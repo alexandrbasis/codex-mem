@@ -4,7 +4,9 @@
 
 # Codex Mem
 
-Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation inspired by Claude Mem; it is not a fork and does not provide full Claude Mem feature parity.
+**Inspired by [Claude Mem](https://github.com/thedotmack/claude-mem).**
+
+Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation; it is not a fork and does not provide full Claude Mem feature parity.
 
 The public release line is `1.2.1`. Its behavior carries the tested `1.2.0` implementation snapshot; the compatibility and evidence boundaries below still apply.
 
