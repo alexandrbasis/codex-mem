@@ -1,16 +1,27 @@
 # Verification
 
-Version `1.3.0` adds a maintenance skill and read-only diagnostic helper. The runtime capture, processing, and retrieval checks below retain the `1.2.0` behavioral baseline published with `1.2.1`. This record separates current local checks from that baseline; it is not a universal compatibility or retrieval-quality claim.
+Version `1.3.1` changes observation selection and retrieval eligibility. Current checks are separated from the historical baselines below; these bounded scenarios do not establish universal retrieval quality.
 
 ## Version and host boundary
 
 - Tested implementation snapshot: `1.2.0`.
-- Current package: `1.3.0`. The original public-export checks below were recorded for `1.2.1`.
+- Current package: `1.3.1`. The original public-export checks below were recorded for `1.2.1`.
 - Native Codex integration boundary: Codex CLI `0.153.4`.
 - Public export checks: 143 unit tests and the local synthetic acceptance driver passed.
 - Native behavioral baseline: E5, Luna/medium, MCP, queue, capture, paired recall, and exclusion checks from the tested `1.2.0` snapshot.
 - The evidence uses temporary fictional fixtures for native reads and automatic flows. It does not validate or publish a user's existing memory.
 - Remote CI results are not part of this verification record.
+
+## Observation quality checks (1.3.1)
+
+- The complete unit suite passed 166 tests. The synthetic hook/MCP acceptance passed nine hook invocations, including native string-shaped Bash results; official schema validation was not enabled for this run.
+
+- A native Luna/medium replay reproduced rejection of an otherwise structured response after a long source ID was transcribed incorrectly. The new model-facing request uses short handles constrained by the response schema; the local resolver rejects unknown handles without guessing attribution.
+- Four isolated native Luna/medium cases passed: routine maintenance produced no notes; a verified-fix fixture mixed with routine activity produced one attributed fix note; an unfulfilled user request produced no completion note; a memory queue error snapshot without a diagnosed cause produced no note. These are bounded synthetic checks, not a statistical quality benchmark.
+- Raw hook records are retained for explicit audit but excluded from default search, automatic context, semantic candidates, and semantic health totals. Existing raw vectors cannot bypass the retrieval filter.
+- Processed batches may omit unrelated evidence. Known, disjoint source attribution remains mandatory for every note; unused evidence remains available through explicit audit and is not reprocessed after the batch completes.
+- Bash output handling matches [CLI 0.153.4 `ExecCommandToolOutput::post_tool_use_response`](https://github.com/openai/codex/blob/rust-v0.153.4/codex-rs/core/src/tools/context.rs#L376-L383), which emits a JSON string. Object-shaped output remains supported. Result excerpts are redacted before truncation.
+- Private diagnostic receipts and user records are not included in this repository.
 
 ## Maintenance skill checks
 

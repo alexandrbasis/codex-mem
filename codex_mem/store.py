@@ -1804,8 +1804,10 @@ class Store:
                                 raise ValueError("note source_ids must partition claimed sources")
                             seen.update(requested)
                             note_sources.append(requested)
-                        if seen != set(source_ids):
-                            raise ValueError("note source_ids must partition claimed sources")
+                        # A processed batch may intentionally discard unrelated or
+                        # non-durable raw sources.  Keep the source IDs that were
+                        # actually attributed disjoint and project-local, while
+                        # leaving unreferenced claimed records available for audit.
 
                 output_ids: list[str] = []
                 if disposition == "processed":
@@ -2009,6 +2011,8 @@ class Store:
                 return [], "source_deleted"
             if row["superseded_by"] is not None:
                 return [], "source_superseded"
+            if isinstance(row["source"], str) and row["source"].startswith("hook:"):
+                return [], "raw_observation"
             payload = self._embedding_entry_payload(row)
             if (
                 payload["id"] != claimed_id
@@ -2171,6 +2175,7 @@ class Store:
                         AND vectors.project = e.project AND vectors.model = ?
                         AND vectors.revision = ? AND vectors.dimensions = ?
                     WHERE e.project = ? AND e.superseded_by IS NULL
+                      AND COALESCE(e.source, '') NOT GLOB 'hook:*'
                       AND (
                           documents.entry_id IS NULL OR documents.text_version IS NULL
                           OR documents.text_version != ? OR vectors.entry_id IS NULL
@@ -2569,6 +2574,7 @@ class Store:
                 "vectors.dimensions = ?",
                 "e.project = vectors.project",
                 "e.superseded_by IS NULL",
+                "COALESCE(e.source, '') NOT GLOB 'hook:*'",
             ]
             parameters: list[object] = [
                 workspace,
@@ -2646,8 +2652,13 @@ class Store:
             if profile is None:
                 vector_row = self._read(
                     lambda: connection.execute(
-                        f"SELECT COUNT(*) AS vectors FROM embedding_vectors {scope_clause}",
-                        scope_parameters,
+                        "SELECT COUNT(*) AS vectors "
+                        "FROM embedding_vectors AS vectors "
+                        "JOIN entries AS e ON e.id = vectors.entry_id "
+                        "AND e.project = vectors.project "
+                        "WHERE COALESCE(e.source, '') NOT GLOB 'hook:*'"
+                        + (" AND vectors.project = ?" if workspace is not None else ""),
+                        (() if workspace is None else (workspace,)),
                     ).fetchone()
                 )
                 job_row = self._read(
@@ -2683,6 +2694,7 @@ class Store:
 
             checked_model, checked_revision, checked_dimensions = profile
             entry_clauses = ["e.superseded_by IS NULL"]
+            entry_clauses.append("COALESCE(e.source, '') NOT GLOB 'hook:*'")
             # Join placeholders precede the WHERE scope placeholder.
             entry_parameters: list[object] = [
                 checked_model,
@@ -2729,19 +2741,29 @@ class Store:
                     continue
                 _unpack_embedding_vector(row["embedding_vector"], checked_dimensions)
                 indexed += 1
-            vector_conditions = ["model = ?", "revision = ?", "dimensions = ?"]
             vector_parameters: list[object] = [checked_model, checked_revision, checked_dimensions]
-            job_conditions = list(vector_conditions)
-            job_parameters = list(vector_parameters)
+            job_conditions = ["model = ?", "revision = ?", "dimensions = ?"]
+            job_parameters: list[object] = [checked_model, checked_revision, checked_dimensions]
             if workspace is not None:
-                vector_conditions.append("project = ?")
                 vector_parameters.append(workspace)
                 job_conditions.append("project = ?")
                 job_parameters.append(workspace)
             vector_row = self._read(
                 lambda: connection.execute(
-                    "SELECT COUNT(*) AS vectors FROM embedding_vectors WHERE "
-                    + " AND ".join(vector_conditions),
+                    "SELECT COUNT(*) AS vectors "
+                    "FROM embedding_vectors AS vectors "
+                    "JOIN entries AS e ON e.id = vectors.entry_id "
+                    "AND e.project = vectors.project "
+                    "WHERE "
+                    + " AND ".join(
+                        [
+                            "vectors.model = ?",
+                            "vectors.revision = ?",
+                            "vectors.dimensions = ?",
+                            "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                        ]
+                        + (["vectors.project = ?"] if workspace is not None else [])
+                    ),
                     tuple(vector_parameters),
                 ).fetchone()
             )
@@ -2749,10 +2771,11 @@ class Store:
                 lambda: connection.execute(
                     """
                     SELECT COUNT(*) AS jobs,
-                        COALESCE(SUM(CASE WHEN status = 'running' THEN 1 ELSE 0 END), 0) AS running,
-                        COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) AS failed,
-                        COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) AS completed
-                    FROM embedding_jobs WHERE """
+                        COALESCE(SUM(CASE WHEN jobs.status = 'running' THEN 1 ELSE 0 END), 0) AS running,
+                        COALESCE(SUM(CASE WHEN jobs.status = 'failed' THEN 1 ELSE 0 END), 0) AS failed,
+                        COALESCE(SUM(CASE WHEN jobs.status = 'completed' THEN 1 ELSE 0 END), 0) AS completed
+                    FROM embedding_jobs AS jobs
+                    WHERE """
                     + " AND ".join(job_conditions),
                     tuple(job_parameters),
                 ).fetchone()
@@ -2788,7 +2811,12 @@ class Store:
         if not expression:
             return [], {}
         connection = self._connection
-        clauses = ["entries_fts MATCH ?", "e.project = ?", "e.superseded_by IS NULL"]
+        clauses = [
+            "entries_fts MATCH ?",
+            "e.project = ?",
+            "e.superseded_by IS NULL",
+            "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+        ]
         parameters: list[object] = [expression, workspace]
         if kinds:
             placeholders = ", ".join("?" for _ in kinds)
@@ -2917,7 +2945,11 @@ class Store:
                     exclude_session=checked_exclude,
                 )
             else:
-                clauses = ["project = ?", "superseded_by IS NULL"]
+                clauses = [
+                    "project = ?",
+                    "superseded_by IS NULL",
+                    "COALESCE(source, '') NOT GLOB 'hook:*'",
+                ]
                 parameters: list[object] = [workspace]
                 if checked_exclude is not None:
                     clauses.append("(session_id IS NULL OR session_id != ?)")

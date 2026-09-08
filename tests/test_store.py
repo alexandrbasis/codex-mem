@@ -6,6 +6,7 @@ import hashlib
 import os
 import sqlite3
 import stat
+import struct
 import tempfile
 import threading
 import unittest
@@ -175,7 +176,36 @@ class StoreTests(unittest.TestCase):
         queried_context = self.store.context(
             self.project_a, query="hookextractzeta", budget=500
         )
-        self.assertIn(hook_extract["id"], queried_context)
+        self.assertNotIn(hook_extract["id"], queried_context)
+        self.assertNotIn("hookextractzeta", queried_context)
+        self.assertEqual([], self.store.search(self.project_a, "hookextractzeta"))
+        self.assertEqual(
+            [hook_extract["id"]],
+            [record["id"] for record in self.store.get(self.project_a, [hook_extract["id"]])],
+        )
+        self.assertIn(
+            hook_extract["id"],
+            {record["id"] for record in self.store.timeline(self.project_a)},
+        )
+
+    def test_source_less_curated_records_remain_default_eligible(self) -> None:
+        curated = self.store.remember(
+            self.project_a,
+            "Source-less decision",
+            "Null source decisions remain searchable and contextual.",
+        )
+        raw = self.store.remember(
+            self.project_a,
+            "Raw hook decision",
+            "Null source decisions remain searchable and contextual.",
+            source="hook:Stop",
+        )
+
+        found = self.store.search(self.project_a, "Null source decisions")
+        self.assertEqual([curated["id"]], [record["id"] for record in found])
+        context = self.store.context(self.project_a, query="Null source decisions", budget=700)
+        self.assertIn(curated["id"], context)
+        self.assertNotIn(raw["id"], context)
 
     def test_observation_claim_and_finish_preserve_raw_provenance(self) -> None:
         prompt = self.store.remember(
@@ -338,9 +368,11 @@ class StoreTests(unittest.TestCase):
         )
         third = self.store.get(self.project_a, [sources[2]["id"]])[0]
         self.assertIsNone(third["superseded_by"])
-        self.assertEqual([sources[2]["id"]], [
-            record["id"] for record in self.store.search(self.project_a, "unique tailed evidence 2")
-        ])
+        self.assertEqual([], self.store.search(self.project_a, "unique tailed evidence 2"))
+        self.assertEqual(
+            [sources[2]["id"]],
+            [record["id"] for record in self.store.get(self.project_a, [sources[2]["id"]])],
+        )
         next_batch = self.store.claim_observation_batch(
             self.project_a, "processor-boundary", "gpt-5.6-luna", "medium"
         )
@@ -454,7 +486,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(0, self.store.status(self.project_a)["observation_jobs"]["jobs"])
         self.assertIsNone(self.store.get(self.project_a, [raw["id"]])[0]["superseded_by"])
 
-    def test_observation_finish_is_atomic_and_skip_leaves_raw_searchable(self) -> None:
+    def test_observation_finish_is_atomic_and_skip_hides_raw_from_default_retrieval(self) -> None:
         first = self.store.remember(
             self.project_a,
             "First raw observation",
@@ -501,13 +533,102 @@ class StoreTests(unittest.TestCase):
         )
         self.assertEqual("skipped", skipped["status"])
         self.assertEqual([], skipped["outputs"])
+        self.assertEqual([], self.store.search(self.project_a, "relevant source"))
+        self.assertNotIn(
+            first["id"], self.store.context(self.project_a, query="relevant source", budget=500)
+        )
         self.assertEqual(
             {first["id"], second["id"]},
-            {record["id"] for record in self.store.search(self.project_a, "relevant source")},
+            {record["id"] for record in self.store.get(self.project_a, [first["id"], second["id"]])},
+        )
+        self.assertTrue(
+            {first["id"], second["id"]}.issubset(
+                {record["id"] for record in self.store.timeline(self.project_a)}
+            )
         )
         self.assertIsNone(
             self.store.claim_observation_batch(
                 self.project_a, "processor-v2", "gpt-5.6-luna", "medium"
+            )
+        )
+
+    def test_processed_observation_may_attribute_a_known_subset_without_reclaiming_unused_source(self) -> None:
+        first = self.store.remember(
+            self.project_a,
+            "Durable source",
+            "The verified fix uses a unique checkout key.",
+            session_id="subset-session",
+            source="hook:UserPromptSubmit",
+        )
+        second = self.store.remember(
+            self.project_a,
+            "Transient source",
+            "Routine command inventory without a result.",
+            session_id="subset-session",
+            source="hook:PostToolUse:subset-call",
+        )
+        batch = self.store.claim_observation_batch(
+            self.project_a, "processor-subset", "gpt-5.6-luna", "medium"
+        )
+        assert batch is not None
+
+        with self.assertRaises(ValueError):
+            self.store.finish_observation_batch(
+                self.project_a,
+                batch["job_id"],
+                batch["lease_token"],
+                notes=[
+                    {
+                        "title": "Unknown source",
+                        "body": "Must reject an ID outside the claimed batch.",
+                        "source_ids": ["z" * 32],
+                    }
+                ],
+            )
+        with self.assertRaises(ValueError):
+            self.store.finish_observation_batch(
+                self.project_a,
+                batch["job_id"],
+                batch["lease_token"],
+                notes=[
+                    {
+                        "title": "Duplicate attribution",
+                        "body": "The same source cannot support two outputs.",
+                        "source_ids": [first["id"]],
+                    },
+                    {
+                        "title": "Duplicate attribution again",
+                        "body": "This must remain atomic.",
+                        "source_ids": [first["id"]],
+                    },
+                ],
+            )
+
+        completed = self.store.finish_observation_batch(
+            self.project_a,
+            batch["job_id"],
+            batch["lease_token"],
+            notes=[
+                {
+                    "title": "Verified checkout fix",
+                    "body": "Unique checkout keys prevent duplicate charges.",
+                    "tags": ["verified"],
+                    "source_ids": [first["id"]],
+                }
+            ],
+        )
+        self.assertEqual("processed", completed["status"])
+        output = completed["outputs"][0]
+        self.assertEqual([first["id"]], output["source_ids"])
+        current = self.store.get(self.project_a, [first["id"], second["id"]])
+        by_id = {record["id"]: record for record in current}
+        self.assertEqual(output["id"], by_id[first["id"]]["superseded_by"])
+        self.assertIsNone(by_id[second["id"]]["superseded_by"])
+        self.assertEqual([], self.store.search(self.project_a, "routine command"))
+        self.assertEqual({first["id"], second["id"]}, set(by_id))
+        self.assertIsNone(
+            self.store.claim_observation_batch(
+                self.project_a, "processor-subset", "gpt-5.6-luna", "medium"
             )
         )
 
@@ -647,7 +768,7 @@ class StoreTests(unittest.TestCase):
         receipt = self.store.status(self.project_a)["observation_jobs"]["recent"][0]
         self.assertEqual("max", receipt["reasoning_effort"])
         pending = self.store.embedding_status(self.project_a, "test-model", "r1", 2)
-        self.assertEqual(1, pending["pending"])
+        self.assertEqual(0, pending["pending"])
 
     def test_embedding_claims_redacted_whole_text_and_semantic_search_is_project_scoped(self) -> None:
         note = self.store.remember(
@@ -672,7 +793,7 @@ class StoreTests(unittest.TestCase):
 
         batch = self.store.claim_embedding_batch(self.project_a, "test-model", "r1", 2)
         assert batch is not None
-        self.assertEqual({note["id"], tool["id"]}, {item["id"] for item in batch["entries"]})
+        self.assertEqual([note["id"]], [item["id"] for item in batch["entries"]])
         claimed_note = next(item for item in batch["entries"] if item["id"] == note["id"])
         self.assertEqual(
             "Semantic decision\n\ndecision\n\ntoken=[REDACTED]\n\n"
@@ -696,7 +817,7 @@ class StoreTests(unittest.TestCase):
             {
                 "entry_id": item["id"],
                 "content_hash": item["content_hash"],
-                "vector": [3.0, 4.0] if item["id"] == note["id"] else [0.0, 1.0],
+                "vector": [3.0, 4.0],
             }
             for item in batch["entries"]
         ]
@@ -704,14 +825,44 @@ class StoreTests(unittest.TestCase):
             self.project_a, batch["job_id"], batch["lease_token"], vectors=vectors
         )
         self.assertEqual("completed", completed["status"])
-        self.assertEqual(2, completed["indexed_count"])
-        self.assertEqual({note["id"], tool["id"]}, set(completed["indexed_ids"]))
+        self.assertEqual(1, completed["indexed_count"])
+        self.assertEqual({note["id"]}, set(completed["indexed_ids"]))
+
+        # A vector produced by the old behavior must remain invisible to
+        # semantic retrieval and status after the source policy changes.
+        raw_row = self.store._connection.execute(  # type: ignore[attr-defined]
+            "SELECT * FROM entries WHERE id = ?", (tool["id"],)
+        ).fetchone()
+        assert raw_row is not None
+        _, raw_hash = Store._embedding_text_and_hash_from_row(raw_row)
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            """
+            INSERT INTO embedding_vectors(
+                entry_id, project, model, revision, dimensions, content_hash,
+                vector, indexed_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                tool["id"],
+                project_key(self.project_a),
+                "test-model",
+                "r1",
+                2,
+                raw_hash,
+                sqlite3.Binary(struct.pack("<2f", 0.0, 1.0)),
+                tool["created_at"],
+                tool["created_at"],
+            ),
+        )
 
         found = self.store.semantic_search(
             self.project_a, [6.0, 8.0], "test-model", "r1", 2, kinds=["note"]
         )
         self.assertEqual([note["id"]], [item["id"] for item in found])
         self.assertEqual(1.0, found[0]["semantic_score"])
+        self.assertEqual([], self.store.semantic_search(
+            self.project_a, [0.0, 1.0], "test-model", "r1", 2, kinds=["tool"]
+        ))
         self.assertEqual([], self.store.semantic_search(
             self.project_b, [1.0, 0.0], "test-model", "r1", 2
         ))
@@ -720,9 +871,14 @@ class StoreTests(unittest.TestCase):
             self.project_a, [1.0, 0.0], "test-model", "other-revision", 2
         ))
         status = self.store.embedding_status(self.project_a, "test-model", "r1", 2)
-        self.assertEqual({"indexed": 2, "pending": 0, "stale": 0}, {
-            key: status[key] for key in ("indexed", "pending", "stale")
+        self.assertEqual({"vectors": 1, "indexed": 1, "pending": 0, "stale": 0}, {
+            key: status[key] for key in ("vectors", "indexed", "pending", "stale")
         })
+        self.assertEqual({"vectors": 1, "indexed": 1}, {
+            key: self.store.embedding_status(self.project_a)[key]
+            for key in ("vectors", "indexed")
+        })
+        self.assertIsNone(self.store.claim_embedding_batch(self.project_a, "test-model", "r1", 2))
 
     def test_embedding_v1_documents_and_vectors_reindex_with_v2_text(self) -> None:
         entry = self.store.remember(
@@ -825,6 +981,37 @@ class StoreTests(unittest.TestCase):
         self.assertEqual([entry["id"]], [item["id"] for item in self.store.semantic_search(
             self.project_a, [1.0, 0.0], "test-model", "r1", 2
         )])
+
+    def test_retrying_a_legacy_raw_embedding_job_invalidates_it_without_reclaiming_raw(self) -> None:
+        entry = self.store.remember(
+            self.project_a,
+            "Legacy raw source",
+            "A hook record that was claimed before raw indexing was disabled.",
+        )
+        batch = self.store.claim_embedding_batch(self.project_a, "test-model", "r1", 2)
+        assert batch is not None
+        self.store.fail_embedding_batch(
+            self.project_a, batch["job_id"], batch["lease_token"], "transient"
+        )
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            "UPDATE entries SET source = ? WHERE id = ?",
+            ("hook:PostToolUse:legacy", entry["id"]),
+        )
+
+        self.assertIsNone(
+            self.store.claim_embedding_batch(
+                self.project_a, "test-model", "r1", 2, retry_failed=True
+            )
+        )
+        status = self.store.embedding_status(self.project_a, "test-model", "r1", 2)
+        self.assertEqual({"indexed": 0, "pending": 0, "stale": 0}, {
+            key: status[key] for key in ("indexed", "pending", "stale")
+        })
+        job = self.store._connection.execute(  # type: ignore[attr-defined]
+            "SELECT error_code FROM embedding_jobs WHERE id = ?", (batch["job_id"],)
+        ).fetchone()
+        assert job is not None
+        self.assertEqual("raw_observation", job["error_code"])
 
         current = self.store.remember(self.project_a, "Current failure", "current v2 work")
         failed = self.store.claim_embedding_batch(self.project_a, "test-model", "r1", 2)

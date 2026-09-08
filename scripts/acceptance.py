@@ -67,7 +67,7 @@ def run(schema_dir: Path | None = None) -> dict:
         hook("UserPromptSubmit", turn_id="turn-one", prompt="Fix Aurora cache eviction. DATABASE_PASSWORD=hunter2 <private>hidden-test-value</private>")
         tool = dict(turn_id="turn-one", tool_name="Bash", tool_use_id="call-one",
                     tool_input={"command": "python3 -m unittest tests.test_aurora"},
-                    tool_response={"exit_code": 0, "output": "RAW_OUTPUT_MUST_NOT_BE_STORED"})
+                    tool_response="Aurora regression: 1 test passed. <private>RAW_OUTPUT_MUST_NOT_BE_STORED</private>")
         hook("PostToolUse", **tool)
         hook("PostToolUse", **tool)
         hook("Stop", turn_id="turn-one", stop_hook_active=False,
@@ -79,6 +79,8 @@ def run(schema_dir: Path | None = None) -> dict:
             material = json.dumps(full)
             for secret in ("hunter2", "hidden-test-value", "RAW_OUTPUT_MUST_NOT_BE_STORED"):
                 assert secret not in material, "Raw/private content persisted"
+            assert "Aurora regression: 1 test passed." in material, "Tool result evidence missing"
+            assert not store.search(project, "Aurora"), "Raw evidence leaked into memory search"
             assert not store.search(other_project, "Aurora"), "Cross-project result leak"
             ids = [r["id"] for r in records]
 

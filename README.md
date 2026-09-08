@@ -8,18 +8,18 @@
 
 Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation; it is not a fork and does not provide full Claude Mem feature parity.
 
-Version `1.3.0` adds the maintenance skill and a read-only diagnostic helper. Capture, processing, and retrieval retain the tested `1.2.0` behavioral baseline; the compatibility and evidence boundaries below still apply.
+Version `1.3.1` separates raw hook evidence from searchable memory. The observer can discard routine activity, and schema-constrained source handles prevent long-ID transcription errors. The compatibility and evidence boundaries below still apply.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
 
 ## What it does
 
-- Captures bounded excerpts from approved projects through native Codex lifecycle hooks.
+- Captures bounded evidence from approved projects through native Codex lifecycle hooks. Raw hook records remain available for explicit audit, but are excluded from search, automatic context, and semantic indexing.
 - Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, and `memory_status` through a local MCP server.
 - Uses SQLite FTS5 for lexical search. Optional local multilingual semantic search uses `intfloat/multilingual-e5-base` with FastEmbed and ONNX Runtime.
 - Keeps project and session provenance, source links for consolidated notes, and bounded execution receipts.
 - Runs a durable local queue. A worker processes small observation batches in fresh `gpt-5.6-luna` sessions with `medium` reasoning, then updates the local semantic index.
-- Redacts private blocks and common credential formats before persistence. Full tool output, images, and transcript files are not copied.
+- Redacts private blocks and common credential formats before persistence. Eligible tool events include at most 2,000 characters of redacted result evidence, within the 6,000-character total event budget. Images and transcript files are not copied.
 
 Automatic capture is privacy-preserving by default: the `selected` scope starts with an empty project list. Add a project explicitly before hooks can capture it. Lexical search and explicit memory tools do not require the optional semantic runtime.
 
@@ -160,7 +160,7 @@ Use `config --no-semantic-enabled` to disable automatic indexing or `config --no
 python3 scripts/codex-mem.py service retry --project /absolute/path/to/project
 ```
 
-The worker uses only bounded, redacted observations from the selected project. It requests an empty environment and disables connected MCP servers individually for its processing session. This is layered isolation, not a universal switch over every native utility. The worker validates the model response and source coverage and records model and execution provenance. Memory failures return control to the main Codex task.
+The worker uses only bounded, redacted observations from the selected project. It requests an empty environment and disables connected MCP servers individually for its processing session. This is layered isolation, not a universal switch over every native utility. The worker validates the model response and source attribution and records model and execution provenance. Memory failures return control to the main Codex task.
 
 ## Protect and manage data
 

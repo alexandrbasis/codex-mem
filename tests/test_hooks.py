@@ -135,6 +135,30 @@ class HookTests(unittest.TestCase):
         body = str(self.store.records[0]["body"])
         self.assertNotIn("ghp_", body)
 
+    def test_prompt_strips_known_codex_ambient_wrappers_and_preserves_annotation(self) -> None:
+        prompt = (
+            '<in-app-browser-context source="tab">ambient title and URL</in-app-browser-context>\n'
+            "# Response annotations:\nEach item contains selected text. Preserve user comments.\n"
+            '<response-annotations>[{"text":"selected code","annotation":"Keep this comment","source":"browser"}]</response-annotations>\n'
+            "## My request:\n"
+            "Fix the capture filter and preserve this user request."
+        )
+
+        handle_hook(self.payload("UserPromptSubmit", prompt=prompt), self.store)
+
+        body = str(self.store.records[0]["body"])
+        self.assertNotIn("ambient title and URL", body)
+        self.assertNotIn("<response-annotations>", body)
+        self.assertNotIn("## My request:", body)
+        self.assertIn("Selection: selected code", body)
+        self.assertIn("Comment: Keep this comment", body)
+        self.assertIn("Fix the capture filter and preserve this user request.", body)
+
+    def test_long_ambient_context_does_not_truncate_actual_request(self) -> None:
+        prompt = '<in-app-browser-context>' + ('x' * 8000) + '</in-app-browser-context>\n## My request:\nKeep the real request.'
+        handle_hook(self.payload("UserPromptSubmit", prompt=prompt), self.store)
+        self.assertEqual("[User prompt]\nKeep the real request.", self.store.records[0]["body"])
+
     def test_context_delivery_state_is_project_scoped(self) -> None:
         other_project = self.root / "other-project"
         configure(
@@ -346,6 +370,115 @@ class HookTests(unittest.TestCase):
             records = store.timeline(project_key(self.project))
         self.assertEqual(1, len(records))
 
+    def test_multiline_read_only_bash_without_output_is_ignored(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_use_id="call-readonly-multiline",
+                tool_input={
+                    "command": "sed -n '1,120p' skills/memory/SKILL.md\nrg -n MEMORY.md",
+                },
+                tool_response={
+                    "exit_code": 0,
+                },
+            ),
+            self.store,
+        )
+
+        self.assertEqual([], self.store.records)
+
+    def test_skill_loading_output_is_not_an_observation(self) -> None:
+        handle_hook(self.payload("PostToolUse", tool_name="Bash",
+            tool_input={"command": "sed -n '1,120p' skills/memory/SKILL.md\nrg -n Codex MEMORY.md"},
+            tool_response="Skill instructions and memory registry contents"), self.store)
+        self.assertEqual([], self.store.records)
+
+    def test_read_only_bash_with_meaningful_native_output_is_captured(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_use_id="call-readonly-output",
+                tool_input={"command": 'rg -n "bug" codex_mem/hooks.py'},
+                tool_response={"exit_code": 0, "output": "codex_mem/hooks.py:1:bug evidence"},
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        self.assertIn("bug evidence", str(self.store.records[0]["body"]))
+
+    def test_self_maintenance_command_is_ignored_but_development_paths_are_not(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_input={"command": "python3 -m codex_mem maintenance"},
+                tool_response={"exit_code": 0, "output": "maintenance complete"},
+            ),
+            self.store,
+        )
+
+        self.assertEqual([], self.store.records)
+
+    def test_codex_mem_development_paths_remain_capturable(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_use_id="call-development",
+                tool_input={
+                    "command": "pytest -q tests/test_hooks.py codex_mem/hooks.py",
+                    "affected_paths": ["codex_mem/hooks.py", "tests/test_hooks.py"],
+                },
+                tool_response={"exit_code": 0, "output": "25 passed"},
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        self.assertIn("codex_mem/hooks.py", str(self.store.records[0]["body"]))
+
+    def test_native_cli_string_tool_response_is_captured(self) -> None:
+        # Codex rust-v0.153.4 ExecCommandToolOutput::post_tool_use_response
+        # emits a JSON string, unlike code_mode_result's output object.
+        handle_hook(self.payload("PostToolUse", tool_name="Bash", tool_use_id="native-string",
+            tool_input={"command": "pytest -q tests/test_checkout.py"},
+            tool_response="Duplicate retry regression: 1 passed. API_KEY=do-not-store"), self.store)
+        self.assertEqual(1, len(self.store.records))
+        self.assertIn("Duplicate retry regression: 1 passed.", self.store.records[0]["body"])
+        self.assertNotIn("do-not-store", self.store.records[0]["body"])
+        self.assertNotIn("Exit code:", self.store.records[0]["body"])
+
+    def test_post_tool_use_keeps_bounded_redacted_output_excerpt(self) -> None:
+        output = (
+            "focused test passed\n"
+            "OPENAI_API_KEY=plain-secret\n"
+            "<private>hidden output</private>\n"
+            + "x" * 3_000
+        )
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_use_id="call-output-excerpt",
+                tool_input={
+                    "command": "pytest -q tests/test_hooks.py",
+                },
+                tool_response={"exit_code": 0, "output": output},
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        body = str(self.store.records[0]["body"])
+        self.assertIn("Output excerpt:", body)
+        self.assertIn("focused test passed", body)
+        self.assertNotIn("plain-secret", body)
+        self.assertNotIn("hidden output", body)
+        self.assertLessEqual(len(body), 6_000)
+
     def test_post_tool_use_keeps_only_safe_metadata(self) -> None:
         response = handle_hook(
             self.payload(
@@ -358,7 +491,7 @@ class HookTests(unittest.TestCase):
                 },
                 tool_response={
                     "exit_code": 0,
-                    "output": "SUPER_SECRET_TOOL_OUTPUT must never be remembered",
+                    "output": "OPENAI_API_KEY=do-not-store",
                     "affected_paths": ["tests/test_hooks.py"],
                 },
             ),
@@ -371,7 +504,7 @@ class HookTests(unittest.TestCase):
         self.assertIn("pytest tests/test_hooks.py", str(record["body"]))
         self.assertIn("Exit code: 0", str(record["body"]))
         self.assertIn("tests/test_hooks.py", str(record["body"]))
-        self.assertNotIn("SUPER_SECRET_TOOL_OUTPUT", str(record["body"]))
+        self.assertNotIn("do-not-store", str(record["body"]))
         self.assertEqual("hook:PostToolUse:call-test-123", record["source"])
         self.assertNotIn("source_ids", record)
 
@@ -399,9 +532,10 @@ class HookTests(unittest.TestCase):
                     "PostToolUse",
                     tool_name="Bash",
                     tool_use_id="call_test_123",
-                tool_input={"command": "pytest -q"},
-                tool_response={
-                    "exit_code": 0,
+                    tool_input={"command": "pytest -q"},
+                    tool_response={
+                        "exit_code": 0,
+                        "output": "1 passed",
                         "affected_paths": ["tests/test_hooks.py"],
                     },
                 ),
@@ -423,7 +557,7 @@ class HookTests(unittest.TestCase):
                 tool_response={
                     "exit_code": 0,
                     "affected_paths": ["response-only-private.py"],
-                    "output": "response-only-private.py",
+                    "output": "1 passed",
                 },
             ),
             self.store,

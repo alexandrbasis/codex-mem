@@ -143,6 +143,7 @@ def process_pending(
                     active_runner = NativeProcessorRunner(codex=codex, timeout=checked_timeout)
                 run_value = _invoke_runner(active_runner, request)
                 output, evidence, thread_id, turn_id = _validate_runner_receipt(run_value)
+                output = _resolve_source_handles(output, sources)
                 notes, disposition = _validate_model_output(output, sources)
                 finished = store.finish_observation_batch(
                     workspace,
@@ -805,7 +806,8 @@ def _notification_turn_id(params: Mapping[str, Any]) -> str | None:
 
 def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any]:
     job_id, _, sources = _claim_parts(claimed)
-    prompt = _build_prompt(sources)
+    wire_sources = [dict(source, id=f"s{index}") for index, source in enumerate(sources, 1)]
+    prompt = _build_prompt(wire_sources)
     return {
         "job_id": job_id,
         "processor_id": PROCESSOR_ID,
@@ -819,10 +821,10 @@ def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any
                 "body": source["body"],
                 "tags": list(source.get("tags", [])),
             }
-            for source in sources
+            for source in wire_sources
         ],
         "prompt": prompt,
-        "output_schema": _output_schema(),
+        "output_schema": _output_schema([source["id"] for source in wire_sources]),
     }
 
 
@@ -847,8 +849,23 @@ def _build_prompt(sources: Sequence[Mapping[str, Any]]) -> str:
         "Write at most four concise notes. Preserve uncertainty: distinguish what someone "
         "claimed from what the observations directly verify, and do not invent proof. If no "
         "durable note is justified, return disposition `skipped` with an empty notes list. "
-        "Include source_ids on every processed note and partition every supplied source ID "
-        "exactly once. Return "
+        "Save specific changes, fixes, decisions with rationale, or discoveries that help a future "
+        "session do project work. Describe what was learned or changed, not the fact that a tool "
+        "was called or an investigation happened. Skip greetings, requests to inspect memory, "
+        "skill loading, routine status checks, command inventories, and transient counts or "
+        "worker status. A reproducible cause and its remedy can be durable; a health-check "
+        "diary is not. In particular, a memory queue being blocked, an `invalid_response` "
+        "code, index coverage counts, and instructions to retry are operational snapshots: "
+        "omit them even when a prior assistant describes them as an unresolved problem. "
+        "Only retain such an incident when the evidence adds a concrete underlying cause "
+        "or an implemented remedy, beyond the error code itself. Ask whether the fact "
+        "will help after the queue returns to normal; otherwise skip it. Describe historical "
+        "evidence in the past tense, never as the current live system state. "
+        "Commands without results prove only an attempted action, not its outcome. "
+        "Treat user requests as intent, never as completed implementation. "
+        "Include only relevant source_ids on each note. Unrelated sources may be omitted. "
+        "Each source can support at most one note; combine related facts if needed. "
+        "Prefer zero notes over a generic activity summary. Return "
         "only JSON that satisfies the provided schema.\n\n"
         "<untrusted_observations>\n"
         f"{encoded}\n"
@@ -859,7 +876,7 @@ def _build_prompt(sources: Sequence[Mapping[str, Any]]) -> str:
     return prompt
 
 
-def _output_schema() -> dict[str, Any]:
+def _output_schema(source_handles: Sequence[str] | None = None) -> dict[str, Any]:
     """The model-facing schema; local validation below remains authoritative."""
 
     note_properties: dict[str, Any] = {
@@ -879,6 +896,8 @@ def _output_schema() -> dict[str, Any]:
             "items": {"type": "string", "minLength": 1, "maxLength": 64},
         },
     }
+    if source_handles is not None:
+        note_properties["source_ids"]["items"]["enum"] = list(source_handles)
     return {
         "type": "object",
         "additionalProperties": False,
@@ -959,6 +978,24 @@ def _validate_runner_receipt(
     return output, evidence, thread_id, turn_id
 
 
+def _resolve_source_handles(output: Mapping[str, Any], sources: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Resolve short schema-constrained handles; never guess or repair attribution."""
+    handles = {f"s{index}": source["id"] for index, source in enumerate(sources, 1)}
+    resolved = dict(output)
+    if not isinstance(output.get("notes"), list):
+        raise ProcessorFailure("invalid_response")
+    notes = []
+    for value in output["notes"]:
+        if not isinstance(value, Mapping) or not isinstance(value.get("source_ids"), list):
+            raise ProcessorFailure("invalid_response")
+        ids = value["source_ids"]
+        if any(not isinstance(item, str) or item not in handles for item in ids):
+            raise ProcessorFailure("invalid_response")
+        notes.append(dict(value, source_ids=[handles[item] for item in ids]))
+    resolved["notes"] = notes
+    return resolved
+
+
 def _validate_model_output(
     output: Mapping[str, Any], sources: Sequence[Mapping[str, Any]]
 ) -> tuple[list[dict[str, Any]], str]:
@@ -1010,8 +1047,6 @@ def _validate_model_output(
         if any(source_id not in source_ids or source_id in assigned for source_id in requested):
             raise ProcessorFailure("invalid_response")
         assigned.update(requested)
-    if assigned != set(source_ids):
-        raise ProcessorFailure("invalid_response")
     return notes, disposition
 
 

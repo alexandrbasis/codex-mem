@@ -16,6 +16,7 @@ from codex_mem.processor import (
     _isolated_config_overrides,
     _read_valid_final_output,
     process_pending,
+    _runner_request,
 )
 from codex_mem.store import Store
 
@@ -118,6 +119,39 @@ class ProcessorTests(unittest.TestCase):
             self.assertEqual(MODEL, job["model"])
             self.assertEqual(REASONING_EFFORT, job["reasoning_effort"])
             self.assertEqual("processed", job["status"])
+
+    def test_native_request_uses_short_schema_constrained_source_handles(self) -> None:
+        source_id = "ffffffffffffffffffffffffffffffff"
+        request = _runner_request({"job_id": "a" * 32, "lease_token": "b" * 32,
+                                   "sources": [{"id": source_id, "title": "Fact", "body": "Evidence"}]}, 60)
+        self.assertEqual("s1", request["sources"][0]["id"])
+        self.assertNotIn(source_id, request["prompt"])
+        schema = request["output_schema"]["properties"]["notes"]["items"]["properties"]
+        self.assertEqual(["s1"], schema["source_ids"]["items"]["enum"])
+
+    def test_unknown_source_handle_fails_without_committing_a_note(self) -> None:
+        self.remember("Evidence", "The checkout fix is verified.")
+        result = process_pending(self.project, self.data_dir, runner=lambda request: self.receipt({
+            "disposition": "processed", "notes": [{"title": "Invalid provenance", "body": "A fact.",
+            "tags": [], "source_ids": ["s999"]}]}))
+        self.assertEqual("failed", result["status"])
+        with Store(self.data_dir) as store:
+            self.assertEqual([], store.search(self.project, "Invalid provenance"))
+
+    def test_useful_note_can_discard_unrelated_source(self) -> None:
+        useful = self.remember("Verified fix", "Unique checkout keys prevent duplicate charges.")
+        noise = self.remember("Routine", "Read the skill and checked the clock.")
+        def runner(request):
+            return self.receipt({"disposition": "processed", "notes": [{
+                "title": "Checkout idempotency", "body": "Unique checkout keys prevent duplicate charges.",
+                "tags": ["bugfix"], "source_ids": [request["sources"][0]["id"]]}]})
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual("processed", result["status"])
+        with Store(self.data_dir) as store:
+            note = store.search(self.project, "idempotency")[0]
+            self.assertEqual(note["id"], store.get(self.project, [str(useful["id"])])[0]["superseded_by"])
+            self.assertIsNone(store.get(self.project, [str(noise["id"])])[0]["superseded_by"])
+        self.assertEqual("idle", process_pending(self.project, self.data_dir, runner=runner)["status"])
 
     def test_idle_never_calls_runner(self) -> None:
         called = False
@@ -232,7 +266,7 @@ class ProcessorTests(unittest.TestCase):
 
         def runner(request: object) -> dict[str, object]:
             source_ids = [source["id"] for source in dict(request)["sources"]]
-            self.assertEqual({first["id"], second["id"]}, set(source_ids))
+            self.assertEqual({"s1", "s2"}, set(source_ids))
             return self.receipt(
                 {
                     "notes": [

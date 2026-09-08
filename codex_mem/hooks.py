@@ -59,6 +59,7 @@ except Exception:  # pragma: no cover - exercised only by incomplete installs
 MAX_STDIN_BYTES = 1_048_576
 MAX_CAPTURE_CHARS = 6_000
 MAX_COMMAND_CHARS = 2_000
+MAX_TOOL_OUTPUT_CHARS = 2_000
 MAX_PATHS = 20
 
 _SUPPORTED_EVENTS = {
@@ -100,9 +101,34 @@ _SENSITIVE_MARKERS = (
     ".env",
 )
 _READ_ONLY_COMMAND = re.compile(
-    r"^\s*(?:command\s+)?(?:pwd|ls|find|rg|grep|cat|sed|head|tail|"
-    r"which|whoami|date|echo|git\s+(?:status|log|diff|show|branch|remote))\b",
+    r"^\s*(?:command\s+)?(?:cd|pwd|ls|find|rg|grep|cat|sed|head|tail|"
+    r"which|whoami|date|echo|git\s+(?:status|log|diff|show|branch|remote))"
+    r"(?:\s+.*)?\s*$",
     re.IGNORECASE,
+)
+_IN_APP_BROWSER_CONTEXT = re.compile(
+    r"(?is)(?:^|\n)\s*<in-app-browser-context\b[^>]*>.*?</in-app-browser-context>\s*"
+)
+_RESPONSE_ANNOTATIONS = re.compile(
+    r"(?is)(?:^|\n)\s*#\s*Response annotations:.*?"
+    r"<response-annotations\b[^>]*>\s*(?P<body>.*?)</response-annotations>\s*"
+)
+_MY_REQUEST_HEADER = re.compile(r"(?im)^\s*##\s*My request:\s*")
+_SENSITIVE_OUTPUT_PATH_MARKERS = (
+    "transcript",
+    "secret",
+    "credential",
+    "password",
+    "token",
+    ".env",
+)
+_SELF_MAINTENANCE_COMMAND = re.compile(
+    r"(?ix)(?:^|(?:&&|\|\||[;|\n]))\s*"
+    r"(?:command\s+)?(?:env\s+)?(?:"
+    r"(?:python(?:3(?:\.\d+)?)?\s+-m\s+codex_mem(?:\.[a-z0-9_]+)?)"
+    r"|(?:python(?:3(?:\.\d+)?)?\s+)?(?:[^\s;&|]+/)*codex-mem\.py"
+    r"|codex[-_]mem"
+    r")(?=\s|$)"
 )
 _PATCH_PATH = re.compile(
     r"^\*\*\*\s+(?:Update|Add|Delete)\s+File:\s+(.+?)\s*$|"
@@ -299,9 +325,13 @@ def _tool_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any
         return False
     tool_input = payload.get("tool_input")
     command = _safe_command(tool_name, tool_input)
-    if _read_only_tool(tool_name, command):
-        return False
-    return bool(command or _exit_code(payload.get("tool_response")) is not None or _affected_paths(tool_name, tool_input))
+    output = _tool_output(payload.get("tool_response"), command=command)
+    exit_code = _exit_code(payload.get("tool_response"))
+    paths = _affected_paths(tool_name, tool_input)
+    # A successful command with no output or changed-path evidence is routine
+    # activity. Failed commands remain useful even when the host supplied no
+    # textual output.
+    return bool(output or paths or (exit_code is not None and exit_code != 0))
 
 
 def _stop_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any]) -> bool:
@@ -358,7 +388,7 @@ def _user_prompt(
     data_dir: str | os.PathLike[str] | None,
     response: dict[str, Any],
 ) -> dict[str, Any]:
-    prompt = _safe_text(payload.get("prompt"), maximum=MAX_CAPTURE_CHARS)
+    prompt = _safe_prompt(payload.get("prompt"))
     if config.get("capture_enabled") and prompt:
         _remember_safely(
             store,
@@ -416,9 +446,10 @@ def _post_tool_use(
     command = _safe_command(tool_name, tool_input)
     exit_code = _exit_code(payload.get("tool_response"))
     paths = _affected_paths(tool_name, tool_input)
-    if not command and exit_code is None and not paths:
+    output = _tool_output(payload.get("tool_response"), command=command)
+    if not output and not paths and (exit_code is None or exit_code == 0):
         return
-    if _read_only_tool(tool_name, command):
+    if _read_only_tool(tool_name, command) and not output and exit_code in (None, 0):
         return
 
     lines = ["[Tool metadata]", f"Tool: {tool_name}"]
@@ -426,6 +457,9 @@ def _post_tool_use(
         lines.append(f"Command: {command}")
     if exit_code is not None:
         lines.append(f"Exit code: {exit_code}")
+    if output:
+        lines.append("Output excerpt:")
+        lines.append(output)
     if paths:
         lines.append("Affected paths:")
         lines.extend(f"- {path}" for path in paths)
@@ -669,6 +703,37 @@ def _safe_text(value: Any, *, maximum: int) -> str:
     return _truncate(redact_text(value), maximum).strip()
 
 
+def _safe_prompt(value: Any) -> str:
+    if not isinstance(value, str):
+        return ""
+    prompt = redact_text(value).strip()
+    prompt = _IN_APP_BROWSER_CONTEXT.sub("\n", prompt)
+    prompt = _RESPONSE_ANNOTATIONS.sub(_format_response_annotations, prompt)
+    prompt = _MY_REQUEST_HEADER.sub("", prompt)
+    return _truncate(prompt, MAX_CAPTURE_CHARS).strip()
+
+
+def _format_response_annotations(match: re.Match[str]) -> str:
+    raw = match.group("body").strip()
+    try:
+        annotations = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return raw
+    if not isinstance(annotations, list):
+        return raw
+    lines: list[str] = []
+    for item in annotations:
+        if not isinstance(item, Mapping):
+            continue
+        selected = _safe_text(item.get("text"), maximum=1_000)
+        comment = _safe_text(item.get("annotation"), maximum=1_000)
+        if selected:
+            lines.append(f"Selection: {selected}")
+        if comment:
+            lines.append(f"Comment: {comment}")
+    return "\n" + "\n".join(lines) + "\n" if lines else "\n"
+
+
 def _truncate(value: str, limit: int) -> str:
     if limit <= 0:
         return ""
@@ -687,10 +752,14 @@ def _exclude_tool(tool_name: str, tool_input: Any) -> bool:
         return True
     if name == "bash" and isinstance(tool_input, Mapping):
         command = tool_input.get("command")
-        if isinstance(command, str) and (
-            "codex-mem.py" in command.lower() or "codex_mem" in command.lower()
-        ):
-            return True
+        if isinstance(command, str):
+            if _is_self_maintenance_command(command):
+                return True
+            lines = [line.strip() for line in command.splitlines() if line.strip()]
+            if _read_only_tool(tool_name, command) and lines and all(
+                "SKILL.md" in line or "MEMORY.md" in line for line in lines
+            ):
+                return True
     return False
 
 
@@ -704,7 +773,12 @@ def _read_only_tool(tool_name: str, command: str) -> bool:
     # token is `ls` or `git status`.
     if any(operator in command for operator in (";", "&&", "||", "|", "`", "$(`")):
         return False
-    return bool(_READ_ONLY_COMMAND.match(command))
+    lines = [line.strip() for line in command.splitlines() if line.strip()]
+    return bool(lines) and all(_READ_ONLY_COMMAND.fullmatch(line) for line in lines)
+
+
+def _is_self_maintenance_command(command: str) -> bool:
+    return bool(_SELF_MAINTENANCE_COMMAND.search(command))
 
 
 def _safe_command(tool_name: str, tool_input: Any) -> str:
@@ -734,6 +808,21 @@ def _exit_code(tool_response: Any) -> int | None:
             except ValueError:
                 pass
     return None
+
+
+def _tool_output(tool_response: Any, *, command: str) -> str:
+    if not command or _contains_sensitive_marker(command):
+        return ""
+    if any(marker in command.lower() for marker in _SENSITIVE_OUTPUT_PATH_MARKERS):
+        return ""
+    # Native Bash hooks in CLI 0.153.4 emit the output as a JSON string.
+    # Some integrations use an object; never stringify arbitrary response data.
+    output = tool_response if isinstance(tool_response, str) else (
+        tool_response.get("output") if isinstance(tool_response, Mapping) else None
+    )
+    if not isinstance(output, str):
+        return ""
+    return _safe_text(output, maximum=MAX_TOOL_OUTPUT_CHARS)
 
 
 def _affected_paths(tool_name: str, tool_input: Any) -> list[str]:

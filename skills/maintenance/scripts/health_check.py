@@ -397,10 +397,13 @@ def _semantic_index(connection: sqlite3.Connection, project: str, enabled: bool)
         return base
     total_row = _one(
         connection,
-        "SELECT COUNT(*) AS count FROM entries WHERE project = ? AND superseded_by IS NULL",
+        "SELECT COUNT(*) AS count FROM entries WHERE project = ? AND superseded_by IS NULL AND COALESCE(source, '') NOT GLOB 'hook:*'",
         (project,),
     )
     total_entries = int(_value(total_row, "count", 0) or 0)
+    raw_row = _one(connection, "SELECT COUNT(*) AS count FROM entries WHERE project = ? "
+                   "AND superseded_by IS NULL AND source GLOB 'hook:*'", (project,))
+    base["raw_observations_excluded"] = int(_value(raw_row, "count", 0) or 0)
     sample_limit = 5000
     rows = _rows(
         connection,
@@ -411,7 +414,7 @@ def _semantic_index(connection: sqlite3.Connection, project: str, enabled: bool)
         LEFT JOIN embedding_documents AS d ON d.entry_id = e.id AND d.project = e.project
         LEFT JOIN embedding_vectors AS v ON v.entry_id = e.id AND v.project = e.project
           AND v.model = ? AND v.revision = ? AND v.dimensions = ?
-        WHERE e.project = ? AND e.superseded_by IS NULL
+        WHERE e.project = ? AND e.superseded_by IS NULL AND COALESCE(e.source, '') NOT GLOB 'hook:*'
         LIMIT ?
         """,
         (EXPECTED_SEMANTIC_MODEL, EXPECTED_SEMANTIC_REVISION, EXPECTED_SEMANTIC_DIMENSIONS, project, sample_limit),

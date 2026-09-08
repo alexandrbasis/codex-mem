@@ -75,6 +75,17 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
             self.assertEqual(state, (path.stat().st_size, path.stat().st_mtime_ns, path.read_bytes()))
         self.assertEqual("all", report["capture_scope"])
 
+    def test_raw_observations_are_not_counted_as_pending_semantic_memories(self) -> None:
+        configure(self.data_dir, capture_scope="all")
+        with Store(self.data_dir) as store:
+            store.remember(self.project_a, "Raw tool", "Ran maintenance", source="hook:PostToolUse:call-1")
+            store.remember(self.project_a, "Decision", "Use project scoped locks")
+        report = self.report()
+        project = report["projects"][0]
+        self.assertEqual(2, project["records"]["entries"])
+        self.assertEqual(1, project["semantic"]["pending"])
+        self.assertEqual(1, project["semantic"]["raw_observations_excluded"])
+
     def test_corrupt_database_and_config_report_codes_without_raw_content(self) -> None:
         self.data_dir.mkdir()
         (self.data_dir / "memory.sqlite3").write_bytes(b"not a sqlite database PRIVATE_SENTINEL")
