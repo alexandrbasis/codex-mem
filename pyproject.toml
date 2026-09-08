@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-mem-local"
+version = "1.2.1"
+description = "Project-scoped persistent memory for Codex, using Python and SQLite"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Alex Basis"}]
+dependencies = []
+
+[project.optional-dependencies]
+semantic = ["fastembed==0.8.0", "onnxruntime==1.23.2"]
+
+[project.urls]
+Homepage = "https://github.com/alexandrbasis/codex-mem"
+Repository = "https://github.com/alexandrbasis/codex-mem"
+Issues = "https://github.com/alexandrbasis/codex-mem/issues"
+
+[project.scripts]
+codex-mem = "codex_mem.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["codex_mem*"]

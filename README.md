@@ -1,0 +1,191 @@
+<p align="center">
+  <img src="assets/logo-on-light.png" alt="Codex Mem logo" width="160">
+</p>
+
+# Codex Mem
+
+Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation inspired by Claude Mem; it is not a fork and does not provide full Claude Mem feature parity.
+
+The public release line is `1.2.1`. Its behavior carries the tested `1.2.0` implementation snapshot; the compatibility and evidence boundaries below still apply.
+
+[Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
+
+## What it does
+
+- Captures bounded excerpts from approved projects through native Codex lifecycle hooks.
+- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, and `memory_status` through a local MCP server.
+- Uses SQLite FTS5 for lexical search. Optional local multilingual semantic search uses `intfloat/multilingual-e5-base` with FastEmbed and ONNX Runtime.
+- Keeps project and session provenance, source links for consolidated notes, and bounded execution receipts.
+- Runs a durable local queue. A worker processes small observation batches in fresh `gpt-5.6-luna` sessions with `medium` reasoning, then updates the local semantic index.
+- Redacts private blocks and common credential formats before persistence. Full tool output, images, and transcript files are not copied.
+
+Automatic capture is privacy-preserving by default: the `selected` scope starts with an empty project list. Add a project explicitly before hooks can capture it. Lexical search and explicit memory tools do not require the optional semantic runtime.
+
+## Requirements
+
+- Python 3.10 or newer.
+- SQLite with FTS5 support.
+- Codex CLI with current authentication if you enable automatic observation processing. The native integration in this release was checked against Codex CLI `0.153.4`; other CLI versions are outside this verification boundary.
+- macOS or Linux for the native hook and local service workflow.
+
+The semantic layer is optional. It supports Python 3.10 through 3.13 and installs `fastembed==0.8.0` plus `onnxruntime==1.23.2`. The pinned E5-base model and tokenizer require about 300 MB and are downloaded only when you run the explicit setup command.
+
+## Install the plugin
+
+Clone the repository and run these commands from its root:
+
+```sh
+git clone https://github.com/alexandrbasis/codex-mem.git
+cd codex-mem
+python3 scripts/codex-mem.py doctor
+python3 scripts/install.py
+python3 scripts/install.py --apply
+```
+
+The first `install.py` invocation previews the changes. `--apply` copies the plugin, registers it in the personal marketplace, and invokes Codex plugin activation. Existing marketplace entries are preserved and the installer creates a backup before changing the registry.
+
+Open a new Codex task after installation. Review the plugin hooks in `/hooks` and allow them according to your host policy. Installation alone does not establish hook trust. Check the registered plugin with:
+
+```sh
+codex plugin list --marketplace personal --json
+```
+
+The installer retains managed caches of older versions so open tasks can finish with the hooks they already loaded. A running Codex desktop process can keep an older catalog until it is restarted; a successful CLI activation does not prove that an existing desktop connection has refreshed.
+
+## Select projects for capture
+
+The default capture scope is `selected` with no included projects. Add one absolute project path:
+
+```sh
+python3 scripts/codex-mem.py config \
+  --scope selected \
+  --include-project /absolute/path/to/project
+```
+
+Provide the complete list in one invocation: repeat `--include-project` for each allowed project. The provided list replaces the previous include list. Included subdirectories are covered, while separate worktrees keep separate histories. To capture in every project except explicit exclusions, use `all`:
+
+```sh
+python3 scripts/codex-mem.py config \
+  --scope all \
+  --exclude-project /absolute/path/to/private-project
+```
+
+To keep only explicit memory writes, use `manual`:
+
+```sh
+python3 scripts/codex-mem.py config --scope manual
+```
+
+The capture setting does not interpret every natural-language request to avoid saving. Use `manual`, an excluded project, or `CODEX_MEM_DISABLED=1` when you need a hard opt-out.
+
+## Use memory in Codex
+
+In a Codex task, ask for earlier project decisions, ask to save a decision with its evidence, or ask for a compact summary with unresolved questions. The MCP tools require an absolute project path so records remain isolated.
+
+For a direct CLI search, use `auto` to use the available semantic index with lexical fallback:
+
+```sh
+python3 scripts/codex-mem.py search \
+  --project /absolute/path/to/project \
+  --query "why did the payment fail" \
+  --mode auto
+```
+
+Read the full record after selecting an ID from search results:
+
+```sh
+python3 scripts/codex-mem.py get \
+  --project /absolute/path/to/project \
+  --id RECORD_ID
+```
+
+`lexical` works without the optional model. Explicit `semantic` and `hybrid` modes require a ready local semantic runtime and model. Stored records are historical evidence; verify current facts before relying on them.
+
+## Set up semantic search
+
+Run the explicit setup command with Python 3.13 (or another supported Python from 3.10 through 3.13):
+
+```sh
+python3 scripts/semantic_setup.py --python python3.13
+python3 scripts/codex-mem.py semantic status --project /absolute/path/to/project
+python3 scripts/codex-mem.py semantic index --project /absolute/path/to/project
+```
+
+`semantic index` processes one bounded batch and reports the number of pending records. Run it again until `pending` reaches zero, or let the enabled queue index approved projects. The model runs on the local CPU; normal search and indexing do not upload memory text. Model setup is the one explicit download path.
+
+## Manage the local queue
+
+After a completed response, the asynchronous hook queues an approved project and starts one local worker when needed. The queue stores project scheduling state; observation text remains in SQLite. It does not install a login item.
+
+```sh
+python3 scripts/codex-mem.py service status
+python3 scripts/codex-mem.py service enqueue --project /absolute/path/to/project
+python3 scripts/codex-mem.py service start
+python3 scripts/codex-mem.py service stop
+```
+
+Automatic processing uses the current Codex account's allowance. Disable model processing while retaining captured observations with:
+
+```sh
+python3 scripts/codex-mem.py config --no-processor-enabled
+```
+
+Use `config --no-semantic-enabled` to disable automatic indexing or `config --no-service-enabled` to disable the detached queue. A failed queue job remains blocked until you inspect it and explicitly retry it:
+
+```sh
+python3 scripts/codex-mem.py service retry --project /absolute/path/to/project
+```
+
+The worker uses only bounded, redacted observations from the selected project. It requests an empty environment and disables connected MCP servers individually for its processing session. This is layered isolation, not a universal switch over every native utility. The worker validates the model response and source coverage and records model and execution provenance. Memory failures return control to the main Codex task.
+
+## Protect and manage data
+
+The default data directory is `~/.local/share/codex-mem`. Set `CODEX_MEM_HOME` or pass `--data-dir` to use another local directory. Codex Mem does not modify Codex's built-in memory, `AGENTS.md`, Claude Mem settings, or the Claude Mem database.
+
+The redaction filter covers `<private>...</private>` blocks and common token, password, and key formats. It cannot identify every secret. Keep the data directory accessible only to trusted local processes; project isolation does not replace operating-system permissions.
+
+```sh
+python3 scripts/codex-mem.py status
+python3 scripts/codex-mem.py backup /absolute/path/codex-mem-backup.sqlite
+python3 scripts/codex-mem.py prune --days 90
+```
+
+`prune` removes old records from all projects. Backups and context already sent to a chat are separate copies, so review your retention policy before pruning.
+
+## Import selected Claude Mem records
+
+The optional importer reads one named project from a legacy Claude Mem SQLite database. Without `--apply`, it only previews the import:
+
+```sh
+python3 scripts/codex-mem.py import-claude \
+  --database /absolute/path/claude-mem.db \
+  --legacy-project exact-old-project-name \
+  --project /absolute/path/to/project
+```
+
+Add `--apply` only after reviewing the preview. The source database is opened read-only, repeated imports skip records already transferred, and an unknown schema stops the import. The importer does not scan every legacy project automatically.
+
+## Verify or remove the plugin
+
+Run the local unit suite and doctor check from the repository root:
+
+```sh
+python3 -m unittest discover -s tests -v
+python3 scripts/codex-mem.py doctor
+```
+
+`doctor` checks Python, SQLite FTS5, and local plugin files. Hook trust and host catalog state require inspection in Codex. See [Verification](docs/VERIFICATION.md) for the tested boundaries and known partial result.
+
+Remove the registered plugin with:
+
+```sh
+codex plugin remove codex-mem@personal
+```
+
+The local database remains on disk after plugin removal. Delete it separately only after reviewing backups and retention needs.
+
+## Known limitations
+
+Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, rich structured session-summary schema, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record.
+
+Read [Upstream and implementation choices](UPSTREAM.md) for provenance and design differences. The project is licensed under the MIT license.
