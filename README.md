@@ -8,6 +8,22 @@
 
 Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation; it is not a fork and does not provide full Claude Mem feature parity.
 
+## Install with your agent
+
+**Copy this prompt** and send it to your coding agent:
+
+```text
+Install Codex Mem on this machine for Codex: https://github.com/alexandrbasis/codex-mem
+
+Read the repository's current README, check prerequisites, and use its supported installer. Reuse an existing clone or installation when possible; preserve existing memory, settings, and other plugins.
+
+For a fresh installation, enable automatic capture for the project I am working on, not the plugin's source folder. If no project is open, leave capture disabled and explain how to select one. Preserve the capture scope and exclusions on upgrades.
+
+Verify plugin registration, MCP tools, hook discovery and trust, and the background observation processor using Luna with medium reasoning. Report what you verified and any remaining manual action, such as allowing hooks or opening a new Codex task. Do not report automatic capture as working without checking it.
+```
+
+## Current release
+
 Version `1.4.0` adds retained tool input/output, structured observations, Stop summaries, and file/concept/type filters. The observer remains Luna with medium reasoning. See the verification record for tested behavior and the limits of the Claude Mem comparison.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
