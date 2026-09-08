@@ -13,6 +13,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import sys
 from typing import Any
 
@@ -86,20 +87,44 @@ _READ_ONLY_TOOL_WORDS = (
     "fetch",
     "query",
 )
-_SENSITIVE_MARKERS = (
-    "api_key",
-    "api-key",
-    "token",
-    "secret",
-    "password",
-    "passwd",
-    "credential",
-    "authorization",
-    "bearer ",
-    "private_key",
-    "private-key",
-    ".env",
+_SENSITIVE_NAME = (
+    r"(?:(?:[A-Za-z][A-Za-z0-9]*[_-])*"
+    r"(?:api[_-]?key|api[_-]?token|access[_-]?token|refresh[_-]?token|"
+    r"auth(?:entication)?[_-]?token|authorization|credentials?|client[_-]?secret|"
+    r"private[_-]?key|secrets?(?:[_-]?key)?|password|passwd|token))"
 )
+_SENSITIVE_ASSIGNMENT = re.compile(
+    rf"(?i)(?<![A-Za-z0-9_-]){_SENSITIVE_NAME}\s*[:=]\s*(?=\S)"
+)
+_SENSITIVE_FLAG = re.compile(
+    rf"(?i)(?<![A-Za-z0-9_-])--?{_SENSITIVE_NAME}\s+\S+"
+)
+_SENSITIVE_VARIABLE = re.compile(
+    rf"(?i)\$(?:\{{)?{_SENSITIVE_NAME}(?:\}})?\b"
+)
+_SENSITIVE_PATH_BASENAME = re.compile(
+    r"(?i)^(?:\.env(?:[._-].*)?|credentials?(?:[._-].*)?|"
+    r"passwords?(?:[._-].*)?|secrets?(?:[._-].*)?|.*private[_-]?key.*)$"
+)
+_BOILERPLATE_OUTPUT = re.compile(
+    r"(?is)^\s*(?:skill\s+instructions?\s+and\s+memory\s+registry\s+contents?|"
+    r"skill\s+instructions?|memory\s+registry\s+contents?)[\s.:;-]*$"
+)
+_OUTPUT_KEYS = {
+    "content",
+    "data",
+    "detail",
+    "error",
+    "message",
+    "output",
+    "resource",
+    "result",
+    "response",
+    "stderr",
+    "stdout",
+    "structuredcontent",
+    "text",
+}
 _READ_ONLY_COMMAND = re.compile(
     r"^\s*(?:command\s+)?(?:cd|pwd|ls|find|rg|grep|cat|sed|head|tail|"
     r"which|whoami|date|echo|git\s+(?:status|log|diff|show|branch|remote))"
@@ -114,14 +139,6 @@ _RESPONSE_ANNOTATIONS = re.compile(
     r"<response-annotations\b[^>]*>\s*(?P<body>.*?)</response-annotations>\s*"
 )
 _MY_REQUEST_HEADER = re.compile(r"(?im)^\s*##\s*My request:\s*")
-_SENSITIVE_OUTPUT_PATH_MARKERS = (
-    "transcript",
-    "secret",
-    "credential",
-    "password",
-    "token",
-    ".env",
-)
 _SELF_MAINTENANCE_COMMAND = re.compile(
     r"(?ix)(?:^|(?:&&|\|\||[;|\n]))\s*"
     r"(?:command\s+)?(?:env\s+)?(?:"
@@ -324,10 +341,17 @@ def _tool_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any
     if not tool_name or _exclude_tool(tool_name, payload.get("tool_input")):
         return False
     tool_input = payload.get("tool_input")
+    raw_command = _command_text(tool_input)
     command = _safe_command(tool_name, tool_input)
-    output = _tool_output(payload.get("tool_response"), command=command)
+    output = _tool_output(
+        payload.get("tool_response"),
+        command=raw_command,
+        sensitive_input=_sensitive_tool_input(tool_input),
+    )
     exit_code = _exit_code(payload.get("tool_response"))
     paths = _affected_paths(tool_name, tool_input)
+    if _is_boilerplate_output(output):
+        return False
     # A successful command with no output or changed-path evidence is routine
     # activity. Failed commands remain useful even when the host supplied no
     # textual output.
@@ -443,10 +467,17 @@ def _post_tool_use(
         return
 
     tool_input = payload.get("tool_input")
+    raw_command = _command_text(tool_input)
     command = _safe_command(tool_name, tool_input)
     exit_code = _exit_code(payload.get("tool_response"))
     paths = _affected_paths(tool_name, tool_input)
-    output = _tool_output(payload.get("tool_response"), command=command)
+    output = _tool_output(
+        payload.get("tool_response"),
+        command=raw_command,
+        sensitive_input=_sensitive_tool_input(tool_input),
+    )
+    if _is_boilerplate_output(output):
+        return
     if not output and not paths and (exit_code is None or exit_code == 0):
         return
     if _read_only_tool(tool_name, command) and not output and exit_code in (None, 0):
@@ -614,6 +645,19 @@ def _remember_safely(
         )
     except Exception:
         _stderr("codex-mem hook: capture unavailable")
+        return
+
+    # Commit evidence first. A long or interrupted turn must not depend on a
+    # later Stop event to wake the durable queue. Scope/configuration gates and
+    # detached startup remain owned by integration; never run the model here.
+    if source == "hook:Stop" or source.startswith("hook:PostToolUse"):
+        data_dir = _store_data_dir(store)
+        if data_dir is not None:
+            try:
+                from .integration import after_write
+                after_write(project, data_dir, wait_for_start=False)
+            except Exception:
+                _stderr("codex-mem hook: queue unavailable")
 
 
 def _project_for(payload: Mapping[str, Any]) -> str | None:
@@ -755,11 +799,6 @@ def _exclude_tool(tool_name: str, tool_input: Any) -> bool:
         if isinstance(command, str):
             if _is_self_maintenance_command(command):
                 return True
-            lines = [line.strip() for line in command.splitlines() if line.strip()]
-            if _read_only_tool(tool_name, command) and lines and all(
-                "SKILL.md" in line or "MEMORY.md" in line for line in lines
-            ):
-                return True
     return False
 
 
@@ -790,7 +829,7 @@ def _safe_command(tool_name: str, tool_input: Any) -> str:
     if not isinstance(command, str):
         return ""
     stripped = command.strip()
-    if not stripped or _contains_sensitive_marker(stripped):
+    if not stripped or _contains_sensitive_command(stripped):
         return ""
     return _safe_text(stripped, maximum=MAX_COMMAND_CHARS)
 
@@ -810,19 +849,101 @@ def _exit_code(tool_response: Any) -> int | None:
     return None
 
 
-def _tool_output(tool_response: Any, *, command: str) -> str:
-    if not command or _contains_sensitive_marker(command):
+def _tool_output(
+    tool_response: Any,
+    *,
+    command: str,
+    sensitive_input: bool = False,
+) -> str:
+    if sensitive_input or (command and _contains_sensitive_command(command)):
         return ""
-    if any(marker in command.lower() for marker in _SENSITIVE_OUTPUT_PATH_MARKERS):
+    output = _extract_tool_output(tool_response)
+    if not output:
         return ""
-    # Native Bash hooks in CLI 0.153.4 emit the output as a JSON string.
-    # Some integrations use an object; never stringify arbitrary response data.
-    output = tool_response if isinstance(tool_response, str) else (
-        tool_response.get("output") if isinstance(tool_response, Mapping) else None
-    )
-    if not isinstance(output, str):
+    # Redact the complete response before keeping a bounded head/tail excerpt;
+    # otherwise a credential near the discarded boundary could survive.
+    return _truncate_preserving_tail(redact_text(output).strip(), MAX_TOOL_OUTPUT_CHARS)
+
+
+def _command_text(tool_input: Any) -> str:
+    if not isinstance(tool_input, Mapping):
         return ""
-    return _safe_text(output, maximum=MAX_TOOL_OUTPUT_CHARS)
+    command = tool_input.get("command")
+    return command.strip() if isinstance(command, str) else ""
+
+
+def _sensitive_tool_input(tool_input: Any) -> bool:
+    candidates: list[str] = []
+    _collect_path_values(tool_input, candidates, depth=0)
+    return any(_contains_sensitive_marker(candidate) for candidate in candidates)
+
+
+def _extract_tool_output(value: Any, *, key: str | None = None, depth: int = 0) -> str:
+    """Extract text-shaped result fields without serializing opaque objects."""
+
+    if depth > 4:
+        return ""
+    if isinstance(value, str):
+        return value if key is None or key in _OUTPUT_KEYS else ""
+    if isinstance(value, Mapping):
+        parts: list[str] = []
+        for child_key, child in value.items():
+            normalized_key = child_key.lower() if isinstance(child_key, str) else ""
+            if normalized_key not in _OUTPUT_KEYS:
+                continue
+            # Image blocks can carry a large base64 `data` field.  Textual
+            # content remains eligible while binary media is intentionally not
+            # copied into memory.
+            if normalized_key == "data" and value.get("type") not in {
+                None,
+                "text",
+                "resource",
+            }:
+                continue
+            text = _extract_tool_output(child, key=normalized_key, depth=depth + 1)
+            if text and text not in parts:
+                parts.append(text)
+        return "\n".join(parts)
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        if key is None:
+            # A top-level content list is accepted only when each item is
+            # explicitly text-shaped; arbitrary arrays stay opaque.
+            text_items = all(isinstance(child, str) for child in value)
+            content_items = all(
+                isinstance(child, Mapping)
+                and (child.get("type") == "text" or "text" in child)
+                for child in value
+            )
+            if not (text_items or content_items):
+                return ""
+            key = "content"
+        if key not in _OUTPUT_KEYS:
+            return ""
+        parts = []
+        for child in value:
+            text = _extract_tool_output(child, key=key, depth=depth + 1)
+            if text and text not in parts:
+                parts.append(text)
+        return "\n".join(parts)
+    return ""
+
+
+def _is_boilerplate_output(output: str) -> bool:
+    """Drop the known empty skill-loader marker, while keeping real evidence."""
+
+    return bool(output and _BOILERPLATE_OUTPUT.fullmatch(output))
+
+
+def _truncate_preserving_tail(value: str, limit: int) -> str:
+    if len(value) <= limit:
+        return value
+    marker = "\n...[truncated]...\n"
+    if limit <= len(marker):
+        return value[:limit]
+    remaining = limit - len(marker)
+    head = (remaining + 1) // 2
+    tail = remaining - head
+    return value[:head] + marker + value[-tail:]
 
 
 def _affected_paths(tool_name: str, tool_input: Any) -> list[str]:
@@ -858,6 +979,8 @@ def _collect_path_values(value: Any, target: list[str], *, depth: int) -> None:
         "affectedPaths",
         "changed_files",
         "changedFiles",
+        "file_path",
+        "filePath",
     }
     for key, item in value.items():
         if key in keys:
@@ -889,10 +1012,48 @@ def _safe_path(value: Any) -> str:
 
 
 def _contains_sensitive_marker(value: str) -> bool:
-    lowered = value.lower()
-    return any(marker in lowered for marker in _SENSITIVE_MARKERS) or bool(
-        re.search(r"(?:https?|ssh)://[^\s/@:]+:[^\s@]+@", value)
-    )
+    if not isinstance(value, str):
+        return False
+    if _SENSITIVE_ASSIGNMENT.search(value):
+        return True
+    if _SENSITIVE_FLAG.search(value):
+        return True
+    if _SENSITIVE_VARIABLE.search(value):
+        return True
+    if re.search(r"(?:https?|ssh)://[^\s/@:]+:[^\s@]+@", value):
+        return True
+    return _is_sensitive_path(value)
+
+
+def _contains_sensitive_command(command: str) -> bool:
+    if _contains_sensitive_marker(command):
+        return True
+    try:
+        tokens = shlex.split(command, posix=True)
+    except ValueError:
+        tokens = command.split()
+    if not tokens:
+        return False
+    file_command = tokens[0].rsplit("/", 1)[-1].lower()
+    for token in tokens[1:]:
+        if _is_sensitive_path(token):
+            return True
+        if file_command in {"cat", "head", "tail", "less", "more", "open", "source"}:
+            if _SENSITIVE_PATH_BASENAME.fullmatch(token.strip(",;:()[]{}")):
+                return True
+    return False
+
+
+def _is_sensitive_path(value: str) -> bool:
+    stripped = value.strip().strip("'\"`,;:()[]{}")
+    if not stripped or any(character.isspace() for character in stripped):
+        return False
+    components = re.split(r"[/\\]", stripped)
+    if len(components) == 1 and not (
+        stripped.startswith(".") or "." in stripped or stripped in {"secret", "secrets"}
+    ):
+        return False
+    return any(_SENSITIVE_PATH_BASENAME.fullmatch(component) for component in components)
 
 
 def _continue() -> dict[str, Any]:

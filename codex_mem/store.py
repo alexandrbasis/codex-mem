@@ -51,6 +51,7 @@ MAX_OBSERVATION_ENTRIES = 12
 MAX_OBSERVATION_CHARS = 12_000
 MIN_OBSERVATION_CHARS = 256
 MAX_OBSERVATION_NOTES = 8
+MAX_OBSERVATION_CONTEXT_CHARS = 6_000
 MAX_PROCESSOR_CHARS = 128
 MAX_LEASE_SECONDS = 3_600
 DEFAULT_LEASE_SECONDS = 300
@@ -1715,7 +1716,46 @@ class Store:
             sources = self._observation_source_rows(job_id, workspace)
             result = self._observation_job_result(job, include_lease_token=True)
             result["sources"] = self._bounded_observation_sources(sources, input_limit)
+            result["context"] = self._observation_context(workspace, sources)
             return result
+
+    def _observation_context(
+        self, workspace: str, sources: Sequence[sqlite3.Row]
+    ) -> list[dict[str, str]]:
+        """Bounded earlier evidence helps a fresh observer resolve references.
+
+        It is reference material, not newly claimed work. Do not cross session
+        boundaries, include later events, or turn it into new source attribution.
+        """
+        if not sources or not sources[0]["session_id"]:
+            return []
+        first = sources[0]
+        rows = self._read(lambda: self._connection.execute(
+            """SELECT id, title, body, created_at FROM entries
+               WHERE project = ? AND session_id = ?
+                 AND (created_at < ? OR (created_at = ? AND id < ?))
+                 AND (source IN ('hook:UserPromptSubmit', 'hook:Stop')
+                      OR source LIKE 'hook:PostToolUse%'
+                      OR (source LIKE 'processor:%' AND superseded_by IS NULL))
+               ORDER BY created_at DESC, id DESC LIMIT 6""",
+            (workspace, first["session_id"], first["created_at"],
+             first["created_at"], first["id"]),
+        ).fetchall())
+        context: list[dict[str, str]] = []
+        remaining = MAX_OBSERVATION_CONTEXT_CHARS
+        for row in rows:
+            title = str(row["title"])
+            available = min(2_000, remaining - len(title))
+            if available < 100:
+                break
+            body = str(row["body"])
+            if len(body) > available:
+                marker = "\n[earlier context excerpt truncated]\n"
+                room = available - len(marker)
+                body = body[:room // 2] + marker + body[-(room - room // 2):]
+            context.append({"title": title, "body": body, "created_at": str(row["created_at"])})
+            remaining -= len(title) + len(body)
+        return list(reversed(context))
 
     def finish_observation_batch(
         self,

@@ -252,6 +252,14 @@ def run_service(
                 )
                 if retrying:
                     continue
+                # A bad project is quarantined by _finish_failure, but it
+                # must not stop unrelated approved work from draining.  Keep
+                # the historical halted receipt when this was the only
+                # eligible project, so callers still get a clear failure.
+                if _has_other_eligible_project(
+                    base, data_dir, config_loader, excluded_project=project
+                ):
+                    continue
                 return _service_receipt("halted", jobs=jobs, code=code or "invalid_result")
 
             if not processor_enabled:
@@ -1076,6 +1084,39 @@ def _park_unprocessed_project(
             if reason == "not_selected":
                 record["parked"] = "not_selected"
             _write_state(base, state)
+
+
+def _has_other_eligible_project(
+    base: Path,
+    data_dir: str | os.PathLike[str] | None,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]],
+    *,
+    excluded_project: str,
+) -> bool:
+    """Return whether another queued project can still make progress.
+
+    The state read is deliberately separate from claiming work: a failed
+    project is already blocked, and the next loop iteration can then use the
+    normal fair claim path for whichever eligible record remains.  Projects
+    parked for scope/configuration are not considered, while a due time or
+    inflight lease is allowed to keep the worker alive until that work is
+    ready.
+    """
+
+    with _state_lock(base):
+        state = _load_state(base)
+        candidates = [
+            project
+            for project, record in state["projects"].items()
+            if project != excluded_project
+            and not record["blocked"]
+            and record["parked"] is None
+        ]
+    for project in candidates:
+        eligible, _, _, _ = _eligibility(project, data_dir, config_loader)
+        if eligible:
+            return True
+    return False
 
 
 def _finish_success(

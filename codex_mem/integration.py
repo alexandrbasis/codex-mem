@@ -4,21 +4,22 @@ from __future__ import annotations
 from .config import automatic_capture_enabled, load_config, hooks_disabled
 
 
-def enqueue_project(project, data_dir=None, *, retry_failed=False):
+def enqueue_project(project, data_dir=None, *, retry_failed=False, wait_for_start=True):
     config = load_config(data_dir)
     if hooks_disabled() or not config.get("service_enabled") or not automatic_capture_enabled(project, config):
         return {"status": "disabled"}
     from .service import enqueue, start_service
     queued = enqueue(project, data_dir, retry_failed=retry_failed)
     if queued.get("status") == "queued":
-        return {**queued, "service": start_service(data_dir)}
+        service = start_service(data_dir) if wait_for_start else start_service(data_dir, startup_timeout=0)
+        return {**queued, "service": service}
     return queued
 
 
-def after_write(project, data_dir=None):
+def after_write(project, data_dir=None, *, wait_for_start=True):
     """A queue failure must not turn an already committed note into an error."""
     try:
-        return enqueue_project(project, data_dir)
+        return enqueue_project(project, data_dir, wait_for_start=wait_for_start)
     except Exception:
         return {"status": "failed", "code": "queue_unavailable"}
 

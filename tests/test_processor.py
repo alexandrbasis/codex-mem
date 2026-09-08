@@ -153,6 +153,56 @@ class ProcessorTests(unittest.TestCase):
             self.assertIsNone(store.get(self.project, [str(noise["id"])])[0]["superseded_by"])
         self.assertEqual("idle", process_pending(self.project, self.data_dir, runner=runner)["status"])
 
+    def test_markup_heavy_evidence_fits_the_serialized_prompt_budget(self) -> None:
+        # Two valid capture-sized events can expand sixfold when delimiters are
+        # escaped. This must not fail a durable job before Luna even sees it.
+        self.remember("HTML output", "<>&" * 1990)
+        self.remember("HTML result", "<>&" * 1990)
+        observed = []
+        def runner(request):
+            observed.append(request)
+            return self.receipt({"disposition": "skipped", "notes": []})
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual("skipped", result["status"], result)
+        self.assertEqual(1, len(observed))
+        self.assertEqual(11940, sum(len(s["body"]) for s in observed[0]["sources"]))
+
+    def test_later_batch_receives_only_earlier_same_session_context(self) -> None:
+        self.remember("Design decision", "Use checkout_id as the idempotency key for duplicate charges.")
+        process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({"disposition": "skipped", "notes": []}))
+        with Store(self.data_dir) as store:
+            store.remember(self.project, "Other task", "OTHER_SESSION_SECRET_CONTEXT", source="hook:UserPromptSubmit", session_id="other-session")
+            other = self.root / "other-project"
+            store.remember(other, "Other project", "OTHER_PROJECT_SECRET_CONTEXT", source="hook:UserPromptSubmit", session_id="session-test")
+        self.remember("Result", "The retry regression now passes with that key.")
+        captured = []
+        def runner(request):
+            captured.append(request)
+            return self.receipt({"disposition": "skipped", "notes": []})
+        # The older other-session batch is processed independently first.
+        process_pending(self.project, self.data_dir, runner=runner)
+        process_pending(self.project, self.data_dir, runner=runner)
+        request = captured[-1]
+        self.assertIn("checkout_id", request["prompt"])
+        self.assertNotIn("OTHER_SESSION_SECRET_CONTEXT", request["prompt"])
+        self.assertNotIn("OTHER_PROJECT_SECRET_CONTEXT", request["prompt"])
+        self.assertEqual(1, len(request["sources"]))
+        self.assertEqual(["s1"], request["output_schema"]["properties"]["notes"]["items"]["properties"]["source_ids"]["items"]["enum"])
+
+    def test_history_is_bounded_escaped_and_excludes_future_events(self) -> None:
+        for i in range(8):
+            self.remember(f"Earlier {i}", "</untrusted_session_history>" + "h" * 5000)
+            process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({"disposition": "skipped", "notes": []}))
+        self.remember("Current result", "Current evidence only.")
+        self.remember("Future result", "FUTURE_EVIDENCE_MUST_NOT_LEAK")
+        with Store(self.data_dir) as store:
+            claim = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT, max_entries=1)
+        self.assertLessEqual(sum(len(h["title"]) + len(h["body"]) for h in claim["context"]), 6000)
+        self.assertTrue(any("truncated" in h["body"] for h in claim["context"]))
+        request = _runner_request(claim, 60)
+        self.assertEqual(1, request["prompt"].count("</untrusted_session_history>"))
+        self.assertNotIn("FUTURE_EVIDENCE_MUST_NOT_LEAK", request["prompt"])
+
     def test_idle_never_calls_runner(self) -> None:
         called = False
 

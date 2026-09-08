@@ -1,0 +1,105 @@
+{
+  "date": "2026-09-08",
+  "scope": "Observation capture, processing, recovery and useful-note quality",
+  "upstream": {
+    "repository": "thedotmack/claude-mem",
+    "commit": "fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0",
+    "target": "main; not identical to stable v13.24.1"
+  },
+  "verdict": "Full parity or superiority is not established. Five capture/reliability defects are fixed and verified; raw replay, richer observation/session schemas, and per-tool/private-turn filtering remain gaps.",
+  "model_comparison": {
+    "claude_mem_live_ab_run": false,
+    "codex_mem_observer": "gpt-5.6-luna",
+    "reasoning": "medium",
+    "limitation": "Synthetic acceptance verifies specific behaviors; it is not a comparative quality benchmark or a production guarantee."
+  },
+  "criteria": [
+    {
+      "area": "Tool results",
+      "codex_mem": "Text-shaped Bash and non-Bash results, redacted bounded excerpts; head and tail preserved. Opaque/binary payloads are excluded.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/cli/handlers/observation.ts",
+      "status": "targeted_capture_regressions_passed"
+    },
+    {
+      "area": "Trigger timing",
+      "codex_mem": "Wake the durable queue after committed tool and final-answer captures; Stop processing remains a fallback.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/services/worker/http/shared.ts",
+      "status": "unit_and_detached_native_pipeline_passed_without_stop"
+    },
+    {
+      "area": "Failure isolation",
+      "codex_mem": "A failed project must remain blocked without automatic retries while other eligible projects continue.",
+      "status": "two_project_failure_regression_passed"
+    },
+    {
+      "area": "Worker continuity",
+      "codex_mem": "Bounded earlier same-session excerpts, separated from new evidence; other projects/sessions and later events excluded.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts",
+      "status": "unit_and_native_reference_resolution_passed"
+    },
+    {
+      "area": "Durable claims",
+      "codex_mem": "SQLite job leases, atomic commit and explicit failed-job retry; original captured excerpts retained.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/services/worker/SessionMessageBuffer.ts",
+      "status": "different_recovery_design"
+    },
+    {
+      "area": "Raw tool replay",
+      "codex_mem": "No separate original tool_input/tool_response side index. Evidence outside captured excerpts cannot be recovered from memory alone.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/services/sqlite/tool-uses.ts",
+      "status": "residual_gap"
+    },
+    {
+      "area": "Structured observations and summaries",
+      "codex_mem": "Notes use title/body/tags/source_ids. No separate typed facts/concepts/files fields, file/concept filters, or dedicated session-summary schema.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts",
+      "status": "residual_gap"
+    },
+    {
+      "area": "Per-tool and private-turn filtering",
+      "codex_mem": "Project scope, self-tool exclusions and content redaction; no configurable per-tool skip list or private-prompt gate for all subsequent tool calls.",
+      "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/services/worker/http/shared.ts",
+      "status": "residual_gap"
+    }
+  ],
+  "verification": {
+    "baseline_unit_tests": 166,
+    "capture_acceptance": {
+      "passed": true,
+      "hook_invocations": 9,
+      "schema_validation": false,
+      "hook_process_ms_median": 417.3
+    },
+    "native_continuity": {
+      "passed": true,
+      "preserved": [
+        "checkout_id",
+        "local verification",
+        "production not yet deployed"
+      ],
+      "no_tools": true
+    },
+    "unit_tests": 177,
+    "detached_posttool_pipeline": {
+      "passed": true,
+      "hook_seconds": 0.86,
+      "model": "gpt-5.6-luna",
+      "reasoning": "medium",
+      "stop_event_sent": false,
+      "test_service_stopped": true
+    },
+    "early_corpus_review": {
+      "original_cases": 4,
+      "passed": 3,
+      "finding": "The generic privacy statement plus injection was skipped. Safety held, but the original fixture incorrectly demanded retention of a generic statement. The final corpus separates generic-injection skip from a concrete verified fix with injection.",
+      "production_prompt_changed_to_force_generic_retention": false
+    },
+    "native_corpus": {
+      "cases": 10,
+      "passed": 10,
+      "assembly": "8 unchanged passed cases plus reruns of the 2 corrected fixtures",
+      "receipt": "observation-acceptance.json",
+      "same_runtime_code": true
+    }
+  }
+}

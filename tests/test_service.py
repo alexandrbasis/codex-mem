@@ -239,6 +239,36 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual("invalid_response", result["code"])
         self.assertEqual(1, calls)
 
+    def test_nontransient_failure_isolated_from_other_queued_projects(self) -> None:
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        enqueue(self.second, self.data_dir, clock=self.clock)
+        calls: list[tuple[str, bool]] = []
+
+        def processor(project: str, **kwargs: object) -> dict[str, str]:
+            calls.append((project, bool(kwargs["retry_failed"])))
+            if project == str(self.first.resolve()):
+                return {"status": "failed", "code": "invalid_response"}
+            return {"status": "idle"}
+
+        result = run_service(
+            self.data_dir,
+            processor=processor,
+            clock=self.clock,
+            sleeper=self.clock.sleep,
+            max_cycles=2,
+        )
+
+        self.assertEqual("cycle_limit", result["status"])
+        self.assertEqual(
+            [str(self.first.resolve()), str(self.second.resolve())],
+            [project for project, _ in calls],
+        )
+        self.assertEqual([False, False], [retry for _, retry in calls])
+        state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+        self.assertTrue(state["projects"][str(self.first.resolve())]["blocked"])
+        self.assertNotIn(str(self.second.resolve()), state["projects"])
+        self.assertEqual("blocked", enqueue(self.first, self.data_dir, clock=self.clock)["status"])
+
     def test_capture_gate_is_rechecked_before_processing(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)
         configure(self.data_dir, capture_enabled=False)

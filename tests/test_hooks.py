@@ -67,6 +67,10 @@ class HookTests(unittest.TestCase):
             included_projects=[self.project],
         )
         self.store = FakeStore(self.data_dir)
+        # Lifecycle tests never launch a detached native worker.
+        self.start_service_patch = mock.patch("codex_mem.service.start_service", return_value={"status": "test-disabled"})
+        self.start_service_mock = self.start_service_patch.start()
+        self.addCleanup(self.start_service_patch.stop)
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -79,6 +83,25 @@ class HookTests(unittest.TestCase):
             "turn_id": "turn-1",
             **extra,
         }
+
+    def test_tool_capture_durably_enqueues_before_stop(self) -> None:
+        from codex_mem.service import service_status
+        with Store(self.data_dir) as store:
+            response = handle_hook(self.payload("PostToolUse", tool_name="Bash", tool_use_id="queue-tool",
+                tool_input={"command": "pytest tests/test_checkout.py"},
+                tool_response={"output": "Checkout retry regression passed", "exit_code": 0}), store)
+            self.assertEqual({"continue": True}, response)
+            self.assertEqual(1, len(store.timeline(self.project)))
+        self.assertEqual(1, service_status(self.data_dir)["queued_projects"])
+        self.start_service_mock.assert_called_once_with(self.data_dir.resolve(), startup_timeout=0)
+
+    def test_queue_failure_does_not_lose_committed_tool_capture(self) -> None:
+        with Store(self.data_dir) as store, mock.patch("codex_mem.integration.after_write", side_effect=RuntimeError("queue unavailable")):
+            response = handle_hook(self.payload("PostToolUse", tool_name="Bash", tool_use_id="queue-failed",
+                tool_input={"command": "pytest tests/test_checkout.py"},
+                tool_response={"output": "Checkout retry regression passed", "exit_code": 0}), store)
+            self.assertEqual({"continue": True}, response)
+            self.assertEqual(1, len(store.timeline(self.project)))
 
     def test_default_selected_scope_does_not_automatically_capture_or_create_db(self) -> None:
         unconfigured_data_dir = self.root / "unconfigured-home"
@@ -450,6 +473,95 @@ class HookTests(unittest.TestCase):
         self.assertIn("Duplicate retry regression: 1 passed.", self.store.records[0]["body"])
         self.assertNotIn("do-not-store", self.store.records[0]["body"])
         self.assertNotIn("Exit code:", self.store.records[0]["body"])
+
+    def test_non_bash_structured_result_and_error_are_captured(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="mcp__github__get_issue",
+                tool_input={"owner": "example", "repo": "project", "number": 42},
+                tool_response={
+                    "result": {
+                        "content": [{"type": "text", "text": "Issue 42 is fixed."}]
+                    },
+                    "error": {"message": "No follow-up action is required."},
+                },
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        body = str(self.store.records[0]["body"])
+        self.assertIn("Issue 42 is fixed.", body)
+        self.assertIn("No follow-up action is required.", body)
+
+    def test_long_tool_output_keeps_tail_error_and_redacts_tail_secret(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_input={"command": "pytest -q tests/test_checkout.py"},
+                tool_response={
+                    "output": (
+                        "test setup\n"
+                        + "x" * 3_500
+                        + "\nFAIL: assertion failed at the end\n"
+                        + "OPENAI_API_KEY=tail-secret"
+                    ),
+                },
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        body = str(self.store.records[0]["body"])
+        self.assertIn("FAIL: assertion failed at the end", body)
+        self.assertNotIn("tail-secret", body)
+
+    def test_token_word_in_normal_path_does_not_filter_tool_result(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_input={"command": "pytest -q tests/test_tokenizer.py"},
+                tool_response={"output": "tokenizer regression: 1 passed"},
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        body = str(self.store.records[0]["body"])
+        self.assertIn("pytest -q tests/test_tokenizer.py", body)
+        self.assertIn("tokenizer regression: 1 passed", body)
+
+    def test_skill_file_command_with_substantive_result_is_captured(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_input={"command": 'rg -n "verified" skills/memory/SKILL.md'},
+                tool_response={
+                    "output": "skills/memory/SKILL.md:42: verified capture behavior"
+                },
+            ),
+            self.store,
+        )
+
+        self.assertEqual(1, len(self.store.records))
+        self.assertIn("verified capture behavior", self.store.records[0]["body"])
+
+    def test_non_bash_sensitive_file_result_is_not_captured(self) -> None:
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="mcp__filesystem__read_file",
+                tool_input={"filePath": "config/credentials.json"},
+                tool_response={"content": [{"type": "text", "text": "password=private"}]},
+            ),
+            self.store,
+        )
+
+        self.assertEqual([], self.store.records)
 
     def test_post_tool_use_keeps_bounded_redacted_output_excerpt(self) -> None:
         output = (
