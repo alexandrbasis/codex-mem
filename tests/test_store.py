@@ -15,6 +15,7 @@ from pathlib import Path
 from unittest import mock
 
 from codex_mem.store import SCHEMA_VERSION, Store, StoreError, project_key
+from codex_mem.tool_io import get_tool_capture_for_entry, normalize_capture
 
 
 class StoreTests(unittest.TestCase):
@@ -90,6 +91,186 @@ class StoreTests(unittest.TestCase):
         self.assertEqual([], self.store.get(self.project_b, [first["id"]]))
         # This is treated as literal tokens, not FTS syntax or an operator.
         self.assertIsInstance(self.store.search(self.project_a, '" OR *'), list)
+
+    def test_structured_observation_metadata_round_trips_and_filters(self) -> None:
+        entry = self.store.remember(
+            self.project_a,
+            "Checkout fix",
+            "The checkout now preserves the idempotency key.",
+            observation={
+                "type": "bugfix",
+                "subtitle": "Duplicate charges were prevented",
+                "facts": ["The key is preserved across retries."],
+                "narrative": "The retry path dropped the key before the fix.",
+                "concepts": ["idempotency", "payments"],
+                "files_read": ["src/checkout.py"],
+                "files_modified": ["src/retry.py"],
+            },
+        )
+
+        fetched = self.store.get(self.project_a, entry["id"])[0]
+        self.assertEqual("bugfix", fetched["observation"]["type"])
+        self.assertEqual(["src/retry.py"], fetched["observation"]["files_modified"])
+        self.assertEqual(entry["observation"], fetched["metadata"]["observation"])
+        self.assertEqual([entry["id"]], [item["id"] for item in self.store.search(
+            self.project_a,
+            "idempotency",
+            types="bugfix",
+            concepts="payments",
+            files="src/retry.py",
+        )])
+        self.assertEqual([entry["id"]], [item["id"] for item in self.store.search(
+            self.project_a, "retry path"
+        )])
+        context = self.store.context(
+            self.project_a,
+            concepts="idempotency",
+            files="src/checkout.py",
+            budget=2_000,
+        )
+        self.assertIn("Duplicate charges were prevented", context)
+        self.assertIn("src/checkout.py", context)
+
+    def test_tool_capture_is_atomic_and_dedupe_replay_updates_the_raw_side_index(self) -> None:
+        capture = normalize_capture(
+            {
+                "tool_name": "Read",
+                "tool_use_id": "tool-1",
+                "session_id": "session-1",
+                "tool_input": {"path": "src/checkout.py"},
+                "tool_response": {"text": "verified"},
+            },
+            project=str(self.project_a),
+        )
+        self.assertIsNotNone(capture)
+        assert capture is not None
+        entry = self.store.remember(
+            self.project_a,
+            "Raw tool excerpt",
+            "verified",
+            source="hook:PostToolUse",
+            dedupe_key="tool-event",
+            tool_capture=capture,
+        )
+        row = get_tool_capture_for_entry(
+            self.store._connection, entry["id"], project_key(self.project_a)  # type: ignore[attr-defined]
+        )
+        self.assertIsNotNone(row)
+        assert row is not None
+        self.assertEqual('{"path":"src/checkout.py"}', row["tool_input"])
+        listed = self.store.get_tool_uses(
+            self.project_a, ids=["tool-1"], session_id="session-1", limit=10
+        )
+        self.assertEqual([entry["id"]], [item["entry_id"] for item in listed])
+
+        replay = self.store.remember(
+            self.project_a,
+            "Ignored replay",
+            "ignored",
+            source="hook:PostToolUse",
+            dedupe_key="tool-event",
+            tool_capture=capture,
+        )
+        self.assertTrue(replay["deduplicated"])
+        self.assertEqual(
+            1,
+            self.store._connection.execute(  # type: ignore[attr-defined]
+                "SELECT COUNT(*) FROM tool_uses WHERE project = ?", (project_key(self.project_a),)
+            ).fetchone()[0],
+        )
+
+    def test_forget_and_prune_remove_raw_side_index_rows_with_project_scope(self) -> None:
+        def capture(tool_use_id: str, project: Path) -> object:
+            value = normalize_capture(
+                {
+                    "tool_name": "Read",
+                    "tool_use_id": tool_use_id,
+                    "session_id": "raw-retention",
+                    "tool_input": {"path": "src/retention.py"},
+                    "tool_response": {"text": "retention evidence"},
+                },
+                project=str(project),
+            )
+            assert value is not None
+            return value
+
+        forgotten = self.store.remember(
+            self.project_a,
+            "Forget raw capture",
+            "forget raw excerpt",
+            source="hook:PostToolUse",
+            tool_capture=capture("forget-raw", self.project_a),  # type: ignore[arg-type]
+        )
+        foreign = self.store.remember(
+            self.project_b,
+            "Foreign raw capture",
+            "foreign raw excerpt",
+            source="hook:PostToolUse",
+            tool_capture=capture("forget-raw", self.project_b),  # type: ignore[arg-type]
+        )
+        self.store.forget(self.project_a, forgotten["id"])
+        self.assertIsNone(
+            get_tool_capture_for_entry(
+                self.store._connection, forgotten["id"], project_key(self.project_a)  # type: ignore[attr-defined]
+            )
+        )
+        self.assertIsNotNone(
+            get_tool_capture_for_entry(
+                self.store._connection, foreign["id"], project_key(self.project_b)  # type: ignore[attr-defined]
+            )
+        )
+
+        pruned = self.store.remember(
+            self.project_a,
+            "Prune raw capture",
+            "prune raw excerpt",
+            source="hook:PostToolUse",
+            tool_capture=capture("prune-raw", self.project_a),  # type: ignore[arg-type]
+        )
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            "UPDATE entries SET created_at = ? WHERE id = ?",
+            ("2000-01-01T00:00:00.000000Z", pruned["id"]),
+        )
+        self.store.prune(days=90)
+        self.assertIsNone(
+            get_tool_capture_for_entry(
+                self.store._connection, pruned["id"], project_key(self.project_a)  # type: ignore[attr-defined]
+            )
+        )
+
+    def test_claim_hydrates_a_large_raw_tool_event_without_clipping_it(self) -> None:
+        response = "middle-evidence-" + ("x" * 30_000)
+        capture = normalize_capture(
+            {
+                "tool_name": "Bash",
+                "tool_use_id": "tool-large",
+                "session_id": "session-large",
+                "tool_input": {"command": "printf evidence"},
+                "tool_response": {"text": response},
+            },
+            project=str(self.project_a),
+        )
+        assert capture is not None
+        entry = self.store.remember(
+            self.project_a,
+            "Large raw tool excerpt",
+            "short excerpt",
+            source="hook:PostToolUse",
+            tool_capture=capture,
+        )
+        batch = self.store.claim_observation_batch(
+            self.project_a,
+            "processor-large-raw",
+            "gpt-5.6-luna",
+            "medium",
+            max_chars=256,
+        )
+        assert batch is not None
+        self.assertGreater(batch["input_limit"], 24_000)
+        source = batch["sources"][0]
+        self.assertEqual(entry["id"], source["id"])
+        self.assertIn("middle-evidence-", source["tool_io"]["tool_response"])
+        self.assertIn(response[-1_000:], source["tool_io"]["tool_response"])
 
     def test_consolidation_keeps_source_evidence_but_hides_it_by_default(self) -> None:
         source_a = self.store.remember(self.project_a, "First observation", "alpha source evidence one")
@@ -295,6 +476,269 @@ class StoreTests(unittest.TestCase):
         self.assertEqual("processor-thread-1", jobs["recent"][0]["worker_thread_id"])
         self.assertEqual("processor-turn-2", jobs["recent"][0]["worker_turn_id"])
 
+    def test_session_summary_is_structured_and_can_share_provenance_with_observations(self) -> None:
+        prompt = self.store.remember(
+            self.project_a,
+            "User request",
+            "Investigate the checkout retry behavior.",
+            kind="session",
+            session_id="summary-session",
+            source="hook:UserPromptSubmit",
+        )
+        stop = self.store.remember(
+            self.project_a,
+            "Final answer",
+            "The retry key is preserved now.",
+            kind="session",
+            session_id="summary-session",
+            source="hook:Stop",
+        )
+        batch = self.store.claim_observation_batch(
+            self.project_a, "processor-summary", "gpt-5.6-luna", "medium"
+        )
+        assert batch is not None
+        completed = self.store.finish_observation_batch(
+            self.project_a,
+            batch["job_id"],
+            batch["lease_token"],
+            notes=[
+                {
+                    "title": "Retry key fix",
+                    "body": "The key now survives the retry boundary.",
+                    "source_ids": [prompt["id"]],
+                    "observation": {
+                        "type": "bugfix",
+                        "facts": ["The retry key is preserved."],
+                        "concepts": ["idempotency"],
+                        "files_read": [],
+                        "files_modified": [],
+                    },
+                }
+            ],
+            session_summary={
+                "title": "Checkout retry session",
+                "request": "Investigate checkout retries.",
+                "investigated": "The retry boundary and key propagation.",
+                "learned": "The key was dropped before the fix.",
+                "completed": "The key is preserved.",
+                "next_steps": "Monitor the next release.",
+                "notes": "The summary cites the final answer.",
+                "source_ids": [stop["id"]],
+            },
+        )
+        self.assertEqual(2, len(completed["outputs"]))
+        observation, summary = completed["outputs"]
+        self.assertEqual("bugfix", observation["observation"]["type"])
+        self.assertEqual("session_summary", summary["kind"])
+        self.assertEqual("Investigate checkout retries.", summary["session_summary"]["request"])
+        self.assertEqual([stop["id"]], summary["source_ids"])
+        self.assertEqual(
+            summary["id"], self.store.get(self.project_a, stop["id"])[0]["superseded_by"]
+        )
+        self.assertEqual(
+            observation["id"], self.store.get(self.project_a, prompt["id"])[0]["superseded_by"]
+        )
+        self.assertEqual(
+            [summary["id"]],
+            [item["id"] for item in self.store.search(self.project_a, "checkout retries")],
+        )
+
+    def test_stop_context_uses_source_provenance_when_note_finishes_after_stop(self) -> None:
+        tool = self.store.remember(
+            self.project_a,
+            "Tool result before Stop",
+            "The retry path dropped the key.",
+            kind="tool",
+            session_id="delayed-stop",
+            source="hook:PostToolUse:read",
+        )
+        stop = self.store.remember(
+            self.project_a,
+            "Stop after tool",
+            "The turn ended after the tool result.",
+            kind="session",
+            session_id="delayed-stop",
+            source="hook:Stop",
+        )
+
+        first = self.store.claim_observation_batch(
+            self.project_a,
+            "processor-delayed-stop",
+            "gpt-5.6-luna",
+            "medium",
+            max_entries=1,
+        )
+        assert first is not None
+        self.assertEqual([tool["id"]], [item["id"] for item in first["sources"]])
+        first_finished = self.store.finish_observation_batch(
+            self.project_a,
+            first["job_id"],
+            first["lease_token"],
+            notes=[
+                {
+                    "title": "Retry key diagnosis",
+                    "body": "The retry path dropped the key before the fix.",
+                    "source_ids": [tool["id"]],
+                }
+            ],
+        )
+        prior_note_id = first_finished["outputs"][0]["id"]
+        # The processor writes this note after the Stop has already been
+        # captured. A later raw event must remain outside the Stop context.
+        future = self.store.remember(
+            self.project_a,
+            "Future tool result",
+            "This evidence belongs to a later event.",
+            kind="tool",
+            session_id="delayed-stop",
+            source="hook:PostToolUse:future",
+        )
+        second = self.store.claim_observation_batch(
+            self.project_a,
+            "processor-delayed-stop",
+            "gpt-5.6-luna",
+            "medium",
+            max_entries=1,
+        )
+        assert second is not None
+        self.assertEqual([stop["id"]], [item["id"] for item in second["sources"]])
+        self.assertTrue(second["summary_required"])
+        self.assertEqual(1, second["summary_context_new_notes"])
+        self.assertEqual(["Retry key diagnosis"], [item["title"] for item in second["context"] if item["kind"] == "note"])
+        self.assertNotIn(future["id"], {item["id"] for item in second["context"]})
+
+        completed = self.store.finish_observation_batch(
+            self.project_a,
+            second["job_id"],
+            second["lease_token"],
+            session_summary={
+                "title": "Delayed Stop summary",
+                "request": "Investigate retry behavior.",
+                "learned": "The key was dropped before the fix.",
+                "completed": "The source was recorded for continuity.",
+                "source_ids": [stop["id"]],
+            },
+        )
+        summary = completed["outputs"][0]
+        self.assertIn(stop["id"], summary["source_ids"])
+        self.assertIn(prior_note_id, summary["source_ids"])
+        self.assertEqual(prior_note_id, self.store.get(self.project_a, tool["id"])[0]["superseded_by"])
+
+    def test_observation_batch_stops_at_first_stop_source(self) -> None:
+        before = self.store.remember(
+            self.project_a,
+            "Tool result before Stop",
+            "The retry path dropped the key.",
+            kind="tool",
+            session_id="ordered-stop",
+            source="hook:PostToolUse:before",
+        )
+        stop = self.store.remember(
+            self.project_a,
+            "Stop after tool",
+            "The turn ended after the tool result.",
+            kind="session",
+            session_id="ordered-stop",
+            source="hook:Stop",
+        )
+        future = self.store.remember(
+            self.project_a,
+            "Tool result after Stop",
+            "This evidence belongs to a later event.",
+            kind="tool",
+            session_id="ordered-stop",
+            source="hook:PostToolUse:future",
+        )
+
+        batch = self.store.claim_observation_batch(
+            self.project_a,
+            "processor-stop-boundary",
+            "gpt-5.6-luna",
+            "medium",
+        )
+        assert batch is not None
+        self.assertEqual(
+            [before["id"], stop["id"]],
+            [item["id"] for item in batch["sources"]],
+        )
+        self.assertNotIn(future["id"], {item["id"] for item in batch["sources"]})
+
+    def test_finish_rejects_legacy_summary_sources_after_first_stop(self) -> None:
+        before = self.store.remember(
+            self.project_a,
+            "Tool result before Stop",
+            "The retry path dropped the key.",
+            kind="tool",
+            session_id="legacy-stop",
+            source="hook:PostToolUse:before",
+        )
+        stop = self.store.remember(
+            self.project_a,
+            "Stop after tool",
+            "The turn ended after the tool result.",
+            kind="session",
+            session_id="legacy-stop",
+            source="hook:Stop",
+        )
+        future = self.store.remember(
+            self.project_a,
+            "Tool result after Stop",
+            "This evidence belongs to a later event.",
+            kind="tool",
+            session_id="legacy-stop",
+            source="hook:PostToolUse:future",
+        )
+
+        batch = self.store.claim_observation_batch(
+            self.project_a,
+            "processor-legacy-stop",
+            "gpt-5.6-luna",
+            "medium",
+        )
+        assert batch is not None
+        connection = self.store._connection  # type: ignore[attr-defined]
+        connection.execute(
+            "INSERT INTO observation_job_sources(job_id, source_id) VALUES (?, ?)",
+            (batch["job_id"], future["id"]),
+        )
+        source_rows = connection.execute(
+            """
+            SELECT e.id FROM observation_job_sources AS links
+            JOIN entries AS e ON e.id = links.source_id
+            WHERE links.job_id = ?
+            ORDER BY e.created_at ASC, e.id ASC
+            """,
+            (batch["job_id"],),
+        ).fetchall()
+        source_ids = [str(row["id"]) for row in source_rows]
+        fingerprint = hashlib.sha256(
+            (
+                project_key(self.project_a)
+                + "\x00"
+                + "processor-legacy-stop"
+                + "\x00"
+                + "\x00".join(source_ids)
+            ).encode("utf-8")
+        ).hexdigest()
+        connection.execute(
+            "UPDATE observation_jobs SET input_fingerprint = ? WHERE id = ?",
+            (fingerprint, batch["job_id"]),
+        )
+
+        with self.assertRaises(ValueError):
+            self.store.finish_observation_batch(
+                self.project_a,
+                batch["job_id"],
+                batch["lease_token"],
+                session_summary={
+                    "title": "Legacy Stop summary",
+                    "request": "Investigate retry behavior.",
+                    "learned": "The key was dropped before the fix.",
+                    "completed": "The source was recorded for continuity.",
+                    "source_ids": [stop["id"], future["id"]],
+                },
+            )
+
     def test_observation_failure_needs_explicit_retry_but_expired_lease_recovers(self) -> None:
         raw = self.store.remember(
             self.project_a,
@@ -353,12 +797,20 @@ class StoreTests(unittest.TestCase):
             for index in range(3)
         ]
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-boundary", "gpt-5.6-luna", "medium"
+            self.project_a,
+            "processor-boundary",
+            "gpt-5.6-luna",
+            "medium",
+            max_chars=14_000,
         )
         assert batch is not None
         self.assertEqual([sources[0]["id"], sources[1]["id"]], [
             record["id"] for record in batch["sources"]
         ])
+        # The boundary counts the complete serialized observer payload,
+        # including provenance and metadata. Give the two complete events
+        # enough room while retaining the old body-size assertion.
+        self.assertLessEqual(batch["input_limit"], 14_000)
         self.assertLessEqual(sum(len(record["body"]) for record in batch["sources"]), 12_000)
         self.store.finish_observation_batch(
             self.project_a,
@@ -468,22 +920,24 @@ class StoreTests(unittest.TestCase):
             )
         self.assertEqual([], self.store.search(self.project_a, "pruned sentinel"))
 
-    def test_observation_oversized_first_source_fails_without_a_lease(self) -> None:
+    def test_observation_oversized_first_source_is_claimed_whole_without_clipping(self) -> None:
         raw = self.store.remember(
             self.project_a,
             "Oversized raw source",
             "x" * 257,
             source="hook:UserPromptSubmit",
         )
-        with self.assertRaises(StoreError):
-            self.store.claim_observation_batch(
-                self.project_a,
-                "processor-oversized",
-                "gpt-5.6-luna",
-                "medium",
-                max_chars=256,
-            )
-        self.assertEqual(0, self.store.status(self.project_a)["observation_jobs"]["jobs"])
+        batch = self.store.claim_observation_batch(
+            self.project_a,
+            "processor-oversized",
+            "gpt-5.6-luna",
+            "medium",
+            max_chars=256,
+        )
+        assert batch is not None
+        self.assertEqual(raw["id"], batch["sources"][0]["id"])
+        self.assertEqual("x" * 257, batch["sources"][0]["body"])
+        self.assertGreater(batch["input_limit"], 256)
         self.assertIsNone(self.store.get(self.project_a, [raw["id"]])[0]["superseded_by"])
 
     def test_observation_finish_is_atomic_and_skip_hides_raw_from_default_retrieval(self) -> None:
@@ -769,6 +1223,33 @@ class StoreTests(unittest.TestCase):
         self.assertEqual("max", receipt["reasoning_effort"])
         pending = self.store.embedding_status(self.project_a, "test-model", "r1", 2)
         self.assertEqual(0, pending["pending"])
+
+    def test_v3_database_adds_metadata_and_raw_extensions(self) -> None:
+        existing = self.store.remember(
+            self.project_a,
+            "Existing v3 entry",
+            "must survive additive metadata migration",
+        )
+        self.store.close()
+        database = self.data_dir / "memory.sqlite3"
+        with sqlite3.connect(database) as connection:
+            connection.execute("DROP TRIGGER IF EXISTS entries_tool_uses_ad")
+            connection.execute("DROP TABLE IF EXISTS tool_uses")
+            connection.execute("DROP TABLE IF EXISTS entry_metadata")
+            connection.execute("PRAGMA user_version = 3")
+
+        self.store = Store(self.data_dir)
+        self.assertEqual(SCHEMA_VERSION, self.store.status(self.project_a)["schema_version"])
+        self.assertEqual([existing["id"]], [item["id"] for item in self.store.get(
+            self.project_a, existing["id"]
+        )])
+        objects = {
+            row["name"]
+            for row in self.store._connection.execute(  # type: ignore[attr-defined]
+                "SELECT name FROM sqlite_master WHERE name IN ('entry_metadata', 'tool_uses', 'entries_tool_uses_ad')"
+            ).fetchall()
+        }
+        self.assertEqual({"entry_metadata", "tool_uses", "entries_tool_uses_ad"}, objects)
 
     def test_embedding_claims_redacted_whole_text_and_semantic_search_is_project_scoped(self) -> None:
         note = self.store.remember(

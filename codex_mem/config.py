@@ -31,8 +31,17 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "context_chars": MAX_CONTEXT_CHARS,
     "excluded_projects": [],
     "included_projects": [],
+    # Raw tool I/O is useful for explicit source readback, but noisy tools and
+    # the memory server itself should never grow that side index.  Keep the
+    # list user-configurable while retaining the existing all-projects scope
+    # default unchanged.
+    "tool_skip_list": [],
+    "private_prompt_gate": True,
 }
 _CAPTURE_SCOPES = {"selected", "all", "manual"}
+_CONFIG_ALIASES = {
+    "skip_tools": "tool_skip_list",
+}
 
 
 def _fresh_default_config() -> dict[str, Any]:
@@ -118,6 +127,16 @@ def configure(
     elif "data_dir" in updates:
         raise ValueError("data_dir must be passed as an argument")
 
+    # Accept the names used by the upstream settings and by older local
+    # previews, but persist one canonical field so later reads stay stable.
+    aliased: dict[str, Any] = {}
+    for key, value in updates.items():
+        canonical = _CONFIG_ALIASES.get(key, key)
+        if canonical in aliased:
+            raise ValueError("configuration field specified more than once")
+        aliased[canonical] = value
+    updates = aliased
+
     unknown = set(updates).difference(DEFAULT_CONFIG)
     if unknown:
         raise ValueError("unknown configuration field")
@@ -168,6 +187,24 @@ def automatic_capture_enabled(
     if scope == "selected":
         return is_included_project(project, settings)
     return False
+
+
+def configured_tool_skip_list(config: Mapping[str, Any] | None = None) -> list[str]:
+    """Return the exact per-tool skip list used by raw capture filters."""
+
+    settings = config if config is not None else load_config()
+    value = settings.get("tool_skip_list", settings.get("skip_tools", []))
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str) and item]
+
+
+def private_prompt_gate_enabled(config: Mapping[str, Any] | None = None) -> bool:
+    """Whether private prompts suppress later tools in the same session/turn."""
+
+    settings = config if config is not None else load_config()
+    value = settings.get("private_prompt_gate", True)
+    return value is True
 
 
 def _matches_project_paths(project: str | os.PathLike[str] | None, candidates: Any) -> bool:
@@ -253,6 +290,74 @@ def mark_context_injected(
         _write_json(base / HOOK_STATE_FILENAME, state)
 
 
+def mark_private_prompt_gate(
+    session_key: str,
+    *,
+    turn_id: str | None = None,
+    data_dir: str | os.PathLike[str] | None = None,
+) -> None:
+    """Remember that a private prompt opened a same-session tool gate."""
+
+    if not session_key:
+        return
+    base = data_dir_path(data_dir)
+    with _hook_state_lock(base):
+        state = _load_hook_state(base)
+        gates = state.setdefault("private_prompt_gates", {})
+        if not isinstance(gates, dict):
+            gates = {}
+            state["private_prompt_gates"] = gates
+        gates[session_key] = {"turn_id": turn_id or None}
+        while len(gates) > 256:
+            oldest = next(iter(gates), None)
+            if oldest is None:
+                break
+            del gates[oldest]
+        _write_json(base / HOOK_STATE_FILENAME, state)
+
+
+def private_prompt_gate_active(
+    session_key: str,
+    *,
+    turn_id: str | None = None,
+    data_dir: str | os.PathLike[str] | None = None,
+) -> bool:
+    """Check a private prompt gate without creating or mutating state."""
+
+    if not session_key:
+        return False
+    state = _load_hook_state(data_dir)
+    gates = state.get("private_prompt_gates", {})
+    if not isinstance(gates, dict):
+        return False
+    record = gates.get(session_key)
+    if not isinstance(record, dict):
+        return False
+    opened_turn = record.get("turn_id")
+    if opened_turn is None or turn_id is None:
+        return True
+    return opened_turn == turn_id
+
+
+def clear_private_prompt_gate(
+    session_key: str,
+    *,
+    data_dir: str | os.PathLike[str] | None = None,
+) -> None:
+    """Clear a prior private prompt gate when a new public prompt arrives."""
+
+    if not session_key:
+        return
+    base = data_dir_path(data_dir)
+    with _hook_state_lock(base):
+        state = _load_hook_state(base)
+        gates = state.get("private_prompt_gates")
+        if not isinstance(gates, dict) or session_key not in gates:
+            return
+        del gates[session_key]
+        _write_json(base / HOOK_STATE_FILENAME, state)
+
+
 def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
     if not isinstance(raw, Mapping):
         if strict:
@@ -292,6 +397,14 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
         "included_projects": _validate_excluded_projects(
             raw.get("included_projects", DEFAULT_CONFIG["included_projects"]), strict
         ),
+        "tool_skip_list": _validate_tool_skip_list(
+            raw.get("tool_skip_list", DEFAULT_CONFIG["tool_skip_list"]), strict
+        ),
+        "private_prompt_gate": _validate_bool(
+            raw.get("private_prompt_gate", DEFAULT_CONFIG["private_prompt_gate"]),
+            "private_prompt_gate",
+            strict,
+        ),
     }
     return LoadedConfig(result, valid=True)
 
@@ -329,6 +442,10 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
             _validate_excluded_projects(raw["excluded_projects"], True)
         if "included_projects" in raw:
             _validate_excluded_projects(raw["included_projects"], True)
+        if "tool_skip_list" in raw:
+            _validate_tool_skip_list(raw["tool_skip_list"], True)
+        if "private_prompt_gate" in raw:
+            _validate_bool(raw["private_prompt_gate"], "private_prompt_gate", True)
     except ValueError:
         return False
     return True
@@ -386,6 +503,41 @@ def _validate_excluded_projects(value: Any, strict: bool) -> list[str]:
     return paths
 
 
+def _validate_tool_skip_list(value: Any, strict: bool) -> list[str]:
+    """Validate exact tool names without interpreting shell patterns."""
+
+    if isinstance(value, str):
+        candidates: list[Any] = [part.strip() for part in value.split(",")]
+    elif isinstance(value, (list, tuple)):
+        candidates = list(value)
+    else:
+        if strict:
+            raise ValueError("tool_skip_list must be a list of tool names")
+        return []
+    if len(candidates) > 128:
+        if strict:
+            raise ValueError("tool_skip_list has too many values")
+        candidates = candidates[:128]
+    names: list[str] = []
+    for item in candidates:
+        if not isinstance(item, str):
+            if strict:
+                raise ValueError("tool_skip_list must contain only tool names")
+            continue
+        cleaned = item.strip()
+        if not cleaned:
+            if strict:
+                raise ValueError("tool_skip_list cannot contain an empty tool name")
+            continue
+        if len(cleaned) > 256 or "\x00" in cleaned:
+            if strict:
+                raise ValueError("tool_skip_list contains an invalid tool name")
+            continue
+        if cleaned.casefold() not in {name.casefold() for name in names}:
+            names.append(cleaned)
+    return names
+
+
 def _load_hook_state(data_dir: str | os.PathLike[str] | None) -> dict[str, Any]:
     try:
         with (data_dir_path(data_dir) / HOOK_STATE_FILENAME).open(
@@ -396,7 +548,7 @@ def _load_hook_state(data_dir: str | os.PathLike[str] | None) -> dict[str, Any]:
             return raw
     except (OSError, TypeError, ValueError, json.JSONDecodeError):
         pass
-    return {"version": 1, "context_injections": {}}
+    return {"version": 1, "context_injections": {}, "private_prompt_gates": {}}
 
 
 class _HookStateLock:

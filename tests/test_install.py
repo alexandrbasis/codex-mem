@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest import mock
@@ -21,7 +22,8 @@ class InstallTests(unittest.TestCase):
         self.source = Path(self.temp.name) / "source"
         for name, body in {
             ".codex-plugin/plugin.json": json.dumps({"name": "codex-mem", "version": "1.0.0"}),
-            ".mcp.json": "{}", "hooks/hooks.json": "{}", "scripts/codex-mem.py": "# test launcher\n",
+            ".mcp.json": "{}", "hooks/hooks.json": "{}",
+            "scripts/codex-mem.py": "#!/usr/bin/env python3\nimport sys\nprint('managed-current', *sys.argv[1:])\n",
         }.items():
             path = self.source / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,6 +58,32 @@ class InstallTests(unittest.TestCase):
             str(item.relative_to(package)): item.read_bytes()
             for item in sorted(package.rglob("*")) if item.is_file()
         }
+
+    @staticmethod
+    def launcher_path(package):
+        return package / "scripts/codex-mem.py"
+
+    @staticmethod
+    def launcher_backup_path(package):
+        return package / "scripts/codex-mem.py.codex-mem-original"
+
+    def assert_forwarded_cache(self, package, original_launcher):
+        launcher = self.launcher_path(package)
+        backup = self.launcher_backup_path(package)
+        self.assertIn(installer._FORWARDER_MARKER, launcher.read_text())
+        self.assertEqual(backup.read_bytes(), original_launcher)
+
+    def assert_cache_restored_with_forwarder(self, package, expected_bytes):
+        actual = self.package_bytes(package)
+        for name, body in expected_bytes.items():
+            if name == "scripts/codex-mem.py":
+                continue
+            self.assertEqual(body, actual[name], name)
+        self.assertEqual(
+            expected_bytes["scripts/codex-mem.py"],
+            self.launcher_backup_path(package).read_bytes(),
+        )
+        self.assertIn(installer._FORWARDER_MARKER, self.launcher_path(package).read_text())
 
     def fake_codex(self, *, remove_cache=False, recreate_cache=False, exit_code=0,
                    record_invocation=False):
@@ -164,7 +192,7 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(
             json.loads((old_cache / ".codex-plugin/plugin.json").read_text())["version"], "1.0.0"
         )
-        self.assertEqual((old_cache / "scripts/codex-mem.py").read_bytes(), old_launcher)
+        self.assert_forwarded_cache(old_cache, old_launcher)
         self.assertEqual(
             json.loads((self.home / "plugins/codex-mem/.codex-plugin/plugin.json").read_text())["version"],
             "1.1.0",
@@ -206,13 +234,19 @@ class InstallTests(unittest.TestCase):
 
         self.assertTrue(result["installed"])
         self.assertEqual(result["cache_preservation"], "complete")
-        self.assertEqual(self.package_bytes(cache_root / "1.0.0"), expected_v1_0)
-        self.assertEqual(self.package_bytes(cache_root / "1.1.0"), expected_v1_1)
+        self.assert_cache_restored_with_forwarder(cache_root / "1.0.0", expected_v1_0)
+        self.assert_cache_restored_with_forwarder(cache_root / "1.1.0", expected_v1_1)
         self.assertEqual(self.package_bytes(cache_root / "1.2.0"), expected_v1_2)
         self.assertFalse((self.home / "plugins/cache").exists())
         retained = {receipt["version"]: receipt for receipt in result["retained_caches"]}
         self.assertEqual(set(retained), {"1.0.0", "1.1.0", "1.2.0"})
         self.assertTrue(all(receipt["status"] == "restored" for receipt in retained.values()))
+        refresh = result["legacy_launcher_refresh"]
+        self.assertEqual("complete", refresh["status"])
+        self.assertEqual(
+            {"refreshed", "skipped"},
+            {receipt["status"] for receipt in refresh["packages"]},
+        )
         self.assertEqual(
             json.loads((target / ".codex-plugin/plugin.json").read_text())["version"], "1.2.0"
         )
@@ -232,7 +266,7 @@ class InstallTests(unittest.TestCase):
         self.assertIn("Codex activation failed", result["error"])
         self.assertEqual(result["cache_preservation"], "complete")
         self.assertEqual(result["previous_cache"]["status"], "restored")
-        self.assertEqual(self.package_bytes(old_cache), expected_cache)
+        self.assert_cache_restored_with_forwarder(old_cache, expected_cache)
 
     def test_activation_does_not_overwrite_a_cache_recreated_by_codex(self):
         self.run_install()
@@ -256,6 +290,78 @@ class InstallTests(unittest.TestCase):
         self.assertTrue(result["installed"])
         self.assertEqual(result["previous_cache"]["status"], "already_present")
         self.assertEqual((old_cache / "created-by-codex").read_text(), "leave this package alone")
+
+    def test_legacy_cache_launcher_delegates_to_current_managed_target(self):
+        self.run_install()
+        old_target = self.home / "plugins/codex-mem"
+        old_cache = self.cache_from(old_target, "1.0.0")
+        original_launcher = self.launcher_path(old_cache).read_bytes()
+        self.set_source_version("1.1.0")
+
+        result = self.apply_with_fake_codex(self.fake_codex())
+
+        refresh = result["legacy_launcher_refresh"]
+        self.assertEqual("complete", refresh["status"])
+        self.assertEqual("refreshed", refresh["packages"][0]["status"])
+        self.assert_forwarded_cache(old_cache, original_launcher)
+        completed = subprocess.run(
+            [sys.executable, str(self.launcher_path(old_cache)), "probe"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertEqual("managed-current probe\n", completed.stdout)
+
+    def test_legacy_cache_refresh_is_idempotent_and_backup_stable(self):
+        self.run_install()
+        old_target = self.home / "plugins/codex-mem"
+        old_cache = self.cache_from(old_target, "1.0.0")
+        original_launcher = self.launcher_path(old_cache).read_bytes()
+        self.set_source_version("1.1.0")
+        self.apply_with_fake_codex(self.fake_codex())
+        backup_before = self.launcher_backup_path(old_cache).read_bytes()
+        launcher_before = self.launcher_path(old_cache).read_bytes()
+
+        result = self.apply_with_fake_codex(self.fake_codex())
+
+        refresh = result["legacy_launcher_refresh"]
+        self.assertEqual("complete", refresh["status"])
+        self.assertEqual("already_current", refresh["packages"][0]["status"])
+        self.assertEqual(original_launcher, backup_before)
+        self.assertEqual(backup_before, self.launcher_backup_path(old_cache).read_bytes())
+        self.assertEqual(launcher_before, self.launcher_path(old_cache).read_bytes())
+
+    def test_missing_current_target_fails_closed_without_touching_cache_launcher(self):
+        self.run_install()
+        old_target = self.home / "plugins/codex-mem"
+        old_cache = self.cache_from(old_target, "0.9.0")
+        original_launcher = self.launcher_path(old_cache).read_bytes()
+        current_launcher = old_target / "scripts/codex-mem.py"
+        current_launcher.unlink()
+
+        result = installer._refresh_legacy_launchers(
+            self.cache_root(), old_target, "1.0.0"
+        )
+
+        self.assertEqual("failed", result["status"])
+        self.assertEqual("target_unavailable", result["reason"])
+        self.assertEqual(original_launcher, self.launcher_path(old_cache).read_bytes())
+        self.assertFalse(self.launcher_backup_path(old_cache).exists())
+
+    def test_unrelated_cache_namespace_is_untouched(self):
+        self.run_install()
+        old_target = self.home / "plugins/codex-mem"
+        old_cache = self.cache_from(old_target, "1.0.0")
+        unrelated = self.home / ".codex/plugins/cache/other-plugin/9.9.9/scripts/codex-mem.py"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_text("unrelated\n")
+        self.set_source_version("1.1.0")
+
+        self.apply_with_fake_codex(self.fake_codex())
+
+        self.assertEqual("unrelated\n", unrelated.read_text())
+        self.assertTrue(self.launcher_backup_path(old_cache).is_file())
 
     def test_unsafe_cached_version_aborts_before_activation(self):
         self.run_install()

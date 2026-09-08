@@ -28,7 +28,7 @@ except ImportError:  # pragma: no cover
 
 
 REPORT_VERSION = 1
-EXPECTED_SCHEMA_VERSION = 3
+EXPECTED_SCHEMA_VERSION = 4
 EXPECTED_PROCESSOR_MODEL = "gpt-5.6-luna"
 EXPECTED_PROCESSOR_EFFORT = "medium"
 EXPECTED_SEMANTIC_MODEL = "intfloat/multilingual-e5-base"
@@ -688,7 +688,7 @@ def _db_report(
             base["status"] = "unavailable"
             errors.append(_error("database_unreadable"))
             return base, per_project, errors
-        if version != EXPECTED_SCHEMA_VERSION or not REQUIRED_TABLES.issubset(names):
+        if version not in {3, EXPECTED_SCHEMA_VERSION} or not REQUIRED_TABLES.issubset(names):
             base["status"] = "schema_mismatch"
             errors.append(_error("schema_invalid"))
             return base, per_project, errors

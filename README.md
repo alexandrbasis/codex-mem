@@ -8,18 +8,19 @@
 
 Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation; it is not a fork and does not provide full Claude Mem feature parity.
 
-Version `1.3.1` separates raw hook evidence from searchable memory. The observer can discard routine activity, and schema-constrained source handles prevent long-ID transcription errors. The compatibility and evidence boundaries below still apply.
+Version `1.4.0` adds retained tool input/output, structured observations, Stop summaries, and file/concept/type filters. The observer remains Luna with medium reasoning. See the verification record for tested behavior and the limits of the Claude Mem comparison.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
 
 ## What it does
 
 - Captures bounded evidence from approved projects through native Codex lifecycle hooks. Raw hook records remain available for explicit audit, but are excluded from search, automatic context, and semantic indexing.
-- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, and `memory_status` through a local MCP server.
+- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, `memory_status`, and `memory_get_tool_uses` through a local MCP server.
 - Uses SQLite FTS5 for lexical search. Optional local multilingual semantic search uses `intfloat/multilingual-e5-base` with FastEmbed and ONNX Runtime.
 - Keeps project and session provenance, source links for consolidated notes, and bounded execution receipts.
 - Runs a durable local queue. A worker processes small observation batches in fresh `gpt-5.6-luna` sessions with `medium` reasoning, then updates the local semantic index.
-- Redacts private blocks and common credential formats before persistence. Eligible tool events include at most 2,000 characters of redacted result evidence, within the 6,000-character total event budget. Images and transcript files are not copied.
+- Retains redacted tool input and response in a local side index, up to 64 KiB per field. Oversized fields keep marked head/tail excerpts inside valid JSON. The observer receives the retained payload, including its middle; raw records stay outside normal memory search. Images and transcript files are not copied.
+- Writes observations with type, facts, narrative, concepts, and read/modified files. Substantive Stop events produce a separate session summary with the request, investigation, learning, completion, and next steps.
 
 Automatic capture is privacy-preserving by default: the `selected` scope starts with an empty project list. Add a project explicitly before hooks can capture it. Lexical search and explicit memory tools do not require the optional semantic runtime.
 
@@ -52,7 +53,7 @@ Open a new Codex task after installation. Review the plugin hooks in `/hooks` an
 codex plugin list --marketplace personal --json
 ```
 
-The installer retains managed caches of older versions so open tasks can finish with the hooks they already loaded. A running Codex desktop process can keep an older catalog until it is restarted; a successful CLI activation does not prove that an existing desktop connection has refreshed.
+The installer retains managed caches of older versions and updates their launchers to forward to the current managed installation. Open tasks keep working through the hook paths they already loaded; original launchers are backed up. A running Codex desktop process can keep an older catalog until it is restarted; a successful CLI activation does not prove that an existing desktop connection has refreshed.
 
 ## Select projects for capture
 
@@ -78,6 +79,8 @@ To keep only explicit memory writes, use `manual`:
 python3 scripts/codex-mem.py config --scope manual
 ```
 
+Skip named tools with `config --skip-tool TOOL_NAME` (repeat the flag for the complete replacement list). Memory tools and session-memory files are excluded automatically. A private prompt suppresses subsequent tool capture for its session until a public prompt clears the gate.
+
 The capture setting does not interpret every natural-language request to avoid saving. Use `manual`, an excluded project, or `CODEX_MEM_DISABLED=1` when you need a hard opt-out.
 
 ## Skills
@@ -89,7 +92,7 @@ The plugin includes two skills:
 | [memory](skills/memory/SKILL.md) | Ask why a past decision was made, recover an earlier fix with its evidence, save a checked result, or consolidate related notes. Search previews lead to full source records before the agent relies on them. |
 | [maintenance](skills/maintenance/SKILL.md) | Ask whether memory is working, why new notes are delayed, or request a repair. It checks storage, recent activity, queue/processor state, semantic coverage, and native hook discovery, then verifies authorized repairs. |
 
-Automatic hooks collect observations during work. The `memory` skill guides deliberate recall and curation. `maintenance` diagnoses the system that captures, processes, and retrieves those records.
+Both skills use `allow_implicit_invocation: false`; invoke `$codex-mem:memory` or `$codex-mem:maintenance` explicitly. Automatic hooks collect observations during work. The `memory` skill guides deliberate recall and curation. `maintenance` diagnoses the system that captures, processes, and retrieves those records.
 
 For example: "Why did we choose this architecture?", "Remember the verified cause and fix", or "Check Codex Mem for this project and explain anything stuck in the queue."
 
@@ -115,6 +118,8 @@ python3 scripts/codex-mem.py search \
   --mode auto
 ```
 
+Search also accepts repeatable `--type`, `--concept`, and `--file` filters, applied before ranking in every search mode. Read retained raw tool evidence with `tool-uses --project /absolute/path/to/project --limit 5`; this command returns data and never executes captured commands.
+
 Read the full record after selecting an ID from search results:
 
 ```sh
@@ -139,7 +144,7 @@ python3 scripts/codex-mem.py semantic index --project /absolute/path/to/project
 
 ## Manage the local queue
 
-After a completed response, the asynchronous hook queues an approved project and starts one local worker when needed. The queue stores project scheduling state; observation text remains in SQLite. It does not install a login item.
+After each retained tool result and completed response, hooks queue an approved project and wake one local worker when needed. Calls return without waiting for model processing. The queue stores project scheduling state; observation text remains in SQLite. It does not install a login item.
 
 ```sh
 python3 scripts/codex-mem.py service status
@@ -154,7 +159,7 @@ Automatic processing uses the current Codex account's allowance. Disable model p
 python3 scripts/codex-mem.py config --no-processor-enabled
 ```
 
-Use `config --no-semantic-enabled` to disable automatic indexing or `config --no-service-enabled` to disable the detached queue. A failed queue job remains blocked until you inspect it and explicitly retry it:
+Use `config --no-semantic-enabled` to disable automatic indexing or `config --no-service-enabled` to disable the detached queue. A failed project remains blocked while other approved projects can continue. Inspect the failure before explicitly retrying it:
 
 ```sh
 python3 scripts/codex-mem.py service retry --project /absolute/path/to/project

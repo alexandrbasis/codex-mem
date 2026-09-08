@@ -2,11 +2,11 @@
 
 Codex Mem is an independent implementation inspired by [Claude Mem](https://github.com/thedotmack/claude-mem). It is not a GitHub fork and does not include copied Claude Mem source. This repository's implementation uses the MIT license in `LICENSE`.
 
-Version `1.3.1` separates captured hook evidence from searchable notes and improves observation filtering and source attribution; see the [public verification record](docs/VERIFICATION.md) for the evidence and compatibility boundary.
+Version `1.4.0` adds retained tool I/O, typed observations, dedicated Stop summaries, and structured retrieval filters; see the [public verification record](docs/VERIFICATION.md) for the evidence and compatibility boundary.
 
 The reviewed upstream is [v13.24.1, commit f6f72747e1298aef37b1baccefc11ce7305d7bf8](https://github.com/thedotmack/claude-mem/tree/f6f72747e1298aef37b1baccefc11ce7305d7bf8). Review date: 2026-09-08. Its package metadata declares Apache-2.0. If future changes copy upstream code, retain the applicable upstream license, NOTICE, attribution, and modification notices for that code.
 
-The observation-quality review for `1.3.1` additionally checked [observer rules](https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/plugin/modes/code.json) and [prompt construction](https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts) at upstream commit `fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0`. The adopted principle is to retain durable findings and skip routine activity before retrieval. Raw evidence stays local for audit; failed jobs are preserved for explicit retry. No upstream source was copied.
+The observation-capture review for `1.4.0` additionally checked [observer rules](https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/plugin/modes/code.json) and [prompt construction](https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts) at upstream commit `fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0`. The adopted principle is to retain durable findings and skip routine activity before retrieval. Raw evidence stays local for audit; failed jobs are preserved for explicit retry. No upstream source was copied.
 
 ## What carries over
 
@@ -20,7 +20,7 @@ The product workflow remains capture, compact notes, retrieval, and context for 
 | Runtime | Python 3.10+ and SQLite FTS5; optional FastEmbed/ONNX Runtime on Python 3.10–3.13. A local background service drains a durable queue. No HTTP listener or database daemon. |
 | Compression | A local queue service processes bounded observation batches in fresh Luna/medium sessions. Explicit user-authored notes remain available through MCP. Source records and execution receipts are retained. |
 | Retrieval | Unicode full-text, local multilingual embeddings, cosine similarity and reciprocal rank fusion; project scope and bounded previews. |
-| Privacy | Common credential patterns and private blocks are redacted before persistence. Tool result excerpts are redacted and capped at 2,000 characters; transcript scanning is omitted. |
+| Privacy | Common credential patterns and private blocks are redacted before persistence. Retained tool input and response are redacted and capped at 64 KiB each with explicit head/tail truncation. Per-tool skips and a private-prompt gate reduce capture; transcript scanning is omitted. |
 | Data control | Exact-ID deletion, local backups, explicit retention, and optional import from a selected legacy project. |
 | Failure handling | Memory failures do not block a coding task. Failed queue work remains blocked until explicit retry; completed work and pending jobs survive a service restart. |
 
@@ -50,4 +50,4 @@ The encoder produces 768-dimensional vectors. Documents use the required `passag
 
 Model selection used the same three English/Russian paraphrase queries and six records. MiniLM, E5-small and MPNet did not rank all intended records first. E5-base improved this small comparison; it is not evidence of universally correct ranking. The [public verification record](docs/VERIFICATION.md) summarizes this bounded comparison without publishing raw host receipts.
 
-There is still no full Claude Mem feature parity: no Web UI, HTTP API, cloud sync, rich structured session-summary schema, or non-Codex host integrations. The [public verification record](docs/VERIFICATION.md) states this limitation together with the tested behavior and known partial result. Raw host receipts and the private feature comparison are intentionally omitted from the public export.
+There is still no full Claude Mem feature parity: no Web UI, HTTP API, cloud sync, or non-Codex host integrations. Observation capture is compared against pinned upstream commit `fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0`; a live Claude-versus-Luna quality comparison was unavailable because Claude authentication was absent. The [public verification record](docs/VERIFICATION.md) states this limitation together with the tested behavior and known partial result. Raw host receipts and the private feature comparison are intentionally omitted from the public export.

@@ -144,6 +144,27 @@ class ConfigTests(unittest.TestCase):
             context_was_injected("session:a", source="context:two", data_dir=self.data_dir)
         )
 
+    def test_raw_capture_filters_persist_canonically_without_changing_scope(self) -> None:
+        configured = configure(
+            self.data_dir,
+            capture_scope="all",
+            skip_tools=["NoisyTool", "noisytool", "mcp__example__trace"],
+            private_prompt_gate=False,
+        )
+
+        self.assertEqual("all", configured["capture_scope"])
+        self.assertEqual(["NoisyTool", "mcp__example__trace"], configured["tool_skip_list"])
+        self.assertFalse(configured["private_prompt_gate"])
+        loaded = load_config(self.data_dir)
+        self.assertEqual(configured, loaded)
+        self.assertTrue(automatic_capture_enabled(self.data_dir / "new-project", loaded))
+
+    def test_raw_capture_filter_validation_fails_closed(self) -> None:
+        with self.assertRaises(ValueError):
+            configure(self.data_dir, tool_skip_list=["", "valid"])
+        with self.assertRaises(ValueError):
+            configure(self.data_dir, private_prompt_gate="yes")
+
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

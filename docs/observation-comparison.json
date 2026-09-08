@@ -6,17 +6,17 @@
     "commit": "fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0",
     "target": "main; not identical to stable v13.24.1"
   },
-  "verdict": "Full parity or superiority is not established. Five capture/reliability defects are fixed and verified; raw replay, richer observation/session schemas, and per-tool/private-turn filtering remain gaps.",
+  "verdict": "Targeted observation-capture mechanisms now have corresponding implementation and regression coverage. Universal parity or model-quality superiority is not established; a Claude-provider A/B was unavailable.",
   "model_comparison": {
     "claude_mem_live_ab_run": false,
     "codex_mem_observer": "gpt-5.6-luna",
     "reasoning": "medium",
-    "limitation": "Synthetic acceptance verifies specific behaviors; it is not a comparative quality benchmark or a production guarantee."
+    "limitation": "Claude CLI was unauthenticated and no subscription was available. Native Luna/medium synthetic scenarios verify bounded behavior only."
   },
   "criteria": [
     {
       "area": "Tool results",
-      "codex_mem": "Text-shaped Bash and non-Bash results, redacted bounded excerpts; head and tail preserved. Opaque/binary payloads are excluded.",
+      "codex_mem": "Separate redacted tool input and response, up to 64 KiB each; valid JSON head/tail wrappers and explicit truncation metadata; full retained text supplied to the observer. Binary/media payloads are excluded.",
       "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/cli/handlers/observation.ts",
       "status": "targeted_capture_regressions_passed"
     },
@@ -33,7 +33,7 @@
     },
     {
       "area": "Worker continuity",
-      "codex_mem": "Bounded earlier same-session excerpts, separated from new evidence; other projects/sessions and later events excluded.",
+      "codex_mem": "Bounded same-session history; Stop includes prior derived notes by raw source chronology, excludes post-Stop evidence, and retains links to context notes.",
       "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts",
       "status": "unit_and_native_reference_resolution_passed"
     },
@@ -45,24 +45,25 @@
     },
     {
       "area": "Raw tool replay",
-      "codex_mem": "No separate original tool_input/tool_response side index. Evidence outside captured excerpts cannot be recovered from memory alone.",
+      "codex_mem": "Durable SQLite tool-use side index, idempotent IDs, bounded hydration and explicit MCP/CLI inspection. Recovery uses persistent jobs; an audit replay plan is inert and does not execute tools.",
       "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/services/sqlite/tool-uses.ts",
-      "status": "residual_gap"
+      "status": "implemented_with_regression_coverage"
     },
     {
       "area": "Structured observations and summaries",
-      "codex_mem": "Notes use title/body/tags/source_ids. No separate typed facts/concepts/files fields, file/concept filters, or dedicated session-summary schema.",
+      "codex_mem": "Nine observation types, subtitle/facts/narrative/concepts/files fields, structured file/concept/type filters, and a dedicated Stop summary schema. Atomic source attribution is retained.",
       "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts",
-      "status": "residual_gap"
+      "status": "implemented_with_regression_coverage"
     },
     {
       "area": "Per-tool and private-turn filtering",
-      "codex_mem": "Project scope, self-tool exclusions and content redaction; no configurable per-tool skip list or private-prompt gate for all subsequent tool calls.",
+      "codex_mem": "Configurable tool skip list, same-session private-prompt gate until the next public prompt, memory self-tool exclusions, field-aware redaction before persistence.",
       "upstream_evidence": "https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/services/worker/http/shared.ts",
-      "status": "residual_gap"
+      "status": "implemented_with_regression_coverage"
     }
   ],
-  "verification": {
+  "version": "1.4.0",
+  "verification_1_3_1": {
     "baseline_unit_tests": 166,
     "capture_acceptance": {
       "passed": true,
@@ -101,5 +102,69 @@
       "receipt": "observation-acceptance.json",
       "same_runtime_code": true
     }
+  },
+  "verification": {
+    "capture_acceptance": {
+      "passed": true,
+      "hook_invocations": 11,
+      "official_schema_validation": false
+    },
+    "host_discovery": {
+      "enabled_trusted_hooks": 6
+    },
+    "known_findings": [
+      "Earlier runs exposed exact-identifier loss, a skipped contradictory verification result, and routine text in summaries. Observer instructions were corrected; these failures are not relabeled as original passes.",
+      "The initial fixture printed an unverified success claim; the final native capture probe executes a UNIQUE-constraint regression before reporting success.",
+      "The probe initially closed its app-server before Stop completed; it now waits for the Stop record before shutdown.",
+      "Asynchronously written notes were missing from Stop context. Selection now follows raw source causality and batches end at Stop; summaries retain context-note links.",
+      "Mandatory Stop-summary provenance is distinct from promotion of incidental Stop text. Noise-content assertions check both observations and summaries.",
+      "Required summary batches now explicitly summarize prior structured findings even when Stop only acknowledges completion. Invalid responses remain blocked for explicit retry."
+    ],
+    "unit_tests": 217,
+    "native_corpus": {
+      "passed": true,
+      "cases": 10,
+      "model_turns": 13,
+      "synthetic": true,
+      "fixture_boundary": "Ordinary tool evidence no longer uses artificial Stop events; request remains UserPromptSubmit. Content expectations retained. Dedicated Stop is tested separately."
+    },
+    "native_tool_and_stop": {
+      "passed": true,
+      "output_characters": 30796,
+      "model": "gpt-5.6-luna",
+      "reasoning": "medium",
+      "actual_shell_regression": true,
+      "native_hooks": [
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Stop"
+      ],
+      "structured_observations": 1,
+      "session_summaries": 1,
+      "middle_fact_in_observer_prompt": true,
+      "scope": "Temporary project; actual shell and hook capture, then explicit process_pending drain. Not a new detached-service scheduling test."
+    },
+    "pinned_upstream_contract": {
+      "passed": true,
+      "events": 8,
+      "parser_samples": 3,
+      "upstream_prompt_parser_executed": true,
+      "claude_provider_executed": false
+    },
+    "comparison_codex_case": {
+      "passed": true,
+      "case": "durable-decision",
+      "hook_capture_hydration": true,
+      "native_luna_medium": true,
+      "environment_failure": "An initial sandbox run failed before model execution because app-server SQLite access was denied. The authorized host rerun passed."
+    },
+    "privacy_and_transport_regressions": [
+      "Shell punctuation does not bypass sensitive path matching.",
+      "Top-level and nested media/data payloads are excluded.",
+      "Raw inspection responses have a 256 KiB JSON budget with explicit field truncation.",
+      "Stop batches exclude future events; legacy summary attribution is checked again before commit."
+    ]
   }
 }

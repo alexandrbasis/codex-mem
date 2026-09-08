@@ -43,6 +43,7 @@ EXPECTED_TOOLS = {
     "memory_consolidate",
     "memory_forget",
     "memory_status",
+    "memory_get_tool_uses",
 }
 READ_ONLY_TOOLS = {"memory_search", "memory_get", "memory_timeline", "memory_status"}
 RECALL_TOOLS = {"memory_search", "memory_get", "memory_timeline"}

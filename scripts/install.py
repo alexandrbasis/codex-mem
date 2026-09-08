@@ -16,11 +16,14 @@ import time
 NAME = "codex-mem"
 ROOT = Path(__file__).resolve().parents[1]
 FILES = (".codex-plugin", ".mcp.json", "codex_mem", "hooks", "skills", "scripts",
-         "tests", "docs", "assets", "README.md", "README.ru.md", "UPSTREAM.md", "LICENSE", "pyproject.toml")
+         "tests", "docs", "fixtures", "assets", "README.md", "README.ru.md", "UPSTREAM.md", "LICENSE", "pyproject.toml")
 MARKER = ".codex-mem-managed"
 _CACHE_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}\Z")
 MAX_CACHE_PACKAGES = 32
 MAX_CACHE_BACKUP_BYTES = 128 * 1024 * 1024
+LEGACY_LAUNCHER = Path("scripts") / "codex-mem.py"
+LEGACY_LAUNCHER_BACKUP = Path("scripts") / "codex-mem.py.codex-mem-original"
+_FORWARDER_MARKER = "# codex-mem managed legacy cache forwarder v1"
 
 
 def manifest(root: Path) -> dict:
@@ -134,6 +137,144 @@ def _verify_managed_package(
     if require_versioned_path and version != package.name:
         raise ValueError("Codex Mem cache package version does not match its path")
     return version, _package_bytes(package)
+
+
+def _verify_current_launcher(target: Path, expected_version: str) -> Path:
+    """Validate the stable managed target used by compatibility launchers."""
+
+    _assert_cache_ancestors(target)
+    if target.is_symlink() or not target.is_dir():
+        raise ValueError("Codex Mem managed install target is unavailable")
+    _assert_tree_has_no_symlinks(target)
+    if not (target / MARKER).is_file():
+        raise ValueError("Codex Mem managed install target is not installer-owned")
+    info = manifest(target)
+    if info.get("version") != expected_version:
+        raise ValueError("Codex Mem managed install target has an unexpected version")
+    launcher = target / LEGACY_LAUNCHER
+    if launcher.is_symlink() or not launcher.is_file():
+        raise ValueError("Codex Mem managed launcher is unavailable")
+    return launcher
+
+
+def _legacy_forwarder_bytes(target_launcher: Path) -> bytes:
+    target_literal = json.dumps(str(target_launcher), ensure_ascii=False)
+    return (
+        "#!/usr/bin/env python3\n"
+        f"{_FORWARDER_MARKER}\n"
+        '"""Forward an older Codex Mem cache launcher to the managed install."""\n'
+        "import os\n"
+        "import sys\n"
+        "from pathlib import Path\n\n"
+        f"_TARGET = Path({target_literal})\n"
+        "if _TARGET.is_symlink() or not _TARGET.is_file():\n"
+        "    raise SystemExit(\"Codex Mem managed launcher is unavailable\")\n"
+        "os.execv(sys.executable, [sys.executable, str(_TARGET), *sys.argv[1:]])\n"
+    ).encode("utf-8")
+
+
+def _replace_launcher(path: Path, payload: bytes, mode: int) -> None:
+    """Atomically replace a regular launcher while preserving its mode."""
+
+    temporary = path.with_name(f".{path.name}.codex-mem-{time.time_ns()}.tmp")
+    try:
+        temporary.write_bytes(payload)
+        temporary.chmod(mode)
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def _refresh_cache_launcher(
+    package: Path, version: str, target_launcher: Path, current_version: str
+) -> dict:
+    receipt = {"version": version, "path": str(package)}
+    if version == current_version:
+        receipt["status"] = "skipped"
+        receipt["reason"] = "current_version"
+        return receipt
+    try:
+        _verify_managed_package(package, expected_version=version)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        receipt.update(status="skipped", reason="unverified_package", detail=str(exc))
+        return receipt
+
+    launcher = package / LEGACY_LAUNCHER
+    backup = package / LEGACY_LAUNCHER_BACKUP
+    if launcher.is_symlink() or not launcher.is_file():
+        receipt.update(status="failed", reason="launcher_unavailable")
+        return receipt
+    if backup.is_symlink() or (backup.exists() and not backup.is_file()):
+        receipt.update(status="failed", reason="backup_unavailable")
+        return receipt
+    expected = _legacy_forwarder_bytes(target_launcher)
+    try:
+        if launcher.read_bytes() == expected:
+            receipt["status"] = "already_current"
+            if backup.is_file():
+                receipt["backup"] = str(backup)
+            return receipt
+        if not backup.exists():
+            shutil.copy2(launcher, backup)
+            if backup.is_symlink() or not backup.is_file():
+                raise ValueError("Codex Mem launcher backup is unavailable")
+        mode = launcher.stat().st_mode & 0o7777
+        _replace_launcher(launcher, expected, mode)
+        if launcher.is_symlink() or launcher.read_bytes() != expected:
+            raise ValueError("Codex Mem launcher refresh verification failed")
+    except (OSError, shutil.Error, ValueError) as exc:
+        receipt.update(status="failed", reason="refresh_failed", detail=str(exc))
+        if backup.is_file():
+            receipt["backup"] = str(backup)
+        return receipt
+    receipt.update(status="refreshed", backup=str(backup))
+    return receipt
+
+
+def _refresh_legacy_launchers(
+    cache_root: Path, target: Path, current_version: str
+) -> dict:
+    """Point managed legacy cache launchers at the current install target."""
+
+    result: dict = {"status": "skipped", "scope": str(cache_root), "packages": []}
+    if not cache_root.exists():
+        result["reason"] = "no_managed_cache"
+        return result
+    if cache_root.is_symlink() or not cache_root.is_dir():
+        result.update(status="failed", reason="cache_namespace_unavailable")
+        return result
+    try:
+        target_launcher = _verify_current_launcher(target, current_version)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        result.update(status="failed", reason="target_unavailable", detail=str(exc))
+        return result
+
+    packages: list[dict] = []
+    for package in sorted(cache_root.iterdir(), key=lambda path: path.name):
+        if not _CACHE_VERSION.fullmatch(package.name):
+            continue
+        try:
+            version, _ = _verify_managed_package(package)
+        except (OSError, ValueError, json.JSONDecodeError):
+            # A version-shaped package that is not ours is left untouched.
+            packages.append({
+                "version": package.name,
+                "path": str(package),
+                "status": "skipped",
+                "reason": "unverified_package",
+            })
+            continue
+        packages.append(_refresh_cache_launcher(package, version, target_launcher, current_version))
+
+    result["packages"] = packages
+    if not packages:
+        result["reason"] = "no_legacy_packages"
+    elif any(package["status"] == "failed" for package in packages):
+        result["status"] = "partial"
+    else:
+        result["status"] = "complete"
+    return result
 
 
 def _copy_cache_backup(
@@ -291,6 +432,7 @@ def install(source: Path, user_home: Path, *, apply: bool, register_only: bool =
         previous_cache: tuple[Path, str] | None = None
         cache_backups: list[tuple[Path, Path, str, str]] = []
         cache_backup_root: Path | None = None
+        cache_root: Path | None = None
         cache_total = 0
         retain_cache_backup = False
         stage = Path(tempfile.mkdtemp(prefix=".codex-mem-stage-", dir=target.parent))
@@ -397,6 +539,10 @@ def install(source: Path, user_home: Path, *, apply: bool, register_only: bool =
                         retain_cache_backup = True
                 else:
                     activated["cache_preservation"] = "complete"
+            if cache_root is not None:
+                activated["legacy_launcher_refresh"] = _refresh_legacy_launchers(
+                    cache_root, target, info["version"]
+                )
             return activated
         finally:
             if cache_backup_root is not None and not retain_cache_backup:

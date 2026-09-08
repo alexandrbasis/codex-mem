@@ -56,15 +56,25 @@ class FakeBackend:
 
 class FakeSearchStore:
     def __init__(self) -> None:
-        self.lexical_calls: list[tuple[str, str, int, object]] = []
-        self.semantic_calls: list[tuple[str, list[float], str, str, int, int, object]] = []
+        self.lexical_calls: list[tuple[str, str, int, object, object, object, object]] = []
+        self.semantic_calls: list[
+            tuple[str, list[float], str, str, int, int, object, object, object, object]
+        ] = []
         self.lexical_results: list[dict[str, object]] = []
         self.semantic_results: list[dict[str, object]] = []
 
     def search(
-        self, project: str, query: str, *, limit: int, kinds: object = None
+        self,
+        project: str,
+        query: str,
+        *,
+        limit: int,
+        kinds: object = None,
+        types: object = None,
+        concepts: object = None,
+        files: object = None,
     ) -> list[dict[str, object]]:
-        self.lexical_calls.append((project, query, limit, kinds))
+        self.lexical_calls.append((project, query, limit, kinds, types, concepts, files))
         return self.lexical_results
 
     def semantic_search(
@@ -77,9 +87,12 @@ class FakeSearchStore:
         *,
         limit: int,
         kinds: object = None,
+        types: object = None,
+        concepts: object = None,
+        files: object = None,
     ) -> list[dict[str, object]]:
         self.semantic_calls.append(
-            (project, query_vector, model, revision, dimensions, limit, kinds)
+            (project, query_vector, model, revision, dimensions, limit, kinds, types, concepts, files)
         )
         return self.semantic_results
 
@@ -192,6 +205,34 @@ class SemanticTests(unittest.TestCase):
         self.assertEqual(["b", "a", "c"], [record["id"] for record in result["results"]])
         self.assertEqual("hybrid", result["used_mode"])
         self.assertGreater(result["results"][0]["score"], result["results"][1]["score"])
+
+    def test_structured_filters_reach_both_candidate_queries_before_rrf_limit(self) -> None:
+        store = FakeSearchStore()
+        store.lexical_results = [{"id": "lexical-a", "title": "A"}]
+        store.semantic_results = [{"id": "semantic-a", "title": "A"}]
+
+        semantic.search(
+            store,
+            self.project,
+            "query",
+            mode="hybrid",
+            limit=2,
+            kinds=["note"],
+            types=["bugfix"],
+            concepts=["sqlite"],
+            files=["codex_mem/store.py"],
+            backend=FakeBackend(),
+        )
+
+        lexical = store.lexical_calls[0]
+        semantic_call = store.semantic_calls[0]
+        self.assertEqual(8, lexical[2])
+        self.assertEqual(8, semantic_call[5])
+        self.assertEqual(("note",), tuple(lexical[3]))
+        self.assertEqual(("bugfix",), tuple(lexical[4]))
+        self.assertEqual(("sqlite",), tuple(lexical[5]))
+        self.assertEqual(("codex_mem/store.py",), tuple(lexical[6]))
+        self.assertEqual(lexical[3:], semantic_call[6:])
 
     def test_tokenizer_offsets_chunk_long_russian_wordpieces_without_losing_the_tail(self) -> None:
         tokenizer = CharacterPieceTokenizer()

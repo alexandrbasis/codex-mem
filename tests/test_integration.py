@@ -5,10 +5,58 @@ import unittest
 from unittest.mock import patch
 
 from codex_mem.integration import index_project
+from codex_mem.integration import search_memory
+from codex_mem.store import Store
 from codex_mem.service import _index_pending
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_search_memory_propagates_structured_filters_to_semantic_boundary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            data = Path(temporary) / "memory"
+            project = Path(temporary) / "project"
+            project.mkdir()
+            with Store(data) as store:
+                with patch(
+                    "codex_mem.semantic.search",
+                    return_value={
+                        "results": [],
+                        "requested_mode": "lexical",
+                        "used_mode": "lexical",
+                        "fallback_reason": None,
+                    },
+                ) as search:
+                    result = search_memory(
+                        store,
+                        project,
+                        "query",
+                        mode="lexical",
+                        limit=3,
+                        kinds=["note"],
+                        types=["bugfix"],
+                        concepts=["sqlite"],
+                        files=["codex_mem/store.py"],
+                    )
+            self.assertEqual([], result["results"])
+            self.assertEqual(
+                {
+                    "mode": "lexical",
+                    "limit": 3,
+                    "kinds": ["note"],
+                    "types": ["bugfix"],
+                    "concepts": ["sqlite"],
+                    "files": ["codex_mem/store.py"],
+                },
+                {
+                    "mode": search.call_args.kwargs["mode"],
+                    "limit": search.call_args.kwargs["limit"],
+                    "kinds": search.call_args.kwargs["kinds"],
+                    "types": search.call_args.kwargs["types"],
+                    "concepts": search.call_args.kwargs["concepts"],
+                    "files": search.call_args.kwargs["files"],
+                },
+            )
+
     def test_absent_optional_model_does_not_block_observation_queue(self):
         with tempfile.TemporaryDirectory() as temporary:
             data = Path(temporary) / "memory"

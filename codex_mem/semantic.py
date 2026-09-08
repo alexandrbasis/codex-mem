@@ -369,6 +369,9 @@ def search(
     mode: str = "hybrid",
     limit: int = 10,
     kinds: Sequence[str] | None = None,
+    types: Sequence[str] | None = None,
+    concepts: Sequence[str] | None = None,
+    files: Sequence[str] | None = None,
     backend: EmbeddingBackend | None = None,
 ) -> dict[str, Any]:
     """Search lexical, semantic, or hybrid previews with stable RRF ordering."""
@@ -377,16 +380,38 @@ def search(
     requested_mode = _checked_mode(mode)
     checked_limit = _checked_limit(limit)
     checked_query = _checked_query(query)
+    checked_kinds = _checked_filter_values(kinds, "kinds") if kinds is not None else None
+    checked_types = _checked_filter_values(types, "types") if types is not None else None
+    checked_concepts = _checked_filter_values(concepts, "concepts") if concepts is not None else None
+    checked_files = _checked_filter_values(files, "files") if files is not None else None
 
     if requested_mode == "lexical":
-        results = _lexical_results(store, workspace, checked_query, checked_limit, kinds)
+        results = _lexical_results(
+            store,
+            workspace,
+            checked_query,
+            checked_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
         return _search_receipt(results, requested_mode, "lexical", None)
 
     active_backend = _backend(backend)
     if not active_backend.ready:
         code = active_backend.unavailable_code or "model_not_ready"
         if requested_mode == "auto":
-            results = _lexical_results(store, workspace, checked_query, checked_limit, kinds)
+            results = _lexical_results(
+                store,
+                workspace,
+                checked_query,
+                checked_limit,
+                checked_kinds,
+                checked_types,
+                checked_concepts,
+                checked_files,
+            )
             return _search_receipt(results, requested_mode, "lexical", code)
         raise SemanticError(code)
 
@@ -394,20 +419,54 @@ def search(
         query_vector = _normalized_query_vector(active_backend, checked_query)
         if requested_mode == "semantic":
             results = _semantic_results(
-                store, workspace, query_vector, checked_limit, kinds
+                store,
+                workspace,
+                query_vector,
+                checked_limit,
+                checked_kinds,
+                checked_types,
+                checked_concepts,
+                checked_files,
             )
             return _search_receipt(results, requested_mode, "semantic", None)
 
         candidate_limit = min(MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
-        lexical = _lexical_results(store, workspace, checked_query, candidate_limit, kinds)
-        semantic = _semantic_results(store, workspace, query_vector, candidate_limit, kinds)
+        lexical = _lexical_results(
+            store,
+            workspace,
+            checked_query,
+            candidate_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
+        semantic = _semantic_results(
+            store,
+            workspace,
+            query_vector,
+            candidate_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
         results = _rrf(lexical, semantic, checked_limit)
         used_mode = "hybrid"
         return _search_receipt(results, requested_mode, used_mode, None)
     except SemanticError as exc:
         if requested_mode != "auto":
             raise
-        results = _lexical_results(store, workspace, checked_query, checked_limit, kinds)
+        results = _lexical_results(
+            store,
+            workspace,
+            checked_query,
+            checked_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
         return _search_receipt(results, requested_mode, "lexical", exc.code)
 
 
@@ -676,6 +735,79 @@ def _checked_limit(limit: int) -> int:
     return limit
 
 
+def _checked_filter_values(
+    value: Sequence[str] | str | None,
+    field: str,
+    *,
+    maximum_items: int = 100,
+    maximum_chars: int = 1_000,
+) -> list[str] | None:
+    """Validate a structured retrieval filter before it reaches storage.
+
+    Storage owns the canonical validation and redaction of metadata.  The
+    semantic layer still validates the transport shape so an embedding search
+    cannot accidentally interpret a scalar, mapping, or bytes object as an
+    iterable of filter values.  Returning a fresh list also prevents a caller
+    from mutating filters while lexical and semantic branches are running.
+    """
+
+    if value is None:
+        return None
+    if isinstance(value, str):
+        values: list[object] = [value]
+    elif isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        values = list(value)
+    else:
+        raise ValueError(f"{field} must be a list of text values")
+    if not values:
+        raise ValueError(f"{field} must not be empty")
+    if len(values) > maximum_items:
+        raise ValueError(f"{field} has too many values")
+    checked: list[str] = []
+    seen: set[str] = set()
+    for candidate in values:
+        if not isinstance(candidate, str) or "\x00" in candidate:
+            raise ValueError(f"{field} must contain text values")
+        cleaned = candidate.strip()
+        if not cleaned:
+            raise ValueError(f"{field} must not contain empty values")
+        if len(cleaned) > maximum_chars:
+            raise ValueError(f"{field} contains a value that is too long")
+        if cleaned not in seen:
+            checked.append(cleaned)
+            seen.add(cleaned)
+    if not checked:
+        raise ValueError(f"{field} must not be empty")
+    return checked
+
+
+def _filter_kwargs(
+    kinds: Sequence[str] | str | None,
+    types: Sequence[str] | str | None,
+    concepts: Sequence[str] | str | None,
+    files: Sequence[str] | str | None,
+) -> dict[str, list[str] | None]:
+    """Build only the filter kwargs requested by the caller.
+
+    Omitting new kwargs when they are absent keeps the v1/v2 in-process Store
+    seam and third-party test doubles source compatible.  Once a structured
+    filter is requested it is passed to storage as a candidate-universe
+    constraint; callers must not emulate this by filtering an already limited
+    result list.
+    """
+
+    values: dict[str, list[str] | None] = {}
+    if kinds is not None:
+        values["kinds"] = _checked_filter_values(kinds, "kinds")
+    if types is not None:
+        values["types"] = _checked_filter_values(types, "types")
+    if concepts is not None:
+        values["concepts"] = _checked_filter_values(concepts, "concepts")
+    if files is not None:
+        values["files"] = _checked_filter_values(files, "files")
+    return values
+
+
 def _claimed_parts(claimed: object) -> tuple[str, str, list[Mapping[str, Any]]]:
     if not isinstance(claimed, Mapping):
         raise SemanticError("storage_protocol_error")
@@ -903,8 +1035,12 @@ def _lexical_results(
     query: str,
     limit: int,
     kinds: Sequence[str] | None,
+    types: Sequence[str] | None = None,
+    concepts: Sequence[str] | None = None,
+    files: Sequence[str] | None = None,
 ) -> list[dict[str, Any]]:
-    return _preview_list(store.search(project, query, limit=limit, kinds=kinds))
+    kwargs = {"limit": limit, **_filter_kwargs(kinds, types, concepts, files)}
+    return _preview_list(store.search(project, query, **kwargs))
 
 
 def _semantic_results(
@@ -913,7 +1049,11 @@ def _semantic_results(
     query_vector: Sequence[float],
     limit: int,
     kinds: Sequence[str] | None,
+    types: Sequence[str] | None = None,
+    concepts: Sequence[str] | None = None,
+    files: Sequence[str] | None = None,
 ) -> list[dict[str, Any]]:
+    kwargs = {"limit": limit, **_filter_kwargs(kinds, types, concepts, files)}
     return _preview_list(
         store.semantic_search(
             project,
@@ -921,8 +1061,7 @@ def _semantic_results(
             MODEL,
             MODEL_REVISION,
             DIMENSIONS,
-            limit=limit,
-            kinds=kinds,
+            **kwargs,
         )
     )
 

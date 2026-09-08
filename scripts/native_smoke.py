@@ -248,7 +248,7 @@ def smoke(args: argparse.Namespace) -> dict[str, Any]:
             matches = [server for server in servers if server.get("pluginId") == args.plugin_id
                        and {tool.get("name") for tool in server.get("tools", {}).values()} == EXPECTED_TOOLS]
             if len(matches) != 1:
-                raise SmokeError("Expected exactly one installed codex-mem MCP with all seven tools")
+                raise SmokeError("Expected exactly one installed codex-mem MCP with all expected tools")
             server = matches[0]
             status = status_payload(client.request("mcpServer/tool/call", {
                 "server": server["name"], "threadId": thread_id,

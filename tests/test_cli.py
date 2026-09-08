@@ -10,6 +10,10 @@ import sys
 import tempfile
 import unittest
 
+from codex_mem.store import Store
+from codex_mem.tool_io import normalize_capture
+from codex_mem.mcp import MAX_RAW_RESULT_BYTES
+
 
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "scripts" / "codex-mem.py"
@@ -149,6 +153,169 @@ class CLITests(unittest.TestCase):
                           "--project", str(self.project), "--query", "memory", "--mode", "semantic",
                           expected=2)
         self.assertEqual("semantic_unavailable", error["error"]["code"])
+
+    def test_structured_observation_filters_and_skip_tools_config(self) -> None:
+        remembered = self._run(
+            "remember",
+            "--data-dir",
+            str(self.data_dir),
+            "--project",
+            str(self.project),
+            "--title",
+            "Structured note",
+            "--body",
+            "The metadata carries the sqlite decision.",
+            "--observation-type",
+            "decision",
+            "--concept",
+            "sqlite",
+            "--file-read",
+            "codex_mem/store.py",
+        )
+        entry_id = remembered["id"]
+
+        other_project = self.temporary.name + "/other-project"
+        Path(other_project).mkdir()
+        other = self._run(
+            "remember",
+            "--data-dir",
+            str(self.data_dir),
+            "--project",
+            other_project,
+            "--title",
+            "Other project note",
+            "--body",
+            "The same sqlite decision exists in another project.",
+            "--observation-type",
+            "decision",
+            "--concept",
+            "sqlite",
+            "--file-read",
+            "codex_mem/store.py",
+        )
+
+        searched = self._run(
+            "search",
+            "--data-dir",
+            str(self.data_dir),
+            "--project",
+            str(self.project),
+            "--query",
+            "sqlite",
+            "--mode",
+            "lexical",
+            "--type",
+            "decision",
+            "--concept",
+            "sqlite",
+            "--file",
+            "codex_mem/store.py",
+        )
+        self.assertEqual([entry_id], [item["id"] for item in searched["results"]])
+        self.assertNotIn(other["id"], [item["id"] for item in searched["results"]])
+
+        context = self._run(
+            "context",
+            "--data-dir",
+            str(self.data_dir),
+            "--project",
+            str(self.project),
+            "--type",
+            "decision",
+            "--concept",
+            "sqlite",
+            "--file",
+            "codex_mem/store.py",
+        )
+        self.assertIn(entry_id, context["context"])
+
+        configured = self._run(
+            "config",
+            "--data-dir",
+            str(self.data_dir),
+            "--set",
+            'skip_tools=["shell","browser"]',
+        )
+        self.assertEqual(["shell", "browser"], configured["tool_skip_list"])
+
+    def test_tool_uses_accepts_native_punctuation_and_256_char_id(self) -> None:
+        tool_id = "native.call:" + ("x" * 244)
+        self.assertEqual(256, len(tool_id))
+        with Store(self.data_dir) as store:
+            capture = normalize_capture(
+                {
+                    "tool_name": "shell",
+                    "tool_use_id": tool_id,
+                    "session_id": "session-a",
+                    "tool_input": {"command": "echo safe"},
+                    "tool_response": {"status": "ok"},
+                },
+                project=str(self.project),
+            )
+            self.assertIsNotNone(capture)
+            assert capture is not None
+            store.remember(
+                self.project,
+                "Captured tool evidence",
+                "The tool returned a bounded result.",
+                source="hook:PostToolUse",
+                tool_capture=capture,
+            )
+
+        raw = self._run(
+            "tool-uses",
+            "--data-dir",
+            str(self.data_dir),
+            "--project",
+            str(self.project),
+            "--id",
+            tool_id,
+        )
+        self.assertEqual(tool_id, raw[0]["tool_use_id"])
+
+    def test_tool_uses_bounds_aggregate_with_explicit_field_markers(self) -> None:
+        with Store(self.data_dir) as store:
+            for index in range(5):
+                capture = normalize_capture(
+                    {
+                        "tool_name": "shell",
+                        "tool_use_id": f"large-{index}",
+                        "session_id": "large-session",
+                        "tool_input": {"payload": "x" * 70_000},
+                        "tool_response": {"payload": "y" * 70_000},
+                    },
+                    project=str(self.project),
+                )
+                self.assertIsNotNone(capture)
+                assert capture is not None
+                store.remember(
+                    self.project,
+                    f"Large raw capture {index}",
+                    "bounded raw evidence",
+                    source="hook:PostToolUse",
+                    tool_capture=capture,
+                )
+
+        raw = self._run(
+            "tool-uses",
+            "--data-dir",
+            str(self.data_dir),
+            "--project",
+            str(self.project),
+            "--session-id",
+            "large-session",
+            "--limit",
+            "5",
+        )
+        self.assertTrue(raw["truncated"])
+        self.assertEqual(5, raw["total"])
+        self.assertEqual(5, raw["returned"])
+        self.assertEqual(5, len(raw["tool_uses"]))
+        self.assertTrue(raw["truncated_fields"])
+        self.assertTrue(
+            json.loads(raw["tool_uses"][0]["tool_input"])["__codex_mem_aggregate_truncated__"]
+        )
+        self.assertLessEqual(len(json.dumps(raw, ensure_ascii=False).encode()), MAX_RAW_RESULT_BYTES)
 
     def test_import_preview_does_not_initialize_destination_store(self) -> None:
         legacy = Path(self.temporary.name) / "legacy.sqlite"

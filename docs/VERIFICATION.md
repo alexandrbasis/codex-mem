@@ -1,16 +1,36 @@
 # Verification
 
-Version `1.3.1` changes observation selection and retrieval eligibility. Current checks are separated from the historical baselines below; these bounded scenarios do not establish universal retrieval quality.
+Version `1.4.0` adds retained tool I/O, structured observations, session summaries, and structured retrieval filters. Tests below have bounded synthetic scope; they do not establish universal note quality.
 
-## Version and host boundary
+## Version 1.4.0 verification
 
-- Tested implementation snapshot: `1.2.0`.
-- Current package: `1.3.1`. The original public-export checks below were recorded for `1.2.1`.
-- Native Codex integration boundary: Codex CLI `0.153.4`.
-- Public export checks: 143 unit tests and the local synthetic acceptance driver passed.
-- Native behavioral baseline: E5, Luna/medium, MCP, queue, capture, paired recall, and exclusion checks from the tested `1.2.0` snapshot.
-- The evidence uses temporary fictional fixtures for native reads and automatic flows. It does not validate or publish a user's existing memory.
-- Remote CI results are not part of this verification record.
+The release comparison targets Claude Mem commit [`fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0`](https://github.com/thedotmack/claude-mem/commit/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0), rather than assuming it is identical to stable v13.24.1. A direct Claude-provider A/B was unavailable because Claude CLI authentication and a subscription were absent.
+
+- The native observation processor uses `gpt-5.6-luna` with `medium` reasoning.
+- Synthetic hook/MCP acceptance passed 11 hook invocations. Official hook-schema validation was not enabled.
+- The full unit suite passed 217 tests. Ten isolated native Luna/medium scenarios passed, covering useful fixes, intent without an outcome, routine noise, contradictory verification, injection, continuity, long output, and project/session boundaries.
+- A fresh native Codex task executed a UNIQUE-constraint regression, captured a 30,796-character shell result through `PostToolUse`, and retained a fact absent from command input. The observer received that middle fact, created a structured note, then produced a Stop summary from the earlier note. The harness explicitly drains processing after native capture; it does not replace the separate detached-service baseline.
+- The pinned upstream prompt builder and parser were executed offline against eight synthetic events and three parser samples. A Codex-provider decision case additionally passed real hook-handler capture, hydration, and Luna processing. This is not a Claude-provider A/B.
+- Earlier native runs exposed identifier loss, noise in summaries, and missing summaries after asynchronous note writes. Corrections and fixture-boundary changes are recorded in the comparison JSON; earlier failed runs remain failures.
+- The installed host discovered six enabled, trusted hook definitions at version 1.4.0. Database migration to schema 4 passed SQLite integrity checks, with a pre-upgrade backup.
+- Older managed cache paths are preserved; their launchers forward to the current managed installation. Both skills remain explicit-only.
+
+See [the machine-readable comparison](observation-comparison.json) for individual criteria and the preserved earlier evidence. The current comparison does not claim complete product parity: UI, HTTP API, cloud synchronization, and non-Codex integrations are outside this implementation.
+
+To reproduce the local checks from the repository root:
+
+```sh
+python3 -m unittest discover -s tests
+python3 scripts/acceptance.py
+python3 scripts/observation_quality_acceptance.py --native --output /tmp/observation-quality.json
+python3 scripts/native_tool_capture_test.py --native --output /tmp/native-capture.json
+```
+
+Native commands use the signed-in Codex account and its allowance. For the upstream contract check, supply a checkout at the pinned commit and install Bun, then run `python3 scripts/compare_observers.py --upstream /absolute/path/to/claude-mem`. The default run does not invoke an AI provider; `--codex-live` explicitly enables the Codex-only cases.
+
+## Historical verification
+
+The following records apply to their named versions, not automatically to the current release.
 
 ## Observation quality checks (1.3.1)
 

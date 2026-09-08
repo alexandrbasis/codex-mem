@@ -13,9 +13,10 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
-from .store import Store, StoreError
+from .store import MAX_TOOL_USE_ID_CHARS, Store, StoreError
 from .semantic import SemanticError
 from .service import ServiceError
+from .mcp import bound_tool_uses
 
 try:  # The package initializer is created alongside the rest of the package.
     from . import __version__ as _VERSION
@@ -75,6 +76,34 @@ def _collect_ids(namespace: argparse.Namespace) -> list[str]:
     return values
 
 
+def _collect_optional_ids(namespace: argparse.Namespace) -> list[str] | None:
+    """Collect raw-evidence IDs without requiring an ID selector."""
+
+    values = list(getattr(namespace, "ids", []) or []) + list(
+        getattr(namespace, "id_values", []) or []
+    )
+    for encoded in getattr(namespace, "id_arrays", []) or []:
+        values.extend(
+            _parse_string_array(
+                encoded,
+                field="ids",
+                maximum=100,
+                maximum_chars=MAX_TOOL_USE_ID_CHARS,
+            )
+        )
+    if not values:
+        return None
+    if len(values) > 100:
+        raise CLIError("at most 100 record IDs are allowed")
+    if any(not isinstance(value, str) or not value.strip() for value in values):
+        raise CLIError("tool-use IDs must not be empty")
+    if any(len(value) > MAX_TOOL_USE_ID_CHARS for value in values):
+        raise CLIError("tool-use IDs are too long")
+    if len(set(values)) != len(values):
+        raise CLIError("tool-use IDs must not contain duplicates")
+    return values
+
+
 def _parse_bool(value: str, *, field: str) -> bool:
     normalized = value.strip().lower()
     if normalized in {"1", "true", "yes", "on"}:
@@ -99,6 +128,49 @@ def _parse_excluded_projects(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
+def _parse_string_array(value: str, *, field: str, maximum: int = 100, maximum_chars: int = 1_000) -> list[str]:
+    """Parse a bounded string array used by config and structured filters."""
+
+    value = value.strip()
+    if not value:
+        return []
+    if value.startswith("["):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise CLIError(f"{field} must be a JSON string array or comma-separated values") from exc
+        if not isinstance(parsed, list):
+            raise CLIError(f"{field} must be a string array")
+        candidates = parsed
+    else:
+        candidates = [item.strip() for item in value.split(",")]
+    if len(candidates) > maximum:
+        raise CLIError(f"{field} has too many values")
+    values: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, str) or not candidate.strip() or "\x00" in candidate:
+            raise CLIError(f"{field} must contain non-empty strings")
+        item = candidate.strip()
+        if len(item) > maximum_chars:
+            raise CLIError(f"{field} contains a value that is too long")
+        if item not in seen:
+            values.append(item)
+            seen.add(item)
+    return values
+
+
+def _filter_values(values: Sequence[str] | None, *, field: str) -> list[str] | None:
+    """Normalize repeatable retrieval flags, accepting one JSON/comma page too."""
+
+    if values is None:
+        return None
+    flattened: list[str] = []
+    for value in values:
+        flattened.extend(_parse_string_array(value, field=field))
+    return list(dict.fromkeys(flattened))
+
+
 def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
     updates: dict[str, Any] = {}
     for item in namespace.set_values or []:
@@ -114,6 +186,8 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
             updates[key] = _positive(value, field=key, maximum=6_000)
         elif key in {"excluded_projects", "included_projects"}:
             updates[key] = _parse_excluded_projects(value)
+        elif key in {"skip_tools", "tool_skip_list"}:
+            updates[key] = _parse_string_array(value, field=key)
         elif key == "capture_scope":
             capture_scope = value.strip()
             if capture_scope not in {"selected", "all", "manual"}:
@@ -138,9 +212,32 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["excluded_projects"] = namespace.excluded_projects
     if namespace.included_projects is not None:
         updates["included_projects"] = namespace.included_projects
+    if getattr(namespace, "skip_tools", None) is not None:
+        values: list[str] = []
+        for item in namespace.skip_tools:
+            values.extend(_parse_string_array(item, field="skip_tools"))
+        updates["skip_tools"] = list(dict.fromkeys(values))
     if namespace.capture_scope is not None:
         updates["capture_scope"] = namespace.capture_scope
     return updates
+
+
+def _observation_metadata(namespace: argparse.Namespace) -> dict[str, Any] | None:
+    """Build optional structured observation metadata for ``remember``."""
+
+    fields = {
+        "type": getattr(namespace, "observation_type", None),
+        "subtitle": getattr(namespace, "observation_subtitle", None),
+        "facts": getattr(namespace, "facts", None),
+        "concepts": getattr(namespace, "concepts", None),
+        "files_read": getattr(namespace, "files_read", None),
+        "files_modified": getattr(namespace, "files_modified", None),
+    }
+    if not any(value is not None for value in fields.values()):
+        return None
+    if not isinstance(fields["type"], str) or not fields["type"].strip():
+        raise CLIError("--observation-type is required when structured observation fields are supplied")
+    return {key: value for key, value in fields.items() if value is not None}
 
 
 def _doctor() -> dict[str, Any]:
@@ -218,12 +315,21 @@ def _build_parser() -> _ArgumentParser:
     remember.add_argument("--tag", dest="tags", action="append", default=[])
     remember.add_argument("--dedupe-key")
     remember.add_argument("--source-id", dest="source_ids", action="append")
+    remember.add_argument("--observation-type", "--type", dest="observation_type")
+    remember.add_argument("--observation-subtitle", dest="observation_subtitle")
+    remember.add_argument("--fact", "--facts", dest="facts", action="append")
+    remember.add_argument("--concept", "--concepts", "--observation-concept", dest="concepts", action="append")
+    remember.add_argument("--file-read", "--files-read", dest="files_read", action="append")
+    remember.add_argument("--file-modified", "--files-modified", dest="files_modified", action="append")
 
     search = commands.add_parser("search", help="Search project memory previews")
     search.add_argument("--project", required=True)
     search.add_argument("--query", required=True)
     search.add_argument("--limit", type=lambda value: _positive(value, field="limit", maximum=100), default=10)
     search.add_argument("--kind", dest="kinds", action="append")
+    search.add_argument("--type", "--types", "--observation-type", dest="types", action="append")
+    search.add_argument("--concept", "--concepts", dest="concepts", action="append")
+    search.add_argument("--file", "--files", dest="files", action="append")
     search.add_argument("--mode", choices=("auto", "lexical", "semantic", "hybrid"),
                         help="Return results plus retrieval metadata; default automatically uses an available semantic index")
 
@@ -249,6 +355,22 @@ def _build_parser() -> _ArgumentParser:
     get.add_argument("--id", dest="id_values", action="append")
     get.add_argument("ids", nargs="*")
 
+    tool_uses = commands.add_parser(
+        "tool-uses",
+        aliases=["get-tool-uses"],
+        help="Read captured raw tool input/output evidence",
+    )
+    tool_uses.add_argument("--project", required=True)
+    tool_uses.add_argument("--id", dest="id_values", action="append")
+    tool_uses.add_argument("--ids", dest="id_arrays", action="append")
+    tool_uses.add_argument("ids", nargs="*")
+    tool_uses.add_argument("--session-id")
+    tool_uses.add_argument(
+        "--limit",
+        type=lambda value: _positive(value, field="limit", maximum=100),
+        default=10,
+    )
+
     timeline = commands.add_parser("timeline", help="List recent project memory")
     timeline.add_argument("--project", required=True)
     timeline.add_argument("--session-id")
@@ -263,6 +385,10 @@ def _build_parser() -> _ArgumentParser:
         default=6_000,
     )
     context.add_argument("--exclude-session")
+    context.add_argument("--kind", dest="kinds", action="append")
+    context.add_argument("--type", "--types", "--observation-type", dest="types", action="append")
+    context.add_argument("--concept", "--concepts", dest="concepts", action="append")
+    context.add_argument("--file", "--files", dest="files", action="append")
 
     status = commands.add_parser("status", help="Inspect local memory-store status")
     status.add_argument("--project")
@@ -293,6 +419,7 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--context-chars", type=lambda value: _positive(value, field="context_chars", maximum=6_000))
     config.add_argument("--exclude-project", dest="excluded_projects", action="append")
     config.add_argument("--include-project", dest="included_projects", action="append")
+    config.add_argument("--skip-tool", "--skip-tools", dest="skip_tools", action="append")
     config.add_argument(
         "--scope",
         "--capture-scope",
@@ -362,7 +489,7 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
 
     # Reject malformed project selectors before opening the local DB for a
     # command that otherwise has no reason to create or touch it.
-    if command in {"remember", "search", "get", "timeline", "context", "forget"}:
+    if command in {"remember", "search", "get", "get-tool-uses", "tool-uses", "timeline", "context", "forget"}:
         _absolute_project(namespace.project)
     elif command == "status" and namespace.project is not None:
         _absolute_project(namespace.project)
@@ -371,17 +498,23 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
 
     with Store(namespace.data_dir) as store:
         if command == "remember":
+            observation = _observation_metadata(namespace)
+            remember_kwargs: dict[str, Any] = {
+                "kind": namespace.kind,
+                "session_id": namespace.session_id,
+                "turn_id": namespace.turn_id,
+                "source": namespace.source,
+                "tags": namespace.tags or None,
+                "dedupe_key": namespace.dedupe_key,
+                "source_ids": namespace.source_ids,
+            }
+            if observation is not None:
+                remember_kwargs["observation"] = observation
             result = store.remember(
                 _absolute_project(namespace.project),
                 namespace.title,
                 namespace.body,
-                kind=namespace.kind,
-                session_id=namespace.session_id,
-                turn_id=namespace.turn_id,
-                source=namespace.source,
-                tags=namespace.tags or None,
-                dedupe_key=namespace.dedupe_key,
-                source_ids=namespace.source_ids,
+                **remember_kwargs,
             )
             from .integration import after_write
             result["background"] = after_write(namespace.project, namespace.data_dir)
@@ -395,8 +528,20 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
                 mode=namespace.mode or "auto",
                 limit=namespace.limit,
                 kinds=namespace.kinds,
+                types=_filter_values(namespace.types, field="types"),
+                concepts=_filter_values(namespace.concepts, field="concepts"),
+                files=_filter_values(namespace.files, field="files"),
             )
             return result if namespace.mode else result["results"]
+        if command in {"get-tool-uses", "tool-uses"}:
+            return bound_tool_uses(
+                store.get_tool_uses(
+                    _absolute_project(namespace.project),
+                    ids=_collect_optional_ids(namespace),
+                    session_id=namespace.session_id,
+                    limit=namespace.limit,
+                )
+            )
         if command == "get":
             return store.get(_absolute_project(namespace.project), _collect_ids(namespace))
         if command == "timeline":
@@ -406,12 +551,19 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
                 limit=namespace.limit,
             )
         if command == "context":
+            context_kwargs: dict[str, Any] = {
+                "query": namespace.query,
+                "budget": namespace.budget,
+                "exclude_session": namespace.exclude_session,
+            }
+            for name in ("kinds", "types", "concepts", "files"):
+                values = getattr(namespace, name, None)
+                if values is not None:
+                    context_kwargs[name] = _filter_values(values, field=name)
             return {
                 "context": store.context(
                     _absolute_project(namespace.project),
-                    query=namespace.query,
-                    budget=namespace.budget,
-                    exclude_session=namespace.exclude_session,
+                    **context_kwargs,
                 )
             }
         if command == "status":

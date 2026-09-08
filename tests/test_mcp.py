@@ -10,6 +10,10 @@ import sys
 import tempfile
 import unittest
 
+from codex_mem.mcp import MAX_LINE_BYTES, MemoryMCPServer
+from codex_mem.store import Store
+from codex_mem.tool_io import normalize_capture
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -107,6 +111,7 @@ class MCPSubprocessTests(unittest.TestCase):
         self.assertTrue(
             {
                 "memory_search",
+                "memory_get_tool_uses",
                 "memory_get",
                 "memory_timeline",
                 "memory_remember",
@@ -115,6 +120,17 @@ class MCPSubprocessTests(unittest.TestCase):
                 "memory_status",
             }.issubset(names)
         )
+        search_schema = next(
+            tool["inputSchema"] for tool in listing["result"]["tools"] if tool["name"] == "memory_search"
+        )
+        self.assertTrue({"kinds", "types", "concepts", "files"}.issubset(search_schema["properties"]))
+        raw_tool = next(
+            tool for tool in listing["result"]["tools"] if tool["name"] == "memory_get_tool_uses"
+        )
+        self.assertEqual(["project"], raw_tool["inputSchema"]["required"])
+        self.assertEqual(256, raw_tool["inputSchema"]["properties"]["ids"]["items"]["maxLength"])
+        self.assertNotIn("pattern", raw_tool["inputSchema"]["properties"]["ids"]["items"])
+        self.assertIn("never executes", raw_tool["description"])
 
         remembered = self._call(
             2,
@@ -194,6 +210,136 @@ class MCPSubprocessTests(unittest.TestCase):
         )
         self.assertEqual(0, malformed_envelope["id"])
         self.assertEqual(-32602, malformed_envelope["error"]["code"])
+
+
+class MCPRawToolUseTests(unittest.TestCase):
+    def test_raw_tool_read_passes_project_selectors_and_keeps_payload_opaque(self) -> None:
+        class FakeStore:
+            data_dir = "/tmp/codex-mem-test"
+
+            def __init__(self) -> None:
+                self.calls: list[tuple[str, object, object, int]] = []
+
+            def get_tool_uses(
+                self,
+                project: str,
+                *,
+                ids: object,
+                session_id: object,
+                limit: int,
+            ) -> list[dict[str, object]]:
+                self.calls.append((project, ids, session_id, limit))
+                return [
+                    {
+                        "project": project,
+                        "tool_input": "echo never execute",
+                        "tool_response": {"status": "ok"},
+                    }
+                ]
+
+        fake = FakeStore()
+        server = MemoryMCPServer(store=fake)  # type: ignore[arg-type]
+        try:
+            result = server._execute_tool(
+                "memory_get_tool_uses",
+                {
+                    "project": "/tmp/project-a",
+                    "ids": ["tool-use-1"],
+                    "session_id": "session-a",
+                    "limit": 3,
+                },
+            )
+        finally:
+            server.close()
+
+        self.assertEqual(
+            [("/tmp/project-a", ["tool-use-1"], "session-a", 3)],
+            fake.calls,
+        )
+        self.assertEqual("echo never execute", result[0]["tool_input"])
+        self.assertEqual({"status": "ok"}, result[0]["tool_response"])
+
+    def test_native_punctuation_and_256_char_tool_use_id_round_trip(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            project = root / "project"
+            project.mkdir()
+            tool_id = "native.call:" + ("x" * 244)
+            self.assertEqual(256, len(tool_id))
+            with Store(root / "memory-home") as store:
+                capture = normalize_capture(
+                    {
+                        "tool_name": "shell",
+                        "tool_use_id": tool_id,
+                        "session_id": "session-a",
+                        "tool_input": {"command": "echo safe"},
+                        "tool_response": {"status": "ok"},
+                    },
+                    project=str(project),
+                )
+                self.assertIsNotNone(capture)
+                assert capture is not None
+                store.remember(
+                    project,
+                    "Captured tool evidence",
+                    "The tool returned a bounded result.",
+                    source="hook:PostToolUse",
+                    tool_capture=capture,
+                )
+                server = MemoryMCPServer(store=store)
+                result = server._execute_tool(
+                    "memory_get_tool_uses",
+                    {"project": str(project), "ids": [tool_id], "limit": 1},
+                )
+                self.assertEqual(tool_id, result[0]["tool_use_id"])
+
+    def test_large_raw_page_keeps_records_and_marks_transport_field_truncation(self) -> None:
+        class FakeStore:
+            data_dir = "/tmp/codex-mem-test"
+
+            def get_tool_uses(
+                self,
+                project: str,
+                *,
+                ids: object,
+                session_id: object,
+                limit: int,
+            ) -> list[dict[str, object]]:
+                return [
+                    {
+                        "tool_use_id": f"tool-{index}",
+                        "project": project,
+                        "tool_input": "x" * 70_000,
+                        "tool_response": "y" * 70_000,
+                        "input_metadata": {},
+                        "response_metadata": {},
+                    }
+                    for index in range(5)
+                ]
+
+        server = MemoryMCPServer(store=FakeStore())  # type: ignore[arg-type]
+        try:
+            result = server._call_tool(
+                {
+                    "name": "memory_get_tool_uses",
+                    "arguments": {"project": "/tmp/project-a", "limit": 5},
+                }
+            )
+        finally:
+            server.close()
+
+        payload = json.loads(result["content"][0]["text"])
+        self.assertTrue(payload["truncated"])
+        self.assertEqual(5, payload["total"])
+        self.assertEqual(5, payload["returned"])
+        self.assertEqual(5, len(payload["tool_uses"]))
+        self.assertEqual(5, len(payload["truncated_fields"]))
+        self.assertTrue(payload["tool_uses"][0]["input_metadata"]["aggregate_truncated"])
+        self.assertTrue(
+            json.loads(payload["tool_uses"][0]["tool_input"])["__codex_mem_aggregate_truncated__"]
+        )
+        wire = json.dumps({"jsonrpc": "2.0", "id": 1, "result": result}, ensure_ascii=False).encode()
+        self.assertLess(len(wire), MAX_LINE_BYTES)
 
 
 if __name__ == "__main__":  # pragma: no cover

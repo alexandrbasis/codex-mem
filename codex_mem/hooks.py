@@ -22,10 +22,12 @@ try:  # A partially upgraded plugin must still let Codex continue.
         MAX_CONTEXT_CHARS,
         automatic_capture_enabled,
         context_was_injected,
+        clear_private_prompt_gate,
         hooks_disabled,
         load_config,
         mark_context_injected,
-    )
+        mark_private_prompt_gate,
+        )
 except Exception:  # pragma: no cover - defensive bootstrap path
     MAX_CONTEXT_CHARS = 6_000
 
@@ -44,6 +46,12 @@ except Exception:  # pragma: no cover - defensive bootstrap path
     def mark_context_injected(*_args: Any, **_kwargs: Any) -> None:
         return None
 
+    def clear_private_prompt_gate(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
+    def mark_private_prompt_gate(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
 try:
     from .privacy import redact_text
 except Exception:  # pragma: no cover - do not persist text when redaction is unavailable
@@ -55,6 +63,24 @@ try:  # Keep imports lazy/fail-open while an installation is being upgraded.
 except Exception:  # pragma: no cover - exercised only by incomplete installs
     Store = None  # type: ignore[assignment,misc]
     project_key = None  # type: ignore[assignment,misc]
+
+try:  # The raw side index is optional during an in-place plugin upgrade.
+    from .config import private_prompt_gate_active, private_prompt_gate_enabled
+    from .tool_io import ToolCapture, is_private_prompt, normalize_capture
+except Exception:  # pragma: no cover - exercised only by incomplete installs
+    ToolCapture = Any  # type: ignore[assignment,misc]
+
+    def private_prompt_gate_active(*_args: Any, **_kwargs: Any) -> bool:
+        return False
+
+    def private_prompt_gate_enabled(*_args: Any, **_kwargs: Any) -> bool:
+        return True
+
+    def is_private_prompt(_value: object) -> bool:
+        return False
+
+    def normalize_capture(*_args: Any, **_kwargs: Any) -> Any:
+        return None
 
 
 MAX_STDIN_BYTES = 1_048_576
@@ -207,7 +233,9 @@ def _handle_hook(
         project = _project_for(payload)
         if project is None or not automatic_capture_enabled(project, config):
             return response
-        if event == "PostToolUse" and not _tool_capture_candidate(payload, config):
+        if event == "PostToolUse" and not _tool_capture_candidate(
+            payload, config, project=project, data_dir=active_data_dir
+        ):
             return response
         if event == "Stop" and not _stop_capture_candidate(payload, config):
             return response
@@ -226,7 +254,7 @@ def _handle_hook(
                 payload, active_store, project, config, active_data_dir, response
             )
         if event == "PostToolUse":
-            _post_tool_use(payload, active_store, project, config)
+            _post_tool_use(payload, active_store, project, config, active_data_dir)
         elif event == "Stop":
             _stop(payload, active_store, project, config)
         elif event == "PreCompact":
@@ -332,13 +360,23 @@ def _event_payload_is_valid(event: str, payload: Mapping[str, Any]) -> bool:
     return False
 
 
-def _tool_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any]) -> bool:
+def _tool_capture_candidate(
+    payload: Mapping[str, Any],
+    config: Mapping[str, Any],
+    *,
+    project: str | None = None,
+    data_dir: str | os.PathLike[str] | None = None,
+) -> bool:
     """Decide whether PostToolUse needs a Store before opening SQLite."""
 
     if not config.get("capture_enabled") or not config.get("capture_tools"):
         return False
     tool_name = _safe_text(payload.get("tool_name"), maximum=160)
     if not tool_name or _exclude_tool(tool_name, payload.get("tool_input")):
+        return False
+    if _private_tool_gate_active(payload, project, config, data_dir):
+        return False
+    if normalize_capture(payload, project=project, config=config) is None:
         return False
     tool_input = payload.get("tool_input")
     raw_command = _command_text(tool_input)
@@ -356,6 +394,22 @@ def _tool_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any
     # activity. Failed commands remain useful even when the host supplied no
     # textual output.
     return bool(output or paths or (exit_code is not None and exit_code != 0))
+
+
+def _private_tool_gate_active(
+    payload: Mapping[str, Any],
+    project: str | None,
+    config: Mapping[str, Any],
+    data_dir: str | os.PathLike[str] | None,
+) -> bool:
+    if not project or not private_prompt_gate_enabled(config):
+        return False
+    session_key = _session_key(payload, project)
+    return private_prompt_gate_active(
+        session_key,
+        turn_id=_optional_id(payload.get("turn_id")),
+        data_dir=data_dir,
+    )
 
 
 def _stop_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any]) -> bool:
@@ -413,6 +467,28 @@ def _user_prompt(
     response: dict[str, Any],
 ) -> dict[str, Any]:
     prompt = _safe_prompt(payload.get("prompt"))
+    session_key = _session_key(payload, project)
+    # The marker is detected before _safe_prompt/redact_text replaces private
+    # content.  A public prompt starts a fresh turn and clears the prior gate;
+    # the key includes the canonical project and session, so another session
+    # cannot inherit the privacy decision.
+    if private_prompt_gate_enabled(config):
+        try:
+            if is_private_prompt(payload.get("prompt")):
+                mark_private_prompt_gate(
+                    session_key,
+                    turn_id=_optional_id(payload.get("turn_id")),
+                    data_dir=data_dir,
+                )
+            else:
+                clear_private_prompt_gate(session_key, data_dir=data_dir)
+        except Exception:
+            _stderr("codex-mem hook: privacy state unavailable")
+    else:
+        try:
+            clear_private_prompt_gate(session_key, data_dir=data_dir)
+        except Exception:
+            pass
     if config.get("capture_enabled") and prompt:
         _remember_safely(
             store,
@@ -426,7 +502,6 @@ def _user_prompt(
             dedupe_prefix="prompt",
         )
 
-    session_key = _session_key(payload, project)
     context = _prior_context(
         store,
         project,
@@ -458,12 +533,21 @@ def _user_prompt(
 
 
 def _post_tool_use(
-    payload: Mapping[str, Any], store: Any, project: str, config: Mapping[str, Any]
+    payload: Mapping[str, Any],
+    store: Any,
+    project: str,
+    config: Mapping[str, Any],
+    data_dir: str | os.PathLike[str] | None = None,
 ) -> None:
     if not config.get("capture_enabled") or not config.get("capture_tools"):
         return
     tool_name = _safe_text(payload.get("tool_name"), maximum=160)
     if not tool_name or _exclude_tool(tool_name, payload.get("tool_input")):
+        return
+    if _private_tool_gate_active(payload, project, config, data_dir):
+        return
+    tool_capture = normalize_capture(payload, project=project, config=config)
+    if tool_capture is None:
         return
 
     tool_input = payload.get("tool_input")
@@ -509,6 +593,7 @@ def _post_tool_use(
         tags=["tool", "metadata"],
         dedupe_prefix="tool",
         provenance_id=tool_use_id,
+        tool_capture=tool_capture,
     )
 
 
@@ -624,6 +709,7 @@ def _remember_safely(
     tags: Sequence[str],
     dedupe_prefix: str,
     provenance_id: str | None = None,
+    tool_capture: ToolCapture | Mapping[str, Any] | None = None,
 ) -> None:
     session_id = _optional_id(payload.get("session_id"))
     turn_id = _optional_id(payload.get("turn_id"))
@@ -632,16 +718,21 @@ def _remember_safely(
     )
     dedupe_key = f"hook:{dedupe_prefix}:{hashlib.sha256(fingerprint.encode('utf-8')).hexdigest()}"
     try:
+        remember_kwargs: dict[str, Any] = {
+            "title": _truncate(redact_text(title), 300),
+            "body": _truncate(redact_text(body), MAX_CAPTURE_CHARS),
+            "kind": kind,
+            "session_id": session_id,
+            "turn_id": turn_id,
+            "source": source,
+            "tags": list(tags),
+            "dedupe_key": dedupe_key,
+        }
+        if tool_capture is not None:
+            remember_kwargs["tool_capture"] = tool_capture
         store.remember(
             project,
-            title=_truncate(redact_text(title), 300),
-            body=_truncate(redact_text(body), MAX_CAPTURE_CHARS),
-            kind=kind,
-            session_id=session_id,
-            turn_id=turn_id,
-            source=source,
-            tags=list(tags),
-            dedupe_key=dedupe_key,
+            **remember_kwargs,
         )
     except Exception:
         _stderr("codex-mem hook: capture unavailable")

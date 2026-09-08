@@ -38,13 +38,36 @@ def index_project(project, data_dir=None, *, retry_failed=False):
     return result
 
 
-def search_memory(store, project, query, *, mode="auto", limit=10, kinds=None):
+def search_memory(
+    store,
+    project,
+    query,
+    *,
+    mode="auto",
+    limit=10,
+    kinds=None,
+    types=None,
+    concepts=None,
+    files=None,
+):
     from .semantic import SemanticError, search
     enabled = load_config(store.data_dir).get("semantic_enabled")
     if not enabled and mode in {"semantic", "hybrid"}:
         raise SemanticError("semantic_disabled")
-    result = search(store, project, query, mode="lexical" if not enabled else mode,
-                    limit=limit, kinds=kinds)
+    search_kwargs = {
+        "mode": "lexical" if not enabled else mode,
+        "limit": limit,
+        "kinds": kinds,
+    }
+    # Omit new filter keywords when they are unused so older embedding/search
+    # adapters remain callable during a rolling upgrade.
+    if types is not None:
+        search_kwargs["types"] = types
+    if concepts is not None:
+        search_kwargs["concepts"] = concepts
+    if files is not None:
+        search_kwargs["files"] = files
+    result = search(store, project, query, **search_kwargs)
     if not enabled and mode == "auto":
         result.update(requested_mode="auto", fallback_reason="semantic_disabled")
     return result

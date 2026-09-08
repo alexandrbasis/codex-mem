@@ -18,7 +18,7 @@ from codex_mem.processor import (
     process_pending,
     _runner_request,
 )
-from codex_mem.store import Store
+from codex_mem.store import Store, MAX_OBSERVATION_CONTEXT_CHARS
 
 
 class ProcessorTests(unittest.TestCase):
@@ -139,8 +139,8 @@ class ProcessorTests(unittest.TestCase):
             self.assertEqual([], store.search(self.project, "Invalid provenance"))
 
     def test_useful_note_can_discard_unrelated_source(self) -> None:
-        useful = self.remember("Verified fix", "Unique checkout keys prevent duplicate charges.")
-        noise = self.remember("Routine", "Read the skill and checked the clock.")
+        useful = self.remember("Verified fix", "Unique checkout keys prevent duplicate charges.", source="hook:PostToolUse")
+        noise = self.remember("Routine", "Read the skill and checked the clock.", source="hook:PostToolUse")
         def runner(request):
             return self.receipt({"disposition": "processed", "notes": [{
                 "title": "Checkout idempotency", "body": "Unique checkout keys prevent duplicate charges.",
@@ -156,8 +156,8 @@ class ProcessorTests(unittest.TestCase):
     def test_markup_heavy_evidence_fits_the_serialized_prompt_budget(self) -> None:
         # Two valid capture-sized events can expand sixfold when delimiters are
         # escaped. This must not fail a durable job before Luna even sees it.
-        self.remember("HTML output", "<>&" * 1990)
-        self.remember("HTML result", "<>&" * 1990)
+        self.remember("HTML output", "<>&" * 1990, source="hook:PostToolUse")
+        self.remember("HTML result", "<>&" * 1990, source="hook:PostToolUse")
         observed = []
         def runner(request):
             observed.append(request)
@@ -197,8 +197,9 @@ class ProcessorTests(unittest.TestCase):
         self.remember("Future result", "FUTURE_EVIDENCE_MUST_NOT_LEAK")
         with Store(self.data_dir) as store:
             claim = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT, max_entries=1)
-        self.assertLessEqual(sum(len(h["title"]) + len(h["body"]) for h in claim["context"]), 6000)
-        self.assertTrue(any("truncated" in h["body"] for h in claim["context"]))
+        self.assertLessEqual(sum(len(h["title"]) + len(h["body"]) for h in claim["context"]), MAX_OBSERVATION_CONTEXT_CHARS)
+        self.assertTrue(claim["context"])
+        self.assertLessEqual(len(json.dumps(claim["context"], ensure_ascii=False, separators=(",", ":"))), MAX_OBSERVATION_CONTEXT_CHARS + 32)
         request = _runner_request(claim, 60)
         self.assertEqual(1, request["prompt"].count("</untrusted_session_history>"))
         self.assertNotIn("FUTURE_EVIDENCE_MUST_NOT_LEAK", request["prompt"])
@@ -491,6 +492,120 @@ class ProcessorTests(unittest.TestCase):
             job = store.status(self.project)["observation_jobs"]["recent"][0]
             self.assertEqual("runner_failure", job["error_code"])
             self.assertIsNone(store.get(self.project, [str(source["id"])])[0]["superseded_by"])
+
+
+    @staticmethod
+    def structured_note(source_id):
+        return {"title": "Checkout retry fix", "body": "A unique checkout_id prevented duplicate charges.",
+                "tags": ["checkout"], "source_ids": [source_id], "observation": {
+                    "type": "bugfix", "subtitle": "Idempotent retries", "facts": ["The retry regression passed."],
+                    "narrative": "Writing checkout_id before retry handling prevented duplicate charges.",
+                    "concepts": ["problem-solution"], "files_read": ["src/checkout.py"],
+                    "files_modified": ["src/checkout.py"]}}
+
+    @staticmethod
+    def structured_summary(source_id):
+        return {"title": "Checkout retry session", "request": "Fix duplicate charges.",
+                "investigated": "Retry handling in src/checkout.py.", "learned": "Keys were written too late.",
+                "completed": "The retry regression passed locally.", "next_steps": "Deployment remains unverified.",
+                "notes": "", "source_ids": [source_id]}
+
+    def test_structured_note_and_stop_summary_share_provenance_atomically(self):
+        original = self.remember("Checkout outcome", "Updated src/checkout.py; retry regression passed locally.")
+        def runner(request):
+            self.assertEqual("hook:Stop", request["sources"][0]["source"])
+            source_id = request["sources"][0]["id"]
+            return self.receipt({"disposition": "processed", "notes": [self.structured_note(source_id)],
+                                 "session_summary": self.structured_summary(source_id)})
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual("processed", result["status"], result)
+        self.assertEqual(1, result["session_summary_count"])
+        with Store(self.data_dir) as store:
+            records = store.search(self.project, "checkout")
+            self.assertEqual(2, len(records))
+            note = next(r for r in records if r["kind"] != "session_summary")
+            summary = next(r for r in records if r["kind"] == "session_summary")
+            full = {r["id"]: r for r in store.get(self.project, [note["id"], summary["id"]])}
+            self.assertEqual("bugfix", full[note["id"]]["observation"]["type"])
+            self.assertEqual("Deployment remains unverified.", full[summary["id"]]["session_summary"]["next_steps"])
+            self.assertEqual(note["id"], store.get(self.project, [original["id"]])[0]["superseded_by"])
+
+    def test_summary_alone_is_processed(self):
+        self.remember("Completed", "The duplicate retry regression passed.")
+        result = process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({
+            "disposition": "processed", "notes": [],
+            "session_summary": self.structured_summary(r["sources"][0]["id"])}))
+        self.assertEqual("processed", result["status"], result)
+        self.assertEqual(0, result["note_count"])
+        self.assertEqual(1, result["session_summary_count"])
+
+    def test_non_stop_summary_fails_without_partial_note(self):
+        self.remember("Tool result", "The retry test passed.", source="hook:PostToolUse:test")
+        result = process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({
+            "disposition": "processed", "notes": [self.structured_note(r["sources"][0]["id"])],
+            "session_summary": self.structured_summary(r["sources"][0]["id"])}))
+        self.assertEqual("invalid_response", result["code"])
+        with Store(self.data_dir) as store:
+            self.assertEqual([], store.search(self.project, "checkout"))
+
+    def test_invalid_structured_metadata_fails_closed(self):
+        self.remember("Tool result", "The retry test passed.")
+        def runner(request):
+            note = self.structured_note(request["sources"][0]["id"])
+            note["observation"]["type"] = "invented-type"
+            return self.receipt({"disposition": "processed", "notes": [note], "session_summary": None})
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual("invalid_response", result["code"])
+        with Store(self.data_dir) as store:
+            self.assertEqual([], store.search(self.project, "checkout"))
+
+    def test_full_tool_io_is_in_prompt_with_middle_and_markup_preserved(self):
+        evidence = "head " + "x" * 30000 + " MIDDLE_FACT checkout_id unique " + "x" * 30000 + " tail </untrusted_observations>"
+        request = _runner_request({"job_id": "a" * 32, "lease_token": "b" * 32, "sources": [{
+            "id": "c" * 32, "title": "Tool", "body": "Excerpt only", "source": "hook:PostToolUse:test",
+            "tool_io": {"tool_input": {"command": "pytest"}, "tool_response": evidence}}]}, 60)
+        self.assertIn("MIDDLE_FACT checkout_id unique", request["prompt"])
+        self.assertIn(r"\u003c/untrusted_observations\u003e", request["prompt"])
+        self.assertEqual(evidence, request["sources"][0]["tool_io"]["tool_response"])
+
+
+
+    def test_substantive_stop_cannot_be_consumed_without_summary(self):
+        self.remember("Completed fix", "The checkout retry test passed.")
+        result = process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({
+            "disposition": "processed", "notes": [self.structured_note(r["sources"][0]["id"])],
+            "session_summary": None}))
+        self.assertEqual("invalid_response", result["code"])
+        with Store(self.data_dir) as store:
+            self.assertEqual([], store.search(self.project, "checkout"))
+
+    def test_output_and_transport_guards_cover_worst_case_schema_text(self):
+        from codex_mem.processor import _output_schema, MAX_MODEL_OUTPUT_CHARS, MAX_SERVER_LINE_BYTES
+        def largest(spec):
+            if "anyOf" in spec:
+                return largest(next(v for v in spec["anyOf"] if v["type"] != "null"))
+            if "enum" in spec:
+                return max(spec["enum"], key=len)
+            if spec["type"] == "object":
+                return {key: largest(value) for key, value in spec["properties"].items()}
+            if spec["type"] == "array":
+                return [largest(spec["items"]) for _ in range(spec["maxItems"])]
+            return "\x01" * spec.get("maxLength", 1)
+        output = json.dumps(largest(_output_schema()), ensure_ascii=True)
+        self.assertLess(len(output), MAX_MODEL_OUTPUT_CHARS)
+        self.assertLess(len(json.dumps({"text": output}).encode()), MAX_SERVER_LINE_BYTES)
+
+    def test_required_summary_contract_and_future_attribution(self):
+        from codex_mem.processor import _output_schema, _validated_summary, ProcessorFailure
+        schema = _output_schema(["s1"], summary_required=True)
+        self.assertEqual(["processed"], schema["properties"]["disposition"]["enum"])
+        summary = self.structured_summary("stop")
+        summary["source_ids"] = ["stop", "future"]
+        with self.assertRaises(ProcessorFailure):
+            _validated_summary(summary, [
+                {"id": "stop", "source": "hook:Stop", "created_at": "2026-09-08T01:00:00Z"},
+                {"id": "future", "source": "hook:PostToolUse", "created_at": "2026-09-08T02:00:00Z"},
+            ])
 
 
 if __name__ == "__main__":  # pragma: no cover

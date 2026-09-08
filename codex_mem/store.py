@@ -27,10 +27,11 @@ from typing import Any, TypeVar
 from .privacy import redact_text
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 DEFAULT_LIMIT = 10
 MAX_LIMIT = 100
 MAX_IDS = 100
+MAX_TOOL_USE_ID_CHARS = 256
 MAX_TITLE_CHARS = 500
 MAX_BODY_CHARS = 100_000
 MAX_SOURCE_CHARS = 2_000
@@ -48,15 +49,57 @@ PREVIEW_CHARS = 480
 # for a single local worker invocation and avoid turning hook captures into an
 # unbounded prompt.
 MAX_OBSERVATION_ENTRIES = 12
-MAX_OBSERVATION_CHARS = 12_000
+# The default prompt remains modest, while one oversized raw tool event is
+# still claimable whole (up to the durable safety cap).  The processor can use
+# the larger ceiling when it hydrates tool I/O from the raw side index.
+MAX_OBSERVATION_CHARS = 160_000
+DEFAULT_OBSERVATION_CHARS = 24_000
 MIN_OBSERVATION_CHARS = 256
 MAX_OBSERVATION_NOTES = 8
-MAX_OBSERVATION_CONTEXT_CHARS = 6_000
+MAX_OBSERVATION_CONTEXT_CHARS = 32_000
+DEFAULT_OBSERVATION_CONTEXT_CHARS = 6_000
 MAX_PROCESSOR_CHARS = 128
 MAX_LEASE_SECONDS = 3_600
 DEFAULT_LEASE_SECONDS = 300
 OBSERVATION_MODEL = "gpt-5.6-luna"
 OBSERVATION_REASONING_EFFORT = "medium"
+
+# Structured Claude-Mem compatible observation metadata.  The values are
+# deliberately kept in a side table instead of widening ``entries``: v3
+# databases remain readable, and old callers still get the same title/body
+# contract when no metadata was supplied.
+OBSERVATION_TYPES = (
+    "bugfix",
+    "feature",
+    "refactor",
+    "change",
+    "discovery",
+    "decision",
+    "security_alert",
+    "security_note",
+    "sensitive",
+)
+MAX_METADATA_ITEMS = 100
+MAX_METADATA_ITEM_CHARS = 1_000
+MAX_METADATA_FIELD_CHARS = 20_000
+MAX_METADATA_JSON_CHARS = 100_000
+_OBSERVATION_METADATA_FIELDS = (
+    "type",
+    "subtitle",
+    "facts",
+    "narrative",
+    "concepts",
+    "files_read",
+    "files_modified",
+)
+_SESSION_SUMMARY_FIELDS = (
+    "request",
+    "investigated",
+    "learned",
+    "completed",
+    "next_steps",
+    "notes",
+)
 
 # Embeddings are calculated by a separate local service.  Store only owns the
 # durable, redacted document snapshot, its content hash, and normalized vector
@@ -203,6 +246,34 @@ def _validate_ids(value: object, field: str, *, allow_empty: bool = False) -> li
     return ids
 
 
+def _validate_tool_use_ids(value: object) -> list[str] | None:
+    """Validate optional raw-capture identities without narrowing tool IDs to entry IDs."""
+
+    if value is None:
+        return None
+    if isinstance(value, str):
+        candidates: Iterable[object] = [value]
+    elif isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        candidates = value
+    else:
+        raise ValueError("ids must be a list of tool-use identifiers")
+    candidates = list(candidates)
+    if not candidates:
+        raise ValueError("ids must not be empty")
+    if len(candidates) > MAX_IDS:
+        raise ValueError("ids has too many tool-use identifiers")
+    result: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        checked = _validate_text(candidate, "tool-use id", MAX_TOOL_USE_ID_CHARS)
+        assert checked is not None
+        if checked in seen:
+            raise ValueError("ids must not contain duplicate tool-use identifiers")
+        result.append(checked)
+        seen.add(checked)
+    return result
+
+
 def _validate_tags(value: object) -> list[str]:
     if value is None:
         return []
@@ -250,6 +321,152 @@ def _validate_kinds(value: object) -> list[str] | None:
     if not kinds:
         raise ValueError("kinds must not be empty")
     return kinds
+
+
+def _validate_observation_types(value: object) -> list[str] | None:
+    """Validate the closed observation type vocabulary used by filtering."""
+
+    if value is None:
+        return None
+    if isinstance(value, str):
+        candidates: Iterable[object] = [value]
+    elif isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        candidates = value
+    else:
+        raise ValueError("types must be a list of observation types")
+
+    if len(candidates) > len(OBSERVATION_TYPES):
+        raise ValueError("types has too many values")
+    result: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        if not isinstance(candidate, str) or candidate not in OBSERVATION_TYPES:
+            raise ValueError("type must be one of the supported observation types")
+        if candidate not in seen:
+            result.append(candidate)
+            seen.add(candidate)
+    if not result:
+        raise ValueError("types must not be empty")
+    return result
+
+
+def _validate_metadata_array(
+    value: object,
+    field: str,
+    *,
+    maximum_items: int = MAX_METADATA_ITEMS,
+) -> list[str]:
+    """Validate and redact one structured metadata string array."""
+
+    if value is None:
+        return []
+    if isinstance(value, (str, bytes, bytearray)) or not isinstance(value, Sequence):
+        raise ValueError(f"{field} must be a list of text values")
+    if len(value) > maximum_items:
+        raise ValueError(f"{field} has too many values")
+    result: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        clean = _validate_text(item, field, MAX_METADATA_ITEM_CHARS)
+        assert clean is not None
+        if clean not in seen:
+            result.append(clean)
+            seen.add(clean)
+    return result
+
+
+def _validate_observation_metadata(value: object) -> dict[str, Any] | None:
+    """Normalize the structured fields emitted for one observation note."""
+
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("observation must be an object")
+    unknown = set(value).difference(_OBSERVATION_METADATA_FIELDS)
+    if unknown:
+        raise ValueError("observation contains an unknown field")
+
+    raw_type = value.get("type")
+    if not isinstance(raw_type, str) or raw_type not in OBSERVATION_TYPES:
+        raise ValueError("observation type must be one of the supported observation types")
+    subtitle = _validate_text(
+        value.get("subtitle"), "observation subtitle", MAX_METADATA_FIELD_CHARS, required=False
+    )
+    narrative = _validate_text(
+        value.get("narrative"), "observation narrative", MAX_METADATA_FIELD_CHARS, required=False
+    )
+    return {
+        "type": raw_type,
+        "subtitle": subtitle,
+        "facts": _validate_metadata_array(value.get("facts"), "observation facts"),
+        "narrative": narrative,
+        "concepts": _validate_metadata_array(value.get("concepts"), "observation concepts"),
+        "files_read": _validate_metadata_array(value.get("files_read"), "observation files_read"),
+        "files_modified": _validate_metadata_array(
+            value.get("files_modified"), "observation files_modified"
+        ),
+    }
+
+
+def _validate_session_summary(value: object) -> dict[str, Any] | None:
+    """Normalize the dedicated session-summary fields.
+
+    ``source_ids`` is validated here when present but is intentionally not
+    required.  A finishing worker may omit it to attribute the summary to the
+    complete claimed batch; the lease owner resolves that default atomically.
+    """
+
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise ValueError("session_summary must be an object")
+    allowed = set(_SESSION_SUMMARY_FIELDS) | {"title", "source_ids"}
+    if set(value).difference(allowed):
+        raise ValueError("session_summary contains an unknown field")
+    title = _validate_text(value.get("title"), "session summary title", MAX_TITLE_CHARS, required=False)
+    result: dict[str, Any] = {"title": title}
+    for field in _SESSION_SUMMARY_FIELDS:
+        result[field] = _validate_text(
+            value.get(field), f"session summary {field}", MAX_METADATA_FIELD_CHARS, required=False
+        )
+    if "source_ids" in value and value["source_ids"] is not None:
+        result["source_ids"] = _validate_ids(
+            value["source_ids"], "session_summary source_ids", allow_empty=True
+        )
+    else:
+        result["source_ids"] = None
+    if not any(result[field] for field in _SESSION_SUMMARY_FIELDS):
+        raise ValueError("session_summary must contain at least one field")
+    return result
+
+
+def _validate_metadata_filters(
+    value: object,
+    field: str,
+) -> list[str] | None:
+    """Validate file/concept filter values while applying the same redaction."""
+
+    if value is None:
+        return None
+    if isinstance(value, str):
+        candidates: Iterable[object] = [value]
+    elif isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        candidates = value
+    else:
+        raise ValueError(f"{field} must be a list of text values")
+    values: list[str] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        checked = _validate_text(candidate, field, MAX_METADATA_ITEM_CHARS)
+        assert checked is not None
+        if checked not in seen:
+            values.append(checked)
+            seen.add(checked)
+    if not values:
+        raise ValueError(f"{field} must not be empty")
+    if len(values) > MAX_METADATA_ITEMS:
+        raise ValueError(f"{field} has too many values")
+    return values
 
 
 def _validate_processor_value(value: object, field: str) -> str:
@@ -413,7 +630,7 @@ def _validate_observation_notes(value: object) -> list[dict[str, Any]]:
     for note in value:
         if not isinstance(note, Mapping):
             raise ValueError("notes must contain note objects")
-        if set(note).difference({"title", "body", "tags", "source_ids"}):
+        if set(note).difference({"title", "body", "tags", "source_ids", "observation"}):
             raise ValueError("notes contains an unknown field")
         title = _validate_text(note.get("title"), "note title", MAX_TITLE_CHARS)
         body = _validate_text(note.get("body"), "note body", MAX_BODY_CHARS)
@@ -427,6 +644,7 @@ def _validate_observation_notes(value: object) -> list[dict[str, Any]]:
                 "body": body,
                 "tags": _validate_tags(note.get("tags")),
                 "source_ids": source_ids,
+                "observation": _validate_observation_metadata(note.get("observation")),
             }
         )
     return notes
@@ -440,7 +658,7 @@ def _dedupe_hash(project: str, value: object) -> str | None:
     return hashlib.sha256((project + "\x00" + key).encode("utf-8")).hexdigest()
 
 
-def _fts_expression(query: object) -> str:
+def _fts_tokens(query: object) -> list[str]:
     if not isinstance(query, str) or "\x00" in query:
         raise ValueError("query must be text")
     value = query.strip()
@@ -449,7 +667,11 @@ def _fts_expression(query: object) -> str:
     if len(value) > MAX_QUERY_CHARS:
         raise ValueError("query is too long")
     normalized = unicodedata.normalize("NFKC", value)
-    tokens = _FTS_TOKEN_RE.findall(normalized)
+    return _FTS_TOKEN_RE.findall(normalized)[:32]
+
+
+def _fts_expression(query: object) -> str:
+    tokens = _fts_tokens(query)
     if not tokens:
         return ""
     # Tokens are extracted rather than passed through as FTS syntax.  They are
@@ -671,18 +893,30 @@ class Store:
                 self._validate_schema(connection, observations=False, embeddings=False)
                 self._create_observation_schema(connection)
                 self._create_embedding_schema(connection)
+                self._create_metadata_schema(connection)
                 self._backfill_embedding_documents(connection)
                 connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 return
             if version == 2:
                 self._validate_schema(connection, embeddings=False)
                 self._create_embedding_schema(connection)
+                self._create_metadata_schema(connection)
                 self._backfill_embedding_documents(connection)
+                connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+                return
+            if version == 3:
+                self._validate_schema(connection, metadata=False)
+                self._create_metadata_schema(connection)
                 connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 return
             self._validate_schema(connection)
 
         self._write(migrate)
+        # Raw tool I/O is maintained by the capture parity module.  Keeping
+        # its schema installer optional lets v3 stores open during an
+        # interrupted upgrade while still installing the durable side index
+        # whenever the module is present.
+        self._install_tool_io_schema()
 
     @staticmethod
     def _create_schema(connection: sqlite3.Connection) -> None:
@@ -754,6 +988,7 @@ class Store:
 
         Store._create_observation_schema(connection)
         Store._create_embedding_schema(connection)
+        Store._create_metadata_schema(connection)
 
     @staticmethod
     def _create_observation_schema(connection: sqlite3.Connection) -> None:
@@ -876,11 +1111,35 @@ class Store:
             connection.execute(statement)
 
     @staticmethod
+    def _create_metadata_schema(connection: sqlite3.Connection) -> None:
+        """Create structured observation/session metadata for v4 stores."""
+
+        statements = (
+            """
+            CREATE TABLE IF NOT EXISTS entry_metadata (
+                entry_id TEXT PRIMARY KEY NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+                observation_json TEXT,
+                session_summary_json TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                CHECK(observation_json IS NOT NULL OR session_summary_json IS NOT NULL)
+            )
+            """,
+            """
+            CREATE INDEX IF NOT EXISTS entry_metadata_observation_type_idx
+            ON entry_metadata(json_extract(observation_json, '$.type'))
+            """,
+        )
+        for statement in statements:
+            connection.execute(statement)
+
+    @staticmethod
     def _validate_schema(
         connection: sqlite3.Connection,
         *,
         observations: bool = True,
         embeddings: bool = True,
+        metadata: bool = True,
     ) -> None:
         required = {
             ("entries", "table"),
@@ -923,6 +1182,9 @@ class Store:
                     "embedding_job_entries",
                 ]
             )
+        if metadata:
+            required.add(("entry_metadata", "table"))
+            names.append("entry_metadata")
         placeholders = ", ".join("?" for _ in names)
         found = {
             (row["name"], row["type"])
@@ -933,6 +1195,43 @@ class Store:
         }
         if found != required:
             raise StoreError("Storage database schema is invalid")
+
+    def _install_tool_io_schema(self) -> None:
+        """Let the capture parity module install its optional side index."""
+
+        try:
+            from .tool_io import install_schema
+        except ModuleNotFoundError as error:
+            # The capture module is intentionally a separately owned boundary
+            # and may be absent in older installations.  Only suppress the
+            # missing module itself; dependency/import failures remain visible.
+            if error.name in {"codex_mem.tool_io", f"{__package__}.tool_io"}:
+                return
+            raise
+
+        connection = self._connection
+        try:
+            def install() -> None:
+                install_schema(connection)
+                # Keep deletion safe for older Store readers that know
+                # nothing about the side index. The trigger is additive and
+                # survives a v3-compatible reopen of this database.
+                connection.execute(
+                    """
+                    CREATE TRIGGER IF NOT EXISTS entries_tool_uses_ad
+                    AFTER DELETE ON entries BEGIN
+                        DELETE FROM tool_uses
+                        WHERE project = old.project AND entry_id = old.id;
+                    END
+                    """
+                )
+
+            self._write(install)
+        except (AttributeError, ImportError):
+            # A partially upgraded plugin may expose no installer yet.  Keep
+            # v3 stores readable; remember(tool_capture=...) still fails
+            # closed once a capture was explicitly requested.
+            return
 
     @staticmethod
     def _source_map(connection: sqlite3.Connection, summary_ids: Sequence[str]) -> dict[str, list[str]]:
@@ -948,6 +1247,112 @@ class Store:
         for row in rows:
             result[row["summary_id"]].append(row["source_id"])
         return result
+
+    @staticmethod
+    def _metadata_map(
+        connection: sqlite3.Connection, entry_ids: Sequence[str]
+    ) -> dict[str, dict[str, Any]]:
+        if not entry_ids:
+            return {}
+        placeholders = ", ".join("?" for _ in entry_ids)
+        rows = connection.execute(
+            f"SELECT entry_id, observation_json, session_summary_json FROM entry_metadata "
+            f"WHERE entry_id IN ({placeholders})",
+            tuple(entry_ids),
+        ).fetchall()
+        result: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            metadata: dict[str, Any] = {}
+            for key, column in (
+                ("observation", "observation_json"),
+                ("session_summary", "session_summary_json"),
+            ):
+                payload = row[column]
+                if payload is None:
+                    continue
+                try:
+                    decoded = json.loads(payload)
+                except (TypeError, json.JSONDecodeError):
+                    raise StoreError("Storage database contains invalid metadata") from None
+                if not isinstance(decoded, dict):
+                    raise StoreError("Storage database contains invalid metadata")
+                metadata[key] = Store._redact_metadata(decoded)
+            if metadata:
+                result[str(row["entry_id"])] = metadata
+        return result
+
+    @staticmethod
+    def _redact_metadata(value: Any) -> Any:
+        """Redact metadata again on read so hand-edited DBs cannot leak text."""
+
+        if isinstance(value, str):
+            return redact_text(value)
+        if isinstance(value, Mapping):
+            return {str(key): Store._redact_metadata(child) for key, child in value.items()}
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+            return [Store._redact_metadata(child) for child in value]
+        return value
+
+    @staticmethod
+    def _upsert_metadata(
+        connection: sqlite3.Connection,
+        *,
+        entry_id: str,
+        observation: Mapping[str, Any] | None,
+        session_summary: Mapping[str, Any] | None,
+        timestamp: str,
+    ) -> None:
+        if observation is None and session_summary is None:
+            return
+        observation_json = (
+            json.dumps(dict(observation), ensure_ascii=False, separators=(",", ":"))
+            if observation is not None
+            else None
+        )
+        summary_json = (
+            json.dumps(dict(session_summary), ensure_ascii=False, separators=(",", ":"))
+            if session_summary is not None
+            else None
+        )
+        if observation_json is not None and len(observation_json) > MAX_METADATA_JSON_CHARS:
+            raise ValueError("observation metadata is too long")
+        if summary_json is not None and len(summary_json) > MAX_METADATA_JSON_CHARS:
+            raise ValueError("session summary metadata is too long")
+        connection.execute(
+            """
+            INSERT INTO entry_metadata(
+                entry_id, observation_json, session_summary_json, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(entry_id) DO UPDATE SET
+                observation_json = COALESCE(excluded.observation_json, entry_metadata.observation_json),
+                session_summary_json = COALESCE(
+                    excluded.session_summary_json, entry_metadata.session_summary_json
+                ),
+                updated_at = excluded.updated_at
+            """,
+            (entry_id, observation_json, summary_json, timestamp, timestamp),
+        )
+
+    @staticmethod
+    def _insert_tool_capture(
+        connection: sqlite3.Connection,
+        *,
+        entry_id: str,
+        project: str,
+        capture: Mapping[str, Any],
+    ) -> None:
+        """Persist a raw capture through the separately owned tool I/O seam."""
+
+        try:
+            from .tool_io import insert_capture
+        except ModuleNotFoundError as error:
+            if error.name in {"codex_mem.tool_io", f"{__package__}.tool_io"}:
+                raise StoreError("Raw tool capture storage is unavailable") from None
+            raise
+        try:
+            insert_capture(connection, entry_id, project, capture)
+        except (AttributeError, ImportError):
+            raise StoreError("Raw tool capture storage is unavailable") from None
 
     @staticmethod
     def _tags_from_row(row: sqlite3.Row) -> list[str]:
@@ -1087,6 +1492,7 @@ class Store:
         self,
         row: sqlite3.Row,
         source_ids: Sequence[str],
+        metadata: Mapping[str, Any] | None = None,
         *,
         preview: bool = False,
         score: float | None = None,
@@ -1123,6 +1529,11 @@ class Store:
             "superseded_at": row["superseded_at"],
             "source_ids": list(source_ids),
         }
+        if metadata:
+            # Keep the direct keys used by the processor and a generic nested
+            # view for clients that treat structured data uniformly.
+            record.update(metadata)
+            record["metadata"] = dict(metadata)
         if preview:
             record["preview"] = _preview(body)
         else:
@@ -1141,10 +1552,14 @@ class Store:
         source_map = self._read(
             lambda: self._source_map(self._connection, [row["id"] for row in rows])
         )
+        metadata_map = self._read(
+            lambda: self._metadata_map(self._connection, [row["id"] for row in rows])
+        )
         return [
             self._record_from_row(
                 row,
                 source_map.get(row["id"], []),
+                metadata_map.get(row["id"]),
                 preview=preview,
                 score=scores.get(row["id"]) if scores is not None else None,
             )
@@ -1163,6 +1578,9 @@ class Store:
         tags: Sequence[str] | str | None = None,
         dedupe_key: str | None = None,
         source_ids: Sequence[str] | str | None = None,
+        observation: Mapping[str, Any] | None = None,
+        session_summary: Mapping[str, Any] | None = None,
+        tool_capture: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Store a redacted memory entry and optionally consolidate source entries."""
 
@@ -1170,6 +1588,10 @@ class Store:
         clean_title = _validate_text(title, "title", MAX_TITLE_CHARS)
         clean_body = _validate_text(body, "body", MAX_BODY_CHARS)
         clean_kind = _validate_kind(kind)
+        clean_observation = _validate_observation_metadata(observation)
+        clean_summary = _validate_session_summary(session_summary)
+        if clean_summary is not None and clean_kind == "note":
+            clean_kind = "session_summary"
         clean_session = _validate_text(session_id, "session_id", MAX_SESSION_CHARS, required=False)
         clean_turn = _validate_text(turn_id, "turn_id", MAX_SESSION_CHARS, required=False)
         clean_source = _validate_text(source, "source", MAX_SOURCE_CHARS, required=False)
@@ -1178,6 +1600,13 @@ class Store:
         clean_source_ids = (
             _validate_ids(source_ids, "source_ids", allow_empty=True) if source_ids is not None else []
         )
+        if clean_summary is not None and clean_summary.get("source_ids") is not None:
+            summary_source_ids = list(clean_summary["source_ids"])
+            if clean_source_ids and clean_source_ids != summary_source_ids:
+                raise ValueError("source_ids must match session_summary source_ids")
+            clean_source_ids = summary_source_ids
+        if tool_capture is not None and not isinstance(tool_capture, Mapping):
+            raise ValueError("tool_capture must be an object")
         assert clean_title is not None and clean_body is not None
 
         with self._lock:
@@ -1200,7 +1629,47 @@ class Store:
                         (workspace, clean_dedupe),
                     ).fetchone()
                     if existing is not None:
-                        return str(existing["id"]), True
+                        existing_id = str(existing["id"])
+                        timestamp = _utc_now()
+                        self._upsert_metadata(
+                            connection,
+                            entry_id=existing_id,
+                            observation=clean_observation,
+                            session_summary=clean_summary,
+                            timestamp=timestamp,
+                        )
+                        if clean_source_ids:
+                            connection.executemany(
+                                "INSERT OR IGNORE INTO entry_sources(summary_id, source_id) VALUES (?, ?)",
+                                [(existing_id, source_id) for source_id in clean_source_ids],
+                            )
+                            placeholders = ", ".join("?" for _ in clean_source_ids)
+                            self._revoke_embedding_jobs(
+                                connection,
+                                project=workspace,
+                                source_ids=clean_source_ids,
+                                code="source_superseded",
+                            )
+                            connection.execute(
+                                f"UPDATE entries SET superseded_by = COALESCE(superseded_by, ?), "
+                                f"superseded_at = COALESCE(superseded_at, ?), updated_at = ? "
+                                f"WHERE project = ? AND superseded_by IS NULL AND id IN ({placeholders})",
+                                (
+                                    existing_id,
+                                    timestamp,
+                                    timestamp,
+                                    workspace,
+                                    *clean_source_ids,
+                                ),
+                            )
+                        if tool_capture is not None:
+                            self._insert_tool_capture(
+                                connection,
+                                entry_id=existing_id,
+                                project=workspace,
+                                capture=tool_capture,
+                            )
+                        return existing_id, True
 
                 entry_id = uuid.uuid4().hex
                 timestamp = _utc_now()
@@ -1235,6 +1704,20 @@ class Store:
                     tags=clean_tags,
                     timestamp=timestamp,
                 )
+                self._upsert_metadata(
+                    connection,
+                    entry_id=entry_id,
+                    observation=clean_observation,
+                    session_summary=clean_summary,
+                    timestamp=timestamp,
+                )
+                if tool_capture is not None:
+                    self._insert_tool_capture(
+                        connection,
+                        entry_id=entry_id,
+                        project=workspace,
+                        capture=tool_capture,
+                    )
                 if clean_source_ids:
                     connection.executemany(
                         "INSERT INTO entry_sources(summary_id, source_id) VALUES (?, ?)",
@@ -1289,6 +1772,7 @@ class Store:
                 "status": row["status"],
                 "disposition": row["disposition"],
                 "attempt_count": row["attempt_count"],
+                "input_limit": row["input_limit"],
                 "lease_expires_at": row["lease_expires_at"],
                 "worker_thread_id": row["worker_thread_id"],
                 "worker_turn_id": row["worker_turn_id"],
@@ -1505,17 +1989,47 @@ class Store:
         except (IndexError, KeyError, TypeError, json.JSONDecodeError):
             raise StoreError("Storage database contains invalid data") from None
 
+    @staticmethod
+    def _observation_source_chars(record: Mapping[str, Any]) -> int:
+        """Count the serialized observer payload, including hydrated tool I/O."""
+
+        try:
+            return len(json.dumps(dict(record), ensure_ascii=False, separators=(",", ":")))
+        except (TypeError, ValueError):
+            raise StoreError("Observation source contains invalid data") from None
+
+    def _hydrate_observation_source(
+        self,
+        workspace: str,
+        record: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        try:
+            from .tool_io import hydrate_source_tool_io
+        except ModuleNotFoundError as error:
+            if error.name in {"codex_mem.tool_io", f"{__package__}.tool_io"}:
+                return dict(record)
+            raise
+        try:
+            hydrated = hydrate_source_tool_io(self._connection, record, project=workspace)
+        except (AttributeError, ImportError):
+            return dict(record)
+        if not isinstance(hydrated, Mapping):
+            raise StoreError("Raw tool capture returned invalid data")
+        return dict(hydrated)
+
     def _bounded_observation_sources(
-        self, rows: Sequence[sqlite3.Row], max_chars: int
+        self, rows: Sequence[sqlite3.Row], max_chars: int, workspace: str | None = None
     ) -> list[dict[str, Any]]:
         records = self._records_from_rows(rows)
+        if workspace is not None:
+            records = [self._hydrate_observation_source(workspace, record) for record in records]
         remaining = max_chars
         bounded: list[dict[str, Any]] = []
         for record in records:
-            body = str(record["body"])
-            if len(body) > remaining:
+            source_chars = self._observation_source_chars(record)
+            if source_chars > remaining:
                 raise StoreError("Observation sources exceed their stored batch boundary")
-            remaining -= len(body)
+            remaining -= source_chars
             bounded.append(dict(record))
         return bounded
 
@@ -1529,7 +2043,7 @@ class Store:
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
         max_entries: int = MAX_OBSERVATION_ENTRIES,
-        max_chars: int = MAX_OBSERVATION_CHARS,
+        max_chars: int = DEFAULT_OBSERVATION_CHARS,
         lease_seconds: int = DEFAULT_LEASE_SECONDS,
         retry_failed: bool = False,
     ) -> dict[str, Any] | None:
@@ -1592,27 +2106,59 @@ class Store:
                     ),
                 ).fetchone()
                 if reusable is not None:
+                    reusable_sources = connection.execute(
+                        """
+                        SELECT e.* FROM observation_job_sources AS links
+                        JOIN entries AS e ON e.id = links.source_id
+                        WHERE links.job_id = ? AND e.project = ?
+                        ORDER BY e.created_at ASC, e.id ASC
+                        """,
+                        (reusable["id"], workspace),
+                    ).fetchall()
+                    if not reusable_sources:
+                        return None
+                    reusable_records = self._records_from_rows(reusable_sources)
+                    hydrated_records = [
+                        self._hydrate_observation_source(workspace, record)
+                        for record in reusable_records
+                    ]
+                    hydrated_chars = sum(
+                        self._observation_source_chars(record) for record in hydrated_records
+                    )
+                    if hydrated_chars > MAX_OBSERVATION_CHARS:
+                        raise StoreError("Observation sources exceed maximum boundary")
+                    stored_limit = reusable["input_limit"]
+                    if (
+                        isinstance(stored_limit, bool)
+                        or not isinstance(stored_limit, int)
+                        or not MIN_OBSERVATION_CHARS <= stored_limit <= MAX_OBSERVATION_CHARS
+                    ):
+                        raise StoreError("Storage database contains invalid data")
+                    effective_limit = max(stored_limit, hydrated_chars)
                     token = uuid.uuid4().hex
+                    now = _utc_now()
                     connection.execute(
                         """
                         UPDATE observation_jobs
                         SET status = 'running', disposition = NULL, lease_token = ?,
-                            lease_expires_at = ?, attempt_count = attempt_count + 1,
+                            lease_expires_at = ?, input_limit = ?, attempt_count = attempt_count + 1,
                             worker_thread_id = COALESCE(?, worker_thread_id),
                             worker_turn_id = COALESCE(?, worker_turn_id), error_code = NULL,
                             updated_at = ?
                         WHERE id = ? AND project = ?
                         """,
-                        (token, expires_at, thread_id, turn_id, now, reusable["id"], workspace),
+                        (
+                            token,
+                            expires_at,
+                            effective_limit,
+                            thread_id,
+                            turn_id,
+                            now,
+                            reusable["id"],
+                            workspace,
+                        ),
                     )
-                    input_limit = reusable["input_limit"]
-                    if (
-                        isinstance(input_limit, bool)
-                        or not isinstance(input_limit, int)
-                        or not MIN_OBSERVATION_CHARS <= input_limit <= MAX_OBSERVATION_CHARS
-                    ):
-                        raise StoreError("Storage database contains invalid data")
-                    return str(reusable["id"]), input_limit
+                    return str(reusable["id"]), effective_limit
 
                 # A failed receipt blocks retries only for the current exact
                 # document snapshot.  A retired text profile must requeue.
@@ -1646,21 +2192,47 @@ class Store:
                 session_id = candidates[0]["session_id"]
                 selected: list[sqlite3.Row] = []
                 remaining = chars_limit
+                selected_chars = 0
+                stop_reached = False
                 for row in candidates:
-                    if row["session_id"] != session_id or len(selected) >= entries_limit:
+                    if row["session_id"] != session_id:
                         continue
+                    # A single batch represents one turn. Once its first Stop
+                    # is included, later raw events belong to a subsequent
+                    # turn even when asynchronous capture made them visible
+                    # before this worker claimed the queue.
+                    if stop_reached or len(selected) >= entries_limit:
+                        break
                     body = row["body"]
                     if not isinstance(body, str):
                         raise StoreError("Storage database contains invalid data")
+                    source_record = self._records_from_rows([row])[0]
+                    source_record = self._hydrate_observation_source(workspace, source_record)
+                    source_chars = self._observation_source_chars(source_record)
+                    if source_chars > MAX_OBSERVATION_CHARS:
+                        if not selected:
+                            raise StoreError("Observation source exceeds maximum boundary")
+                        break
                     # A source is only superseded after the processor has seen
                     # all of it.  Never claim a truncated tail just to fill a
                     # prompt budget; leave that record active for the next job.
-                    if len(body) > remaining:
+                    if source_chars > remaining:
                         if not selected:
-                            raise StoreError("Observation source exceeds batch budget")
+                            # A single larger event may use the hard ceiling,
+                            # but it must still be delivered whole.
+                            selected.append(row)
+                            selected_chars = source_chars
+                            remaining = 0
                         break
                     selected.append(row)
-                    remaining -= len(body)
+                    selected_chars += source_chars
+                    remaining -= source_chars
+                    if (
+                        str(row["source"] or "") == "hook:Stop"
+                        or str(row["source"] or "").startswith("hook:Stop:")
+                    ):
+                        stop_reached = True
+                        break
                 if not selected:
                     return None
                 source_ids = [str(row["id"]) for row in selected]
@@ -1686,7 +2258,7 @@ class Store:
                         required_effort,
                         session_id,
                         fingerprint,
-                        chars_limit,
+                        max(chars_limit, selected_chars),
                         token,
                         expires_at,
                         thread_id,
@@ -1699,7 +2271,7 @@ class Store:
                     "INSERT INTO observation_job_sources(job_id, source_id) VALUES (?, ?)",
                     [(job_id, source_id) for source_id in source_ids],
                 )
-                return job_id, chars_limit
+                return job_id, max(chars_limit, selected_chars)
 
             claimed = self._write(claim)
             if claimed is None:
@@ -1715,47 +2287,311 @@ class Store:
                 raise StoreError("Storage operation failed")
             sources = self._observation_source_rows(job_id, workspace)
             result = self._observation_job_result(job, include_lease_token=True)
-            result["sources"] = self._bounded_observation_sources(sources, input_limit)
-            result["context"] = self._observation_context(workspace, sources)
+            result["sources"] = self._bounded_observation_sources(sources, input_limit, workspace)
+            context = self._observation_context(workspace, sources)
+            result["context"] = context
+            summary_required, context_new_notes = self._summary_context_requirement(
+                workspace, sources, context
+            )
+            result["summary_required"] = summary_required
+            result["summary_context_new_notes"] = context_new_notes
             return result
+
+    def _summary_context_requirement(
+        self,
+        workspace: str,
+        sources: Sequence[sqlite3.Row],
+        context: Sequence[Mapping[str, Any]],
+    ) -> tuple[bool, int]:
+        """Report whether a Stop must carry a fresh continuous summary.
+
+        Only completed processor notes count as prior work. Raw hook/tool
+        records may be present in the same history window, but they cannot
+        force a summary because they have not yet passed the observation
+        processor. Context is returned oldest-first, so a later summary resets
+        the count of notes that are newer than the latest summary.
+        """
+
+        has_stop = any(
+            str(row["source"] or "") == "hook:Stop"
+            or str(row["source"] or "").startswith("hook:Stop:")
+            for row in sources
+        )
+        if not has_stop:
+            return False, 0
+        provenance_ids = {
+            str(source_id)
+            for item in context
+            for source_id in item.get("source_ids", [])
+            if isinstance(source_id, str)
+        }
+        provenance_positions: dict[str, tuple[str, str]] = {}
+        if provenance_ids:
+            placeholders = ", ".join("?" for _ in provenance_ids)
+            provenance_rows = self._read(
+                lambda: self._connection.execute(
+                    f"SELECT id, created_at, source FROM entries "
+                    f"WHERE project = ? AND id IN ({placeholders})",
+                    (workspace, *sorted(provenance_ids)),
+                ).fetchall()
+            )
+            provenance_positions = {
+                str(row["id"]): (str(row["created_at"]), str(row["id"]))
+                for row in provenance_rows
+                if str(row["source"] or "").startswith("hook:")
+            }
+
+        def position(item: Mapping[str, Any]) -> tuple[str, str]:
+            source_positions = [
+                provenance_positions[source_id]
+                for source_id in item.get("source_ids", [])
+                if isinstance(source_id, str) and source_id in provenance_positions
+            ]
+            if source_positions:
+                return max(source_positions)
+            return (str(item.get("created_at") or ""), str(item.get("id") or ""))
+
+        summaries = [
+            item
+            for item in context
+            if item.get("kind") == "session_summary"
+            and str(item.get("source") or "").startswith("processor:")
+        ]
+        latest_summary = max(summaries, key=position, default=None)
+        summary_cutoff = position(latest_summary) if latest_summary is not None else None
+        newer_notes = 0
+        for item in context:
+            if item.get("kind") != "note" or not str(item.get("source") or "").startswith(
+                "processor:"
+            ):
+                continue
+            item_position = position(item)
+            if summary_cutoff is None or item_position > summary_cutoff:
+                newer_notes += 1
+        return newer_notes > 0, newer_notes
+
+    def _observation_context_rows(
+        self, workspace: str, sources: Sequence[sqlite3.Row]
+    ) -> list[sqlite3.Row]:
+        """Select bounded history without using derived-entry write time as causality."""
+
+        if not sources or not sources[0]["session_id"]:
+            return []
+        connection = self._connection
+        first = sources[0]
+        session_id = first["session_id"]
+        has_stop = any(
+            str(row["source"] or "") == "hook:Stop"
+            or str(row["source"] or "").startswith("hook:Stop:")
+            for row in sources
+        )
+        stop_rows = [
+            row
+            for row in sources
+            if str(row["source"] or "") == "hook:Stop"
+            or str(row["source"] or "").startswith("hook:Stop:")
+        ]
+        first_stop = min(
+            stop_rows,
+            key=lambda row: (str(row["created_at"]), str(row["id"])),
+            default=None,
+        )
+        cutoff_row = first_stop if first_stop is not None else first
+        cutoff = (str(cutoff_row["created_at"]), str(cutoff_row["id"]))
+
+        def before_clause(alias: str = "e") -> tuple[str, tuple[object, ...]]:
+            return (
+                f"{alias}.project = ? AND {alias}.session_id = ? "
+                f"AND ({alias}.created_at < ? OR ({alias}.created_at = ? AND {alias}.id < ?))",
+                (workspace, session_id, cutoff[0], cutoff[0], cutoff[1]),
+            )
+
+        base_clause, base_parameters = before_clause()
+        if not has_stop:
+            return connection.execute(
+                f"""SELECT e.* FROM entries AS e
+                    WHERE {base_clause}
+                      AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop')
+                           OR e.source LIKE 'hook:PostToolUse%'
+                           OR (e.source LIKE 'processor:%' AND e.superseded_by IS NULL))
+                    ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
+                base_parameters,
+            ).fetchall()
+
+        # A Stop needs the latest completed summary and processor notes whose
+        # *raw source events* precede that Stop. Their derived rows can have
+        # later timestamps because background processing runs asynchronously.
+        current_ids = [str(row["id"]) for row in sources]
+        raw_parameters: list[object] = list(base_parameters)
+        raw_exclusion = ""
+        if current_ids:
+            placeholders = ", ".join("?" for _ in current_ids)
+            raw_exclusion = f" AND e.id NOT IN ({placeholders})"
+            raw_parameters.extend(current_ids)
+        raw_rows = connection.execute(
+            f"""SELECT e.* FROM entries AS e
+                WHERE {base_clause}{raw_exclusion}
+                  AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop')
+                       OR e.source LIKE 'hook:PostToolUse%')
+                ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
+            tuple(raw_parameters),
+        ).fetchall()
+
+        structured_base = (
+            "e.project = ? AND e.session_id = ? "
+            "AND e.source LIKE 'processor:%' AND e.superseded_by IS NULL "
+            "AND EXISTS ("
+            "SELECT 1 FROM entry_sources AS links "
+            "JOIN entries AS source_events ON source_events.id = links.source_id "
+            "WHERE links.summary_id = e.id AND source_events.source LIKE 'hook:%'"
+            ") AND NOT EXISTS ("
+            "SELECT 1 FROM entry_sources AS links "
+            "JOIN entries AS source_events ON source_events.id = links.source_id "
+            "WHERE links.summary_id = e.id AND source_events.source LIKE 'hook:%' "
+            "AND (source_events.project != ? OR source_events.session_id IS NULL "
+            "OR source_events.session_id != ? OR source_events.created_at > ? "
+            "OR (source_events.created_at = ? AND source_events.id >= ?))"
+            ")"
+        )
+        current_link_exclusion = ""
+        current_link_parameters: tuple[object, ...] = ()
+        if current_ids:
+            current_placeholders = ", ".join("?" for _ in current_ids)
+            current_link_exclusion = (
+                " AND NOT EXISTS ("
+                "SELECT 1 FROM entry_sources AS current_links "
+                f"WHERE current_links.summary_id = e.id AND current_links.source_id IN ({current_placeholders})"
+                ")"
+            )
+            current_link_parameters = tuple(current_ids)
+        structured_base += current_link_exclusion
+        structured_parameters: tuple[object, ...] = (
+            workspace,
+            session_id,
+            workspace,
+            session_id,
+            cutoff[0],
+            cutoff[0],
+            cutoff[1],
+            *current_link_parameters,
+        )
+        summary = connection.execute(
+            f"""SELECT e.* FROM entries AS e
+                WHERE {structured_base} AND e.kind = 'session_summary'
+                ORDER BY e.created_at DESC, e.id DESC LIMIT 1""",
+            structured_parameters,
+        ).fetchone()
+        notes = connection.execute(
+            f"""SELECT e.* FROM entries AS e
+                WHERE {structured_base} AND e.kind = 'note'
+                ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
+            structured_parameters,
+        ).fetchall()
+        ordered: list[sqlite3.Row] = []
+        seen: set[str] = set()
+        for row in ([summary] if summary is not None else []) + list(notes) + list(raw_rows):
+            if row["id"] in seen:
+                continue
+            ordered.append(row)
+            seen.add(row["id"])
+        return ordered
 
     def _observation_context(
         self, workspace: str, sources: Sequence[sqlite3.Row]
-    ) -> list[dict[str, str]]:
-        """Bounded earlier evidence helps a fresh observer resolve references.
+    ) -> list[dict[str, Any]]:
+        """Bounded earlier evidence helps a fresh observer resolve references."""
 
-        It is reference material, not newly claimed work. Do not cross session
-        boundaries, include later events, or turn it into new source attribution.
-        """
         if not sources or not sources[0]["session_id"]:
             return []
-        first = sources[0]
-        rows = self._read(lambda: self._connection.execute(
-            """SELECT id, title, body, created_at FROM entries
-               WHERE project = ? AND session_id = ?
-                 AND (created_at < ? OR (created_at = ? AND id < ?))
-                 AND (source IN ('hook:UserPromptSubmit', 'hook:Stop')
-                      OR source LIKE 'hook:PostToolUse%'
-                      OR (source LIKE 'processor:%' AND superseded_by IS NULL))
-               ORDER BY created_at DESC, id DESC LIMIT 6""",
-            (workspace, first["session_id"], first["created_at"],
-             first["created_at"], first["id"]),
-        ).fetchall())
-        context: list[dict[str, str]] = []
-        remaining = MAX_OBSERVATION_CONTEXT_CHARS
-        for row in rows:
-            title = str(row["title"])
-            available = min(2_000, remaining - len(title))
-            if available < 100:
-                break
-            body = str(row["body"])
-            if len(body) > available:
+        rows = self._read(lambda: self._observation_context_rows(workspace, sources))
+        has_stop = any(
+            str(row["source"] or "") == "hook:Stop"
+            or str(row["source"] or "").startswith("hook:Stop:")
+            for row in sources
+        )
+        records = self._records_from_rows(rows)
+        context: list[dict[str, Any]] = []
+        remaining = (
+            MAX_OBSERVATION_CONTEXT_CHARS
+            if has_stop
+            else DEFAULT_OBSERVATION_CONTEXT_CHARS
+        )
+        for record in records:
+            title = str(record["title"])
+
+            # A summary's structured fields can be considerably larger than
+            # its reader-facing body. Keep that shape useful for Stop prompts
+            # while bounding the serialized context by the same budget that
+            # bounds ordinary text.
+            metadata: dict[str, Any] = {}
+            for field in ("observation", "session_summary"):
+                value = record.get(field)
+                if not isinstance(value, Mapping):
+                    continue
+                bounded: dict[str, Any] = {}
+                for key, child in value.items():
+                    if isinstance(child, str):
+                        bounded[key] = redact_text(child)[:2_000]
+                    elif isinstance(child, Sequence) and not isinstance(
+                        child, (str, bytes, bytearray)
+                    ):
+                        bounded[key] = [
+                            redact_text(item)[:256] if isinstance(item, str) else item
+                            for item in list(child)[:32]
+                        ]
+                    else:
+                        bounded[key] = child
+                metadata[field] = bounded
+
+            body = str(record["body"])
+            item: dict[str, Any] = {
+                "id": str(record["id"]),
+                "title": title,
+                "body": body,
+                "created_at": str(record["created_at"]),
+                "kind": str(record["kind"]),
+                "source": str(record.get("source") or ""),
+                "source_ids": list(record.get("source_ids", [])),
+            }
+            item.update(metadata)
+
+            # Count the serialized object, rather than only body characters:
+            # metadata and provenance must not bypass the context budget.
+            payload_chars = self._observation_source_chars(item)
+            if payload_chars > remaining:
+                fixed_item = dict(item)
+                fixed_item["body"] = ""
+                fixed_chars = self._observation_source_chars(fixed_item)
+                available = remaining - fixed_chars
+                if available < 100:
+                    break
                 marker = "\n[earlier context excerpt truncated]\n"
-                room = available - len(marker)
-                body = body[:room // 2] + marker + body[-(room - room // 2):]
-            context.append({"title": title, "body": body, "created_at": str(row["created_at"])})
-            remaining -= len(title) + len(body)
-        return list(reversed(context))
+                high = max(0, available - len(marker))
+                low = 0
+                best_room: int | None = None
+                while low <= high:
+                    room = (low + high) // 2
+                    candidate = dict(item)
+                    candidate["body"] = (
+                        body[: room // 2]
+                        + marker
+                        + body[-(room - room // 2) :]
+                    )
+                    candidate_chars = self._observation_source_chars(candidate)
+                    if candidate_chars <= remaining:
+                        best_room = room
+                        low = room + 1
+                    else:
+                        high = room - 1
+                if best_room is None:
+                    break
+                room = best_room
+                item["body"] = body[: room // 2] + marker + body[-(room - room // 2) :]
+                payload_chars = self._observation_source_chars(item)
+            context.append(item)
+            remaining -= payload_chars
+        context.sort(key=lambda item: (str(item["created_at"]), str(item["id"])))
+        return context
 
     def finish_observation_batch(
         self,
@@ -1764,6 +2600,7 @@ class Store:
         lease_token: str,
         *,
         notes: Sequence[Mapping[str, Any]] = (),
+        session_summary: Mapping[str, Any] | None = None,
         disposition: str = "processed",
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
@@ -1776,10 +2613,11 @@ class Store:
         if disposition not in {"processed", "skipped"}:
             raise ValueError("disposition must be processed or skipped")
         checked_notes = _validate_observation_notes(notes)
-        if disposition == "processed" and not checked_notes:
-            raise ValueError("processed observations require at least one note")
-        if disposition == "skipped" and checked_notes:
-            raise ValueError("skipped observations must not include notes")
+        checked_summary = _validate_session_summary(session_summary)
+        if disposition == "processed" and not checked_notes and checked_summary is None:
+            raise ValueError("processed observations require a note or session summary")
+        if disposition == "skipped" and (checked_notes or checked_summary is not None):
+            raise ValueError("skipped observations must not include notes or session summary")
         thread_id = _validate_optional_processor_value(worker_thread_id, "worker_thread_id")
         turn_id = _validate_optional_processor_value(worker_turn_id, "worker_turn_id")
 
@@ -1806,7 +2644,8 @@ class Store:
                     raise StoreError("Observation job lease is unavailable")
                 source_rows = connection.execute(
                     """
-                    SELECT e.id, e.superseded_by FROM observation_job_sources AS links
+                    SELECT e.id, e.project, e.session_id, e.source, e.created_at, e.superseded_by
+                    FROM observation_job_sources AS links
                     JOIN entries AS e ON e.id = links.source_id
                     WHERE links.job_id = ? AND e.project = ?
                     ORDER BY e.created_at ASC, e.id ASC
@@ -1814,6 +2653,17 @@ class Store:
                     (checked_job_id, workspace),
                 ).fetchall()
                 source_ids = [str(row["id"]) for row in source_rows]
+                stop_rows = [
+                    row
+                    for row in source_rows
+                    if str(row["source"] or "") == "hook:Stop"
+                    or str(row["source"] or "").startswith("hook:Stop:")
+                ]
+                first_stop_key = min(
+                    ((str(row["created_at"]), str(row["id"])) for row in stop_rows),
+                    default=None,
+                )
+                source_by_id = {str(row["id"]): row for row in source_rows}
                 fingerprint = hashlib.sha256(
                     (
                         workspace
@@ -1848,6 +2698,34 @@ class Store:
                         # non-durable raw sources.  Keep the source IDs that were
                         # actually attributed disjoint and project-local, while
                         # leaving unreferenced claimed records available for audit.
+
+                summary_source_ids: list[str] = []
+                if checked_summary is not None:
+                    requested_summary_sources = checked_summary.get("source_ids")
+                    summary_source_ids = (
+                        list(source_ids)
+                        if requested_summary_sources is None
+                        else list(requested_summary_sources)
+                    )
+                    if not summary_source_ids or any(
+                        source_id not in source_ids for source_id in summary_source_ids
+                    ):
+                        raise ValueError("session_summary source_ids must refer to claimed sources")
+                    if first_stop_key is not None and any(
+                        (
+                            str(source_by_id[source_id]["created_at"]),
+                            source_id,
+                        )
+                        > first_stop_key
+                        for source_id in summary_source_ids
+                    ):
+                        # Defend jobs created by older workers that may have
+                        # leased raw events after the first Stop. A summary
+                        # may cite the Stop and earlier evidence only; later
+                        # events belong to the following turn.
+                        raise ValueError(
+                            "session_summary source_ids must not include sources after first Stop"
+                        )
 
                 output_ids: list[str] = []
                 if disposition == "processed":
@@ -1888,6 +2766,13 @@ class Store:
                             tags=note["tags"],
                             timestamp=timestamp,
                         )
+                        self._upsert_metadata(
+                            connection,
+                            entry_id=entry_id,
+                            observation=note["observation"],
+                            session_summary=None,
+                            timestamp=timestamp,
+                        )
                         connection.executemany(
                             "INSERT INTO entry_sources(summary_id, source_id) VALUES (?, ?)",
                             [(entry_id, source_id) for source_id in note_source_ids],
@@ -1903,6 +2788,92 @@ class Store:
                             f"UPDATE entries SET superseded_by = ?, superseded_at = ?, updated_at = ? "
                             f"WHERE project = ? AND id IN ({placeholders})",
                             (entry_id, timestamp, timestamp, workspace, *note_source_ids),
+                        )
+                        output_ids.append(entry_id)
+
+                    if checked_summary is not None:
+                        summary_title = checked_summary.get("title") or "Session summary"
+                        summary_parts = [
+                            (field.replace("_", " ").capitalize(), checked_summary.get(field))
+                            for field in _SESSION_SUMMARY_FIELDS
+                            if checked_summary.get(field)
+                        ]
+                        summary_body = "\n".join(
+                            f"{label}: {value}" for label, value in summary_parts
+                        )
+                        entry_id = uuid.uuid4().hex
+                        dedupe_hash = _dedupe_hash(
+                            workspace, f"session_summary:{checked_job_id}"
+                        )
+                        connection.execute(
+                            """
+                            INSERT INTO entries(
+                                id, project, title, body, kind, session_id, turn_id, source,
+                                tags_json, dedupe_hash, created_at, updated_at
+                            ) VALUES (?, ?, ?, ?, 'session_summary', ?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            (
+                                entry_id,
+                                workspace,
+                                summary_title,
+                                summary_body,
+                                job["session_id"],
+                                turn_id,
+                                processor_source,
+                                json.dumps(["session_summary"], separators=(",", ":")),
+                                dedupe_hash,
+                                timestamp,
+                                timestamp,
+                            ),
+                        )
+                        self._upsert_embedding_document(
+                            connection,
+                            entry_id=entry_id,
+                            project=workspace,
+                            title=summary_title,
+                            body=summary_body,
+                            tags=["session_summary"],
+                            timestamp=timestamp,
+                        )
+                        self._upsert_metadata(
+                            connection,
+                            entry_id=entry_id,
+                            observation=None,
+                            session_summary=checked_summary,
+                            timestamp=timestamp,
+                        )
+                        context_rows = self._observation_context_rows(workspace, source_rows)
+                        context_ids = [
+                            str(row["id"])
+                            for row in context_rows
+                            if str(row["source"] or "").startswith("processor:")
+                            and str(row["id"]) not in summary_source_ids
+                        ]
+                        all_summary_links = list(dict.fromkeys(summary_source_ids + context_ids))
+                        connection.executemany(
+                            "INSERT INTO entry_sources(summary_id, source_id) VALUES (?, ?)",
+                            [(entry_id, source_id) for source_id in all_summary_links],
+                        )
+                        self._revoke_embedding_jobs(
+                            connection,
+                            project=workspace,
+                            source_ids=summary_source_ids,
+                            code="source_superseded",
+                        )
+                        placeholders = ", ".join("?" for _ in summary_source_ids)
+                        # A summary can share provenance with an observation.
+                        # Preserve the first durable superseder and only claim
+                        # sources that have not already been attributed.
+                        connection.execute(
+                            f"UPDATE entries SET superseded_by = ?, superseded_at = ?, updated_at = ? "
+                            f"WHERE project = ? AND superseded_by IS NULL AND id IN ({placeholders})",
+                            (
+                                entry_id,
+                                timestamp,
+                                timestamp,
+                                workspace,
+                                *summary_source_ids,
+                            ),
                         )
                         output_ids.append(entry_id)
 
@@ -2595,6 +3566,10 @@ class Store:
         *,
         limit: int = DEFAULT_LIMIT,
         kinds: Sequence[str] | str | None = None,
+        files: Sequence[str] | str | None = None,
+        concepts: Sequence[str] | str | None = None,
+        types: Sequence[str] | str | None = None,
+        type: Sequence[str] | str | None = None,
     ) -> list[dict[str, Any]]:
         """Return active project-local previews ranked by exact-profile cosine."""
 
@@ -2605,6 +3580,11 @@ class Store:
         query = _normalize_embedding_vector(query_vector, checked_dimensions)
         checked_limit = _validate_limit(limit)
         checked_kinds = _validate_kinds(kinds)
+        if types is not None and type is not None:
+            raise ValueError("provide either types or type, not both")
+        checked_types = _validate_observation_types(types if types is not None else type)
+        checked_files = _validate_metadata_filters(files, "files")
+        checked_concepts = _validate_metadata_filters(concepts, "concepts")
         with self._lock:
             self._require_open()
             clauses = [
@@ -2626,6 +3606,11 @@ class Store:
                 placeholders = ", ".join("?" for _ in checked_kinds)
                 clauses.append(f"e.kind IN ({placeholders})")
                 parameters.extend(checked_kinds)
+            metadata_clauses, metadata_filter_parameters = self._metadata_filter_sql(
+                "m", types=checked_types, concepts=checked_concepts, files=checked_files
+            )
+            clauses.extend(metadata_clauses)
+            parameters.extend(metadata_filter_parameters)
             parameters.append(MAX_EMBEDDING_SCAN)
             rows = self._read(
                 lambda: self._connection.execute(
@@ -2636,6 +3621,7 @@ class Store:
                            documents.text_version AS document_text_version
                     FROM embedding_vectors AS vectors
                     JOIN entries AS e ON e.id = vectors.entry_id
+                    LEFT JOIN entry_metadata AS m ON m.entry_id = e.id
                     LEFT JOIN embedding_documents AS documents ON documents.entry_id = e.id
                         AND documents.project = e.project
                     WHERE """
@@ -2839,6 +3825,53 @@ class Store:
                 result["project"] = workspace
             return result
 
+    @staticmethod
+    def _metadata_filter_sql(
+        alias: str,
+        *,
+        types: Sequence[str] | None = None,
+        concepts: Sequence[str] | None = None,
+        files: Sequence[str] | None = None,
+    ) -> tuple[list[str], list[object]]:
+        clauses: list[str] = []
+        parameters: list[object] = []
+        if types:
+            placeholders = ", ".join("?" for _ in types)
+            clauses.append(
+                f"json_extract({alias}.observation_json, '$.type') IN ({placeholders})"
+            )
+            parameters.extend(types)
+        if concepts:
+            for concept in concepts:
+                clauses.append(
+                    f"EXISTS (SELECT 1 FROM json_each(COALESCE(json_extract({alias}.observation_json, '$.concepts'), '[]')) "
+                    "WHERE value = ?)"
+                )
+                parameters.append(concept)
+        if files:
+            for path in files:
+                clauses.append(
+                    f"(EXISTS (SELECT 1 FROM json_each(COALESCE(json_extract({alias}.observation_json, '$.files_read'), '[]')) "
+                    "WHERE value = ?) OR "
+                    f"EXISTS (SELECT 1 FROM json_each(COALESCE(json_extract({alias}.observation_json, '$.files_modified'), '[]')) "
+                    "WHERE value = ?))"
+                )
+                parameters.extend([path, path])
+        return clauses, parameters
+
+    @staticmethod
+    def _metadata_search_sql(
+        alias: str, tokens: Sequence[str]
+    ) -> tuple[str | None, list[object]]:
+        if not tokens:
+            return None, []
+        text = (
+            f"LOWER(COALESCE({alias}.observation_json, '') || ' ' || "
+            f"COALESCE({alias}.session_summary_json, ''))"
+        )
+        clauses = [f"{text} LIKE ?" for _ in tokens]
+        return " AND ".join(clauses), [f"%{token.lower()}%" for token in tokens]
+
     def _search_rows(
         self,
         workspace: str,
@@ -2847,33 +3880,80 @@ class Store:
         kinds: Sequence[str] | None,
         *,
         exclude_session: str | None = None,
+        metadata_tokens: Sequence[str] = (),
+        observation_types: Sequence[str] | None = None,
+        concepts: Sequence[str] | None = None,
+        files: Sequence[str] | None = None,
     ) -> tuple[list[sqlite3.Row], dict[str, float]]:
         if not expression:
             return [], {}
         connection = self._connection
-        clauses = [
-            "entries_fts MATCH ?",
+        metadata_search, metadata_parameters = self._metadata_search_sql("m", metadata_tokens)
+        base_clauses = [
             "e.project = ?",
             "e.superseded_by IS NULL",
             "COALESCE(e.source, '') NOT GLOB 'hook:*'",
         ]
-        parameters: list[object] = [expression, workspace]
+        base_parameters: list[object] = [workspace]
         if kinds:
             placeholders = ", ".join("?" for _ in kinds)
-            clauses.append(f"e.kind IN ({placeholders})")
-            parameters.extend(kinds)
+            base_clauses.append(f"e.kind IN ({placeholders})")
+            base_parameters.extend(kinds)
+        metadata_clauses, metadata_filter_parameters = self._metadata_filter_sql(
+            "m", types=observation_types, concepts=concepts, files=files
+        )
+        base_clauses.extend(metadata_clauses)
+        base_parameters.extend(metadata_filter_parameters)
         if exclude_session is not None:
-            clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
-            parameters.append(exclude_session)
-        parameters.append(limit)
-        sql = (
+            base_clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
+            base_parameters.append(exclude_session)
+
+        fts_sql = (
             "SELECT e.*, bm25(entries_fts, 3.0, 1.0, 0.5) AS fts_rank "
             "FROM entries_fts JOIN entries AS e ON e.rowid = entries_fts.rowid "
-            f"WHERE {' AND '.join(clauses)} "
+            "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
+            f"WHERE entries_fts MATCH ? AND {' AND '.join(base_clauses)} "
             "ORDER BY fts_rank ASC, e.created_at DESC LIMIT ?"
         )
-        rows = self._read(lambda: connection.execute(sql, tuple(parameters)).fetchall())
-        scores = {row["id"]: -float(row["fts_rank"]) for row in rows}
+        fts_parameters = [expression, *base_parameters, limit]
+        fts_rows = self._read(
+            lambda: connection.execute(fts_sql, tuple(fts_parameters)).fetchall()
+        )
+        rows_by_id: dict[str, sqlite3.Row] = {str(row["id"]): row for row in fts_rows}
+        ranks: dict[str, float] = {
+            str(row["id"]): float(row["fts_rank"]) for row in fts_rows
+        }
+
+        if metadata_search is not None:
+            metadata_sql = (
+                "SELECT e.*, 0.0 AS fts_rank FROM entries AS e "
+                "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
+                f"WHERE {metadata_search} AND {' AND '.join(base_clauses)} "
+                "ORDER BY e.created_at DESC LIMIT ?"
+            )
+            metadata_query_parameters = [
+                *metadata_parameters,
+                *base_parameters,
+                limit,
+            ]
+            metadata_rows = self._read(
+                lambda: connection.execute(
+                    metadata_sql, tuple(metadata_query_parameters)
+                ).fetchall()
+            )
+            for row in metadata_rows:
+                row_id = str(row["id"])
+                rows_by_id.setdefault(row_id, row)
+                ranks.setdefault(row_id, 0.0)
+
+        rows = list(rows_by_id.values())
+        rows.sort(key=lambda row: (ranks[str(row["id"])], str(row["created_at"])), reverse=False)
+        # FTS bm25 values are normally negative, so metadata-only matches at
+        # zero naturally follow exact FTS hits.  Newer records break ties.
+        rows.sort(key=lambda row: str(row["created_at"]), reverse=True)
+        rows.sort(key=lambda row: ranks[str(row["id"])])
+        rows = rows[:limit]
+        scores = {row["id"]: -ranks[str(row["id"])] for row in rows}
         return rows, scores
 
     def search(
@@ -2882,16 +3962,36 @@ class Store:
         query: str,
         limit: int = DEFAULT_LIMIT,
         kinds: Sequence[str] | str | None = None,
+        *,
+        files: Sequence[str] | str | None = None,
+        concepts: Sequence[str] | str | None = None,
+        types: Sequence[str] | str | None = None,
+        type: Sequence[str] | str | None = None,
     ) -> list[dict[str, Any]]:
-        """Search active entries with literal, parameterized Unicode FTS tokens."""
+        """Search active entries with structured observation filters."""
 
         workspace = project_key(project)
         expression = _fts_expression(query)
+        query_tokens = _fts_tokens(query)
         checked_limit = _validate_limit(limit)
         checked_kinds = _validate_kinds(kinds)
+        if types is not None and type is not None:
+            raise ValueError("provide either types or type, not both")
+        checked_types = _validate_observation_types(types if types is not None else type)
+        checked_files = _validate_metadata_filters(files, "files")
+        checked_concepts = _validate_metadata_filters(concepts, "concepts")
         with self._lock:
             self._require_open()
-            rows, scores = self._search_rows(workspace, expression, checked_limit, checked_kinds)
+            rows, scores = self._search_rows(
+                workspace,
+                expression,
+                checked_limit,
+                checked_kinds,
+                metadata_tokens=query_tokens,
+                observation_types=checked_types,
+                concepts=checked_concepts,
+                files=checked_files,
+            )
             return self._records_from_rows(rows, preview=True, scores=scores)
 
     def get(self, project: str | Path, ids: Sequence[str] | str) -> list[dict[str, Any]]:
@@ -2911,6 +4011,61 @@ class Store:
             records = self._records_from_rows(rows)
             by_id = {record["id"]: record for record in records}
             return [by_id[entry_id] for entry_id in checked_ids if entry_id in by_id]
+
+    def get_tool_uses(
+        self,
+        project: str | Path,
+        *,
+        ids: Sequence[str] | str | None = None,
+        session_id: str | None = None,
+        limit: int = DEFAULT_LIMIT,
+    ) -> list[dict[str, Any]]:
+        """Read bounded, redacted raw tool evidence without executing it.
+
+        ``ids`` refers to durable tool-use identifiers from the side index,
+        rather than memory entry IDs. Omit it to list the oldest bounded page
+        for the project/session. The raw module owns payload normalization and
+        replay semantics; this wrapper keeps project validation and Store's
+        lifecycle/locking contract at the public boundary.
+        """
+
+        workspace = project_key(project)
+        checked_ids = _validate_tool_use_ids(ids)
+        checked_session = _validate_text(
+            session_id, "session_id", MAX_SESSION_CHARS, required=False
+        )
+        checked_limit = _validate_limit(limit)
+        try:
+            from .tool_io import get_tool_capture, list_tool_captures
+        except ModuleNotFoundError as error:
+            if error.name in {"codex_mem.tool_io", f"{__package__}.tool_io"}:
+                raise StoreError("Raw tool evidence is unavailable") from None
+            raise
+
+        with self._lock:
+            self._require_open()
+            connection = self._connection
+            try:
+                if checked_ids is None:
+                    return list_tool_captures(
+                        connection,
+                        workspace,
+                        session_id=checked_session,
+                        limit=checked_limit,
+                    )
+                result: list[dict[str, Any]] = []
+                for tool_use_id in checked_ids[:checked_limit]:
+                    row = get_tool_capture(
+                        connection,
+                        workspace,
+                        tool_use_id,
+                        session_id=checked_session,
+                    )
+                    if row is not None:
+                        result.append(row)
+                return result
+            except sqlite3.Error:
+                raise StoreError("Raw tool evidence is unavailable") from None
 
     def timeline(
         self,
@@ -2945,12 +4100,54 @@ class Store:
                 )
             return self._records_from_rows(rows, preview=True)
 
+    @staticmethod
+    def _context_metadata_markup(record: Mapping[str, Any]) -> str:
+        """Render bounded structured fields without making them executable."""
+
+        observation = record.get("observation")
+        summary = record.get("session_summary")
+        if not isinstance(observation, Mapping) and not isinstance(summary, Mapping):
+            return ""
+        lines: list[str] = ["<metadata>\n"]
+        if isinstance(observation, Mapping):
+            lines.append("<observation>\n")
+            for field in _OBSERVATION_METADATA_FIELDS:
+                value = observation.get(field)
+                if value is None or value == []:
+                    continue
+                if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+                    rendered = ", ".join(redact_text(str(item)) for item in value)
+                else:
+                    rendered = redact_text(str(value))
+                lines.append(
+                    f"<{field}>{html.escape(rendered, quote=False)}</{field}>\n"
+                )
+            lines.append("</observation>\n")
+        if isinstance(summary, Mapping):
+            lines.append("<session_summary>\n")
+            for field in _SESSION_SUMMARY_FIELDS:
+                value = summary.get(field)
+                if value is None or value == "":
+                    continue
+                lines.append(
+                    f"<{field}>{html.escape(redact_text(str(value)), quote=False)}</{field}>\n"
+                )
+            lines.append("</session_summary>\n")
+        lines.append("</metadata>\n")
+        return "".join(lines)
+
     def context(
         self,
         project: str | Path,
         query: str = "",
         budget: int = 6_000,
         exclude_session: str | None = None,
+        *,
+        files: Sequence[str] | str | None = None,
+        concepts: Sequence[str] | str | None = None,
+        types: Sequence[str] | str | None = None,
+        type: Sequence[str] | str | None = None,
+        kinds: Sequence[str] | str | None = None,
     ) -> str:
         """Build a bounded, escaped wrapper of active memory records.
 
@@ -2972,39 +4169,60 @@ class Store:
         checked_exclude = _validate_text(
             exclude_session, "exclude_session", MAX_SESSION_CHARS, required=False
         )
+        if types is not None and type is not None:
+            raise ValueError("provide either types or type, not both")
+        checked_types = _validate_observation_types(types if types is not None else type)
+        checked_kinds = _validate_kinds(kinds)
+        checked_files = _validate_metadata_filters(files, "files")
+        checked_concepts = _validate_metadata_filters(concepts, "concepts")
 
         with self._lock:
             self._require_open()
             if query.strip():
                 expression = _fts_expression(query)
+                query_tokens = _fts_tokens(query)
                 rows, _ = self._search_rows(
                     workspace,
                     expression,
                     50,
-                    None,
+                    checked_kinds,
                     exclude_session=checked_exclude,
+                    metadata_tokens=query_tokens,
+                    observation_types=checked_types,
+                    concepts=checked_concepts,
+                    files=checked_files,
                 )
             else:
                 clauses = [
-                    "project = ?",
-                    "superseded_by IS NULL",
-                    "COALESCE(source, '') NOT GLOB 'hook:*'",
+                    "e.project = ?",
+                    "e.superseded_by IS NULL",
+                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
                 ]
                 parameters: list[object] = [workspace]
                 if checked_exclude is not None:
-                    clauses.append("(session_id IS NULL OR session_id != ?)")
+                    clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
                     parameters.append(checked_exclude)
+                if checked_kinds:
+                    placeholders = ", ".join("?" for _ in checked_kinds)
+                    clauses.append(f"e.kind IN ({placeholders})")
+                    parameters.extend(checked_kinds)
+                metadata_clauses, metadata_filter_parameters = self._metadata_filter_sql(
+                    "m", types=checked_types, concepts=checked_concepts, files=checked_files
+                )
+                clauses.extend(metadata_clauses)
+                parameters.extend(metadata_filter_parameters)
                 parameters.append(50)
                 automatic_kinds = ", ".join(
                     f"'{kind}'" for kind in _AUTOMATIC_CONTEXT_KINDS
                 )
                 sql = (
-                    "SELECT * FROM entries WHERE "
+                    "SELECT e.* FROM entries AS e "
+                    "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id WHERE "
                     + " AND ".join(clauses)
                     + " ORDER BY CASE "
-                    + "WHEN source LIKE 'hook:%' THEN 2 "
-                    + f"WHEN kind IN ({automatic_kinds}) THEN 1 "
-                    + "ELSE 0 END ASC, created_at DESC LIMIT ?"
+                    + "WHEN e.source LIKE 'hook:%' THEN 2 "
+                    + f"WHEN e.kind IN ({automatic_kinds}) THEN 1 "
+                    + "ELSE 0 END ASC, e.created_at DESC LIMIT ?"
                 )
                 rows = self._read(
                     lambda: self._connection.execute(sql, tuple(parameters)).fetchall()
@@ -3032,14 +4250,18 @@ class Store:
             title = html.escape(redact_text(str(record["title"])), quote=False)
             tags = ", ".join(redact_text(str(tag)) for tag in record["tags"])
             tags_markup = f"<tags>{html.escape(tags, quote=False)}</tags>\n" if tags else ""
+            metadata_markup = self._context_metadata_markup(record)
             body = html.escape(redact_text(str(record["body"])), quote=False)
-            complete = f"{entry_open}<title>{title}</title>\n{tags_markup}<body>{body}</body>\n</entry>\n"
+            complete = (
+                f"{entry_open}<title>{title}</title>\n{tags_markup}"
+                f"{metadata_markup}<body>{body}</body>\n</entry>\n"
+            )
             if len(complete) <= remaining:
                 chunks.append(complete)
                 remaining -= len(complete)
                 continue
 
-            fixed = f"{entry_open}<title>{title}</title>\n{tags_markup}<body>"
+            fixed = f"{entry_open}<title>{title}</title>\n{tags_markup}{metadata_markup}<body>"
             suffix = "</body>\n</entry>\n"
             available_body = remaining - len(fixed) - len(suffix)
             if available_body <= 0:
@@ -3077,6 +4299,19 @@ class Store:
                     self._revoke_embedding_jobs(
                         connection, project=workspace, source_ids=deleted_ids
                     )
+                    # The raw tool side index intentionally has no foreign
+                    # key: it is owned by the capture parity module and must
+                    # remain installable on older stores. Remove its rows in
+                    # this transaction so forget cannot leave searchable raw
+                    # evidence behind.
+                    try:
+                        connection.execute(
+                            f"DELETE FROM tool_uses WHERE project = ? AND entry_id IN ({selected})",
+                            (workspace, *deleted_ids),
+                        )
+                    except sqlite3.OperationalError as error:
+                        if "no such table" not in str(error).lower():
+                            raise
                     connection.execute(
                         f"DELETE FROM entries WHERE project = ? AND id IN ({selected})",
                         (workspace, *deleted_ids),
@@ -3211,6 +4446,25 @@ class Store:
             def delete_old() -> int:
                 self._revoke_observation_jobs(connection, cutoff=cutoff)
                 self._revoke_embedding_jobs(connection, cutoff=cutoff)
+                old_rows = connection.execute(
+                    "SELECT id, project FROM entries WHERE created_at < ?", (cutoff,)
+                ).fetchall()
+                if old_rows:
+                    # See forget(): this table is deliberately decoupled from
+                    # entries, so retention must explicitly remove raw rows.
+                    by_project: dict[str, list[str]] = {}
+                    for row in old_rows:
+                        by_project.setdefault(str(row["project"]), []).append(str(row["id"]))
+                    try:
+                        for project, entry_ids in by_project.items():
+                            placeholders = ", ".join("?" for _ in entry_ids)
+                            connection.execute(
+                                f"DELETE FROM tool_uses WHERE project = ? AND entry_id IN ({placeholders})",
+                                (project, *entry_ids),
+                            )
+                    except sqlite3.OperationalError as error:
+                        if "no such table" not in str(error).lower():
+                            raise
                 cursor = connection.execute("DELETE FROM entries WHERE created_at < ?", (cutoff,))
                 return max(0, int(cursor.rowcount))
 

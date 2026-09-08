@@ -637,6 +637,65 @@ class HookTests(unittest.TestCase):
             )
         self.assertEqual([], self.store.records)
 
+    def test_private_prompt_gates_same_turn_tools_and_public_prompt_clears_it(self) -> None:
+        handle_hook(
+            self.payload(
+                "UserPromptSubmit",
+                prompt="<private>do not retain this task</private>",
+                turn_id="private-turn",
+            ),
+            self.store,
+        )
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_use_id="private-tool",
+                turn_id="private-turn",
+                tool_input={"command": "pytest -q"},
+                tool_response={"exit_code": 0, "output": "private result"},
+            ),
+            self.store,
+        )
+        # A separate session cannot inherit the gate from session-1.
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                session_id="session-2",
+                tool_name="Bash",
+                tool_use_id="other-session-tool",
+                turn_id="private-turn",
+                tool_input={"command": "pytest -q"},
+                tool_response={"exit_code": 0, "output": "other session result"},
+            ),
+            self.store,
+        )
+        self.assertEqual(2, len(self.store.records))
+        self.assertIn("other session result", str(self.store.records[-1]["body"]))
+        self.assertNotIn("private result", " ".join(str(item["body"]) for item in self.store.records))
+
+        # A new public prompt clears the gate for the same session.
+        handle_hook(
+            self.payload(
+                "UserPromptSubmit",
+                prompt="continue publicly",
+                turn_id="public-turn",
+            ),
+            self.store,
+        )
+        handle_hook(
+            self.payload(
+                "PostToolUse",
+                tool_name="Bash",
+                tool_use_id="public-tool",
+                turn_id="public-turn",
+                tool_input={"command": "pytest -q"},
+                tool_response={"exit_code": 0, "output": "public result"},
+            ),
+            self.store,
+        )
+        self.assertIn("public result", " ".join(str(item["body"]) for item in self.store.records))
+
     def test_real_store_accepts_post_tool_provenance_without_source_ids(self) -> None:
         with Store(self.data_dir) as store:
             result = handle_hook(

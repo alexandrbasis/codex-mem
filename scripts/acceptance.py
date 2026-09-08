@@ -69,8 +69,13 @@ def run(schema_dir: Path | None = None) -> dict:
                     tool_input={"command": "python3 -m unittest tests.test_aurora"},
                     tool_response="Aurora regression: 1 test passed. <private>RAW_OUTPUT_MUST_NOT_BE_STORED</private>")
         hook("PostToolUse", **tool)
+        with Store(data) as store:
+            assert not any(r["kind"] == "tool" for r in store.timeline(project)), "Private turn leaked tool capture"
+        hook("UserPromptSubmit", turn_id="turn-two", prompt="Continue public Aurora cache eviction verification.")
+        tool["turn_id"] = "turn-two"
         hook("PostToolUse", **tool)
-        hook("Stop", turn_id="turn-one", stop_hook_active=False,
+        hook("PostToolUse", **tool)
+        hook("Stop", turn_id="turn-two", stop_hook_active=False,
              last_assistant_message="Aurora cache eviction is fixed. The focused test passed; production behavior is unverified.")
         with Store(data) as store:
             records = store.timeline(project, limit=100)
@@ -116,7 +121,7 @@ def run(schema_dir: Path | None = None) -> dict:
         assert len(replies) == 4 and replies[0]["id"] == 0, "MCP notification/id protocol mismatch"
         for reply in replies:
             assert "error" not in reply and not reply.get("result", {}).get("isError"), "MCP operation failed"
-        assert len(replies[1]["result"]["tools"]) == 7, "Unexpected tool catalog"
+        assert len(replies[1]["result"]["tools"]) == 8, "Unexpected tool catalog"
         with Store(data) as store:
             search = store.search(project, "Aurora")
             assert len(search) == 1, "Consolidated sources remain active"
@@ -146,7 +151,7 @@ def run(schema_dir: Path | None = None) -> dict:
                 assert store.search(project, "cache", limit=10)
                 query_ms.append((time.perf_counter() - start) * 1000)
         return {"status": "passed", "data": "disposable synthetic project; no user history read",
-                "checks": ["official hook payloads", "capture", "dedupe", "redaction", "project isolation", "MCP subprocess",
+                "checks": ["official hook payloads", "capture", "dedupe", "redaction", "private-turn gate", "project isolation", "MCP subprocess",
                            "consolidation provenance", "repeated compaction recall", "bounded injection", "backup", "forget"],
                 "official_schema_validation": validator is not None, "hook_invocations": len(validations),
                 "hook_process_ms_median": round(statistics.median(timings), 2),
