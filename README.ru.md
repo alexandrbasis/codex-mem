@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo-on-light.png" alt="Логотип Codex Mem" width="160">
+  <img src="assets/logo.png" alt="Логотип Codex Mem" width="160">
 </p>
 
 # Codex Mem
