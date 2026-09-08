@@ -1,16 +1,27 @@
 # Verification
 
-This page records the public evidence boundary for Codex Mem `1.2.1`. The public patch carries the tested `1.2.0` behavior; its branding, metadata, documentation, and packaging additions do not extend that behavior or compatibility boundary. Unit and local acceptance checks were rerun on the public export. Native E5, Luna, MCP, queue, and paired-flow checks below are the `1.2.0` behavioral baseline carried forward unchanged. The record describes tested scenarios and their limits; it is not a universal compatibility or retrieval-quality claim.
+Version `1.3.0` adds a maintenance skill and read-only diagnostic helper. The runtime capture, processing, and retrieval checks below retain the `1.2.0` behavioral baseline published with `1.2.1`. This record separates current local checks from that baseline; it is not a universal compatibility or retrieval-quality claim.
 
 ## Version and host boundary
 
 - Tested implementation snapshot: `1.2.0`.
-- Public release line: `1.2.1`.
+- Current package: `1.3.0`. The original public-export checks below were recorded for `1.2.1`.
 - Native Codex integration boundary: Codex CLI `0.153.4`.
 - Public export checks: 143 unit tests and the local synthetic acceptance driver passed.
 - Native behavioral baseline: E5, Luna/medium, MCP, queue, capture, paired recall, and exclusion checks from the tested `1.2.0` snapshot.
 - The evidence uses temporary fictional fixtures for native reads and automatic flows. It does not validate or publish a user's existing memory.
 - Remote CI results are not part of this verification record.
+
+## Maintenance skill checks
+
+The `1.3.0` maintenance skill combines diagnosis and authorized repair guidance. Its JSON helper is scoped to metadata and uses read-only storage access; native hook discovery and execution remain separate evidence.
+
+- The final `1.3.0` unit suite passed all 150 tests, including seven maintenance tests.
+- The skill frontmatter and resource structure passed the bundled skill validator.
+- Seven isolated maintenance tests passed: absent/existing store reads without primary data changes, corrupt database/config/service diagnostics, expired and blocked jobs, real enqueue metadata without worker startup, metadata privacy, and project isolation.
+- An independent skill exercise on a fictional manual-mode project preserved the check-only scope and correctly left native execution unverified. The repair guidance preserves a project-only request when a global worker could process other projects.
+- The local synthetic acceptance driver passed again with nine hook invocations. Official hook-schema validation was not enabled for this invocation.
+- The existing native host-check script discovered all six enabled, trusted Codex Mem definitions on CLI `0.153.4`. This establishes discovery and trust only; it does not claim a new end-to-end processing run for `1.3.0`.
 
 ## Recorded checks
 

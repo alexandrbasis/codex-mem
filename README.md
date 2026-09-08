@@ -8,7 +8,7 @@
 
 Codex Mem is local, project-scoped memory for Codex CLI and Codex desktop on macOS and Linux. It captures bounded observations, keeps explicit notes, and makes earlier project context searchable in later sessions. It is an independent implementation; it is not a fork and does not provide full Claude Mem feature parity.
 
-The public release line is `1.2.1`. Its behavior carries the tested `1.2.0` implementation snapshot; the compatibility and evidence boundaries below still apply.
+Version `1.3.0` adds the maintenance skill and a read-only diagnostic helper. Capture, processing, and retrieval retain the tested `1.2.0` behavioral baseline; the compatibility and evidence boundaries below still apply.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
 
@@ -79,6 +79,28 @@ python3 scripts/codex-mem.py config --scope manual
 ```
 
 The capture setting does not interpret every natural-language request to avoid saving. Use `manual`, an excluded project, or `CODEX_MEM_DISABLED=1` when you need a hard opt-out.
+
+## Skills
+
+The plugin includes two skills:
+
+| Skill | When to use it |
+| --- | --- |
+| [memory](skills/memory/SKILL.md) | Ask why a past decision was made, recover an earlier fix with its evidence, save a checked result, or consolidate related notes. Search previews lead to full source records before the agent relies on them. |
+| [maintenance](skills/maintenance/SKILL.md) | Ask whether memory is working, why new notes are delayed, or request a repair. It checks storage, recent activity, queue/processor state, semantic coverage, and native hook discovery, then verifies authorized repairs. |
+
+Automatic hooks collect observations during work. The `memory` skill guides deliberate recall and curation. `maintenance` diagnoses the system that captures, processes, and retrieves those records.
+
+For example: "Why did we choose this architecture?", "Remember the verified cause and fix", or "Check Codex Mem for this project and explain anything stuck in the queue."
+
+The maintenance helper also runs directly from the plugin root:
+
+```sh
+python3 skills/maintenance/scripts/health_check.py --project /absolute/path/to/project
+python3 skills/maintenance/scripts/health_check.py --all-projects --deep
+```
+
+It emits metadata-only JSON and leaves the memory database and configuration unchanged. `--deep` adds a SQLite integrity check. Use `--data-dir` for a custom store. Native hook trust and actual execution are separate evidence; the skill uses the installed host check for discovery. Read-only diagnosis does not run a model, retry jobs, or repair storage. Repair commands have their own effects and scope.
 
 ## Use memory in Codex
 

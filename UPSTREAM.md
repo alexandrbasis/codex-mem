@@ -2,7 +2,7 @@
 
 Codex Mem is an independent implementation inspired by [Claude Mem](https://github.com/thedotmack/claude-mem). It is not a GitHub fork and does not include copied Claude Mem source. This repository's implementation uses the MIT license in `LICENSE`.
 
-The public release line is `1.2.1`. It carries the tested `1.2.0` implementation snapshot; see the [public verification record](docs/VERIFICATION.md) for the evidence and compatibility boundary.
+Version `1.3.0` adds a maintenance skill and read-only diagnostics to the public package. Capture, processing, and retrieval carry the tested `1.2.0` implementation snapshot; see the [public verification record](docs/VERIFICATION.md) for the evidence and compatibility boundary.
 
 The reviewed upstream is [v13.24.1, commit f6f72747e1298aef37b1baccefc11ce7305d7bf8](https://github.com/thedotmack/claude-mem/tree/f6f72747e1298aef37b1baccefc11ce7305d7bf8). Review date: 2026-09-08. Its package metadata declares Apache-2.0. If future changes copy upstream code, retain the applicable upstream license, NOTICE, attribution, and modification notices for that code.
 
@@ -14,7 +14,7 @@ The product workflow remains capture, compact notes, retrieval, and context for 
 
 | Area | This implementation |
 | --- | --- |
-| Agent integration | Native Codex lifecycle hooks, an MCP stdio server, and a Codex skill. |
+| Agent integration | Native Codex lifecycle hooks, an MCP stdio server, and memory/maintenance skills. |
 | Runtime | Python 3.10+ and SQLite FTS5; optional FastEmbed/ONNX Runtime on Python 3.10–3.13. A local background service drains a durable queue. No HTTP listener or database daemon. |
 | Compression | A local queue service processes bounded observation batches in fresh Luna/medium sessions. Explicit user-authored notes remain available through MCP. Source records and execution receipts are retained. |
 | Retrieval | Unicode full-text, local multilingual embeddings, cosine similarity and reciprocal rank fusion; project scope and bounded previews. |
