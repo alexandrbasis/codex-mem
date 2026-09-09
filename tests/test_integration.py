@@ -86,6 +86,60 @@ class IntegrationTests(unittest.TestCase):
                 self.assertEqual(4, len(store.timeline(project)))
                 self.assertIsNone(store.get(project, [detail["id"]])[0]["superseded_by"])
 
+    def test_resume_finds_relevant_handoff_beyond_a_flood_of_trivia(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            data = Path(temporary) / "memory"
+            project = Path(temporary) / "project"
+            project.mkdir()
+            with Store(data) as store:
+                for index in range(35):
+                    store.remember(project, f"Roadmap roadmap theme {index}", "Roadmap CSS theme and preview.")
+                summary = store.remember(
+                    project, "Release handoff", "Roadmap: autosave is accepted; live install remains unverified.",
+                    kind="session_summary",
+                )
+                decision = store.remember(
+                    project, "Editing decision", "Use autosave for roadmap changes because drafts caused lost edits.",
+                    observation={"type": "decision"},
+                )
+                store.remember(project, "Billing handoff", "Invoice export remains unverified.", kind="session_summary")
+                store.remember(project, "Roadmap hook summary", "Roadmap raw report.",
+                               kind="session_summary", source="hook:Stop")
+                obsolete = store.remember(project, "Roadmap superseded summary", "Old roadmap state.", kind="session_summary")
+                store.remember(project, "Retirement", "Historical source retired.", source_ids=[obsolete["id"]])
+                other_project = Path(temporary) / "other-project"
+                other_project.mkdir()
+                store.remember(other_project, "Roadmap foreign summary", "Roadmap other project.", kind="session_summary")
+                before = store.search(project, "roadmap", limit=20)
+                self.assertNotIn(summary["id"], {item["id"] for item in before})
+                self.assertNotIn(decision["id"], {item["id"] for item in before})
+                lookup = search_memory(store, project, "roadmap", mode="lexical", limit=5)
+                resumed = search_memory(store, project, "roadmap", mode="lexical", intent="resume", limit=5)
+                self.assertEqual([summary["id"], decision["id"]], [item["id"] for item in resumed["results"][:2]])
+                self.assertEqual([item["id"] for item in before[:5]], [item["id"] for item in lookup["results"]])
+                self.assertEqual("lexical", resumed["resume_expansion_mode"])
+                self.assertEqual(2, resumed["resume_added_candidates"])
+
+    def test_resume_expansion_never_widens_caller_filters(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary) / "project"
+            project.mkdir()
+            with Store(Path(temporary) / "memory") as store:
+                matching = store.remember(project, "Roadmap decision", "Keep autosave.", observation={
+                    "type": "decision", "concepts": ["autosave"], "files_read": ["roadmap.py"],
+                })
+                store.remember(project, "Roadmap summary", "An unrelated handoff.", kind="session_summary")
+                store.remember(project, "Roadmap kind decision", "Not the selected kind.", kind="decision", observation={
+                    "type": "decision", "concepts": ["autosave"], "files_read": ["roadmap.py"],
+                })
+                for mismatch in ({"type": "discovery"}, {"concepts": ["theme"]}, {"files_read": ["billing.py"]}):
+                    store.remember(project, "Roadmap filtered detail", "Different metadata.", observation={
+                        "type": "decision", "concepts": ["autosave"], "files_read": ["roadmap.py"], **mismatch,
+                    })
+                result = search_memory(store, project, "roadmap", mode="lexical", intent="resume", limit=5,
+                                       kinds=["note"], types=["decision"], concepts=["autosave"], files=["roadmap.py"])
+                self.assertEqual([matching["id"]], [item["id"] for item in result["results"]])
+
     def test_absent_optional_model_does_not_block_observation_queue(self):
         with tempfile.TemporaryDirectory() as temporary:
             data = Path(temporary) / "memory"

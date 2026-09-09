@@ -10,6 +10,8 @@ import unittest
 from unittest import mock
 
 from codex_mem.config import configure
+from codex_mem.processor import MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending
+from codex_mem.store import Store
 from codex_mem.service import (
     SERVICE_PID_FILENAME,
     SERVICE_STATE_FILENAME,
@@ -17,6 +19,7 @@ from codex_mem.service import (
     _clear_owner,
     _record_owner,
     enqueue,
+    resume_pending,
     run_service,
     service_status,
     start_service,
@@ -239,6 +242,61 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual("invalid_response", result["code"])
         self.assertEqual(1, calls)
 
+    def test_rejected_batch_does_not_starve_later_work_or_spin_when_idle(self) -> None:
+        with Store(self.data_dir) as store:
+            bad_source = store.remember(self.first, "Rejected source", "Earlier malformed output",
+                                        source="hook:PostToolUse", session_id="earlier-chat")
+            store.remember(self.first, "Useful later source", "Retry retains the original request ID.",
+                           source="hook:PostToolUse", session_id="later-chat")
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        calls: list[bool] = []
+        worker_calls: list[str] = []
+
+        def runner(request: dict[str, object]) -> dict[str, object]:
+            source = request["sources"][0]
+            worker_calls.append(source["title"])
+            if source["title"] == "Rejected source":
+                output = {"notes": "malformed", "disposition": "processed"}
+            else:
+                output = {"notes": [{"title": "Retry invariant", "body": "Retry retains the original request ID.",
+                                     "tags": ["retry"], "source_ids": ["s1"]}],
+                          "disposition": "processed", "session_summary": None}
+            return {"output": output, "evidence": {
+                "thread_start": {"thread_id": "test-thread", "model": MODEL,
+                                 "reasoning_effort": REASONING_EFFORT, "model_provider": "openai"},
+                "turn_started": {"thread_id": "test-thread", "turn_id": "test-turn"},
+                "turn_completed": True, "no_tools": True, "rerouted": False}}
+
+        def processor(project: str, **kwargs: object) -> dict[str, object]:
+            calls.append(bool(kwargs["retry_failed"]))
+            return process_pending(project, runner=runner, **kwargs)
+
+        result = run_service(self.data_dir, processor=processor, clock=self.clock,
+                             sleeper=self.clock.sleep, poll_interval=1, max_cycles=8)
+        self.assertEqual("cycle_limit", result["status"])
+        self.assertEqual("invalid_response", result["code"])
+        self.assertEqual([False, False, False], calls)
+        self.assertEqual(["Rejected source", "Useful later source"], worker_calls)
+        with Store(self.data_dir) as store:
+            jobs = store.status(self.first)["observation_jobs"]
+            self.assertEqual(1, jobs["failed"])
+            self.assertEqual(1, jobs["processed"])
+            failed = next(job for job in jobs["recent"] if job["status"] == "failed")
+            self.assertEqual(1, failed["attempt_count"])
+            self.assertIsNone(store.get(self.first, [bad_source["id"]])[0]["superseded_by"])
+            self.assertEqual("Retry invariant", store.search(self.first, "Retry")[0]["title"])
+        status = service_status(self.data_dir, clock=self.clock)
+        self.assertEqual(0, status["blocked_projects"])
+        self.assertEqual(1, status["quarantined_projects"])
+        self.assertEqual(1, status["quarantined_batches"])
+        self.assertEqual("invalid_note_shape", status["quarantines"][str(self.first.resolve())]["reason_code"])
+        # A new enqueue checks new work; it must never rearm the rejected job.
+        self.assertEqual("queued", enqueue(self.first, self.data_dir, clock=self.clock)["status"])
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.clock.sleep, max_cycles=3)
+        self.assertEqual([False, False, False, False], calls)
+        self.assertEqual(2, len(worker_calls))
+
     def test_nontransient_failure_isolated_from_other_queued_projects(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)
         enqueue(self.second, self.data_dir, clock=self.clock)
@@ -268,6 +326,111 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(state["projects"][str(self.first.resolve())]["blocked"])
         self.assertNotIn(str(self.second.resolve()), state["projects"])
         self.assertEqual("blocked", enqueue(self.first, self.data_dir, clock=self.clock)["status"])
+
+    def _failed_job(self, project: Path, code: str = "invalid_response") -> dict[str, object]:
+        with Store(self.data_dir) as store:
+            store.remember(project, "Raw source", "Preserve this evidence unchanged.",
+                           source="hook:PostToolUse", session_id="failed-chat")
+            job = store.claim_observation_batch(project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+            return store.fail_observation_batch(project, job["job_id"], job["lease_token"], code=code)
+
+    def test_resume_pending_recovers_legacy_block_without_retrying_failed_job(self) -> None:
+        failed = self._failed_job(self.first)
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        # A legacy scheduler blocked the project without retaining a job ID.
+        run_service(self.data_dir, processor=lambda *_a, **_k: {"status": "failed", "code": "invalid_response"},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+        recovered = resume_pending(self.first, self.data_dir, rejected_job_id=failed["job_id"], clock=self.clock)
+        self.assertEqual("queued", recovered["status"])
+        self.assertFalse(recovered["retry_failed"])
+        calls: list[bool] = []
+
+        def processor(project: str, **kwargs: object) -> dict[str, object]:
+            calls.append(bool(kwargs["retry_failed"]))
+            return process_pending(project, **kwargs, runner=lambda _: self.fail("Failed job was rearmed"))
+
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.clock.sleep, max_cycles=5)
+        self.assertEqual([False], calls)
+        status = service_status(self.data_dir, clock=self.clock)
+        self.assertEqual(0, status["blocked_projects"])
+        self.assertEqual(1, status["quarantined_batches"])
+        self.assertEqual(failed["job_id"], status["quarantines"][str(self.first.resolve())]["last_job_id"])
+        with Store(self.data_dir) as store:
+            actual = store.status(self.first)["observation_jobs"]["recent"][0]
+            self.assertEqual("failed", actual["status"])
+            self.assertEqual(1, actual["attempt_count"])
+
+    def test_resume_pending_cannot_clear_foreign_missing_or_global_failures(self) -> None:
+        first_job = self._failed_job(self.first)
+        second_job = self._failed_job(self.second)
+        for project, job_id in ((self.first, second_job["job_id"]), (self.second, "missing-job")):
+            result = resume_pending(project, self.data_dir, rejected_job_id=job_id, clock=self.clock)
+            self.assertEqual("rejection_unavailable", result["code"])
+        self.assertFalse((self.data_dir / SERVICE_STATE_FILENAME).exists())
+        for code in ("model_mismatch", "tools_available", "tool_called", "storage_failure", "protocol_error"):
+            with self.subTest(code=code):
+                enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+                result = run_service(self.data_dir,
+                    processor=lambda *_a, **_k: {"status": "failed", "code": code, "job_id": first_job["job_id"]},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+                self.assertEqual("halted", result["status"])
+                result = resume_pending(self.first, self.data_dir,
+                                        rejected_job_id=first_job["job_id"], clock=self.clock)
+                self.assertEqual({"status": "blocked", "code": code},
+                                 {"status": result["status"], "code": result["code"]})
+
+    def test_repeated_identical_rejection_receipt_does_not_spin(self) -> None:
+        failed = self._failed_job(self.first)
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        calls: list[bool] = []
+
+        def processor(_project: str, **kwargs: object) -> dict[str, object]:
+            calls.append(bool(kwargs["retry_failed"]))
+            return {"status": "failed", "code": "invalid_response", "job_id": failed["job_id"],
+                    "reason_code": "invalid_output_shape"}
+
+        result = run_service(self.data_dir, processor=processor, clock=self.clock,
+                             sleeper=self.clock.sleep, max_cycles=10)
+        self.assertEqual("halted", result["status"])
+        self.assertEqual([False, False], calls)
+        self.assertEqual(1, service_status(self.data_dir, clock=self.clock)["quarantined_batches"])
+
+    def test_unknown_and_runner_rejection_reasons_remain_blocked(self) -> None:
+        failed = self._failed_job(self.first)
+        for reason in (None, "invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
+                       "turn_not_completed", "invalid_source_batch", "secret-response-excerpt"):
+            with self.subTest(reason=reason):
+                enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+                result = run_service(self.data_dir,
+                    processor=lambda *_a, **_k: {"status": "failed", "code": "invalid_response",
+                                                "job_id": failed["job_id"], "reason_code": reason},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=4)
+                self.assertEqual("halted", result["status"])
+                self.assertEqual(1, result["jobs"])
+                if reason in {"invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
+                              "turn_not_completed", "invalid_source_batch"}:
+                    state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+                    self.assertEqual(reason, state["projects"][str(self.first.resolve())]["last_rejected_reason"])
+                    recovery = resume_pending(self.first, self.data_dir,
+                                              rejected_job_id=failed["job_id"], clock=self.clock)
+                    self.assertEqual("blocked", recovery["status"])
+                    self.assertEqual(reason, recovery["reason_code"])
+        self.assertNotIn("secret-response-excerpt", (self.data_dir / SERVICE_STATE_FILENAME).read_text())
+
+    def test_quarantine_health_clears_only_after_explicit_job_resolution(self) -> None:
+        failed = self._failed_job(self.first)
+        resume_pending(self.first, self.data_dir, rejected_job_id=failed["job_id"], clock=self.clock)
+        self.assertEqual(1, service_status(self.data_dir, clock=self.clock)["quarantined_batches"])
+        with Store(self.data_dir) as store:
+            retry = store.claim_observation_batch(self.first, PROCESSOR_ID, MODEL, REASONING_EFFORT,
+                                                  retry_failed=True)
+            self.assertEqual(failed["job_id"], retry["job_id"])
+            store.finish_observation_batch(self.first, retry["job_id"], retry["lease_token"], disposition="skipped")
+        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["quarantined_batches"])
+        run_service(self.data_dir, processor=lambda *_a, **_k: {"status": "idle"},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
 
     def test_capture_gate_is_rechecked_before_processing(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)

@@ -325,6 +325,7 @@ class ProcessorTests(unittest.TestCase):
             "status": first["status"],
             "code": first["code"],
         })
+        self.assertEqual("invalid_source_ids", first["reason_code"])
 
         calls = 0
 
@@ -579,6 +580,65 @@ class ProcessorTests(unittest.TestCase):
             self.assertEqual("runner_failure", job["error_code"])
             self.assertIsNone(store.get(self.project, [str(source["id"])])[0]["superseded_by"])
 
+    def test_invalid_output_has_safe_reason_and_keeps_sources_recoverable(self) -> None:
+        cases = [
+            ("unknown_source_handle", lambda note: note.update(source_ids=["private-invalid-id"])),
+            ("invalid_observation_metadata", lambda note: note["observation"].update(type="private-invalid-type")),
+            ("invalid_text", lambda note: note.update(title="private-title\x00")),
+        ]
+        for index, (reason, damage) in enumerate(cases):
+            with self.subTest(reason=reason):
+                data_dir = self.root / f"case-{index}"
+                with Store(data_dir) as store:
+                    source = store.remember(self.project, "Raw", "private-source-body",
+                                            source="hook:PostToolUse:test", session_id="session-test")
+
+                def runner(request):
+                    note = self.structured_note(request["sources"][0]["id"])
+                    damage(note)
+                    return self.receipt({"disposition": "processed", "notes": [note], "session_summary": None})
+
+                result = process_pending(self.project, data_dir, runner=runner)
+                self.assertEqual("invalid_response", result["code"])
+                self.assertEqual(reason, result.get("reason_code"))
+                self.assertNotIn("private-", json.dumps(result))
+                with Store(data_dir) as store:
+                    job = store.status(self.project)["observation_jobs"]["recent"][0]
+                    self.assertEqual("invalid_response", job["error_code"])
+                    self.assertIsNone(store.get(self.project, [source["id"]])[0]["superseded_by"])
+                    self.assertEqual([], store.search(self.project, "Checkout retry fix"))
+
+    def test_native_final_output_diagnoses_decode_shape_and_message_count(self) -> None:
+        for messages, reason in [
+            (["private-not-json"], "invalid_json"),
+            (["[]"], "invalid_output_shape"),
+            ([], "missing_final_message"),
+            (["{}", "{}"], "multiple_final_messages"),
+        ]:
+            with self.subTest(reason=reason):
+                monitor = _TurnMonitor("thread-test")
+                monitor.set_turn("turn-test")
+                monitor.completed = True
+                for index, text in enumerate(messages):
+                    monitor._capture_agent_message({"id": str(index), "type": "agentMessage",
+                                                    "phase": "final_answer", "text": text})
+                with self.assertRaises(ProcessorFailure) as raised:
+                    _read_valid_final_output(monitor)
+                self.assertEqual("invalid_response", raised.exception.code)
+                self.assertEqual(reason, getattr(raised.exception, "reason_code", None))
+                self.assertEqual("invalid_response", str(raised.exception))
+
+    def test_untrusted_failure_reason_is_not_exposed(self) -> None:
+        self.remember("Raw", "private-source-body")
+
+        def runner(_request):
+            raise ProcessorFailure("invalid_response", reason_code="private-source-body")
+
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual("invalid_response", result["code"])
+        self.assertNotIn("reason_code", result)
+        self.assertNotIn("private-", json.dumps(result))
+
 
     @staticmethod
     def structured_note(source_id):
@@ -662,6 +722,7 @@ class ProcessorTests(unittest.TestCase):
             "disposition": "processed", "notes": [self.structured_note(r["sources"][0]["id"])],
             "session_summary": None}))
         self.assertEqual("invalid_response", result["code"])
+        self.assertEqual("missing_required_summary", result["reason_code"])
         with Store(self.data_dir) as store:
             self.assertEqual([], store.search(self.project, "checkout"))
 

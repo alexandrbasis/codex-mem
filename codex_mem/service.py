@@ -21,6 +21,7 @@ import math
 import os
 from pathlib import Path
 import secrets
+import sqlite3
 import stat
 import subprocess
 import sys
@@ -34,7 +35,9 @@ except ImportError:  # pragma: no cover - Windows does not provide flock
     fcntl = None  # type: ignore[assignment]
 
 from .config import automatic_capture_enabled, data_dir_path, hooks_disabled, load_config
-from .processor import DEFAULT_TIMEOUT, process_pending
+from .processor import (
+    DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending,
+)
 from .store import project_key
 
 
@@ -56,7 +59,14 @@ DEFAULT_BACKOFF_SECONDS = 5.0
 MAX_BACKOFF_SECONDS = 300.0
 _INFLIGHT_GRACE_SECONDS = 10.0
 _SAFE_CODE_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
-_PARK_REASONS = {"not_selected", "processor_disabled", "semantic_disabled"}
+_PARK_REASONS = {"not_selected", "processor_disabled", "semantic_disabled", "rejected_batches"}
+_CONTENT_REJECTION_REASONS = frozenset({
+    "invalid_json", "invalid_output_shape", "invalid_note_shape", "invalid_source_ids",
+    "unknown_source_handle", "invalid_disposition", "too_many_notes", "missing_required_summary",
+    "skipped_with_content", "processed_without_content", "invalid_observation_metadata",
+    "source_attribution_conflict", "invalid_summary_shape", "invalid_summary_attribution",
+    "future_summary_source", "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+})
 
 
 class ServiceError(RuntimeError):
@@ -81,9 +91,9 @@ def enqueue(
 ) -> dict[str, Any]:
     """Durably schedule one explicitly approved project.
 
-    The queue holds no observation body, title, source, record ID, prompt, or
-    model output.  A normal enqueue never unblocks a failed project; callers
-    must pass ``retry_failed=True`` after deciding to retry it.
+    The queue holds no observation text or model output. A normal enqueue
+    wakes a project with quarantined batches without retrying those batches.
+    A project blocked by a global failure still requires explicit recovery.
     """
 
     if not isinstance(retry_failed, bool):
@@ -131,6 +141,56 @@ def enqueue(
             record["retry_requested"] = True
         _write_state(base, state)
         return {"status": "queued", "project": workspace}
+
+
+def resume_pending(
+    project: str | os.PathLike[str],
+    data_dir: str | os.PathLike[str] | None = None,
+    *,
+    rejected_job_id: str,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]] = load_config,
+    clock: Callable[[], float] = time.time,
+) -> dict[str, Any]:
+    """Resume independent work after inspecting an exact rejected batch.
+
+    This recovers legacy project-wide invalid_response blocks. It never
+    changes or retries the rejected Store job; retry_failed remains false.
+    Other project failures cannot be cleared through this narrower operation.
+    """
+
+    workspace = project_key(project)
+    eligible, reason, _, _ = _eligibility(workspace, data_dir, config_loader)
+    if not eligible:
+        return {"status": "disabled", "project": workspace, "reason": reason}
+    base = _base_dir(data_dir)
+    if not _persisted_rejection(base, workspace, rejected_job_id):
+        return {"status": "blocked", "project": workspace, "code": "rejection_unavailable"}
+    now = _checked_now(clock)
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(workspace)
+        if record is not None and record["blocked"]:
+            reason_code = record["last_rejected_reason"]
+            if (record["last_code"] != "invalid_response"
+                    or (reason_code is not None and reason_code not in _CONTENT_REJECTION_REASONS)):
+                return {"status": "blocked", "project": workspace, "code": record["last_code"],
+                        "reason_code": reason_code}
+        if record is None:
+            if len(state["projects"]) >= MAX_QUEUED_PROJECTS:
+                raise ServiceError("service queue is full")
+            record = state["projects"][workspace] = _new_record(now)
+        if record["inflight_generation"] is not None:
+            return {"status": "blocked", "project": workspace, "code": "work_inflight"}
+        _record_rejection(record, rejected_job_id)
+        record["generation"] += 1
+        record["blocked"] = False
+        record["parked"] = None
+        record["due_at"] = now
+        record["attempts"] = 0
+        record["retry_requested"] = False
+        _write_state(base, state)
+    return {"status": "queued", "project": workspace,
+            "rejected_job_id": rejected_job_id, "retry_failed": False}
 
 
 def run_service(
@@ -241,6 +301,14 @@ def run_service(
                 last_code = code
 
             if status == "failed":
+                # A persisted content rejection is isolated to its leased
+                # batch. Store excludes failed sources from ordinary claims;
+                # continue new work with retry_failed=False, never rearm it.
+                if code == "invalid_response" and _quarantine_rejection(
+                    base, project, generation, result.get("job_id"), _checked_now(clock),
+                    reason_code=result.get("reason_code"),
+                ):
+                    continue
                 retrying = _finish_failure(
                     base,
                     project,
@@ -249,6 +317,8 @@ def run_service(
                     now=_checked_now(clock),
                     max_timeout_retries=checked_retries,
                     retry_backoff=checked_backoff,
+                    rejected_job_id=result.get("job_id") if processor_enabled else None,
+                    reason_code=result.get("reason_code") if processor_enabled else None,
                 )
                 if retrying:
                     continue
@@ -421,6 +491,20 @@ def service_status(
     lock_held = _pid_lock_held(base)
     projects = state["projects"]
     blocked = sum(1 for record in projects.values() if record["blocked"])
+    rejected_projects = [project for project, record in projects.items() if record["rejected_batches"]]
+    rejection_counts = _rejection_counts(base, rejected_projects)
+    quarantines = {
+        project: {"batches": None if rejection_counts is None else rejection_counts.get(project, 0),
+                  "last_job_id": projects[project]["last_rejected_job"], "code": "invalid_response",
+                  "reason_code": projects[project]["last_rejected_reason"]}
+        for project in rejected_projects
+        if rejection_counts is None or rejection_counts.get(project, 0)
+    }
+    quarantine_status = {
+        "quarantined_projects": None if rejection_counts is None else len(quarantines),
+        "quarantined_batches": None if rejection_counts is None else sum(rejection_counts.values()),
+        "quarantines": quarantines,
+    }
     if lock_held is None:
         result: dict[str, Any] = {
             "status": "unknown",
@@ -429,6 +513,7 @@ def service_status(
             "blocked_projects": blocked,
             "stop_requested": state["stop_requested"],
             "code": "lock_visibility_unavailable",
+            **quarantine_status,
         }
         if lock and owner and lock["pid"] == owner["pid"] and lock["nonce"] == owner["nonce"]:
             result["pid"] = lock["pid"]
@@ -459,6 +544,7 @@ def service_status(
         "queued_projects": len(projects),
         "blocked_projects": blocked,
         "stop_requested": state["stop_requested"],
+        **quarantine_status,
     }
     if running and lock is not None:
         result["pid"] = lock["pid"]
@@ -587,6 +673,9 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
         "attempts": 0,
         "retry_requested": retry_requested,
         "last_code": None,
+        "rejected_batches": 0,
+        "last_rejected_job": None,
+        "last_rejected_reason": None,
         "blocked": False,
         "parked": None,
         "inflight_generation": None,
@@ -739,6 +828,19 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     last_code = raw.get("last_code")
     if last_code is not None and not _safe_code(last_code):
         raise ServiceStateError("service state is unavailable")
+    rejected_batches = raw.get("rejected_batches", 0)
+    last_rejected_job = raw.get("last_rejected_job")
+    last_rejected_reason = raw.get("last_rejected_reason")
+    if (isinstance(rejected_batches, bool) or not isinstance(rejected_batches, int)
+            or not 0 <= rejected_batches <= 1_000_000_000
+            or (rejected_batches == 0) != (last_rejected_job is None)
+            or (last_rejected_job is not None and not _valid_job_id(last_rejected_job))):
+        raise ServiceStateError("service state is unavailable")
+    if last_rejected_reason is not None and (
+        not rejected_batches or not isinstance(last_rejected_reason, str)
+        or last_rejected_reason not in INVALID_RESPONSE_REASONS
+    ):
+        raise ServiceStateError("service state is unavailable")
     inflight_generation = raw.get("inflight_generation")
     inflight_until = raw.get("inflight_until")
     if inflight_generation is not None and (
@@ -757,6 +859,9 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         "attempts": attempts,
         "retry_requested": retry_requested,
         "last_code": last_code,
+        "rejected_batches": rejected_batches,
+        "last_rejected_job": last_rejected_job,
+        "last_rejected_reason": last_rejected_reason,
         "blocked": blocked,
         "parked": parked,
         "inflight_generation": inflight_generation,
@@ -1136,13 +1241,24 @@ def _finish_success(
         record["inflight_until"] = None
         record["attempts"] = 0
         record["retry_requested"] = False
-        record["last_code"] = None
+        if record["rejected_batches"]:
+            counts = _rejection_counts(base, [project])
+            if counts is not None and not counts.get(project, 0):
+                record["rejected_batches"] = 0
+                record["last_rejected_job"] = None
+                record["last_rejected_reason"] = None
+        record["last_code"] = "invalid_response" if record["rejected_batches"] else None
         if record["generation"] != generation:
             record["due_at"] = now
         elif status == "idle" and not index_pending:
-            del state["projects"][project]
-            if state["cursor"] == project:
-                state["cursor"] = None
+            if record["rejected_batches"]:
+                # Preserve a visible warning while dormant. Ordinary enqueue
+                # wakes new work; polling cannot repeatedly invoke the model.
+                record["parked"] = "rejected_batches"
+            else:
+                del state["projects"][project]
+                if state["cursor"] == project:
+                    state["cursor"] = None
         else:
             # A processed/skipped batch can be followed by more raw entries.
             # Keep draining until one invocation reports idle.
@@ -1182,6 +1298,108 @@ def _finish_local_only(
         _write_state(base, state)
 
 
+def _valid_job_id(value: Any) -> bool:
+    return (isinstance(value, str) and 1 <= len(value) <= 64
+            and all(c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in value))
+
+
+def _persisted_rejection(base: Path, project: str, job_id: Any) -> bool:
+    """Confirm a durable failed batch before permitting independent work.
+
+    Read job metadata only through a read-only SQLite connection. A missing,
+    malformed, foreign-project, or uncommitted receipt remains fail-closed.
+    """
+
+    if not _valid_job_id(job_id):
+        return False
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        row = connection.execute(
+            "SELECT j.id FROM observation_jobs AS j WHERE j.id = ? AND j.project = ? "
+            "AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
+            "AND j.status = 'failed' AND j.error_code = 'invalid_response' "
+            "AND j.lease_token IS NULL AND j.lease_expires_at IS NULL "
+            "AND EXISTS (SELECT 1 FROM observation_job_sources AS links WHERE links.job_id = j.id) "
+            "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
+            "LEFT JOIN entries AS e ON e.id = links.source_id AND e.project = j.project "
+            "WHERE links.job_id = j.id AND e.id IS NULL)",
+            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+        ).fetchone()
+        return row is not None
+    except (OSError, sqlite3.Error, ServiceError, ValueError):
+        return False
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def _rejection_counts(base: Path, projects: list[str]) -> dict[str, int] | None:
+    """Read unresolved failures, so a later explicit repair clears warnings."""
+
+    if not projects:
+        return {}
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        placeholders = ",".join("?" for _ in projects)
+        rows = connection.execute(
+            "SELECT project, COUNT(*) FROM observation_jobs "
+            f"WHERE project IN ({placeholders}) AND processor_id = ? AND model = ? "
+            "AND reasoning_effort = ? AND status = 'failed' AND error_code = 'invalid_response' "
+            "GROUP BY project", (*projects, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+        ).fetchall()
+        return {project: count for project, count in rows}
+    except (OSError, sqlite3.Error, ServiceError, ValueError):
+        return None
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def _record_rejection(record: dict[str, Any], job_id: str, reason_code: Any = None) -> None:
+    if record["last_rejected_job"] != job_id:
+        record["rejected_batches"] += 1
+        record["last_rejected_reason"] = None
+    record["last_rejected_job"] = job_id
+    if isinstance(reason_code, str) and reason_code in INVALID_RESPONSE_REASONS:
+        record["last_rejected_reason"] = reason_code
+    record["last_code"] = "invalid_response"
+
+
+def _quarantine_rejection(
+    base: Path, project: str, generation: int, job_id: Any, now: float, *, reason_code: Any = None,
+) -> bool:
+    # Unknown historic reasons require explicit resume_pending after review.
+    # Runner envelopes, lifecycle, and internal source corruption may signal
+    # infrastructure failures and cannot be treated as bad model content.
+    if not isinstance(reason_code, str) or reason_code not in _CONTENT_REJECTION_REASONS:
+        return False
+    if not _persisted_rejection(base, project, job_id):
+        return False
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(project)
+        if (record is None or record["inflight_generation"] != generation
+                or record["last_rejected_job"] == job_id):
+            # Repeated identical receipts are not progress. Do not spin on a
+            # broken adapter that keeps returning a previously rejected job.
+            return False
+        _record_rejection(record, job_id, reason_code)
+        record["inflight_generation"] = None
+        record["inflight_until"] = None
+        record["retry_requested"] = False
+        record["attempts"] = 0
+        record["blocked"] = False
+        record["due_at"] = now
+        _write_state(base, state)
+    return True
+
+
 def _finish_failure(
     base: Path,
     project: str,
@@ -1191,8 +1409,11 @@ def _finish_failure(
     now: float,
     max_timeout_retries: int,
     retry_backoff: float,
+    rejected_job_id: Any = None,
+    reason_code: Any = None,
 ) -> bool:
     safe_code = _normalise_code(code)
+    rejected = safe_code == "invalid_response" and _persisted_rejection(base, project, rejected_job_id)
     with _state_lock(base):
         state = _load_state(base)
         record = state["projects"].get(project)
@@ -1200,6 +1421,8 @@ def _finish_failure(
             return False
         record["inflight_generation"] = None
         record["inflight_until"] = None
+        if rejected:
+            _record_rejection(record, rejected_job_id, reason_code)
         record["last_code"] = safe_code
         if safe_code == "timeout":
             record["attempts"] += 1

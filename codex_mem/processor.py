@@ -68,6 +68,19 @@ MAX_THREAD_ITEMS = 128
 _WORKER_ID_RE = re.compile(r"[A-Za-z0-9._:-]{1,256}\Z")
 _MCP_NAME_MAX_CHARS = 256
 _SAFE_ITEM_TYPES = {"userMessage", "agentMessage", "reasoning"}
+# Closed vocabulary: receipts may identify a rejected invariant, never contain
+# response values, source text, exception messages, or model output excerpts.
+INVALID_RESPONSE_REASONS = frozenset({
+    "invalid_message_phase", "invalid_message_text", "missing_final_message",
+    "multiple_final_messages", "invalid_json", "invalid_output_shape",
+    "invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
+    "turn_not_completed", "invalid_note_shape", "invalid_source_ids",
+    "unknown_source_handle", "invalid_disposition", "too_many_notes",
+    "missing_required_summary", "skipped_with_content", "processed_without_content",
+    "invalid_source_batch", "invalid_observation_metadata", "source_attribution_conflict",
+    "invalid_summary_shape", "invalid_summary_attribution", "future_summary_source",
+    "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+})
 
 
 class ProcessorFailure(RuntimeError):
@@ -77,11 +90,13 @@ class ProcessorFailure(RuntimeError):
         self,
         code: str,
         *,
+        reason_code: str | None = None,
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
     ) -> None:
         super().__init__(code)
         self.code = code
+        self.reason_code = _safe_response_reason(reason_code) if code == "invalid_response" else None
         self.worker_thread_id = worker_thread_id
         self.worker_turn_id = worker_turn_id
 
@@ -170,7 +185,8 @@ def process_pending(
             except ProcessorFailure as exc:
                 thread_id = exc.worker_thread_id or thread_id
                 turn_id = exc.worker_turn_id or turn_id
-                return _failed_after_claim(store, workspace, job_id, lease_token, exc.code, thread_id, turn_id)
+                return _failed_after_claim(store, workspace, job_id, lease_token, exc.code, thread_id, turn_id,
+                                           reason_code=exc.reason_code)
             except (StoreError, OSError):
                 return _failed_after_claim(
                     store, workspace, job_id, lease_token, "storage_failure", thread_id, turn_id
@@ -627,10 +643,10 @@ class _TurnMonitor:
             return
         phase = item.get("phase")
         if phase is not None and not isinstance(phase, str):
-            raise ProcessorFailure("invalid_response", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
+            raise ProcessorFailure("invalid_response", reason_code="invalid_message_phase", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
         text = item.get("text")
         if not isinstance(text, str) or len(text) > MAX_MODEL_OUTPUT_CHARS:
-            raise ProcessorFailure("invalid_response", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
+            raise ProcessorFailure("invalid_response", reason_code="invalid_message_text", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
         item_id = item.get("id")
         if item_id is not None:
             if not isinstance(item_id, str) or not item_id or "\x00" in item_id or len(item_id) > 256:
@@ -649,7 +665,9 @@ class _TurnMonitor:
         legacy_texts = [text for text, phase in self._agent_messages if phase is None]
         texts = final_texts if len(final_texts) == 1 else legacy_texts if not final_texts else []
         if len(texts) != 1:
-            raise ProcessorFailure("invalid_response", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
+            reason = "multiple_final_messages" if len(final_texts) > 1 or len(texts) > 1 else "missing_final_message"
+            raise ProcessorFailure("invalid_response", reason_code=reason,
+                                   worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
         return texts[0]
 
 
@@ -794,9 +812,9 @@ def _read_valid_final_output(monitor: _TurnMonitor) -> dict[str, Any]:
     try:
         output = json.loads(text)
     except json.JSONDecodeError:
-        raise ProcessorFailure("invalid_response", worker_thread_id=monitor.thread_id, worker_turn_id=monitor.turn_id) from None
+        raise ProcessorFailure("invalid_response", reason_code="invalid_json", worker_thread_id=monitor.thread_id, worker_turn_id=monitor.turn_id) from None
     if not isinstance(output, dict):
-        raise ProcessorFailure("invalid_response", worker_thread_id=monitor.thread_id, worker_turn_id=monitor.turn_id)
+        raise ProcessorFailure("invalid_response", reason_code="invalid_output_shape", worker_thread_id=monitor.thread_id, worker_turn_id=monitor.turn_id)
     return output
 
 
@@ -913,6 +931,10 @@ def _build_prompt(
         "inventories and routine code descriptions that can be read from the current files. "
         "Retain those details only when they explain a non-obvious constraint, user decision, "
         "regression or reusable fix. Combine related details into that finding. "
+        "Skip mere untracked-file inventories, transient seat prices, and generic README "
+        "defaults unless they explain a relevant accepted decision, consequential constraint, "
+        "or reproducible finding. A price quote or documented default alone does not establish "
+        "a purchase decision or the actual configured behavior. "
         "A test result establishing a concrete project invariant, "
         "constraint or failure mode is a useful discovery, even without proof of a code edit. "
         "Keep that observed behavior and its verification scope; surrounding repetitive logs "
@@ -1096,7 +1118,7 @@ def _invoke_runner(runner: Any, request: Mapping[str, Any]) -> Mapping[str, Any]
     except Exception:
         raise ProcessorFailure("runner_failure") from None
     if not isinstance(value, Mapping):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_receipt")
     return value
 
 
@@ -1104,25 +1126,25 @@ def _validate_runner_receipt(
     value: Mapping[str, Any],
 ) -> tuple[Mapping[str, Any], Mapping[str, Any], str, str]:
     if set(value) != {"output", "evidence"}:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_receipt")
     output = value.get("output")
     evidence = value.get("evidence")
     if not isinstance(output, Mapping) or not isinstance(evidence, Mapping):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_receipt")
     if set(evidence) != {"thread_start", "turn_started", "turn_completed", "no_tools", "rerouted"}:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_evidence")
     thread_start = evidence.get("thread_start")
     turn_started = evidence.get("turn_started")
     if not isinstance(thread_start, Mapping) or not isinstance(turn_started, Mapping):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_evidence")
     if set(thread_start) != {"thread_id", "model", "reasoning_effort", "model_provider"}:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_evidence")
     if set(turn_started) != {"thread_id", "turn_id"}:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_runner_evidence")
     thread_id = _safe_worker_id(thread_start.get("thread_id"))
     turn_id = _safe_worker_id(turn_started.get("turn_id"), thread_id=thread_id)
     if turn_started.get("thread_id") != thread_id:
-        raise ProcessorFailure("invalid_response", worker_thread_id=thread_id, worker_turn_id=turn_id)
+        raise ProcessorFailure("invalid_response", reason_code="worker_id_mismatch", worker_thread_id=thread_id, worker_turn_id=turn_id)
     if (
         thread_start.get("model") != MODEL
         or thread_start.get("reasoning_effort") != REASONING_EFFORT
@@ -1134,7 +1156,7 @@ def _validate_runner_receipt(
     if evidence.get("no_tools") is not True:
         raise ProcessorFailure("tool_called", worker_thread_id=thread_id, worker_turn_id=turn_id)
     if evidence.get("turn_completed") is not True:
-        raise ProcessorFailure("invalid_response", worker_thread_id=thread_id, worker_turn_id=turn_id)
+        raise ProcessorFailure("invalid_response", reason_code="turn_not_completed", worker_thread_id=thread_id, worker_turn_id=turn_id)
     return output, evidence, thread_id, turn_id
 
 
@@ -1143,23 +1165,23 @@ def _resolve_source_handles(output: Mapping[str, Any], sources: Sequence[Mapping
     handles = {f"s{index}": source["id"] for index, source in enumerate(sources, 1)}
     resolved = dict(output)
     if not isinstance(output.get("notes"), list):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_note_shape")
     notes = []
     for value in output["notes"]:
         if not isinstance(value, Mapping) or not isinstance(value.get("source_ids"), list):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_source_ids")
         ids = value["source_ids"]
         if any(not isinstance(item, str) or item not in handles for item in ids):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="unknown_source_handle")
         notes.append(dict(value, source_ids=[handles[item] for item in ids]))
     resolved["notes"] = notes
     summary = output.get("session_summary")
     if summary is not None:
         if not isinstance(summary, Mapping) or not isinstance(summary.get("source_ids"), list):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_summary_shape")
         ids = summary["source_ids"]
         if any(not isinstance(item, str) or item not in handles for item in ids):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="unknown_source_handle")
         resolved["session_summary"] = dict(summary, source_ids=[handles[item] for item in ids])
     return resolved
 
@@ -1168,44 +1190,44 @@ def _validate_model_output(
     output: Mapping[str, Any], sources: Sequence[Mapping[str, Any]], *, summary_required: bool = False
 ) -> tuple[list[dict[str, Any]], str, dict[str, Any] | None]:
     if set(output) not in ({"notes", "disposition"}, {"notes", "disposition", "session_summary"}):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_output_shape")
     notes_value = output.get("notes")
     disposition = output.get("disposition")
     if disposition not in {"processed", "skipped"} or not isinstance(notes_value, list):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_disposition")
     if len(notes_value) > MAX_NOTES:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="too_many_notes")
     summary = _validated_summary(output.get("session_summary"), sources)
     has_stop = any(s.get("source") == "hook:Stop" or str(s.get("source", "")).startswith("hook:Stop:") for s in sources)
     # Legacy injected test runners remain compatible. Native schema always
     # declares session_summary and must not consume substantive Stop evidence
     # without either a summary or an explicit failed receipt.
     if summary is None and (summary_required or ("session_summary" in output and has_stop and notes_value)):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="missing_required_summary")
     if disposition == "skipped":
         if notes_value or summary is not None:
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="skipped_with_content")
         return [], disposition, None
     if not notes_value and summary is None:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="processed_without_content")
 
     source_ids: list[str] = []
     for source in sources:
         source_id = source.get("id")
         if not isinstance(source_id, str) or not _valid_source_id(source_id):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_source_batch")
         source_ids.append(source_id)
     if not source_ids or len(set(source_ids)) != len(source_ids):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_source_batch")
 
     notes: list[dict[str, Any]] = []
     for note_value in notes_value:
         if not isinstance(note_value, Mapping):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_note_shape")
         if set(note_value).difference({"title", "body", "tags", "source_ids", "observation"}):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_note_shape")
         if not {"title", "body", "tags"}.issubset(note_value):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_note_shape")
         title = _bounded_nonempty_text(note_value.get("title"), MAX_TITLE_CHARS)
         body = _bounded_nonempty_text(note_value.get("body"), MAX_NOTE_BODY_CHARS)
         tags = _validated_tags(note_value.get("tags"))
@@ -1228,16 +1250,16 @@ def _validate_model_output(
                         raise ValueError("invalid metadata")
                 note["observation"] = _validate_observation_metadata(metadata)
             except (ValueError, TypeError):
-                raise ProcessorFailure("invalid_response") from None
+                raise ProcessorFailure("invalid_response", reason_code="invalid_observation_metadata") from None
         notes.append(note)
 
     assigned: set[str] = set()
     for note in notes:
         requested = note.get("source_ids")
         if not isinstance(requested, list) or not requested:
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_source_ids")
         if any(source_id not in source_ids or source_id in assigned for source_id in requested):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
         assigned.update(requested)
     return notes, disposition, summary
 
@@ -1249,26 +1271,26 @@ def _validated_summary(value: object, sources: Sequence[Mapping[str, Any]]) -> d
              str(s.get("source", "")).startswith("hook:Stop:")}
     fields = {"title", "request", "investigated", "learned", "completed", "next_steps", "notes", "source_ids"}
     if not stops or not isinstance(value, Mapping) or set(value) != fields:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_summary_shape")
     ids = _validated_source_ids(value["source_ids"])
     known = {s["id"] for s in sources}
     if not set(ids).issubset(known) or not set(ids).intersection(stops):
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_summary_attribution")
     timed_stops = [s for s in sources if s["id"] in stops and isinstance(s.get("created_at"), str)]
     if timed_stops:
         cutoff = min((s["created_at"], s["id"]) for s in timed_stops)
         if any(s["id"] in ids and isinstance(s.get("created_at"), str)
                and (s["created_at"], s["id"]) > cutoff for s in sources):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="future_summary_source")
     for field in fields - {"source_ids"}:
         item = value[field]
         if not isinstance(item, str) or len(item) > (MAX_TITLE_CHARS if field == "title" else 3000):
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_summary_text")
     _bounded_nonempty_text(value["title"], MAX_TITLE_CHARS)
     try:
         return _validate_session_summary(value)
     except (ValueError, TypeError):
-        raise ProcessorFailure("invalid_response") from None
+        raise ProcessorFailure("invalid_response", reason_code="invalid_summary_metadata") from None
 
 
 def _claim_parts(claimed: Mapping[str, Any]) -> tuple[str, str, list[Mapping[str, Any]]]:
@@ -1318,6 +1340,8 @@ def _failed_after_claim(
     code: str,
     thread_id: str | None,
     turn_id: str | None,
+    *,
+    reason_code: str | None = None,
 ) -> dict[str, Any]:
     safe_code = _safe_failure_code(code)
     try:
@@ -1331,7 +1355,7 @@ def _failed_after_claim(
         )
         returned_thread = failed.get("worker_thread_id") if isinstance(failed, Mapping) else thread_id
         returned_turn = failed.get("worker_turn_id") if isinstance(failed, Mapping) else turn_id
-        return _failed_receipt(job_id, safe_code, returned_thread, returned_turn)
+        return _failed_receipt(job_id, safe_code, returned_thread, returned_turn, reason_code=reason_code)
     except (StoreError, ValueError, OSError):
         return _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
 
@@ -1346,7 +1370,8 @@ def _idle_receipt() -> dict[str, Any]:
 
 
 def _failed_receipt(
-    job_id: str | None, code: str, thread_id: object, turn_id: object
+    job_id: str | None, code: str, thread_id: object, turn_id: object,
+    *, reason_code: str | None = None,
 ) -> dict[str, Any]:
     result: dict[str, Any] = {
         "status": "failed",
@@ -1357,6 +1382,9 @@ def _failed_receipt(
     }
     if job_id is not None:
         result["job_id"] = job_id
+    safe_reason = _safe_response_reason(reason_code)
+    if result["code"] == "invalid_response" and safe_reason is not None:
+        result["reason_code"] = safe_reason
     if isinstance(thread_id, str) and _WORKER_ID_RE.fullmatch(thread_id):
         result["worker_thread_id"] = thread_id
     if isinstance(turn_id, str) and _WORKER_ID_RE.fullmatch(turn_id):
@@ -1405,16 +1433,16 @@ def _valid_source_id(value: str) -> bool:
 
 def _bounded_nonempty_text(value: object, maximum: int) -> str:
     if not isinstance(value, str) or "\x00" in value:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_text")
     cleaned = value.strip()
     if not cleaned or len(cleaned) > maximum:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_text")
     return cleaned
 
 
 def _validated_tags(value: object) -> list[str]:
     if not isinstance(value, list) or len(value) > MAX_TAGS:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_tags")
     tags: list[str] = []
     seen: set[str] = set()
     for tag in value:
@@ -1427,15 +1455,19 @@ def _validated_tags(value: object) -> list[str]:
 
 def _validated_source_ids(value: object) -> list[str]:
     if not isinstance(value, list) or not value or len(value) > MAX_OBSERVATION_ENTRIES:
-        raise ProcessorFailure("invalid_response")
+        raise ProcessorFailure("invalid_response", reason_code="invalid_source_ids")
     result: list[str] = []
     seen: set[str] = set()
     for source_id in value:
         if not isinstance(source_id, str) or not _valid_source_id(source_id) or source_id in seen:
-            raise ProcessorFailure("invalid_response")
+            raise ProcessorFailure("invalid_response", reason_code="invalid_source_ids")
         result.append(source_id)
         seen.add(source_id)
     return result
+
+
+def _safe_response_reason(value: object) -> str | None:
+    return value if isinstance(value, str) and value in INVALID_RESPONSE_REASONS else None
 
 
 def _safe_failure_code(code: object) -> str:

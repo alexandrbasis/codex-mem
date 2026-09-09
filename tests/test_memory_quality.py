@@ -18,6 +18,70 @@ class MemoryQualityTests(unittest.TestCase):
         self.store.close()
         self.tmp.cleanup()
 
+    def test_context_excerpts_keep_readable_titles_and_whole_sentences(self):
+        records = []
+        for index in range(8):
+            sentence = f"Receipt {index} establishes the local failure; production remains unverified."
+            narrative = " ".join([sentence, *[
+                f"Investigation step {step} recorded a complete diagnostic statement about the isolated fixture."
+                for step in range(8)
+            ]])
+            records.append(self.store.remember(
+                self.project,
+                f"Deployment verification {index}: preserve unfinished investigation and its independent receipt",
+                narrative, source="processor:codex-mem-native-observation-v1", session_id=f"chat-{index}",
+                observation={"type": "discovery", "facts": [sentence], "narrative": narrative},
+            ))
+        context = self.store.context(self.project, budget=5300)
+        entries = ET.fromstring(context).findall("entry")
+        by_id = {record["id"]: record for record in records}
+        self.assertLessEqual(len(entries), 4)
+        self.assertGreaterEqual(len(entries), 2)
+        self.assertNotRegex(context, r"\w+\[truncated\]\w+")
+        for entry in entries:
+            record = by_id[entry.attrib["id"]]
+            self.assertEqual(record["title"], entry.findtext("title"))
+            sentence = record["observation"]["facts"][0]
+            self.assertEqual(1, "".join(entry.itertext()).count(sentence))
+        self.assertLessEqual(len(context), 5300)
+
+    def test_context_diversity_keeps_open_work_and_distinct_subjects(self):
+        descriptive = [self.store.remember(
+            self.project, f"Processor boundary {index}", f"Processor boundary detail {index} was inspected.",
+            session_id="same-chat", source="processor:test",
+            observation={"type": "discovery", "files_read": ["codex_mem/processor.py"]},
+        ) for index in range(3)]
+        decision = self.store.remember(
+            self.project, "Processor retry decision", "Use a new lease only after failure inspection.",
+            session_id="same-chat", source="processor:test",
+            observation={"type": "decision", "files_read": ["codex_mem/processor.py"]},
+        )
+        pending = self.store.remember(
+            self.project, "Unfinished recovery", "Recovery remains blocked; inspect the failed job before retry.",
+            session_id="same-chat", source="processor:test",
+            observation={"type": "discovery", "files_read": ["codex_mem/processor.py"]},
+        )
+        other = self.store.remember(
+            self.project, "Retrieval finding", "Search uses the local semantic model.",
+            session_id="same-chat", source="processor:test",
+            observation={"type": "discovery", "files_read": ["codex_mem/semantic.py"]},
+        )
+        context = self.store.context(self.project, budget=5300)
+        ids = [entry.attrib["id"] for entry in ET.fromstring(context).findall("entry")]
+        self.assertEqual(1, len(set(ids) & {record["id"] for record in descriptive}))
+        self.assertTrue({decision["id"], pending["id"], other["id"]}.issubset(ids))
+        self.assertEqual(6, self.store.status(self.project)["active_entries"])
+        self.assertEqual(3, len(self.store.get(self.project, [record["id"] for record in descriptive])))
+
+    def test_context_diversity_does_not_group_distinct_changes_in_one_file(self):
+        changes = [self.store.remember(
+            self.project, f"Implemented change {index}", f"Behavior {index} was implemented in the shared module.",
+            session_id="same-chat", source="processor:test",
+            observation={"type": note_type, "files_modified": ["module.py"]},
+        ) for index, note_type in enumerate(("feature", "change", "refactor"))]
+        context = self.store.context(self.project, budget=5300)
+        self.assertTrue(all(record["id"] in context for record in changes))
+
     def test_continuation_preserves_summary_and_decision_ahead_of_recent_trivia(self):
         summary = self.store.remember(
             self.project, "Roadmap handoff", "Version 0.3 has autosave; publication is unverified.",
@@ -206,7 +270,7 @@ class MemoryQualityTests(unittest.TestCase):
     def test_long_structured_handoff_keeps_unfinished_work_and_tail_caveat(self):
         fields = {
             "request": "Release roadmap", "investigated": "Inspected " + "file details " * 1400,
-            "learned": "Autosave worked locally. " + "implementation details " * 500 + " Production remains unverified.",
+            "learned": "Autosave worked locally. " + "Implementation details. " * 500 + "Production remains unverified.",
             "completed": "Local fix only.", "next_steps": "Verify live install before publication.",
             "notes": "The assistant report is not an execution receipt.",
         }
@@ -219,7 +283,7 @@ class MemoryQualityTests(unittest.TestCase):
         self.assertIn(fields["next_steps"], context)
         self.assertIn(fields["notes"], context)
         self.assertIn("Production remains unverified.", context)
-        self.assertIn("[truncated]", context)
+        self.assertIsNotNone(ET.fromstring(context).find("entry/omitted"))
         self.assertEqual(1, context.count(fields["next_steps"]))
         self.assertLessEqual(len(context), 5300)
         ET.fromstring(context)
@@ -265,7 +329,7 @@ class MemoryQualityTests(unittest.TestCase):
             kind="session_summary", source="processor:test<&\"",
             session_summary={"investigated": "details " * 2000, "next_steps": "Fix failing deployment."},
             observation={"type": "decision", "facts": ["No successful deployment was observed."],
-                         "narrative": "details " * 2000 + " This is not production proof."},
+                         "narrative": "Detail. " * 2000 + "This is not production proof."},
         )
         context = self.store.context(self.project, budget=5300)
         self.assertIn(record["id"], context)
@@ -274,10 +338,10 @@ class MemoryQualityTests(unittest.TestCase):
         self.assertIn("This is not production proof.", context)
         root = ET.fromstring(context)
         self.assertEqual("processor:test<&\"", root.find("entry").attrib["source"])
-        self.assertIsNotNone(root.find("entry/metadata/observation"))
-        self.assertIsNotNone(root.find("entry/metadata/session_summary"))
+        self.assertIsNone(root.find("entry/metadata"))
+        self.assertEqual(1, context.count("No successful deployment was observed."))
 
-    def test_small_context_budgets_are_valid_xml_with_whole_ids_and_explicit_clipping(self):
+    def test_small_context_budgets_are_valid_xml_with_whole_ids_and_explicit_omission(self):
         record = self.store.remember(
             self.project, "Long entry", "<&>" * 10000,
             session_summary={"next_steps": "Pending action " * 1000},
@@ -290,7 +354,7 @@ class MemoryQualityTests(unittest.TestCase):
             for entry in root.findall("entry"):
                 rendered = True
                 self.assertEqual(record["id"], entry.attrib["id"])
-                self.assertIn("[truncated]", context)
+                self.assertIsNotNone(ET.fromstring(context).find("entry/omitted"))
         self.assertTrue(rendered)
 
     def test_inventory_counts_history_separately_and_preserves_version_conflicts(self):

@@ -391,9 +391,31 @@ def search(
     def receipt(
         results: list[dict[str, Any]], used_mode: str, fallback_reason: str | None
     ) -> dict[str, Any]:
+        added_candidates = 0
         if checked_intent == "resume":
-            results = sorted(results[:retrieval_limit], key=resume_priority)[:checked_limit]
-        return _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
+            # General relevance windows can be filled entirely by repeated UI
+            # details. Query priority categories separately before the final
+            # cap, while keeping project/activity and caller filters in Store.
+            candidates = list(results[:retrieval_limit])
+            seen = {record["id"] for record in candidates}
+            for record in _resume_candidates(
+                store, workspace, checked_query, checked_limit, checked_kinds,
+                checked_types, checked_concepts, checked_files,
+            ):
+                if record["id"] not in seen:
+                    seen.add(record["id"])
+                    if used_mode != "lexical" and "score" in record:
+                        record = dict(record)
+                        record["lexical_score"] = record.pop("score")
+                    candidates.append(record)
+                    added_candidates += 1
+            results = sorted(candidates, key=resume_priority)[:checked_limit]
+            if added_candidates and used_mode == "semantic":
+                used_mode = "hybrid"
+        result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
+        if checked_intent == "resume":
+            result.update(resume_expansion_mode="lexical", resume_added_candidates=added_candidates)
+        return result
 
     if requested_mode == "lexical":
         results = _lexical_results(
@@ -1071,6 +1093,46 @@ def _lexical_results(
 ) -> list[dict[str, Any]]:
     kwargs = {"limit": limit, **_filter_kwargs(kinds, types, concepts, files)}
     return _preview_list(store.search(project, query, **kwargs))
+
+
+def _resume_candidates(
+    store: Store,
+    project: str,
+    query: str,
+    limit: int,
+    kinds: Sequence[str] | None,
+    types: Sequence[str] | None,
+    concepts: Sequence[str] | None,
+    files: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Find query-matched handoffs beyond the general relevance window.
+
+    Expansion is deliberately lexical even for semantic searches: nearest
+    vectors alone can return unrelated summaries from a small category. Every
+    added record must match the query and all caller-supplied filters. The
+    receipt exposes this mixing instead of claiming pure semantic retrieval.
+    """
+    preferred = ("decision", "bugfix", "security_alert")
+    summary_kinds = [kind for kind in ("session_summary",) if kinds is None or kind in kinds]
+    decision_kinds = [kind for kind in preferred if kinds is None or kind in kinds]
+    decision_types = [kind for kind in preferred if types is None or kind in types]
+    scopes: list[tuple[Sequence[str] | None, Sequence[str] | None]] = []
+    if summary_kinds:
+        scopes.append((summary_kinds, types))
+    if decision_kinds:
+        scopes.append((decision_kinds, types))
+    if decision_types:
+        scopes.append((kinds, decision_types))
+    results: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for scoped_kinds, scoped_types in scopes:
+        for record in _lexical_results(
+            store, project, query, limit, scoped_kinds, scoped_types, concepts, files
+        ):
+            if record["id"] not in seen:
+                seen.add(record["id"])
+                results.append(record)
+    return results
 
 
 def _semantic_results(

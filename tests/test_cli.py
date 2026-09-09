@@ -150,6 +150,17 @@ class CLITests(unittest.TestCase):
         status = self._run("status", "--data-dir", str(self.data_dir), "--project", str(self.project))
         self.assertEqual(0, status["observation_jobs"]["jobs"])
 
+    def test_resume_pending_requires_a_verified_rejected_job(self) -> None:
+        from codex_mem.config import configure
+        configure(self.data_dir, capture_scope="selected", included_projects=[self.project])
+        result = self._run(
+            "service", "resume-pending", "--data-dir", str(self.data_dir),
+            "--project", str(self.project), "--rejected-job-id", "a" * 32,
+            expected=2,
+        )
+        self.assertEqual("blocked", result["status"])
+        self.assertEqual("rejection_unavailable", result["code"])
+
     def test_disabled_semantic_search_has_explicit_fallback_and_error(self) -> None:
         configured = self._run("config", "--data-dir", str(self.data_dir),
                                "--no-semantic-enabled", "--no-service-enabled")

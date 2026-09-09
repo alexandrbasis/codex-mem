@@ -4161,131 +4161,180 @@ class Store:
             return self._records_from_rows(rows, preview=True)
 
     @staticmethod
-    def _context_entry_markup(record: Mapping[str, Any], budget: int) -> str:
-        """Share space across handoff fields; clipping is explicit, never silent.
+    def _context_passages(
+        record: Mapping[str, Any], *, observation_details: bool = False
+    ) -> list[tuple[str, str]]:
+        """Choose source passages, never manufacture text by splicing words.
 
-        Keeping the head and tail of a clipped field helps retain end-of-field
-        caveats. This remains an excerpt: the full entry ID is always available
-        for retrieval, and provenance does not certify its claims.
+        The body is the canonical observation narrative. Structured facts add
+        only independent passages; summaries instead lead with their explicit
+        unfinished work and qualifications. Full structured data stays in get.
         """
 
-        def escaped(value: object) -> str:
-            return html.escape(redact_text(str(value)), quote=False)
-
-        def clipped(value: str, limit: int) -> str:
-            value = redact_text(value)
-            if len(escaped(value)) <= limit:
-                return escaped(value)
-            marker = "[truncated]"
-            if limit < len(marker):
-                return ""
-            # Slice raw text before escaping, so entities can never be split.
-            low, high = 0, len(value)
-            while low < high:
-                count = (low + high + 1) // 2
-                head = (count + 1) // 2
-                tail = count // 2
-                candidate = escaped(value[:head]) + marker
-                if tail:
-                    candidate += escaped(value[-tail:])
-                if len(candidate) <= limit:
-                    low = count
-                else:
-                    high = count - 1
-            head, tail = (low + 1) // 2, low // 2
-            return escaped(value[:head]) + marker + (escaped(value[-tail:]) if tail else "")
-
-        entry_open = (
-            f'<entry id="{html.escape(str(record["id"]), quote=True)}" '
-            f'created_at="{html.escape(str(record["created_at"]), quote=True)}" '
-            f'source="{html.escape(str(record["source"] or ""), quote=True)}">\n'
-        )
-        provenance = record.get("provenance", {})
-        evidence_roles = ",".join(provenance.get("linked_source_roles", []))
-        evidence_markup = (
-            '<provenance record_role="'
-            + html.escape(str(provenance.get("record_role", "unclassified")), quote=True)
-            + '" linked_source_roles="' + html.escape(evidence_roles, quote=True)
-            + '" verification="not_assessed"/>\n'
-        )
-        # Parts retain structured field names and the independent custom body.
-        # Unfinished work and caveats are first even in the compact fallback.
-        fields: list[tuple[str, str, str]] = []
         summary = record.get("session_summary")
-        if isinstance(summary, Mapping):
-            for field in ("next_steps", "notes", "learned", "completed", "request", "investigated"):
-                if summary.get(field):
-                    fields.append(("session_summary", field, str(summary[field])))
         observation = record.get("observation")
-        if isinstance(observation, Mapping):
-            for field in _OBSERVATION_METADATA_FIELDS:
-                value = observation.get(field)
-                if value is None or value == []:
-                    continue
-                text = ", ".join(str(item) for item in value) if isinstance(value, (list, tuple)) else str(value)
-                fields.append(("observation", field, text))
         body = str(record["body"])
+        sections: list[tuple[str, str, int]] = []
         if isinstance(summary, Mapping):
-            canonical_body = "\n".join(
+            canonical = "\n".join(
                 f'{field.replace("_", " ").capitalize()}: {summary[field]}'
                 for field in _SESSION_SUMMARY_FIELDS if summary.get(field)
             )
             if "\n".join(line.rstrip() for line in body.splitlines()) == "\n".join(
-                line.rstrip() for line in canonical_body.splitlines()
+                line.rstrip() for line in canonical.splitlines()
             ):
                 body = ""
-        tags = ", ".join(str(tag) for tag in record["tags"])
-        parts: list[tuple[str, str, str]] = [("<title>", "</title>\n", str(record["title"]))]
-        if tags:
-            parts.append(("<tags>", "</tags>\n", tags))
-        for index, (group, name, value) in enumerate(fields):
-            prefix = "<metadata>\n" if index == 0 else ""
-            if index == 0 or fields[index - 1][0] != group:
-                prefix += f"<{group}>\n"
-            suffix = ""
-            if index == len(fields) - 1 or fields[index + 1][0] != group:
-                suffix += f"</{group}>\n"
-            if index == len(fields) - 1:
-                suffix += "</metadata>\n"
-            parts.append((prefix + f"<{name}>", f"</{name}>\n" + suffix, value))
+            for field, priority in (("next_steps", 0), ("notes", 1), ("learned", 3),
+                                    ("completed", 4), ("request", 5), ("investigated", 6)):
+                if summary.get(field):
+                    sections.append((field.replace("_", " ").capitalize(), str(summary[field]), priority))
         if body:
-            parts.append(("<body>", "</body>\n", body))
+            sections.append(("", body, 2))
+        if isinstance(observation, Mapping):
+            subtitle = str(observation.get("subtitle") or "")
+            if subtitle and subtitle.casefold() not in str(record["title"]).casefold():
+                sections.append(("Detail", subtitle, 3))
+            # The prose body is the curated observation. Repeating its richer
+            # schema alongside it usually restates the same discoveries. Use
+            # those fields for mixed summary evidence or as a readable fallback
+            # when no complete body passage fits the excerpt.
+            if observation_details or isinstance(summary, Mapping) or not body:
+                for fact in observation.get("facts") or []:
+                    sections.append(("Evidence", str(fact), 4))
+                if observation.get("narrative"):
+                    sections.append(("Context", str(observation["narrative"]), 5))
+            paths = list(dict.fromkeys([*(observation.get("files_modified") or []),
+                                        *(observation.get("files_read") or [])]))
+            for path in paths:
+                sections.append(("File", str(path), 7))
+        # Sort only complete passages. Negative/uncertain qualifications are
+        # kept ahead of routine investigation details, including tail caveats.
+        qualification = re.compile(
+            r"\b(?:not|no|never|only|reported|reportedly|limited|partial|unverified|uncertain|unresolved|failed|blocked|pending|"
+            r"не|нет|только|неподтвержден|непроверен|неизвестно|заблокирован)\b", re.IGNORECASE
+        )
+        units: list[tuple[int, int, str, str]] = []
+        seen: list[str] = []
+        for label, value, priority in sorted(sections, key=lambda section: section[2]):
+            value = redact_text(value).strip()
+            # Newlines and sentence endings are natural boundaries. A single
+            # oversized sentence is omitted whole instead of shortened.
+            for passage in re.split(r"\n+|(?<=[.!?])\s+(?=[A-ZА-ЯЁ])", value):
+                passage = passage.strip()
+                if not passage:
+                    continue
+                normalized = " ".join(passage.casefold().split()).rstrip(".!?")
+                # A fact already stated by the canonical body adds no context.
+                # Exact containment is conservative; changed evidence/negation
+                # is not treated as an equivalent paraphrase.
+                if any(normalized == old or normalized in old for old in seen):
+                    continue
+                seen.append(normalized)
+                effective_priority = min(priority, 1) if qualification.search(passage) else priority
+                units.append((effective_priority, len(units), label, passage))
+        units.sort(key=lambda unit: (unit[0], unit[1]))
+        return [(label, passage) for _, _, label, passage in units]
 
-        base = entry_open + evidence_markup
-        closing = "</entry>\n"
-        fixed = len(base) + len(closing) + sum(len(a) + len(b) for a, b, _ in parts)
-        # Tiny budgets use labelled text without dropping a unique custom body
-        # merely because XML metadata has a high fixed overhead.
-        if budget - fixed < len(parts) * len("[truncated]"):
-            compact = "\n".join(f"{name}: {value}" for _, name, value in fields)
-            if body:
-                compact += ("\n" if compact else "") + "body: " + body
-            parts = [("<title>", "</title>\n", str(record["title"])),
-                     ("<body>", "</body>\n", compact)]
-            fixed = len(base) + len(closing) + sum(len(a) + len(b) for a, b, _ in parts)
-        available = budget - fixed
-        if available < len(parts) * len("[truncated]"):
-            return ""
-        lengths = [len(escaped(value)) for _, _, value in parts]
-        allocations = [0] * len(parts)
-        # Water filling preserves short fields whole and divides the remaining
-        # space across long fields, instead of truncating the last field away.
-        pending = set(range(len(parts)))
-        while pending:
-            share = available // len(pending)
-            short = [index for index in pending if lengths[index] <= share]
-            if not short:
-                for index in sorted(pending):
-                    allocations[index] = share
+    @staticmethod
+    def _context_diverse_records(records: Sequence[Mapping[str, Any]], limit: int) -> list[Mapping[str, Any]]:
+        """Give a short reading view distinct subjects without deleting notes.
+
+        Descriptive processor notes from the same chat and source file share a
+        slot. Decisions, fixes, alerts, and explicit open work are exempt: their
+        shared file does not make them redundant. This is coverage, not a claim
+        that different source records carry identical knowledge.
+        """
+
+        selected: list[Mapping[str, Any]] = []
+        descriptive_files: dict[str, set[str]] = {}
+        fingerprints: set[tuple[str, str]] = set()
+        open_work = re.compile(
+            r"\b(?:pending|blocked|unresolved|unfinished|todo|remaining|must|needs?|"
+            r"необходимо|осталось|требуется|незавершен)\b|not yet|before (?:release|publication)",
+            re.IGNORECASE,
+        )
+        for record in records:
+            observation = record.get("observation")
+            summary = record.get("session_summary")
+            body = str(record["body"])
+            source = str(record.get("source") or "")
+            session = str(record.get("session_id") or "")
+            if source.startswith("processor:") and isinstance(observation, Mapping) and not isinstance(summary, Mapping):
+                note_type = str(observation.get("type") or "")
+                fingerprint = (note_type, " ".join(body.casefold().split()))
+                if fingerprint in fingerprints:
+                    continue
+                fingerprints.add(fingerprint)
+                evidence = body + " " + " ".join(str(fact) for fact in observation.get("facts") or [])
+                protected = note_type not in {"discovery", "security_note"} or open_work.search(evidence)
+                paths = set(observation.get("files_read") or []) | set(observation.get("files_modified") or [])
+                if session and paths and not protected:
+                    covered = descriptive_files.setdefault(session, set())
+                    if paths & covered:
+                        continue
+                    covered.update(paths)
+            selected.append(record)
+            if len(selected) == limit:
                 break
-            for index in short:
-                allocations[index] = lengths[index]
-                available -= lengths[index]
-                pending.remove(index)
-        return base + "".join(
-            prefix + clipped(value, allocations[index]) + suffix
-            for index, (prefix, suffix, value) in enumerate(parts)
-        ) + closing
+        return selected
+
+    @staticmethod
+    def _context_entry_markup(record: Mapping[str, Any], budget: int) -> str:
+        """Render one readable excerpt, preserving whole titles and passages."""
+
+        provenance = record.get("provenance", {})
+        attributes = {
+            "id": record["id"], "created_at": record["created_at"],
+            "source": record.get("source") or "",
+            "record_role": provenance.get("record_role", "unclassified"),
+            "linked_source_roles": ",".join(provenance.get("linked_source_roles", [])),
+            "verification": "not_assessed",
+        }
+        # Empty provenance values add no information; the ID always permits
+        # retrieval of full source links and metadata.
+        entry_open = "<entry " + " ".join(
+            f'{key}="{html.escape(str(value), quote=True)}"'
+            for key, value in attributes.items() if value != ""
+        ) + ">\n"
+        title = html.escape(redact_text(str(record["title"])), quote=False)
+        prefix = entry_open + f"<title>{title}</title>\n<body>"
+        suffix = "</body>\n</entry>\n"
+        omission = '<omitted reason="budget"/>\n'
+        detail_omission = '<omitted reason="structured-details"/>\n'
+        marker_budget = max(len(omission), len(detail_omission))
+        available = budget - len(prefix) - len(suffix)
+        if available < marker_budget:
+            return ""
+        passages = Store._context_passages(record)
+        details_included = bool(record.get("session_summary"))
+        # If the primary narrative is a single oversized paragraph, use whole
+        # independent fact passages instead of a fragment of that paragraph.
+        if not any(not label and len(html.escape(passage, quote=False)) <= available - marker_budget
+                   for label, passage in passages) and not record.get("session_summary"):
+            passages = Store._context_passages(record, observation_details=True)
+            details_included = True
+        rendered: list[str] = []
+        omitted = False
+        previous_label: str | None = None
+        # Reserve one small, explicit omission marker. Never spend the final
+        # characters on fragments of another fact or a sliced title.
+        available -= marker_budget
+        for label, passage in passages:
+            label_text = f"{label}: " if label and label != previous_label else ""
+            text = html.escape(label_text + passage, quote=False)
+            separator = "\n" if rendered else ""
+            if len(separator) + len(text) > available:
+                omitted = True
+                continue
+            rendered.append(separator + text)
+            available -= len(separator) + len(text)
+            previous_label = label
+        observation = record.get("observation")
+        details_omitted = (not details_included and isinstance(observation, Mapping)
+                           and bool(observation.get("facts") or observation.get("narrative")))
+        marker = omission if omitted else detail_omission if details_omitted else ""
+        closing = "</body>\n" + marker + "</entry>\n"
+        return prefix + "".join(rendered) + closing
 
     def context(
         self,
@@ -4427,13 +4476,17 @@ class Store:
             # minimum is deliberately large enough for a complete wrapper.
             return (header + footer)[:budget]
 
+        # A small set of readable excerpts is more useful than many records
+        # whose labels and provenance consume most of the injection budget.
+        limit = min(4, max(1, remaining // 380))
+        candidates = self._context_diverse_records(records, limit)
         chunks: list[str] = []
-        for index, record in enumerate(records):
-            # Reserve bounded coverage for up to four candidates before any
-            # single long handoff consumes the context. Small contexts still
-            # get useful excerpts and retain the full record IDs.
-            slots = min(4, len(records) - index, max(1, remaining // 380))
-            allocation = remaining // slots
+        for index, record in enumerate(candidates):
+            later = candidates[index + 1:]
+            # Give the latest handoff room for decisions, evidence, and open
+            # work; use space it leaves for the other distinct subjects.
+            weight = 2 if index == 0 and (record.get("session_summary") or record.get("kind") == "session_summary") else 1
+            allocation = remaining * weight // (weight + len(later))
             chunk = self._context_entry_markup(record, allocation)
             if chunk:
                 chunks.append(chunk)

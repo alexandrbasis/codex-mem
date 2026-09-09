@@ -178,9 +178,58 @@ class SemanticTests(unittest.TestCase):
                 self.assertEqual(["summary", "another-summary", "decision"],
                                  [record["id"] for record in result["results"]])
                 for call in store.lexical_calls:
-                    self.assertEqual(12, call[2])
+                    self.assertEqual(12 if call[3] is None and call[4] is None else 3, call[2])
                 for call in store.semantic_calls:
                     self.assertEqual(12, call[5])
+
+    def test_resume_expands_priority_categories_across_search_modes(self) -> None:
+        class FilteredStore(FakeSearchStore):
+            def search(self, project, query, *, limit, kinds=None, types=None, concepts=None, files=None):
+                candidates = super().search(project, query, limit=limit, kinds=kinds, types=types,
+                                            concepts=concepts, files=files)
+                return [record for record in candidates
+                        if query in record["title"]
+                        and (kinds is None or record.get("kind") in kinds)
+                        and (types is None or record.get("observation", {}).get("type") in types)][:limit]
+
+            def semantic_search(self, *args, **kwargs):
+                return super().semantic_search(*args, **kwargs)[:kwargs["limit"]]
+
+        details = [{"id": f"ui-{index:02}", "title": "roadmap theme", "kind": "note"}
+                   for index in range(35)]
+        handoffs = [
+            {"id": "summary", "title": "roadmap handoff", "kind": "session_summary", "score": 2.5},
+            {"id": "decision", "title": "roadmap decision", "kind": "note", "observation": {"type": "decision"}},
+            {"id": "unrelated", "title": "billing handoff", "kind": "session_summary"},
+        ]
+        for mode, ready in (("lexical", True), ("semantic", True), ("hybrid", True), ("auto", True), ("auto", False)):
+            with self.subTest(mode=mode, ready=ready):
+                store = FilteredStore()
+                store.lexical_results = details + handoffs
+                store.semantic_results = details + handoffs
+                result = semantic.search(store, self.project, "roadmap", mode=mode, intent="resume", limit=5,
+                                         backend=FakeBackend(ready=ready))
+                self.assertEqual(["summary", "decision"], [item["id"] for item in result["results"][:2]])
+                self.assertNotIn("unrelated", [item["id"] for item in result["results"]])
+                self.assertEqual(mode, result["requested_mode"])
+                self.assertEqual("lexical", result["resume_expansion_mode"])
+                self.assertEqual(2, result["resume_added_candidates"])
+                self.assertEqual("hybrid" if ready and mode != "lexical" else "lexical", result["used_mode"])
+                summary = result["results"][0]
+                if result["used_mode"] == "hybrid":
+                    self.assertEqual(2.5, summary["lexical_score"])
+                    self.assertNotIn("score", summary)
+                else:
+                    self.assertEqual(2.5, summary["score"])
+
+    def test_resume_keeps_explicit_semantic_model_requirement(self) -> None:
+        store = FakeSearchStore()
+        store.lexical_results = [{"id": "summary", "kind": "session_summary"}]
+        for mode in ("semantic", "hybrid"):
+            with self.subTest(mode=mode), self.assertRaisesRegex(semantic.SemanticError, "model_not_ready"):
+                semantic.search(store, self.project, "roadmap", mode=mode, intent="resume",
+                                backend=FakeBackend(ready=False, code="model_not_ready"))
+        self.assertEqual([], store.lexical_calls)
 
     def test_resume_preserves_relevance_within_tiers_and_keeps_history(self) -> None:
         store = FakeSearchStore()

@@ -351,6 +351,10 @@ def _build_parser() -> _ArgumentParser:
     for action in ("enqueue", "retry"):
         item = service_commands.add_parser(action)
         item.add_argument("--project", required=True)
+    resume = service_commands.add_parser(
+        "resume-pending", help="Resume later work while preserving an inspected rejected batch")
+    resume.add_argument("--project", required=True)
+    resume.add_argument("--rejected-job-id", required=True)
 
     get = commands.add_parser("get", help="Read full project memory records")
     get.add_argument("--project", required=True)
@@ -610,7 +614,7 @@ def main(args: Sequence[str] | None = None) -> int:
             _emit(value)
             return 2 if value.get("status") == "failed" else 0
         if namespace.command == "service":
-            from .service import run_service, service_status, start_service, stop_service
+            from .service import resume_pending, run_service, service_status, start_service, stop_service
             from .integration import enqueue_project, index_project
             action = namespace.service_command
             if action == "run":
@@ -621,6 +625,9 @@ def main(args: Sequence[str] | None = None) -> int:
                 value = stop_service(namespace.data_dir)
             elif action == "status":
                 value = service_status(namespace.data_dir)
+            elif action == "resume-pending":
+                value = resume_pending(_absolute_project(namespace.project), namespace.data_dir,
+                                       rejected_job_id=namespace.rejected_job_id)
             else:
                 value = enqueue_project(_absolute_project(namespace.project), namespace.data_dir,
                                         retry_failed=action == "retry")
