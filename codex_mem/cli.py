@@ -330,6 +330,8 @@ def _build_parser() -> _ArgumentParser:
     search.add_argument("--type", "--types", "--observation-type", dest="types", action="append")
     search.add_argument("--concept", "--concepts", dest="concepts", action="append")
     search.add_argument("--file", "--files", dest="files", action="append")
+    search.add_argument("--intent", choices=("lookup", "resume"),
+                        help="Prioritize relevant summaries and decisions for resume; returns retrieval metadata")
     search.add_argument("--mode", choices=("auto", "lexical", "semantic", "hybrid"),
                         help="Return results plus retrieval metadata; default automatically uses an available semantic index")
 
@@ -526,13 +528,14 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
                 _absolute_project(namespace.project),
                 namespace.query,
                 mode=namespace.mode or "auto",
+                intent=namespace.intent or "lookup",
                 limit=namespace.limit,
                 kinds=namespace.kinds,
                 types=_filter_values(namespace.types, field="types"),
                 concepts=_filter_values(namespace.concepts, field="concepts"),
                 files=_filter_values(namespace.files, field="files"),
             )
-            return result if namespace.mode else result["results"]
+            return result if namespace.mode or namespace.intent else result["results"]
         if command in {"get-tool-uses", "tool-uses"}:
             return bound_tool_uses(
                 store.get_tool_uses(

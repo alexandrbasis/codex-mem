@@ -57,6 +57,35 @@ class IntegrationTests(unittest.TestCase):
                 },
             )
 
+    def test_roadmap_resume_promotes_handoff_without_hiding_narrow_lookup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            data = Path(temporary) / "memory"
+            project = Path(temporary) / "project"
+            project.mkdir()
+            with Store(data) as store:
+                detail = store.remember(project, "Roadmap roadmap theme", "Roadmap CSS token midnightblue.")
+                summary = store.remember(
+                    project, "Release handoff", "The roadmap release uses autosave; marketplace verification remains open.",
+                    kind="session_summary",
+                )
+                decision = store.remember(
+                    project, "Editing decision", "Use autosave for roadmap changes because drafts caused lost edits.",
+                    observation={"type": "decision"},
+                )
+                unrelated = store.remember(project, "Other release", "Billing export completed.", kind="session_summary")
+                lookup = search_memory(store, project, "roadmap", mode="lexical", limit=2)
+                self.assertEqual("lookup", lookup["intent"])
+                self.assertEqual(detail["id"], lookup["results"][0]["id"])
+                resumed = search_memory(store, project, "roadmap", mode="auto", intent="resume", limit=2)
+                self.assertEqual("resume", resumed["intent"])
+                self.assertEqual([summary["id"], decision["id"]], [item["id"] for item in resumed["results"]])
+                self.assertNotIn(unrelated["id"], [item["id"] for item in resumed["results"]])
+                narrow = search_memory(store, project, "midnightblue", mode="lexical", limit=1)
+                self.assertEqual([detail["id"]], [item["id"] for item in narrow["results"]])
+                # Ranking must not mutate source history or invent supersession.
+                self.assertEqual(4, len(store.timeline(project)))
+                self.assertIsNone(store.get(project, [detail["id"]])[0]["superseded_by"])
+
     def test_absent_optional_model_does_not_block_observation_queue(self):
         with tempfile.TemporaryDirectory() as temporary:
             data = Path(temporary) / "memory"

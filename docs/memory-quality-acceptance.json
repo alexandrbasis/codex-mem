@@ -1,0 +1,294 @@
+{
+  "scope": "Synthetic fixtures processed by native Codex Luna/medium in temporary databases. No live project memory was rewritten.",
+  "processor_sha256": "f84efefe36ec2f97463b2ae8360467bf6b6009c1a736e69457dd750f90881540",
+  "native_results": [
+    {
+      "case": "assistant_claim",
+      "phase": "before_request_provenance_refinement",
+      "receipt": {
+        "status": "processed",
+        "job_id": "3024b0a8bf7e4f4d9c30efc6150114d3",
+        "disposition": "processed",
+        "note_count": 1,
+        "processor_id": "codex-mem-native-observation-v1",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "medium",
+        "worker_thread_id": "01a0854a-947b-7ea3-a779-737bfb67d54c",
+        "worker_turn_id": "01a0854a-94f3-7d40-b058-8e463596542f",
+        "session_summary_count": 1
+      },
+      "inputs": [
+        {
+          "source": "hook:Stop",
+          "body": "[Assistant final answer]\nRoadmap 0.3.0 is implemented: autosave now persists State/Project changes and all 205 tests passed. No test command, execution result, diff or external installation check is present in this session."
+        }
+      ],
+      "notes": [
+        {
+          "title": "Roadmap 0.3.0 implementation claim remained unverified",
+          "body": "The session’s final answer claimed that autosave persisted State/Project changes and that 205 tests passed, but it also stated that no test command, execution result, diff, or installation check was present. Treat the implementation and test result as unsupported pending direct verification.",
+          "observation": {
+            "type": "discovery",
+            "subtitle": "Reported completion lacked supporting evidence",
+            "facts": [
+              "According to the assistant report, autosave was claimed to persist State/Project changes; this was not directly verified.",
+              "According to the assistant report, 205 tests were claimed to pass; no test command or execution result supported that claim.",
+              "No diff or external installation check was present in the retained evidence."
+            ],
+            "narrative": "The only retained evidence was an assistant report, not an execution record. It described implementation and passing tests while explicitly noting the absence of artifacts that could verify either claim.",
+            "concepts": [
+              "verification-gap",
+              "evidence-scope",
+              "unverified-claim"
+            ],
+            "files_read": [],
+            "files_modified": []
+          },
+          "session_summary": null
+        },
+        {
+          "title": "Roadmap 0.3.0 verification status",
+          "body": "Request: Implement Roadmap 0.3.0 autosave behavior and verify the result.\nInvestigated: The retained session evidence consisted only of an assistant final answer.\nLearned: The answer reported autosave persistence and 205 passing tests, but explicitly provided no test execution result, diff, or installation check; these outcomes remain unverified.\nNext steps: Directly inspect the implementation and run the relevant test suite to verify autosave persistence and the reported test count.\nNotes: This summary is based on the assistant report from hook:Stop; it does not independently establish that the claimed implementation or tests succeeded.",
+          "observation": null,
+          "session_summary": {
+            "title": "Roadmap 0.3.0 verification status",
+            "request": "Implement Roadmap 0.3.0 autosave behavior and verify the result.",
+            "investigated": "The retained session evidence consisted only of an assistant final answer.",
+            "learned": "The answer reported autosave persistence and 205 passing tests, but explicitly provided no test execution result, diff, or installation check; these outcomes remain unverified.",
+            "completed": null,
+            "next_steps": "Directly inspect the implementation and run the relevant test suite to verify autosave persistence and the reported test count.",
+            "notes": "This summary is based on the assistant report from hook:Stop; it does not independently establish that the claimed implementation or tests succeeded.",
+            "source_ids": [
+              "e4c13c52731d42b698c3ab524fde2b79"
+            ]
+          }
+        }
+      ],
+      "raw_preserved": true
+    },
+    {
+      "case": "trivia",
+      "phase": "before_request_provenance_refinement",
+      "receipt": {
+        "status": "skipped",
+        "job_id": "cdd392b5ec04413bb7a7fd28c6a55c98",
+        "disposition": "skipped",
+        "note_count": 0,
+        "processor_id": "codex-mem-native-observation-v1",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "medium",
+        "worker_thread_id": "01a0854a-7e2c-7652-ba59-4820bdb38df4",
+        "worker_turn_id": "01a0854a-7ea1-7c70-95fb-effd658f7244",
+        "session_summary_count": 0
+      },
+      "inputs": [
+        {
+          "source": "hook:PostToolUse:read",
+          "body": "Read src/roadmap.html and src/styles.css. The CSS gap is 12px, the header is 48px tall, the theme toggle supports dark and light, and title uses an HTML text input. The page entry point is src/main.ts. No defect, requirement, decision, constraint, or change was found."
+        }
+      ],
+      "notes": [],
+      "raw_preserved": true
+    },
+    {
+      "case": "version_conflict",
+      "phase": "before_request_provenance_refinement",
+      "receipt": {
+        "status": "processed",
+        "job_id": "bf004d69078b45a899789d1019cffbbc",
+        "disposition": "processed",
+        "note_count": 1,
+        "processor_id": "codex-mem-native-observation-v1",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "medium",
+        "worker_thread_id": "01a0854a-d626-7360-8665-43a55dbcddbf",
+        "worker_turn_id": "01a0854a-d699-7813-a397-059e1b983ec4",
+        "session_summary_count": 1
+      },
+      "inputs": [
+        {
+          "source": "hook:Stop",
+          "body": "[Assistant final answer]\nFor Roadmap 0.2.0, saving required clicking Apply. I reported 205 passing tests for 0.2.0, but the execution output is absent."
+        },
+        {
+          "source": "hook:UserPromptSubmit",
+          "body": "For Roadmap 0.3.0 we decided State and Project edits should autosave to avoid lost changes. This replaces the manual Apply interaction for 0.3.0. Please implement it; this message does not establish implementation."
+        },
+        {
+          "source": "hook:PostToolUse:pytest",
+          "body": "Command: pytest tests/test_roadmap_autosave.py\nVersion under test: Roadmap 0.3.0\nOutput: FAILED tests/test_roadmap_autosave.py::test_state_persists_after_reload - expected Active, got Draft\nExit code: 1.\nThe command did not test version 0.2.0."
+        }
+      ],
+      "notes": [
+        {
+          "title": "Roadmap 0.2.0 behavior and test status remain unverified",
+          "body": "An earlier assistant report claimed that saving in Roadmap 0.2.0 required clicking Apply and that 205 tests passed. The retained evidence contains no execution output or other direct verification, so both statements remain reported claims rather than confirmed project facts.",
+          "observation": {
+            "type": "discovery",
+            "subtitle": "Reported behavior and test count lack supporting execution evidence",
+            "facts": [
+              "Source s1 reported that saving required clicking Apply; this was not directly verified in the retained evidence.",
+              "Source s1 reported 205 passing tests for 0.2.0; execution output was absent, so the result was not independently verified."
+            ],
+            "narrative": "The earlier report identified a possible Apply requirement and a 205-test result, but the available evidence does not establish either claim. Future work should verify the save interaction and rerun the relevant 0.2.0 test suite before treating them as established.",
+            "concepts": [
+              "verification-needed",
+              "uncertainty"
+            ],
+            "files_read": [],
+            "files_modified": []
+          },
+          "session_summary": null
+        },
+        {
+          "title": "Roadmap 0.2.0 claims require verification",
+          "body": "Learned: An earlier assistant report claimed an Apply requirement for saving and 205 passing tests for Roadmap 0.2.0, but the retained evidence did not verify either claim.\nNext steps: Verify the save interaction and rerun the relevant 0.2.0 test suite with retained execution output.",
+          "observation": null,
+          "session_summary": {
+            "title": "Roadmap 0.2.0 claims require verification",
+            "request": null,
+            "investigated": null,
+            "learned": "An earlier assistant report claimed an Apply requirement for saving and 205 passing tests for Roadmap 0.2.0, but the retained evidence did not verify either claim.",
+            "completed": null,
+            "next_steps": "Verify the save interaction and rerun the relevant 0.2.0 test suite with retained execution output.",
+            "notes": null,
+            "source_ids": [
+              "2d9858ae2b0f406d83bb821ddb5d4036"
+            ]
+          }
+        }
+      ],
+      "raw_preserved": true
+    },
+    {
+      "case": "assistant_claim",
+      "phase": "after_request_provenance_refinement",
+      "receipt": {
+        "status": "skipped",
+        "job_id": "25b147b6310d416180dde801267acd41",
+        "disposition": "skipped",
+        "note_count": 0,
+        "processor_id": "codex-mem-native-observation-v1",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "medium",
+        "worker_thread_id": "01a0854e-17d3-7a12-a2dd-3a5b5fe670b0",
+        "worker_turn_id": "01a0854e-189c-7423-95cc-d3f6c8e2f5c5",
+        "session_summary_count": 0
+      },
+      "inputs": null,
+      "notes": [],
+      "raw_preserved": null
+    },
+    {
+      "case": "version_conflict_continuation",
+      "phase": "after_request_provenance_refinement",
+      "receipt": {
+        "status": "processed",
+        "job_id": "0b1d413b70bb4496bed955e118573c94",
+        "disposition": "processed",
+        "note_count": 2,
+        "processor_id": "codex-mem-native-observation-v1",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "medium",
+        "worker_thread_id": "01a0854e-3ed9-7111-9900-737ef052406f",
+        "worker_turn_id": "01a0854e-3f3f-7ed0-ae1b-32692991e390",
+        "session_summary_count": 1
+      },
+      "inputs": null,
+      "notes": [
+        {
+          "title": "Roadmap 0.3.0 autosave decision",
+          "body": "For Roadmap 0.3.0, the requested design decision was for State and Project edits to autosave to avoid lost changes, replacing the manual Apply interaction. The observation explicitly requested implementation but did not establish that implementation occurred.",
+          "observation": {
+            "type": "decision",
+            "subtitle": "Autosave should replace manual Apply",
+            "facts": [
+              "The user requested autosave for State and Project edits in Roadmap 0.3.0.",
+              "The user stated this replaces the manual Apply interaction.",
+              "The observation did not verify implementation."
+            ],
+            "narrative": "The requested 0.3.0 behavior is autosaving State and Project edits to reduce the risk of lost changes. Implementation status remains unverified.",
+            "concepts": [
+              "what-changed",
+              "why-it-exists",
+              "verification-needed"
+            ],
+            "files_read": [],
+            "files_modified": []
+          },
+          "session_summary": null
+        },
+        {
+          "title": "Roadmap 0.3.0 autosave regression",
+          "body": "Roadmap 0.3.0 failed the autosave test: after reload, State was expected to be Active but was Draft. The failing command covered tests/test_roadmap_autosave.py only and did not test Roadmap 0.2.0.",
+          "observation": {
+            "type": "bugfix",
+            "subtitle": "State did not persist across reload",
+            "facts": [
+              "Roadmap 0.3.0 test_roadmap_autosave.py failed at test_state_persists_after_reload.",
+              "The test expected Active but observed Draft after reload.",
+              "The command exited with code 1.",
+              "The execution did not test Roadmap 0.2.0."
+            ],
+            "narrative": "The retained execution result shows a concrete 0.3.0 autosave failure: the persisted State value was Draft instead of Active after reload. The implementation remained unresolved within this evidence, and the test scope did not cover version 0.2.0.",
+            "concepts": [
+              "regression",
+              "problem-solution",
+              "verification-scope"
+            ],
+            "files_read": [
+              "tests/test_roadmap_autosave.py"
+            ],
+            "files_modified": []
+          },
+          "session_summary": null
+        },
+        {
+          "title": "Roadmap 0.3.0 autosave remains unfinished",
+          "body": "Request: Implement Roadmap 0.3.0 autosave for State and Project edits, replacing manual Apply.\nInvestigated: The Roadmap 0.3.0 autosave test was executed.\nLearned: The autosave regression test failed because State reloaded as Draft instead of the expected Active. The test did not cover Roadmap 0.2.0, whose earlier reported results remain separate and unverified.\nCompleted: No implementation completion was established; the Roadmap 0.3.0 behavior remained unfinished in the retained evidence.\nNext steps: Fix the State persistence regression and rerun tests/test_roadmap_autosave.py. This is a proposed follow-up based on the observed failure.",
+          "observation": null,
+          "session_summary": {
+            "title": "Roadmap 0.3.0 autosave remains unfinished",
+            "request": "Implement Roadmap 0.3.0 autosave for State and Project edits, replacing manual Apply.",
+            "investigated": "The Roadmap 0.3.0 autosave test was executed.",
+            "learned": "The autosave regression test failed because State reloaded as Draft instead of the expected Active. The test did not cover Roadmap 0.2.0, whose earlier reported results remain separate and unverified.",
+            "completed": "No implementation completion was established; the Roadmap 0.3.0 behavior remained unfinished in the retained evidence.",
+            "next_steps": "Fix the State persistence regression and rerun tests/test_roadmap_autosave.py. This is a proposed follow-up based on the observed failure.",
+            "notes": null,
+            "source_ids": [
+              "8393b7f271d94c00aebc810bc5c9362c",
+              "4f5bbb36c29d42f7ac01a33924468bb3",
+              "cec529c7a43a457e9707e9028b53369a"
+            ]
+          }
+        }
+      ],
+      "raw_preserved": null
+    }
+  ],
+  "findings": [
+    "UI trivia produced no durable note in the tested fixture.",
+    "An assistant report explicitly lacking verification stayed qualified in its title, facts and narrative. Its summary incorrectly inferred a user request; the prompt was refined after this result.",
+    "After refinement, a bare assistant completion claim without user intent or execution evidence was skipped.",
+    "The first version-conflict invocation processed the earlier Stop only. A later invocation handled the 0.3 user decision, failing tool result, and final Stop; it preserved version boundaries and unfinished work."
+  ],
+  "limitations": [
+    "Native outputs are a bounded sample, not a guarantee of model quality or a corpus-wide audit.",
+    "The old real memory corpus and installed plugin were not changed.",
+    "Resume retrieval prioritizes at most min(100, 4 * limit) candidates; ranking is not truth or automatic version resolution.",
+    "Provenance describes direct linked source channels. Tool records can contain document reads; claims are not independently verified by storage.",
+    "An initial sandboxed app-server launch failed before worker creation due to permission denial; the native fixture was subsequently run with scoped escalation."
+  ],
+  "unit_suite": {
+    "command": "python3 -m unittest discover -s tests",
+    "tests": 231,
+    "result": "passed",
+    "warnings": "Python ResourceWarnings reported unclosed SQLite connections during tests; the suite exited successfully."
+  },
+  "document_validation": {
+    "command": "roughdraft doctor skills/memory/SKILL.md",
+    "result": "passed",
+    "comments": 0,
+    "suggestions": 0
+  }
+}

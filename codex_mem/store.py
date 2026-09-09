@@ -118,7 +118,33 @@ MAX_EMBEDDING_PROFILE_CHARS = 128
 MAX_EMBEDDING_SCAN = 5_000
 _EMBEDDING_STATUSES = ("running", "failed", "completed")
 
-_AUTOMATIC_CONTEXT_KINDS = ("session", "tool", "checkpoint")
+def _evidence_role(source: object) -> str:
+    """Describe provenance, never infer whether a claim is true."""
+    value = str(source or "")
+    if value == "hook:Stop" or value.startswith("hook:Stop:"):
+        return "assistant_report"
+    if value == "hook:UserPromptSubmit" or value.startswith("hook:UserPromptSubmit:"):
+        return "user_intent"
+    if value == "hook:PostToolUse" or value.startswith("hook:PostToolUse:"):
+        return "tool_record"
+    if value == "hook:PreCompact" or value.startswith("hook:PreCompact:"):
+        return "lifecycle_marker"
+    if value.startswith("processor:"):
+        return "derived_note"
+    if value.startswith("import:"):
+        return "imported_memory"
+    return "unclassified"
+
+
+def _context_priority_sql() -> str:
+    # This is a continuation view. Explicit search keeps relevance ordering.
+    return (
+        "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL THEN 0 "
+        "WHEN json_extract(m.observation_json, '$.type') IN ('decision', 'bugfix', 'security_alert') "
+        "OR e.kind IN ('decision', 'bugfix', 'security_alert') THEN 1 "
+        "WHEN e.kind IN ('session', 'tool', 'checkpoint') THEN 3 ELSE 2 END"
+    )
+
 
 _KIND_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
 _ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
@@ -1555,7 +1581,7 @@ class Store:
         metadata_map = self._read(
             lambda: self._metadata_map(self._connection, [row["id"] for row in rows])
         )
-        return [
+        records = [
             self._record_from_row(
                 row,
                 source_map.get(row["id"], []),
@@ -1565,6 +1591,30 @@ class Store:
             )
             for row in rows
         ]
+        # Source categories are transport provenance, not verification of the
+        # note. Keep them outside model-authored metadata so an assistant claim
+        # cannot label itself as a successful test run.
+        if rows:
+            placeholders = ", ".join("?" for _ in rows)
+            evidence_rows = self._read(lambda: self._connection.execute(
+                "SELECT links.summary_id, sources.source FROM entry_sources AS links "
+                "JOIN entries AS derived ON derived.id = links.summary_id "
+                "JOIN entries AS sources ON sources.id = links.source_id "
+                "AND sources.project = derived.project "
+                f"WHERE links.summary_id IN ({placeholders})",
+                tuple(row["id"] for row in rows),
+            ).fetchall())
+            roles: dict[str, set[str]] = {}
+            for evidence in evidence_rows:
+                roles.setdefault(evidence["summary_id"], set()).add(
+                    _evidence_role(evidence["source"]))
+            for record in records:
+                record["provenance"] = {
+                    "record_role": _evidence_role(record["source"]),
+                    "linked_source_roles": sorted(roles.get(record["id"], set())),
+                    "verification": "not_assessed",
+                }
+        return records
 
     def remember(
         self,
@@ -2290,6 +2340,12 @@ class Store:
             result["sources"] = self._bounded_observation_sources(sources, input_limit, workspace)
             context = self._observation_context(workspace, sources)
             result["context"] = context
+            # Separate cross-session reference from the temporally bounded
+            # source context. This history may postdate the claimed events.
+            result["project_context"] = (
+                self.context(workspace, budget=3_000, exclude_session=sources[0]["session_id"])
+                if sources and sources[0]["session_id"] else ""
+            )
             summary_required, context_new_notes = self._summary_context_requirement(
                 workspace, sources, context
             )
@@ -3884,6 +3940,7 @@ class Store:
         observation_types: Sequence[str] | None = None,
         concepts: Sequence[str] | None = None,
         files: Sequence[str] | None = None,
+        resume: bool = False,
     ) -> tuple[list[sqlite3.Row], dict[str, float]]:
         if not expression:
             return [], {}
@@ -3908,12 +3965,13 @@ class Store:
             base_clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
             base_parameters.append(exclude_session)
 
+        priority = _context_priority_sql() if resume else "0"
         fts_sql = (
-            "SELECT e.*, bm25(entries_fts, 3.0, 1.0, 0.5) AS fts_rank "
+            f"SELECT e.*, {priority} AS context_priority, bm25(entries_fts, 3.0, 1.0, 0.5) AS fts_rank "
             "FROM entries_fts JOIN entries AS e ON e.rowid = entries_fts.rowid "
             "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             f"WHERE entries_fts MATCH ? AND {' AND '.join(base_clauses)} "
-            "ORDER BY fts_rank ASC, e.created_at DESC LIMIT ?"
+            "ORDER BY context_priority ASC, fts_rank ASC, e.created_at DESC LIMIT ?"
         )
         fts_parameters = [expression, *base_parameters, limit]
         fts_rows = self._read(
@@ -3926,10 +3984,10 @@ class Store:
 
         if metadata_search is not None:
             metadata_sql = (
-                "SELECT e.*, 0.0 AS fts_rank FROM entries AS e "
+                f"SELECT e.*, {priority} AS context_priority, 0.0 AS fts_rank FROM entries AS e "
                 "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
                 f"WHERE {metadata_search} AND {' AND '.join(base_clauses)} "
-                "ORDER BY e.created_at DESC LIMIT ?"
+                "ORDER BY context_priority ASC, e.created_at DESC LIMIT ?"
             )
             metadata_query_parameters = [
                 *metadata_parameters,
@@ -3952,6 +4010,8 @@ class Store:
         # zero naturally follow exact FTS hits.  Newer records break ties.
         rows.sort(key=lambda row: str(row["created_at"]), reverse=True)
         rows.sort(key=lambda row: ranks[str(row["id"])])
+        if resume:
+            rows.sort(key=lambda row: row["context_priority"])
         rows = rows[:limit]
         scores = {row["id"]: -ranks[str(row["id"])] for row in rows}
         return rows, scores
@@ -4101,40 +4161,131 @@ class Store:
             return self._records_from_rows(rows, preview=True)
 
     @staticmethod
-    def _context_metadata_markup(record: Mapping[str, Any]) -> str:
-        """Render bounded structured fields without making them executable."""
+    def _context_entry_markup(record: Mapping[str, Any], budget: int) -> str:
+        """Share space across handoff fields; clipping is explicit, never silent.
 
-        observation = record.get("observation")
+        Keeping the head and tail of a clipped field helps retain end-of-field
+        caveats. This remains an excerpt: the full entry ID is always available
+        for retrieval, and provenance does not certify its claims.
+        """
+
+        def escaped(value: object) -> str:
+            return html.escape(redact_text(str(value)), quote=False)
+
+        def clipped(value: str, limit: int) -> str:
+            value = redact_text(value)
+            if len(escaped(value)) <= limit:
+                return escaped(value)
+            marker = "[truncated]"
+            if limit < len(marker):
+                return ""
+            # Slice raw text before escaping, so entities can never be split.
+            low, high = 0, len(value)
+            while low < high:
+                count = (low + high + 1) // 2
+                head = (count + 1) // 2
+                tail = count // 2
+                candidate = escaped(value[:head]) + marker
+                if tail:
+                    candidate += escaped(value[-tail:])
+                if len(candidate) <= limit:
+                    low = count
+                else:
+                    high = count - 1
+            head, tail = (low + 1) // 2, low // 2
+            return escaped(value[:head]) + marker + (escaped(value[-tail:]) if tail else "")
+
+        entry_open = (
+            f'<entry id="{html.escape(str(record["id"]), quote=True)}" '
+            f'created_at="{html.escape(str(record["created_at"]), quote=True)}" '
+            f'source="{html.escape(str(record["source"] or ""), quote=True)}">\n'
+        )
+        provenance = record.get("provenance", {})
+        evidence_roles = ",".join(provenance.get("linked_source_roles", []))
+        evidence_markup = (
+            '<provenance record_role="'
+            + html.escape(str(provenance.get("record_role", "unclassified")), quote=True)
+            + '" linked_source_roles="' + html.escape(evidence_roles, quote=True)
+            + '" verification="not_assessed"/>\n'
+        )
+        # Parts retain structured field names and the independent custom body.
+        # Unfinished work and caveats are first even in the compact fallback.
+        fields: list[tuple[str, str, str]] = []
         summary = record.get("session_summary")
-        if not isinstance(observation, Mapping) and not isinstance(summary, Mapping):
-            return ""
-        lines: list[str] = ["<metadata>\n"]
+        if isinstance(summary, Mapping):
+            for field in ("next_steps", "notes", "learned", "completed", "request", "investigated"):
+                if summary.get(field):
+                    fields.append(("session_summary", field, str(summary[field])))
+        observation = record.get("observation")
         if isinstance(observation, Mapping):
-            lines.append("<observation>\n")
             for field in _OBSERVATION_METADATA_FIELDS:
                 value = observation.get(field)
                 if value is None or value == []:
                     continue
-                if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-                    rendered = ", ".join(redact_text(str(item)) for item in value)
-                else:
-                    rendered = redact_text(str(value))
-                lines.append(
-                    f"<{field}>{html.escape(rendered, quote=False)}</{field}>\n"
-                )
-            lines.append("</observation>\n")
+                text = ", ".join(str(item) for item in value) if isinstance(value, (list, tuple)) else str(value)
+                fields.append(("observation", field, text))
+        body = str(record["body"])
         if isinstance(summary, Mapping):
-            lines.append("<session_summary>\n")
-            for field in _SESSION_SUMMARY_FIELDS:
-                value = summary.get(field)
-                if value is None or value == "":
-                    continue
-                lines.append(
-                    f"<{field}>{html.escape(redact_text(str(value)), quote=False)}</{field}>\n"
-                )
-            lines.append("</session_summary>\n")
-        lines.append("</metadata>\n")
-        return "".join(lines)
+            canonical_body = "\n".join(
+                f'{field.replace("_", " ").capitalize()}: {summary[field]}'
+                for field in _SESSION_SUMMARY_FIELDS if summary.get(field)
+            )
+            if "\n".join(line.rstrip() for line in body.splitlines()) == "\n".join(
+                line.rstrip() for line in canonical_body.splitlines()
+            ):
+                body = ""
+        tags = ", ".join(str(tag) for tag in record["tags"])
+        parts: list[tuple[str, str, str]] = [("<title>", "</title>\n", str(record["title"]))]
+        if tags:
+            parts.append(("<tags>", "</tags>\n", tags))
+        for index, (group, name, value) in enumerate(fields):
+            prefix = "<metadata>\n" if index == 0 else ""
+            if index == 0 or fields[index - 1][0] != group:
+                prefix += f"<{group}>\n"
+            suffix = ""
+            if index == len(fields) - 1 or fields[index + 1][0] != group:
+                suffix += f"</{group}>\n"
+            if index == len(fields) - 1:
+                suffix += "</metadata>\n"
+            parts.append((prefix + f"<{name}>", f"</{name}>\n" + suffix, value))
+        if body:
+            parts.append(("<body>", "</body>\n", body))
+
+        base = entry_open + evidence_markup
+        closing = "</entry>\n"
+        fixed = len(base) + len(closing) + sum(len(a) + len(b) for a, b, _ in parts)
+        # Tiny budgets use labelled text without dropping a unique custom body
+        # merely because XML metadata has a high fixed overhead.
+        if budget - fixed < len(parts) * len("[truncated]"):
+            compact = "\n".join(f"{name}: {value}" for _, name, value in fields)
+            if body:
+                compact += ("\n" if compact else "") + "body: " + body
+            parts = [("<title>", "</title>\n", str(record["title"])),
+                     ("<body>", "</body>\n", compact)]
+            fixed = len(base) + len(closing) + sum(len(a) + len(b) for a, b, _ in parts)
+        available = budget - fixed
+        if available < len(parts) * len("[truncated]"):
+            return ""
+        lengths = [len(escaped(value)) for _, _, value in parts]
+        allocations = [0] * len(parts)
+        # Water filling preserves short fields whole and divides the remaining
+        # space across long fields, instead of truncating the last field away.
+        pending = set(range(len(parts)))
+        while pending:
+            share = available // len(pending)
+            short = [index for index in pending if lengths[index] <= share]
+            if not short:
+                for index in sorted(pending):
+                    allocations[index] = share
+                break
+            for index in short:
+                allocations[index] = lengths[index]
+                available -= lengths[index]
+                pending.remove(index)
+        return base + "".join(
+            prefix + clipped(value, allocations[index]) + suffix
+            for index, (prefix, suffix, value) in enumerate(parts)
+        ) + closing
 
     def context(
         self,
@@ -4178,55 +4329,91 @@ class Store:
 
         with self._lock:
             self._require_open()
+            active_clauses = [
+                "e.project = ?",
+                "e.superseded_by IS NULL",
+                "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+            ]
+            # The first workspace parameter scopes source-position lookup;
+            # the second scopes active rows before any ranking or filters.
+            parameters: list[object] = [workspace, workspace]
+            if checked_exclude is not None:
+                active_clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
+                parameters.append(checked_exclude)
+            clauses = ["e.session_rank = 1"]
+            if checked_kinds:
+                placeholders = ", ".join("?" for _ in checked_kinds)
+                clauses.append(f"e.kind IN ({placeholders})")
+                parameters.extend(checked_kinds)
+            metadata_clauses, metadata_filter_parameters = self._metadata_filter_sql(
+                "e", types=checked_types, concepts=checked_concepts, files=checked_files
+            )
+            clauses.extend(metadata_clauses)
+            parameters.extend(metadata_filter_parameters)
             if query.strip():
                 expression = _fts_expression(query)
-                query_tokens = _fts_tokens(query)
-                rows, _ = self._search_rows(
-                    workspace,
-                    expression,
-                    50,
-                    checked_kinds,
-                    exclude_session=checked_exclude,
-                    metadata_tokens=query_tokens,
-                    observation_types=checked_types,
-                    concepts=checked_concepts,
-                    files=checked_files,
-                )
-            else:
-                clauses = [
-                    "e.project = ?",
-                    "e.superseded_by IS NULL",
-                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
-                ]
-                parameters: list[object] = [workspace]
-                if checked_exclude is not None:
-                    clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
-                    parameters.append(checked_exclude)
-                if checked_kinds:
-                    placeholders = ", ".join("?" for _ in checked_kinds)
-                    clauses.append(f"e.kind IN ({placeholders})")
-                    parameters.extend(checked_kinds)
-                metadata_clauses, metadata_filter_parameters = self._metadata_filter_sql(
-                    "m", types=checked_types, concepts=checked_concepts, files=checked_files
-                )
-                clauses.extend(metadata_clauses)
-                parameters.extend(metadata_filter_parameters)
-                parameters.append(50)
-                automatic_kinds = ", ".join(
-                    f"'{kind}'" for kind in _AUTOMATIC_CONTEXT_KINDS
-                )
-                sql = (
-                    "SELECT e.* FROM entries AS e "
-                    "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id WHERE "
-                    + " AND ".join(clauses)
-                    + " ORDER BY CASE "
-                    + "WHEN e.source LIKE 'hook:%' THEN 2 "
-                    + f"WHEN e.kind IN ({automatic_kinds}) THEN 1 "
-                    + "ELSE 0 END ASC, e.created_at DESC LIMIT ?"
-                )
-                rows = self._read(
-                    lambda: self._connection.execute(sql, tuple(parameters)).fetchall()
-                )
+                metadata_search, metadata_parameters = self._metadata_search_sql("e", _fts_tokens(query))
+                if not expression:
+                    clauses.append("0")
+                else:
+                    match = "e.context_rowid IN (SELECT rowid FROM entries_fts WHERE entries_fts MATCH ?)"
+                    parameters.append(expression)
+                    if metadata_search:
+                        match += " OR (" + metadata_search + ")"
+                        parameters.extend(metadata_parameters)
+                    clauses.append("(" + match + ")")
+            # Use source-event order for derived records. A delayed retry
+            # must not make an earlier Stop appear newer than a later Stop.
+            # Prefer the linked Stop; without one use other linked hook events,
+            # and fall back to write order for manual/source-less records.
+            sql = (
+                "WITH source_order AS ("
+                "SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
+                "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
+                "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
+                "THEN 0 ELSE 1 END, raw.created_at DESC, raw.id DESC) AS event_rank "
+                "FROM entry_sources AS links JOIN entries AS derived ON derived.id = links.summary_id "
+                "JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
+                "AND raw.session_id IS derived.session_id "
+                "WHERE derived.project = ? AND raw.source GLOB 'hook:*'"
+                "), active AS (SELECT e.rowid AS context_rowid, e.*, "
+                "m.observation_json, m.session_summary_json, "
+                "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL THEN 0 "
+                # All structured observations should already have passed the
+                # quality gate. Recent discoveries/open failures must not lose
+                # to an unbounded backlog of older decision-type observations.
+                "WHEN m.observation_json IS NOT NULL "
+                "OR e.kind IN ('decision', 'bugfix', 'security_alert', 'discovery', 'feature', "
+                "'refactor', 'change', 'security_note', 'sensitive') THEN 1 "
+                "WHEN e.kind IN ('session', 'tool', 'checkpoint') THEN 3 ELSE 2 END AS context_priority, "
+                "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL "
+                "OR m.observation_json IS NOT NULL THEN COALESCE(source_order.event_at, e.created_at) "
+                "ELSE e.created_at END AS context_at, "
+                "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL "
+                "OR m.observation_json IS NOT NULL THEN COALESCE(source_order.event_id, e.id) "
+                "ELSE e.id END AS context_event_id "
+                "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
+                "LEFT JOIN source_order ON source_order.summary_id = e.id AND source_order.event_rank = 1 "
+                "WHERE " + " AND ".join(active_clauses)
+                + "), session_ranked AS (SELECT active.*, "
+                "ROW_NUMBER() OVER (PARTITION BY CASE "
+                "WHEN context_priority = 0 AND COALESCE(session_id, '') != '' "
+                "THEN 'session:' || session_id ELSE 'id:' || id END "
+                "ORDER BY context_at DESC, context_event_id DESC, created_at DESC, id DESC) AS session_rank "
+                "FROM active), candidates AS (SELECT e.* FROM session_ranked AS e WHERE "
+                + " AND ".join(clauses)
+                + "), ranked AS (SELECT candidates.*, "
+                # Rank lanes before the candidate cap; historical summaries
+                # cannot crowd out recent meaningful observations, or vice versa.
+                "ROW_NUMBER() OVER (PARTITION BY (context_priority = 0) "
+                "ORDER BY context_priority ASC, context_at DESC, context_event_id DESC, "
+                "created_at DESC, id DESC) AS lane_rank "
+                "FROM candidates) SELECT * FROM ranked "
+                "ORDER BY lane_rank ASC, (context_priority != 0) ASC LIMIT 50"
+            )
+            rows = self._read(
+                lambda: self._connection.execute(sql, tuple(parameters)).fetchall()
+            )
             records = self._records_from_rows(rows)
 
         header = (
@@ -4241,37 +4428,16 @@ class Store:
             return (header + footer)[:budget]
 
         chunks: list[str] = []
-        for record in records:
-            entry_open = (
-                f'<entry id="{html.escape(str(record["id"]), quote=True)}" '
-                f'created_at="{html.escape(str(record["created_at"]), quote=True)}" '
-                f'source="{html.escape(str(record["source"] or ""), quote=True)}">\n'
-            )
-            title = html.escape(redact_text(str(record["title"])), quote=False)
-            tags = ", ".join(redact_text(str(tag)) for tag in record["tags"])
-            tags_markup = f"<tags>{html.escape(tags, quote=False)}</tags>\n" if tags else ""
-            metadata_markup = self._context_metadata_markup(record)
-            body = html.escape(redact_text(str(record["body"])), quote=False)
-            complete = (
-                f"{entry_open}<title>{title}</title>\n{tags_markup}"
-                f"{metadata_markup}<body>{body}</body>\n</entry>\n"
-            )
-            if len(complete) <= remaining:
-                chunks.append(complete)
-                remaining -= len(complete)
-                continue
-
-            fixed = f"{entry_open}<title>{title}</title>\n{tags_markup}{metadata_markup}<body>"
-            suffix = "</body>\n</entry>\n"
-            available_body = remaining - len(fixed) - len(suffix)
-            if available_body <= 0:
-                break
-            clipped_body = _escape_to_limit(str(record["body"]), available_body)
-            clipped = fixed + clipped_body + suffix
-            if len(clipped) <= remaining:
-                chunks.append(clipped)
-                remaining -= len(clipped)
-            break
+        for index, record in enumerate(records):
+            # Reserve bounded coverage for up to four candidates before any
+            # single long handoff consumes the context. Small contexts still
+            # get useful excerpts and retain the full record IDs.
+            slots = min(4, len(records) - index, max(1, remaining // 380))
+            allocation = remaining // slots
+            chunk = self._context_entry_markup(record, allocation)
+            if chunk:
+                chunks.append(chunk)
+                remaining -= len(chunk)
         return header + "".join(chunks) + footer
 
     def forget(self, project: str | Path, ids: Sequence[str] | str) -> dict[str, Any]:
@@ -4376,6 +4542,27 @@ class Store:
                 "oldest_at": row["oldest_at"],
                 "newest_at": row["newest_at"],
             }
+            inventory_where = "" if workspace is None else "WHERE project = ?"
+            inventory = self._read(lambda: self._connection.execute(
+                "SELECT CASE WHEN source GLOB 'hook:*' THEN 'raw_capture' "
+                "WHEN kind = 'session_summary' THEN 'session_summary' "
+                "WHEN kind IN ('session', 'tool', 'checkpoint') THEN 'other_history' "
+                "ELSE 'durable_note' END AS category, "
+                "COUNT(*) AS total, "
+                "SUM(CASE WHEN superseded_by IS NULL THEN 1 ELSE 0 END) AS active "
+                f"FROM entries {inventory_where} GROUP BY category",
+                () if workspace is None else (workspace,),
+            ).fetchall())
+            result["inventory"] = {
+                category: {"total": 0, "active": 0, "superseded": 0}
+                for category in ("raw_capture", "session_summary", "other_history", "durable_note")
+            }
+            for item in inventory:
+                result["inventory"][item["category"]] = {
+                    "total": int(item["total"]),
+                    "active": int(item["active"]),
+                    "superseded": int(item["total"] - item["active"]),
+                }
             if workspace is None:
                 result["projects"] = int(row["projects"])
             else:

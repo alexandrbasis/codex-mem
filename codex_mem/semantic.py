@@ -367,6 +367,7 @@ def search(
     query: str,
     *,
     mode: str = "hybrid",
+    intent: str = "lookup",
     limit: int = 10,
     kinds: Sequence[str] | None = None,
     types: Sequence[str] | None = None,
@@ -379,24 +380,33 @@ def search(
     workspace = project_key(project)
     requested_mode = _checked_mode(mode)
     checked_limit = _checked_limit(limit)
+    checked_intent = _checked_intent(intent)
+    retrieval_limit = min(MAX_SEARCH_LIMIT, checked_limit * 4) if checked_intent == "resume" else checked_limit
     checked_query = _checked_query(query)
     checked_kinds = _checked_filter_values(kinds, "kinds") if kinds is not None else None
     checked_types = _checked_filter_values(types, "types") if types is not None else None
     checked_concepts = _checked_filter_values(concepts, "concepts") if concepts is not None else None
     checked_files = _checked_filter_values(files, "files") if files is not None else None
 
+    def receipt(
+        results: list[dict[str, Any]], used_mode: str, fallback_reason: str | None
+    ) -> dict[str, Any]:
+        if checked_intent == "resume":
+            results = sorted(results[:retrieval_limit], key=resume_priority)[:checked_limit]
+        return _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
+
     if requested_mode == "lexical":
         results = _lexical_results(
             store,
             workspace,
             checked_query,
-            checked_limit,
+            retrieval_limit,
             checked_kinds,
             checked_types,
             checked_concepts,
             checked_files,
         )
-        return _search_receipt(results, requested_mode, "lexical", None)
+        return receipt(results, "lexical", None)
 
     active_backend = _backend(backend)
     if not active_backend.ready:
@@ -406,13 +416,13 @@ def search(
                 store,
                 workspace,
                 checked_query,
-                checked_limit,
+                retrieval_limit,
                 checked_kinds,
                 checked_types,
                 checked_concepts,
                 checked_files,
             )
-            return _search_receipt(results, requested_mode, "lexical", code)
+            return receipt(results, "lexical", code)
         raise SemanticError(code)
 
     try:
@@ -422,13 +432,13 @@ def search(
                 store,
                 workspace,
                 query_vector,
-                checked_limit,
+                retrieval_limit,
                 checked_kinds,
                 checked_types,
                 checked_concepts,
                 checked_files,
             )
-            return _search_receipt(results, requested_mode, "semantic", None)
+            return receipt(results, "semantic", None)
 
         candidate_limit = min(MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
         lexical = _lexical_results(
@@ -451,9 +461,9 @@ def search(
             checked_concepts,
             checked_files,
         )
-        results = _rrf(lexical, semantic, checked_limit)
+        results = _rrf(lexical, semantic, retrieval_limit)
         used_mode = "hybrid"
-        return _search_receipt(results, requested_mode, used_mode, None)
+        return receipt(results, used_mode, None)
     except SemanticError as exc:
         if requested_mode != "auto":
             raise
@@ -461,13 +471,13 @@ def search(
             store,
             workspace,
             checked_query,
-            checked_limit,
+            retrieval_limit,
             checked_kinds,
             checked_types,
             checked_concepts,
             checked_files,
         )
-        return _search_receipt(results, requested_mode, "lexical", exc.code)
+        return receipt(results, "lexical", exc.code)
 
 
 def _model_dir(model_dir: str | Path | None) -> Path:
@@ -721,6 +731,26 @@ def _checked_query(query: str) -> str:
     if len(redacted) > MAX_QUERY_CHARS:
         raise ValueError("query is too long")
     return redacted
+
+
+def _checked_intent(intent: str) -> str:
+    if not isinstance(intent, str) or intent not in {"lookup", "resume"}:
+        raise ValueError("intent must be lookup or resume")
+    return intent
+
+
+def resume_priority(record: Mapping[str, Any]) -> int:
+    """Prefer useful handoff records without asserting freshness or truth."""
+    kind = record.get("kind")
+    if kind == "session_summary" or record.get("session_summary"):
+        return 0
+    observation = record.get("observation")
+    observation_type = observation.get("type") if isinstance(observation, Mapping) else None
+    if kind in {"decision", "bugfix", "security_alert"} or observation_type in {"decision", "bugfix", "security_alert"}:
+        return 1
+    if kind in {"session", "tool", "checkpoint"}:
+        return 3
+    return 2
 
 
 def _checked_mode(mode: str) -> str:
@@ -1144,9 +1174,11 @@ def _search_receipt(
     requested_mode: str,
     used_mode: str,
     fallback_reason: str | None,
+    intent: str,
 ) -> dict[str, Any]:
     return {
         "results": results,
+        "intent": intent,
         "requested_mode": requested_mode,
         "used_mode": used_mode,
         "fallback_reason": fallback_reason,

@@ -156,6 +156,58 @@ class SemanticTests(unittest.TestCase):
         self.assertEqual(1, len(store.lexical_calls))
         self.assertEqual([], store.semantic_calls)
 
+    def test_resume_reorders_bounded_relevant_candidates_in_every_mode(self) -> None:
+        candidates = [
+            {"id": "ui", "kind": "note"},
+            {"id": "raw", "kind": "tool"},
+            {"id": "decision", "kind": "note", "observation": {"type": "decision"}},
+            {"id": "summary", "kind": "session_summary"},
+            {"id": "fix", "kind": "bugfix"},
+            {"id": "another-summary", "kind": "session_summary"},
+        ]
+        for mode, ready in (("lexical", True), ("semantic", True), ("hybrid", True), ("auto", False)):
+            with self.subTest(mode=mode):
+                store = FakeSearchStore()
+                store.lexical_results = candidates
+                store.semantic_results = candidates
+                result = semantic.search(
+                    store, self.project, "roadmap", mode=mode, intent="resume", limit=3,
+                    backend=FakeBackend(ready=ready),
+                )
+                self.assertEqual("resume", result["intent"])
+                self.assertEqual(["summary", "another-summary", "decision"],
+                                 [record["id"] for record in result["results"]])
+                for call in store.lexical_calls:
+                    self.assertEqual(12, call[2])
+                for call in store.semantic_calls:
+                    self.assertEqual(12, call[5])
+
+    def test_resume_preserves_relevance_within_tiers_and_keeps_history(self) -> None:
+        store = FakeSearchStore()
+        store.lexical_results = [
+            {"id": "tool", "kind": "tool"},
+            {"id": "note-one", "kind": "note"},
+            {"id": "alert", "kind": "note", "observation": {"type": "security_alert"}},
+            {"id": "note-two", "kind": "discovery"},
+            {"id": "session", "kind": "session"},
+            {"id": "checkpoint", "kind": "checkpoint"},
+        ]
+        lookup = semantic.search(store, self.project, "roadmap", mode="lexical", limit=6)
+        resumed = semantic.search(store, self.project, "roadmap", mode="lexical", intent="resume", limit=6)
+        self.assertEqual(store.lexical_results, lookup["results"])
+        self.assertEqual(["alert", "note-one", "note-two", "tool", "session", "checkpoint"],
+                         [record["id"] for record in resumed["results"]])
+        self.assertEqual({record["id"] for record in lookup["results"]},
+                         {record["id"] for record in resumed["results"]})
+
+    def test_resume_candidate_limit_is_capped_and_invalid_intent_fails(self) -> None:
+        store = FakeSearchStore()
+        semantic.search(store, self.project, "roadmap", mode="lexical", intent="resume", limit=50)
+        self.assertEqual(100, store.lexical_calls[0][2])
+        for intent in ("current", [], None):
+            with self.subTest(intent=intent), self.assertRaisesRegex(ValueError, "intent"):
+                semantic.search(store, self.project, "roadmap", mode="lexical", intent=intent)
+
     def test_explicit_semantic_modes_fail_when_the_model_is_unavailable(self) -> None:
         store = FakeSearchStore()
         backend = FakeBackend(ready=False, code="dependency_missing")

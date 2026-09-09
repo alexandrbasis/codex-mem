@@ -123,7 +123,7 @@ class MCPSubprocessTests(unittest.TestCase):
         search_schema = next(
             tool["inputSchema"] for tool in listing["result"]["tools"] if tool["name"] == "memory_search"
         )
-        self.assertTrue({"kinds", "types", "concepts", "files"}.issubset(search_schema["properties"]))
+        self.assertTrue({"kinds", "types", "concepts", "files", "intent"}.issubset(search_schema["properties"]))
         raw_tool = next(
             tool for tool in listing["result"]["tools"] if tool["name"] == "memory_get_tool_uses"
         )
@@ -160,6 +160,22 @@ class MCPSubprocessTests(unittest.TestCase):
 
         forgotten = self._call(5, "memory_forget", {"project": str(self.project), "ids": [entry_id]})
         self.assertIn(entry_id, self._content(forgotten)["ids"])
+
+    def test_resume_intent_is_exposed_ranked_and_validated(self) -> None:
+        self._initialize()
+        with Store(self.data_dir) as store:
+            store.remember(self.project, "Roadmap roadmap theme", "Roadmap CSS theme.")
+            summary = store.remember(self.project, "Handoff", "Roadmap deployment remains open.", kind="session_summary")
+        response = self._call(1, "memory_search", {
+            "project": str(self.project), "query": "roadmap", "intent": "resume", "limit": 1,
+        })
+        self.assertEqual([summary["id"]], [item["id"] for item in self._content(response)])
+        self.assertEqual("resume", response["result"]["_meta"]["codexMemRetrieval"]["intent"])
+        for request_id, intent in enumerate(("current", [], None), start=2):
+            invalid = self._call(request_id, "memory_search", {
+                "project": str(self.project), "query": "roadmap", "intent": intent,
+            })
+            self.assertTrue(invalid["result"]["isError"])
 
     def test_payload_cap_bad_arguments_and_notifications(self) -> None:
         assert self.process.stdin is not None

@@ -42,6 +42,17 @@ class CLITests(unittest.TestCase):
         self.assertTrue(result.stdout, result.stderr)
         return json.loads(result.stdout)
 
+    def test_search_resume_intent_returns_ranked_results_and_metadata(self) -> None:
+        with Store(self.data_dir) as store:
+            store.remember(self.project, "Roadmap roadmap theme", "Roadmap CSS theme.")
+            summary = store.remember(self.project, "Handoff", "Roadmap deployment remains open.", kind="session_summary")
+        result = self._run(
+            "search", "--data-dir", str(self.data_dir), "--project", str(self.project),
+            "--query", "roadmap", "--intent", "resume", "--limit", "1",
+        )
+        self.assertEqual("resume", result["intent"])
+        self.assertEqual([summary["id"]], [item["id"] for item in result["results"]])
+
     def test_launcher_data_commands_and_config(self) -> None:
         remembered = self._run(
             "remember",

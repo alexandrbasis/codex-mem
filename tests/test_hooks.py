@@ -127,6 +127,31 @@ class HookTests(unittest.TestCase):
         self.assertIn("Active session id: session-1.", context)
         self.assertLessEqual(len(context), MAX_CONTEXT_CHARS)
 
+    def test_new_session_receives_recent_cross_chat_decision_and_unfinished_work(self) -> None:
+        with Store(self.data_dir) as store:
+            for index in range(50):
+                store.remember(self.project, f"Old handoff {index}", "Routine historical progress.",
+                    session_id="old-chat", kind="session_summary")
+            store.remember(self.project, "Recent handoff", "Investigated: " + "details " * 4000,
+                session_id="recent-chat", kind="session_summary", session_summary={
+                    "learned": "Autosave worked in local tests; live behavior unverified.",
+                    "next_steps": "Verify installed autosave before publication."})
+            decision = store.remember(self.project, "Accepted choice", "Use autosave to avoid lost edits.",
+                session_id="decision-chat", kind="decision")
+            store.remember(self.project, "Current session", "CURRENT_PRIVATE",
+                session_id="session-1", kind="session_summary")
+            store.remember(self.project / "foreign", "Other project", "FOREIGN_PRIVATE",
+                session_id="foreign-chat", kind="session_summary")
+            response = handle_hook(self.payload("SessionStart", source="startup"), store)
+        context = response["hookSpecificOutput"]["additionalContext"]
+        self.assertIn(decision["id"], context)
+        self.assertIn("Verify installed autosave before publication.", context)
+        self.assertIn("live behavior unverified", context)
+        self.assertNotIn("Old handoff 48", context)
+        self.assertNotIn("CURRENT_PRIVATE", context)
+        self.assertNotIn("FOREIGN_PRIVATE", context)
+        self.assertLessEqual(len(context), MAX_CONTEXT_CHARS)
+
     def test_prompt_captures_extractively_and_new_topics_get_new_context(self) -> None:
         first = handle_hook(
             self.payload("UserPromptSubmit", prompt="investigate alpha", turn_id="turn-a"),

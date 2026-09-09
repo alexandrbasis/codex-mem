@@ -188,6 +188,8 @@ TOOLS: tuple[ToolDefinition, ...] = (
                 "limit": _LIMIT,
                 "mode": {"type": "string", "enum": ["auto", "lexical", "semantic", "hybrid"],
                          "description": "auto uses an available local semantic index with lexical fallback; explicit semantic/hybrid requires a ready model."},
+                "intent": {"type": "string", "enum": ["lookup", "resume"],
+                           "description": "lookup preserves relevance order; resume prioritizes summaries and decisions within a bounded relevant candidate set, without establishing current truth."},
                 "kinds": {
                     "type": "array",
                     "minItems": 1,
@@ -730,10 +732,13 @@ class MemoryMCPServer:
 
     def _execute_tool(self, name: str, args: dict[str, Any]) -> Any:
         if name == "memory_search":
-            _only(args, {"project", "query", "limit", "kinds", "types", "concepts", "files", "mode"})
+            _only(args, {"project", "query", "limit", "kinds", "types", "concepts", "files", "mode", "intent"})
             mode = args.get("mode", "auto")
             if not isinstance(mode, str) or mode not in {"auto", "lexical", "semantic", "hybrid"}:
                 raise ArgumentError("mode must be auto, lexical, semantic, or hybrid")
+            intent = args.get("intent", "lookup")
+            if not isinstance(intent, str) or intent not in {"lookup", "resume"}:
+                raise ArgumentError("intent must be lookup or resume")
             from .integration import search_memory
             kinds = _string_list(
                 args,
@@ -757,6 +762,7 @@ class MemoryMCPServer:
                 _project(args),
                 _string(args.get("query"), "query", maximum=MAX_QUERY_CHARS),
                 mode=mode,
+                intent=intent,
                 limit=_integer(args, "limit", default=10, minimum=1, maximum=MAX_LIMIT),
                 kinds=kinds,
                 types=types,

@@ -44,6 +44,7 @@ def search_memory(
     query,
     *,
     mode="auto",
+    intent="lookup",
     limit=10,
     kinds=None,
     types=None,
@@ -59,6 +60,8 @@ def search_memory(
         "limit": limit,
         "kinds": kinds,
     }
+    if intent != "lookup":
+        search_kwargs["intent"] = intent
     # Omit new filter keywords when they are unused so older embedding/search
     # adapters remain callable during a rolling upgrade.
     if types is not None:
