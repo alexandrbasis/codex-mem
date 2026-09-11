@@ -175,7 +175,7 @@ class SemanticTests(unittest.TestCase):
                     backend=FakeBackend(ready=ready),
                 )
                 self.assertEqual("resume", result["intent"])
-                self.assertEqual(["summary", "another-summary", "decision"],
+                self.assertEqual(["summary", "decision", "another-summary"],
                                  [record["id"] for record in result["results"]])
                 for call in store.lexical_calls:
                     self.assertEqual(12 if call[3] is None and call[4] is None else 3, call[2])
@@ -230,6 +230,27 @@ class SemanticTests(unittest.TestCase):
                 semantic.search(store, self.project, "roadmap", mode=mode, intent="resume",
                                 backend=FakeBackend(ready=False, code="model_not_ready"))
         self.assertEqual([], store.lexical_calls)
+
+    def test_resume_balances_summaries_and_keeps_one_match_per_session(self) -> None:
+        candidates = [
+            {"id": f"summary-{index}", "kind": "session_summary", "session_id": "same-chat"}
+            for index in range(6)
+        ] + [
+            {"id": "other-summary", "kind": "session_summary", "session_id": "other-chat"},
+            {"id": "decision", "kind": "decision"},
+            {"id": "discovery", "kind": "discovery"},
+        ]
+        for mode, ready in (("lexical", True), ("semantic", True), ("hybrid", True), ("auto", False)):
+            with self.subTest(mode=mode):
+                store = FakeSearchStore()
+                store.lexical_results = candidates
+                store.semantic_results = candidates
+                result = semantic.search(store, self.project, "roadmap", mode=mode,
+                                         intent="resume", limit=4, backend=FakeBackend(ready=ready))
+                self.assertEqual(["summary-0", "decision", "other-summary", "discovery"],
+                                 [record["id"] for record in result["results"]])
+                lookup = semantic.search(store, self.project, "roadmap", mode="lexical", limit=20)
+                self.assertEqual(candidates, lookup["results"])
 
     def test_resume_preserves_relevance_within_tiers_and_keeps_history(self) -> None:
         store = FakeSearchStore()

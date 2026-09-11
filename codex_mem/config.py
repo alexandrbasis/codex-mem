@@ -27,6 +27,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "processor_enabled": True,
     "service_enabled": True,
     "semantic_enabled": True,
+    "usage_enabled": True,
     "capture_scope": "selected",
     "context_chars": MAX_CONTEXT_CHARS,
     "excluded_projects": [],
@@ -385,6 +386,7 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
         ),
         "service_enabled": _validate_bool(raw.get("service_enabled", True), "service_enabled", strict),
         "semantic_enabled": _validate_bool(raw.get("semantic_enabled", True), "semantic_enabled", strict),
+        "usage_enabled": _validate_bool(raw.get("usage_enabled", True), "usage_enabled", strict),
         "capture_scope": _validate_capture_scope(
             raw.get("capture_scope", DEFAULT_CONFIG["capture_scope"]), strict
         ),
@@ -418,6 +420,7 @@ def _disabled_config() -> LoadedConfig:
     value["processor_enabled"] = False
     value["service_enabled"] = False
     value["semantic_enabled"] = False
+    value["usage_enabled"] = False
     return LoadedConfig(value, valid=False)
 
 
@@ -431,7 +434,7 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
             _validate_bool(raw["capture_tools"], "capture_tools", True)
         if "processor_enabled" in raw:
             _validate_bool(raw["processor_enabled"], "processor_enabled", True)
-        for name in ("service_enabled", "semantic_enabled"):
+        for name in ("service_enabled", "semantic_enabled", "usage_enabled"):
             if name in raw:
                 _validate_bool(raw[name], name, True)
         if "capture_scope" in raw:

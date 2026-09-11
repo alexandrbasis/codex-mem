@@ -15,6 +15,7 @@ signals to a PID that might have been reused by an unrelated process.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from datetime import datetime, timezone
 import errno
 import json
 import math
@@ -52,6 +53,7 @@ MAX_STATE_BYTES = 256 * 1024
 MAX_QUEUED_PROJECTS = 256
 MAX_TIMEOUT_RETRIES = 5
 DEFAULT_MAX_TIMEOUT_RETRIES = 0
+MAX_LEASE_RECOVERY_RETRIES = 2
 DEFAULT_POLL_INTERVAL = 1.0
 DEFAULT_STARTUP_TIMEOUT = 3.0
 DEFAULT_STARTUP_TTL = 15.0
@@ -193,6 +195,47 @@ def resume_pending(
             "rejected_job_id": rejected_job_id, "retry_failed": False}
 
 
+def recover_expired(
+    project: str | os.PathLike[str],
+    data_dir: str | os.PathLike[str] | None = None,
+    *,
+    job_id: str,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]] = load_config,
+    clock: Callable[[], float] = time.time,
+) -> dict[str, Any]:
+    """Explicitly release a legacy blocker backed by an exact expired claim.
+
+    No Store jobs are changed here. Normal claiming recovers expired running
+    work, while failed and quarantined batches remain excluded.
+    """
+    workspace = project_key(project)
+    eligible, reason, _, _ = _eligibility(workspace, data_dir, config_loader)
+    if not eligible:
+        return {"status": "disabled", "project": workspace, "reason": reason}
+    base = _base_dir(data_dir)
+    now = _checked_now(clock)
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(workspace)
+        if record is None or not record["blocked"]:
+            return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
+        if record["last_code"] not in {"storage_failure", "lease_expired"}:
+            return {"status": "blocked", "project": workspace, "code": record["last_code"]}
+        if record["inflight_generation"] is not None:
+            return {"status": "blocked", "project": workspace, "code": "work_inflight"}
+        if not _persisted_expired_claim(base, workspace, job_id, now):
+            return {"status": "blocked", "project": workspace, "code": "expired_claim_unavailable"}
+        record["generation"] += 1
+        record["blocked"] = False
+        record["parked"] = None
+        record["last_code"] = None
+        record["due_at"] = now
+        record["attempts"] = 0
+        record["retry_requested"] = False
+        _write_state(base, state)
+    return {"status": "queued", "project": workspace, "job_id": job_id, "retry_failed": False}
+
+
 def run_service(
     data_dir: str | os.PathLike[str] | None = None,
     *,
@@ -208,6 +251,7 @@ def run_service(
     retry_backoff: int | float = DEFAULT_BACKOFF_SECONDS,
     indexer: Callable[..., Any] | None = None,
     max_cycles: int | None = None,
+    usage_collector: Callable[..., Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Run one local worker until stopped.
 
@@ -241,6 +285,7 @@ def run_service(
         _record_owner(base, pid_lock.pid, pid_lock.nonce, _checked_now(clock))
 
         cycles = 0
+        next_usage_at = 0.0
         while True:
             if _event_is_set(stop_event):
                 return _service_receipt("stopped", jobs=jobs, code=last_code)
@@ -252,6 +297,18 @@ def run_service(
             gate = _refresh_queue_gates(base, data_dir, config_loader)
             if not gate["active"]:
                 return _service_receipt("paused", jobs=jobs, code=gate["reason"])
+            # Metadata accounting is independent of observation work: a
+            # blocked or idle memory queue must not stop token collection.
+            if usage_collector is not None and now >= next_usage_at:
+                next_usage_at = now + 30.0
+                try:
+                    settings = config_loader(data_dir)
+                    if settings.get("usage_enabled", True):
+                        usage_collector(config=settings)
+                except Exception:
+                    # Accounting failure must never block memory extraction.
+                    # The collector's atomic cursor permits a later retry.
+                    pass
             choice = _claim_due_project(base, now, checked_timeout)
             if choice["kind"] == "stop":
                 _consume_stop_request(base)
@@ -1303,6 +1360,35 @@ def _valid_job_id(value: Any) -> bool:
             and all(c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for c in value))
 
 
+def _persisted_expired_claim(base: Path, project: str, job_id: Any, now: float) -> bool:
+    if not _valid_job_id(job_id):
+        return False
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        row = connection.execute(
+            "SELECT j.lease_expires_at FROM observation_jobs AS j WHERE j.id = ? AND j.project = ? "
+            "AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
+            "AND j.status = 'running' AND j.lease_token IS NOT NULL "
+            "AND EXISTS (SELECT 1 FROM observation_job_sources AS links WHERE links.job_id = j.id) "
+            "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
+            "LEFT JOIN entries AS e ON e.id = links.source_id AND e.project = j.project "
+            "WHERE links.job_id = j.id AND e.id IS NULL)",
+            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+        ).fetchone()
+        if row is None or not isinstance(row[0], str):
+            return False
+        expiry = datetime.fromisoformat(row[0].replace("Z", "+00:00"))
+        return expiry.tzinfo is not None and expiry <= datetime.fromtimestamp(now, timezone.utc)
+    except (OSError, sqlite3.Error, ServiceError, ValueError, OverflowError):
+        return False
+    finally:
+        if connection is not None:
+            connection.close()
+
+
 def _persisted_rejection(base: Path, project: str, job_id: Any) -> bool:
     """Confirm a durable failed batch before permitting independent work.
 
@@ -1424,10 +1510,14 @@ def _finish_failure(
         if rejected:
             _record_rejection(record, rejected_job_id, reason_code)
         record["last_code"] = safe_code
-        if safe_code == "timeout":
+        if safe_code in {"timeout", "lease_expired"}:
             record["attempts"] += 1
-            if record["attempts"] <= max_timeout_retries:
-                record["retry_requested"] = True
+            retry_limit = (MAX_LEASE_RECOVERY_RETRIES if safe_code == "lease_expired"
+                           else max_timeout_retries)
+            if record["attempts"] <= retry_limit:
+                # Expired running jobs are reclaimed normally; never opt into
+                # retrying unrelated quarantined model responses.
+                record["retry_requested"] = safe_code == "timeout"
                 delay = min(MAX_BACKOFF_SECONDS, retry_backoff * (2 ** (record["attempts"] - 1)))
                 record["due_at"] = now + delay
                 _write_state(base, state)

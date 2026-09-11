@@ -362,6 +362,50 @@ class ProcessorTests(unittest.TestCase):
             self.assertEqual(2, job["attempt_count"])
             self.assertEqual("processed", job["status"])
 
+    def test_expired_lease_preserves_recoverable_failure(self) -> None:
+        self.remember("Lease", "Recover this source after worker timeout.")
+
+        def expired_runner(_request: object) -> object:
+            with Store(self.data_dir) as store:
+                store._connection.execute(
+                    "UPDATE observation_jobs SET lease_expires_at = '2000-01-01T00:00:00Z'"
+                )
+            raise ProcessorFailure("timeout")
+
+        failed = process_pending(self.project, self.data_dir, runner=expired_runner)
+        self.assertEqual("lease_expired", failed["code"])
+        # Recovery uses the expired running lease, without retrying quarantined failures.
+        recovered = process_pending(self.project, self.data_dir, runner=lambda _: self.receipt(
+            {"notes": [], "disposition": "skipped"}))
+        self.assertEqual("skipped", recovered["status"])
+        with Store(self.data_dir) as store:
+            job = store.status(self.project)["observation_jobs"]["recent"][0]
+            self.assertEqual(2, job["attempt_count"])
+
+    def test_expired_lease_does_not_downgrade_hard_runner_failure(self) -> None:
+        self.remember("Lease", "Keep hard failures blocked.")
+
+        def expired_runner(_request: object) -> object:
+            with Store(self.data_dir) as store:
+                store._connection.execute(
+                    "UPDATE observation_jobs SET lease_expires_at = '2000-01-01T00:00:00Z'")
+            raise ProcessorFailure("tools_available")
+
+        failed = process_pending(self.project, self.data_dir, runner=expired_runner)
+        self.assertEqual("tools_available", failed["code"])
+
+    def test_successful_output_after_expired_lease_is_recoverable(self) -> None:
+        self.remember("Lease", "Recover a late successful worker safely.")
+
+        def expired_runner(_request: object) -> object:
+            with Store(self.data_dir) as store:
+                store._connection.execute(
+                    "UPDATE observation_jobs SET lease_expires_at = '2000-01-01T00:00:00Z'")
+            return self.receipt({"notes": [], "disposition": "skipped"})
+
+        failed = process_pending(self.project, self.data_dir, runner=expired_runner)
+        self.assertEqual("lease_expired", failed["code"])
+
     def test_longer_timeout_derives_a_lease_that_can_record_cleanup(self) -> None:
         self.assertEqual(300, _effective_lease_seconds(300, 240))
         self.assertEqual(610, _effective_lease_seconds(1, 600))

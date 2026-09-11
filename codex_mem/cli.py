@@ -180,7 +180,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         key = key.strip()
         if not key:
             raise CLIError("--set key must not be empty")
-        if key in {"capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled"}:
+        if key in {"capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled", "usage_enabled"}:
             updates[key] = _parse_bool(value, field=key)
         elif key == "context_chars":
             updates[key] = _positive(value, field=key, maximum=6_000)
@@ -203,7 +203,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["capture_tools"] = namespace.capture_tools
     if namespace.processor_enabled is not None:
         updates["processor_enabled"] = namespace.processor_enabled
-    for name in ("service_enabled", "semantic_enabled"):
+    for name in ("service_enabled", "semantic_enabled", "usage_enabled"):
         if getattr(namespace, name, None) is not None:
             updates[name] = getattr(namespace, name)
     if namespace.context_chars is not None:
@@ -355,6 +355,20 @@ def _build_parser() -> _ArgumentParser:
         "resume-pending", help="Resume later work while preserving an inspected rejected batch")
     resume.add_argument("--project", required=True)
     resume.add_argument("--rejected-job-id", required=True)
+    recover = service_commands.add_parser(
+        "recover-expired", help="Recover an inspected expired job without retrying rejected batches")
+    recover.add_argument("--project", required=True)
+    recover.add_argument("--job-id", required=True)
+
+    usage = commands.add_parser("usage", help="Collect or inspect recorded session token usage; no cost estimates")
+    usage_commands = usage.add_subparsers(dest="usage_command", required=True)
+    usage_scan = usage_commands.add_parser("scan", help="Import a bounded batch of local usage metadata")
+    usage_scan.add_argument("--codex-home", help="Codex state directory containing sessions")
+    usage_scan.add_argument("--file", help="Scan one rollout inside the Codex sessions directories")
+    usage_scan.add_argument("--max-files", type=lambda value: _positive(value, field="max_files", maximum=1000), default=32)
+    usage_status = usage_commands.add_parser("status", help="Read token totals by task, agent and model")
+    usage_status.add_argument("--project")
+    usage_status.add_argument("--session-id", help="Root task/session ID")
 
     get = commands.add_parser("get", help="Read full project memory records")
     get.add_argument("--project", required=True)
@@ -422,6 +436,7 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--processor-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--service-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--semantic-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--usage-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--context-chars", type=lambda value: _positive(value, field="context_chars", maximum=6_000))
     config.add_argument("--exclude-project", dest="excluded_projects", action="append")
     config.add_argument("--include-project", dest="included_projects", action="append")
@@ -614,11 +629,14 @@ def main(args: Sequence[str] | None = None) -> int:
             _emit(value)
             return 2 if value.get("status") == "failed" else 0
         if namespace.command == "service":
-            from .service import resume_pending, run_service, service_status, start_service, stop_service
+            from .service import recover_expired, resume_pending, run_service, service_status, start_service, stop_service
             from .integration import enqueue_project, index_project
             action = namespace.service_command
             if action == "run":
-                value = run_service(namespace.data_dir, indexer=index_project)
+                from .usage import UsageCollector
+                collector = UsageCollector(namespace.data_dir)
+                value = run_service(namespace.data_dir, indexer=index_project,
+                                    usage_collector=collector.collect)
             elif action == "start":
                 value = start_service(namespace.data_dir)
             elif action == "stop":
@@ -628,11 +646,31 @@ def main(args: Sequence[str] | None = None) -> int:
             elif action == "resume-pending":
                 value = resume_pending(_absolute_project(namespace.project), namespace.data_dir,
                                        rejected_job_id=namespace.rejected_job_id)
+            elif action == "recover-expired":
+                value = recover_expired(_absolute_project(namespace.project), namespace.data_dir,
+                                        job_id=namespace.job_id)
             else:
                 value = enqueue_project(_absolute_project(namespace.project), namespace.data_dir,
                                         retry_failed=action == "retry")
             _emit(value)
             return 2 if value.get("status") in {"failed", "error", "blocked", "halted", "unknown", "unavailable"} else 0
+        if namespace.command == "usage":
+            if namespace.usage_command == "scan":
+                from .usage import UsageCollector
+                collector = UsageCollector(namespace.data_dir, codex_home=namespace.codex_home)
+                value = (collector.scan_file(namespace.file) if namespace.file
+                         else collector.collect(max_files=namespace.max_files))
+            else:
+                from .usage_store import UsageStore
+                with UsageStore(namespace.data_dir) as usage_store:
+                    totals = usage_store.usage_totals(
+                        project=_absolute_project(namespace.project) if namespace.project else None,
+                        session_id=namespace.session_id,
+                    )
+                    value = {"status": "ok", "records": totals,
+                             "note": "Recorded token usage only; cached input and reasoning output are subsets."}
+            _emit(value)
+            return 2 if value.get("status") in {"failed", "error", "unavailable"} else 0
         if namespace.command == "semantic":
             from .semantic import prepare_model, semantic_status, index_pending
             if namespace.semantic_command == "setup":

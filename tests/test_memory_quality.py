@@ -121,6 +121,29 @@ class MemoryQualityTests(unittest.TestCase):
         self.assertIn("Additional evidence: receipt-42", context)
         self.assertIn(custom["id"], context)
 
+    def test_context_selects_latest_matching_summary_after_query_and_filters(self):
+        older = self.store.remember(
+            self.project, "OAuth renewal", "OAuth renewal remains blocked.",
+            kind="session_summary", session_id="same-chat",
+            observation={"type": "decision", "files_read": ["oauth.py"], "concepts": ["renewal"]},
+        )
+        newer = self.store.remember(
+            self.project, "Spacing update", "Spacing work completed.",
+            kind="session_summary", session_id="same-chat",
+            observation={"type": "discovery", "files_read": ["style.css"], "concepts": ["theme"]},
+        )
+        for filters in ({"query": "OAuth"}, {"files": ["oauth.py"]},
+                        {"concepts": ["renewal"]}, {"types": ["decision"]}):
+            with self.subTest(filters=filters):
+                context = self.store.context(self.project, **filters)
+                self.assertIn(older["id"], context)
+                entry = ET.fromstring(context).find("entry")
+                self.assertEqual("historical_match", entry.attrib["selection"])
+                self.assertEqual(newer["id"], entry.attrib["later_summary_id"])
+                self.assertIn("not current session state", entry.findtext("notice"))
+        self.assertNotIn(older["id"], self.store.context(self.project))
+        self.assertIn(newer["id"], self.store.context(self.project))
+
     def test_provenance_distinguishes_assistant_claim_from_tool_record(self):
         report = self.store.remember(self.project, "Final answer", "205 tests passed",
                                      source="hook:Stop", kind="session")
@@ -240,7 +263,12 @@ class MemoryQualityTests(unittest.TestCase):
             ids = [entry.attrib["id"] for entry in ET.fromstring(context).findall("entry")]
             self.assertEqual([newer["id"]], ids)
             self.assertNotIn("Deploy old version", context)
-        self.assertNotIn(retried["id"], self.store.context(self.project, query="retried", budget=5300))
+        filtered = self.store.context(self.project, query="retried", budget=5300)
+        entry = ET.fromstring(filtered).find("entry")
+        self.assertEqual(retried["id"], entry.attrib["id"])
+        self.assertEqual("historical_match", entry.attrib["selection"])
+        self.assertEqual(newer["id"], entry.attrib["later_summary_id"])
+        self.assertIn("not current session state", entry.findtext("notice"))
         historical = self.store.get(self.project, [newer["id"], retried["id"]])
         self.assertTrue(all(record["superseded_by"] is None for record in historical))
 
@@ -301,7 +329,7 @@ class MemoryQualityTests(unittest.TestCase):
             self.assertNotIn(foreign["id"], context)
             self.assertNotIn(excluded["id"], context)
 
-    def test_context_filters_do_not_revive_an_older_matching_session_summary(self):
+    def test_context_filters_label_an_older_matching_session_summary_as_historical(self):
         old = self.store.remember(
             self.project, "Roadmap obsolete release", "Old selection.", session_id="one-chat",
             kind="session_summary", observation={"type": "decision", "concepts": ["release"]},
@@ -319,7 +347,11 @@ class MemoryQualityTests(unittest.TestCase):
         self.assertIn(matching["id"], context)
         self.assertNotIn(old["id"], context)
         self.assertNotIn(new["id"], context)
-        self.assertNotIn(old["id"], self.store.context(self.project, query="obsolete", budget=2000))
+        filtered = self.store.context(self.project, query="obsolete", budget=2000)
+        entry = ET.fromstring(filtered).find("entry")
+        self.assertEqual(old["id"], entry.attrib["id"])
+        self.assertEqual("historical_match", entry.attrib["selection"])
+        self.assertEqual(new["id"], entry.attrib["later_summary_id"])
         # Exact retrieval still exposes the older matching evidence.
         self.assertEqual(old["id"], self.store.get(self.project, [old["id"]])[0]["id"])
 

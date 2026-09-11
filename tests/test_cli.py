@@ -53,6 +53,17 @@ class CLITests(unittest.TestCase):
         self.assertEqual("resume", result["intent"])
         self.assertEqual([summary["id"]], [item["id"] for item in result["results"]])
 
+    def test_recover_expired_rejects_unverified_job_without_creating_state(self) -> None:
+        self._run("config", "--data-dir", str(self.data_dir),
+                  "--capture-scope", "all")
+        result = self._run(
+            "service", "recover-expired", "--data-dir", str(self.data_dir),
+            "--project", str(self.project), "--job-id", "a" * 32,
+            expected=2,
+        )
+        self.assertEqual("blocked", result["status"])
+        self.assertFalse((self.data_dir / "service-state.json").exists())
+
     def test_launcher_data_commands_and_config(self) -> None:
         remembered = self._run(
             "remember",
@@ -115,6 +126,35 @@ class CLITests(unittest.TestCase):
             entry_id,
         )
         self.assertIn(entry_id, forgotten["ids"])
+
+    def test_usage_records_task_agents_and_models_without_replay_double_count(self) -> None:
+        self._run("config", "--data-dir", str(self.data_dir), "--capture-scope", "all")
+        home = Path(self.temporary.name) / "codex"
+        sessions = home / "sessions"
+        sessions.mkdir(parents=True)
+        for thread, models in (("root", ["model-a", "model-b"]), ("child", ["model-c"])):
+            records = [{"type": "session_meta", "payload": {
+                "id": thread, "session_id": "root", "cwd": str(self.project),
+                "parent_thread_id": "root" if thread == "child" else None,
+                "model_provider": "openai"}}]
+            for index, model in enumerate(models):
+                records.extend([
+                    {"type": "turn_context", "payload": {"turn_id": str(index), "model": model}},
+                    {"type": "token_usage_record", "payload": {
+                        "thread_id": thread, "session_id": "root", "turn_id": str(index),
+                        "response_id": f"{thread}-{index}", "usage": {
+                            "input_tokens": 100, "cached_input_tokens": 40, "cache_write_input_tokens": 0,
+                            "output_tokens": 20, "reasoning_output_tokens": 5, "total_tokens": 120}}}])
+            (sessions / f"{thread}.jsonl").write_text("".join(json.dumps(row) + "\n" for row in records))
+        for _ in range(2):
+            self._run("usage", "scan", "--data-dir", str(self.data_dir), "--codex-home", str(home))
+        result = self._run("usage", "status", "--data-dir", str(self.data_dir), "--session-id", "root")
+        rows = result["records"]
+        self.assertEqual({row["model"] for row in rows}, {"model-a", "model-b", "model-c"})
+        self.assertEqual(sum(row["total_tokens"] for row in rows), 360)
+        self.assertEqual(sum(row["event_count"] for row in rows), 3)
+        child = next(row for row in rows if row["thread_id"] == "child")
+        self.assertEqual(child["parent_thread_id"], "root")
 
     def test_cli_rejects_relative_projects_and_reports_unknown_hook_state(self) -> None:
         invalid = self._run(

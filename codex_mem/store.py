@@ -165,6 +165,10 @@ class StoreError(RuntimeError):
     """A safe, non-diagnostic error raised for a local storage failure."""
 
 
+class ObservationLeaseExpired(StoreError):
+    """The same observation claim outlived its lease and can be reclaimed."""
+
+
 def project_key(path: str | Path) -> str:
     """Return the resolved absolute workspace key without merging worktrees."""
 
@@ -2695,9 +2699,10 @@ class Store:
                     job["status"] != "running"
                     or job["lease_token"] != checked_token
                     or not isinstance(job["lease_expires_at"], str)
-                    or job["lease_expires_at"] <= now
                 ):
                     raise StoreError("Observation job lease is unavailable")
+                if job["lease_expires_at"] <= now:
+                    raise ObservationLeaseExpired("Observation job lease expired")
                 source_rows = connection.execute(
                     """
                     SELECT e.id, e.project, e.session_id, e.source, e.created_at, e.superseded_by
@@ -3004,9 +3009,10 @@ class Store:
                     job["status"] != "running"
                     or job["lease_token"] != checked_token
                     or not isinstance(job["lease_expires_at"], str)
-                    or job["lease_expires_at"] <= now
                 ):
                     raise StoreError("Observation job lease is unavailable")
+                if job["lease_expires_at"] <= now:
+                    raise ObservationLeaseExpired("Observation job lease expired")
                 connection.execute(
                     """
                     UPDATE observation_jobs
@@ -4290,6 +4296,13 @@ class Store:
             "linked_source_roles": ",".join(provenance.get("linked_source_roles", [])),
             "verification": "not_assessed",
         }
+        historical_notice = ""
+        if record.get("context_historical"):
+            attributes.update(selection="historical_match", later_summary_id=record["later_summary_id"])
+            historical_notice = (
+                "<notice>Historical summary; a later handoff exists. "
+                "This is not current session state.</notice>\n"
+            )
         # Empty provenance values add no information; the ID always permits
         # retrieval of full source links and metadata.
         entry_open = "<entry " + " ".join(
@@ -4297,7 +4310,7 @@ class Store:
             for key, value in attributes.items() if value != ""
         ) + ">\n"
         title = html.escape(redact_text(str(record["title"])), quote=False)
-        prefix = entry_open + f"<title>{title}</title>\n<body>"
+        prefix = entry_open + f"<title>{title}</title>\n" + historical_notice + "<body>"
         suffix = "</body>\n</entry>\n"
         omission = '<omitted reason="budget"/>\n'
         detail_omission = '<omitted reason="structured-details"/>\n'
@@ -4389,7 +4402,7 @@ class Store:
             if checked_exclude is not None:
                 active_clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
                 parameters.append(checked_exclude)
-            clauses = ["e.session_rank = 1"]
+            clauses = ["1"]
             if checked_kinds:
                 placeholders = ", ".join("?" for _ in checked_kinds)
                 clauses.append(f"e.kind IN ({placeholders})")
@@ -4444,14 +4457,23 @@ class Store:
                 "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
                 "LEFT JOIN source_order ON source_order.summary_id = e.id AND source_order.event_rank = 1 "
                 "WHERE " + " AND ".join(active_clauses)
-                + "), session_ranked AS (SELECT active.*, "
+                + "), current_ranked AS (SELECT active.*, "
+                "FIRST_VALUE(id) OVER (PARTITION BY CASE "
+                "WHEN context_priority = 0 AND COALESCE(session_id, '') != '' "
+                "THEN 'session:' || session_id ELSE 'id:' || id END "
+                "ORDER BY context_at DESC, context_event_id DESC, created_at DESC, id DESC) "
+                "AS latest_summary_id FROM active"
+                # Match before collapsing a session: a later unrelated handoff
+                # must not hide an older summary matching the requested topic.
+                "), matching AS (SELECT e.* FROM current_ranked AS e WHERE "
+                + " AND ".join(clauses)
+                + "), session_ranked AS (SELECT matching.*, "
                 "ROW_NUMBER() OVER (PARTITION BY CASE "
                 "WHEN context_priority = 0 AND COALESCE(session_id, '') != '' "
                 "THEN 'session:' || session_id ELSE 'id:' || id END "
                 "ORDER BY context_at DESC, context_event_id DESC, created_at DESC, id DESC) AS session_rank "
-                "FROM active), candidates AS (SELECT e.* FROM session_ranked AS e WHERE "
-                + " AND ".join(clauses)
-                + "), ranked AS (SELECT candidates.*, "
+                "FROM matching), candidates AS (SELECT e.* FROM session_ranked AS e "
+                "WHERE e.session_rank = 1), ranked AS (SELECT candidates.*, "
                 # Rank lanes before the candidate cap; historical summaries
                 # cannot crowd out recent meaningful observations, or vice versa.
                 "ROW_NUMBER() OVER (PARTITION BY (context_priority = 0) "
@@ -4464,6 +4486,9 @@ class Store:
                 lambda: self._connection.execute(sql, tuple(parameters)).fetchall()
             )
             records = self._records_from_rows(rows)
+            for record, row in zip(records, rows):
+                if row["context_priority"] == 0 and row["latest_summary_id"] != record["id"]:
+                    record.update(context_historical=True, later_summary_id=row["latest_summary_id"])
 
         header = (
             '<codex-mem-context untrusted="true">\n'

@@ -409,7 +409,7 @@ def search(
                         record["lexical_score"] = record.pop("score")
                     candidates.append(record)
                     added_candidates += 1
-            results = sorted(candidates, key=resume_priority)[:checked_limit]
+            results = _resume_selection(candidates, checked_limit)
             if added_candidates and used_mode == "semantic":
                 used_mode = "hybrid"
         result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
@@ -773,6 +773,36 @@ def resume_priority(record: Mapping[str, Any]) -> int:
     if kind in {"session", "tool", "checkpoint"}:
         return 3
     return 2
+
+
+def _resume_selection(records: Sequence[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    """Balance handoffs with findings while preserving relevance within lanes.
+
+    Keep the first query-matched summary for each identified session. It is the
+    highest-ranked match in the retrieved candidates, not necessarily the latest
+    event or a replacement for the session's other historical summaries.
+    """
+    summaries: list[dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
+    sessions: set[str] = set()
+    for record in sorted(records, key=resume_priority):
+        if resume_priority(record) == 0:
+            session = record.get("session_id")
+            if session:
+                if session in sessions:
+                    continue
+                sessions.add(session)
+            summaries.append(record)
+        else:
+            findings.append(record)
+    selected: list[dict[str, Any]] = []
+    for index in range(max(len(summaries), len(findings))):
+        for lane in (summaries, findings):
+            if index < len(lane):
+                selected.append(lane[index])
+                if len(selected) == limit:
+                    return selected
+    return selected
 
 
 def _checked_mode(mode: str) -> str:

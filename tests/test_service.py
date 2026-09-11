@@ -20,6 +20,7 @@ from codex_mem.service import (
     _record_owner,
     enqueue,
     resume_pending,
+    recover_expired,
     run_service,
     service_status,
     start_service,
@@ -70,6 +71,33 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual([str(self.first.resolve())], list(state["projects"]))
         self.assertNotIn("body", json.dumps(state))
         self.assertNotIn("observation", json.dumps(state))
+
+    def test_usage_collection_runs_while_idle_and_failure_does_not_block_queue(self) -> None:
+        calls = []
+        def collect(**kwargs):
+            calls.append(kwargs)
+            raise OSError("usage source unavailable")
+        result = run_service(
+            self.data_dir, processor=lambda *a, **k: {"status": "idle"},
+            usage_collector=collect, clock=self.clock, sleeper=self.clock.sleep,
+            poll_interval=1, max_cycles=32,
+        )
+        self.assertEqual("cycle_limit", result["status"])
+        self.assertEqual(2, len(calls))
+        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
+
+    def test_usage_collection_respects_disable_without_disabling_memory(self) -> None:
+        configure(self.data_dir, usage_enabled=False)
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        calls = []
+        result = run_service(
+            self.data_dir, processor=lambda *a, **k: {"status": "idle"},
+            usage_collector=lambda **kwargs: calls.append(kwargs),
+            clock=self.clock, sleeper=self.clock.sleep, max_cycles=1,
+        )
+        self.assertEqual("cycle_limit", result["status"])
+        self.assertEqual([], calls)
+        self.assertEqual(1, result["jobs"])
 
     def test_enqueue_respects_service_enabled_and_the_configured_all_scope(self) -> None:
         configure(self.data_dir, service_enabled=False)
@@ -166,6 +194,21 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual("cycle_limit", result["status"])
         self.assertEqual([False, True], calls)
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
+
+    def test_expired_lease_recovery_is_bounded_and_does_not_retry_rejections(self) -> None:
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        calls = []
+
+        def processor(_project: str, **kwargs: object) -> dict[str, str]:
+            calls.append((self.clock(), kwargs["retry_failed"]))
+            return {"status": "failed", "code": "lease_expired"}
+
+        result = run_service(self.data_dir, processor=processor, clock=self.clock,
+                             sleeper=self.clock.sleep, poll_interval=5, retry_backoff=5,
+                             max_cycles=20)
+        self.assertEqual("halted", result["status"])
+        self.assertEqual([(1000.0, False), (1005.0, False), (1015.0, False)], calls)
+        self.assertEqual(1, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
 
     def test_explicit_retry_also_reaches_the_indexer(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)
@@ -333,6 +376,40 @@ class ServiceTests(unittest.TestCase):
                            source="hook:PostToolUse", session_id="failed-chat")
             job = store.claim_observation_batch(project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
             return store.fail_observation_batch(project, job["job_id"], job["lease_token"], code=code)
+
+    def test_recover_expired_validates_exact_claim_and_preserves_quarantine(self) -> None:
+        failed = self._failed_job(self.first)
+        with Store(self.data_dir) as store:
+            store.remember(self.first, "New source", "Independent pending evidence.",
+                           source="hook:PostToolUse", session_id="new-chat")
+            job = store.claim_observation_batch(self.first, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        run_service(self.data_dir, processor=lambda *_a, **_k: {"status": "failed", "code": "storage_failure"},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+        for rejected_id in ("missing", failed["job_id"], job["job_id"]):
+            self.assertEqual("expired_claim_unavailable", recover_expired(
+                self.first, self.data_dir, job_id=rejected_id, clock=self.clock)["code"])
+        with Store(self.data_dir) as store:
+            store._connection.execute("UPDATE observation_jobs SET lease_expires_at = ? WHERE id = ?",
+                                      ("1970-01-01T00:01:00Z", job["job_id"]))
+        self.assertEqual("blocker_unavailable", recover_expired(
+            self.second, self.data_dir, job_id=job["job_id"], clock=self.clock)["code"])
+        state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+        state["projects"][str(self.first.resolve())]["last_code"] = "tools_available"
+        (self.data_dir / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+        self.assertEqual("tools_available", recover_expired(
+            self.first, self.data_dir, job_id=job["job_id"], clock=self.clock)["code"])
+        state["projects"][str(self.first.resolve())]["last_code"] = "storage_failure"
+        (self.data_dir / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+        result = recover_expired(self.first, self.data_dir, job_id=job["job_id"], clock=self.clock)
+        self.assertEqual("queued", result["status"])
+        self.assertFalse(result["retry_failed"])
+        with Store(self.data_dir) as store:
+            rows = store._connection.execute("SELECT status,attempt_count FROM observation_jobs WHERE id = ?",
+                                             (failed["job_id"],)).fetchone()
+            self.assertEqual(("failed", 1), tuple(rows))
+        self.assertEqual("blocker_unavailable", recover_expired(
+            self.first, self.data_dir, job_id=job["job_id"], clock=self.clock)["code"])
 
     def test_resume_pending_recovers_legacy_block_without_retrying_failed_job(self) -> None:
         failed = self._failed_job(self.first)

@@ -37,6 +37,7 @@ from .store import (
     OBSERVATION_REASONING_EFFORT,
     Store,
     StoreError,
+    ObservationLeaseExpired,
     project_key,
 )
 
@@ -187,6 +188,8 @@ def process_pending(
                 turn_id = exc.worker_turn_id or turn_id
                 return _failed_after_claim(store, workspace, job_id, lease_token, exc.code, thread_id, turn_id,
                                            reason_code=exc.reason_code)
+            except ObservationLeaseExpired:
+                return _failed_receipt(job_id, "lease_expired", thread_id, turn_id)
             except (StoreError, OSError):
                 return _failed_after_claim(
                     store, workspace, job_id, lease_token, "storage_failure", thread_id, turn_id
@@ -1356,6 +1359,11 @@ def _failed_after_claim(
         returned_thread = failed.get("worker_thread_id") if isinstance(failed, Mapping) else thread_id
         returned_turn = failed.get("worker_turn_id") if isinstance(failed, Mapping) else turn_id
         return _failed_receipt(job_id, safe_code, returned_thread, returned_turn, reason_code=reason_code)
+    except ObservationLeaseExpired:
+        # Lease expiry may mask a timeout, but must not downgrade a hard
+        # validation/security failure into an automatically retried condition.
+        expired_code = "lease_expired" if safe_code == "timeout" else safe_code
+        return _failed_receipt(job_id, expired_code, thread_id, turn_id, reason_code=reason_code)
     except (StoreError, ValueError, OSError):
         return _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
 
@@ -1481,6 +1489,7 @@ def _safe_failure_code(code: object) -> str:
         "runner_failure",
         "runner_unavailable",
         "storage_failure",
+        "lease_expired",
         "timeout",
         "tool_called",
         "tools_available",
