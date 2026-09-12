@@ -89,6 +89,23 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(2, len(calls))
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
 
+    def test_observer_receipts_are_reconciled_on_startup_and_while_idle(self) -> None:
+        with mock.patch("codex_mem.service._reconcile_observer_usage") as reconcile:
+            result = run_service(
+                self.data_dir, processor=lambda *a, **k: {"status": "idle"},
+                clock=self.clock, sleeper=self.clock.sleep, poll_interval=1, max_cycles=32,
+            )
+        self.assertEqual("cycle_limit", result["status"])
+        self.assertEqual(2, reconcile.call_count)
+        self.assertEqual(self.data_dir.resolve(), reconcile.call_args.args[0])
+
+    def test_disabled_service_does_not_reconcile_observer_receipts(self) -> None:
+        configure(self.data_dir, service_enabled=False)
+        with mock.patch("codex_mem.service._reconcile_observer_usage") as reconcile:
+            result = run_service(self.data_dir, clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+        self.assertEqual("paused", result["status"])
+        reconcile.assert_not_called()
+
     def test_usage_collection_respects_disable_without_disabling_memory(self) -> None:
         configure(self.data_dir, usage_enabled=False)
         enqueue(self.first, self.data_dir, clock=self.clock)

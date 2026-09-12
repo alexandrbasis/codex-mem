@@ -104,6 +104,10 @@ def _install_schema(connection: sqlite3.Connection) -> None:
         )
         """
     )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS observer_usage_running "
+        "ON observer_usage_attempts(started_at, job_id) WHERE outcome = 'running'"
+    )
 
 
 def recover_attempt(
@@ -138,11 +142,80 @@ def recover_attempt(
     connection.execute(
         """
         UPDATE observer_usage_attempts
-        SET outcome = ?, error_code = ?, finished_at = COALESCE(finished_at, ?)
+        SET outcome = ?, error_code = ?, finished_at = COALESCE(finished_at, ?),
+            usage_status = COALESCE(usage_status, 'unavailable')
         WHERE job_id = ? AND attempt_count = ? AND outcome = 'running'
         """,
         (outcome, checked_code, _utc_now(), checked_job_id, checked_attempt),
     )
+
+
+def reconcile_attempts(
+    store: Store, project: str | Path | None = None, *, limit: int = 128,
+) -> int:
+    """Recover a bounded set of receipts after an interrupted terminal write.
+
+    Persisted job outcomes and expired leases are the only recovery evidence.
+    Active leases remain untouched, and completed jobs do not turn partial
+    counters into reported totals. This does not change observation job state.
+    """
+
+    if not isinstance(store, Store):
+        raise TypeError("store must be a Store")
+    checked_limit = _integer(limit, "limit", positive=True)
+    if checked_limit > 1000:
+        raise ValueError("limit must be at most 1000")
+    workspace = project_key(project) if project is not None else None
+    with store._lock:
+        store._require_open()
+        connection = store._connection
+        if connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observer_usage_attempts'"
+        ).fetchone() is None:
+            return 0
+
+        def operation() -> int:
+            now = _utc_now()
+            rows = connection.execute(
+                """
+                SELECT attempts.job_id, attempts.attempt_count, jobs.status,
+                       jobs.error_code, jobs.worker_thread_id, jobs.worker_turn_id,
+                       jobs.updated_at, jobs.completed_at
+                FROM observer_usage_attempts AS attempts
+                JOIN observation_jobs AS jobs ON jobs.id = attempts.job_id
+                WHERE attempts.outcome = 'running'
+                  AND attempts.attempt_count = jobs.attempt_count
+                  AND (? IS NULL OR jobs.project = ?)
+                  AND (jobs.status IN ('processed', 'skipped', 'failed')
+                       OR (jobs.status = 'running' AND jobs.lease_expires_at <= ?))
+                ORDER BY attempts.started_at, attempts.job_id LIMIT ?
+                """, (workspace, workspace, now, checked_limit),
+            ).fetchall()
+            for row in rows:
+                expired = row["status"] == "running"
+                outcome = "lease_expired" if expired else row["status"]
+                code = None
+                if expired:
+                    code = "lease_expired"
+                elif outcome == "failed":
+                    code = row["error_code"] if row["error_code"] in ERROR_CODES else "runner_failure"
+                connection.execute(
+                    """
+                    UPDATE observer_usage_attempts
+                    SET outcome = ?, error_code = ?,
+                        usage_status = COALESCE(usage_status, 'unavailable'),
+                        worker_thread_id = COALESCE(worker_thread_id, ?),
+                        worker_turn_id = COALESCE(worker_turn_id, ?),
+                        finished_at = COALESCE(finished_at, ?)
+                    WHERE job_id = ? AND attempt_count = ? AND outcome = 'running'
+                    """,
+                    (outcome, code, row["worker_thread_id"], row["worker_turn_id"],
+                     now if expired else row["completed_at"] or row["updated_at"],
+                     row["job_id"], row["attempt_count"]),
+                )
+            return len(rows)
+
+        return store._write(operation)
 
 
 def _job(
@@ -249,24 +322,44 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
             merged[field] = existing[field] if existing[field] is not None else incoming[field]
         else:
             merged[field] = incoming[field] if incoming[field] is not None else existing[field]
+    for field in ("duration_ms", "usage_updates"):
+        if not terminal and existing[field] is not None and incoming[field] is not None:
+            merged[field] = max(existing[field], incoming[field])
 
     old_status = existing["usage_status"]
     new_status = incoming["usage_status"]
-    same_known_counters = all(
-        incoming[counter] is None
-        or existing[counter] is None
-        or incoming[counter] == existing[counter]
+    monotonic_counters = all(
+        incoming[counter] is not None
+        and (existing[counter] is None or incoming[counter] >= existing[counter])
         for counter in COUNTERS
     )
+    same_worker = all(
+        existing[field] is None or incoming[field] is None or existing[field] == incoming[field]
+        for field in ("worker_thread_id", "worker_turn_id")
+    )
     if not terminal and incoming["usage_source"] is not None:
-        merged["usage_status"] = new_status
-        if new_status in {"unavailable", "invalid"}:
+        if new_status == "unavailable" and old_status in {"reported", "partial"}:
+            # A timeout, worker abort, or lost final response is not evidence
+            # that the already persisted cumulative snapshot cost nothing.
+            merged["usage_status"] = old_status
+        elif new_status in {"reported", "partial"} and old_status in {"reported", "partial"} and not monotonic_counters:
+            merged["usage_status"] = "invalid"
+        else:
+            merged["usage_status"] = new_status
+        if merged["usage_status"] in {"unavailable", "invalid"}:
             for counter in COUNTERS:
                 merged[counter] = None
     elif old_status == "reported":
         merged["usage_status"] = old_status
-    elif old_status == "partial" and not (new_status == "reported" and same_known_counters):
-        merged["usage_status"] = old_status
+    elif old_status == "partial":
+        # A reclaimed lease keeps its outcome, but a late final receipt from
+        # that same worker can replace its incomplete cumulative snapshot.
+        if new_status in {"reported", "partial"} and monotonic_counters and same_worker:
+            merged["usage_status"] = new_status
+            for field in (*COUNTERS, "duration_ms", "usage_updates"):
+                merged[field] = max(existing[field] or 0, incoming[field] or 0)
+        else:
+            merged["usage_status"] = old_status
     elif new_status in {"reported", "partial"} and any(
         merged[counter] is not None for counter in COUNTERS
     ):
@@ -320,6 +413,10 @@ def finish_attempt(
                 raise ValueError("observer attempt was not begun")
             if checked_attempt > job["attempt_count"]:
                 raise ValueError("observation attempt is unavailable")
+            if outcome == "running" and existing["outcome"] != "running":
+                # A superseded worker cannot keep mutating its recovered
+                # receipt through intermediate progress callbacks.
+                return
             merged = _merge(existing, normalized, outcome)
             terminal_at = existing["finished_at"]
             if merged["outcome"] != "running" and terminal_at is None:
@@ -350,6 +447,30 @@ def finish_attempt(
             )
 
         store._write(operation)
+
+
+def snapshot_attempt(
+    store: Store,
+    project: str | Path,
+    job_id: str,
+    attempt_count: int,
+    *,
+    worker_thread_id: str | None = None,
+    worker_turn_id: str | None = None,
+    metrics: Mapping[str, Any] | None = None,
+) -> None:
+    """Persist one cumulative progress snapshot without finalizing the attempt.
+
+    Callers throttle these writes; snapshots replace totals, never add them.
+    A later recovery keeps their counters as partial unless native completion
+    had already been observed. No worker prompt or output is accepted here.
+    """
+
+    finish_attempt(
+        store, project, job_id, attempt_count, outcome="running",
+        worker_thread_id=worker_thread_id, worker_turn_id=worker_turn_id,
+        metrics=metrics,
+    )
 
 
 def _empty_summary(workspace: str, status: str) -> dict[str, Any]:
@@ -556,4 +677,6 @@ __all__ = (
     "finish_attempt",
     "observer_usage_summary",
     "recover_attempt",
+    "reconcile_attempts",
+    "snapshot_attempt",
 )

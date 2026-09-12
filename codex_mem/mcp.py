@@ -312,6 +312,38 @@ TOOLS: tuple[ToolDefinition, ...] = (
         _object_schema({"project": _PROJECT}, []),
         {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True},
     ),
+    ToolDefinition(
+        "memory_usage_report",
+        "Read recorded token usage and estimated API-equivalent USD/Codex credits for a period. "
+        "No model calls or ledger refresh. Actual subscription charges are unavailable. "
+        "Omitting project covers all recorded local projects; to_date is exclusive.",
+        _object_schema({
+            "project": _PROJECT,
+            "session_id": {"type": "string", "minLength": 1, "maxLength": MAX_SESSION_CHARS},
+            "from_date": {"type": "string", "maxLength": 64},
+            "to_date": {"type": "string", "maxLength": 64},
+            "timezone": {"type": "string", "maxLength": 128, "default": "UTC"},
+            "group_by": {"type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": True,
+                         "items": {"type": "string", "enum": ["day", "project", "task", "agent", "model"]}},
+        }, []),
+        {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True},
+    ),
+    ToolDefinition(
+        "memory_usage_refresh",
+        "Import a bounded batch of local token metadata for a period, respecting capture settings. "
+        "This updates only the usage ledger and makes no model calls; repeat if coverage remains partial. "
+        "Omitting project covers all allowed local projects; to_date is exclusive.",
+        _object_schema({
+            "project": _PROJECT,
+            "session_id": {"type": "string", "minLength": 1, "maxLength": MAX_SESSION_CHARS},
+            "from_date": {"type": "string", "maxLength": 64},
+            "to_date": {"type": "string", "maxLength": 64},
+            "timezone": {"type": "string", "maxLength": 128, "default": "UTC"},
+            "max_files": {"type": "integer", "minimum": 1, "maximum": 128, "default": 32},
+            "max_bytes": {"type": "integer", "minimum": 1, "maximum": 8388608, "default": 8388608},
+        }, []),
+        {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": True},
+    ),
 )
 
 _TOOLS_BY_NAME = {tool.name: tool for tool in TOOLS}
@@ -334,6 +366,28 @@ def _json_size(value: Any) -> int:
             sort_keys=True,
         ).encode("utf-8")
     )
+
+
+def bound_usage_report(report: dict[str, Any], maximum: int = MAX_RAW_RESULT_BYTES) -> dict[str, Any]:
+    """Keep exact totals while explicitly limiting large MCP group breakdowns."""
+    result = {**report, "groups": {
+        stream: {dimension: {**group, "rows": list(group["rows"])}
+                 for dimension, group in dimensions.items()}
+        for stream, dimensions in report.get("groups", {}).items()
+    }}
+    result["transport"] = {"truncated": False, "omitted_rows": 0, "max_result_bytes": maximum}
+    while _json_size(result) > maximum:
+        candidates = [group for dimensions in result["groups"].values()
+                      for group in dimensions.values() if group["rows"]]
+        if not candidates:
+            raise ArgumentError("Usage report is too large; narrow the project or period")
+        group = max(candidates, key=lambda value: _json_size(value["rows"]))
+        remove = max(1, len(group["rows"]) // 2)
+        del group["rows"][-remove:]
+        group["omitted_groups"] += remove
+        result["transport"]["truncated"] = True
+        result["transport"]["omitted_rows"] += remove
+    return result
 
 
 _RAW_PAYLOAD_FIELDS = ("tool_input", "tool_response")
@@ -741,6 +795,25 @@ class MemoryMCPServer:
         return result
 
     def _execute_tool(self, name: str, args: dict[str, Any]) -> Any:
+        if name in {"memory_usage_report", "memory_usage_refresh"}:
+            allowed = {"project", "session_id", "from_date", "to_date", "timezone"}
+            _only(args, allowed | ({"group_by"} if name == "memory_usage_report" else {"max_files", "max_bytes"}))
+            from .usage_api import usage_report, usage_refresh
+            options = {"project": _project(args, required=False),
+                       "session_id": _optional_string(args, "session_id", maximum=MAX_SESSION_CHARS),
+                       "from_date": _optional_string(args, "from_date", maximum=64),
+                       "to_date": _optional_string(args, "to_date", maximum=64),
+                       "timezone": _optional_string(args, "timezone", maximum=128) or "UTC"}
+            if name == "memory_usage_refresh":
+                return usage_refresh(self._store.data_dir, **options,
+                                     max_files=args.get("max_files", 32),
+                                     max_bytes=args.get("max_bytes", 8388608))
+            group_by = args.get("group_by", ["day", "project", "task", "agent", "model"])
+            if (not isinstance(group_by, list) or not 1 <= len(group_by) <= 5
+                    or any(not isinstance(item, str) or item not in {"day", "project", "task", "agent", "model"} for item in group_by)
+                    or len(set(group_by)) != len(group_by)):
+                raise ArgumentError("group_by must contain distinct supported dimensions")
+            return bound_usage_report(usage_report(self._store.data_dir, **options, group_by=tuple(group_by)))
         if name == "memory_search":
             _only(args, {"project", "query", "limit", "kinds", "types", "concepts", "files", "mode", "intent", "detail"})
             detail = args.get("detail", "compact")

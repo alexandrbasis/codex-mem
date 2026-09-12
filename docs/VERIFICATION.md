@@ -2,6 +2,32 @@
 
 Verification is version-specific. Synthetic fixtures, a package build and an installed runtime are separate evidence; these checks do not establish universal note quality.
 
+## Version 1.8.0 verification
+
+The accounting release separates requested Standard/Fast settings from response-confirmed tiers, adds snapshot-based API and Codex-credit estimates, exposes cached period reports through CLI/MCP, and preserves intermediate observer usage through interruption and restart. Unknown prices, tiers and partial attempt totals remain explicit.
+
+- The offline 5,000-response acceptance imports each response twice and retains exactly 5,000 records. Independent fixture arithmetic matches $58.50 API-equivalent cost and 1,706.25 estimated Codex credits. Reasoning tokens are not counted twice. Three cached reports took 0.139–0.143 seconds on the development machine.
+- On a private disposable copy of an existing database, migration and bounded refresh preserved memory-entry, observation-job and fixed-period response counts; SQLite `quick_check` returned `ok`. After known pending files were read, the calculator reproduced the independently calculated API scenarios, preserving unknown prices. The cached report took 0.332 seconds. Source-specific counts, monetary amounts, private rows and the database remain local and are not included in the package.
+- Regression tests cover nested and legacy tier shapes, resets, replay enrichment, old-writer inserts after migration, exact microsecond/UTC-offset boundaries, DST, time-index selection, cache writes, unknown models, partial counters, observer overlap, child-task attribution, missing databases and bounded MCP responses. Cached reports do not initialize a collector or migrate the source database.
+- Repeated public refresh calls collected all 2,100 files in the archive fixture. Discovery persists across fresh CLI/MCP invocations; file coverage distinguishes known unread bytes, required repairs, skipped records, missing files and incomplete discovery. Coverage remains global and bounded, even for a scoped report.
+- Native observer tests cover intermediate snapshots visible through another SQLite connection, cumulative-update deduplication, throttling, timeout, interruption, separate retries, late receipts, and reconciliation of expired or terminal jobs. The service performs bounded accounting reconciliation on startup and while idle. Hard termination may leave the last throttled interval unrecorded; partial usage does not claim a complete call total.
+- One native Luna/medium contradiction-correction case passed in a disposable fictional project. It retained the corrected fact and recorded 10,103 input plus 340 output tokens, totaling 10,443, with 94 reasoning tokens already included in output. Duration was 11,335 ms; a subsequent idle check did not duplicate the receipt. An earlier restricted attempt returned `protocol_error` with unknown usage; it is not counted as a successful native check.
+- The disposable managed-upgrade fixture passed with real idle processes: the old owner exited, the 1.8.0 owner acquired the exclusive lock, duplicate startup was prevented, and database, configuration and queue contents remained unchanged. This fixture disables native processing, semantic indexing and usage collection.
+
+The final 1.8.0 unit suite passed all 449 tests in 53.918 seconds. Unclosed SQLite connection ResourceWarnings remain in test paths; no tests failed.
+
+Reproduce the bounded local checks:
+
+```sh
+python3 -m unittest discover -s tests -q
+python3 scripts/usage_acceptance.py
+python3 scripts/installer_runtime_acceptance.py
+python3 scripts/observation_quality_acceptance.py --native --case contradiction_correction --output /tmp/codex-mem-native-quality.json
+python3 scripts/package.py
+```
+
+The native command consumes the signed-in Codex allowance. Cached reports and usage refreshes do not call a model. Tariffs are the reviewed `openai-2026-09-12.1` snapshot, not a reconstruction of historical invoices. Deleted logs and historical observer attempts without recorded counters cannot be backfilled. Local installation, a running service version and a freshly connected MCP client require separate verification; an existing desktop MCP connection does not reload automatically.
+
 ## Version 1.7.0 verification
 
 The [observer accounting review](observer-usage-review-2026-09-12.md) continues the comparison against Claude Mem 13.24.23 at commit `ed57a511f5dbf84e75c9a785df818c43b66b5849`. Per-attempt measurement was implemented independently; no upstream source was copied.

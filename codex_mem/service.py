@@ -295,6 +295,7 @@ def run_service(
 
         cycles = 0
         next_usage_at = 0.0
+        next_usage_reconcile_at = 0.0
         while True:
             if _event_is_set(stop_event):
                 return _service_receipt("stopped", jobs=jobs, code=last_code)
@@ -306,6 +307,9 @@ def run_service(
             gate = _refresh_queue_gates(base, data_dir, config_loader)
             if not gate["active"]:
                 return _service_receipt("paused", jobs=jobs, code=gate["reason"])
+            if now >= next_usage_reconcile_at:
+                next_usage_reconcile_at = now + 30.0
+                _reconcile_observer_usage(base)
             # Metadata accounting is independent of observation work: a
             # blocked or idle memory queue must not stop token collection.
             if usage_collector is not None and now >= next_usage_at:
@@ -648,6 +652,20 @@ def _base_dir(data_dir: str | os.PathLike[str] | None) -> Path:
         return data_dir_path(data_dir)
     except (OSError, RuntimeError, TypeError, ValueError):
         raise ServiceError("service data directory is unavailable") from None
+
+
+def _reconcile_observer_usage(base: Path) -> None:
+    """Repair a bounded batch of stale accounting receipts, including idle queues."""
+    if not (base / "memory.sqlite3").is_file():
+        return
+    try:
+        from .observer_usage_store import reconcile_attempts
+        from .store import Store
+        with Store(base) as store:
+            reconcile_attempts(store, limit=128)
+    except Exception:
+        # A later accounting pass can retry without interrupting memory work.
+        pass
 
 
 def _eligibility(

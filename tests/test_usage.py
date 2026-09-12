@@ -1,13 +1,14 @@
 """Accounting regression tests use synthetic rollouts, never the user's DB."""
 import json
 import os
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from codex_mem.usage import COLLECTION_BYTE_BUDGET, COLLECTION_FILE_LIMIT, DISCOVERY_ENTRY_BUDGET, SCAN_FINGERPRINT_BYTE_BUDGET, UsageCollector
+from codex_mem.usage import COLLECTION_BYTE_BUDGET, COLLECTION_FILE_LIMIT, DISCOVERY_ENTRY_BUDGET, PARSER_VERSION, SCAN_FINGERPRINT_BYTE_BUDGET, UsageCollector, coverage_period
 
 
 class UsageCollectorTests(unittest.TestCase):
@@ -59,6 +60,70 @@ class UsageCollectorTests(unittest.TestCase):
         self.write(self.meta(), self.turn(), self.native(), self.turn('turn-b', 'model-b'), self.native('response-b', turn='turn-b'), self.native('response-c', turn='missing'))
         self.scan()
         self.assertEqual([r['model'] for r in self.rows()], ['model-a', 'model-b', None])
+
+    def test_nested_and_top_level_settings_keep_request_separate_from_response(self):
+        # Native shape observed in local logs, with unrelated settings removed.
+        self.write(self.meta(), self.turn(),
+                   ('event_msg', {'type': 'thread_settings_applied', 'thread_id': 'thread-a',
+                                  'thread_settings': {'service_tier': 'priority', 'model': 'model-a'}}),
+                   self.native())
+        kind, response = self.native('response-b')
+        response['service_tier'] = 'default'
+        self.write(('event_msg', {'type': 'thread_settings_applied', 'thread_id': 'foreign',
+                                 'thread_settings': {'service_tier': 'flex'}}), (kind, response),
+                   ('event_msg', {'type': 'thread_settings_applied', 'thread_id': 'thread-a', 'service_tier': 'default'}),
+                   self.native('response-c'))
+        self.scan()
+        a, b, c = self.rows()
+        self.assertIsNone(a['service_tier'])
+        self.assertEqual('priority', a['requested_service_tier'])
+        self.assertEqual('thread_settings_nested', a['requested_service_tier_source'])
+        self.assertEqual('priority', b['requested_service_tier'])
+        self.assertEqual('default', b['service_tier'])
+        self.assertEqual('token_usage_record', b['service_tier_source'])
+        self.assertEqual('default', c['requested_service_tier'])
+        self.assertEqual('thread_settings', c['requested_service_tier_source'])
+
+    def test_explicit_null_tier_clears_requested_setting_on_next_response(self):
+        self.write(self.meta(), self.turn(),
+                   ('event_msg', {'type': 'thread_settings_applied', 'thread_settings': {'service_tier': 'priority'}}), self.native(),
+                   ('event_msg', {'type': 'thread_settings_applied', 'thread_settings': {'service_tier': None}}), self.native('response-b'))
+        self.scan()
+        self.assertEqual(['priority', None], [r['requested_service_tier'] for r in self.rows()])
+
+    def test_parser_version_replays_missing_tier_without_recounting(self):
+        self.write(self.meta(), self.turn(),
+                   ('event_msg', {'type': 'thread_settings_applied', 'thread_settings': {'service_tier': 'priority'}}), self.native())
+        self.scan()
+        conn = self.collector.store.store._connection
+        checkpoint = self.collector.store.get_checkpoint(self.path)
+        state = checkpoint['parser_state']
+        state.pop('parser_version')
+        conn.execute('UPDATE usage_scan_files SET parser_state=?', (json.dumps(state),))
+        conn.execute('UPDATE usage_events SET requested_service_tier=NULL,requested_service_tier_source=NULL')
+        self.scan(max_bytes=400)
+        self.scan(max_bytes=400)
+        self.scan(max_bytes=400)
+        self.assertEqual(1, len(self.rows()))
+        self.assertEqual(120, self.rows()[0]['total_tokens'])
+        self.assertEqual('priority', self.rows()[0]['requested_service_tier'])
+        self.assertEqual(PARSER_VERSION, self.collector.store.get_checkpoint(self.path)['parser_state']['parser_version'])
+
+    def test_partial_counters_survive_root_conflict_and_repair(self):
+        kind, response = self.native()
+        response['session_id'] = 'conflicting-root'
+        response['usage'] = {'input_tokens': 100, 'output_tokens': 20, 'total_tokens': 120}
+        self.write(self.meta(session_id='explicit-root'), self.turn(), (kind, response))
+        self.scan()
+        self.assertEqual('root_metadata_conflict_partial_counters', self.rows()[0]['quality'])
+        conn = self.collector.store.store._connection
+        checkpoint = self.collector.store.get_checkpoint(self.path)
+        checkpoint['parser_state'].pop('parser_version')
+        conn.execute('UPDATE usage_scan_files SET parser_state=?', (json.dumps(checkpoint['parser_state']),))
+        conn.execute("UPDATE usage_events SET quality='response_exact'")
+        self.scan()
+        self.assertIn('partial_counters', self.rows()[0]['quality'])
+        self.assertEqual(120, self.rows()[0]['total_tokens'])
 
     def test_foreign_inherited_events_rejected(self):
         self.write(self.meta(session_id='root', parent_thread_id='parent', agent_role='worker'),
@@ -287,6 +352,154 @@ class UsageCollectorTests(unittest.TestCase):
         self.assertEqual(before.st_size, self.path.stat().st_size)
         self.collector.collect(config=self.config, max_files=1)
         self.assertEqual(1, len(self.rows()))
+
+    def test_period_refresh_finds_old_active_session_and_honors_scope(self):
+        stamp = datetime(2026, 9, 12, tzinfo=timezone.utc).timestamp()
+        self.populate('2025/01/01/old-active.jsonl', 'old-active', stamp, project='/selected')
+        self.populate('2026/09/12/other.jsonl', 'other', stamp, project='/other')
+        result = self.collector.refresh_period('2026-09-11T21:00:00Z', '2026-09-12T21:00:00Z',
+                                               self.config, project='/selected', max_files=4)
+        self.assertEqual({'old-active'}, {r['thread_id'] for r in self.rows()})
+        self.assertEqual('global', result['coverage']['scope'])
+        self.assertLessEqual(result['files'], 4)
+
+    def test_period_refresh_budget_and_partial_tail_coverage(self):
+        self.write(self.meta(), self.turn(), self.native())
+        with self.path.open('ab') as out:
+            out.write(b'{"incomplete"')
+        start, end = '2026-01-01T00:00:00Z', '2100-01-01T00:00:00Z'
+        result = self.collector.refresh_period(start, end, self.config, max_bytes=128)
+        self.assertEqual(0, result['files'])
+        self.assertEqual([], self.rows())
+        result = self.collector.refresh_period(start, end, self.config, max_bytes=65536)
+        self.assertEqual(1, len(self.rows()))
+        self.assertEqual(1, result['coverage']['unread_files'])
+        self.assertEqual(len(b'{"incomplete"'), result['coverage']['unread_bytes'])
+        self.assertEqual('partial', result['coverage']['freshness'])
+
+    def test_cached_coverage_is_read_only_and_marks_undiscovered_sources_unknown(self):
+        self.write(self.meta(), self.turn(), self.native())
+        self.scan()
+        conn = self.collector.store.store._connection
+        before = conn.total_changes
+        coverage = coverage_period(self.collector.data_dir, '2026-01-01T00:00:00Z', '2100-01-01T00:00:00Z', codex_home=self.home)
+        self.assertEqual('unknown', coverage['freshness'])
+        self.assertFalse(coverage['discovery_complete'])
+        self.assertEqual(0, coverage['unread_bytes'])
+        self.assertEqual(before, conn.total_changes)
+        missing = Path(self.tmp.name) / 'does-not-exist'
+        self.assertEqual('missing_database', coverage_period(missing, '2026-01-01T00:00:00Z', '2100-01-01T00:00:00Z')['status'])
+        self.assertFalse(missing.exists())
+
+    def test_coverage_marks_old_parser_as_pending_repair_and_tracks_malformed_records(self):
+        self.write(self.meta(), self.turn(), self.native())
+        with self.path.open('ab') as out:
+            out.write(b'bad json\n')
+        self.scan()
+        coverage = coverage_period(self.collector.data_dir, '2026-01-01T00:00:00Z', '2100-01-01T00:00:00Z', codex_home=self.home)
+        self.assertEqual(1, coverage['malformed_records'])
+        checkpoint = self.collector.store.get_checkpoint(self.path)
+        checkpoint['parser_state'].pop('parser_version')
+        self.collector.store.store._connection.execute('UPDATE usage_scan_files SET parser_state=?', (json.dumps(checkpoint['parser_state']),))
+        coverage = coverage_period(self.collector.data_dir, '2026-01-01T00:00:00Z', '2100-01-01T00:00:00Z', codex_home=self.home)
+        self.assertEqual(1, coverage['repair_files'])
+        self.assertEqual(self.path.stat().st_size, coverage['repair_bytes'])
+
+    def test_public_refresh_restarts_progress_beyond_discovery_entry_budget(self):
+        from codex_mem.usage_api import usage_refresh
+        directory = self.home / 'archived_sessions'
+        directory.mkdir()
+        total = DISCOVERY_ENTRY_BUDGET + 52
+        for n in range(total):
+            self.path = directory / f'{n:05d}.jsonl'
+            self.write(self.meta(id=f'archive-{n}'), self.turn(), self.native(thread=f'archive-{n}'))
+        data_dir = Path(self.collector.data_dir)
+        (data_dir / 'config.json').write_text(json.dumps(self.config))
+        for _ in range(24):
+            usage_refresh(data_dir, from_date='2026-09-11', to_date='2026-09-13', codex_home=self.home, max_files=128)
+            if len(self.rows()) == total:
+                break
+        self.assertEqual(total, len(self.rows()))
+        self.assertEqual(total * 120, sum(row['total_tokens'] for row in self.rows()))
+
+    def test_snapshot_overflow_is_reported_as_incomplete(self):
+        for n in range(5):
+            self.populate(f'{n}.jsonl', f'thread-{n}', 2_000_000_000)
+        with patch('codex_mem.usage.REFRESH_SNAPSHOT_ENTRY_LIMIT', 2):
+            result = self.collector.refresh_period('2026-09-11T00:00:00Z', '2026-09-13T00:00:00Z', self.config)
+        self.assertGreater(result['coverage']['discovery_overflow_directories'], 0)
+        self.assertFalse(result['coverage']['discovery_complete'])
+        self.assertEqual('partial', result['coverage']['freshness'])
+
+    def test_public_refresh_removes_vanished_or_disallowed_queue_entries(self):
+        from codex_mem.usage_api import usage_refresh
+        for change in ('deleted', 'symlink', 'outside'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory(dir=self.tmp.name) as temporary:
+                base = Path(temporary)
+                home, data = base / 'codex', base / 'memory'
+                archive = home / 'archived_sessions'
+                archive.mkdir(parents=True)
+                with closing(UsageCollector(data, home)) as collector:
+                    (data / 'config.json').write_text(json.dumps(self.config))
+
+                    def write_file(path, thread):
+                        records = [self.meta(id=thread), self.turn(), self.native(thread=thread)]
+                        path.write_text(''.join(json.dumps({'type': kind, 'payload': payload}) + '\n' for kind, payload in records))
+
+                    def refresh():
+                        return usage_refresh(data, from_date='2026-09-11', to_date='2026-09-13', codex_home=home, max_files=1)
+
+                    for n in range(2):
+                        write_file(archive / f'{n}.jsonl', f'archive-{n}')
+                    refresh()
+                    conn = collector.store.store._connection
+                    queued = Path(conn.execute("SELECT path FROM usage_discovery_queue WHERE kind='file'").fetchone()[0])
+                    queued.unlink()
+                    outside = base / 'outside.jsonl'
+                    write_file(outside, 'must-not-be-read')
+                    if change == 'symlink':
+                        queued.symlink_to(outside)
+                    elif change == 'outside':
+                        conn.execute("UPDATE usage_discovery_queue SET path=? WHERE path=?", (str(outside), str(queued)))
+                    write_file(archive / 'new.jsonl', 'new-thread')
+                    for _ in range(3):
+                        refresh()
+                    threads = {row['thread_id'] for row in collector.store.list_events()}
+                    self.assertIn('new-thread', threads)
+                    self.assertNotIn('must-not-be-read', threads)
+                    self.assertEqual(2, len(threads))
+
+    def test_public_refresh_retries_snapshot_overflow_in_later_call(self):
+        from codex_mem.usage_api import usage_refresh
+        archive = self.home / 'archived_sessions'
+        archive.mkdir()
+        for n in range(2):
+            self.path = archive / f'{n}.jsonl'
+            self.write(self.meta(id=f'archive-{n}'), self.turn(), self.native(thread=f'archive-{n}'))
+        data = Path(self.collector.data_dir)
+        (data / 'config.json').write_text(json.dumps(self.config))
+        arguments = dict(from_date='2026-09-11', to_date='2026-09-13', codex_home=self.home, max_files=128)
+        with patch('codex_mem.usage.REFRESH_SNAPSHOT_ENTRY_LIMIT', 1):
+            initial = usage_refresh(data, **arguments)
+        self.assertGreater(initial['coverage']['discovery_overflow_directories'], 0)
+        for _ in range(3):
+            result = usage_refresh(data, **arguments)
+        self.assertEqual(2, len(self.rows()))
+        self.assertEqual({}, result['coverage']['pending_discovery'])
+        self.assertTrue(result['coverage']['discovery_complete'])
+
+    def test_public_refresh_completed_inventory_reports_current_after_scan(self):
+        from codex_mem.usage_api import usage_refresh
+        self.path = self.home / 'archived_sessions' / 'single.jsonl'
+        self.path.parent.mkdir()
+        self.write(self.meta(), self.turn(), self.native())
+        data = Path(self.collector.data_dir)
+        (data / 'config.json').write_text(json.dumps(self.config))
+        for _ in range(3):
+            result = usage_refresh(data, from_date='2026-09-11', to_date='2026-09-13', codex_home=self.home, max_files=128)
+            self.assertTrue(result['coverage']['discovery_complete'])
+            self.assertEqual({}, result['coverage']['pending_discovery'])
+            self.assertEqual('known_sources_current', result['coverage']['freshness'])
 
 
 if __name__ == '__main__':

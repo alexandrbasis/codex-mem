@@ -80,6 +80,35 @@ class ObserverAccountingTests(unittest.TestCase):
         self.assertEqual(1, summary["attempts"]["unknown"])
         self.assertIsNone(summary["totals"]["reported"])
 
+    def test_native_abort_preserves_checkpoint_before_retry(self):
+        def native_runner(*, usage_checkpoint, **kwargs):
+            def run(request):
+                usage_checkpoint({"worker_thread_id": "thread-a", "worker_turn_id": "turn-a",
+                                  "metrics": metrics(status="partial")})
+                # A second independent Store connection sees the receipt while
+                # the native call is still running, before any terminal write.
+                during = self.summary()
+                self.assertEqual(1, during["attempts"]["outcomes"]["running"])
+                self.assertEqual(120, during["totals"]["partial"]["total_tokens"])
+                raise RuntimeError("private abrupt worker failure")
+            return run
+
+        with mock.patch("codex_mem.processor.NativeProcessorRunner", side_effect=native_runner):
+            failed = process_pending(self.project, self.data)
+        self.assertEqual("runner_failure", failed["code"])
+        self.assertNotIn("private", str(failed))
+        self.assertEqual(120, self.summary()["totals"]["partial"]["total_tokens"])
+        retried = process_pending(self.project, self.data, retry_failed=True, runner=lambda _: receipt())
+        self.assertEqual("skipped", retried["status"])
+        summary = self.summary()
+        self.assertEqual(2, summary["attempts"]["recorded"])
+        self.assertEqual(120, summary["totals"]["partial"]["total_tokens"])
+        self.assertEqual(240, summary["totals"]["reported"]["total_tokens"])
+        with Store(self.data) as store:
+            row = store._connection.execute("SELECT worker_thread_id FROM observer_usage_attempts "
+                                            "WHERE attempt_count=1").fetchone()
+            self.assertEqual("thread-a", row[0])
+
     def test_rejected_content_still_has_reported_cost(self):
         value = receipt()
         value["output"] = {"disposition": "invalid", "notes": []}

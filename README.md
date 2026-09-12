@@ -24,14 +24,14 @@ Verify plugin registration, MCP tools, hook discovery and trust, and the backgro
 
 ## Current release
 
-Version `1.7.0` records the observation worker's reported token usage and duration for each processing attempt. Health report v2 distinguishes current processing, quarantined failures, a blocked service, and stale work. It retains the compact search previews, exact-record timeline windows, queue recovery and managed service refresh added in 1.6.0. The observer remains Luna with medium reasoning. See the verification record for tested behavior, installation checks, and the limits of the Claude Mem comparison.
+Version `1.8.0` adds period-based usage reports with separate API-equivalent cost and Codex credit estimates. Reports read the local ledger by default; an explicit refresh imports a bounded batch of usage metadata without model calls. The collector repairs missing Standard/Fast attribution while keeping requested and provider-confirmed settings separate. The observer now saves usage during a running attempt so recovery can retain a partial total. The observer remains Luna with medium reasoning. See the verification record for tested behavior and installation checks.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
 
 ## What it does
 
 - Captures bounded evidence from approved projects through native Codex lifecycle hooks. Raw hook records remain available for explicit audit, but are excluded from search, automatic context, and semantic indexing.
-- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, `memory_status`, and `memory_get_tool_uses` through a local MCP server.
+- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, `memory_status`, `memory_get_tool_uses`, `memory_usage_report`, and `memory_usage_refresh` through a local MCP server.
 - Uses SQLite FTS5 for lexical search. Optional local multilingual semantic search uses `intfloat/multilingual-e5-base` with FastEmbed and ONNX Runtime.
 - Keeps project and session provenance, source links for consolidated notes, and bounded execution receipts.
 - Runs a durable local queue. A worker processes small observation batches in fresh `gpt-5.6-luna` sessions with `medium` reasoning, then updates the local semantic index.
@@ -203,7 +203,63 @@ The worker uses only bounded, redacted observations from the selected project. I
 
 ## Inspect token usage
 
-Read the recorded usage for a project:
+### Report a period
+
+Read usage and cost estimates for September 11 and 12 in Israel:
+
+```sh
+python3 scripts/codex-mem.py usage report \
+  --from 2026-09-11 --to 2026-09-13 --timezone Asia/Jerusalem \
+  --group-by day,project,model
+```
+
+`--from` is inclusive and `--to` is exclusive. Dates use the selected IANA timezone; timestamps must include a UTC offset. With no dates, the period starts at yesterday's midnight and ends at the current time. The default timezone is `UTC`.
+
+Omitting `--project` includes all recorded local projects. Add `--project /absolute/path/to/project` to select a project and `--session-id ROOT_SESSION_ID` to select a root task and its agents. Replace `ROOT_SESSION_ID` with the task's session ID. `--group-by` accepts a comma-separated selection of `day,project,task,agent,model`; all five are returned by default.
+
+Each dimension has its own breakdown under `groups.main` and `groups.observer`. Each breakdown returns up to 100 groups and the number omitted; totals still include all matching records.
+
+MCP may shorten large breakdowns further to stay within its response-size limit. `transport.truncated` and the group omission counts disclose this; totals remain unchanged. Narrow the project, period, or grouping for more detail.
+
+The default report reads the existing ledger without importing logs or calling a model. To import a bounded batch before reporting, add `--refresh`. You can also refresh separately:
+
+```sh
+python3 scripts/codex-mem.py usage refresh \
+  --from 2026-09-11 --to 2026-09-13 --timezone Asia/Jerusalem
+```
+
+A refresh respects capture settings and updates usage metadata only. It can retain usage outside the requested period from a selected source file because attribution requires parsing that file in order. The default batch allows 32 files and 8 MiB. `--max-files` accepts 1–128 and `--max-bytes` accepts 1–8388608. Repeat the refresh if coverage remains partial.
+
+MCP provides the same report through the read-only `memory_usage_report` tool:
+
+```json
+{
+  "from_date": "2026-09-11",
+  "to_date": "2026-09-13",
+  "timezone": "Asia/Jerusalem",
+  "group_by": ["day", "project", "model"]
+}
+```
+
+Use `memory_usage_refresh` with the period and optional `project`, `session_id`, `max_files`, and `max_bytes` to import metadata, then call `memory_usage_report` again. The report tool does not refresh implicitly. Neither tool calls a model.
+
+### Interpret costs and coverage
+
+The shared calculator prices each response before adding totals. It applies the model, Standard/Fast setting, cached input, cache writes, and long-context rates from the versioned `openai-2026-09-12.1` snapshot. API-equivalent USD and estimated Codex credits are separate estimates based on [OpenAI API pricing](https://developers.openai.com/api/docs/pricing) and [Codex token rates](https://learn.chatgpt.com/docs/pricing#token-rates). Applying this snapshot to old usage does not reconstruct the historical invoice. Actual subscription payments, purchased credits, taxes, tool fees, and account discounts are unavailable.
+
+Each cost metric exposes `selected_subtotal` for the priced portion. Its `total` is `null` if any included record is unpriced. Where rates are known but the tier is not, Standard and Fast scenarios describe hypothetical costs. Requested settings are labeled separately from provider-confirmed settings. Unknown rates and tiers never become zero-cost records. Cached input is already part of input tokens, and reasoning output is already part of output tokens. Older cumulative records lack precise response boundaries, so their context-based estimates remain approximate.
+
+Read coverage with the estimate. It reports missing attribution and known files that still need reading or repair, along with scan limits and errors. File coverage is global even for a project report, because the project of an unread file is not yet known. A cached report cannot discover new files; bounded or incomplete discovery does not establish complete coverage.
+
+Partial or running observer attempts also leave the complete cost `total` unknown; their recorded portion remains in the subtotals. The public Codex credit card does not specify cache-write pricing, so rows with cache writes have no credit estimate even when their API-equivalent cost can be calculated.
+
+After an upgrade, the next usage refresh or collection pass reparses older checkpoints to recover nested Standard/Fast settings. Stable response IDs let it enrich existing records without adding the same response's tokens again. Missing source files and usage that was never recorded remain unknown.
+
+### Inspect observer accounting
+
+The period report separates main sessions, observer attempts, and their combined total. It excludes matching observer worker threads from the main stream to prevent double counting. An observer attempt belongs entirely to its start date, including when it crosses midnight or the selected period boundary. Historical attempts without receipts are shown as a coverage gap across all dates in the selected scope; they cannot be assigned a cost or an exact date.
+
+Read the existing token summaries for a project:
 
 ```sh
 python3 scripts/codex-mem.py usage status --project /absolute/path/to/project
@@ -212,7 +268,7 @@ python3 scripts/codex-mem.py status --project /absolute/path/to/project
 
 `usage status` returns session JSONL accounting in `records` and separate processing accounting in `observer_usage`. The project `status`, MCP `memory_status`, and maintenance report also expose `observer_usage`. Adding `--session-id` to `usage status` filters only `records`; `observer_usage` still covers the entire project. The two ledgers are not merged.
 
-The observer uses the latest valid app-server token total matching its fresh thread and turn. Repeated updates replace the snapshot; they are not added together. Each retry has its own attempt receipt, so its reported usage is counted separately. Attempts also retain their outcome and available duration.
+The observer uses the latest valid app-server token total matching its fresh thread and turn. It saves intermediate snapshots while the attempt runs. Repeated updates replace the snapshot; they are not added together. Recovery of an expired attempt preserves its saved partial usage. Each retry has its own attempt receipt, so its reported usage is counted separately. Attempts also retain their outcome and available duration.
 
 | Coverage | Meaning |
 | --- | --- |
@@ -223,7 +279,7 @@ The observer uses the latest valid app-server token total matching its fresh thr
 
 The optional SQLite ledger is created when processing records its first attempt. An absent ledger reports `unavailable`; it does not mean processing was free. Model groups use `model_basis="requested_job_profile"`: they describe the requested model and reasoning setting, and do not independently prove the backend that served a failed attempt. Cached input is part of input tokens, and reasoning output is part of output tokens; do not add these subsets again.
 
-These measurements describe recorded work. They do not calculate money spent or prove net savings from memory. See [Verification](docs/VERIFICATION.md) for the tested accounting boundaries and [Upstream and implementation choices](UPSTREAM.md) for the protocol and comparison sources.
+These measurements describe recorded work. Cost estimates do not establish actual money spent or net savings from memory. See [Verification](docs/VERIFICATION.md) for the tested accounting boundaries and [Upstream and implementation choices](UPSTREAM.md) for the protocol and comparison sources.
 
 ## Protect and manage data
 

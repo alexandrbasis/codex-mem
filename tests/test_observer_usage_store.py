@@ -9,6 +9,8 @@ from codex_mem.observer_usage_store import (
     finish_attempt,
     observer_usage_summary,
     recover_attempt,
+    reconcile_attempts,
+    snapshot_attempt,
 )
 from codex_mem.store import SCHEMA_VERSION, Store, project_key
 
@@ -240,6 +242,92 @@ class ObserverUsageStoreTests(unittest.TestCase):
         summary = observer_usage_summary(self.store._connection, self.project)
         self.assertEqual(1, summary["attempts"]["unknown"])
         self.assertIsNone(summary["totals"]["partial"])
+
+    def test_unavailable_final_receipt_preserves_durable_partial_snapshot(self) -> None:
+        self.add_job("job-a")
+        begin_attempt(self.store, self.project, "job-a", 1)
+        snapshot_attempt(self.store, self.project, "job-a", 1,
+                         worker_thread_id="worker-a", worker_turn_id="turn-a",
+                         metrics=self.metrics(status="partial", updates=3))
+        finish_attempt(self.store, self.project, "job-a", 1, outcome="failed",
+                       error_code="timeout",
+                       metrics=self.metrics(status="unavailable", updates=0))
+        row = self.store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
+        self.assertEqual(("failed", "partial", 130, 3, "worker-a", "turn-a"),
+                         tuple(row[k] for k in ("outcome", "usage_status", "total_tokens",
+                                                "usage_updates", "worker_thread_id", "worker_turn_id")))
+
+    def test_crash_recovery_keeps_checkpoint_and_monotonic_late_final(self) -> None:
+        self.add_job("job-a")
+        begin_attempt(self.store, self.project, "job-a", 1)
+        snapshot_attempt(self.store, self.project, "job-a", 1,
+                         worker_thread_id="worker-a", metrics=self.metrics(status="partial"))
+        self.store.close()
+        self.store = Store(self.tmp.name)
+        self.store._write(lambda: recover_attempt(self.store._connection, "job-a", 1,
+                                                  outcome="lease_expired"))
+        row = self.store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
+        self.assertEqual(("lease_expired", "partial", 130),
+                         tuple(row[k] for k in ("outcome", "usage_status", "total_tokens")))
+        larger = self.metrics(status="reported")
+        larger["usage"]["tokens"] = {k: v * 2 for k, v in larger["usage"]["tokens"].items()}
+        # Reclaimed attempts ignore any late intermediate callbacks.
+        snapshot_attempt(self.store, self.project, "job-a", 1,
+                         worker_thread_id="worker-a", metrics=larger)
+        self.assertEqual(130, observer_usage_summary(self.store._connection, self.project)
+                         ["totals"]["partial"]["total_tokens"])
+        # A final receipt may complete the same worker's partial accounting,
+        # but cannot change its recovered operational outcome.
+        finish_attempt(self.store, self.project, "job-a", 1, outcome="processed",
+                       worker_thread_id="worker-a", metrics=larger)
+        row = self.store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
+        self.assertEqual(("lease_expired", "reported", 260),
+                         tuple(row[k] for k in ("outcome", "usage_status", "total_tokens")))
+
+    def test_checkpoint_regression_is_not_summed_or_reported_as_complete(self) -> None:
+        self.add_job("job-a")
+        begin_attempt(self.store, self.project, "job-a", 1)
+        snapshot_attempt(self.store, self.project, "job-a", 1, metrics=self.metrics(status="partial"))
+        smaller = self.metrics()
+        smaller["usage"]["tokens"] = {k: 0 for k in COUNTERS}
+        finish_attempt(self.store, self.project, "job-a", 1, outcome="processed", metrics=smaller)
+        row = self.store._connection.execute("SELECT usage_status,total_tokens FROM observer_usage_attempts").fetchone()
+        self.assertEqual(("invalid", None), tuple(row))
+
+    def test_recovery_without_a_checkpoint_explicitly_marks_usage_unavailable(self) -> None:
+        self.add_job("job-a")
+        begin_attempt(self.store, self.project, "job-a", 1)
+        self.store._write(lambda: recover_attempt(self.store._connection, "job-a", 1,
+                                                  outcome="lease_expired"))
+        row = self.store._connection.execute("SELECT usage_status,total_tokens FROM observer_usage_attempts").fetchone()
+        self.assertEqual(("unavailable", None), tuple(row))
+
+    def test_restart_reconciliation_is_bounded_scoped_and_preserves_partial_evidence(self) -> None:
+        self.add_job("job-a")
+        self.add_job("job-b")
+        self.add_job("job-c", project=self.other_project)
+        self.add_job("job-d")
+        for job_id, workspace in (("job-a", self.project), ("job-b", self.project),
+                                  ("job-c", self.other_project), ("job-d", self.project)):
+            begin_attempt(self.store, workspace, job_id, 1)
+            snapshot_attempt(self.store, workspace, job_id, 1, metrics=self.metrics(status="partial"))
+        self.store._write(lambda: self.store._connection.execute(
+            "UPDATE observation_jobs SET status='skipped' WHERE id IN ('job-a','job-c')"))
+        self.store._write(lambda: self.store._connection.execute(
+            "UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE id='job-b'"))
+        self.assertEqual(1, reconcile_attempts(self.store, self.project, limit=1))
+        self.assertEqual(1, reconcile_attempts(self.store, self.project, limit=1))
+        self.assertEqual(0, reconcile_attempts(self.store, self.project))
+        rows = {row["job_id"]: row for row in self.store._connection.execute(
+            "SELECT * FROM observer_usage_attempts")}
+        self.assertEqual("skipped", rows["job-a"]["outcome"])
+        self.assertEqual("lease_expired", rows["job-b"]["outcome"])
+        self.assertEqual("running", rows["job-c"]["outcome"])
+        self.assertEqual("running", rows["job-d"]["outcome"])
+        self.assertTrue(all(row["usage_status"] == "partial" and row["total_tokens"] == 130
+                            for row in rows.values()))
+        self.assertEqual(1, reconcile_attempts(self.store))
+        self.assertEqual(0, reconcile_attempts(self.store))
 
     def test_duplicate_terminal_finish_can_enrich_null_metrics(self) -> None:
         self.add_job("job-a")

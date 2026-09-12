@@ -66,6 +66,7 @@ MAX_MODEL_PAGES = 16
 MAX_MCP_PAGES = 64
 MAX_ITEM_PAGES = 32
 MAX_THREAD_ITEMS = 128
+USAGE_CHECKPOINT_INTERVAL_SECONDS = 1.0
 
 _WORKER_ID_RE = re.compile(r"[A-Za-z0-9._:-]{1,256}\Z")
 _MCP_NAME_MAX_CHARS = 256
@@ -145,6 +146,8 @@ def process_pending(
     claimed: Mapping[str, Any] | None = None
     try:
         with Store(data_dir) as store:
+            from .observer_usage_store import reconcile_attempts
+            reconcile_attempts(store, workspace)
             claimed = store.claim_observation_batch(
                 workspace,
                 PROCESSOR_ID,
@@ -182,14 +185,19 @@ def process_pending(
             error_code: str | None = None
             receipt: dict[str, Any] | None = None
             try:
-                from .observer_usage_store import begin_attempt, finish_attempt
+                from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt
                 begin_attempt(store, workspace, job_id, attempt_count)
                 usage_started = True
                 _, _, sources = _claim_parts(claimed)
                 request = _runner_request(claimed, checked_timeout)
                 active_runner = runner
                 if active_runner is None:
-                    active_runner = NativeProcessorRunner(codex=codex, timeout=checked_timeout)
+                    def checkpoint(snapshot: Mapping[str, Any]) -> None:
+                        snapshot_attempt(store, workspace, job_id, attempt_count, **snapshot)
+
+                    active_runner = NativeProcessorRunner(
+                        codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
+                    )
                 run_value = _invoke_runner(active_runner, request)
                 if isinstance(run_value.get("metrics"), Mapping):
                     metrics = run_value["metrics"]
@@ -265,12 +273,51 @@ def process_pending(
         return _failed_receipt(None, "storage_failure", None, None)
 
 
+class _UsageCheckpointer:
+    """Bound synchronous telemetry writes without losing the first known total."""
+
+    def __init__(self, callback: Callable[[Mapping[str, Any]], None] | None) -> None:
+        self.callback = callback
+        self._last_attempt_at: float | None = None
+        self._last_signature: tuple[Any, ...] | None = None
+        self._last_saved_signature: tuple[Any, ...] | None = None
+
+    def save(self, snapshot: Mapping[str, Any], *, force: bool = False) -> None:
+        if self.callback is None:
+            return
+        usage = snapshot["metrics"]["usage"]
+        tokens = usage["tokens"]
+        signature = (
+            snapshot["worker_thread_id"], snapshot["worker_turn_id"], usage["status"],
+            tuple(sorted(tokens.items())) if tokens is not None else None,
+        )
+        if signature == self._last_saved_signature:
+            return
+        now = time.monotonic()
+        transition = self._last_signature is None or signature[:3] != self._last_signature[:3]
+        if not force and not transition and self._last_attempt_at is not None and now - self._last_attempt_at < USAGE_CHECKPOINT_INTERVAL_SECONDS:
+            return
+        self._last_signature = signature
+        self._last_attempt_at = now
+        try:
+            self.callback(snapshot)
+        except Exception:
+            # Telemetry storage must not reject a valid observation. Retry on
+            # a later checkpoint or finalization; no exception text is retained.
+            return
+        self._last_saved_signature = signature
+
+
 class NativeProcessorRunner:
     """Run one pinned, isolated native app-server worker turn."""
 
-    def __init__(self, *, codex: str = "codex", timeout: int | float = DEFAULT_TIMEOUT) -> None:
+    def __init__(
+        self, *, codex: str = "codex", timeout: int | float = DEFAULT_TIMEOUT,
+        usage_checkpoint: Callable[[Mapping[str, Any]], None] | None = None,
+    ) -> None:
         self.codex = codex
         self.timeout = _validate_timeout(timeout)
+        self.usage_checkpoint = usage_checkpoint
 
     def __call__(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
         return self.run(request)
@@ -291,6 +338,7 @@ class NativeProcessorRunner:
         client: _AppServer | None = None
         monitor: _TurnMonitor | None = None
         started_at = time.monotonic()
+        checkpointer = _UsageCheckpointer(self.usage_checkpoint)
 
         def metrics() -> dict[str, Any]:
             return {
@@ -300,6 +348,15 @@ class NativeProcessorRunner:
                     "updates": 0, "tokens": None,
                 },
             }
+
+        def checkpoint(*, force: bool = False) -> None:
+            if thread_id is not None:
+                checkpointer.save({
+                    "worker_thread_id": thread_id,
+                    "worker_turn_id": monitor.turn_id if monitor is not None else turn_id,
+                    "metrics": metrics(),
+                }, force=force)
+
         try:
             with tempfile.TemporaryDirectory(prefix="codex-mem-processor-") as temporary:
                 worker_cwd = Path(temporary).resolve()
@@ -342,9 +399,10 @@ class NativeProcessorRunner:
                         },
                     )
                     thread_id = _verify_thread_start(started)
+                    checkpoint(force=True)
                     _verify_empty_mcp_inventory(client, thread_id)
 
-                    monitor = _TurnMonitor(thread_id)
+                    monitor = _TurnMonitor(thread_id, on_usage=checkpoint)
                     turn_started = client.request(
                         "turn/start",
                         {
@@ -359,6 +417,7 @@ class NativeProcessorRunner:
                     )
                     turn_id = _turn_id_from_response(turn_started, thread_id)
                     monitor.set_turn(turn_id)
+                    checkpoint(force=True)
                     _wait_for_turn_completion(client, monitor)
                     output = _read_valid_final_output(monitor)
                     return {
@@ -390,6 +449,7 @@ class NativeProcessorRunner:
                         metrics=metrics(),
                     ) from None
                 finally:
+                    checkpoint(force=True)
                     client.close()
                     client = None
         except ProcessorFailure:
@@ -405,6 +465,7 @@ class NativeProcessorRunner:
                 metrics=metrics(),
             ) from None
         finally:
+            checkpoint(force=True)
             if client is not None:
                 client.close()
 
@@ -632,7 +693,7 @@ class _AppServer:
 class _TurnMonitor:
     """Reject unsafe turn activity and retain only bounded completed agent output."""
 
-    def __init__(self, thread_id: str) -> None:
+    def __init__(self, thread_id: str, *, on_usage: Callable[[], None] | None = None) -> None:
         self.thread_id = thread_id
         self.turn_id: str | None = None
         self.started = False
@@ -644,6 +705,7 @@ class _TurnMonitor:
         self._usage_tokens: dict[str, int] | None = None
         self._usage_updates = 0
         self._usage_invalid = False
+        self._on_usage = on_usage
 
     def set_turn(self, turn_id: str) -> None:
         self.turn_id = turn_id
@@ -694,6 +756,8 @@ class _TurnMonitor:
                 # These are thread totals for a fresh single-turn worker.
                 # Repeated updates replace the snapshot; never sum them.
                 self._usage_tokens = tokens
+            if self._on_usage is not None:
+                self._on_usage()
             return
         if method.endswith("model/rerouted"):
             raise ProcessorFailure("rerouted", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
@@ -724,6 +788,8 @@ class _TurnMonitor:
                 for item in completion_items:
                     self._capture_agent_message(item)
             self.completed = True
+            if self._on_usage is not None:
+                self._on_usage()
 
     def usage_receipt(self) -> dict[str, Any]:
         if self._usage_invalid:

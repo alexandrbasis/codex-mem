@@ -364,7 +364,7 @@ def _build_parser() -> _ArgumentParser:
     recover.add_argument("--project", required=True)
     recover.add_argument("--job-id", required=True)
 
-    usage = commands.add_parser("usage", help="Collect or inspect recorded session token usage; no cost estimates")
+    usage = commands.add_parser("usage", help="Collect token usage or estimate costs with explicit coverage")
     usage_commands = usage.add_subparsers(dest="usage_command", required=True)
     usage_scan = usage_commands.add_parser("scan", help="Import a bounded batch of local usage metadata")
     usage_scan.add_argument("--codex-home", help="Codex state directory containing sessions")
@@ -373,6 +373,22 @@ def _build_parser() -> _ArgumentParser:
     usage_status = usage_commands.add_parser("status", help="Read token totals by task, agent and model")
     usage_status.add_argument("--project")
     usage_status.add_argument("--session-id", help="Root task/session ID")
+    for action in ("report", "refresh"):
+        item = usage_commands.add_parser(action, help=(
+            "Read a cached cost report; no model calls" if action == "report" else
+            "Import a bounded slice of usage metadata for a period"))
+        item.add_argument("--from", dest="from_date", help="Inclusive local date or aware ISO timestamp")
+        item.add_argument("--to", dest="to_date", help="Exclusive local date or aware ISO timestamp")
+        item.add_argument("--timezone", default="UTC", help="IANA timezone, for example Asia/Jerusalem")
+        item.add_argument("--project")
+        item.add_argument("--session-id", help="Root task/session ID")
+        if action == "report":
+            item.add_argument("--group-by", default="day,project,task,agent,model",
+                              help="Comma-separated day,project,task,agent,model dimensions")
+            item.add_argument("--refresh", action="store_true", help="Refresh a bounded batch before reporting")
+        item.add_argument("--codex-home", help="Codex state directory containing sessions")
+        item.add_argument("--max-files", type=lambda value: _positive(value, field="max_files", maximum=128), default=32)
+        item.add_argument("--max-bytes", type=lambda value: _positive(value, field="max_bytes", maximum=8388608), default=8388608)
 
     get = commands.add_parser("get", help="Read full project memory records")
     get.add_argument("--project", required=True)
@@ -671,11 +687,29 @@ def main(args: Sequence[str] | None = None) -> int:
             _emit(value)
             return 2 if value.get("status") in {"failed", "error", "blocked", "halted", "unknown", "unavailable"} else 0
         if namespace.command == "usage":
-            if namespace.usage_command == "scan":
+            if namespace.usage_command in {"report", "refresh"}:
+                from .usage_api import usage_report, usage_refresh
+                options = dict(from_date=namespace.from_date, to_date=namespace.to_date,
+                               timezone=namespace.timezone,
+                               project=_absolute_project(namespace.project) if namespace.project else None,
+                               session_id=namespace.session_id)
+                if namespace.usage_command == "refresh":
+                    value = usage_refresh(namespace.data_dir, **options,
+                                          codex_home=namespace.codex_home,
+                                          max_files=namespace.max_files, max_bytes=namespace.max_bytes)
+                else:
+                    value = usage_report(namespace.data_dir, **options,
+                                         group_by=tuple(namespace.group_by.split(",")),
+                                         refresh=namespace.refresh, codex_home=namespace.codex_home,
+                                         max_files=namespace.max_files, max_bytes=namespace.max_bytes)
+            elif namespace.usage_command == "scan":
                 from .usage import UsageCollector
                 collector = UsageCollector(namespace.data_dir, codex_home=namespace.codex_home)
-                value = (collector.scan_file(namespace.file) if namespace.file
-                         else collector.collect(max_files=namespace.max_files))
+                try:
+                    value = (collector.scan_file(namespace.file) if namespace.file
+                             else collector.collect(max_files=namespace.max_files))
+                finally:
+                    collector.close()
             else:
                 from .usage_store import UsageStore
                 with UsageStore(namespace.data_dir) as usage_store:
