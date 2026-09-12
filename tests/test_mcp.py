@@ -200,6 +200,45 @@ class MCPSubprocessTests(unittest.TestCase):
         self.assertEqual(0, pong["id"])
         self.assertEqual({}, pong["result"])
 
+    def test_compact_search_anchor_timeline_and_full_details_round_trip(self) -> None:
+        self._initialize()
+        with Store(self.data_dir) as store:
+            older = store.remember(self.project, "Before", "Earlier context.", session_id="review")
+            anchor = store.remember(
+                self.project, "Atomic rollback", "Rollback verified by a regression fixture.",
+                session_id="review", observation={"type": "bugfix", "narrative": "Detailed evidence. " * 100},
+            )
+            newer = store.remember(self.project, "After", "Deployment remains unverified.", session_id="review")
+        searched = self._content(self._call(1, "memory_search", {
+            "project": str(self.project), "query": "rollback", "mode": "lexical",
+        }))
+        self.assertEqual([anchor["id"]], [record["id"] for record in searched])
+        self.assertNotIn("narrative", searched[0]["observation"])
+        self.assertNotIn("metadata", searched[0])
+        timeline = self._content(self._call(2, "memory_timeline", {
+            "project": str(self.project), "anchor_id": searched[0]["id"], "before": 1, "after": 1,
+        }))
+        self.assertEqual([older["id"], anchor["id"], newer["id"]], [record["id"] for record in timeline])
+        self.assertEqual([False, True, False], [record["is_anchor"] for record in timeline])
+        full_preview = self._content(self._call(3, "memory_search", {
+            "project": str(self.project), "query": "rollback", "mode": "lexical", "detail": "full",
+        }))
+        fetched = self._content(self._call(4, "memory_get", {
+            "project": str(self.project), "ids": [anchor["id"]],
+        }))
+        self.assertEqual(fetched[0]["observation"], full_preview[0]["observation"])
+        for request_id, bad in enumerate((
+            {"anchor_id": "../bad"}, {"anchor_id": anchor["id"], "before": True},
+            {"anchor_id": anchor["id"], "before": 99, "after": 1}, {"before": 1},
+            {"detail": []},
+        ), start=5):
+            response = self._call(request_id, "memory_timeline", {"project": str(self.project), **bad})
+            self.assertTrue(response["result"]["isError"], bad)
+        foreign = self._content(self._call(20, "memory_timeline", {
+            "project": str(self.project / "other"), "anchor_id": anchor["id"],
+        }))
+        self.assertEqual([], foreign)
+
     def test_lifecycle_and_protocol_envelope_validation(self) -> None:
         incomplete = self._request(
             {

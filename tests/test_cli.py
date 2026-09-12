@@ -64,6 +64,21 @@ class CLITests(unittest.TestCase):
         self.assertEqual("blocked", result["status"])
         self.assertFalse((self.data_dir / "service-state.json").exists())
 
+    def test_anchor_timeline_and_preview_detail(self) -> None:
+        with Store(self.data_dir) as store:
+            anchor = store.remember(self.project, "Rollback", "Fixture checked rollback.",
+                                    observation={"type": "bugfix", "narrative": "Full fixture evidence."})
+            store.remember(self.project, "Later", "Later event.")
+        common = ("--data-dir", str(self.data_dir), "--project", str(self.project))
+        compact = self._run("search", *common, "--query", "rollback")
+        self.assertNotIn("metadata", compact[0])
+        full = self._run("search", *common, "--query", "rollback", "--detail", "full")
+        self.assertEqual("Full fixture evidence.", full[0]["observation"]["narrative"])
+        window = self._run("timeline", *common, "--anchor-id", anchor["id"], "--before", "0", "--after", "1")
+        self.assertEqual(2, len(window))
+        self.assertTrue(window[0]["is_anchor"])
+        self._run("timeline", *common, "--before", "0", expected=2)
+
     def test_launcher_data_commands_and_config(self) -> None:
         remembered = self._run(
             "remember",

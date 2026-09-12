@@ -2087,6 +2087,30 @@ class Store:
             bounded.append(dict(record))
         return bounded
 
+    def next_observation_lease_expiry(
+        self, project: str | Path, processor_id: str, model: str, reasoning_effort: str,
+    ) -> str | None:
+        """Read the earliest running lease without exposing observation content.
+
+        A failed claim is not proof of an empty queue: another worker may
+        still own its sources. Keep that project scheduled until its lease
+        can be recovered through the normal atomic claim path.
+        """
+        workspace = project_key(project)
+        contract = tuple(_validate_processor_value(value, field) for value, field in (
+            (processor_id, "processor_id"), (model, "model"), (reasoning_effort, "reasoning_effort"),
+        ))
+        with self._lock:
+            self._require_open()
+            row = self._read(lambda: self._connection.execute(
+                "SELECT MIN(j.lease_expires_at) FROM observation_jobs AS j "
+                "WHERE j.project = ? AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
+                "AND j.status = 'running' AND j.lease_token IS NOT NULL "
+                "AND EXISTS (SELECT 1 FROM observation_job_sources AS s WHERE s.job_id = j.id)",
+                (workspace, *contract),
+            ).fetchone())
+            return None if row is None else row[0]
+
     def claim_observation_batch(
         self,
         project: str | Path,
@@ -2100,12 +2124,16 @@ class Store:
         max_chars: int = DEFAULT_OBSERVATION_CHARS,
         lease_seconds: int = DEFAULT_LEASE_SECONDS,
         retry_failed: bool = False,
+        retry_job_id: str | None = None,
     ) -> dict[str, Any] | None:
         """Atomically lease one bounded, project-local raw hook batch.
 
         Failed jobs are deliberately not retried unless requested.  A crashed
         worker remains recoverable after its real lease expires, while an
         invalid model response cannot cause a new retry at every Stop hook.
+        ``retry_job_id`` permits just that timed-out failed job in addition
+        to ordinary fresh or expired work. ``retry_failed`` is the explicit
+        broader recovery operation; the two selectors cannot be combined.
         """
 
         workspace = project_key(project)
@@ -2124,6 +2152,9 @@ class Store:
         )
         if not isinstance(retry_failed, bool):
             raise ValueError("retry_failed must be true or false")
+        retry_job = None if retry_job_id is None else _validate_ids([retry_job_id], "retry_job_id")[0]
+        if retry_failed and retry_job is not None:
+            raise ValueError("pass retry_failed or retry_job_id, not both")
 
         with self._lock:
             self._require_open()
@@ -2134,29 +2165,28 @@ class Store:
                 expires_at = (
                     datetime.now(timezone.utc) + timedelta(seconds=checked_lease)
                 ).isoformat(timespec="microseconds").replace("+00:00", "Z")
-                recovery_states = ["running"]
-                if retry_failed:
-                    recovery_states.append("failed")
-                placeholders = ", ".join("?" for _ in recovery_states)
                 reusable = connection.execute(
-                    f"""
+                    """
                     SELECT * FROM observation_jobs
                     WHERE project = ? AND processor_id = ? AND model = ?
-                      AND reasoning_effort = ? AND status IN ({placeholders})
-                      AND (status = 'failed' OR lease_expires_at <= ?)
+                      AND reasoning_effort = ?
+                      AND ((status = 'running' AND lease_expires_at <= ?)
+                        OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code = 'timeout'))))
                       AND EXISTS (
                         SELECT 1 FROM observation_job_sources
                         WHERE observation_job_sources.job_id = observation_jobs.id
                       )
-                    ORDER BY created_at ASC LIMIT 1
+                    ORDER BY CASE WHEN id = ? THEN 0 ELSE 1 END, created_at ASC LIMIT 1
                     """,
                     (
                         workspace,
                         processor,
                         required_model,
                         required_effort,
-                        *recovery_states,
                         now,
+                        1 if retry_failed else 0,
+                        retry_job,
+                        retry_job,
                     ),
                 ).fetchone()
                 if reusable is not None:
@@ -4138,21 +4168,82 @@ class Store:
         project: str | Path,
         session_id: str | None = None,
         limit: int = 20,
+        *,
+        anchor_id: str | None = None,
+        before: int = 5,
+        after: int = 5,
     ) -> list[dict[str, Any]]:
-        """Return newest previews, including records that have been superseded."""
+        """Return previews, including raw and superseded records.
+
+        Without an anchor, ``limit`` bounds the newest-first results. With an
+        exact ``anchor_id``, ``before`` and ``after`` bound the neighbors in the
+        project and optional session, and ``limit`` is unused. Anchored results
+        are chronological and include ``is_anchor`` on every preview. Missing
+        or out-of-scope anchors return an empty list.
+        """
 
         workspace = project_key(project)
-        checked_limit = _validate_limit(limit)
         checked_session = _validate_text(
             session_id, "session_id", MAX_SESSION_CHARS, required=False
         )
+        for field, value in (("before", before), ("after", after)):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{field} must be a nonnegative integer")
+        if before + after + 1 > MAX_LIMIT:
+            raise ValueError(f"before + after + 1 must not exceed {MAX_LIMIT}")
+        if anchor_id is None:
+            if before != 5 or after != 5:
+                raise ValueError("before and after require anchor_id")
+            checked_limit = _validate_limit(limit)
+            checked_anchor = None
+        else:
+            if not isinstance(anchor_id, str) or not _ID_RE.fullmatch(anchor_id):
+                raise ValueError("anchor_id must be a valid entry id")
+            checked_anchor = anchor_id
         with self._lock:
             self._require_open()
+            if checked_anchor is not None:
+                anchor_session_clause = " AND session_id = ?" if checked_session is not None else ""
+                neighbor_session_clause = (
+                    " AND e.session_id = anchor.session_id" if checked_session is not None else ""
+                )
+                parameters: tuple[Any, ...] = (workspace, checked_anchor)
+                if checked_session is not None:
+                    parameters += (checked_session,)
+                rows = self._read(
+                    lambda: self._connection.execute(
+                        f"""
+                        WITH anchor AS (
+                            SELECT rowid AS timeline_rowid, * FROM entries
+                            WHERE project = ? AND id = ?{anchor_session_clause}
+                        ), older AS (
+                            SELECT e.rowid AS timeline_rowid, e.* FROM entries AS e, anchor
+                            WHERE e.project = anchor.project{neighbor_session_clause}
+                              AND (e.created_at, e.rowid) < (anchor.created_at, anchor.timeline_rowid)
+                            ORDER BY e.created_at DESC, e.rowid DESC LIMIT ?
+                        ), newer AS (
+                            SELECT e.rowid AS timeline_rowid, e.* FROM entries AS e, anchor
+                            WHERE e.project = anchor.project{neighbor_session_clause}
+                              AND (e.created_at, e.rowid) > (anchor.created_at, anchor.timeline_rowid)
+                            ORDER BY e.created_at ASC, e.rowid ASC LIMIT ?
+                        )
+                        SELECT * FROM older
+                        UNION ALL SELECT * FROM anchor
+                        UNION ALL SELECT * FROM newer
+                        ORDER BY created_at ASC, timeline_rowid ASC
+                        """,
+                        (*parameters, before, after),
+                    ).fetchall()
+                )
+                records = self._records_from_rows(rows, preview=True)
+                for record in records:
+                    record["is_anchor"] = record["id"] == checked_anchor
+                return records
             if checked_session is None:
                 rows = self._read(
                     lambda: self._connection.execute(
                         "SELECT * FROM entries WHERE project = ? "
-                        "ORDER BY created_at DESC LIMIT ?",
+                        "ORDER BY created_at DESC, rowid DESC LIMIT ?",
                         (workspace, checked_limit),
                     ).fetchall()
                 )
@@ -4160,7 +4251,7 @@ class Store:
                 rows = self._read(
                     lambda: self._connection.execute(
                         "SELECT * FROM entries WHERE project = ? AND session_id = ? "
-                        "ORDER BY created_at DESC LIMIT ?",
+                        "ORDER BY created_at DESC, rowid DESC LIMIT ?",
                         (workspace, checked_session, checked_limit),
                     ).fetchall()
                 )

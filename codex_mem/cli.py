@@ -334,6 +334,8 @@ def _build_parser() -> _ArgumentParser:
                         help="Prioritize relevant summaries and decisions for resume; returns retrieval metadata")
     search.add_argument("--mode", choices=("auto", "lexical", "semantic", "hybrid"),
                         help="Return results plus retrieval metadata; default automatically uses an available semantic index")
+    search.add_argument("--detail", choices=("compact", "full"), default="compact",
+                        help="Compact previews by default; full retains all preview metadata")
 
     semantic = commands.add_parser("semantic", help="Prepare and inspect the optional local semantic index")
     semantic_commands = semantic.add_subparsers(dest="semantic_command", required=True)
@@ -346,8 +348,10 @@ def _build_parser() -> _ArgumentParser:
 
     service = commands.add_parser("service", help="Manage the local background queue worker")
     service_commands = service.add_subparsers(dest="service_command", required=True)
-    for action in ("start", "run", "stop", "status"):
+    for action in ("start", "run", "status"):
         service_commands.add_parser(action)
+    stop = service_commands.add_parser("stop")
+    stop.add_argument("--expected-owner", help="Stop only the verified owner from service status")
     for action in ("enqueue", "retry"):
         item = service_commands.add_parser(action)
         item.add_argument("--project", required=True)
@@ -395,6 +399,11 @@ def _build_parser() -> _ArgumentParser:
     timeline.add_argument("--project", required=True)
     timeline.add_argument("--session-id")
     timeline.add_argument("--limit", type=lambda value: _positive(value, field="limit", maximum=100), default=20)
+    timeline.add_argument("--anchor-id", help="Exact memory ID; returns chronological neighbors")
+    timeline.add_argument("--before", type=int, default=5, help="Earlier neighbors, requires anchor; total window at most 100")
+    timeline.add_argument("--after", type=int, default=5, help="Later neighbors, requires anchor; recent --limit does not apply")
+    timeline.add_argument("--detail", choices=("compact", "full"), default="compact",
+                          help="Compact previews by default; full retains all preview metadata")
 
     context = commands.add_parser("context", help="Build a bounded memory context")
     context.add_argument("--project", required=True)
@@ -554,6 +563,8 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
                 concepts=_filter_values(namespace.concepts, field="concepts"),
                 files=_filter_values(namespace.files, field="files"),
             )
+            from .retrieval import preview_records
+            result["results"] = preview_records(result["results"], detail=namespace.detail)
             return result if namespace.mode or namespace.intent else result["results"]
         if command in {"get-tool-uses", "tool-uses"}:
             return bound_tool_uses(
@@ -567,11 +578,16 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
         if command == "get":
             return store.get(_absolute_project(namespace.project), _collect_ids(namespace))
         if command == "timeline":
-            return store.timeline(
+            from .retrieval import preview_records
+            records = store.timeline(
                 _absolute_project(namespace.project),
                 session_id=namespace.session_id,
                 limit=namespace.limit,
+                anchor_id=namespace.anchor_id,
+                before=namespace.before,
+                after=namespace.after,
             )
+            return preview_records(records, detail=namespace.detail)
         if command == "context":
             context_kwargs: dict[str, Any] = {
                 "query": namespace.query,
@@ -640,7 +656,7 @@ def main(args: Sequence[str] | None = None) -> int:
             elif action == "start":
                 value = start_service(namespace.data_dir)
             elif action == "stop":
-                value = stop_service(namespace.data_dir)
+                value = stop_service(namespace.data_dir, expected_owner=namespace.expected_owner)
             elif action == "status":
                 value = service_status(namespace.data_dir)
             elif action == "resume-pending":

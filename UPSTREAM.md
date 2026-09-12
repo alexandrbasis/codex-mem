@@ -2,9 +2,11 @@
 
 Codex Mem is an independent implementation inspired by [Claude Mem](https://github.com/thedotmack/claude-mem). It is not a GitHub fork and does not include copied Claude Mem source. This repository's implementation uses the MIT license in `LICENSE`.
 
-Version `1.4.0` adds retained tool I/O, typed observations, dedicated Stop summaries, and structured retrieval filters; see the [public verification record](docs/VERIFICATION.md) for the evidence and compatibility boundary.
+Version `1.6.0` adds compact retrieval responses, exact-anchor timeline windows, queue recovery fixes, fresh usage-source scheduling, and checked service refresh during managed upgrades. See the [September review](docs/claude-mem-review-2026-09-12.md) and [public verification record](docs/VERIFICATION.md) for evidence and limits.
 
-The reviewed upstream is [v13.24.1, commit f6f72747e1298aef37b1baccefc11ce7305d7bf8](https://github.com/thedotmack/claude-mem/tree/f6f72747e1298aef37b1baccefc11ce7305d7bf8). Review date: 2026-09-08. Its package metadata declares Apache-2.0. If future changes copy upstream code, retain the applicable upstream license, NOTICE, attribution, and modification notices for that code.
+The latest review targets [13.24.23, commit ed57a511f5dbf84e75c9a785df818c43b66b5849](https://github.com/thedotmack/claude-mem/tree/ed57a511f5dbf84e75c9a785df818c43b66b5849), inspected on 2026-09-12. The earlier 2026-09-08 review targeted [v13.24.1, commit f6f72747e1298aef37b1baccefc11ce7305d7bf8](https://github.com/thedotmack/claude-mem/tree/f6f72747e1298aef37b1baccefc11ce7305d7bf8). That package metadata declares Apache-2.0. If future changes copy upstream code, retain the applicable upstream license, NOTICE, attribution, and modification notices for that code.
+
+The new retrieval work adopts the separation between a small search index, surrounding history and full records. Upstream implements [compact search rendering and anchor windows](https://github.com/thedotmack/claude-mem/blob/ed57a511f5dbf84e75c9a785df818c43b66b5849/src/services/worker/SearchManager.ts#L690-L907). Codex Mem now exposes an exact project-scoped `anchor_id` with bounded chronological neighbors, and projects CLI/MCP previews after ranking. The Store and processor retain their full metadata contract. No upstream source was copied.
 
 The observation-capture review for `1.4.0` additionally checked [observer rules](https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/plugin/modes/code.json) and [prompt construction](https://github.com/thedotmack/claude-mem/blob/fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0/src/sdk/prompts.ts) at upstream commit `fd0ecf023336ce631c8a5cd7b70cdeca8f0e82e0`. The adopted principle is to retain durable findings and skip routine activity before retrieval. Raw evidence stays local for audit; failed jobs are preserved for explicit retry. No upstream source was copied.
 
@@ -19,10 +21,10 @@ The product workflow remains capture, compact notes, retrieval, and context for 
 | Agent integration | Native Codex lifecycle hooks, an MCP stdio server, and memory/maintenance skills. |
 | Runtime | Python 3.10+ and SQLite FTS5; optional FastEmbed/ONNX Runtime on Python 3.10–3.13. A local background service drains a durable queue. No HTTP listener or database daemon. |
 | Compression | A local queue service processes bounded observation batches in fresh Luna/medium sessions. Explicit user-authored notes remain available through MCP. Source records and execution receipts are retained. |
-| Retrieval | Unicode full-text, local multilingual embeddings, cosine similarity and reciprocal rank fusion; project scope and bounded previews. |
+| Retrieval | Unicode full-text, local multilingual embeddings, cosine similarity and reciprocal rank fusion; compact CLI/MCP previews, project scope, and exact-anchor timeline windows. |
 | Privacy | Common credential patterns and private blocks are redacted before persistence. Retained tool input and response are redacted and capped at 64 KiB each with explicit head/tail truncation. Per-tool skips and a private-prompt gate reduce capture; transcript scanning is omitted. |
 | Data control | Exact-ID deletion, local backups, explicit retention, and optional import from a selected legacy project. |
-| Failure handling | Memory failures do not block a coding task. Failed queue work remains blocked until explicit retry; completed work and pending jobs survive a service restart. |
+| Failure handling | Memory failures do not block a coding task. Timed-out batches have bounded exact-job retries. Content rejections remain quarantined; active leases defer work without deleting its queue entry. Unknown failures require explicit recovery. |
 
 The runtime needs no separate AI provider configuration. Automatic processing uses the current Codex account's allowance in separate Luna/medium sessions; explicit MCP notes can be authored in the main task. There is no measured claim that lexical search beats vector search, or that this implementation preserves every upstream feature.
 

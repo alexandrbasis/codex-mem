@@ -24,7 +24,7 @@ Verify plugin registration, MCP tools, hook discovery and trust, and the backgro
 
 ## Current release
 
-Version `1.4.0` adds retained tool input/output, structured observations, Stop summaries, and file/concept/type filters. The observer remains Luna with medium reasoning. See the verification record for tested behavior and the limits of the Claude Mem comparison.
+Version `1.6.0` adds compact search previews, history around an exact record, queue recovery fixes, priority for fresh usage data, and verified service refresh during upgrades. The observer remains Luna with medium reasoning. See the verification record for tested behavior and the limits of the Claude Mem comparison.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
 
@@ -70,6 +70,8 @@ codex plugin list --marketplace personal --json
 ```
 
 The installer retains managed caches of older versions and updates their launchers to forward to the current managed installation. Open tasks keep working through the hook paths they already loaded; original launchers are backed up. A running Codex desktop process can keep an older catalog until it is restarted; a successful CLI activation does not prove that an existing desktop connection has refreshed.
+
+On a managed upgrade, the installer also attempts a cooperative restart of an already running memory service. It verifies the prior owner, released lock, new owner and runtime version. Inspect `runtime_refresh` in the result: `restarted` confirms the new worker, while `restart_pending` means files were installed but runtime refresh could not be confirmed. A previously stopped service stays stopped. This service check is separate from the desktop plugin catalog.
 
 ## Select projects for capture
 
@@ -121,6 +123,8 @@ python3 skills/maintenance/scripts/health_check.py --all-projects --deep
 
 It emits metadata-only JSON and leaves the memory database and configuration unchanged. `--deep` adds a SQLite integrity check. Use `--data-dir` for a custom store. Native hook trust and actual execution are separate evidence; the skill uses the installed host check for discovery. Read-only diagnosis does not run a model, retry jobs, or repair storage. Repair commands have their own effects and scope.
 
+The report includes recorded token usage and the age of its latest event. Missing usage data remains unavailable; it is never treated as zero. If process visibility is restricted, worker liveness is `unknown`.
+
 ## Use memory in Codex
 
 In a Codex task, ask for earlier project decisions, ask to save a decision with its evidence, or ask for a compact summary with unresolved questions. The MCP tools require an absolute project path so records remain isolated.
@@ -135,6 +139,18 @@ python3 scripts/codex-mem.py search \
 ```
 
 Search also accepts repeatable `--type`, `--concept`, and `--file` filters, applied before ranking in every search mode. Read retained raw tool evidence with `tool-uses --project /absolute/path/to/project --limit 5`; this command returns data and never executes captured commands.
+
+Since 1.6.0, CLI and MCP search/timeline responses default to compact previews. They retain record IDs, excerpts, provenance and supersession without repeating full structured text. Use `--detail full`, or MCP `detail="full"`, to restore the previous preview metadata. `get` still returns complete records, including bodies and source links. Search ranking and filters are unchanged.
+
+To inspect events around a result, replace `MEMORY_ID` with its exact ID:
+
+```sh
+python3 scripts/codex-mem.py timeline \
+  --project /absolute/path/to/project \
+  --anchor-id MEMORY_ID --before 3 --after 3
+```
+
+Anchor windows include the selected record and chronological neighbors, with `is_anchor` identifying it. `before` and `after` default to 5, and their sum plus the anchor cannot exceed 100. An optional `--session-id` narrows the window. A missing or out-of-scope ID returns an empty list. Anchor mode uses these counts instead of `--limit`; without an anchor, timeline lists recent history newest first. Raw and superseded records remain visible in timeline for audit.
 
 Read the full record after selecting an ID from search results:
 
@@ -231,6 +247,6 @@ The local database remains on disk after plugin removal. Delete it separately on
 
 ## Known limitations
 
-Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, rich structured session-summary schema, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record.
+Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record. The usage ledger does not yet establish the token cost of the ephemeral observation worker, so it cannot establish net memory-system savings.
 
 Read [Upstream and implementation choices](UPSTREAM.md) for provenance and design differences. The project is licensed under the MIT license.

@@ -9,6 +9,7 @@ observation API.  Source text is evidence, never instructions.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime
 import json
 import math
 import os
@@ -107,6 +108,7 @@ def process_pending(
     data_dir: str | Path | None = None,
     *,
     retry_failed: bool = False,
+    retry_job_id: str | None = None,
     timeout: int | float = DEFAULT_TIMEOUT,
     codex: str = "codex",
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
@@ -123,11 +125,19 @@ def process_pending(
 
     The returned receipt intentionally contains no source text, prompt, model
     output, raw configuration, or exception details.
+    ``deferred`` means another running lease still owns the sources; its
+    ``retry_at`` is a UTC Unix timestamp for the next safe claim attempt.
+    ``retry_job_id`` retries only the matching timed-out batch. It never
+    authorizes retries of other failures, unlike explicit ``retry_failed``.
     """
 
     workspace = project_key(project)
     checked_timeout = _validate_timeout(timeout)
     _validate_processor_arguments(retry_failed, max_entries, max_chars, lease_seconds)
+    if retry_job_id is not None and (not isinstance(retry_job_id, str) or not _valid_source_id(retry_job_id)):
+        raise ValueError("retry_job_id is invalid")
+    if retry_failed and retry_job_id is not None:
+        raise ValueError("pass retry_failed or retry_job_id, not both")
     effective_lease_seconds = _effective_lease_seconds(lease_seconds, checked_timeout)
 
     claimed: Mapping[str, Any] | None = None
@@ -142,8 +152,12 @@ def process_pending(
                 max_chars=max_chars,
                 lease_seconds=effective_lease_seconds,
                 retry_failed=retry_failed,
+                retry_job_id=retry_job_id,
             )
             if claimed is None:
+                expiry = store.next_observation_lease_expiry(workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+                if expiry is not None:
+                    return _deferred_receipt(expiry)
                 return _idle_receipt()
 
             raw_job_id = claimed.get("job_id")
@@ -1366,6 +1380,17 @@ def _failed_after_claim(
         return _failed_receipt(job_id, expired_code, thread_id, turn_id, reason_code=reason_code)
     except (StoreError, ValueError, OSError):
         return _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
+
+
+def _deferred_receipt(expiry: str) -> dict[str, Any]:
+    try:
+        parsed = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
+        retry_at = parsed.timestamp()
+        if parsed.tzinfo is None or not math.isfinite(retry_at) or retry_at <= 0:
+            raise ValueError
+    except (AttributeError, TypeError, ValueError, OverflowError, OSError):
+        raise StoreError("Observation lease is invalid") from None
+    return {**_idle_receipt(), "status": "deferred", "retry_at": retry_at}
 
 
 def _idle_receipt() -> dict[str, Any]:

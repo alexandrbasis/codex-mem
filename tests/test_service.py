@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import errno
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
+from codex_mem import __version__
 from codex_mem.config import configure
 from codex_mem.processor import MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending
-from codex_mem.store import Store
+from codex_mem.store import MAX_LEASE_SECONDS, Store
 from codex_mem.service import (
     SERVICE_PID_FILENAME,
     SERVICE_STATE_FILENAME,
@@ -173,13 +176,14 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual([True], retry_flags)
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
 
-    def test_explicit_timeout_retry_is_bounded_and_marks_retry_failed(self) -> None:
+    def test_timeout_retry_is_bounded_and_selects_only_the_failed_job(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)
-        calls: list[bool] = []
+        calls = []
 
         def processor(_project: str, **kwargs: object) -> dict[str, str]:
-            calls.append(bool(kwargs["retry_failed"]))
-            return {"status": "failed", "code": "timeout"} if len(calls) == 1 else {"status": "idle"}
+            calls.append((kwargs["retry_failed"], kwargs.get("retry_job_id")))
+            return ({"status": "failed", "code": "timeout", "job_id": "a" * 32}
+                    if len(calls) == 1 else {"status": "idle"})
 
         result = run_service(
             self.data_dir,
@@ -192,8 +196,148 @@ class ServiceTests(unittest.TestCase):
             max_cycles=3,
         )
         self.assertEqual("cycle_limit", result["status"])
-        self.assertEqual([False, True], calls)
+        self.assertEqual([(False, None), (False, "a" * 32)], calls)
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
+
+    def test_timeout_without_exact_job_cannot_authorize_automatic_retry(self) -> None:
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        processor = mock.Mock(return_value={"status": "failed", "code": "timeout"})
+        result = run_service(self.data_dir, processor=processor, clock=self.clock,
+                             sleeper=self.clock.sleep, max_timeout_retries=1, max_cycles=5)
+        self.assertEqual("halted", result["status"])
+        self.assertEqual(1, processor.call_count)
+
+    def test_deferred_receipt_keeps_retry_intent_and_clamps_wait(self) -> None:
+        for retry_at, expected_delay in ((1.0, 1.0), (10**12, MAX_LEASE_SECONDS)):
+            with self.subTest(retry_at=retry_at):
+                enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+                result = run_service(self.data_dir,
+                    processor=lambda *_a, **_k: {"status": "deferred", "retry_at": retry_at},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+                self.assertEqual("cycle_limit", result["status"])
+                state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+                record = state["projects"][str(self.first.resolve())]
+                self.assertTrue(record["retry_requested"])
+                self.assertEqual(self.clock() + expected_delay, record["due_at"])
+                calls = []
+                run_service(self.data_dir, processor=lambda *a, **k: calls.append(k),
+                            clock=self.clock, sleeper=self.clock.sleep, poll_interval=0, max_cycles=3)
+                self.assertEqual([], calls)
+
+    def test_malformed_deferred_receipt_fails_without_persisting_unsafe_timing(self) -> None:
+        for retry_at in (None, True, "private-source-content", float("nan"), float("inf")):
+            with self.subTest(retry_at=retry_at):
+                enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+                result = run_service(self.data_dir,
+                    processor=lambda *_a, **_k: {"status": "deferred", "retry_at": retry_at},
+                    clock=self.clock, sleeper=self.clock.sleep, max_cycles=1)
+                self.assertEqual("invalid_result", result["code"])
+                self.assertNotIn("private-source-content", (self.data_dir / SERVICE_STATE_FILENAME).read_text())
+
+    def test_legacy_retry_record_remains_readable_and_consumed(self) -> None:
+        enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+        state_path = self.data_dir / SERVICE_STATE_FILENAME
+        state = json.loads(state_path.read_text())
+        record = state["projects"][str(self.first.resolve())]
+        del record["retry_generation"]
+        del record["retry_job_id"]
+        state_path.write_text(json.dumps(state))
+        flags = []
+
+        def processor(_project, **kwargs):
+            flags.append(kwargs["retry_failed"])
+            return {"status": "idle"}
+
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.clock.sleep, max_cycles=1)
+        self.assertEqual([True], flags)
+        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
+
+    def test_retry_requested_during_processor_completion_reaches_next_invocation(self) -> None:
+        rejected = self._failed_job(self.first)
+        outcomes = [
+            {"status": "idle"}, {"status": "processed"}, {"status": "skipped"},
+            {"status": "failed", "code": "timeout"},
+            {"status": "failed", "code": "storage_failure"},
+            {"status": "failed", "code": "invalid_response", "job_id": rejected["job_id"],
+             "reason_code": "invalid_output_shape"},
+        ]
+        for outcome in outcomes:
+            with self.subTest(outcome=outcome):
+                enqueue(self.first, self.data_dir, clock=self.clock)
+                flags = []
+
+                def processor(_project, **kwargs):
+                    flags.append(kwargs["retry_failed"])
+                    if len(flags) == 1:
+                        enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+                        return outcome
+                    return {"status": "idle"}
+
+                run_service(self.data_dir, processor=processor, clock=self.clock,
+                            sleeper=self.clock.sleep, poll_interval=0, max_cycles=2)
+                self.assertEqual([False, True], flags)
+
+    def test_ordinary_enqueue_does_not_repeat_an_already_consumed_explicit_retry(self) -> None:
+        enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
+        flags = []
+
+        def processor(_project, **kwargs):
+            flags.append(kwargs["retry_failed"])
+            if len(flags) == 1:
+                enqueue(self.first, self.data_dir, clock=self.clock)
+            return {"status": "idle"}
+
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.clock.sleep, poll_interval=0, max_cycles=2)
+        self.assertEqual([True, False], flags)
+
+    def test_running_store_lease_survives_service_restart_and_recovers_once_due(self) -> None:
+        self.clock.value = time.time()
+        with Store(self.data_dir) as store:
+            store.remember(self.first, "Leased source", "Retain unfinished evidence",
+                           source="hook:PostToolUse", session_id="leased-session")
+            job = store.claim_observation_batch(self.first, PROCESSOR_ID, MODEL, REASONING_EFFORT,
+                                                lease_seconds=3)
+            expiry = datetime.fromisoformat(job["lease_expires_at"].replace("Z", "+00:00")).timestamp()
+        runner = mock.Mock(return_value={
+            "output": {"notes": [], "disposition": "skipped"},
+            "evidence": {
+                "thread_start": {"thread_id": "worker", "model": MODEL,
+                                 "reasoning_effort": REASONING_EFFORT, "model_provider": "openai"},
+                "turn_started": {"thread_id": "worker", "turn_id": "turn"},
+                "turn_completed": True, "no_tools": True, "rerouted": False,
+            },
+        })
+        receipts = []
+
+        def processor(project, **kwargs):
+            receipt = process_pending(project, runner=runner, **kwargs)
+            receipts.append(receipt)
+            return receipt
+
+        def utc_now():
+            return datetime.fromtimestamp(self.clock(), timezone.utc).isoformat(
+                timespec="microseconds").replace("+00:00", "Z")
+
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        with mock.patch("codex_mem.store._utc_now", side_effect=utc_now):
+            run_service(self.data_dir, processor=processor, clock=self.clock,
+                        sleeper=self.clock.sleep, max_cycles=1)
+            self.assertEqual("deferred", receipts[0]["status"])
+            self.assertEqual(0, runner.call_count)
+            state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+            self.assertEqual(expiry, state["projects"][str(self.first.resolve())]["due_at"])
+            self.assertEqual(1, service_status(self.data_dir, clock=self.clock)["queued_projects"])
+            run_service(self.data_dir, processor=processor, clock=self.clock,
+                        sleeper=self.clock.sleep, poll_interval=5, max_cycles=3)
+        self.assertEqual(["deferred", "skipped", "idle"], [item["status"] for item in receipts])
+        self.assertEqual(1, runner.call_count)
+        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
+        with Store(self.data_dir) as store:
+            row = store._connection.execute("SELECT status,attempt_count FROM observation_jobs WHERE id=?",
+                                             (job["job_id"],)).fetchone()
+            self.assertEqual(("skipped", 2), tuple(row))
 
     def test_expired_lease_recovery_is_bounded_and_does_not_retry_rejections(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)
@@ -665,6 +809,62 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual([], [call for call in kill.call_args_list if call.args[1] != 0])
             state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
             self.assertTrue(state["stop_requested"])
+        finally:
+            _clear_owner(self.data_dir, lock.pid, lock.nonce)
+            lock.release()
+
+    def test_runtime_identity_requires_verified_owner_and_accepts_legacy_metadata(self) -> None:
+        lock = _PidLock(self.data_dir, self.clock())
+        lock.acquire()
+        try:
+            _record_owner(self.data_dir, lock.pid, lock.nonce, self.clock())
+            status = service_status(self.data_dir, clock=self.clock)
+            self.assertTrue(status["lock_held"])
+            self.assertEqual(f"{lock.pid}:{lock.nonce}", status["owner_id"])
+            self.assertEqual(__version__, status["runtime_version"])
+            state_path = self.data_dir / SERVICE_STATE_FILENAME
+            state = json.loads(state_path.read_text())
+            del state["owner"]["runtime_version"]
+            state_path.write_text(json.dumps(state))
+            legacy_status = service_status(self.data_dir, clock=self.clock)
+            self.assertEqual("running", legacy_status["status"])
+            self.assertIsNone(legacy_status["runtime_version"])
+        finally:
+            lock.release()
+        stopped = service_status(self.data_dir, clock=self.clock)
+        self.assertFalse(stopped["lock_held"])
+        self.assertNotIn("runtime_version", stopped)
+        self.assertNotIn("owner_id", stopped)
+
+    def test_stop_with_changed_owner_cannot_stop_the_new_worker(self) -> None:
+        lock = _PidLock(self.data_dir, self.clock())
+        lock.acquire()
+        try:
+            _record_owner(self.data_dir, lock.pid, lock.nonce, self.clock())
+            result = stop_service(self.data_dir, clock=self.clock, expected_owner="1234:" + "f" * 32)
+            self.assertNotEqual("stopping", result["status"])
+            state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+            self.assertFalse(state["stop_requested"])
+        finally:
+            _clear_owner(self.data_dir, lock.pid, lock.nonce)
+            lock.release()
+
+    def test_guarded_stop_rechecks_owner_inside_the_state_lock(self) -> None:
+        lock = _PidLock(self.data_dir, self.clock())
+        lock.acquire()
+        old_owner = "1234:" + "f" * 32
+        try:
+            _record_owner(self.data_dir, lock.pid, lock.nonce, self.clock())
+            with mock.patch("codex_mem.service.service_status", return_value={
+                "status": "running", "pid": 1234, "owner_id": old_owner,
+            }):
+                result = stop_service(self.data_dir, clock=self.clock, expected_owner=old_owner)
+            self.assertEqual({"status": "blocked", "code": "owner_changed"}, result)
+            state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+            self.assertFalse(state["stop_requested"])
+            matched = stop_service(self.data_dir, clock=self.clock,
+                                   expected_owner=f"{lock.pid}:{lock.nonce}")
+            self.assertEqual("stopping", matched["status"])
         finally:
             _clear_owner(self.data_dir, lock.pid, lock.nonce)
             lock.release()

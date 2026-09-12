@@ -7,7 +7,7 @@ Use Codex Mem for project memory. When the user supplies an explicit project pat
 
 ## Recall
 
-Call `memory_search` with a short topic query. Results are previews; use `memory_get` for the relevant IDs before relying on their content. Use `memory_timeline` for a chronological handoff or a specific session.
+Call `memory_search` with a short topic query. Compact previews keep IDs, excerpts, provenance and supersession visible. Use `memory_get` for the relevant IDs before relying on their full content or following `source_ids`. If surrounding events matter, call `memory_timeline` with that exact `anchor_id` and bounded `before`/`after` counts, then fetch the relevant records. An empty anchor window means the ID was not found in the requested project/session; search again instead of guessing an anchor. Without an anchor, timeline returns recent history, newest first. `detail="full"` restores full preview metadata when needed.
 
 For continuing a task or asking what is known about a project, use `intent="resume"`. It prioritizes session summaries, decisions, and fixes within a bounded set of relevant matches. Use the default `intent="lookup"` for a specific error, symbol, or implementation detail. Resume ordering is a reading aid, not a determination of current truth.
 

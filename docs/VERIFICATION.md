@@ -1,6 +1,32 @@
 # Verification
 
-Version `1.4.0` adds retained tool I/O, structured observations, session summaries, and structured retrieval filters. Tests below have bounded synthetic scope; they do not establish universal note quality.
+Verification is version-specific. Synthetic fixtures, a package build and an installed runtime are separate evidence; these checks do not establish universal note quality.
+
+## Version 1.6.0 verification
+
+The [2026-09-12 review](claude-mem-review-2026-09-12.md) compares Codex Mem with Claude Mem 13.24.23 at commit `ed57a511f5dbf84e75c9a785df818c43b66b5849`. Two retrieval principles were independently implemented: compact preview responses and exact-anchor timeline windows. No upstream source was copied.
+
+- CLI/MCP regression tests cover compact/default and full preview metadata, unchanged full-record retrieval, anchor validation, project/session isolation and chronological ordering even for equal timestamps. The reproducible eight-record CLI fixture measures 35,945 versus 5,449 JSON bytes, a reduction of 84.8%, with identical search ranking. This is payload size, not account token savings.
+- Real Store plus deterministic processor tests cover concurrent retry requests, restarting with an active lease, deferring until expiry, and exact timeout retry while older content failures stay quarantined. Malformed deferred receipts and unsupported retry selectors fail safely.
+- Metadata-only health tests cover restricted PID visibility, missing usage data, project scope, optional tables and unchanged database bytes. Usage scheduling tests cover active appends, older-file progress, byte budgets and duplicate-free replay.
+- Synthetic hook/MCP acceptance passed 11 invocations, including private-turn exclusion, source preservation, repeated compaction, backup and deletion. Official hook JSON Schema validation was not enabled. This does not establish fresh desktop hook execution.
+- Two native Luna/medium cases passed before the version bump, preserving fix rationale and rejecting a contradicted success claim. The contradiction case passed again through the final 1.6.0 processor. These were three real model turns on disposable fictional projects, with no user-history reads. There was no Claude-provider A/B.
+- The disposable service upgrade acceptance passed with real processes: a fixture runtime at 0.0.0 was replaced by 1.6.0, its owner changed, and repeated startup retained one lock owner. Database contents, configuration and a nonempty parked queue were preserved. All runtime directories were isolated and the temporary service was stopped afterward.
+
+The baseline 1.5.0 unit suite passed 294 tests; the final 1.6.0 suite passed all 347 tests. The run emitted six unclosed SQLite connection ResourceWarnings from existing test paths; no tests failed. The new release changes default CLI/MCP preview metadata: callers needing the former preview schema can request `detail="full"` or `--detail full`; full bodies remain available through `get`.
+
+To reproduce the bounded local checks:
+
+```sh
+python3 -m unittest discover -s tests -q
+python3 scripts/acceptance.py
+python3 scripts/retrieval_acceptance.py
+python3 scripts/installer_runtime_acceptance.py
+python3 scripts/observation_quality_acceptance.py --native --case contradiction_correction --output /tmp/codex-mem-native-quality.json
+python3 scripts/package.py
+```
+
+The native command consumes the signed-in Codex allowance. The session usage ledger does not yet establish the cost of the ephemeral observation worker. No net token savings are claimed. These development checks do not establish installation of 1.6.0, changes to capture settings, repair of historic rejected jobs, or refresh of the running desktop catalog. Installation requires separate read-back verification.
 
 ## Version 1.4.0 verification
 

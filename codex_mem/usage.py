@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
 from typing import Any
@@ -17,6 +18,14 @@ from .usage_store import UsageStore
 
 TOKEN_FIELDS = ("input_tokens", "cached_input_tokens", "cache_write_input_tokens",
                 "output_tokens", "reasoning_output_tokens", "total_tokens")
+DISCOVERY_ENTRY_BUDGET = 2048
+RECENT_DISCOVERY_ENTRY_BUDGET = 128
+RECENT_REFRESH_FILES = 128
+COLLECTION_FILE_LIMIT = 128
+COLLECTION_BYTE_BUDGET = 8 * 1024 * 1024
+FINGERPRINT_PREFIX_BYTES = 1024
+FINGERPRINT_SUFFIX_BYTES = 256
+SCAN_FINGERPRINT_BYTE_BUDGET = 2 * (FINGERPRINT_PREFIX_BYTES + FINGERPRINT_SUFFIX_BYTES)
 _UUID = re.compile(r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$", re.I)
 
 
@@ -47,11 +56,38 @@ class UsageCollector:
         self._paths = set()
         self._unsupported = {}
         self._discovery = None
+        self._recent_discovery = None
+        self._signatures = {}
+        self._caught_up = {}
+        self._recent = {}
+        self._excluded = {}
+        self._scope_key = None
+        self._single_recent_turn = True
 
     def close(self):
-        if self._discovery is not None:
-            self._discovery.close()
+        for discovery in (self._discovery, self._recent_discovery):
+            if discovery is not None:
+                discovery.close()
         self.store.close()
+
+    def _discover_recent(self):
+        """Find native current-day rollouts without waiting for archive traversal."""
+        today = datetime.now(timezone.utc).date()
+        for delta in (0, -1, 1):
+            # Adjacent dates cover native hosts whose local day differs from UTC.
+            day = today + timedelta(days=delta)
+            directory = self.codex_home / 'sessions' / day.strftime('%Y/%m/%d')
+            if directory.is_symlink():
+                continue
+            try:
+                with os.scandir(directory) as entries:
+                    for entry in entries:
+                        candidate = None
+                        if not entry.is_symlink() and entry.is_file(follow_symlinks=False) and entry.name.endswith('.jsonl'):
+                            candidate = Path(entry.path)
+                        yield candidate
+            except OSError:
+                continue
 
     def _discover(self):
         """Yield once per directory entry so discovery itself stays bounded."""
@@ -85,42 +121,113 @@ class UsageCollector:
             return not any(p.is_symlink() for p in (path, *list(path.parents)[:len(path.relative_to(self.codex_home).parts)])) and path.suffix == ".jsonl"
         return False
 
+    def _observe(self, path: Path):
+        """Track metadata only; the content budget belongs to scan_file."""
+        stat = path.stat()
+        signature = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns)
+        self._signatures[path] = signature
+        if self._caught_up.get(path) == signature or self._unsupported.get(path) == signature or self._excluded.get(path) == signature:
+            self._recent.pop(path, None)
+        else:
+            self._recent[path] = stat.st_mtime_ns
+        return signature
+
+    def _forget(self, path: Path):
+        self._paths.discard(path)
+        for mapping in (self._signatures, self._caught_up, self._recent, self._unsupported, self._excluded):
+            mapping.pop(path, None)
+
+    def _advance_discovery(self, attribute, factory, budget):
+        discovery = getattr(self, attribute)
+        if discovery is None:
+            discovery = factory()
+            setattr(self, attribute, discovery)
+        spent = 0
+        for _ in range(budget):
+            try:
+                candidate = next(discovery)
+            except StopIteration:
+                setattr(self, attribute, None)
+                break
+            spent += 1
+            if candidate is not None and self._allowed(candidate):
+                try:
+                    self._observe(candidate)
+                    self._paths.add(candidate)
+                except OSError:
+                    self._forget(candidate)
+        return spent
+
     def collect(self, config=None, max_files=32) -> dict:
         settings = config if config is not None else load_config(self.data_dir)
         if settings.get("usage_enabled", True) is not True or not settings.get("capture_enabled"):
             return {"files": 0, "events": 0, "status": "disabled"}
-        if self._discovery is None:
-            self._discovery = self._discover()
-        for _ in range(2048):
+        scope_key = (settings.get("capture_scope"), tuple(settings.get("included_projects") or ()), tuple(settings.get("excluded_projects") or ()))
+        if scope_key != self._scope_key:
+            self._excluded.clear()
+            self._scope_key = scope_key
+        spent = self._advance_discovery("_recent_discovery", self._discover_recent, RECENT_DISCOVERY_ENTRY_BUDGET)
+        self._advance_discovery("_discovery", self._discover, DISCOVERY_ENTRY_BUDGET - spent)
+        # Recheck the newest known sources every cycle, even when directory
+        # discovery is still walking historical files. Completed sources enter
+        # the recent lane again as soon as their metadata changes.
+        watched = sorted(self._signatures, key=lambda path: (self._signatures[path][3], str(path)), reverse=True)
+        for path in watched[:RECENT_REFRESH_FILES]:
             try:
-                candidate = next(self._discovery)
-            except StopIteration:
-                self._discovery = None
-                break
-            if candidate is not None and self._allowed(candidate):
-                self._paths.add(candidate)
+                if self._allowed(path):
+                    self._observe(path)
+                else:
+                    self._forget(path)
+            except OSError:
+                self._forget(path)
         paths = sorted(self._paths)
         if not paths:
             return {"files": 0, "events": 0}
-        count = min(max(0, min(max_files, 128)), len(paths))
-        chosen = [paths[(self._next_file + i) % len(paths)] for i in range(count)]
-        self._next_file = (self._next_file + count) % len(paths)
-        result = {"files": 0, "events": 0, "errors": 0}
-        for path in chosen:
+        count = min(max(0, min(max_files, COLLECTION_FILE_LIMIT)), len(paths))
+        recent_quota = (count + 1) // 2
+        if count == 1:
+            # One file cannot serve both lanes in the same call. Alternate so
+            # even this smallest budget guarantees historical progress.
+            recent_quota = int(self._single_recent_turn)
+            self._single_recent_turn = not self._single_recent_turn
+        recent = sorted(self._recent, key=lambda path: (self._recent[path], str(path)), reverse=True)[:recent_quota]
+        recent_set = set(recent)
+        historical = []
+        while len(historical) < count - len(recent):
+            path = paths[self._next_file % len(paths)]
+            self._next_file = (self._next_file + 1) % len(paths)
+            if path not in recent_set:
+                historical.append(path)
+        # Separate file slots also reserve a positive share of the byte budget
+        # for history when a large active rollout never reaches EOF.
+        # Resume/replacement checks read at most two bounded fingerprints per
+        # source. Reserve those bytes too, so parsing plus fingerprint reads
+        # together stay within the collection cap.
+        file_bytes = COLLECTION_BYTE_BUDGET // max(count, 1) - SCAN_FINGERPRINT_BYTE_BUDGET
+        result = {"files": 0, "events": 0, "errors": 0, "recent_files": 0, "historical_files": 0}
+        for path, lane in [(path, "recent_files") for path in recent] + [(path, "historical_files") for path in historical]:
             try:
-                stat = path.stat()
-                signature = (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns)
-                if self._unsupported.get(path) == signature:
+                signature = self._observe(path)
+                if self._unsupported.get(path) == signature or (lane == "recent_files" and (self._caught_up.get(path) == signature or self._excluded.get(path) == signature)):
                     continue
-                item = self.scan_file(path, config=settings, max_bytes=max(65536, 8388608 // max(count, 1)))
+                item = self.scan_file(path, config=settings, max_bytes=file_bytes)
                 if item.get("status") == "unsupported":
                     self._unsupported[path] = signature
+                    self._recent.pop(path, None)
+                elif item.get("status") == "excluded":
+                    self._excluded[path] = signature
+                    self._recent.pop(path, None)
                 else:
                     self._unsupported.pop(path, None)
+                    self._excluded.pop(path, None)
+                    if item.get("status") == "ok" and item.get("offset", 0) >= signature[2]:
+                        self._caught_up[path] = signature
+                        self._recent.pop(path, None)
                 result["files"] += 1
+                result[lane] += 1
                 result["events"] += item.get("events", 0)
             except FileNotFoundError:
-                self._paths.discard(path)
+                self._forget(path)
             except (OSError, ValueError):
                 result["errors"] += 1
         return result
@@ -186,9 +293,9 @@ class UsageCollector:
         """Detect in-place replacement without rereading the rollout body."""
         position = handle.tell()
         handle.seek(0)
-        prefix = handle.read(min(1024, offset))
-        handle.seek(max(0, offset - 256))
-        suffix = handle.read(min(256, offset))
+        prefix = handle.read(min(FINGERPRINT_PREFIX_BYTES, offset))
+        handle.seek(max(0, offset - FINGERPRINT_SUFFIX_BYTES))
+        suffix = handle.read(min(FINGERPRINT_SUFFIX_BYTES, offset))
         handle.seek(position)
         return hashlib.sha256(prefix + suffix).hexdigest()
 

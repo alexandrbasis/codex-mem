@@ -24,6 +24,107 @@ MAX_CACHE_BACKUP_BYTES = 128 * 1024 * 1024
 LEGACY_LAUNCHER = Path("scripts") / "codex-mem.py"
 LEGACY_LAUNCHER_BACKUP = Path("scripts") / "codex-mem.py.codex-mem-original"
 _FORWARDER_MARKER = "# codex-mem managed legacy cache forwarder v1"
+SERVICE_COMMAND_TIMEOUT = 5.0
+SERVICE_REFRESH_TIMEOUT = 15.0
+
+
+def _service_command(launcher: Path, data_dir: Path, action: str, *,
+                     timeout: float = SERVICE_COMMAND_TIMEOUT,
+                     expected_owner: str | None = None) -> dict:
+    """Use packaged lifecycle commands without importing an installed module."""
+
+    try:
+        arguments = [sys.executable, str(launcher), "--data-dir", str(data_dir), "service", action]
+        if expected_owner is not None:
+            arguments.extend(["--expected-owner", expected_owner])
+        completed = subprocess.run(
+            arguments,
+            capture_output=True, text=True, timeout=timeout,
+        )
+        value = json.loads(completed.stdout)
+        if isinstance(value, dict) and (completed.returncode == 0 or
+                value.get("status") in {"error", "failed", "blocked", "unknown", "unavailable"}):
+            return value
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+    return {"status": "unavailable", "code": "service_command_unavailable"}
+
+
+def _verified_running(value: dict) -> bool:
+    pid = value.get("pid")
+    return bool(value.get("status") == "running" and value.get("running") is True
+                and value.get("lock_held") is True and isinstance(pid, int)
+                and not isinstance(pid, bool) and pid > 0
+                and isinstance(value.get("owner_id"), str) and value["owner_id"])
+
+
+def _verified_stopped(value: dict) -> bool:
+    return (value.get("status") == "stopped" and value.get("running") is False
+            and value.get("lock_held") is False)
+
+
+def _refresh_runtime(target: Path, version: str, data_dir: Path, before: dict) -> dict:
+    """Refresh a verified preexisting worker after activation, never force it out."""
+
+    receipt = {"status": "restart_pending", "expected_version": version,
+               "previous_status": before.get("status", "unavailable")}
+    if _verified_stopped(before):
+        return {**receipt, "status": "unchanged", "code": "previously_stopped"}
+    if before.get("stop_requested") is True:
+        return {**receipt, "status": "unchanged", "code": "shutdown_already_requested"}
+    if not _verified_running(before):
+        return {**receipt, "code": "previous_owner_unverified"}
+    receipt["previous_pid"] = before["pid"]
+    receipt["previous_runtime_version"] = before.get("runtime_version")
+    try:
+        launcher = _verify_current_launcher(target, version)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return {**receipt, "code": "managed_launcher_unavailable"}
+    deadline = time.monotonic() + SERVICE_REFRESH_TIMEOUT
+
+    def command(action: str) -> dict:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return {"status": "unavailable"}
+        options = {"expected_owner": before["owner_id"]} if action == "stop" else {}
+        return _service_command(launcher, data_dir, action,
+                                timeout=min(SERVICE_COMMAND_TIMEOUT, remaining), **options)
+
+    current = command("status")
+    if not _verified_running(current) or current["owner_id"] != before["owner_id"]:
+        return {**receipt, "code": "previous_owner_changed"}
+    if current.get("stop_requested") is True:
+        return {**receipt, "code": "shutdown_already_requested"}
+    stopped = command("stop")
+    if stopped.get("code") == "owner_changed":
+        return {**receipt, "code": "previous_owner_changed"}
+    if stopped.get("status") not in {"stopping", "not_running"}:
+        return {**receipt, "code": "stop_request_unverified"}
+    while time.monotonic() < deadline:
+        current = command("status")
+        if _verified_stopped(current):
+            break
+        if _verified_running(current) and current["owner_id"] != before["owner_id"]:
+            return {**receipt, "code": "owner_changed_during_stop"}
+        time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
+    else:
+        return {**receipt, "code": "shutdown_pending"}
+
+    # start_service repeats the lock check and reserves startup atomically, so a
+    # concurrent starter cannot make this command launch a competing worker.
+    started = command("start")
+    while time.monotonic() < deadline:
+        current = command("status")
+        if _verified_running(current):
+            if (current["owner_id"] != before["owner_id"]
+                    and current.get("runtime_version") == version):
+                return {**receipt, "status": "restarted", "pid": current["pid"],
+                        "runtime_version": current["runtime_version"]}
+            return {**receipt, "status": "restart_failed", "code": "runtime_version_unverified"}
+        if started.get("status") in {"error", "failed"} and _verified_stopped(current):
+            return {**receipt, "status": "restart_failed", "code": "startup_failed"}
+        time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
+    return {**receipt, "code": "startup_pending"}
 
 
 def manifest(root: Path) -> dict:
@@ -435,6 +536,8 @@ def install(source: Path, user_home: Path, *, apply: bool, register_only: bool =
         cache_root: Path | None = None
         cache_total = 0
         retain_cache_backup = False
+        runtime_before: dict | None = None
+        runtime_data_dir: Path | None = None
         stage = Path(tempfile.mkdtemp(prefix=".codex-mem-stage-", dir=target.parent))
         swapped = False
         try:
@@ -464,6 +567,14 @@ def install(source: Path, user_home: Path, *, apply: bool, register_only: bool =
                     shutil.copy2(item, stage / name)
             (stage / MARKER).write_text("codex-mem personal installer v1\n")
             manifest(stage)
+            if target.exists() and not register_only:
+                configured = os.environ.get("CODEX_MEM_HOME", "").strip()
+                runtime_data_dir = Path(configured or user_home / ".local/share/codex-mem").expanduser().resolve()
+                # New code can inspect older owner records without attributing
+                # the new package version to a daemon still running old code.
+                runtime_before = _service_command(
+                    _verify_current_launcher(stage, info["version"]), runtime_data_dir, "status"
+                )
             if target.exists():
                 target.rename(previous)
                 previous_cache = _previous_cache_destination(previous, user_home, current["name"])
@@ -543,6 +654,21 @@ def install(source: Path, user_home: Path, *, apply: bool, register_only: bool =
                 activated["legacy_launcher_refresh"] = _refresh_legacy_launchers(
                     cache_root, target, info["version"]
                 )
+            if register_only or runtime_before is None:
+                refresh = {"status": "unchanged",
+                           "code": "register_only" if register_only else "first_install"}
+            elif not activated.get("installed"):
+                refresh = {"status": "restart_pending", "code": "activation_not_verified"}
+            else:
+                refresh = _refresh_runtime(target, info["version"], runtime_data_dir, runtime_before)
+            activated["runtime_refresh"] = refresh
+            if refresh["status"] in {"restart_pending", "restart_failed"}:
+                message = (
+                    "Plugin files were updated, but the background service update is not verified. "
+                    "Inspect service status before requesting a cooperative stop/start; no worker was force-killed."
+                )
+                activated["runtime_error"] = message
+                activated.setdefault("error", message)
             return activated
         finally:
             if cache_backup_root is not None and not retain_cache_backup:

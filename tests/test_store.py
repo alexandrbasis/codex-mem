@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest import mock
 
-from codex_mem.store import SCHEMA_VERSION, Store, StoreError, project_key
+from codex_mem.store import MAX_LIMIT, SCHEMA_VERSION, Store, StoreError, project_key
 from codex_mem.tool_io import get_tool_capture_for_entry, normalize_capture
 
 
@@ -91,6 +91,129 @@ class StoreTests(unittest.TestCase):
         self.assertEqual([], self.store.get(self.project_b, [first["id"]]))
         # This is treated as literal tokens, not FTS syntax or an operator.
         self.assertIsInstance(self.store.search(self.project_a, '" OR *'), list)
+
+    def test_timeline_orders_equal_timestamps_by_insertion(self) -> None:
+        with mock.patch("codex_mem.store._utc_now", return_value="2026-01-01T00:00:00.000000Z"):
+            entries = [
+                self.store.remember(self.project_a, f"Event {index}", "evidence", session_id="session-a")
+                for index in range(5)
+            ]
+
+        for session_id in (None, "session-a"):
+            with self.subTest(session_id=session_id):
+                recent = self.store.timeline(self.project_a, session_id, limit=3)
+                self.assertEqual([entry["id"] for entry in reversed(entries[2:])],
+                                 [entry["id"] for entry in recent])
+                self.assertTrue(all("is_anchor" not in entry for entry in recent))
+                anchored = self.store.timeline(
+                    self.project_a, session_id, anchor_id=entries[2]["id"], before=1, after=1
+                )
+                self.assertEqual([entry["id"] for entry in entries[1:4]],
+                                 [entry["id"] for entry in anchored])
+                self.assertEqual([False, True, False], [entry["is_anchor"] for entry in anchored])
+                self.assertTrue(all("body" not in entry for entry in anchored))
+
+    def test_timeline_anchor_reaches_older_entries_beyond_recent_limit(self) -> None:
+        entries = []
+        for index in range(30):
+            with mock.patch("codex_mem.store._utc_now", return_value=f"2026-01-01T00:00:{index:02d}.000000Z"):
+                entries.append(self.store.remember(self.project_a, f"Event {index}", "evidence"))
+        anchor_id = entries[3]["id"]
+        self.assertNotIn(anchor_id, [entry["id"] for entry in self.store.timeline(self.project_a)])
+
+        result = self.store.timeline(self.project_a, limit=1, anchor_id=anchor_id, before=2, after=4)
+
+        self.assertEqual([entry["id"] for entry in entries[1:8]], [entry["id"] for entry in result])
+        self.assertEqual([anchor_id], [entry["id"] for entry in result if entry["is_anchor"]])
+
+    def test_timeline_orders_imported_events_by_creation_time_before_insertion(self) -> None:
+        entries = {}
+        for day in (4, 1, 3, 2):
+            with mock.patch("codex_mem.store._utc_now", return_value=f"2026-01-{day:02d}T00:00:00.000000Z"):
+                entries[day] = self.store.remember(self.project_a, f"Day {day}", "evidence")
+
+        recent = self.store.timeline(self.project_a, limit=3)
+        self.assertEqual([entries[day]["id"] for day in (4, 3, 2)], [entry["id"] for entry in recent])
+        anchored = self.store.timeline(self.project_a, anchor_id=entries[2]["id"], before=1, after=1)
+        self.assertEqual([entries[day]["id"] for day in (1, 2, 3)], [entry["id"] for entry in anchored])
+
+    def test_timeline_filters_scope_before_selecting_anchor_neighbors(self) -> None:
+        with mock.patch("codex_mem.store._utc_now", return_value="2026-01-01T00:00:00.000000Z"):
+            older = self.store.remember(self.project_a, "Older", "evidence", session_id="target")
+            other_session_before = self.store.remember(
+                self.project_a, "Other session before", "evidence", session_id="other"
+            )
+            foreign_before = self.store.remember(self.project_b, "Foreign before", "evidence", session_id="target")
+            anchor = self.store.remember(self.project_a, "Anchor", "evidence", session_id="target")
+            foreign_after = self.store.remember(self.project_b, "Foreign after", "evidence", session_id="target")
+            other_session_after = self.store.remember(
+                self.project_a, "Other session after", "evidence", session_id="other"
+            )
+            newer = self.store.remember(self.project_a, "Newer", "evidence", session_id="target")
+
+        session_result = self.store.timeline(
+            self.project_a, "target", anchor_id=anchor["id"], before=1, after=1
+        )
+        self.assertEqual([older["id"], anchor["id"], newer["id"]], [entry["id"] for entry in session_result])
+        project_result = self.store.timeline(self.project_a, anchor_id=anchor["id"], before=1, after=1)
+        self.assertEqual([other_session_before["id"], anchor["id"], other_session_after["id"]],
+                         [entry["id"] for entry in project_result])
+        for foreign_anchor in (foreign_before, foreign_after):
+            self.assertEqual([], self.store.timeline(self.project_a, anchor_id=foreign_anchor["id"]))
+        self.assertEqual([], self.store.timeline(self.project_a, "other", anchor_id=anchor["id"]))
+        self.assertEqual([], self.store.timeline(self.project_b, anchor_id=anchor["id"]))
+        self.assertEqual([], self.store.timeline(self.project_a, anchor_id="0" * 32))
+
+    def test_timeline_anchor_does_not_refill_missing_neighbors_at_boundaries(self) -> None:
+        with mock.patch("codex_mem.store._utc_now", return_value="2026-01-01T00:00:00.000000Z"):
+            entries = [self.store.remember(self.project_a, f"Event {index}", "evidence") for index in range(5)]
+
+        for anchor_index, before, after, expected_slice in (
+            (0, 4, 1, slice(0, 2)),
+            (4, 1, 4, slice(3, 5)),
+            (2, 0, 0, slice(2, 3)),
+            (2, 2, 0, slice(0, 3)),
+            (2, 0, 2, slice(2, 5)),
+            (4, MAX_LIMIT - 1, 0, slice(0, 5)),
+        ):
+            with self.subTest(anchor_index=anchor_index, before=before, after=after):
+                result = self.store.timeline(
+                    self.project_a, anchor_id=entries[anchor_index]["id"], before=before, after=after
+                )
+                self.assertEqual([entry["id"] for entry in entries[expected_slice]],
+                                 [entry["id"] for entry in result])
+
+    def test_timeline_anchor_includes_raw_and_superseded_evidence(self) -> None:
+        raw = self.store.remember(self.project_a, "Raw output", "token=private-value", source="hook:PostToolUse")
+        summary = self.store.remember(
+            self.project_a, "Summary", "Observed evidence", kind="summary", source_ids=[raw["id"]]
+        )
+
+        result = self.store.timeline(self.project_a, anchor_id=raw["id"], before=0, after=1)
+
+        self.assertEqual([raw["id"], summary["id"]], [entry["id"] for entry in result])
+        self.assertEqual(summary["id"], result[0]["superseded_by"])
+        self.assertTrue(result[0]["is_anchor"])
+        self.assertNotIn("private-value", result[0]["preview"])
+
+    def test_timeline_validates_anchor_and_neighborhood_bounds(self) -> None:
+        entry = self.store.remember(self.project_a, "Anchor", "evidence")
+        for invalid_anchor in ("", "invalid id!", "x" * 65, [entry["id"]], 3, True):
+            with self.subTest(anchor_id=invalid_anchor), self.assertRaisesRegex(ValueError, "anchor_id"):
+                self.store.timeline(self.project_a, anchor_id=invalid_anchor)
+        self.assertEqual([], self.store.timeline(self.project_a, anchor_id=entry["id"][:8]))
+        for field in ("before", "after"):
+            for invalid_bound in (-1, True, False, 1.5, "1", None):
+                with self.subTest(field=field, value=invalid_bound), self.assertRaisesRegex(ValueError, field):
+                    self.store.timeline(self.project_a, anchor_id=entry["id"], **{field: invalid_bound})
+            with self.subTest(field=field, missing_anchor=True), self.assertRaisesRegex(ValueError, "require anchor_id"):
+                self.store.timeline(self.project_a, **{field: 0})
+        for before, after in ((MAX_LIMIT, 0), (0, MAX_LIMIT), (50, 50)):
+            with self.subTest(before=before, after=after), self.assertRaisesRegex(ValueError, "must not exceed"):
+                self.store.timeline(self.project_a, anchor_id=entry["id"], before=before, after=after)
+        for invalid_limit in (0, MAX_LIMIT + 1, True):
+            with self.subTest(limit=invalid_limit), self.assertRaisesRegex(ValueError, "limit"):
+                self.store.timeline(self.project_a, limit=invalid_limit)
 
     def test_structured_observation_metadata_round_trips_and_filters(self) -> None:
         entry = self.store.remember(

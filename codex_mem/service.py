@@ -36,10 +36,11 @@ except ImportError:  # pragma: no cover - Windows does not provide flock
     fcntl = None  # type: ignore[assignment]
 
 from .config import automatic_capture_enabled, data_dir_path, hooks_disabled, load_config
+from . import __version__
 from .processor import (
     DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending,
 )
-from .store import project_key
+from .store import MAX_LEASE_SECONDS, project_key
 
 
 SERVICE_STATE_FILENAME = "service-state.json"
@@ -133,6 +134,8 @@ def enqueue(
         # outside an earlier service run.
         if retry_failed:
             record["retry_requested"] = True
+            record["retry_generation"] = record["generation"]
+            record["retry_job_id"] = None
         if record["blocked"]:
             record["blocked"] = False
             record["attempts"] = 0
@@ -141,6 +144,8 @@ def enqueue(
             # failed leased observation job.  Keep that signal separate from
             # the service's timeout-backoff counter.
             record["retry_requested"] = True
+            record["retry_generation"] = record["generation"]
+            record["retry_job_id"] = None
         _write_state(base, state)
         return {"status": "queued", "project": workspace}
 
@@ -190,6 +195,8 @@ def resume_pending(
         record["due_at"] = now
         record["attempts"] = 0
         record["retry_requested"] = False
+        record["retry_generation"] = None
+        record["retry_job_id"] = None
         _write_state(base, state)
     return {"status": "queued", "project": workspace,
             "rejected_job_id": rejected_job_id, "retry_failed": False}
@@ -232,6 +239,8 @@ def recover_expired(
         record["due_at"] = now
         record["attempts"] = 0
         record["retry_requested"] = False
+        record["retry_generation"] = None
+        record["retry_job_id"] = None
         _write_state(base, state)
     return {"status": "queued", "project": workspace, "job_id": job_id, "retry_failed": False}
 
@@ -336,7 +345,8 @@ def run_service(
             retry_failed = bool(choice["retry_requested"])
             if processor_enabled:
                 result = _call_processor(
-                    active_processor, project, data_dir, retry_failed, checked_timeout
+                    active_processor, project, data_dir, retry_failed, checked_timeout,
+                    retry_job_id=None if retry_failed else choice["retry_job_id"],
                 )
                 jobs += 1
                 status, code = _processor_outcome(result)
@@ -401,6 +411,10 @@ def run_service(
                 # Continue across all queued projects.  A drained local index
                 # pass parks only this project until processor configuration
                 # changes; it cannot repeatedly spin on the same record.
+                continue
+
+            if status == "deferred":
+                _finish_deferred(base, project, generation, result["retry_at"], _checked_now(clock))
                 continue
 
             _finish_success(
@@ -499,6 +513,7 @@ def start_service(
 def stop_service(
     data_dir: str | os.PathLike[str] | None = None,
     *,
+    expected_owner: str | None = None,
     clock: Callable[[], float] = time.time,
 ) -> dict[str, Any]:
     """Request a bounded cooperative shutdown without signalling a PID."""
@@ -510,11 +525,24 @@ def stop_service(
             "status": status["status"],
             "code": status.get("code", "status_unavailable"),
         }
+    if expected_owner is not None and status.get("owner_id") != expected_owner:
+        return {"status": "blocked", "code": "owner_changed"}
     if status["status"] not in {"running", "starting"}:
         return {"status": "not_running"}
     try:
         with _state_lock(base):
             state = _load_state(base)
+            if expected_owner is not None:
+                # Owner registration and cleanup take this same state lock.
+                # Compare again inside it so an installer cannot stop a worker
+                # that replaced the daemon it inspected before activation.
+                owner = state["owner"]
+                lock = _read_pid_lock(base)
+                if (not owner or not lock or _pid_lock_held(base) is not True
+                        or owner["pid"] != lock["pid"] or owner["nonce"] != lock["nonce"]
+                        or f"{owner['pid']}:{owner['nonce']}" != expected_owner
+                        or not _pid_alive(owner["pid"])):
+                    return {"status": "blocked", "code": "owner_changed"}
             state["stop_requested"] = True
             state["stop_requested_at"] = _checked_now(clock)
             _write_state(base, state)
@@ -538,6 +566,7 @@ def service_status(
         return {
             "status": "unavailable",
             "running": None,
+            "lock_held": None,
             "queued_projects": 0,
             "blocked_projects": 0,
             "code": "status_unavailable",
@@ -566,6 +595,7 @@ def service_status(
         result: dict[str, Any] = {
             "status": "unknown",
             "running": None,
+            "lock_held": None,
             "queued_projects": len(projects),
             "blocked_projects": blocked,
             "stop_requested": state["stop_requested"],
@@ -598,6 +628,7 @@ def service_status(
     result: dict[str, Any] = {
         "status": "running" if running else "starting" if starting else "stopped",
         "running": running,
+        "lock_held": lock_held,
         "queued_projects": len(projects),
         "blocked_projects": blocked,
         "stop_requested": state["stop_requested"],
@@ -605,6 +636,8 @@ def service_status(
     }
     if running and lock is not None:
         result["pid"] = lock["pid"]
+        result["owner_id"] = f"{lock['pid']}:{lock['nonce']}"
+        result["runtime_version"] = owner.get("runtime_version")
     elif starting and startup is not None:
         result["pid"] = startup["pid"]
     return result
@@ -729,6 +762,8 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
         "due_at": now,
         "attempts": 0,
         "retry_requested": retry_requested,
+        "retry_generation": 1 if retry_requested else None,
+        "retry_job_id": None,
         "last_code": None,
         "rejected_batches": 0,
         "last_rejected_job": None,
@@ -883,6 +918,14 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     ):
         raise ServiceStateError("service state is unavailable")
     last_code = raw.get("last_code")
+    retry_generation = raw.get("retry_generation", generation if retry_requested else None)
+    retry_job_id = raw.get("retry_job_id")
+    if ((retry_generation is None) != (not retry_requested)
+            or (retry_generation is not None and (
+                isinstance(retry_generation, bool) or not isinstance(retry_generation, int)
+                or not 1 <= retry_generation <= generation))
+            or (retry_job_id is not None and not _valid_job_id(retry_job_id))):
+        raise ServiceStateError("service state is unavailable")
     if last_code is not None and not _safe_code(last_code):
         raise ServiceStateError("service state is unavailable")
     rejected_batches = raw.get("rejected_batches", 0)
@@ -915,6 +958,8 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         "due_at": float(due_at),
         "attempts": attempts,
         "retry_requested": retry_requested,
+        "retry_generation": retry_generation,
+        "retry_job_id": retry_job_id,
         "last_code": last_code,
         "rejected_batches": rejected_batches,
         "last_rejected_job": last_rejected_job,
@@ -936,7 +981,14 @@ def _validate_owner(raw: Any) -> dict[str, Any] | None:
     started_at = raw.get("started_at")
     if not _valid_pid(pid) or not _valid_nonce(nonce) or not _is_timestamp(started_at):
         raise ServiceStateError("service state is unavailable")
-    return {"pid": pid, "nonce": nonce, "started_at": float(started_at)}
+    result = {"pid": pid, "nonce": nonce, "started_at": float(started_at)}
+    version = raw.get("runtime_version")
+    if version is not None:
+        if (not isinstance(version, str) or not 1 <= len(version) <= 128
+                or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-" for c in version)):
+            raise ServiceStateError("service state is unavailable")
+        result["runtime_version"] = version
+    return result
 
 
 def _write_state(base: Path, state: Mapping[str, Any]) -> None:
@@ -1099,7 +1151,8 @@ def _read_lifecycle_file(path: Path) -> dict[str, Any] | None:
 def _record_owner(base: Path, pid: int, nonce: str, started_at: float) -> None:
     with _state_lock(base):
         state = _load_state(base)
-        state["owner"] = {"pid": pid, "nonce": nonce, "started_at": started_at}
+        state["owner"] = {"pid": pid, "nonce": nonce, "started_at": started_at,
+                          "runtime_version": __version__}
         _write_state(base, state)
 
 
@@ -1228,6 +1281,7 @@ def _claim_due_project(base: Path, now: float, processor_timeout: float) -> dict
             "generation": record["generation"],
             "attempts": record["attempts"],
             "retry_requested": record["retry_requested"],
+            "retry_job_id": record["retry_job_id"],
         }
 
 
@@ -1281,6 +1335,29 @@ def _has_other_eligible_project(
     return False
 
 
+def _clear_consumed_retry(record: dict[str, Any], generation: int) -> None:
+    # A retry requested while the worker ran belongs to the next invocation.
+    if record["retry_generation"] is not None and record["retry_generation"] <= generation:
+        record["retry_requested"] = False
+        record["retry_generation"] = None
+
+
+def _finish_deferred(base: Path, project: str, generation: int, retry_at: float, now: float) -> None:
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(project)
+        if record is None or record["inflight_generation"] != generation:
+            return
+        record["inflight_generation"] = None
+        record["inflight_until"] = None
+        # No batch was claimed, so preserve both explicit and exact retries.
+        # Bound untrusted receipt timing, and avoid repeated processor calls
+        # while Store's different (usually longer) lease is still active.
+        record["due_at"] = (now if record["generation"] != generation else
+                            max(now + 1.0, min(retry_at, now + MAX_LEASE_SECONDS)))
+        _write_state(base, state)
+
+
 def _finish_success(
     base: Path,
     project: str,
@@ -1292,12 +1369,13 @@ def _finish_success(
     with _state_lock(base):
         state = _load_state(base)
         record = state["projects"].get(project)
-        if record is None:
+        if record is None or record["inflight_generation"] != generation:
             return
         record["inflight_generation"] = None
         record["inflight_until"] = None
         record["attempts"] = 0
-        record["retry_requested"] = False
+        _clear_consumed_retry(record, generation)
+        record["retry_job_id"] = None
         if record["rejected_batches"]:
             counts = _rejection_counts(base, [project])
             if counts is not None and not counts.get(project, 0):
@@ -1478,7 +1556,8 @@ def _quarantine_rejection(
         _record_rejection(record, job_id, reason_code)
         record["inflight_generation"] = None
         record["inflight_until"] = None
-        record["retry_requested"] = False
+        _clear_consumed_retry(record, generation)
+        record["retry_job_id"] = None
         record["attempts"] = 0
         record["blocked"] = False
         record["due_at"] = now
@@ -1503,21 +1582,33 @@ def _finish_failure(
     with _state_lock(base):
         state = _load_state(base)
         record = state["projects"].get(project)
-        if record is None:
+        if record is None or record["inflight_generation"] != generation:
             return False
         record["inflight_generation"] = None
         record["inflight_until"] = None
+        _clear_consumed_retry(record, generation)
+        record["retry_job_id"] = None
         if rejected:
             _record_rejection(record, rejected_job_id, reason_code)
         record["last_code"] = safe_code
+        if record["retry_requested"]:
+            # An explicit retry arriving during this failed invocation has
+            # not been consumed. Honour it before applying the old failure.
+            record["blocked"] = False
+            record["attempts"] = 0
+            record["due_at"] = now
+            _write_state(base, state)
+            return True
         if safe_code in {"timeout", "lease_expired"}:
             record["attempts"] += 1
             retry_limit = (MAX_LEASE_RECOVERY_RETRIES if safe_code == "lease_expired"
                            else max_timeout_retries)
-            if record["attempts"] <= retry_limit:
+            if record["attempts"] <= retry_limit and (
+                safe_code != "timeout" or _valid_job_id(rejected_job_id)
+            ):
                 # Expired running jobs are reclaimed normally; never opt into
                 # retrying unrelated quarantined model responses.
-                record["retry_requested"] = safe_code == "timeout"
+                record["retry_job_id"] = rejected_job_id if safe_code == "timeout" else None
                 delay = min(MAX_BACKOFF_SECONDS, retry_backoff * (2 ** (record["attempts"] - 1)))
                 record["due_at"] = now + delay
                 _write_state(base, state)
@@ -1548,9 +1639,14 @@ def _call_processor(
     data_dir: str | os.PathLike[str] | None,
     retry_failed: bool,
     timeout: float,
+    *,
+    retry_job_id: str | None = None,
 ) -> Mapping[str, Any]:
     try:
-        value = processor(project, data_dir=data_dir, retry_failed=retry_failed, timeout=timeout)
+        arguments = {"data_dir": data_dir, "retry_failed": retry_failed, "timeout": timeout}
+        if retry_job_id is not None:
+            arguments["retry_job_id"] = retry_job_id
+        value = processor(project, **arguments)
     except Exception:
         return {"status": "failed", "code": "runner_failure"}
     return value if isinstance(value, Mapping) else {"status": "failed", "code": "invalid_result"}
@@ -1560,6 +1656,8 @@ def _processor_outcome(value: Mapping[str, Any]) -> tuple[str, str | None]:
     status = value.get("status")
     if status in {"processed", "skipped", "idle"}:
         return str(status), None
+    if status == "deferred" and _is_timestamp(value.get("retry_at")):
+        return "deferred", None
     if status == "failed":
         code = value.get("code")
         return "failed", _normalise_code(code) if isinstance(code, str) else "invalid_result"

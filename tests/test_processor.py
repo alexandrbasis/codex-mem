@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from codex_mem.processor import (
     MODEL,
@@ -120,6 +121,33 @@ class ProcessorTests(unittest.TestCase):
             self.assertEqual(MODEL, job["model"])
             self.assertEqual(REASONING_EFFORT, job["reasoning_effort"])
             self.assertEqual("processed", job["status"])
+
+    def test_lease_wait_is_scoped_and_exposes_no_source_or_worker_identifiers(self) -> None:
+        self.remember("Sensitive title", "Sensitive body", source="hook:PostToolUse")
+        with Store(self.data_dir) as store:
+            job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+        runner = mock.Mock(side_effect=AssertionError("Leased source must not invoke the model"))
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual({"status", "retry_at", "processor_id", "model", "reasoning_effort"}, set(result))
+        self.assertEqual("deferred", result["status"])
+        self.assertIsInstance(result["retry_at"], float)
+        self.assertNotIn(job["job_id"], json.dumps(result))
+        self.assertEqual(0, runner.call_count)
+        other = self.root / "other"
+        other.mkdir()
+        self.assertEqual("idle", process_pending(other, self.data_dir, runner=runner)["status"])
+
+    def test_malformed_stored_lease_becomes_fixed_storage_failure(self) -> None:
+        self.remember("Raw source", "private-body", source="hook:PostToolUse")
+        with Store(self.data_dir) as store:
+            job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+            store._connection.execute("UPDATE observation_jobs SET lease_expires_at=? WHERE id=?",
+                                      ("private-malformed-expiry", job["job_id"]))
+        runner = mock.Mock(side_effect=AssertionError("Malformed lease must not invoke the model"))
+        result = process_pending(self.project, self.data_dir, runner=runner)
+        self.assertEqual("storage_failure", result["code"])
+        self.assertNotIn("private", json.dumps(result))
+        self.assertEqual(0, runner.call_count)
 
     def test_native_request_uses_short_schema_constrained_source_handles(self) -> None:
         source_id = "ffffffffffffffffffffffffffffffff"

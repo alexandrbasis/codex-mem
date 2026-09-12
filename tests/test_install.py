@@ -1,4 +1,6 @@
 import importlib.util
+import io
+import itertools
 import json
 import os
 import shutil
@@ -18,12 +20,17 @@ class InstallTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.home = Path(self.temp.name) / "home"
-        self.source = Path(self.temp.name) / "source"
+        self.home = Path(self.temp.name).resolve() / "home"
+        self.source = Path(self.temp.name).resolve() / "source"
         for name, body in {
             ".codex-plugin/plugin.json": json.dumps({"name": "codex-mem", "version": "1.0.0"}),
             ".mcp.json": "{}", "hooks/hooks.json": "{}",
-            "scripts/codex-mem.py": "#!/usr/bin/env python3\nimport sys\nprint('managed-current', *sys.argv[1:])\n",
+            "scripts/codex-mem.py": (
+                "#!/usr/bin/env python3\nimport sys\n"
+                "if sys.argv[-2:] == ['service', 'status']:\n"
+                "    print('{\"status\":\"stopped\",\"running\":false,\"lock_held\":false}')\n"
+                "else:\n    print('managed-current', *sys.argv[1:])\n"
+            ),
         }.items():
             path = self.source / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -404,6 +411,186 @@ class InstallTests(unittest.TestCase):
             json.loads((self.home / "plugins/codex-mem/.codex-plugin/plugin.json").read_text())["version"],
             "1.1.0",
         )
+
+    @staticmethod
+    def running_service(owner="100:old", version=None):
+        return {"status": "running", "running": True, "lock_held": True,
+                "pid": int(owner.split(":")[0]), "owner_id": owner, "runtime_version": version}
+
+    @staticmethod
+    def stopped_service():
+        return {"status": "stopped", "running": False, "lock_held": False}
+
+    def upgrade_with_service(self, responses, *, activation_exit=0):
+        self.run_install()
+        self.set_source_version("1.1.0")
+        with mock.patch.object(installer, "_service_command", side_effect=responses) as command:
+            with mock.patch.object(installer.time, "sleep"):
+                result = self.apply_with_fake_codex(self.fake_codex(exit_code=activation_exit))
+        return result, command
+
+    def test_first_install_and_register_only_do_not_control_service(self):
+        with mock.patch.object(installer, "_service_command") as command:
+            first = self.apply_with_fake_codex(self.fake_codex())
+            registered = self.run_install()
+        command.assert_not_called()
+        self.assertEqual(first["runtime_refresh"]["code"], "first_install")
+        self.assertEqual(registered["runtime_refresh"]["code"], "register_only")
+
+    def test_upgrade_preserves_stopped_service(self):
+        result, command = self.upgrade_with_service([self.stopped_service()])
+        self.assertTrue(result["installed"])
+        self.assertNotIn("error", result)
+        self.assertEqual(result["runtime_refresh"]["code"], "previously_stopped")
+        self.assertEqual([call.args[2] for call in command.call_args_list], ["status"])
+
+    def test_upgrade_preserves_existing_shutdown_request(self):
+        snapshot = {**self.running_service(), "stop_requested": True}
+        result, command = self.upgrade_with_service([snapshot])
+        self.assertEqual(result["runtime_refresh"]["status"], "unchanged")
+        self.assertEqual(result["runtime_refresh"]["code"], "shutdown_already_requested")
+        self.assertEqual(command.call_count, 1)
+
+    def test_upgrade_refreshes_verified_running_service_through_managed_launcher(self):
+        old = self.running_service()
+        new = self.running_service("200:new", "1.1.0")
+        result, command = self.upgrade_with_service([
+            old, old, {"status": "stopping"}, old, self.stopped_service(),
+            {"status": "started"}, new,
+        ])
+        self.assertTrue(result["installed"])
+        self.assertNotIn("error", result)
+        refresh = result["runtime_refresh"]
+        self.assertEqual(refresh["status"], "restarted")
+        self.assertIsNone(refresh["previous_runtime_version"])
+        self.assertEqual(refresh["runtime_version"], "1.1.0")
+        self.assertEqual(refresh["pid"], 200)
+        calls = command.call_args_list
+        self.assertEqual([call.args[2] for call in calls],
+                         ["status", "status", "stop", "status", "status", "start", "status"])
+        self.assertTrue(calls[0].args[0].parents[1].name.startswith(".codex-mem-stage-"))
+        self.assertTrue(all(call.args[0] == self.home / "plugins/codex-mem/scripts/codex-mem.py"
+                            for call in calls[1:]))
+        self.assertTrue(all(call.args[1] == self.home / ".local/share/codex-mem" for call in calls))
+        self.assertEqual(calls[2].kwargs["expected_owner"], old["owner_id"])
+
+    def test_upgrade_keeps_explicit_memory_home_for_all_service_commands(self):
+        memory_home = Path(self.temp.name).resolve() / "other-memory"
+        old = self.running_service()
+        with mock.patch.dict(os.environ, {"CODEX_MEM_HOME": f"  {memory_home}  "}):
+            _, command = self.upgrade_with_service([
+                old, old, {"status": "stopping"}, self.stopped_service(),
+                {"status": "started"}, self.running_service("200:new", "1.1.0"),
+            ])
+        self.assertTrue(all(call.args[1] == memory_home for call in command.call_args_list))
+
+    def test_unknown_preexisting_owner_is_reported_without_stop_or_start(self):
+        for snapshot in ({"status": "unknown", "lock_held": None},
+                         {"status": "running", "running": True, "pid": 100},
+                         {"status": "starting", "lock_held": True}):
+            with self.subTest(snapshot=snapshot):
+                result, command = self.upgrade_with_service([snapshot])
+                self.assertTrue(result["installed"])
+                self.assertEqual(result["runtime_refresh"]["status"], "restart_pending")
+                self.assertEqual(result["runtime_refresh"]["code"], "previous_owner_unverified")
+                self.assertIn("background service update is not verified", result["error"])
+                self.assertEqual(command.call_count, 1)
+
+    def test_owner_change_after_activation_is_not_stopped(self):
+        result, command = self.upgrade_with_service([
+            self.running_service(), self.running_service("200:other", "1.1.0"),
+        ])
+        self.assertEqual(result["runtime_refresh"]["code"], "previous_owner_changed")
+        self.assertEqual([call.args[2] for call in command.call_args_list], ["status", "status"])
+
+    def test_failed_activation_does_not_stop_preexisting_worker(self):
+        result, command = self.upgrade_with_service([self.running_service()], activation_exit=7)
+        self.assertFalse(result["installed"])
+        self.assertEqual(result["runtime_refresh"]["code"], "activation_not_verified")
+        self.assertIn("Codex activation failed", result["error"])
+        self.assertEqual(command.call_count, 1)
+
+    def test_atomic_owner_guard_rejection_never_restarts_replacement_worker(self):
+        old = self.running_service()
+        result, command = self.upgrade_with_service([
+            old, old, {"status": "blocked", "code": "owner_changed"},
+        ])
+        self.assertEqual(result["runtime_refresh"]["code"], "previous_owner_changed")
+        self.assertEqual([call.args[2] for call in command.call_args_list], ["status", "status", "stop"])
+        self.assertEqual(command.call_args.kwargs["expected_owner"], old["owner_id"])
+
+    def test_shutdown_timeout_does_not_start_competing_worker(self):
+        self.run_install()
+        target = self.home / "plugins/codex-mem"
+        old = self.running_service()
+        responses = [old, {"status": "stopping"}, old]
+        with mock.patch.object(installer, "_service_command", side_effect=responses) as command:
+            with mock.patch.object(installer, "SERVICE_REFRESH_TIMEOUT", 1.0):
+                with mock.patch.object(installer.time, "monotonic", side_effect=itertools.count(0, 0.2)):
+                    with mock.patch.object(installer.time, "sleep"):
+                        refresh = installer._refresh_runtime(target, "1.0.0", self.home / "memory", old)
+        self.assertEqual(refresh["status"], "restart_pending")
+        self.assertEqual(refresh["code"], "shutdown_pending")
+        self.assertEqual([call.args[2] for call in command.call_args_list], ["status", "stop", "status"])
+
+    def test_owner_change_during_stop_never_starts_another_worker(self):
+        old = self.running_service()
+        result, command = self.upgrade_with_service([
+            old, old, {"status": "stopping"}, self.running_service("200:other", "1.1.0"),
+        ])
+        self.assertEqual(result["runtime_refresh"]["code"], "owner_changed_during_stop")
+        self.assertNotIn("start", [call.args[2] for call in command.call_args_list])
+
+    def test_start_failure_is_separate_from_successful_plugin_activation(self):
+        old = self.running_service()
+        result, _ = self.upgrade_with_service([
+            old, old, {"status": "stopping"}, self.stopped_service(),
+            {"status": "error", "code": "startup_failed"}, self.stopped_service(),
+        ])
+        self.assertTrue(result["installed"])
+        self.assertEqual(result["runtime_refresh"]["status"], "restart_failed")
+        self.assertEqual(result["runtime_refresh"]["code"], "startup_failed")
+
+    def test_new_pid_with_wrong_runtime_version_is_not_reported_updated(self):
+        old = self.running_service()
+        result, _ = self.upgrade_with_service([
+            old, old, {"status": "stopping"}, self.stopped_service(),
+            {"status": "started"}, self.running_service("200:new", "1.0.0"),
+        ])
+        self.assertEqual(result["runtime_refresh"]["status"], "restart_failed")
+        self.assertEqual(result["runtime_refresh"]["code"], "runtime_version_unverified")
+
+    def test_service_command_rejects_ambiguous_results_and_bounds_subprocess(self):
+        launcher = self.source / "scripts/codex-mem.py"
+        data_dir = self.home / "memory"
+        for response in (subprocess.CompletedProcess([], 0, "not json"),
+                         subprocess.CompletedProcess([], 0, "[]"),
+                         subprocess.CompletedProcess([], 2, '{"status":"running"}')):
+            with self.subTest(response=response):
+                with mock.patch.object(installer.subprocess, "run", return_value=response) as run:
+                    result = installer._service_command(launcher, data_dir, "status", timeout=1.5)
+                self.assertEqual(result["status"], "unavailable")
+                self.assertEqual(run.call_args.args[0],
+                                 [sys.executable, str(launcher), "--data-dir", str(data_dir), "service", "status"])
+                self.assertEqual(run.call_args.kwargs["timeout"], 1.5)
+
+    def test_service_command_passes_owner_guard_to_packaged_stop(self):
+        response = subprocess.CompletedProcess([], 2, '{"status":"blocked","code":"owner_changed"}')
+        with mock.patch.object(installer.subprocess, "run", return_value=response) as run:
+            result = installer._service_command(self.source / "scripts/codex-mem.py", self.home / "memory",
+                                                "stop", expected_owner="100:old")
+        self.assertEqual(result["code"], "owner_changed")
+        self.assertEqual(run.call_args.args[0][-3:], ["stop", "--expected-owner", "100:old"])
+
+    def test_cli_stop_dispatches_expected_owner(self):
+        from codex_mem import cli
+
+        with mock.patch("codex_mem.service.stop_service", return_value={"status": "stopping"}) as stop:
+            with mock.patch("sys.stdout", new=io.StringIO()):
+                code = cli.main(["--data-dir", str(self.home / "memory"), "service", "stop",
+                                 "--expected-owner", "100:old"])
+        self.assertEqual(code, 0)
+        stop.assert_called_once_with(str(self.home / "memory"), expected_owner="100:old")
 
 
 if __name__ == "__main__":

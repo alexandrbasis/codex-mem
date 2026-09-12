@@ -1,10 +1,13 @@
 """Accounting regression tests use synthetic rollouts, never the user's DB."""
 import json
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
-from codex_mem.usage import UsageCollector
+from codex_mem.usage import COLLECTION_BYTE_BUDGET, COLLECTION_FILE_LIMIT, DISCOVERY_ENTRY_BUDGET, SCAN_FINGERPRINT_BYTE_BUDGET, UsageCollector
 
 
 class UsageCollectorTests(unittest.TestCase):
@@ -142,6 +145,148 @@ class UsageCollectorTests(unittest.TestCase):
         for _ in range(3):
             self.collector.collect(config=self.config, max_files=1)
         self.assertEqual(len(self.rows()), 3)
+
+    def populate(self, name, thread, modified_at, padding_bytes=0, project='/project'):
+        self.path = self.home / 'sessions' / name
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.write(self.meta(id=thread, cwd=project), self.turn(), self.native(thread=thread), mode='w')
+        if padding_bytes:
+            padding = json.dumps({'type': 'response_item', 'payload': {'text': 'x' * 8192}}) + '\n'
+            with self.path.open('a') as out:
+                for _ in range((padding_bytes + len(padding) - 1) // len(padding)):
+                    out.write(padding)
+        os.utime(self.path, (modified_at, modified_at))
+        return self.path
+
+    def test_recent_sources_do_not_wait_for_historical_sweep_and_replay_is_idempotent(self):
+        for n in range(40):
+            self.populate(f'{n:03d}-old.jsonl', f'old-{n}', 1_500_000_000 + n)
+        self.collector.collect(config=self.config, max_files=4)
+        active = self.populate('zzz-active.jsonl', 'active', 2_000_000_000)
+
+        result = self.collector.collect(config=self.config, max_files=4)
+
+        self.assertIn('active', {row['thread_id'] for row in self.rows()})
+        self.assertGreater(result['recent_files'], 0)
+        self.assertGreater(result['historical_files'], 0)
+        self.assertLessEqual(result['files'], 4)
+        # An active file that reached EOF is watched between discovery passes.
+        self.path = active
+        self.write(self.native('new-response', thread='active'))
+        os.utime(active, (2_000_000_001, 2_000_000_001))
+        self.collector._discovery = iter([None] * (DISCOVERY_ENTRY_BUDGET * 2))
+        self.collector.collect(config=self.config, max_files=4)
+        self.assertEqual(2, sum(row['thread_id'] == 'active' for row in self.rows()))
+        for _ in range(24):
+            self.collector.collect(config=self.config, max_files=4)
+        self.assertEqual(42, len(self.rows()))
+        self.assertEqual(42 * 120, sum(row['total_tokens'] for row in self.rows()))
+
+    def test_large_active_file_preserves_historical_file_and_byte_budget(self):
+        old = self.populate('000-old.jsonl', 'old', 1_500_000_000, padding_bytes=12 * 1024 * 1024)
+        active = self.populate('zzz-active.jsonl', 'active', 2_000_000_000, padding_bytes=12 * 1024 * 1024)
+        offsets = {old: 0, active: 0}
+        fdopen = os.fdopen
+        actual_bytes = [0]
+
+        class CountReads:
+            def __init__(self, handle):
+                self.handle = handle
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                return self.handle.__exit__(*args)
+
+            def __getattr__(self, name):
+                return getattr(self.handle, name)
+
+            def read(self, *args):
+                data = self.handle.read(*args)
+                actual_bytes[0] += len(data)
+                return data
+
+            def readline(self, *args):
+                data = self.handle.readline(*args)
+                actual_bytes[0] += len(data)
+                return data
+
+        for cycle in range(3):
+            os.utime(active, (2_000_000_000 + cycle, 2_000_000_000 + cycle))
+            actual_bytes[0] = 0
+            with patch.object(self.collector, 'scan_file', wraps=self.collector.scan_file) as scanned, patch('codex_mem.usage.os.fdopen', side_effect=lambda *args, **kwargs: CountReads(fdopen(*args, **kwargs))):
+                result = self.collector.collect(config=self.config, max_files=2)
+            self.assertEqual(1, result['recent_files'])
+            self.assertEqual(1, result['historical_files'])
+            self.assertEqual({old, active}, {call.args[0] for call in scanned.call_args_list})
+            self.assertEqual(COLLECTION_BYTE_BUDGET, sum(call.kwargs['max_bytes'] + SCAN_FINGERPRINT_BYTE_BUDGET for call in scanned.call_args_list))
+            self.assertGreater(actual_bytes[0], COLLECTION_BYTE_BUDGET - 4 * SCAN_FINGERPRINT_BYTE_BUDGET)
+            self.assertLessEqual(actual_bytes[0], COLLECTION_BYTE_BUDGET)
+            for path in (old, active):
+                checkpoint = self.collector.store.get_checkpoint(path)
+                self.assertGreater(checkpoint['offset'], offsets[path])
+                self.assertLessEqual(checkpoint['offset'] - offsets[path], COLLECTION_BYTE_BUDGET // 2)
+                offsets[path] = checkpoint['offset']
+        self.assertEqual(2, len(self.rows()))
+
+    def test_collection_file_and_byte_caps_apply_to_both_lanes_together(self):
+        for n in range(COLLECTION_FILE_LIMIT + 20):
+            self.populate(f'{n:03d}.jsonl', f'thread-{n}', 1_500_000_000 + n)
+        with patch.object(self.collector, 'scan_file', wraps=self.collector.scan_file) as scanned:
+            result = self.collector.collect(config=self.config, max_files=COLLECTION_FILE_LIMIT * 2)
+        self.assertEqual(COLLECTION_FILE_LIMIT, scanned.call_count)
+        self.assertEqual(COLLECTION_FILE_LIMIT, result['files'])
+        self.assertEqual(COLLECTION_BYTE_BUDGET, sum(call.kwargs['max_bytes'] + SCAN_FINGERPRINT_BYTE_BUDGET for call in scanned.call_args_list))
+        self.assertTrue(all(call.kwargs['max_bytes'] > 0 for call in scanned.call_args_list))
+
+    def test_historical_scan_still_checks_replacement_when_metadata_is_unchanged(self):
+        self.populate('active.jsonl', 'thread-a', 2_000_000_000)
+        self.collector.collect(config=self.config, max_files=1)
+        before = self.path.stat()
+        self.write(self.meta(), self.turn(), self.native('response-b'), mode='w')
+        os.utime(self.path, ns=(before.st_atime_ns, before.st_mtime_ns))
+        self.assertEqual(before.st_size, self.path.stat().st_size)
+        self.collector.collect(config=self.config, max_files=1)
+        self.assertEqual({'response-a', 'response-b'}, {row['response_id'] for row in self.rows()})
+
+    def test_native_current_day_discovery_bypasses_large_archive_walk(self):
+        archive = self.home / 'archived_sessions'
+        archive.mkdir()
+        for n in range(DISCOVERY_ENTRY_BUDGET + 1):
+            (archive / f'{n:04d}.jsonl').touch()
+        day = datetime.now(timezone.utc).strftime('%Y/%m/%d')
+        self.populate(f'{day}/current.jsonl', 'active', 2_000_000_000)
+        self.collector.collect(config=self.config, max_files=2)
+        self.assertIn('active', {row['thread_id'] for row in self.rows()})
+        self.assertIsNotNone(self.collector._discovery)
+
+    def test_excluded_recent_source_is_reconsidered_when_scope_changes(self):
+        for n in range(5):
+            self.populate(f'{n:03d}-old.jsonl', f'old-{n}', 1_500_000_000 + n)
+        self.populate('yyy-active.jsonl', 'active', 1_900_000_000)
+        excluded = self.populate('zzz-excluded.jsonl', 'excluded', 2_000_000_000, project='/excluded')
+        self.config['excluded_projects'] = ['/excluded']
+        self.collector.collect(config=self.config, max_files=2)
+        self.assertNotIn(excluded, self.collector._recent)
+        self.assertNotIn('excluded', {row['thread_id'] for row in self.rows()})
+        self.collector.collect(config=self.config, max_files=2)
+        self.assertIn('active', {row['thread_id'] for row in self.rows()})
+        self.config['excluded_projects'] = []
+        self.collector.collect(config=self.config, max_files=2)
+        self.assertIn('excluded', {row['thread_id'] for row in self.rows()})
+
+    def test_historical_scan_rechecks_excluded_source_replacement(self):
+        self.populate('active.jsonl', 'thread-a', 2_000_000_000, project='/excluded')
+        self.config['excluded_projects'] = ['/excluded']
+        self.collector.collect(config=self.config, max_files=1)
+        self.assertEqual([], self.rows())
+        before = self.path.stat()
+        self.write(self.meta(cwd='/allowedx'), self.turn(), self.native(), mode='w')
+        os.utime(self.path, ns=(before.st_atime_ns, before.st_mtime_ns))
+        self.assertEqual(before.st_size, self.path.stat().st_size)
+        self.collector.collect(config=self.config, max_files=1)
+        self.assertEqual(1, len(self.rows()))
 
 
 if __name__ == '__main__':

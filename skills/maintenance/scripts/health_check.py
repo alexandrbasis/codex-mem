@@ -458,6 +458,7 @@ def _config(data_dir: Path) -> tuple[dict[str, Any], list[str]]:
         "processor_enabled": True,
         "service_enabled": True,
         "semantic_enabled": True,
+        "usage_enabled": True,
         "capture_scope": "selected",
         "context_chars": 6000,
         "included_projects": 0,
@@ -471,7 +472,7 @@ def _config(data_dir: Path) -> tuple[dict[str, Any], list[str]]:
         return defaults, [_error("config_invalid")]
     result = dict(defaults)
     valid = True
-    for key in ("capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled"):
+    for key in ("capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled", "usage_enabled"):
         value = raw.get(key, defaults[key])
         if not isinstance(value, bool):
             valid = False
@@ -615,9 +616,13 @@ def _service_report(data_dir: Path, project: str, now: float) -> tuple[dict[str,
     starting = False
     if isinstance(startup_raw, Mapping) and isinstance(startup_raw.get("started_at"), (int, float)):
         starting = now - float(startup_raw["started_at"]) <= SERVICE_STARTUP_TTL and alive is not False
+    visibility_unknown = (
+        owner_match and alive is not False and lock_held is not False
+        and (lock_held is None or alive is None)
+    )
     liveness = (
         "running" if owner_match and lock_held is True and alive is True
-        else "unknown" if owner_match and lock_held is None
+        else "unknown" if visibility_unknown
         else "starting" if starting
         else "stale" if owner_match and (lock_held is False or alive is False)
         else "stopped"
@@ -643,12 +648,78 @@ def _service_report(data_dir: Path, project: str, now: float) -> tuple[dict[str,
     }, errors, sorted(known_projects)[:MAX_PROJECTS]
 
 
+def _usage_report(
+    connection: sqlite3.Connection,
+    project: str,
+    tables: set[str],
+    now: float,
+    enabled: bool,
+) -> dict[str, Any]:
+    """Read project accounting totals without initializing the optional ledger."""
+
+    required = {"usage_sessions", "usage_events"}
+    base: dict[str, Any] = {
+        "enabled": enabled,
+        "status": "missing",
+        "collection_liveness": "unknown",
+    }
+    if not required.intersection(tables):
+        return base
+    if not required.issubset(tables):
+        return {**base, "status": "unavailable"}
+    try:
+        sessions = _one(
+            connection,
+            """SELECT COUNT(*) AS threads, COUNT(DISTINCT session_id) AS root_sessions,
+                      COALESCE(SUM(parent_thread_id IS NOT NULL), 0) AS child_threads
+               FROM usage_sessions WHERE project = ?""",
+            (project,),
+        )
+        events = _one(
+            connection,
+            """SELECT COUNT(*) AS events, COUNT(DISTINCT e.thread_id) AS threads_with_events,
+                      COALESCE(SUM(e.input_tokens), 0) AS input_tokens,
+                      COALESCE(SUM(e.cached_input_tokens), 0) AS cached_input_tokens,
+                      COALESCE(SUM(e.cache_write_input_tokens), 0) AS cache_write_input_tokens,
+                      COALESCE(SUM(e.output_tokens), 0) AS output_tokens,
+                      COALESCE(SUM(e.reasoning_output_tokens), 0) AS reasoning_output_tokens,
+                      COALESCE(SUM(e.total_tokens), 0) AS total_tokens,
+                      COALESCE(SUM(e.quality = 'response_exact'), 0) AS exact_events,
+                      COALESCE(SUM(e.quality = 'legacy_cumulative_delta'), 0) AS legacy_events,
+                      MIN(e.recorded_at) AS first_event_at, MAX(e.recorded_at) AS last_event_at
+               FROM usage_events AS e JOIN usage_sessions AS s ON s.thread_id = e.thread_id
+               WHERE s.project = ?""",
+            (project,),
+        )
+        counts = {
+            key: int(_value(events, key, 0) or 0)
+            for key in ("events", "threads_with_events", "exact_events", "legacy_events")
+        }
+        counts["other_events"] = counts["events"] - counts["exact_events"] - counts["legacy_events"]
+        return {
+            **base,
+            "status": "ready" if counts["events"] else "empty",
+            **{key: int(_value(sessions, key, 0) or 0) for key in ("threads", "root_sessions", "child_threads")},
+            **counts,
+            "tokens": {
+                key: int(_value(events, key, 0) or 0)
+                for key in ("input_tokens", "cached_input_tokens", "cache_write_input_tokens", "output_tokens", "reasoning_output_tokens", "total_tokens")
+            },
+            "first_event_at": _safe_timestamp(_value(events, "first_event_at")),
+            "last_event_at": _safe_timestamp(_value(events, "last_event_at")),
+            "last_event_age_seconds": _age(_value(events, "last_event_at"), now),
+        }
+    except (sqlite3.Error, TypeError, ValueError, OverflowError):
+        return {**base, "status": "unavailable"}
+
+
 def _db_report(
     data_dir: Path,
     projects: list[str],
     deep: bool,
     now: float,
     semantic_enabled: bool = True,
+    usage_enabled: bool = True,
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]], list[str]]:
     db_path = data_dir / "memory.sqlite3"
     base: dict[str, Any] = {
@@ -721,7 +792,10 @@ def _db_report(
                     **observations,
                     "observation_queue": queue,
                     "semantic": _semantic_index(connection, project, semantic_enabled),
+                    "usage": _usage_report(connection, project, names, now, usage_enabled),
                 }
+                if per_project[project]["usage"]["status"] == "unavailable":
+                    errors.append(_error("usage_metadata_unavailable"))
             except (sqlite3.Error, TypeError, ValueError):
                 per_project[project] = {"status": "unavailable"}
                 errors.append(_error("metadata_unavailable"))
@@ -757,6 +831,11 @@ def collect_report(
                     value = _canonical(row["project"])
                     if value:
                         candidate_projects.append(value)
+                if _one(connection, "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'usage_sessions'"):
+                    for row in _rows(connection, "SELECT DISTINCT project FROM usage_sessions ORDER BY project LIMIT ?", (MAX_PROJECTS,)):
+                        value = _canonical(row["project"])
+                        if value:
+                            candidate_projects.append(value)
             finally:
                 connection.close()
         except (OSError, sqlite3.Error):
@@ -775,6 +854,7 @@ def collect_report(
         deep,
         current_time,
         config.get("semantic_enabled") is not False,
+        config.get("usage_enabled") is not False,
     )
     service_by_project: dict[str, dict[str, Any]] = {selected: service_global}
     for path in candidate_projects:
@@ -808,10 +888,12 @@ def collect_report(
                 (isinstance(service_queue.get("due_age_seconds"), int) and service_queue["due_age_seconds"] > 0)
                 or (service_queue.get("inflight") is True and isinstance(service_queue.get("inflight_age_seconds"), int) and service_queue["inflight_age_seconds"] > 0)
             )
-            and service.get("worker_liveness") not in {"running", "starting"}
+            and service.get("worker_liveness") in {"stopped", "stale"}
         ):
             local_status = "stale"
         elif isinstance(value.get("semantic"), Mapping) and value["semantic"].get("jobs", {}).get("failed", 0) > 0:
+            local_status = "degraded"
+        elif isinstance(value.get("usage"), Mapping) and value["usage"].get("status") == "unavailable":
             local_status = "degraded"
         elif int(value.get("active_entries", 0) or 0) > 0:
             local_status = "healthy"
@@ -832,6 +914,11 @@ def collect_report(
                 },
                 "observation_queue": value.get("observation_queue", {"status": "idle"}),
                 "semantic": value.get("semantic", {"status": "unknown"}),
+                "usage": value.get("usage", {
+                    "enabled": config.get("usage_enabled") is not False,
+                    "status": "missing" if db["status"] == "missing" else "unavailable",
+                    "collection_liveness": "unknown",
+                }),
                 "service": service,
             }
         )
