@@ -2,6 +2,27 @@
 
 Verification is version-specific. Synthetic fixtures, a package build and an installed runtime are separate evidence; these checks do not establish universal note quality.
 
+## Version 1.7.0 verification
+
+The [observer accounting review](observer-usage-review-2026-09-12.md) continues the comparison against Claude Mem 13.24.23 at commit `ed57a511f5dbf84e75c9a785df818c43b66b5849`. Per-attempt measurement was implemented independently; no upstream source was copied.
+
+- A native Luna/medium contradiction-correction case passed on a disposable fictional project. The final 1.7.0 processor stored one reported usage receipt: 10,095 input plus 307 output tokens, totaling 10,402, with 6,912 cached input and 83 reasoning output tokens already included in those totals. Measured duration was 9,951 ms. A second idle poll did not duplicate the receipt or change the totals.
+- Native-event tests cover matching thread/turn IDs, buffered updates, replacement of cumulative snapshots, malformed/decreasing values, missing versus measured zero, partial failure usage and preservation of usage when output validation rejects a completed turn.
+- Store and processor regressions cover per-attempt retries, late receipts after reclaim, explicit failed retries, missing historical receipts, terminal-write failures and invalid optional metrics. CLI/MCP tests preserve session JSONL totals while adding separate project-wide observer accounting.
+- Health report v2 tests distinguish active leases, historical quarantine, explicit queue blocking and stale work. Observer summaries remain scoped to the selected project; reads of present or missing optional tables leave database bytes unchanged.
+
+The final 1.7.0 unit suite passed all 383 tests. Six unclosed SQLite connection ResourceWarnings remain in existing test paths; no tests failed. The plugin archive builds successfully, and the updated documentation passes validation. To reproduce:
+
+```sh
+python3 -m unittest discover -s tests -q
+python3 scripts/observation_quality_acceptance.py --native --case contradiction_correction --output /tmp/codex-mem-native-quality.json
+python3 scripts/package.py
+```
+
+The native command consumes the signed-in Codex allowance. Verify local installation separately by checking the installed catalog version, managed/cache file hashes, unchanged configuration, the new service owner and runtime version, and fresh hook/MCP discovery. Existing desktop MCP connections require a later app restart to load the new code.
+
+These measurements do not backfill historical usage or establish monetary cost, net savings, universal note quality, or a Claude-provider A/B. Model grouping describes the requested job profile. Local validation and live installation are verified separately.
+
 ## Version 1.6.0 verification
 
 The [2026-09-12 review](claude-mem-review-2026-09-12.md) compares Codex Mem with Claude Mem 13.24.23 at commit `ed57a511f5dbf84e75c9a785df818c43b66b5849`. Two retrieval principles were independently implemented: compact preview responses and exact-anchor timeline windows. No upstream source was copied.

@@ -62,6 +62,7 @@ class Batch:
     result: dict[str, Any]
     job: dict[str, Any] | None
     notes: list[dict[str, Any]]
+    observer_usage: dict[str, Any]
 
 
 def package_version() -> str:
@@ -179,7 +180,7 @@ def seed(data: Path, project: Path, sources: Sequence[Source]) -> dict[str, dict
     return result
 
 
-def read_job(data: Path, project: Path, result: Mapping[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+def read_job(data: Path, project: Path, result: Mapping[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]], dict[str, Any]]:
     with Store(data) as store:
         status = store.status(project)
         job_id = result.get("job_id")
@@ -188,13 +189,13 @@ def read_job(data: Path, project: Path, result: Mapping[str, Any]) -> tuple[dict
         notes: list[dict[str, Any]] = []
         if job and job.get("output_ids"):
             notes = store.get(project, list(job["output_ids"]))
-    return job, notes
+    return job, notes, status.get("observer_usage", {})
 
 
 def run_batch(data: Path, project: Path, timeout: int) -> Batch:
     result = dict(process_pending(project, data, timeout=timeout))
-    job, notes = read_job(data, project, result)
-    return Batch(result, job, notes)
+    job, notes, usage = read_job(data, project, result)
+    return Batch(result, job, notes, usage)
 
 
 def check(assertions: list[dict[str, Any]], name: str, passed: bool, detail: str) -> None:
@@ -271,6 +272,7 @@ def compact_job(job: Mapping[str, Any] | None) -> dict[str, Any] | None:
 def compact_batch(batch: Batch) -> dict[str, Any]:
     return {
         "result": batch.result,
+        "observer_usage": batch.observer_usage,
         "job": compact_job(batch.job),
         "notes": [
             {key: note.get(key) for key in ("id", "title", "body", "session_id", "turn_id", "source", "tags", "source_ids", "kind", "observation", "session_summary")}
@@ -291,6 +293,13 @@ def simple_native(root: Path, case: SimpleCase, timeout: int) -> dict[str, Any]:
     check(assertions, "second_poll_idle", repeat.result.get("status") == "idle", f"got={repeat.result.get('status')}")
     check(assertions, "pinned_luna_medium", first.job is not None and first.job.get("model") == MODEL and first.job.get("reasoning_effort") == REASONING_EFFORT, "job receipt pins Luna/medium")
     check(assertions, "worker_ids", first.job is not None and bool(first.job.get("worker_thread_id")) and bool(first.job.get("worker_turn_id")), "thread and turn IDs are recorded")
+    usage = first.observer_usage
+    check(assertions, "observer_usage_reported", usage.get("attempts", {}).get("reported") == 1,
+          "one completed attempt has native app-server counters")
+    check(assertions, "observer_usage_no_missing_attempt", usage.get("attempts", {}).get("without_receipt") == 0,
+          "the fictional project's only attempt has a receipt")
+    check(assertions, "observer_usage_idle_does_not_duplicate", repeat.observer_usage == usage,
+          "an idle poll leaves the observer ledger unchanged")
     check(assertions, "raw_sources_preserved", all(current[str(seeded[item.key]["id"])].get("body") == item.body for item in case.sources), "raw synthetic bodies are unchanged")
     check(assertions, "retained_fact_count", values["actual_retained"] == values["expected_retained"], f"retained={values['actual_retained']} expected={values['expected_retained']}")
     check(assertions, "noise_promotion_bound", values["actual_noise"] <= case.max_noise_promoted, f"noise promoted={values['actual_noise']} bound={case.max_noise_promoted}")

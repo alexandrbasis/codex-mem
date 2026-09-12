@@ -685,6 +685,16 @@ def main(args: Sequence[str] | None = None) -> int:
                     )
                     value = {"status": "ok", "records": totals,
                              "note": "Recorded token usage only; cached input and reasoning output are subsets."}
+                    if namespace.project:
+                        from .observer_usage_store import observer_usage_summary
+                        value["observer_usage"] = observer_usage_summary(
+                            usage_store.store._connection, _absolute_project(namespace.project)
+                        )
+                        value["note"] = (
+                            "Session records and observer usage are separate ledgers. "
+                            "Observer usage covers the full project, even with a session filter. "
+                            "Cached input and reasoning output are subsets; unknown usage is not zero."
+                        )
             _emit(value)
             return 2 if value.get("status") in {"failed", "error", "unavailable"} else 0
         if namespace.command == "semantic":

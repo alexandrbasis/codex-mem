@@ -2221,6 +2221,15 @@ class Store:
                     effective_limit = max(stored_limit, hydrated_chars)
                     token = uuid.uuid4().hex
                     now = _utc_now()
+                    # Finalize the old attempt while its original job outcome
+                    # is still known, atomically with taking the new lease.
+                    from .observer_usage_store import recover_attempt
+                    expired = reusable["status"] == "running"
+                    recover_attempt(
+                        connection, str(reusable["id"]), int(reusable["attempt_count"]),
+                        outcome="lease_expired" if expired else "failed",
+                        error_code="lease_expired" if expired else reusable["error_code"],
+                    )
                     connection.execute(
                         """
                         UPDATE observation_jobs
@@ -4768,6 +4777,11 @@ class Store:
                 "skipped": int(job_counts["skipped"]),
                 "recent": [self._observation_job_result(job) for job in recent_jobs],
             }
+            if workspace is not None:
+                from .observer_usage_store import observer_usage_summary
+                result["observer_usage"] = self._read(
+                    lambda: observer_usage_summary(self._connection, workspace)
+                )
             return result
 
     def check_integrity(self) -> dict[str, Any]:

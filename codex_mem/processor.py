@@ -95,12 +95,14 @@ class ProcessorFailure(RuntimeError):
         reason_code: str | None = None,
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
+        metrics: Mapping[str, Any] | None = None,
     ) -> None:
         super().__init__(code)
         self.code = code
         self.reason_code = _safe_response_reason(reason_code) if code == "invalid_response" else None
         self.worker_thread_id = worker_thread_id
         self.worker_turn_id = worker_turn_id
+        self.metrics = dict(metrics) if metrics is not None else None
 
 
 def process_pending(
@@ -173,13 +175,24 @@ def process_pending(
             lease_token = raw_lease_token
             thread_id: str | None = None
             turn_id: str | None = None
+            metrics: Mapping[str, Any] | None = None
+            attempt_count = claimed.get("attempt_count")
+            usage_started = False
+            outcome = "failed"
+            error_code: str | None = None
+            receipt: dict[str, Any] | None = None
             try:
+                from .observer_usage_store import begin_attempt, finish_attempt
+                begin_attempt(store, workspace, job_id, attempt_count)
+                usage_started = True
                 _, _, sources = _claim_parts(claimed)
                 request = _runner_request(claimed, checked_timeout)
                 active_runner = runner
                 if active_runner is None:
                     active_runner = NativeProcessorRunner(codex=codex, timeout=checked_timeout)
                 run_value = _invoke_runner(active_runner, request)
+                if isinstance(run_value.get("metrics"), Mapping):
+                    metrics = run_value["metrics"]
                 output, evidence, thread_id, turn_id = _validate_runner_receipt(run_value)
                 output = _resolve_source_handles(output, sources)
                 notes, disposition, summary = _validate_model_output(
@@ -196,25 +209,58 @@ def process_pending(
                 )
                 receipt = _finished_receipt(finished, disposition, len(notes), evidence)
                 receipt["session_summary_count"] = int(summary is not None)
-                return receipt
+                outcome = disposition
             except ProcessorFailure as exc:
                 thread_id = exc.worker_thread_id or thread_id
                 turn_id = exc.worker_turn_id or turn_id
-                return _failed_after_claim(store, workspace, job_id, lease_token, exc.code, thread_id, turn_id,
-                                           reason_code=exc.reason_code)
+                metrics = exc.metrics or metrics
+                error_code = exc.code
+                receipt = _failed_after_claim(store, workspace, job_id, lease_token, exc.code, thread_id, turn_id,
+                                             reason_code=exc.reason_code)
             except ObservationLeaseExpired:
-                return _failed_receipt(job_id, "lease_expired", thread_id, turn_id)
+                outcome = "lease_expired"
+                error_code = "lease_expired"
+                receipt = _failed_receipt(job_id, "lease_expired", thread_id, turn_id)
             except (StoreError, OSError):
-                return _failed_after_claim(
+                error_code = "storage_failure"
+                receipt = _failed_after_claim(
                     store, workspace, job_id, lease_token, "storage_failure", thread_id, turn_id
                 )
             except Exception:
                 # A test runner and a native process both remain untrusted at
                 # this boundary; do not pass exception content into durable
                 # status or CLI output.
-                return _failed_after_claim(
+                error_code = "runner_failure"
+                receipt = _failed_after_claim(
                     store, workspace, job_id, lease_token, "runner_failure", thread_id, turn_id
                 )
+            finally:
+                if usage_started:
+                    if receipt is not None and receipt.get("status") == "failed":
+                        error_code = _safe_failure_code(receipt.get("code"))
+                        if error_code == "lease_expired":
+                            outcome = "lease_expired"
+                    try:
+                        terminal = dict(
+                            outcome=outcome,
+                            error_code=_safe_failure_code(error_code) if error_code is not None else None,
+                            worker_thread_id=thread_id, worker_turn_id=turn_id,
+                        )
+                        try:
+                            finish_attempt(store, workspace, job_id, attempt_count, metrics=metrics, **terminal)
+                        except ValueError:
+                            # Invalid optional telemetry cannot leave a finished
+                            # attempt looking active. Keep its usage unknown.
+                            finish_attempt(store, workspace, job_id, attempt_count, metrics=None, **terminal)
+                        if receipt is not None:
+                            receipt["observer_usage_recorded"] = True
+                    except (StoreError, OSError, ValueError):
+                        # A failed receipt write cannot roll back an already
+                        # committed note. Its running/unknown row remains an
+                        # explicit accounting gap instead of invented zero.
+                        if receipt is not None:
+                            receipt["observer_usage_recorded"] = False
+            return receipt or _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
     except (StoreError, OSError):
         return _failed_receipt(None, "storage_failure", None, None)
 
@@ -243,6 +289,17 @@ class NativeProcessorRunner:
         thread_id: str | None = None
         turn_id: str | None = None
         client: _AppServer | None = None
+        monitor: _TurnMonitor | None = None
+        started_at = time.monotonic()
+
+        def metrics() -> dict[str, Any]:
+            return {
+                "duration_ms": max(0, round((time.monotonic() - started_at) * 1000)),
+                "usage": monitor.usage_receipt() if monitor is not None else {
+                    "status": "unavailable", "source": "app_server_thread_total",
+                    "updates": 0, "tokens": None,
+                },
+            }
         try:
             with tempfile.TemporaryDirectory(prefix="codex-mem-processor-") as temporary:
                 worker_cwd = Path(temporary).resolve()
@@ -306,6 +363,7 @@ class NativeProcessorRunner:
                     output = _read_valid_final_output(monitor)
                     return {
                         "output": output,
+                        "metrics": metrics(),
                         "evidence": {
                             "thread_start": {
                                 "thread_id": thread_id,
@@ -326,8 +384,10 @@ class NativeProcessorRunner:
                         client.interrupt(failed_thread, failed_turn)
                     raise ProcessorFailure(
                         exc.code,
+                        reason_code=exc.reason_code,
                         worker_thread_id=failed_thread,
                         worker_turn_id=failed_turn,
+                        metrics=metrics(),
                     ) from None
                 finally:
                     client.close()
@@ -336,11 +396,13 @@ class NativeProcessorRunner:
             raise
         except (OSError, subprocess.SubprocessError):
             raise ProcessorFailure(
-                "runner_unavailable", worker_thread_id=thread_id, worker_turn_id=turn_id
+                "runner_unavailable", worker_thread_id=thread_id, worker_turn_id=turn_id,
+                metrics=metrics(),
             ) from None
         except Exception:
             raise ProcessorFailure(
-                "runner_failure", worker_thread_id=thread_id, worker_turn_id=turn_id
+                "runner_failure", worker_thread_id=thread_id, worker_turn_id=turn_id,
+                metrics=metrics(),
             ) from None
         finally:
             if client is not None:
@@ -579,6 +641,9 @@ class _TurnMonitor:
         self._completed_item_count = 0
         self._agent_messages: list[tuple[str, str | None]] = []
         self._agent_message_ids: set[str] = set()
+        self._usage_tokens: dict[str, int] | None = None
+        self._usage_updates = 0
+        self._usage_invalid = False
 
     def set_turn(self, turn_id: str) -> None:
         self.turn_id = turn_id
@@ -614,6 +679,22 @@ class _TurnMonitor:
         candidate_turn = _notification_turn_id(params)
         if candidate_turn != self.turn_id:
             return
+        if method == "thread/tokenUsage/updated":
+            self._usage_updates += 1
+            usage = params.get("tokenUsage")
+            tokens = _normalized_usage_totals(usage.get("total") if isinstance(usage, Mapping) else None)
+            if tokens is None or (
+                self._usage_tokens is not None
+                and any(tokens[key] < self._usage_tokens[key] for key in tokens)
+            ):
+                # Invalid telemetry must not reject otherwise valid memories,
+                # nor silently become zero cost. Preserve the evidence gap.
+                self._usage_invalid = True
+            elif not self._usage_invalid:
+                # These are thread totals for a fresh single-turn worker.
+                # Repeated updates replace the snapshot; never sum them.
+                self._usage_tokens = tokens
+            return
         if method.endswith("model/rerouted"):
             raise ProcessorFailure("rerouted", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
         if method.endswith("item/started") or method.endswith("item/completed"):
@@ -643,6 +724,20 @@ class _TurnMonitor:
                 for item in completion_items:
                     self._capture_agent_message(item)
             self.completed = True
+
+    def usage_receipt(self) -> dict[str, Any]:
+        if self._usage_invalid:
+            status = "invalid"
+        elif self._usage_tokens is None:
+            status = "unavailable"
+        else:
+            status = "reported" if self.completed else "partial"
+        return {
+            "status": status,
+            "source": "app_server_thread_total",
+            "updates": self._usage_updates,
+            "tokens": dict(self._usage_tokens) if self._usage_tokens is not None and not self._usage_invalid else None,
+        }
 
     def _completion_items(self, turn: Mapping[str, Any]) -> list[Mapping[str, Any]]:
         items = turn.get("items")
@@ -686,6 +781,26 @@ class _TurnMonitor:
             raise ProcessorFailure("invalid_response", reason_code=reason,
                                    worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
         return texts[0]
+
+
+def _normalized_usage_totals(value: object) -> dict[str, int] | None:
+    if not isinstance(value, Mapping):
+        return None
+    fields = {
+        "input_tokens": "inputTokens", "cached_input_tokens": "cachedInputTokens",
+        "cache_write_input_tokens": "cacheWriteInputTokens", "output_tokens": "outputTokens",
+        "reasoning_output_tokens": "reasoningOutputTokens", "total_tokens": "totalTokens",
+    }
+    result = {key: value.get(wire) for key, wire in fields.items()}
+    if any(isinstance(item, bool) or not isinstance(item, int) or not 0 <= item <= 2**63 - 1 for item in result.values()):
+        return None
+    if (
+        result["cached_input_tokens"] + result["cache_write_input_tokens"] > result["input_tokens"]
+        or result["reasoning_output_tokens"] > result["output_tokens"]
+        or result["total_tokens"] != result["input_tokens"] + result["output_tokens"]
+    ):
+        return None
+    return result
 
 
 def _verify_luna_available(client: _AppServer) -> None:
@@ -1142,7 +1257,7 @@ def _invoke_runner(runner: Any, request: Mapping[str, Any]) -> Mapping[str, Any]
 def _validate_runner_receipt(
     value: Mapping[str, Any],
 ) -> tuple[Mapping[str, Any], Mapping[str, Any], str, str]:
-    if set(value) != {"output", "evidence"}:
+    if set(value) not in ({"output", "evidence"}, {"output", "evidence", "metrics"}):
         raise ProcessorFailure("invalid_response", reason_code="invalid_runner_receipt")
     output = value.get("output")
     evidence = value.get("evidence")

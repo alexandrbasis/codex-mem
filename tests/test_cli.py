@@ -170,6 +170,16 @@ class CLITests(unittest.TestCase):
         self.assertEqual(sum(row["event_count"] for row in rows), 3)
         child = next(row for row in rows if row["thread_id"] == "child")
         self.assertEqual(child["parent_thread_id"], "root")
+        from codex_mem.processor import process_pending
+        from tests.test_observer_accounting import receipt
+        with Store(self.data_dir) as store:
+            store.remember(self.project, "Fixture source", "Synthetic routine event.",
+                           source="hook:PostToolUse", session_id="root")
+        process_pending(self.project, self.data_dir, runner=lambda _: receipt())
+        measured = self._run("usage", "status", "--data-dir", str(self.data_dir),
+                             "--project", str(self.project), "--session-id", "root")
+        self.assertEqual(360, sum(row["total_tokens"] for row in measured["records"]))
+        self.assertEqual(240, measured["observer_usage"]["totals"]["reported"]["total_tokens"])
 
     def test_cli_rejects_relative_projects_and_reports_unknown_hook_state(self) -> None:
         invalid = self._run(

@@ -24,7 +24,7 @@ Verify plugin registration, MCP tools, hook discovery and trust, and the backgro
 
 ## Current release
 
-Version `1.6.0` adds compact search previews, history around an exact record, queue recovery fixes, priority for fresh usage data, and verified service refresh during upgrades. The observer remains Luna with medium reasoning. See the verification record for tested behavior and the limits of the Claude Mem comparison.
+Version `1.7.0` records the observation worker's reported token usage and duration for each processing attempt. Health report v2 distinguishes current processing, quarantined failures, a blocked service, and stale work. It retains the compact search previews, exact-record timeline windows, queue recovery and managed service refresh added in 1.6.0. The observer remains Luna with medium reasoning. See the verification record for tested behavior, installation checks, and the limits of the Claude Mem comparison.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
 
@@ -123,7 +123,9 @@ python3 skills/maintenance/scripts/health_check.py --all-projects --deep
 
 It emits metadata-only JSON and leaves the memory database and configuration unchanged. `--deep` adds a SQLite integrity check. Use `--data-dir` for a custom store. Native hook trust and actual execution are separate evidence; the skill uses the installed host check for discovery. Read-only diagnosis does not run a model, retry jobs, or repair storage. Repair commands have their own effects and scope.
 
-The report includes recorded token usage and the age of its latest event. Missing usage data remains unavailable; it is never treated as zero. If process visibility is restricted, worker liveness is `unknown`.
+Health report v2 uses `in_progress` for an active processing job, `quarantined` for retained failed jobs, `blocked` when service scheduling is explicitly blocked, and `stale` for expired work or overdue work with a stopped worker. Historical failures alone do not establish that the service is blocked. The report includes the last successful processing time and the ages of pending work and recorded session usage. If process visibility is restricted, worker liveness is `unknown`.
+
+The separate `observer_usage` summary reports processing attempts, durations and token coverage. Missing usage stays unknown; it is never treated as zero. See [Inspect token usage](#inspect-token-usage) for the difference between session and observer accounting.
 
 ## Use memory in Codex
 
@@ -199,6 +201,30 @@ python3 scripts/codex-mem.py service retry --project /absolute/path/to/project
 
 The worker uses only bounded, redacted observations from the selected project. It requests an empty environment and disables connected MCP servers individually for its processing session. This is layered isolation, not a universal switch over every native utility. The worker validates the model response and source attribution and records model and execution provenance. Memory failures return control to the main Codex task.
 
+## Inspect token usage
+
+Read the recorded usage for a project:
+
+```sh
+python3 scripts/codex-mem.py usage status --project /absolute/path/to/project
+python3 scripts/codex-mem.py status --project /absolute/path/to/project
+```
+
+`usage status` returns session JSONL accounting in `records` and separate processing accounting in `observer_usage`. The project `status`, MCP `memory_status`, and maintenance report also expose `observer_usage`. Adding `--session-id` to `usage status` filters only `records`; `observer_usage` still covers the entire project. The two ledgers are not merged.
+
+The observer uses the latest valid app-server token total matching its fresh thread and turn. Repeated updates replace the snapshot; they are not added together. Each retry has its own attempt receipt, so its reported usage is counted separately. Attempts also retain their outcome and available duration.
+
+| Coverage | Meaning |
+| --- | --- |
+| `reported` | A valid usage snapshot was received and the native turn completed. This does not by itself mean its output passed memory validation. |
+| `partial` | A valid snapshot was received before an interrupted or failed turn. It is counted separately from completed-turn usage. |
+| `unknown` | The aggregate count of receipts without usable usage, including missing or invalid updates. Their token totals remain `null`. |
+| `without_receipt` | Recorded job attempts with no accounting receipt, including historical attempts. Their cost is unknown. |
+
+The optional SQLite ledger is created when processing records its first attempt. An absent ledger reports `unavailable`; it does not mean processing was free. Model groups use `model_basis="requested_job_profile"`: they describe the requested model and reasoning setting, and do not independently prove the backend that served a failed attempt. Cached input is part of input tokens, and reasoning output is part of output tokens; do not add these subsets again.
+
+These measurements describe recorded work. They do not calculate money spent or prove net savings from memory. See [Verification](docs/VERIFICATION.md) for the tested accounting boundaries and [Upstream and implementation choices](UPSTREAM.md) for the protocol and comparison sources.
+
 ## Protect and manage data
 
 The default data directory is `~/.local/share/codex-mem`. Set `CODEX_MEM_HOME` or pass `--data-dir` to use another local directory. Codex Mem does not modify Codex's built-in memory, `AGENTS.md`, Claude Mem settings, or the Claude Mem database.
@@ -212,6 +238,8 @@ python3 scripts/codex-mem.py prune --days 90
 ```
 
 `prune` removes old records from all projects. Backups and context already sent to a chat are separate copies, so review your retention policy before pruning.
+
+Observer accounting stores operational metadata, including job and attempt IDs, worker thread/turn IDs, counters and duration. It stores no prompts or model output. This metadata remains with observation jobs after `forget` or `prune` removes memory entries, and is included in database backups.
 
 ## Import selected Claude Mem records
 
@@ -247,6 +275,6 @@ The local database remains on disk after plugin removal. Delete it separately on
 
 ## Known limitations
 
-Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record. The usage ledger does not yet establish the token cost of the ephemeral observation worker, so it cannot establish net memory-system savings.
+Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record. A live Claude-versus-Luna quality and cost comparison remains unmeasured. Observer accounting does not backfill missing historical receipts or establish net memory-system savings.
 
 Read [Upstream and implementation choices](UPSTREAM.md) for provenance and design differences. The project is licensed under the MIT license.

@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover
     fcntl = None  # type: ignore[assignment]
 
 
-REPORT_VERSION = 1
+REPORT_VERSION = 2
 EXPECTED_SCHEMA_VERSION = 4
 EXPECTED_PROCESSOR_MODEL = "gpt-5.6-luna"
 EXPECTED_PROCESSOR_EFFORT = "medium"
@@ -40,6 +40,7 @@ MAX_HOOK_BYTES = 256 * 1024
 MAX_PROJECTS = 256
 MAX_LATEST = 10
 MAX_MODEL_PROFILES = 20
+MAX_FAILURE_CODES = 20
 SERVICE_STATE_VERSION = 1
 SERVICE_STARTUP_TTL = 15.0
 DEEP_CHECK_BUDGET_SECONDS = 5.0
@@ -253,12 +254,12 @@ def _observations(connection: sqlite3.Connection, project: str, now: float) -> d
             SELECT 1 FROM observation_job_sources AS links
             JOIN observation_jobs AS jobs ON jobs.id = links.job_id
             WHERE links.source_id = e.id AND jobs.project = e.project
-              AND jobs.status IN ('processed', 'skipped', 'running')
+              AND jobs.status IN ('processed', 'skipped', 'running', 'failed')
           )
         """,
         (project,),
     )
-    blocked_row = _one(
+    failed_row = _one(
         connection,
         f"""
         SELECT COUNT(*) AS value FROM entries AS e
@@ -276,7 +277,7 @@ def _observations(connection: sqlite3.Connection, project: str, now: float) -> d
         "last_note_at": _safe_timestamp(_value(last_note, "value")),
         "last_curated_note_at": _safe_timestamp(_value(last_note, "value")),
         "pending_observations": int(_value(pending_row, "value", 0) or 0),
-        "blocked_observations": int(_value(blocked_row, "value", 0) or 0),
+        "failed_observations": int(_value(failed_row, "value", 0) or 0),
         "last_observation_age_seconds": _age(_value(last_observation, "value"), now),
         "last_note_age_seconds": _age(_value(last_note, "value"), now),
     }
@@ -300,9 +301,11 @@ def _observation_queue(
     counts: dict[str, int] = {"running": 0, "failed": 0, "processed": 0, "skipped": 0}
     invalid = 0
     oldest: dict[str, object] = {}
+    latest: dict[str, object] = {}
     last_progress: list[object] = []
     successful: list[object] = []
     profiles: dict[tuple[str, str], int] = {}
+    failure_codes: dict[str, int] = {}
     for row in rows:
         status = row["status"] if row["status"] in counts else None
         if status is None:
@@ -310,6 +313,7 @@ def _observation_queue(
         else:
             counts[status] += int(row["count"] or 0)
             oldest[status] = row["oldest_at"]
+            latest[status] = row["last_progress_at"]
             if row["last_progress_at"] is not None:
                 last_progress.append(row["last_progress_at"])
             if status in {"processed", "skipped"} and row["completed_at"] is not None:
@@ -324,6 +328,15 @@ def _observation_queue(
         effort = _safe_atom(row["reasoning_effort"])
         if model is not None and effort is not None:
             profiles[(model, effort)] = int(row["count"] or 0)
+    for row in _rows(
+        connection,
+        """SELECT error_code, COUNT(*) AS count FROM observation_jobs
+           WHERE project = ? AND status = 'failed' GROUP BY error_code""",
+        (project,),
+    ):
+        code = _safe_atom(row["error_code"], maximum=64)
+        if code is not None:
+            failure_codes[code] = int(row["count"] or 0)
 
     stale_running_rows = _rows(
         connection,
@@ -345,21 +358,32 @@ def _observation_queue(
         default=None,
     )
     status = "idle"
-    if counts["failed"] or invalid:
-        status = "blocked"
+    if invalid:
+        status = "unavailable"
     elif stale_running:
         status = "stale"
-    elif counts["running"] or counts["processed"] or counts["skipped"]:
+    elif counts["running"]:
+        status = "in_progress"
+    elif counts["failed"]:
+        status = "quarantined"
+    elif counts["processed"] or counts["skipped"]:
         status = "healthy"
     result: dict[str, Any] = {
         "status": status,
         "counts": {**counts, "invalid": invalid},
         "pending_jobs": 0,
         "pending_sources": pending_observations,
+        "quarantined_jobs": counts["failed"],
+        "failure_codes": [
+            {"code": code, "jobs": count}
+            for code, count in sorted(failure_codes.items())[:MAX_FAILURE_CODES]
+        ],
         "oldest_running_at": _safe_timestamp(oldest.get("running")),
         "oldest_failed_at": _safe_timestamp(oldest.get("failed")),
+        "latest_failed_at": _safe_timestamp(latest.get("failed")),
         "oldest_running_age_seconds": _age(oldest.get("running"), now),
         "oldest_failed_age_seconds": _age(oldest.get("failed"), now),
+        "latest_failed_age_seconds": _age(latest.get("failed"), now),
         "last_progress_at": _safe_timestamp(last_progress_value),
         "last_successful_processing_at": _safe_timestamp(last_successful),
         "last_progress_age_seconds": _age(last_progress_value, now),
@@ -713,6 +737,19 @@ def _usage_report(
         return {**base, "status": "unavailable"}
 
 
+def _observer_usage_report(connection: sqlite3.Connection, project: str) -> dict[str, Any]:
+    """Share the read-only accounting query without opening or migrating Store."""
+
+    plugin_root = str(Path(__file__).resolve().parents[3])
+    if plugin_root not in sys.path:
+        sys.path.insert(0, plugin_root)
+    try:
+        from codex_mem.observer_usage_store import observer_usage_summary
+        return observer_usage_summary(connection, project)
+    except (ImportError, sqlite3.Error, TypeError, ValueError, OverflowError):
+        return {"status": "unavailable", "project": project, "scope": "project"}
+
+
 def _db_report(
     data_dir: Path,
     projects: list[str],
@@ -793,6 +830,7 @@ def _db_report(
                     "observation_queue": queue,
                     "semantic": _semantic_index(connection, project, semantic_enabled),
                     "usage": _usage_report(connection, project, names, now, usage_enabled),
+                    "observer_usage": _observer_usage_report(connection, project),
                 }
                 if per_project[project]["usage"]["status"] == "unavailable":
                     errors.append(_error("usage_metadata_unavailable"))
@@ -865,9 +903,14 @@ def collect_report(
     reports: list[dict[str, Any]] = []
     for path in candidate_projects:
         value = project_data.get(path, {"entries": 0, "active_entries": 0, "superseded_entries": 0, "latest": []})
-        queue = value.get("observation_queue", {})
+        stored_queue = value.get("observation_queue", {})
+        queue = dict(stored_queue) if isinstance(stored_queue, Mapping) else {}
         service = service_by_project.get(path, service_global)
         service_queue = service.get("queue_metadata", {}) if isinstance(service, Mapping) else {}
+        service_blocked = isinstance(service_queue, Mapping) and service_queue.get("blocked") is True
+        if service_blocked:
+            queue["status"] = "blocked"
+        failed_observations = int(value.get("failed_observations", 0) or 0)
         local_status = "idle"
         if db["status"] == "unavailable" or value.get("status") == "unavailable":
             local_status = "unavailable"
@@ -875,12 +918,16 @@ def collect_report(
             local_status = "unavailable"
         elif config.get("valid") is False:
             local_status = "degraded"
-        elif isinstance(queue, Mapping) and queue.get("status") == "blocked":
+        elif service_blocked:
             local_status = "blocked"
-        elif isinstance(queue, Mapping) and queue.get("status") == "stale":
+        elif queue.get("status") == "unavailable":
+            local_status = "unavailable"
+        elif queue.get("status") == "stale":
             local_status = "stale"
-        elif isinstance(service_queue, Mapping) and service_queue.get("blocked") is True:
-            local_status = "blocked"
+        elif queue.get("status") == "in_progress":
+            local_status = "in_progress"
+        elif queue.get("status") == "quarantined":
+            local_status = "quarantined"
         elif (
             isinstance(service_queue, Mapping)
             and service_queue.get("queued") is True
@@ -905,20 +952,26 @@ def collect_report(
                 "end_to_end": "unknown",
                 "evidence": {"source": "local_metadata", "observed": True},
                 "records": {key: value.get(key) for key in ("entries", "active_entries", "superseded_entries", "oldest_at", "newest_at", "latest")},
-                "observations": {key: value.get(key) for key in ("last_observation_at", "last_observation_age_seconds", "pending_observations", "blocked_observations")},
+                "observations": {
+                    **{key: value.get(key) for key in ("last_observation_at", "last_observation_age_seconds", "pending_observations")},
+                    "failed_observations": failed_observations,
+                    "blocked_observations": failed_observations if service_blocked else 0,
+                    "quarantined_observations": 0 if service_blocked else failed_observations,
+                },
                 "notes": {key: value.get(key) for key in ("last_note_at", "last_curated_note_at", "last_note_age_seconds")},
                 "processing": {
                     "last_successful_processing_at": value.get("observation_queue", {}).get("last_successful_processing_at") if isinstance(value.get("observation_queue"), Mapping) else None,
                     "last_successful_processing_age_seconds": value.get("observation_queue", {}).get("last_successful_processing_age_seconds") if isinstance(value.get("observation_queue"), Mapping) else None,
                     "model_profiles": value.get("observation_queue", {}).get("model_profiles", []) if isinstance(value.get("observation_queue"), Mapping) else [],
                 },
-                "observation_queue": value.get("observation_queue", {"status": "idle"}),
+                "observation_queue": queue or {"status": "idle"},
                 "semantic": value.get("semantic", {"status": "unknown"}),
                 "usage": value.get("usage", {
                     "enabled": config.get("usage_enabled") is not False,
                     "status": "missing" if db["status"] == "missing" else "unavailable",
                     "collection_liveness": "unknown",
                 }),
+                "observer_usage": value.get("observer_usage", {"status": "unavailable", "scope": "project"}),
                 "service": service,
             }
         )
@@ -931,6 +984,10 @@ def collect_report(
         overall = "blocked"
     elif any(item["status"] == "stale" for item in reports):
         overall = "stale"
+    elif any(item["status"] == "in_progress" for item in reports):
+        overall = "in_progress"
+    elif any(item["status"] == "quarantined" for item in reports):
+        overall = "quarantined"
     elif any(item["status"] == "degraded" for item in reports):
         overall = "degraded"
     elif service_errors:
