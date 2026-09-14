@@ -2131,7 +2131,7 @@ class Store:
         Failed jobs are deliberately not retried unless requested.  A crashed
         worker remains recoverable after its real lease expires, while an
         invalid model response cannot cause a new retry at every Stop hook.
-        ``retry_job_id`` permits just that timed-out failed job in addition
+        ``retry_job_id`` permits just that timeout or runner-failed job in addition
         to ordinary fresh or expired work. ``retry_failed`` is the explicit
         broader recovery operation; the two selectors cannot be combined.
         """
@@ -2171,7 +2171,7 @@ class Store:
                     WHERE project = ? AND processor_id = ? AND model = ?
                       AND reasoning_effort = ?
                       AND ((status = 'running' AND lease_expires_at <= ?)
-                        OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code = 'timeout'))))
+                        OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code IN ('timeout', 'runner_failure')))))
                       AND EXISTS (
                         SELECT 1 FROM observation_job_sources
                         WHERE observation_job_sources.job_id = observation_jobs.id

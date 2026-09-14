@@ -1,5 +1,6 @@
 """Queue recovery regressions with real leases and deterministic model calls."""
 
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -12,7 +13,7 @@ from codex_mem.processor import (
     ProcessorFailure,
     process_pending,
 )
-from codex_mem.service import enqueue, run_service
+from codex_mem.service import SERVICE_STATE_FILENAME, enqueue, recover_runner_failure, run_service
 from codex_mem.store import Store
 
 
@@ -72,6 +73,75 @@ class QueueRecoveryTests(unittest.TestCase):
                             project, PROCESSOR_ID, MODEL, REASONING_EFFORT,
                             retry_failed=True, retry_job_id=requested_id,
                         )
+
+    def test_exact_runner_recovery_preserves_quarantine(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            project = root / "project"
+            foreign = root / "foreign"
+            project.mkdir()
+            foreign.mkdir()
+            data_dir = root / "memory"
+            clock = Clock()
+            configure(data_dir, capture_scope="selected", included_projects=[project, foreign])
+            jobs = {}
+            with Store(data_dir) as store:
+                for name, owner, code in (("rejected", project, "invalid_response"),
+                                          ("runner", project, "runner_failure"),
+                                          ("foreign", foreign, "runner_failure")):
+                    store.remember(owner, name, name, source="hook:PostToolUse", session_id=name)
+                    job = store.claim_observation_batch(owner, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+                    store.fail_observation_batch(owner, job["job_id"], job["lease_token"], code)
+                    jobs[name] = job["job_id"]
+            enqueue(project, data_dir, clock=clock)
+            run_service(data_dir, processor=lambda *_a, **_k: {"status": "failed", "code": "runner_failure"},
+                        clock=clock, sleeper=clock.sleep, max_cycles=1)
+            for wrong_id in ("f" * 32, jobs["rejected"], jobs["foreign"]):
+                result = recover_runner_failure(project, data_dir, job_id=wrong_id, clock=clock)
+                self.assertEqual("failed_claim_unavailable", result["code"])
+            with Store(data_dir) as store:
+                store._connection.execute("UPDATE observation_jobs SET model='wrong' WHERE id=?", (jobs["runner"],))
+            self.assertEqual("failed_claim_unavailable", recover_runner_failure(
+                project, data_dir, job_id=jobs["runner"], clock=clock)["code"])
+            with Store(data_dir) as store:
+                store._connection.execute("UPDATE observation_jobs SET model=? WHERE id=?", (MODEL, jobs["runner"]))
+            state_path = data_dir / SERVICE_STATE_FILENAME
+            state = json.loads(state_path.read_text())
+            record = state["projects"][str(project.resolve())]
+            record["inflight_generation"] = record["generation"]
+            record["inflight_until"] = clock.value + 100
+            state_path.write_text(json.dumps(state))
+            self.assertEqual("work_inflight", recover_runner_failure(
+                project, data_dir, job_id=jobs["runner"], clock=clock)["code"])
+            record["inflight_generation"] = None
+            record["inflight_until"] = None
+            state_path.write_text(json.dumps(state))
+            result = recover_runner_failure(project, data_dir, job_id=jobs["runner"], clock=clock)
+            self.assertEqual("queued", result["status"])
+            self.assertFalse(result["retry_failed"])
+            seen = []
+
+            def processor(owner, **kwargs):
+                self.assertFalse(kwargs["retry_failed"])
+                self.assertEqual(jobs["runner"], kwargs["retry_job_id"])
+                with Store(data_dir) as store:
+                    job = store.claim_observation_batch(owner, PROCESSOR_ID, MODEL, REASONING_EFFORT,
+                                                        retry_job_id=kwargs["retry_job_id"])
+                    seen.append(job["job_id"])
+                    store.finish_observation_batch(owner, job["job_id"], job["lease_token"],
+                                                   notes=[], disposition="skipped")
+                return {"status": "skipped"}
+
+            run_service(data_dir, processor=processor, clock=clock, sleeper=clock.sleep, max_cycles=1)
+            self.assertEqual([jobs["runner"]], seen)
+            with Store(data_dir) as store:
+                for name in ("rejected", "foreign"):
+                    row = store._connection.execute(
+                        "SELECT status,attempt_count FROM observation_jobs WHERE id=?", (jobs[name],)).fetchone()
+                    self.assertEqual(("failed", 1), tuple(row))
+                row = store._connection.execute(
+                    "SELECT status,attempt_count FROM observation_jobs WHERE id=?", (jobs["runner"],)).fetchone()
+                self.assertEqual(("skipped", 2), tuple(row))
 
     def test_automatic_timeout_retry_never_reopens_an_older_content_rejection(self):
         with tempfile.TemporaryDirectory() as temporary:

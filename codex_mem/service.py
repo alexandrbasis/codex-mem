@@ -202,6 +202,45 @@ def resume_pending(
             "rejected_job_id": rejected_job_id, "retry_failed": False}
 
 
+def recover_runner_failure(
+    project: str | os.PathLike[str],
+    data_dir: str | os.PathLike[str] | None = None,
+    *,
+    job_id: str,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]] = load_config,
+    clock: Callable[[], float] = time.time,
+) -> dict[str, Any]:
+    """Explicitly retry one inspected runner failure, preserving quarantine."""
+    workspace = project_key(project)
+    eligible, reason, _, _ = _eligibility(workspace, data_dir, config_loader)
+    if not eligible:
+        return {"status": "disabled", "project": workspace, "reason": reason}
+    base = _base_dir(data_dir)
+    now = _checked_now(clock)
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(workspace)
+        if record is None or not record["blocked"]:
+            return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
+        if record["last_code"] != "runner_failure":
+            return {"status": "blocked", "project": workspace, "code": record["last_code"]}
+        if record["inflight_generation"] is not None:
+            return {"status": "blocked", "project": workspace, "code": "work_inflight"}
+        if not _persisted_failed_batch(base, workspace, job_id, "runner_failure"):
+            return {"status": "blocked", "project": workspace, "code": "failed_claim_unavailable"}
+        record["generation"] += 1
+        record["blocked"] = False
+        record["parked"] = None
+        record["last_code"] = None
+        record["due_at"] = now
+        record["attempts"] = 0
+        record["retry_requested"] = False
+        record["retry_generation"] = None
+        record["retry_job_id"] = job_id
+        _write_state(base, state)
+    return {"status": "queued", "project": workspace, "job_id": job_id, "retry_failed": False}
+
+
 def recover_expired(
     project: str | os.PathLike[str],
     data_dir: str | os.PathLike[str] | None = None,
@@ -1486,6 +1525,10 @@ def _persisted_expired_claim(base: Path, project: str, job_id: Any, now: float) 
 
 
 def _persisted_rejection(base: Path, project: str, job_id: Any) -> bool:
+    return _persisted_failed_batch(base, project, job_id, "invalid_response")
+
+
+def _persisted_failed_batch(base: Path, project: str, job_id: Any, code: str) -> bool:
     """Confirm a durable failed batch before permitting independent work.
 
     Read job metadata only through a read-only SQLite connection. A missing,
@@ -1502,13 +1545,13 @@ def _persisted_rejection(base: Path, project: str, job_id: Any) -> bool:
         row = connection.execute(
             "SELECT j.id FROM observation_jobs AS j WHERE j.id = ? AND j.project = ? "
             "AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
-            "AND j.status = 'failed' AND j.error_code = 'invalid_response' "
+            "AND j.status = 'failed' AND j.error_code = ? "
             "AND j.lease_token IS NULL AND j.lease_expires_at IS NULL "
             "AND EXISTS (SELECT 1 FROM observation_job_sources AS links WHERE links.job_id = j.id) "
             "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
             "LEFT JOIN entries AS e ON e.id = links.source_id AND e.project = j.project "
             "WHERE links.job_id = j.id AND e.id IS NULL)",
-            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT, code),
         ).fetchone()
         return row is not None
     except (OSError, sqlite3.Error, ServiceError, ValueError):

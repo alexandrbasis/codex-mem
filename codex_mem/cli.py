@@ -363,6 +363,10 @@ def _build_parser() -> _ArgumentParser:
         "recover-expired", help="Recover an inspected expired job without retrying rejected batches")
     recover.add_argument("--project", required=True)
     recover.add_argument("--job-id", required=True)
+    recover_runner = service_commands.add_parser(
+        "recover-runner-failure", help="Retry one inspected runner failure without retrying quarantined batches")
+    recover_runner.add_argument("--project", required=True)
+    recover_runner.add_argument("--job-id", required=True)
 
     usage = commands.add_parser("usage", help="Collect token usage or estimate costs with explicit coverage")
     usage_commands = usage.add_subparsers(dest="usage_command", required=True)
@@ -661,7 +665,7 @@ def main(args: Sequence[str] | None = None) -> int:
             _emit(value)
             return 2 if value.get("status") == "failed" else 0
         if namespace.command == "service":
-            from .service import recover_expired, resume_pending, run_service, service_status, start_service, stop_service
+            from .service import recover_expired, recover_runner_failure, resume_pending, run_service, service_status, start_service, stop_service
             from .integration import enqueue_project, index_project
             action = namespace.service_command
             if action == "run":
@@ -678,6 +682,9 @@ def main(args: Sequence[str] | None = None) -> int:
             elif action == "resume-pending":
                 value = resume_pending(_absolute_project(namespace.project), namespace.data_dir,
                                        rejected_job_id=namespace.rejected_job_id)
+            elif action == "recover-runner-failure":
+                value = recover_runner_failure(_absolute_project(namespace.project), namespace.data_dir,
+                                               job_id=namespace.job_id)
             elif action == "recover-expired":
                 value = recover_expired(_absolute_project(namespace.project), namespace.data_dir,
                                         job_id=namespace.job_id)
