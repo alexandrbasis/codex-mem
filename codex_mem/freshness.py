@@ -59,7 +59,7 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
                     AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop', 'hook:PostToolUse')
                          OR e.source LIKE 'hook:PostToolUse:%')
                     AND NOT EXISTS (SELECT 1 FROM observation_job_sources s
-                        JOIN observation_jobs j ON j.id = s.job_id
+                        CROSS JOIN observation_jobs j ON j.id = s.job_id
                         WHERE s.source_id = e.id AND j.project = e.project
                         AND j.status IN ('processed', 'skipped'))''', (workspace,)).fetchone())
             result['pending_capture_count'] = row[0]
@@ -67,7 +67,7 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
                 SELECT j.error_code FROM observation_jobs j WHERE j.project = ? AND j.status = 'failed'
                     AND EXISTS (SELECT 1 FROM observation_job_sources s JOIN entries e ON e.id = s.source_id
                         WHERE s.job_id = j.id AND e.superseded_by IS NULL AND NOT EXISTS (
-                            SELECT 1 FROM observation_job_sources s2 JOIN observation_jobs j2 ON j2.id = s2.job_id
+                            SELECT 1 FROM observation_job_sources s2 CROSS JOIN observation_jobs j2 ON j2.id = s2.job_id
                             WHERE s2.source_id = e.id AND j2.project = e.project AND j2.status IN ('processed', 'skipped')))
                 ORDER BY j.updated_at DESC LIMIT 1''', (workspace,)).fetchone())
             if failed:

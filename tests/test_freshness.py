@@ -143,3 +143,20 @@ class FreshnessTests(unittest.TestCase):
         self.assertTrue(result['knowledge_incomplete'])
         self.assertFalse(result['processing_enabled'])
         self.assertIn('capture/processing/semantic enabled=True/False/False', result['summary'])
+
+    def test_pending_query_uses_source_index_and_preserves_receipt_scope(self):
+        self.store.remember(self.project, 'processed', 'input', source='hook:Stop')
+        job = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-5.6-luna', 'medium')
+        self.store.finish_observation_batch(self.project, job['job_id'], job['lease_token'], disposition='skipped')
+        self.store.remember(self.project, 'pending', 'input', source='hook:Stop')
+        statements = []
+        self.store._connection.set_trace_callback(statements.append)
+        try:
+            result = self.snapshot()
+        finally:
+            self.store._connection.set_trace_callback(None)
+        self.assertEqual(result['pending_capture_count'], 1)
+        query = next(q for q in statements if 'SELECT COUNT(*) FROM entries e' in q)
+        plan = [r[3] for r in self.store._connection.execute('EXPLAIN QUERY PLAN ' + query)]
+        self.assertTrue(any('observation_job_sources_source_idx (source_id=?)' in p for p in plan))
+        self.assertFalse(any('observation_jobs_project_status_idx' in p for p in plan))

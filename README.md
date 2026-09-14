@@ -24,6 +24,8 @@ Verify plugin registration, MCP tools, hook discovery and trust, and the backgro
 
 ## Current release
 
+Version `1.9.0` exposes memory freshness in search and session context: capture and processing timestamps, pending events, blockers, and separate index coverage. It adds exact recovery for inspected runner/storage failures without retrying content quarantine, and shortens observation-claim transactions.
+
 Version `1.8.0` adds period-based usage reports with separate API-equivalent cost and Codex credit estimates. Reports read the local ledger by default; an explicit refresh imports a bounded batch of usage metadata without model calls. The collector repairs missing Standard/Fast attribution while keeping requested and provider-confirmed settings separate. The observer now saves usage during a running attempt so recovery can retain a partial total. The observer remains Luna with medium reasoning. See the verification record for tested behavior and installation checks.
 
 [Русская версия](README.ru.md) · [Verification record](docs/VERIFICATION.md) · [Upstream and implementation choices](UPSTREAM.md)
