@@ -73,4 +73,6 @@ def search_memory(
     result = search(store, project, query, **search_kwargs)
     if not enabled and mode == "auto":
         result.update(requested_mode="auto", fallback_reason="semantic_disabled")
+    from .freshness import freshness_snapshot
+    result["freshness"] = freshness_snapshot(store, project)
     return result

@@ -687,7 +687,9 @@ def _trusted_context_message(context: str, *, session_id: str | None, budget: in
     if session_id:
         instruction += f" Active session id: {session_id}."
     if not context:
-        return _truncate(instruction, budget)
+        # A tiny budget or unavailable context must not silently look fresh.
+        notice = "Codex Mem freshness unknown; knowledge completeness unknown; context unavailable or omitted by budget.\n"
+        return _truncate(notice + instruction, budget)
     message = (
         f"{instruction}\n\n"
         "<codex_mem_untrusted_context>\n"

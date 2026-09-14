@@ -3,6 +3,32 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from typing import Any
+from xml.sax.saxutils import escape
+
+
+def freshness_markup(snapshot: Mapping[str, Any], *, budget: int) -> str:
+    """Render telemetry before records, preserving XML and explicit omissions."""
+    def value(key: str) -> str:
+        item = snapshot.get(key)
+        if item is None:
+            return "unknown"
+        if isinstance(item, bool):
+            return str(item).lower()
+        return str(item)
+
+    full = "<freshness>" + escape(value("summary")) + "</freshness>\n"
+    if len(full) <= budget:
+        return full
+    compact = (
+        "<freshness>" + escape(
+            f'{value("status")}; knowledge_incomplete={value("knowledge_incomplete")}; '
+            f'pending={value("pending_capture_count")}; metrics omitted'
+        ) + "</freshness>\n"
+    )
+    if len(compact) <= budget:
+        return compact
+    minimal = "<freshness>" + escape(value("status")) + "; metrics omitted</freshness>\n"
+    return minimal if len(minimal) <= budget else ""
 
 
 _PREVIEW_FIELDS = (

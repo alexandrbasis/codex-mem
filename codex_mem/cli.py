@@ -589,6 +589,10 @@ def _run_store_command(namespace: argparse.Namespace) -> Any:
             )
             from .retrieval import preview_records
             result["results"] = preview_records(result["results"], detail=namespace.detail)
+            if not (namespace.mode or namespace.intent):
+                # Preserve the historical stdout list, including an empty list.
+                # The companion diagnostic remains visible without fake hits.
+                sys.stderr.write(json.dumps({"freshness": result["freshness"]}) + "\n")
             return result if namespace.mode or namespace.intent else result["results"]
         if command in {"get-tool-uses", "tool-uses"}:
             return bound_tool_uses(
