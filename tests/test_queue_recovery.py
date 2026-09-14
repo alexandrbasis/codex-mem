@@ -13,7 +13,7 @@ from codex_mem.processor import (
     ProcessorFailure,
     process_pending,
 )
-from codex_mem.service import SERVICE_STATE_FILENAME, enqueue, recover_runner_failure, run_service
+from codex_mem.service import SERVICE_STATE_FILENAME, _claim_due_project, enqueue, recover_runner_failure, run_service
 from codex_mem.store import Store
 
 
@@ -29,6 +29,27 @@ class Clock:
 
 
 class QueueRecoveryTests(unittest.TestCase):
+    def test_due_claim_filters_projects_without_touching_other_queue_records(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            first, second = root / "first", root / "second"
+            first.mkdir()
+            second.mkdir()
+            base = root / "memory"
+            clock = Clock()
+            configure(base, capture_scope="selected", included_projects=[first, second])
+            enqueue(first, base, clock=clock)
+            enqueue(second, base, clock=clock)
+            path = base / SERVICE_STATE_FILENAME
+            before = json.loads(path.read_text())["projects"][str(first)]
+            choice = _claim_due_project(base, clock(), 240, allowed_projects={str(second)})
+            self.assertEqual(str(second), choice["project"])
+            self.assertEqual(before, json.loads(path.read_text())["projects"][str(first)])
+            self.assertEqual("wait", _claim_due_project(
+                base, clock(), 240, allowed_projects={str(second)})["kind"])
+            self.assertEqual("wait", _claim_due_project(
+                base, clock(), 240, allowed_projects=set())["kind"])
+
     def test_exact_timeout_retry_never_authorizes_other_failed_jobs(self):
         for selector in ("missing", "foreign", "rejected"):
             with self.subTest(selector=selector), tempfile.TemporaryDirectory() as temporary:

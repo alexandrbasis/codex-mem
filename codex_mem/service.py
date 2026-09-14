@@ -1293,7 +1293,9 @@ def _consume_stop_request(base: Path) -> None:
             _write_state(base, state)
 
 
-def _claim_due_project(base: Path, now: float, processor_timeout: float) -> dict[str, Any]:
+def _claim_due_project(
+    base: Path, now: float, processor_timeout: float, *, allowed_projects: set[str] | None = None,
+) -> dict[str, Any]:
     with _state_lock(base):
         state = _load_state(base)
         if state["stop_requested"]:
@@ -1308,7 +1310,8 @@ def _claim_due_project(base: Path, now: float, processor_timeout: float) -> dict
         ready = [
             project
             for project, record in projects.items()
-            if not record["blocked"]
+            if (allowed_projects is None or project in allowed_projects)
+            and not record["blocked"]
             and record["parked"] is None
             and record["inflight_generation"] is None
             and record["due_at"] <= now
