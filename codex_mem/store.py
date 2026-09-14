@@ -2131,7 +2131,7 @@ class Store:
         Failed jobs are deliberately not retried unless requested.  A crashed
         worker remains recoverable after its real lease expires, while an
         invalid model response cannot cause a new retry at every Stop hook.
-        ``retry_job_id`` permits just that timeout or runner-failed job in addition
+        ``retry_job_id`` permits just that timeout, runner, or storage failure in addition
         to ordinary fresh or expired work. ``retry_failed`` is the explicit
         broader recovery operation; the two selectors cannot be combined.
         """
@@ -2171,7 +2171,7 @@ class Store:
                     WHERE project = ? AND processor_id = ? AND model = ?
                       AND reasoning_effort = ?
                       AND ((status = 'running' AND lease_expires_at <= ?)
-                        OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code IN ('timeout', 'runner_failure')))))
+                        OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code IN ('timeout', 'runner_failure', 'storage_failure')))))
                       AND EXISTS (
                         SELECT 1 FROM observation_job_sources
                         WHERE observation_job_sources.job_id = observation_jobs.id
@@ -2255,6 +2255,9 @@ class Store:
 
                 # A failed receipt blocks retries only for the current exact
                 # document snapshot.  A retired text profile must requeue.
+                # Keep the correlated anti-join source-first. An ordinary JOIN
+                # can scan every project job for each raw entry while holding
+                # the write transaction, starving unrelated writer attempts.
                 candidates = connection.execute(
                     """
                     SELECT e.* FROM entries AS e
@@ -2262,7 +2265,7 @@ class Store:
                       AND (e.source IN (?, ?) OR e.source = ? OR e.source LIKE ?)
                       AND NOT EXISTS (
                         SELECT 1 FROM observation_job_sources AS links
-                        JOIN observation_jobs AS jobs ON jobs.id = links.job_id
+                        CROSS JOIN observation_jobs AS jobs ON jobs.id = links.job_id
                         WHERE links.source_id = e.id AND jobs.project = e.project
                           AND (
                             jobs.status IN ('processed', 'skipped', 'running')

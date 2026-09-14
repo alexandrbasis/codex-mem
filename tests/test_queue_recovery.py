@@ -13,7 +13,7 @@ from codex_mem.processor import (
     ProcessorFailure,
     process_pending,
 )
-from codex_mem.service import SERVICE_STATE_FILENAME, _claim_due_project, enqueue, recover_runner_failure, run_service
+from codex_mem.service import SERVICE_STATE_FILENAME, _claim_due_project, enqueue, recover_runner_failure, recover_storage_failure, run_service
 from codex_mem.store import Store
 
 
@@ -96,6 +96,12 @@ class QueueRecoveryTests(unittest.TestCase):
                         )
 
     def test_exact_runner_recovery_preserves_quarantine(self):
+        self._assert_exact_operational_recovery("runner_failure", recover_runner_failure)
+
+    def test_exact_storage_recovery_preserves_quarantine(self):
+        self._assert_exact_operational_recovery("storage_failure", recover_storage_failure)
+
+    def _assert_exact_operational_recovery(self, operational_code, recover):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             project = root / "project"
@@ -108,21 +114,21 @@ class QueueRecoveryTests(unittest.TestCase):
             jobs = {}
             with Store(data_dir) as store:
                 for name, owner, code in (("rejected", project, "invalid_response"),
-                                          ("runner", project, "runner_failure"),
-                                          ("foreign", foreign, "runner_failure")):
+                                          ("runner", project, operational_code),
+                                          ("foreign", foreign, operational_code)):
                     store.remember(owner, name, name, source="hook:PostToolUse", session_id=name)
                     job = store.claim_observation_batch(owner, PROCESSOR_ID, MODEL, REASONING_EFFORT)
                     store.fail_observation_batch(owner, job["job_id"], job["lease_token"], code)
                     jobs[name] = job["job_id"]
             enqueue(project, data_dir, clock=clock)
-            run_service(data_dir, processor=lambda *_a, **_k: {"status": "failed", "code": "runner_failure"},
+            run_service(data_dir, processor=lambda *_a, **_k: {"status": "failed", "code": operational_code},
                         clock=clock, sleeper=clock.sleep, max_cycles=1)
             for wrong_id in ("f" * 32, jobs["rejected"], jobs["foreign"]):
-                result = recover_runner_failure(project, data_dir, job_id=wrong_id, clock=clock)
+                result = recover(project, data_dir, job_id=wrong_id, clock=clock)
                 self.assertEqual("failed_claim_unavailable", result["code"])
             with Store(data_dir) as store:
                 store._connection.execute("UPDATE observation_jobs SET model='wrong' WHERE id=?", (jobs["runner"],))
-            self.assertEqual("failed_claim_unavailable", recover_runner_failure(
+            self.assertEqual("failed_claim_unavailable", recover(
                 project, data_dir, job_id=jobs["runner"], clock=clock)["code"])
             with Store(data_dir) as store:
                 store._connection.execute("UPDATE observation_jobs SET model=? WHERE id=?", (MODEL, jobs["runner"]))
@@ -132,12 +138,12 @@ class QueueRecoveryTests(unittest.TestCase):
             record["inflight_generation"] = record["generation"]
             record["inflight_until"] = clock.value + 100
             state_path.write_text(json.dumps(state))
-            self.assertEqual("work_inflight", recover_runner_failure(
+            self.assertEqual("work_inflight", recover(
                 project, data_dir, job_id=jobs["runner"], clock=clock)["code"])
             record["inflight_generation"] = None
             record["inflight_until"] = None
             state_path.write_text(json.dumps(state))
-            result = recover_runner_failure(project, data_dir, job_id=jobs["runner"], clock=clock)
+            result = recover(project, data_dir, job_id=jobs["runner"], clock=clock)
             self.assertEqual("queued", result["status"])
             self.assertFalse(result["retry_failed"])
             seen = []

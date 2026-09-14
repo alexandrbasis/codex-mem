@@ -211,6 +211,31 @@ def recover_runner_failure(
     clock: Callable[[], float] = time.time,
 ) -> dict[str, Any]:
     """Explicitly retry one inspected runner failure, preserving quarantine."""
+    return _recover_operational_failure(project, data_dir, job_id=job_id, code="runner_failure",
+                                        config_loader=config_loader, clock=clock)
+
+
+def recover_storage_failure(
+    project: str | os.PathLike[str],
+    data_dir: str | os.PathLike[str] | None = None,
+    *,
+    job_id: str,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]] = load_config,
+    clock: Callable[[], float] = time.time,
+) -> dict[str, Any]:
+    """Retry one inspected storage failure after its cause has been repaired."""
+    return _recover_operational_failure(project, data_dir, job_id=job_id, code="storage_failure",
+                                        config_loader=config_loader, clock=clock)
+
+
+def _recover_operational_failure(
+    project: str | os.PathLike[str], data_dir: str | os.PathLike[str] | None, *,
+    job_id: str, code: str,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]],
+    clock: Callable[[], float],
+) -> dict[str, Any]:
+    if code not in {"runner_failure", "storage_failure"}:
+        raise ValueError("unsupported operational recovery code")
     workspace = project_key(project)
     eligible, reason, _, _ = _eligibility(workspace, data_dir, config_loader)
     if not eligible:
@@ -222,11 +247,11 @@ def recover_runner_failure(
         record = state["projects"].get(workspace)
         if record is None or not record["blocked"]:
             return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
-        if record["last_code"] != "runner_failure":
+        if record["last_code"] != code:
             return {"status": "blocked", "project": workspace, "code": record["last_code"]}
         if record["inflight_generation"] is not None:
             return {"status": "blocked", "project": workspace, "code": "work_inflight"}
-        if not _persisted_failed_batch(base, workspace, job_id, "runner_failure"):
+        if not _persisted_failed_batch(base, workspace, job_id, code):
             return {"status": "blocked", "project": workspace, "code": "failed_claim_unavailable"}
         record["generation"] += 1
         record["blocked"] = False

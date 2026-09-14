@@ -130,7 +130,7 @@ def process_pending(
     output, raw configuration, or exception details.
     ``deferred`` means another running lease still owns the sources; its
     ``retry_at`` is a UTC Unix timestamp for the next safe claim attempt.
-    ``retry_job_id`` retries only the matching timeout or runner failure. It never
+    ``retry_job_id`` retries only the matching timeout, runner, or storage failure. It never
     authorizes retries of other failures, unlike explicit ``retry_failed``.
     """
 

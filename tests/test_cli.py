@@ -53,15 +53,17 @@ class CLITests(unittest.TestCase):
         self.assertEqual("resume", result["intent"])
         self.assertEqual([summary["id"]], [item["id"] for item in result["results"]])
 
-    def test_recover_runner_failure_rejects_unverified_job(self) -> None:
+    def test_recover_operational_failure_rejects_unverified_job(self) -> None:
         self._run("config", "--data-dir", str(self.data_dir), "--capture-scope", "all")
-        result = self._run(
-            "service", "recover-runner-failure", "--data-dir", str(self.data_dir),
-            "--project", str(self.project), "--job-id", "a" * 32,
-            expected=2,
-        )
-        self.assertEqual(result["status"], "blocked")
-        self.assertFalse((self.data_dir / "service-state.json").exists())
+        for action in ("recover-runner-failure", "recover-storage-failure"):
+            with self.subTest(action=action):
+                result = self._run(
+                    "service", action, "--data-dir", str(self.data_dir),
+                    "--project", str(self.project), "--job-id", "a" * 32,
+                    expected=2,
+                )
+                self.assertEqual(result["status"], "blocked")
+                self.assertFalse((self.data_dir / "service-state.json").exists())
 
     def test_recover_expired_rejects_unverified_job_without_creating_state(self) -> None:
         self._run("config", "--data-dir", str(self.data_dir),
