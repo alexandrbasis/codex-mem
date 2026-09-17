@@ -35,6 +35,7 @@ _PREVIEW_FIELDS = (
     "id", "project", "title", "kind", "created_at", "session_id", "preview",
     "source", "provenance", "superseded_by", "superseded_at", "is_anchor",
     "score", "lexical_score", "semantic_score", "rrf_score",
+    "event_at", "event_id", "event_time_basis", "context_historical", "later_summary_id",
 )
 
 

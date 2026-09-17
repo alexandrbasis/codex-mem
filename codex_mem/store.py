@@ -148,7 +148,10 @@ def _context_priority_sql() -> str:
 
 _KIND_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
 _ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}\Z")
-_FTS_TOKEN_RE = re.compile(r"[^\W_]+", re.UNICODE)
+_FTS_TOKEN_RE = re.compile(
+    r"(?<![\w.])[vV]?[0-9]+(?:\.[0-9]+)+(?!\w|\.[0-9])|[^\W_]+", re.UNICODE
+)
+_VERSION_TOKEN_RE = re.compile(r"[vV]?([0-9]+(?:\.[0-9]+)+)\Z")
 _HASH_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 _OBSERVATION_SOURCES = (
@@ -706,7 +709,67 @@ def _fts_expression(query: object) -> str:
         return ""
     # Tokens are extracted rather than passed through as FTS syntax.  They are
     # still parameterized below, so punctuation can never create operators.
-    return " AND ".join(f'"{token}"' for token in tokens[:32])
+    expressions: list[str] = []
+    for token in tokens:
+        version = _VERSION_TOKEN_RE.fullmatch(token)
+        if version:
+            number = version.group(1)
+            expressions.append(f'("{number}" OR "v{number}")')
+        else:
+            expressions.append(f'"{token}"')
+    return " AND ".join(expressions)
+
+
+def _matches_version(
+    text: object, observation_json: object, summary_json: object, version: str
+) -> bool:
+    """Match a literal version in record prose, never opaque IDs or file lists."""
+
+    if not isinstance(version, str) or not _VERSION_TOKEN_RE.fullmatch(version):
+        return False
+    number = version.lstrip("vV")
+    pattern = re.compile(r"(?<![\w.])[vV]?" + re.escape(number) + r"(?!\w|\.[0-9])")
+    values = [text] if isinstance(text, str) else []
+    for raw, fields in (
+        (observation_json, ("subtitle", "facts", "narrative", "concepts")),
+        (summary_json, ("title", *_SESSION_SUMMARY_FIELDS)),
+    ):
+        if not isinstance(raw, str):
+            continue
+        try:
+            metadata = json.loads(raw)
+        except (ValueError, RecursionError):
+            continue
+        if not isinstance(metadata, dict):
+            continue
+        for field in fields:
+            value = metadata.get(field)
+            if isinstance(value, str):
+                values.append(value)
+            elif isinstance(value, list):
+                values.extend(item for item in value if isinstance(item, str))
+    return any(pattern.search(unicodedata.normalize("NFKC", value)) for value in values)
+
+
+def _register_query_functions(connection: sqlite3.Connection) -> None:
+    connection.create_function("codex_mem_matches_version", 4, _matches_version, deterministic=True)
+
+
+def _version_search_sql(
+    entry_alias: str, metadata_alias: str, tokens: Sequence[str]
+) -> tuple[list[str], list[object]]:
+    """Apply exact version boundaries before SQL limits in lexical retrieval."""
+
+    versions = [token for token in tokens if _VERSION_TOKEN_RE.fullmatch(token)]
+    text = (
+        f"COALESCE({entry_alias}.title, '') || ' ' || COALESCE({entry_alias}.body, '') || ' ' || "
+        f"COALESCE({entry_alias}.tags_json, '')"
+    )
+    predicate = (
+        f"codex_mem_matches_version({text}, {metadata_alias}.observation_json, "
+        f"{metadata_alias}.session_summary_json, ?)"
+    )
+    return [predicate for _ in versions], list(versions)
 
 
 def _preview(value: str) -> str:
@@ -3973,8 +4036,19 @@ class Store:
             f"LOWER(COALESCE({alias}.observation_json, '') || ' ' || "
             f"COALESCE({alias}.session_summary_json, ''))"
         )
-        clauses = [f"{text} LIKE ?" for _ in tokens]
-        return " AND ".join(clauses), [f"%{token.lower()}%" for token in tokens]
+        clauses: list[str] = []
+        parameters: list[object] = []
+        for token in tokens:
+            if _VERSION_TOKEN_RE.fullmatch(token):
+                clauses.append(
+                    f"codex_mem_matches_version('', {alias}.observation_json, "
+                    f"{alias}.session_summary_json, ?)"
+                )
+                parameters.append(token)
+            else:
+                clauses.append(f"{text} LIKE ?")
+                parameters.append(f"%{token.lower()}%")
+        return " AND ".join(clauses), parameters
 
     def _search_rows(
         self,
@@ -4000,6 +4074,11 @@ class Store:
             "COALESCE(e.source, '') NOT GLOB 'hook:*'",
         ]
         base_parameters: list[object] = [workspace]
+        version_clauses, version_parameters = _version_search_sql("e", "m", metadata_tokens)
+        if version_clauses:
+            _register_query_functions(connection)
+            base_clauses.extend(version_clauses)
+            base_parameters.extend(version_parameters)
         if kinds:
             placeholders = ", ".join("?" for _ in kinds)
             base_clauses.append(f"e.kind IN ({placeholders})")
@@ -4101,6 +4180,72 @@ class Store:
                 files=checked_files,
             )
             return self._records_from_rows(rows, preview=True, scores=scores)
+
+    def resume_metadata(
+        self, project: str | Path, ids: Sequence[str] | str
+    ) -> dict[str, dict[str, Any]]:
+        """Read event chronology and later handoff links for bounded candidates.
+
+        A later summary is a continuation pointer, not proof that an earlier
+        finding is false, resolved, or superseded. Source order prevents delayed
+        processing from making an earlier event appear current. Only active
+        project-local candidates and their same-session summary peers are read;
+        raw sources supply timestamps only, never returned text.
+        """
+        workspace = project_key(project)
+        checked_ids = _validate_ids(ids, "ids", allow_empty=True)
+        if not checked_ids:
+            return {}
+        placeholders = ", ".join("?" for _ in checked_ids)
+        sql = (
+            "WITH selected AS (SELECT e.id, e.session_id FROM entries AS e "
+            f"WHERE e.project = ? AND e.id IN ({placeholders}) "
+            "AND e.superseded_by IS NULL AND COALESCE(e.source, '') NOT GLOB 'hook:*'), "
+            "candidates AS (SELECT e.id, e.session_id, e.created_at, "
+            "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary "
+            "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
+            "WHERE e.project = ? AND e.superseded_by IS NULL "
+            "AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
+            "AND (e.id IN (SELECT id FROM selected) OR ("
+            "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) "
+            "AND e.session_id IN (SELECT session_id FROM selected "
+            "WHERE session_id IS NOT NULL AND session_id != '')))), "
+            "source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
+            "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
+            "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
+            "THEN 0 ELSE 1 END, raw.created_at DESC, raw.id DESC) AS event_rank "
+            "FROM candidates AS derived JOIN entry_sources AS links ON links.summary_id = derived.id "
+            "JOIN entries AS raw ON raw.id = links.source_id AND raw.project = ? "
+            "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
+            "dated AS (SELECT c.*, COALESCE(s.event_at, c.created_at) AS event_at, "
+            "COALESCE(s.event_id, c.id) AS event_id, "
+            "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
+            "FROM candidates AS c LEFT JOIN source_order AS s ON s.summary_id = c.id AND s.event_rank = 1), "
+            "summaries AS (SELECT dated.*, ROW_NUMBER() OVER (PARTITION BY session_id "
+            "ORDER BY event_at DESC, event_id DESC, created_at DESC, id DESC) AS summary_rank "
+            "FROM dated WHERE is_summary AND session_id IS NOT NULL AND session_id != '') "
+            "SELECT d.*, latest.id AS latest_summary_id, latest.event_at AS latest_event_at, "
+            "latest.event_id AS latest_event_id FROM dated AS d "
+            "LEFT JOIN summaries AS latest ON latest.session_id = d.session_id AND latest.summary_rank = 1 "
+            "WHERE d.id IN (SELECT id FROM selected)"
+        )
+        with self._lock:
+            self._require_open()
+            rows = self._read(lambda: self._connection.execute(
+                sql, (workspace, *checked_ids, workspace, workspace)
+            ).fetchall())
+        result: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            metadata = {key: row[key] for key in ("event_at", "event_id", "event_time_basis")}
+            later = row["latest_summary_id"]
+            if later and later != row["id"] and (
+                row["latest_event_at"], row["latest_event_id"]
+            ) >= (row["event_at"], row["event_id"]):
+                metadata["later_summary_id"] = later
+                if row["is_summary"]:
+                    metadata["context_historical"] = True
+            result[row["id"]] = metadata
+        return result
 
     def get(self, project: str | Path, ids: Sequence[str] | str) -> list[dict[str, Any]]:
         """Fetch full, redacted records only for the specified project."""
@@ -4517,7 +4662,13 @@ class Store:
             parameters.extend(metadata_filter_parameters)
             if query.strip():
                 expression = _fts_expression(query)
-                metadata_search, metadata_parameters = self._metadata_search_sql("e", _fts_tokens(query))
+                query_tokens = _fts_tokens(query)
+                metadata_search, metadata_parameters = self._metadata_search_sql("e", query_tokens)
+                version_clauses, version_parameters = _version_search_sql("e", "e", query_tokens)
+                if version_clauses:
+                    _register_query_functions(self._connection)
+                    clauses.extend(version_clauses)
+                    parameters.extend(version_parameters)
                 if not expression:
                     clauses.append("0")
                 else:

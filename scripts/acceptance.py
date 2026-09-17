@@ -121,7 +121,13 @@ def run(schema_dir: Path | None = None) -> dict:
         assert len(replies) == 4 and replies[0]["id"] == 0, "MCP notification/id protocol mismatch"
         for reply in replies:
             assert "error" not in reply and not reply.get("result", {}).get("isError"), "MCP operation failed"
-        assert len(replies[1]["result"]["tools"]) == 8, "Unexpected tool catalog"
+        expected_tools = {
+            "memory_search", "memory_get_tool_uses", "memory_get", "memory_timeline",
+            "memory_remember", "memory_consolidate", "memory_forget", "memory_status",
+            "memory_usage_report", "memory_usage_refresh",
+        }
+        actual_tools = [tool["name"] for tool in replies[1]["result"]["tools"]]
+        assert sorted(actual_tools) == sorted(expected_tools), "Unexpected tool catalog"
         with Store(data) as store:
             search = store.search(project, "Aurora")
             assert len(search) == 1, "Consolidated sources remain active"

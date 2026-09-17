@@ -178,9 +178,9 @@ class SemanticTests(unittest.TestCase):
                 self.assertEqual(["summary", "decision", "another-summary"],
                                  [record["id"] for record in result["results"]])
                 for call in store.lexical_calls:
-                    self.assertEqual(12 if call[3] is None and call[4] is None else 3, call[2])
+                    self.assertEqual(100 if call[3] is None and call[4] is None else 3, call[2])
                 for call in store.semantic_calls:
-                    self.assertEqual(12, call[5])
+                    self.assertEqual(100, call[5])
 
     def test_resume_expands_priority_categories_across_search_modes(self) -> None:
         class FilteredStore(FakeSearchStore):
@@ -196,7 +196,7 @@ class SemanticTests(unittest.TestCase):
                 return super().semantic_search(*args, **kwargs)[:kwargs["limit"]]
 
         details = [{"id": f"ui-{index:02}", "title": "roadmap theme", "kind": "note"}
-                   for index in range(35)]
+                   for index in range(135)]
         handoffs = [
             {"id": "summary", "title": "roadmap handoff", "kind": "session_summary", "score": 2.5},
             {"id": "decision", "title": "roadmap decision", "kind": "note", "observation": {"type": "decision"}},

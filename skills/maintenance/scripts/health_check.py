@@ -231,6 +231,10 @@ def _latest(connection: sqlite3.Connection, project: str) -> list[dict[str, Any]
 
 def _observations(connection: sqlite3.Connection, project: str, now: float) -> dict[str, Any]:
     source_predicate = "(e.source LIKE 'hook:%')"
+    # Match Store.claim_observation_batch eligibility without importing Store.
+    # Other hook captures, including PreCompact, still count as capture activity.
+    processable_predicate = """(e.source IN ('hook:UserPromptSubmit', 'hook:Stop', 'hook:PostToolUse')
+                                OR e.source LIKE 'hook:PostToolUse:%')"""
     last_observation = _one(
         connection,
         f"SELECT MAX(e.created_at) AS value FROM entries AS e WHERE e.project = ? AND {source_predicate}",
@@ -249,10 +253,10 @@ def _observations(connection: sqlite3.Connection, project: str, now: float) -> d
         connection,
         f"""
         SELECT COUNT(*) AS value FROM entries AS e
-        WHERE e.project = ? AND e.superseded_by IS NULL AND {source_predicate}
+        WHERE e.project = ? AND e.superseded_by IS NULL AND {processable_predicate}
           AND NOT EXISTS (
             SELECT 1 FROM observation_job_sources AS links
-            JOIN observation_jobs AS jobs ON jobs.id = links.job_id
+            CROSS JOIN observation_jobs AS jobs ON jobs.id = links.job_id
             WHERE links.source_id = e.id AND jobs.project = e.project
               AND jobs.status IN ('processed', 'skipped', 'running', 'failed')
           )

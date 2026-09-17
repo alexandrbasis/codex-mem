@@ -331,7 +331,7 @@ def _build_parser() -> _ArgumentParser:
     search.add_argument("--concept", "--concepts", dest="concepts", action="append")
     search.add_argument("--file", "--files", dest="files", action="append")
     search.add_argument("--intent", choices=("lookup", "resume"),
-                        help="Prioritize relevant summaries and decisions for resume; returns retrieval metadata")
+                        help="Resume prefers recent matching handoffs by source-event time and exposes later-summary links; returns retrieval metadata")
     search.add_argument("--mode", choices=("auto", "lexical", "semantic", "hybrid"),
                         help="Return results plus retrieval metadata; default automatically uses an available semantic index")
     search.add_argument("--detail", choices=("compact", "full"), default="compact",

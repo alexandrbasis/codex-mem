@@ -23,6 +23,21 @@ class FreshnessTests(unittest.TestCase):
     def snapshot(self):
         return freshness_snapshot(self.store, self.project)
 
+    def failed_batch(self, code='invalid_response', *, project=None):
+        project = project or self.project
+        self.store.remember(project, 'capture', 'input', source='hook:Stop')
+        job = self.store.claim_observation_batch(project, 'fixture', 'gpt-5.6-luna', 'medium')
+        self.store.fail_observation_batch(project, job['job_id'], job['lease_token'], code)
+        return job
+
+    def service_state(self, *, blocked=False, code=None, project=None):
+        from codex_mem.service import _new_state, _new_record
+        state = _new_state()
+        record = _new_record(1.0)
+        record.update(blocked=blocked, last_code=code)
+        state['projects'][str(project or self.project)] = record
+        return state
+
     def test_empty_is_known_empty_without_fabricated_timestamps(self):
         result = self.snapshot()
         self.assertEqual(result['status'], 'empty')
@@ -104,6 +119,90 @@ class FreshnessTests(unittest.TestCase):
         self.assertIsNone(result['last_ready_at'])
         self.assertIsNone(result['blocked_reason'])
 
+    def test_rejected_batch_with_unblocked_service_is_quarantined(self):
+        self.failed_batch()
+        state = self.service_state()
+        with patch('codex_mem.service._load_state_readonly', return_value=state):
+            result = self.snapshot()
+        self.assertEqual(result['status'], 'quarantined')
+        self.assertTrue(result['knowledge_incomplete'])
+        self.assertEqual(result['pending_capture_count'], 1)
+        self.assertEqual(result['quarantined_batch_count'], 1)
+        self.assertEqual(result['quarantine_reason'], 'invalid_response')
+        self.assertIsNone(result['blocked_reason'])
+        self.assertIn('quarantined batches=1', result['summary'])
+        self.assertIn('blocker=none', result['summary'])
+        self.assertLess(len(result['summary']), 850)
+
+        retry = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-5.6-luna', 'medium', retry_failed=True)
+        self.store.finish_observation_batch(self.project, retry['job_id'], retry['lease_token'], disposition='skipped')
+        with patch('codex_mem.service._load_state_readonly', return_value=state):
+            result = self.snapshot()
+        self.assertEqual(result['status'], 'current')
+        self.assertFalse(result['knowledge_incomplete'])
+        self.assertEqual(result['quarantined_batch_count'], 0)
+        self.assertEqual(result['pending_capture_count'], 0)
+        self.assertIsNone(result['quarantine_reason'])
+        self.assertIsNone(result['blocked_reason'])
+
+    def test_service_block_takes_precedence_over_quarantine(self):
+        self.failed_batch()
+        for code, expected in [('runner_failure', 'runner_failure'), ('private value', 'processing_blocked')]:
+            with self.subTest(code=code), patch('codex_mem.service._load_state_readonly',
+                    return_value=self.service_state(blocked=True, code=code)):
+                result = self.snapshot()
+            self.assertEqual(result['status'], 'blocked')
+            self.assertEqual(result['blocked_reason'], expected)
+            self.assertEqual(result['quarantined_batch_count'], 1)
+            self.assertNotIn('private value', json.dumps(result))
+
+    def test_rejections_do_not_hide_unresolved_infrastructure_failures(self):
+        for code, expected in [('runner_failure', 'runner_failure'), ('private_code', 'processing_failed')]:
+            with self.subTest(code=code):
+                job = self.failed_batch(code)
+                self.failed_batch()
+                with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
+                    result = self.snapshot()
+                self.assertEqual(result['status'], 'blocked')
+                self.assertEqual(result['blocked_reason'], expected)
+                self.assertGreaterEqual(result['quarantined_batch_count'], 1)
+                self.assertNotIn('private_code', json.dumps(result))
+                self.store._connection.execute("UPDATE observation_jobs SET status='skipped' WHERE id=?", (job['job_id'],))
+
+    def test_rejection_requires_own_project_service_evidence(self):
+        from codex_mem.service import ServiceError, _new_state
+        self.failed_batch()
+        for state in (_new_state(), self.service_state(project=self.base / 'other')):
+            with patch('codex_mem.service._load_state_readonly', return_value=state):
+                result = self.snapshot()
+            self.assertEqual(result['status'], 'blocked')
+            self.assertEqual(result['blocked_reason'], 'invalid_response')
+            self.assertTrue(result['knowledge_incomplete'])
+        with patch('codex_mem.service._load_state_readonly', side_effect=ServiceError('unavailable')):
+            self.assertEqual(self.snapshot()['status'], 'blocked')
+
+    def test_quarantine_counts_jobs_separately_from_pending_captures_and_other_projects(self):
+        self.failed_batch()
+        self.failed_batch()
+        self.failed_batch(project=self.base / 'other')
+        self.store.remember(self.project, 'fresh pending', 'new input', source='hook:Stop')
+        self.store.remember(self.project, 'compact', 'ignored input', source='hook:PreCompact')
+        with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
+            result = self.snapshot()
+        self.assertEqual(result['status'], 'quarantined')
+        self.assertEqual(result['quarantined_batch_count'], 2)
+        self.assertEqual(result['pending_capture_count'], 3)
+
+    def test_quarantine_is_cleared_by_successful_coverage_from_another_processor(self):
+        self.failed_batch()
+        retry = self.store.claim_observation_batch(self.project, 'new-processor', 'gpt-5.6-luna', 'medium', retry_failed=True)
+        self.store.finish_observation_batch(self.project, retry['job_id'], retry['lease_token'], disposition='skipped')
+        with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
+            result = self.snapshot()
+        self.assertEqual(result['status'], 'current')
+        self.assertEqual(result['quarantined_batch_count'], 0)
+        self.assertEqual(result['pending_capture_count'], 0)
+
     def test_index_backlog_is_distinct_from_capture_backlog(self):
         configure(self.store.data_dir, semantic_enabled=True)
         self.store.remember(self.project, 'ready', 'a note')
@@ -125,7 +224,16 @@ class FreshnessTests(unittest.TestCase):
         self.assertEqual(result['status'], 'unknown')
         self.assertIsNone(result['pending_capture_count'])
         self.assertIsNone(result['ready_count'])
+        self.assertIsNone(result['quarantined_batch_count'])
+        self.assertIn('quarantine reason=unknown', result['summary'])
         self.assertLess(len(result['summary']), 850)
+
+    def test_unavailable_quarantine_query_does_not_report_no_quarantine(self):
+        with patch.object(self.store, '_read', side_effect=StoreError('unavailable')):
+            result = self.snapshot()
+        self.assertEqual(result['status'], 'unknown')
+        self.assertIsNone(result['quarantined_batch_count'])
+        self.assertIn('quarantine reason=unknown', result['summary'])
 
     def test_disabled_semantic_index_does_not_mark_ready_memory_lagging(self):
         self.store.remember(self.project, 'ready', 'note')

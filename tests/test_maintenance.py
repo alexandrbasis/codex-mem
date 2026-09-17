@@ -209,6 +209,51 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         self.assertEqual("healthy", idle_report["projects"][0]["status"])
         self.assertEqual("idle", idle_report["projects"][0]["observation_queue"]["status"])
 
+    def test_pending_observations_match_processable_sources_and_preserve_last_capture(self) -> None:
+        with Store(self.data_dir) as store:
+            for source in (
+                "hook:UserPromptSubmit", "hook:Stop", "hook:PostToolUse", "hook:PostToolUse:call-1",
+                "hook:UserPromptSubmit:extra", "hook:Stop:extra", "hook:PostToolUseOther",
+                "hook:PreCompact:extra",
+            ):
+                store.remember(self.project_a, source, "Private raw event", source=source)
+            latest_capture = store.remember(
+                self.project_a, "Latest capture", "Private compaction context", source="hook:PreCompact",
+            )
+            superseded = store.remember(
+                self.project_a, "Superseded event", "Private old context", source="hook:Stop",
+            )
+            replacement = store.remember(self.project_a, "Curated note", "Private note")
+            store.remember(self.project_b, "Other project", "Private event", source="hook:Stop")
+            claimed = {
+                status: store.remember(
+                    self.project_a, status, "Private claimed event", source="hook:PostToolUse",
+                )
+                for status in ("processed", "skipped", "running", "failed")
+            }
+        for status, source in claimed.items():
+            self._insert_job(
+                source["id"], status=status, created="2026-01-01T00:00:00Z",
+                updated="2026-01-01T01:00:00Z",
+            )
+        with closing(sqlite3.connect(self.data_dir / "memory.sqlite3")) as connection, connection:
+            connection.execute("UPDATE entries SET created_at = '2026-01-01T00:00:00Z'")
+            connection.execute(
+                "UPDATE entries SET created_at = '2026-01-01T05:00:00Z' WHERE id = ?",
+                (latest_capture["id"],),
+            )
+            connection.execute(
+                "UPDATE entries SET superseded_by = ? WHERE id = ?",
+                (replacement["id"], superseded["id"]),
+            )
+
+        project = self.report()["projects"][0]
+
+        self.assertEqual(4, project["observations"]["pending_observations"])
+        self.assertEqual(4, project["observation_queue"]["pending_sources"])
+        self.assertEqual(1, project["observations"]["failed_observations"])
+        self.assertEqual("2026-01-01T05:00:00Z", project["observations"]["last_observation_at"])
+
     def test_active_processing_is_not_blocked_by_historical_quarantine(self) -> None:
         with Store(self.data_dir) as store:
             failed = store.remember(

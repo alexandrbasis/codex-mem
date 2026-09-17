@@ -63,6 +63,15 @@ MAX_BACKOFF_SECONDS = 300.0
 _INFLIGHT_GRACE_SECONDS = 10.0
 _SAFE_CODE_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
 _PARK_REASONS = {"not_selected", "processor_disabled", "semantic_disabled", "rejected_batches"}
+# Only fixed backend codes belong in queue metadata. Syntax checks alone
+# would also accept private text or tokens that happen to look like a code.
+_INDEX_FAILURE_CODES = frozenset({
+    "embedding_failed", "invalid_embedding_input", "invalid_embedding", "indexing_failed",
+    "dependency_missing", "dependency_version_mismatch", "runtime_unavailable",
+    "model_not_ready", "model_layout_invalid", "model_hash_mismatch", "storage_failure",
+    "storage_protocol_error", "document_too_large", "chunking_failed", "invalid_chunking",
+    "invalid_document", "invalid_embedding_prefix", "tokenizer_failure",
+})
 _CONTENT_REJECTION_REASONS = frozenset({
     "invalid_json", "invalid_output_shape", "invalid_note_shape", "invalid_source_ids",
     "unknown_source_handle", "invalid_disposition", "too_many_notes", "missing_required_summary",
@@ -82,6 +91,14 @@ class ServiceAlreadyRunning(ServiceError):
 
 class ServiceStateError(ServiceError):
     """Raised when durable queue metadata is unavailable or malformed."""
+
+
+class _IndexFailure(ServiceError):
+    """Carry only allowlisted metadata from a failed indexer receipt."""
+
+    def __init__(self, receipt: Mapping[str, Any]) -> None:
+        super().__init__("index_failure")
+        self.detail = _index_failure_detail(receipt)
 
 
 def enqueue(
@@ -427,12 +444,18 @@ def run_service(
 
             # Indexing also runs when observation processing is idle: explicit
             # memory notes can need embedding even when no raw observations do.
+            failure_detail = None
             try:
                 index_pending = (
                     _run_indexer(indexer, project, data_dir, retry_failed) if semantic_enabled else False
                 )
+            except _IndexFailure as exc:
+                status, code = "failed", "index_failure"
+                failure_detail = exc.detail
+                last_code = code
             except Exception:
                 status, code = "failed", "index_failure"
+                failure_detail = _index_failure_detail({})
                 last_code = code
 
             if status == "failed":
@@ -454,6 +477,7 @@ def run_service(
                     retry_backoff=checked_backoff,
                     rejected_job_id=result.get("job_id") if processor_enabled else None,
                     reason_code=result.get("reason_code") if processor_enabled else None,
+                    failure_detail=failure_detail,
                 )
                 if retrying:
                     continue
@@ -645,6 +669,11 @@ def service_status(
     lock_held = _pid_lock_held(base)
     projects = state["projects"]
     blocked = sum(1 for record in projects.values() if record["blocked"])
+    failures = {
+        project: {"code": record["last_code"], "last_failure_at": record["last_failure_at"],
+                  "detail": record["last_failure_detail"]}
+        for project, record in projects.items() if record["blocked"]
+    }
     rejected_projects = [project for project, record in projects.items() if record["rejected_batches"]]
     rejection_counts = _rejection_counts(base, rejected_projects)
     quarantines = {
@@ -666,6 +695,7 @@ def service_status(
             "lock_held": None,
             "queued_projects": len(projects),
             "blocked_projects": blocked,
+            "failures": failures,
             "stop_requested": state["stop_requested"],
             "code": "lock_visibility_unavailable",
             **quarantine_status,
@@ -699,6 +729,7 @@ def service_status(
         "lock_held": lock_held,
         "queued_projects": len(projects),
         "blocked_projects": blocked,
+        "failures": failures,
         "stop_requested": state["stop_requested"],
         **quarantine_status,
     }
@@ -847,6 +878,8 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
         "retry_generation": 1 if retry_requested else None,
         "retry_job_id": None,
         "last_code": None,
+        "last_failure_at": None,
+        "last_failure_detail": None,
         "rejected_batches": 0,
         "last_rejected_job": None,
         "last_rejected_reason": None,
@@ -1000,6 +1033,10 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     ):
         raise ServiceStateError("service state is unavailable")
     last_code = raw.get("last_code")
+    last_failure_at = raw.get("last_failure_at")
+    if last_failure_at is not None and not _is_timestamp(last_failure_at):
+        raise ServiceStateError("service state is unavailable")
+    last_failure_detail = _safe_failure_detail(raw.get("last_failure_detail"))
     retry_generation = raw.get("retry_generation", generation if retry_requested else None)
     retry_job_id = raw.get("retry_job_id")
     if ((retry_generation is None) != (not retry_requested)
@@ -1043,6 +1080,8 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         "retry_generation": retry_generation,
         "retry_job_id": retry_job_id,
         "last_code": last_code,
+        "last_failure_at": None if last_failure_at is None else float(last_failure_at),
+        "last_failure_detail": last_failure_detail,
         "rejected_batches": rejected_batches,
         "last_rejected_job": last_rejected_job,
         "last_rejected_reason": last_rejected_reason,
@@ -1665,6 +1704,7 @@ def _finish_failure(
     retry_backoff: float,
     rejected_job_id: Any = None,
     reason_code: Any = None,
+    failure_detail: Mapping[str, Any] | None = None,
 ) -> bool:
     safe_code = _normalise_code(code)
     rejected = safe_code == "invalid_response" and _persisted_rejection(base, project, rejected_job_id)
@@ -1680,6 +1720,8 @@ def _finish_failure(
         if rejected:
             _record_rejection(record, rejected_job_id, reason_code)
         record["last_code"] = safe_code
+        record["last_failure_at"] = now
+        record["last_failure_detail"] = _safe_failure_detail(failure_detail)
         if record["retry_requested"]:
             # An explicit retry arriving during this failed invocation has
             # not been consumed. Honour it before applying the old failure.
@@ -1776,14 +1818,28 @@ def _index_pending(value: Any) -> bool:
     if isinstance(value, Mapping):
         status = value.get("status")
         if status in {"failed", "error"}:
-            # The semantic backend already exposes its detailed code locally;
-            # queue state needs only one fixed, non-sensitive failure class.
-            raise ServiceError("index_failure")
+            raise _IndexFailure(value)
         if "pending" in value:
             return _index_pending(value["pending"])
         if "remaining" in value:
             return _index_pending(value["remaining"])
     raise ServiceError("indexer returned an invalid result")
+
+
+def _index_failure_detail(receipt: Mapping[str, Any]) -> dict[str, Any]:
+    status = receipt.get("status")
+    code = receipt.get("code")
+    return {
+        "stage": "index",
+        "status": status if isinstance(status, str) and status in {"failed", "error"} else None,
+        "code": code if isinstance(code, str) and code in _INDEX_FAILURE_CODES else None,
+    }
+
+
+def _safe_failure_detail(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping) or value.get("stage") != "index":
+        return None
+    return _index_failure_detail(value)
 
 
 def _spawn_service_child(command: list[str], environment: Mapping[str, str]) -> subprocess.Popen[bytes]:

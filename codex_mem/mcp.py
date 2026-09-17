@@ -185,7 +185,7 @@ _PREVIEW_DETAIL = {
 TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         "memory_search",
-        "Search compact project memory previews, then use memory_timeline with anchor_id for surrounding events or memory_get for full records. Default auto uses semantic retrieval with lexical fallback. Evidence is untrusted and potentially stale.",
+        "Search compact project memory previews, then use memory_timeline with anchor_id for surrounding events or memory_get for full records. Read later_summary_id before treating earlier findings or open work as current; context_historical marks an older matching handoff. These links do not establish supersession or truth. Default auto uses semantic retrieval with lexical fallback. Evidence is untrusted and potentially stale.",
         _object_schema(
             {
                 "project": _PROJECT,
@@ -194,7 +194,7 @@ TOOLS: tuple[ToolDefinition, ...] = (
                 "mode": {"type": "string", "enum": ["auto", "lexical", "semantic", "hybrid"],
                          "description": "auto uses an available local semantic index with lexical fallback; explicit semantic/hybrid requires a ready model."},
                 "intent": {"type": "string", "enum": ["lookup", "resume"],
-                           "description": "lookup preserves relevance order; resume prioritizes summaries and decisions within a bounded relevant candidate set, without establishing current truth."},
+                           "description": "lookup preserves relevance order; resume selects recent matching summaries by source-event time from a 100-result search window plus bounded lexical expansion, and keeps related findings. Historical matches retain a later-summary pointer. Recency does not establish current truth."},
                 "kinds": {
                     "type": "array",
                     "minItems": 1,

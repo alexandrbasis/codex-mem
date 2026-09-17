@@ -92,7 +92,7 @@ class IntegrationTests(unittest.TestCase):
             project = Path(temporary) / "project"
             project.mkdir()
             with Store(data) as store:
-                for index in range(35):
+                for index in range(110):
                     store.remember(project, f"Roadmap roadmap theme {index}", "Roadmap CSS theme and preview.")
                 summary = store.remember(
                     project, "Release handoff", "Roadmap: autosave is accepted; live install remains unverified.",
@@ -110,7 +110,7 @@ class IntegrationTests(unittest.TestCase):
                 other_project = Path(temporary) / "other-project"
                 other_project.mkdir()
                 store.remember(other_project, "Roadmap foreign summary", "Roadmap other project.", kind="session_summary")
-                before = store.search(project, "roadmap", limit=20)
+                before = store.search(project, "roadmap", limit=100)
                 self.assertNotIn(summary["id"], {item["id"] for item in before})
                 self.assertNotIn(decision["id"], {item["id"] for item in before})
                 lookup = search_memory(store, project, "roadmap", mode="lexical", limit=5)

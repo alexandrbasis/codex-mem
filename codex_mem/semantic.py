@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import hashlib
 import importlib.metadata
 import importlib.util
@@ -381,7 +382,9 @@ def search(
     requested_mode = _checked_mode(mode)
     checked_limit = _checked_limit(limit)
     checked_intent = _checked_intent(intent)
-    retrieval_limit = min(MAX_SEARCH_LIMIT, checked_limit * 4) if checked_intent == "resume" else checked_limit
+    # Current handoffs can rank below many repeated details. Keep resume's
+    # candidate coverage independent of the requested final preview count.
+    retrieval_limit = MAX_SEARCH_LIMIT if checked_intent == "resume" else checked_limit
     checked_query = _checked_query(query)
     checked_kinds = _checked_filter_values(kinds, "kinds") if kinds is not None else None
     checked_types = _checked_filter_values(types, "types") if types is not None else None
@@ -409,12 +412,16 @@ def search(
                         record["lexical_score"] = record.pop("score")
                     candidates.append(record)
                     added_candidates += 1
-            results = _resume_selection(candidates, checked_limit)
+            results = _resume_selection(_resume_records(store, workspace, candidates), checked_limit)
             if added_candidates and used_mode == "semantic":
                 used_mode = "hybrid"
         result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
         if checked_intent == "resume":
-            result.update(resume_expansion_mode="lexical", resume_added_candidates=added_candidates)
+            result.update(
+                resume_expansion_mode="lexical",
+                resume_added_candidates=added_candidates,
+                resume_selection="latest_query_matched_summary_by_event_time",
+            )
         return result
 
     if requested_mode == "lexical":
@@ -462,7 +469,10 @@ def search(
             )
             return receipt(results, "semantic", None)
 
-        candidate_limit = min(MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
+        candidate_limit = (
+            MAX_SEARCH_LIMIT if checked_intent == "resume"
+            else min(MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
+        )
         lexical = _lexical_results(
             store,
             workspace,
@@ -776,25 +786,30 @@ def resume_priority(record: Mapping[str, Any]) -> int:
 
 
 def _resume_selection(records: Sequence[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Balance handoffs with findings while preserving relevance within lanes.
+    """Balance recent query-matched handoffs with relevant findings.
 
-    Keep the first query-matched summary for each identified session. It is the
-    highest-ranked match in the retrieved candidates, not necessarily the latest
-    event or a replacement for the session's other historical summaries.
+    Summaries use source event time, with an explicitly identified recorded-time
+    fallback. Delayed processing must not turn an old event into a new handoff.
+    A later summary on another topic cannot replace a query-matched historical
+    summary. Its metadata can identify that later record without retrieving it.
+    Stable sorting retains relevance when event telemetry is absent or tied.
     """
-    summaries: list[dict[str, Any]] = []
+    summary_candidates: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
-    sessions: set[str] = set()
     for record in sorted(records, key=resume_priority):
         if resume_priority(record) == 0:
-            session = record.get("session_id")
-            if session:
-                if session in sessions:
-                    continue
-                sessions.add(session)
-            summaries.append(record)
+            summary_candidates.append(record)
         else:
             findings.append(record)
+    summaries: list[dict[str, Any]] = []
+    sessions: set[str] = set()
+    for record in sorted(summary_candidates, key=_resume_event_time, reverse=True):
+        session = record.get("session_id")
+        if session:
+            if session in sessions:
+                continue
+            sessions.add(session)
+        summaries.append(record)
     selected: list[dict[str, Any]] = []
     for index in range(max(len(summaries), len(findings))):
         for lane in (summaries, findings):
@@ -803,6 +818,55 @@ def _resume_selection(records: Sequence[dict[str, Any]], limit: int) -> list[dic
                 if len(selected) == limit:
                     return selected
     return selected
+
+
+def _resume_records(
+    store: Store, project: str, records: Sequence[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Attach bounded chronology metadata without widening the candidate set."""
+    read_metadata = getattr(store, "resume_metadata", None)
+    if not callable(read_metadata):
+        # Existing in-process adapters may not expose the optional metadata
+        # helper yet. Their relevance order remains the only known ordering.
+        return list(records)
+    metadata: dict[str, dict[str, Any]] = {}
+    ids = [record["id"] for record in records]
+    for offset in range(0, len(ids), MAX_SEARCH_LIMIT):
+        batch_ids = ids[offset:offset + MAX_SEARCH_LIMIT]
+        batch = read_metadata(project, batch_ids)
+        if not isinstance(batch, Mapping):
+            raise SemanticError("storage_protocol_error")
+        for entry_id in batch_ids:
+            item = batch.get(entry_id)
+            if item is None:
+                continue
+            if not isinstance(item, Mapping):
+                raise SemanticError("storage_protocol_error")
+            metadata[entry_id] = {
+                key: item[key]
+                for key in (
+                    "event_at", "event_id", "event_time_basis",
+                    "context_historical", "later_summary_id",
+                )
+                if key in item
+            }
+    return [dict(record, **metadata.get(record["id"], {})) for record in records]
+
+
+def _resume_event_time(record: Mapping[str, Any]) -> datetime:
+    """Read the declared chronology basis; never infer it from created_at."""
+    unknown = datetime.min.replace(tzinfo=timezone.utc)
+    event_at = record.get("event_at")
+    if (
+        record.get("event_time_basis") not in {"source_event", "recorded_at"}
+        or not isinstance(event_at, str)
+    ):
+        return unknown
+    try:
+        value = datetime.fromisoformat(event_at.replace("Z", "+00:00"))
+    except ValueError:
+        return unknown
+    return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
 
 
 def _checked_mode(mode: str) -> str:

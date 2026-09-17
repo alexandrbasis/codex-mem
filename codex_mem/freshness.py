@@ -20,6 +20,8 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
     Pending counts active processor-eligible captures without a successful/skipped
     receipt, including running and failed batches. Index metrics concern ready
     records under the pinned embedding profile, independently of capture backlog.
+    Rejected batches stay incomplete, but only an explicitly unblocked service
+    record establishes that their quarantine does not block independent work.
     ``current`` means no known backlog in retained local data, not universal knowledge.
     """
     workspace = project_key(project)
@@ -28,6 +30,7 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
         'latest_capture_at': None, 'last_successful_processing_at': None,
         'last_ready_at': None, 'pending_capture_count': None, 'ready_count': None,
         'blocked_reason': None, 'capture_enabled': None, 'processing_enabled': None,
+        'quarantined_batch_count': None, 'quarantine_reason': None,
         'semantic_enabled': None,
         'index': {'indexed': None, 'pending': None, 'stale': None},
     }
@@ -63,26 +66,44 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
                         WHERE s.source_id = e.id AND j.project = e.project
                         AND j.status IN ('processed', 'skipped'))''', (workspace,)).fetchone())
             result['pending_capture_count'] = row[0]
-            failed = store._read(lambda: connection.execute('''
-                SELECT j.error_code FROM observation_jobs j WHERE j.project = ? AND j.status = 'failed'
+            # Group only safe codes, keeping the result bounded and private even
+            # if a historic failure code contains unexpected values.
+            safe_codes = tuple(sorted(_SAFE_CODES))
+            failures = store._read(lambda: connection.execute(f'''
+                SELECT CASE WHEN j.error_code IN ({','.join('?' for _ in safe_codes)})
+                        THEN j.error_code ELSE 'processing_failed' END AS code, COUNT(*) AS count
+                FROM observation_jobs j WHERE j.project = ? AND j.status = 'failed'
                     AND EXISTS (SELECT 1 FROM observation_job_sources s JOIN entries e ON e.id = s.source_id
-                        WHERE s.job_id = j.id AND e.superseded_by IS NULL AND NOT EXISTS (
+                        WHERE s.job_id = j.id AND e.project = j.project AND e.superseded_by IS NULL
+                        AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop', 'hook:PostToolUse')
+                             OR e.source LIKE 'hook:PostToolUse:%') AND NOT EXISTS (
                             SELECT 1 FROM observation_job_sources s2 CROSS JOIN observation_jobs j2 ON j2.id = s2.job_id
                             WHERE s2.source_id = e.id AND j2.project = e.project AND j2.status IN ('processed', 'skipped')))
-                ORDER BY j.updated_at DESC LIMIT 1''', (workspace,)).fetchone())
-            if failed:
-                result['blocked_reason'] = failed[0] if failed[0] in _SAFE_CODES else 'processing_failed'
+                GROUP BY code ORDER BY MAX(j.updated_at) DESC, code''', (*safe_codes, workspace)).fetchall())
+            result['quarantined_batch_count'] = 0
+            for failed in failures:
+                if failed['code'] == 'invalid_response':
+                    result['quarantined_batch_count'] = failed['count']
+                    result['quarantine_reason'] = 'invalid_response'
+                elif result['blocked_reason'] is None:
+                    result['blocked_reason'] = failed['code']
     except (StoreError, sqlite3.Error, OSError):
         unknown = True
+    service_unblocked = False
     try:
         from .service import _load_state_readonly, ServiceError
         state = _load_state_readonly(store.data_dir)
         record = state['projects'].get(workspace)
+        service_unblocked = bool(record and record['blocked'] is False)
         if record and record['blocked']:
             code = record['last_code']
             result['blocked_reason'] = code if code in _SAFE_CODES else 'processing_blocked'
     except (ServiceError, OSError):
         unknown = True
+    if result['quarantined_batch_count'] and not service_unblocked and not result['blocked_reason']:
+        # Without service evidence, a failed response may still represent a
+        # project-wide block from an older worker or an infrastructure rejection.
+        result['blocked_reason'] = 'invalid_response'
     try:
         from .semantic import MODEL, MODEL_REVISION, DIMENSIONS
         index = store.embedding_status(workspace, MODEL, MODEL_REVISION, DIMENSIONS)
@@ -94,6 +115,8 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
     index_pending = (result['index']['pending'] or 0) + (result['index']['stale'] or 0)
     if result['blocked_reason']:
         status, incomplete = 'blocked', True
+    elif result['quarantined_batch_count']:
+        status, incomplete = 'quarantined', True
     elif pending or (config.get('semantic_enabled') and index_pending):
         status, incomplete = 'lagging', True
     elif unknown:
@@ -112,6 +135,8 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
         f"{show(result['processing_enabled'])}/{show(result['semantic_enabled'])}; "
         f"capture={show(result['latest_capture_at'])}; processed={show(result['last_successful_processing_at'])}; "
         f"ready={show(result['last_ready_at'])}; pending captures={show(pending)}; "
+        f"quarantined batches={show(result['quarantined_batch_count'])}; "
+        f"quarantine reason={result['quarantine_reason'] or ('unknown' if result['quarantined_batch_count'] is None else 'none')}; "
         f"index ready records indexed/pending/stale={show(result['index']['indexed'])}/"
         f"{show(result['index']['pending'])}/{show(result['index']['stale'])}; "
         f"blocker={result['blocked_reason'] or ('unknown' if unknown else 'none')}. "
@@ -130,10 +155,12 @@ def freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
             'latest_capture_at': None, 'last_successful_processing_at': None,
             'last_ready_at': None, 'pending_capture_count': None, 'ready_count': None,
             'blocked_reason': None, 'capture_enabled': None, 'processing_enabled': None,
+            'quarantined_batch_count': None, 'quarantine_reason': None,
             'semantic_enabled': None,
             'index': {'indexed': None, 'pending': None, 'stale': None},
             'summary': 'Memory unknown; knowledge incomplete=unknown; capture=unknown; '
                        'processed=unknown; ready=unknown; pending captures=unknown; '
+                       'quarantined batches=unknown; quarantine reason=unknown; '
                        'capture/processing/semantic enabled=unknown/unknown/unknown; '
                        'index ready records indexed/pending/stale=unknown/unknown/unknown; '
                        'blocker=unknown. Telemetry unavailable; index coverage does not '

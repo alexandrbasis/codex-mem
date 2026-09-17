@@ -96,3 +96,33 @@ class FreshnessDeliveryTests(unittest.TestCase):
         self.assertIn("freshness unknown", text)
         self.assertIn("omitted by budget", text)
         self.assertLessEqual(len(text), 256)
+
+    def test_real_quarantine_reaches_mcp_context_and_session_start(self):
+        from codex_mem.service import _new_state, _new_record
+        self.telemetry.stop()
+        self.store.remember(self.project, "capture", "input", source="hook:Stop")
+        job = self.store.claim_observation_batch(self.project, "fixture", "gpt-5.6-luna", "medium")
+        self.store.fail_observation_batch(self.project, job["job_id"], job["lease_token"], "invalid_response")
+        state = _new_state()
+        state["projects"][str(self.project.resolve())] = _new_record(1.0)
+        with patch("codex_mem.service._load_state_readonly", return_value=state):
+            result = MemoryMCPServer(store=self.store)._call_tool({"name": "memory_search", "arguments": {
+                "project": str(self.project), "query": "missing",
+            }})
+            snapshot = result["_meta"]["codexMemRetrieval"]["freshness"]
+            self.assertEqual(snapshot["status"], "quarantined")
+            self.assertEqual(snapshot["quarantined_batch_count"], 1)
+            self.assertIsNone(snapshot["blocked_reason"])
+            self.assertIn("Memory quarantined", result["content"][1]["text"])
+            for budget in (128, 180, 256, 380, 600, 1200, 6000):
+                context = self.store.context(self.project, budget=budget)
+                self.assertLessEqual(len(context), budget)
+                self.assertIn("quarantined", ET.fromstring(context).find("freshness").text)
+            response = handle_hook({"hook_event_name": "SessionStart", "cwd": str(self.project),
+                                    "session_id": "quarantine-session", "source": "startup"}, store=self.store)
+        text = response["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Memory quarantined", text)
+        self.assertIn("quarantined batches=1", text)
+        self.assertIn("knowledge incomplete=True", text)
+        self.assertIn("blocker=none", text)
+        self.assertLessEqual(len(text), 6000)
