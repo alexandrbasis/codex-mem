@@ -272,7 +272,7 @@ def _native(args: argparse.Namespace) -> dict[str, Any]:
                     "retained_fact_in_prompt": FACT in request["prompt"],
                     "prompt_chars": len(request["prompt"]),
                     "sources": [s.get("source") for s in request["sources"]],
-                    "summary_required": request["output_schema"]["properties"]["disposition"]["enum"] == ["processed"],
+                    "summary_required": len(request["output_schema"]["properties"]["result"]["anyOf"]) == 1,
                 })
                 result = native_runner(request)
                 receipt["synthetic_worker_outputs"].append(result.get("output"))

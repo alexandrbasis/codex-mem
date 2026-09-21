@@ -159,7 +159,7 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(all(not retry for _, retry in calls))
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
 
-    def test_default_timeout_failure_blocks_and_needs_explicit_retry(self) -> None:
+    def test_timeout_without_durable_receipt_blocks_and_needs_explicit_retry(self) -> None:
         enqueue(self.first, self.data_dir, clock=self.clock)
         result = run_service(
             self.data_dir,
@@ -194,12 +194,13 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
 
     def test_timeout_retry_is_bounded_and_selects_only_the_failed_job(self) -> None:
+        failed = self._failed_job(self.first, "timeout")
         enqueue(self.first, self.data_dir, clock=self.clock)
         calls = []
 
         def processor(_project: str, **kwargs: object) -> dict[str, str]:
             calls.append((kwargs["retry_failed"], kwargs.get("retry_job_id")))
-            return ({"status": "failed", "code": "timeout", "job_id": "a" * 32}
+            return ({"status": "failed", "code": "timeout", "job_id": failed["job_id"]}
                     if len(calls) == 1 else {"status": "idle"})
 
         result = run_service(
@@ -213,7 +214,7 @@ class ServiceTests(unittest.TestCase):
             max_cycles=3,
         )
         self.assertEqual("cycle_limit", result["status"])
-        self.assertEqual([(False, None), (False, "a" * 32)], calls)
+        self.assertEqual([(False, None), (False, failed["job_id"])], calls)
         self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["queued_projects"])
 
     def test_timeout_without_exact_job_cannot_authorize_automatic_retry(self) -> None:
@@ -221,6 +222,15 @@ class ServiceTests(unittest.TestCase):
         processor = mock.Mock(return_value={"status": "failed", "code": "timeout"})
         result = run_service(self.data_dir, processor=processor, clock=self.clock,
                              sleeper=self.clock.sleep, max_timeout_retries=1, max_cycles=5)
+        self.assertEqual("halted", result["status"])
+        self.assertEqual(1, processor.call_count)
+
+    def test_timeout_receipt_without_matching_persisted_failure_is_not_retried(self) -> None:
+        failed = self._failed_job(self.first, "invalid_response")
+        enqueue(self.first, self.data_dir, clock=self.clock)
+        processor = mock.Mock(return_value={"status": "failed", "code": "timeout", "job_id": failed["job_id"]})
+        result = run_service(self.data_dir, processor=processor, clock=self.clock,
+                             sleeper=self.clock.sleep, max_cycles=5)
         self.assertEqual("halted", result["status"])
         self.assertEqual(1, processor.call_count)
 

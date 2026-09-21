@@ -29,6 +29,59 @@ class Clock:
 
 
 class QueueRecoveryTests(unittest.TestCase):
+    def test_default_timeout_backoff_stops_after_two_retries_and_survives_restart(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            project = root / "project"
+            project.mkdir()
+            base = root / "memory"
+            configure(base, capture_scope="selected", included_projects=[project])
+            with Store(base) as store:
+                raw = store.remember(project, "timeout", "raw event", source="hook:PostToolUse")
+            clock = Clock()
+            calls = []
+            receipts = []
+            def runner(request):
+                calls.append(clock())
+                raise ProcessorFailure("timeout")
+            def process(owner, **kwargs):
+                result = process_pending(owner, runner=runner, **kwargs)
+                receipts.append(result)
+                return result
+            enqueue(project, base, clock=clock)
+            result = run_service(base, processor=process, clock=clock, sleeper=clock.sleep,
+                                 poll_interval=5, max_cycles=10)
+            self.assertEqual("halted", result["status"])
+            self.assertEqual([1000.0, 1005.0, 1015.0], calls)
+            self.assertEqual(1, len({receipt["job_id"] for receipt in receipts}))
+            self.assertEqual("blocked", enqueue(project, base, clock=clock)["status"])
+            run_service(base, processor=process, clock=clock, sleeper=clock.sleep, max_cycles=1)
+            self.assertEqual(3, len(calls))
+            with Store(base) as store:
+                row = store.observation_job_status(project, receipts[-1]["job_id"])
+                self.assertEqual(("failed", 3), (row["status"], row["attempt_count"]))
+                self.assertIsNone(store.get(project, [raw["id"]])[0]["superseded_by"])
+
+    def test_explicit_zero_timeout_retries_preserves_no_retry_policy(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            project = root / "project"
+            project.mkdir()
+            base = root / "memory"
+            configure(base, capture_scope="selected", included_projects=[project])
+            with Store(base) as store:
+                store.remember(project, "timeout", "raw event", source="hook:PostToolUse")
+            calls = []
+            def runner(request):
+                calls.append(request)
+                raise ProcessorFailure("timeout")
+            clock = Clock()
+            enqueue(project, base, clock=clock)
+            result = run_service(base, processor=lambda owner, **kwargs: process_pending(owner, runner=runner, **kwargs),
+                                 clock=clock, sleeper=clock.sleep, max_timeout_retries=0, max_cycles=5)
+            self.assertEqual("halted", result["status"])
+            self.assertEqual(1, len(calls))
+
     def test_due_claim_filters_projects_without_touching_other_queue_records(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()

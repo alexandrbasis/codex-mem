@@ -194,7 +194,7 @@ TOOLS: tuple[ToolDefinition, ...] = (
                 "mode": {"type": "string", "enum": ["auto", "lexical", "semantic", "hybrid"],
                          "description": "auto uses an available local semantic index with lexical fallback; explicit semantic/hybrid requires a ready model."},
                 "intent": {"type": "string", "enum": ["lookup", "resume"],
-                           "description": "lookup preserves relevance order; resume selects recent matching summaries by source-event time from a 100-result search window plus bounded lexical expansion, and keeps related findings. Historical matches retain a later-summary pointer. Recency does not establish current truth."},
+                           "description": "lookup preserves relevance order; resume balances query-relevant findings and matching session handoffs from a 100-result search window plus bounded lexical expansion. The latest matched handoff represents its session at that session's relevance position; broad current-state questions prioritize source-event recency. Complete duplicate descriptions share a slot. Explicit history queries keep intermediate matches. Later-summary pointers and recency do not establish current truth."},
                 "kinds": {
                     "type": "array",
                     "minItems": 1,

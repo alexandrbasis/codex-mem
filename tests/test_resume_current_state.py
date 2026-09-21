@@ -138,7 +138,7 @@ class ResumeCurrentStateTests(unittest.TestCase):
                 self.assertEqual(5, len(result["results"]))
                 self.assertNotIn("old-delegation", [item["id"] for item in result["results"]])
 
-    def test_newer_session_summaries_keep_finding_balance_and_priority(self):
+    def test_different_session_summaries_keep_relevance_finding_balance_and_priority(self):
         store = CandidateStore(
             [summary("release-1.4", "old-session"),
              {"id": "detail", "kind": "note"},
@@ -149,7 +149,7 @@ class ResumeCurrentStateTests(unittest.TestCase):
         )
         result = self.search(store, limit=4)
         self.assertEqual(
-            ["release-1.9", "fix", "release-1.4", "detail"],
+            ["release-1.4", "fix", "release-1.9", "detail"],
             [item["id"] for item in result["results"]],
         )
 

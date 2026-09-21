@@ -24,6 +24,8 @@ import tempfile
 import time
 from typing import Any
 
+from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason
+
 from .store import (
     DEFAULT_LEASE_SECONDS,
     DEFAULT_OBSERVATION_CHARS,
@@ -71,19 +73,6 @@ USAGE_CHECKPOINT_INTERVAL_SECONDS = 1.0
 _WORKER_ID_RE = re.compile(r"[A-Za-z0-9._:-]{1,256}\Z")
 _MCP_NAME_MAX_CHARS = 256
 _SAFE_ITEM_TYPES = {"userMessage", "agentMessage", "reasoning"}
-# Closed vocabulary: receipts may identify a rejected invariant, never contain
-# response values, source text, exception messages, or model output excerpts.
-INVALID_RESPONSE_REASONS = frozenset({
-    "invalid_message_phase", "invalid_message_text", "missing_final_message",
-    "multiple_final_messages", "invalid_json", "invalid_output_shape",
-    "invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
-    "turn_not_completed", "invalid_note_shape", "invalid_source_ids",
-    "unknown_source_handle", "invalid_disposition", "too_many_notes",
-    "missing_required_summary", "skipped_with_content", "processed_without_content",
-    "invalid_source_batch", "invalid_observation_metadata", "source_attribution_conflict",
-    "invalid_summary_shape", "invalid_summary_attribution", "future_summary_source",
-    "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
-})
 
 
 class ProcessorFailure(RuntimeError):
@@ -100,10 +89,72 @@ class ProcessorFailure(RuntimeError):
     ) -> None:
         super().__init__(code)
         self.code = code
-        self.reason_code = _safe_response_reason(reason_code) if code == "invalid_response" else None
+        self.reason_code = safe_failure_reason(code, reason_code)
         self.worker_thread_id = worker_thread_id
         self.worker_turn_id = worker_turn_id
         self.metrics = dict(metrics) if metrics is not None else None
+
+
+def recover_failed_batch(
+    project: str | Path,
+    data_dir: str | Path | None = None,
+    *,
+    job_id: str,
+    expected_error_code: str,
+    expected_attempt_count: int,
+    timeout: int | float = DEFAULT_TIMEOUT,
+    codex: str = "codex",
+    runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
+    jev_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Retry one diagnosed failed snapshot once, returning metadata receipts.
+
+    This explicit maintenance operation may retry rejected content after its
+    validator or prompt was repaired. An atomic attempt guard consumes that
+    authorization even when the model fails again. No unrelated job is claimed.
+    """
+    if not isinstance(job_id, str) or not _valid_source_id(job_id):
+        raise ValueError("job_id is invalid")
+    if not isinstance(expected_error_code, str) or expected_error_code not in {
+        "timeout", "runner_failure", "storage_failure", "invalid_response"
+    }:
+        raise ValueError("unsupported recovery error code")
+    if (isinstance(expected_attempt_count, bool) or not isinstance(expected_attempt_count, int)
+            or expected_attempt_count < 1):
+        raise ValueError("expected_attempt_count must be a positive integer")
+    workspace = project_key(project)
+    from .config import automatic_capture_enabled, load_config
+    config = load_config(data_dir)
+    if not getattr(config, "valid", True):
+        return {"status": "blocked", "code": "configuration_unavailable", "project": workspace}
+    if not config.get("processor_enabled", True):
+        return {"status": "disabled", "code": "processor_disabled", "project": workspace}
+    if not automatic_capture_enabled(workspace, config):
+        return {"status": "disabled", "code": "not_selected", "project": workspace}
+    with Store(data_dir) as store:
+        before = store.observation_job_status(workspace, job_id)
+    if (before is None or before["status"] != "failed"
+            or before["error_code"] != expected_error_code
+            or before["attempt_count"] != expected_attempt_count
+            or before["processor_id"] != PROCESSOR_ID or before["model"] != MODEL
+            or before["reasoning_effort"] != REASONING_EFFORT):
+        return {"status": "blocked", "code": "recovery_unavailable", "project": workspace,
+                "job_id": job_id, "before": before, "after": before}
+    result = process_pending(
+        workspace, data_dir, retry_job_id=job_id, retry_error_code=expected_error_code,
+        retry_attempt_count=expected_attempt_count, timeout=timeout, codex=codex, runner=runner,
+        jev_evaluator=jev_evaluator,
+    )
+    with Store(data_dir) as store:
+        after = store.observation_job_status(workspace, job_id)
+    receipt = {**result, "project": workspace, "job_id": job_id, "before": before, "after": after}
+    if result.get("status") in {"processed", "skipped", "failed"}:
+        from .service import reconcile_batch_recovery
+        receipt["service_reconciliation"] = reconcile_batch_recovery(
+            workspace, data_dir, job_id=job_id, expected_attempt_count=expected_attempt_count + 1,
+            recovered_error_code=expected_error_code,
+        )
+    return receipt
 
 
 def process_pending(
@@ -112,9 +163,12 @@ def process_pending(
     *,
     retry_failed: bool = False,
     retry_job_id: str | None = None,
+    retry_error_code: str | None = None,
+    retry_attempt_count: int | None = None,
     timeout: int | float = DEFAULT_TIMEOUT,
     codex: str = "codex",
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
+    jev_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     max_entries: int = MAX_OBSERVATION_ENTRIES,
     max_chars: int = DEFAULT_OBSERVATION_CHARS,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
@@ -141,7 +195,19 @@ def process_pending(
         raise ValueError("retry_job_id is invalid")
     if retry_failed and retry_job_id is not None:
         raise ValueError("pass retry_failed or retry_job_id, not both")
-    effective_lease_seconds = _effective_lease_seconds(lease_seconds, checked_timeout)
+    from .config import load_config
+    settings = load_config(data_dir)
+    if not getattr(settings, "valid", True):
+        return _failed_receipt(None, "invalid_request", None, None)
+    filter_projects = settings.get("jev_filter_projects", [])
+    jev_enabled = bool(settings.get("jev_filter_enabled")) and (
+        not filter_projects or any(
+            Path(workspace) == Path(path) or Path(path) in Path(workspace).parents
+            for path in filter_projects
+        )
+    )
+    effective_lease_seconds = _effective_lease_seconds(
+        lease_seconds, checked_timeout + (60 if jev_enabled else 0))
 
     claimed: Mapping[str, Any] | None = None
     try:
@@ -158,8 +224,12 @@ def process_pending(
                 lease_seconds=effective_lease_seconds,
                 retry_failed=retry_failed,
                 retry_job_id=retry_job_id,
+                retry_error_code=retry_error_code,
+                retry_attempt_count=retry_attempt_count,
             )
             if claimed is None:
+                if retry_attempt_count is not None:
+                    return {**_idle_receipt(), "status": "blocked", "code": "recovery_unavailable"}
                 expiry = store.next_observation_lease_expiry(workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT)
                 if expiry is not None:
                     return _deferred_receipt(expiry)
@@ -184,12 +254,48 @@ def process_pending(
             outcome = "failed"
             error_code: str | None = None
             receipt: dict[str, Any] | None = None
+            filter_audit: dict[str, Any] | None = None
             try:
                 from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt
+                _, _, sources = _claim_parts(claimed)
+                generation_claim = claimed
+                if jev_enabled:
+                    from .jev_filter import filter_claim, JevFilterError, MODEL as JEV_MODEL, POLICY_VERSION
+                    from .jev_audit import record_filter_attempt
+                    from .jev_cache import cache_get, cache_put
+                    try:
+                        generation_claim, filter_audit = filter_claim(
+                            claimed, timeout=60, evaluator=jev_evaluator,
+                            key_file=settings.get("jev_filter_key_file", ""),
+                            cache_get=lambda payload: cache_get(store, workspace, payload),
+                            cache_put=lambda payload, response: cache_put(store, workspace, payload, response))
+                    except JevFilterError as exc:
+                        filter_audit = {**(getattr(exc, "audit", None) or {}), "status": "failure", "model": JEV_MODEL,
+                                        "policy_version": POLICY_VERSION, "error_code": exc.code,
+                                        "generator_started": False}
+                        record_filter_attempt(store, workspace, job_id, attempt_count, filter_audit)
+                        raise ProcessorFailure("runner_failure", reason_code=exc.code) from None
+                    filter_audit = dict(filter_audit, status="success", generator_started=False)
+                    record_filter_attempt(store, workspace, job_id, attempt_count, filter_audit)
+                    generation_claim = _filtered_lifecycle_claim(claimed, generation_claim, filter_audit)
+                    record_filter_attempt(store, workspace, job_id, attempt_count, filter_audit)
+                    if not generation_claim["sources"]:
+                        finished = store.finish_observation_batch(
+                            workspace, job_id, lease_token, notes=[], disposition="skipped")
+                        outcome = "skipped"
+                        receipt = {"status": "skipped", "job_id": finished["job_id"],
+                                   "disposition": "skipped", "note_count": 0, "session_summary_count": 0,
+                                   "processor_id": PROCESSOR_ID, "model": MODEL,
+                                   "reasoning_effort": REASONING_EFFORT,
+                                   "jev_filter": filter_audit}
+                        return receipt
+                    _, _, sources = _claim_parts(generation_claim)
                 begin_attempt(store, workspace, job_id, attempt_count)
                 usage_started = True
-                _, _, sources = _claim_parts(claimed)
-                request = _runner_request(claimed, checked_timeout)
+                request = _runner_request(generation_claim, checked_timeout)
+                if filter_audit is not None:
+                    filter_audit["generator_started"] = True
+                    record_filter_attempt(store, workspace, job_id, attempt_count, filter_audit)
                 active_runner = runner
                 if active_runner is None:
                     def checkpoint(snapshot: Mapping[str, Any]) -> None:
@@ -202,9 +308,15 @@ def process_pending(
                 if isinstance(run_value.get("metrics"), Mapping):
                     metrics = run_value["metrics"]
                 output, evidence, thread_id, turn_id = _validate_runner_receipt(run_value)
+                if "result" in output:
+                    output = _unwrap_model_output(output)
                 output = _resolve_source_handles(output, sources)
                 notes, disposition, summary = _validate_model_output(
-                    output, sources, summary_required=bool(claimed.get("summary_required")))
+                    output, sources, summary_required=bool(generation_claim.get("summary_required")))
+                if filter_audit is not None:
+                    lifecycle_only = set(filter_audit.get("lifecycle_only_ids", []))
+                    if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
+                        raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
                 finished = store.finish_observation_batch(
                     workspace,
                     job_id,
@@ -243,6 +355,8 @@ def process_pending(
                     store, workspace, job_id, lease_token, "runner_failure", thread_id, turn_id
                 )
             finally:
+                if receipt is not None and filter_audit is not None:
+                    receipt["jev_filter"] = filter_audit
                 if usage_started:
                     if receipt is not None and receipt.get("status") == "failed":
                         error_code = _safe_failure_code(receipt.get("code"))
@@ -271,6 +385,46 @@ def process_pending(
             return receipt or _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
     except (StoreError, OSError):
         return _failed_receipt(None, "storage_failure", None, None)
+
+
+def _filtered_lifecycle_claim(
+    original: Mapping[str, Any], filtered: Mapping[str, Any], audit: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep a Stop boundary without forwarding any rejected observation text.
+
+    A Stop is also a deterministic lifecycle event. Its empty envelope lets the
+    generator summarize accepted earlier evidence without treating rejected Stop
+    prose as evidence. An entirely rejected, non-summary batch stays skipped.
+    """
+    result = dict(filtered)
+    sources = list(filtered["sources"])
+    accepted_ids = {source["id"] for source in sources}
+    context = list(filtered.get("context", []))
+    continuity_ids = {
+        item["id"] for item in original.get("context", [])
+        if str(item.get("source", "")).startswith("processor:")
+        and item.get("kind") in {"note", "session_summary"}
+    }
+    if original.get("summary_required") and (
+        not continuity_ids or not continuity_ids.issubset({item["id"] for item in context})
+    ):
+        # Previously processed evidence must remain available for a required
+        # summary. Never manufacture that evidence from a lifecycle marker.
+        raise ProcessorFailure("runner_failure")
+    if sources or original.get("summary_required"):
+        envelopes = []
+        for source in original["sources"]:
+            name = str(source.get("source", ""))
+            if source["id"] not in accepted_ids and (name == "hook:Stop" or name.startswith("hook:Stop:")):
+                envelope = {key: source[key] for key in ("id", "source", "created_at") if key in source}
+                envelope.update(title="Session boundary", body="Lifecycle marker only. Jev rejected the event text; no factual claim is supplied.", tags=[], _jev_lifecycle_only=True)
+                sources.append(envelope)
+                envelopes.append(source["id"])
+        order = {source["id"]: i for i, source in enumerate(original["sources"])}
+        sources.sort(key=lambda source: order[source["id"]])
+        audit["lifecycle_only_ids"] = envelopes
+    result["sources"] = sources
+    return result
 
 
 class _UsageCheckpointer:
@@ -420,6 +574,8 @@ class NativeProcessorRunner:
                     checkpoint(force=True)
                     _wait_for_turn_completion(client, monitor)
                     output = _read_valid_final_output(monitor)
+                    if "result" in schema.get("properties", {}):
+                        output = _unwrap_model_output(output)
                     return {
                         "output": output,
                         "metrics": metrics(),
@@ -690,6 +846,55 @@ class _AppServer:
             pass
 
 
+def _native_failure_reason(turn: object) -> str:
+    """Classify the local app-server protocol without retaining remote prose.
+
+    Enum and tagged HTTP shapes follow the installed CLI's generated
+    TurnCompletedNotification schema. Unknown shapes stay unknown.
+    """
+    if not isinstance(turn, Mapping):
+        return "native_turn_failed"
+    if turn.get("status") == "interrupted":
+        return "native_turn_cancelled"
+    error = turn.get("error")
+    info = error.get("codexErrorInfo") if isinstance(error, Mapping) else None
+    names = {
+        "rateLimitExceeded": "native_rate_limit",
+        "usageLimitExceeded": "native_usage_limit",
+        "sessionBudgetExceeded": "native_usage_limit",
+        "unauthorized": "native_auth",
+        "contextWindowExceeded": "native_context_limit",
+        "badRequest": "native_bad_request",
+        "cyberPolicy": "native_policy",
+        "misalignmentPolicyViolation": "native_policy",
+        "internalServerError": "native_server_error",
+        "serverOverloaded": "native_server_error",
+    }
+    if isinstance(info, str):
+        return names.get(info, "native_turn_failed")
+    if isinstance(info, Mapping) and len(info) == 1:
+        for variant in ("httpConnectionFailed", "responseStreamConnectionFailed",
+                        "responseStreamDisconnected", "responseTooManyFailedAttempts"):
+            details = info.get(variant)
+            if not isinstance(details, Mapping):
+                continue
+            status = details.get("httpStatusCode")
+            if status is None:
+                return "native_connection_error"
+            if isinstance(status, int) and not isinstance(status, bool):
+                if status in {401, 403}:
+                    return "native_auth"
+                if status == 429:
+                    return "native_rate_limit"
+                if 500 <= status <= 599:
+                    return "native_server_error"
+                if status in {408, 425}:
+                    return "native_connection_error"
+                if 400 <= status <= 499:
+                    return "native_bad_request"
+    return "native_turn_failed"
+
+
 class _TurnMonitor:
     """Reject unsafe turn activity and retain only bounded completed agent output."""
 
@@ -777,7 +982,8 @@ class _TurnMonitor:
         if method.endswith("turn/completed"):
             turn = params.get("turn")
             if not isinstance(turn, Mapping) or turn.get("status") != "completed":
-                raise ProcessorFailure("runner_failure", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
+                raise ProcessorFailure("runner_failure", reason_code=_native_failure_reason(turn),
+                                       worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
             # Ephemeral threads cannot be queried through thread/items/list.
             # Native item/completed notifications are therefore the primary
             # result channel.  Always inspect a completion snapshot for unsafe
@@ -1016,6 +1222,25 @@ def _read_valid_final_output(monitor: _TurnMonitor) -> dict[str, Any]:
     return output
 
 
+def _unwrap_model_output(output: Mapping[str, Any]) -> dict[str, Any]:
+    """Decode the exact native envelope before resolving source handles.
+
+    Native output cannot fall back to the legacy injected-runner shape. Extra
+    keys, missing fields, or a nested/ambiguous result remain rejected.
+    """
+    if set(output) != {"result"} or not isinstance(output.get("result"), Mapping):
+        raise ProcessorFailure("invalid_response", reason_code="invalid_output_shape")
+    result = output["result"]
+    if set(result) != {"notes", "disposition", "session_summary"}:
+        raise ProcessorFailure("invalid_response", reason_code="invalid_output_shape")
+    if not isinstance(result["notes"], list) or any(
+        not isinstance(note, Mapping) or set(note) != {"title", "body", "tags", "source_ids", "observation"}
+        for note in result["notes"]
+    ):
+        raise ProcessorFailure("invalid_response", reason_code="invalid_note_shape")
+    return dict(result)
+
+
 def _assert_safe_item(item: object, thread_id: str, turn_id: str | None) -> Mapping[str, Any]:
     if not isinstance(item, Mapping) or item.get("type") not in _SAFE_ITEM_TYPES:
         raise ProcessorFailure("tool_called", worker_thread_id=thread_id, worker_turn_id=turn_id)
@@ -1033,6 +1258,8 @@ def _notification_turn_id(params: Mapping[str, Any]) -> str | None:
 
 
 def _evidence_role(source: Mapping[str, Any]) -> str:
+    if source.get("_jev_lifecycle_only") is True:
+        return "lifecycle_marker"
     """Label the capture channel, never the truth of the source's claims."""
     name = str(source.get("source", ""))
     if name == "hook:Stop" or name.startswith("hook:Stop:"):
@@ -1052,6 +1279,8 @@ def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any
     job_id, _, sources = _claim_parts(claimed)
     wire_sources = [dict(source, id=f"s{index}") for index, source in enumerate(sources, 1)]
     summary_required = bool(claimed.get("summary_required"))
+    has_stop = any(source.get("source") == "hook:Stop" or
+                   str(source.get("source", "")).startswith("hook:Stop:") for source in sources)
     prompt = _build_prompt(wire_sources, claimed.get("context", []),
                            project_context=claimed.get("project_context", ""))
     if summary_required:
@@ -1064,6 +1293,14 @@ def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any
             "Use notes: [] unless there is a separate new finding. Preserve uncertainty and "
             "exclude incidental routine activity."
         )
+    prompt += (
+        "\nReturn exactly one JSON object with a single result property. The result object "
+        "contains notes, disposition, and session_summary. Choose one schema branch: "
+        "processed for supported durable content, or skipped with notes [] and "
+        "session_summary null when no durable content is justified. For a Stop batch, "
+        "every processed result requires a session_summary even when notes is empty. "
+        "Without a Stop, processed requires at least one note and session_summary null."
+    )
     return {
         "job_id": job_id,
         "processor_id": PROCESSOR_ID,
@@ -1082,7 +1319,8 @@ def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any
             for source in wire_sources
         ],
         "prompt": prompt,
-        "output_schema": _output_schema([source["id"] for source in wire_sources], summary_required=summary_required),
+        "output_schema": _output_schema([source["id"] for source in wire_sources],
+                                        summary_required=summary_required, has_stop=has_stop),
     }
 
 
@@ -1168,7 +1406,8 @@ def _build_prompt(
         "Describe a replacement decision only when the evidence explicitly establishes it; "
         "otherwise leave the alternatives unresolved. "
         "Include only relevant source_ids on each note. Unrelated sources may be omitted. "
-        "Each source can support at most one note; combine related facts if needed. "
+        "A source may support multiple distinct notes when it contains evidence for each. "
+        "Combine related facts instead of repeating the same finding in several notes. "
         "Prefer zero notes over a generic activity summary. Return "
         "only JSON that satisfies the provided schema.\n\n"
         f"Each note includes structured observation fields: type ({', '.join(OBSERVATION_TYPES)}), "
@@ -1238,7 +1477,9 @@ def _build_prompt(
     return prompt
 
 
-def _output_schema(source_handles: Sequence[str] | None = None, *, summary_required: bool = False) -> dict[str, Any]:
+def _output_schema(
+    source_handles: Sequence[str] | None = None, *, summary_required: bool = False, has_stop: bool = True,
+) -> dict[str, Any]:
     """The model-facing schema; local validation below remains authoritative."""
 
     note_properties: dict[str, Any] = {
@@ -1272,34 +1513,35 @@ def _output_schema(source_handles: Sequence[str] | None = None, *, summary_requi
         note_properties["source_ids"]["items"]["enum"] = list(source_handles)
     summary_fields = {field: {"type": "string", "maxLength": 3000}
                       for field in ("request", "investigated", "learned", "completed", "next_steps", "notes")}
+    summary_fields["request"] = {"anyOf": [{"type": "string", "maxLength": 3000}, {"type": "null"}]}
     summary_fields["title"] = {"type": "string", "minLength": 1, "maxLength": MAX_TITLE_CHARS}
     summary_fields["source_ids"] = note_properties["source_ids"]
-    return {
-        "type": "object",
-        "additionalProperties": False,
-        "required": ["notes", "disposition", "session_summary"],
-        "properties": {
-            "notes": {
-                "type": "array",
-                "maxItems": MAX_NOTES,
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    # Codex enforces strict structured-output schemas, which
-                    # require every declared object property to be required.
-                    # Source attribution is therefore explicit even for one
-                    # note and local validation enforces the same shape.
-                    "required": ["title", "body", "tags", "source_ids", "observation"],
-                    "properties": note_properties,
-                },
-            },
-            "disposition": {"type": "string", "enum": ["processed"] if summary_required else ["processed", "skipped"]},
-            "session_summary": {"anyOf": ([{"type": "null"}] if not summary_required else []) + [
-                {"type": "object", "additionalProperties": False,
-                 "required": list(summary_fields), "properties": summary_fields},
-            ]},
-        },
-    }
+    if summary_required and not has_stop:
+        raise ProcessorFailure("invalid_request")
+    note_array = {"type": "array", "maxItems": MAX_NOTES,
+                  "items": {"type": "object", "additionalProperties": False,
+                            "required": list(note_properties), "properties": note_properties}}
+    summary_object = {"type": "object", "additionalProperties": False,
+                      "required": list(summary_fields), "properties": summary_fields}
+
+    def branch(disposition: str) -> dict[str, Any]:
+        processed = disposition == "processed"
+        return {"type": "object", "additionalProperties": False,
+                "required": ["notes", "disposition", "session_summary"],
+                "properties": {
+                    "notes": {**note_array, "minItems": int(processed and not has_stop),
+                              "maxItems": MAX_NOTES if processed else 0},
+                    "disposition": {"type": "string", "enum": [disposition]},
+                    "session_summary": summary_object if processed and has_stop else {"type": "null"},
+                }}
+
+    branches = [branch("processed")]
+    if not summary_required:
+        branches.append(branch("skipped"))
+    # A nested union expresses the dependency while retaining an object root
+    # and strict, fully required properties in every branch.
+    return {"type": "object", "additionalProperties": False, "required": ["result"],
+            "properties": {"result": {"anyOf": branches}}}
 
 
 def _invoke_runner(runner: Any, request: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -1435,7 +1677,8 @@ def _validate_model_output(
         if "observation" in note_value:
             try:
                 metadata = note_value["observation"]
-                fields = _output_schema()["properties"]["notes"]["items"]["properties"]["observation"]["properties"]
+                fields = (_output_schema()["properties"]["result"]["anyOf"][0]["properties"]
+                          ["notes"]["items"]["properties"]["observation"]["properties"])
                 if not isinstance(metadata, Mapping) or set(metadata) != set(fields):
                     raise ValueError("invalid metadata")
                 for field, spec in fields.items():
@@ -1451,14 +1694,12 @@ def _validate_model_output(
                 raise ProcessorFailure("invalid_response", reason_code="invalid_observation_metadata") from None
         notes.append(note)
 
-    assigned: set[str] = set()
     for note in notes:
         requested = note.get("source_ids")
         if not isinstance(requested, list) or not requested:
             raise ProcessorFailure("invalid_response", reason_code="invalid_source_ids")
-        if any(source_id not in source_ids or source_id in assigned for source_id in requested):
+        if any(source_id not in source_ids for source_id in requested):
             raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
-        assigned.update(requested)
     return notes, disposition, summary
 
 
@@ -1482,6 +1723,8 @@ def _validated_summary(value: object, sources: Sequence[Mapping[str, Any]]) -> d
             raise ProcessorFailure("invalid_response", reason_code="future_summary_source")
     for field in fields - {"source_ids"}:
         item = value[field]
+        if field == "request" and item is None:
+            continue
         if not isinstance(item, str) or len(item) > (MAX_TITLE_CHARS if field == "title" else 3000):
             raise ProcessorFailure("invalid_response", reason_code="invalid_summary_text")
     _bounded_nonempty_text(value["title"], MAX_TITLE_CHARS)
@@ -1550,6 +1793,7 @@ def _failed_after_claim(
             code=safe_code,
             worker_thread_id=thread_id,
             worker_turn_id=turn_id,
+            reason_code=reason_code,
         )
         returned_thread = failed.get("worker_thread_id") if isinstance(failed, Mapping) else thread_id
         returned_turn = failed.get("worker_turn_id") if isinstance(failed, Mapping) else turn_id
@@ -1596,8 +1840,8 @@ def _failed_receipt(
     }
     if job_id is not None:
         result["job_id"] = job_id
-    safe_reason = _safe_response_reason(reason_code)
-    if result["code"] == "invalid_response" and safe_reason is not None:
+    safe_reason = safe_failure_reason(result["code"], reason_code)
+    if safe_reason is not None:
         result["reason_code"] = safe_reason
     if isinstance(thread_id, str) and _WORKER_ID_RE.fullmatch(thread_id):
         result["worker_thread_id"] = thread_id
@@ -1709,5 +1953,6 @@ __all__ = [
     "REASONING_EFFORT",
     "NativeProcessorRunner",
     "ProcessorFailure",
+    "recover_failed_batch",
     "process_pending",
 ]

@@ -28,6 +28,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "service_enabled": True,
     "semantic_enabled": True,
     "usage_enabled": True,
+    # External semantic screening is opt-in; persist only a credential path.
+    "jev_filter_enabled": False,
+    "jev_filter_key_file": "",
+    # Empty means every captured project, only when screening is enabled.
+    "jev_filter_projects": [],
     "capture_scope": "selected",
     "context_chars": MAX_CONTEXT_CHARS,
     "excluded_projects": [],
@@ -387,6 +392,15 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
         "service_enabled": _validate_bool(raw.get("service_enabled", True), "service_enabled", strict),
         "semantic_enabled": _validate_bool(raw.get("semantic_enabled", True), "semantic_enabled", strict),
         "usage_enabled": _validate_bool(raw.get("usage_enabled", True), "usage_enabled", strict),
+        "jev_filter_enabled": _validate_bool(
+            raw.get("jev_filter_enabled", False), "jev_filter_enabled", strict
+        ),
+        "jev_filter_key_file": _validate_key_file(
+            raw.get("jev_filter_key_file", ""), strict
+        ),
+        "jev_filter_projects": _validate_jev_projects(
+            raw.get("jev_filter_projects", []), strict
+        ),
         "capture_scope": _validate_capture_scope(
             raw.get("capture_scope", DEFAULT_CONFIG["capture_scope"]), strict
         ),
@@ -434,9 +448,13 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
             _validate_bool(raw["capture_tools"], "capture_tools", True)
         if "processor_enabled" in raw:
             _validate_bool(raw["processor_enabled"], "processor_enabled", True)
-        for name in ("service_enabled", "semantic_enabled", "usage_enabled"):
+        for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled"):
             if name in raw:
                 _validate_bool(raw[name], name, True)
+        if "jev_filter_key_file" in raw:
+            _validate_key_file(raw["jev_filter_key_file"], True)
+        if "jev_filter_projects" in raw:
+            _validate_jev_projects(raw["jev_filter_projects"], True)
         if "capture_scope" in raw:
             _validate_capture_scope(raw["capture_scope"], True)
         if "context_chars" in raw:
@@ -460,6 +478,43 @@ def _validate_bool(value: Any, name: str, strict: bool) -> bool:
     if strict:
         raise ValueError(f"{name} must be a boolean")
     return bool(DEFAULT_CONFIG[name])
+
+
+def _validate_key_file(value: Any, strict: bool) -> str:
+    """Validate a path without opening the credential or echoing invalid input."""
+
+    if isinstance(value, str):
+        if value == "":
+            return ""
+        if not any(ord(char) < 32 or ord(char) == 127 for char in value):
+            if Path(value).is_absolute():
+                return value
+    if strict:
+        raise ValueError("jev_filter_key_file must be an absolute path or an empty string")
+    return ""
+
+
+def _validate_jev_projects(value: Any, strict: bool) -> list[str]:
+    """Require explicit absolute project roots for external screening scope."""
+
+    try:
+        if not isinstance(value, (list, tuple)):
+            raise ValueError
+        paths: list[str] = []
+        for item in value:
+            if not isinstance(item, (str, os.PathLike)):
+                raise ValueError
+            text = os.fspath(item)
+            if not isinstance(text, str) or not text or _validate_key_file(text, True) != text:
+                raise ValueError
+            normalised = str(Path(text).resolve(strict=False))
+            if normalised not in paths:
+                paths.append(normalised)
+        return paths
+    except (OSError, RuntimeError, TypeError, ValueError):
+        if strict:
+            raise ValueError("jev_filter_projects must be a list of absolute project paths") from None
+        return []
 
 
 def _validate_context_chars(value: Any, strict: bool) -> int:

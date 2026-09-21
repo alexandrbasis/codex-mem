@@ -73,6 +73,7 @@ _URL_QUERY_SECRET_RE = re.compile(
 _BEARER_RE = re.compile(r"(?i)\bbearer\s+[a-z0-9._~+/=-]{8,}")
 
 _TOKEN_PATTERNS = (
+    re.compile(r"\bapikey_[A-Fa-f0-9]{24,}_[A-Fa-f0-9]{32,}\b"),
     re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"),
     re.compile(r"\bglpat-[A-Za-z0-9_-]{15,}\b"),

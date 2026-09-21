@@ -60,6 +60,29 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         self.assertFalse(missing.exists())
         self.assertEqual(before, sorted(path.name for path in self.root.iterdir()))
 
+    def test_all_projects_reports_truncation_and_keeps_queued_projects(self) -> None:
+        configure(self.data_dir, capture_scope="all")
+        projects = [self.root / name for name in ("a", "b", "c", "z-queued")]
+        with Store(self.data_dir) as store:
+            for project in projects:
+                store.remember(project, "Fixture", "Synthetic metadata fixture")
+        enqueue(projects[-1], self.data_dir)
+
+        with patch.object(health_check, "MAX_PROJECTS", 3):
+            report = self.report(all_projects=True)
+
+        self.assertEqual(3, len(report["projects"]))
+        self.assertIn(str(projects[-1].resolve()), {p["path"] for p in report["projects"]})
+        self.assertEqual("partial", report["project_coverage"]["status"])
+        self.assertTrue(report["project_coverage"]["has_more"])
+        self.assertEqual(3, report["project_coverage"]["reported"])
+        self.assertIn("project_report_bounded", report["errors"])
+
+    def test_single_project_report_does_not_claim_storewide_coverage(self) -> None:
+        report = self.report()
+        self.assertEqual("selected_project", report["project_coverage"]["status"])
+        self.assertFalse(report["project_coverage"]["has_more"])
+
     def test_existing_database_and_config_are_not_changed(self) -> None:
         configure(self.data_dir, capture_scope="all")
         with Store(self.data_dir) as store:

@@ -527,7 +527,15 @@ def _group(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
             {
                 "attempts": count,
                 **{
-                    counter: sum(row[f"{status}_{counter}"] for row in rows)
+                    counter: (
+                        sum(row[f"{status}_{counter}"] for row in rows)
+                        if any(row[f"{status}_{counter}_count"] for row in rows)
+                        else None
+                    )
+                    for counter in COUNTERS
+                },
+                "counter_attempts": {
+                    counter: sum(row[f"{status}_{counter}_count"] for row in rows)
                     for counter in COUNTERS
                 },
             }
@@ -535,6 +543,220 @@ def _group(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
             else None
         )
     return result
+
+
+def _ratio(numerator: int | float, denominator: int) -> float | None:
+    return numerator / denominator if denominator else None
+
+
+def _outcome_efficiency(
+    connection: sqlite3.Connection, workspace: str, recorded: int, present: bool,
+) -> dict[str, Any]:
+    """Aggregate receipts once by outcome; absent counters never become zero."""
+
+    result = {
+        outcome: {
+            "attempts": 0,
+            "percent_of_recorded_attempts": _ratio(0, recorded),
+            "usage_status": {"reported": 0, "partial": 0, "unknown": 0},
+            "reported_percent_of_outcome_attempts": None,
+            "duration_ms": {"count": 0, "total": None, "average": None, "max": None},
+            "totals": {"reported": None, "partial": None},
+        }
+        for outcome in OUTCOMES
+    }
+    if not present:
+        return result
+    counters = ", ".join(
+        f"SUM(a.{counter}) AS {counter}, COUNT(a.{counter}) AS {counter}_count"
+        for counter in COUNTERS
+    )
+    cursor = connection.execute(
+        "SELECT a.outcome, a.usage_status, COUNT(*) AS attempts, "
+        "COUNT(a.duration_ms) AS duration_count, SUM(a.duration_ms) AS duration_total, "
+        "MAX(a.duration_ms) AS duration_max, " + counters +
+        " FROM observation_jobs j JOIN observer_usage_attempts a ON a.job_id = j.id "
+        "WHERE j.project = ? GROUP BY a.outcome, a.usage_status", (workspace,),
+    )
+    names = [column[0] for column in cursor.description]
+    for values in cursor:
+        row = dict(zip(names, values))
+        item = result[row["outcome"]]
+        count = row["attempts"]
+        item["attempts"] += count
+        status = row["usage_status"]
+        usage_key = status if status in {"reported", "partial"} else "unknown"
+        item["usage_status"][usage_key] += count
+        if status in {"reported", "partial"}:
+            item["totals"][status] = {
+                "attempts": count,
+                **{counter: row[counter] for counter in COUNTERS},
+                "counter_attempts": {
+                    counter: row[f"{counter}_count"] for counter in COUNTERS
+                },
+            }
+        duration = item["duration_ms"]
+        if row["duration_count"]:
+            duration["count"] += row["duration_count"]
+            duration["total"] = (duration["total"] or 0) + row["duration_total"]
+            duration["max"] = max(duration["max"] or 0, row["duration_max"])
+    for item in result.values():
+        item["percent_of_recorded_attempts"] = _ratio(100 * item["attempts"], recorded)
+        item["reported_percent_of_outcome_attempts"] = _ratio(
+            100 * item["usage_status"]["reported"], item["attempts"],
+        )
+        duration = item["duration_ms"]
+        duration["average"] = _ratio(duration["total"] or 0, duration["count"])
+    return result
+
+
+def _output_efficiency(
+    connection: sqlite3.Connection, workspace: str, present: bool,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Resolve persisted output metadata once, independently of attempt joins.
+
+    Counts describe retained records, including superseded records, rather than
+    useful or accurate knowledge. Per-output costs use only complete job-level
+    evidence, including every retry, with the same output denominator.
+    """
+
+    cost_columns = (
+        "receipts", "reported_totals", "total_tokens", "duration_count",
+        "duration_total", "success_receipt",
+    )
+    cost_cte = ""
+    cost_join = ""
+    cost_select = ", ".join(f"0 AS {column}" for column in cost_columns)
+    if present:
+        cost_cte = """, costs AS (
+            SELECT j.id, COUNT(CASE WHEN a.outcome != 'running' THEN a.job_id END) AS receipts,
+                SUM(CASE WHEN a.usage_status = 'reported' AND a.total_tokens IS NOT NULL
+                         THEN 1 ELSE 0 END) AS reported_totals,
+                SUM(CASE WHEN a.usage_status = 'reported' THEN a.total_tokens END) AS total_tokens,
+                COUNT(a.duration_ms) AS duration_count, SUM(a.duration_ms) AS duration_total,
+                MAX(CASE WHEN a.attempt_count = j.attempt_count AND a.outcome = 'processed'
+                         THEN 1 ELSE 0 END) AS success_receipt
+            FROM jobs j LEFT JOIN observer_usage_attempts a ON a.job_id = j.id
+            GROUP BY j.id
+        )"""
+        cost_join = " LEFT JOIN costs c ON c.id = j.id "
+        cost_select = ", ".join(f"c.{column}" for column in cost_columns)
+    cursor = connection.execute(
+        """WITH jobs AS (
+            SELECT id, project, processor_id, attempt_count,
+                CASE WHEN json_valid(output_ids_json) THEN
+                    CASE WHEN json_type(output_ids_json) = 'array' THEN output_ids_json END
+                END AS output_manifest
+            FROM observation_jobs WHERE project = ? AND status = 'processed'
+        )""" + cost_cte +
+        " SELECT j.id AS job_id, j.attempt_count, j.output_manifest IS NOT NULL AS manifest_valid, "
+        + cost_select + ", o.type AS output_type, o.value AS output_id, "
+        "e.id AS entry_id, e.kind AS entry_kind "
+        "FROM jobs j " + cost_join +
+        " LEFT JOIN json_each(COALESCE(j.output_manifest, '[]')) o "
+        "LEFT JOIN entries e ON o.type = 'text' AND e.id = o.value "
+        "AND e.project = j.project AND e.source = 'processor:' || j.processor_id "
+        "AND e.kind IN ('note', 'session_summary')", (workspace,),
+    )
+    names = [column[0] for column in cursor.description]
+    jobs: dict[str, dict[str, Any]] = {}
+    notes: set[str] = set()
+    summaries: set[str] = set()
+    for values in cursor:
+        row = dict(zip(names, values))
+        job = jobs.setdefault(row["job_id"], {
+            **{column: row[column] for column in cost_columns},
+            "attempt_count": row["attempt_count"],
+            "manifest_valid": bool(row["manifest_valid"]),
+            "outputs": set(), "unresolved": set(),
+        })
+        if row["entry_id"] is not None:
+            job["outputs"].add(row["entry_id"])
+            (notes if row["entry_kind"] == "note" else summaries).add(row["entry_id"])
+        elif row["output_type"] is not None:
+            job["unresolved"].add((row["output_type"], row["output_id"]))
+
+    outputs = {
+        "basis": "retained_output_records_of_processed_project_jobs",
+        "processed_jobs": len(jobs),
+        "persisted_output_records": len(notes | summaries),
+        "notes": len(notes),
+        "session_summaries": len(summaries),
+        "jobs_without_success_receipt": 0,
+        "jobs_with_incomplete_output_metadata": 0,
+        "unresolved_output_references": 0,
+    }
+    per_output: dict[str, Any] = {
+        "basis": "complete_processed_jobs_including_all_retry_attempts",
+        "tokens": {"basis": "all_attempt_total_tokens_reported", "jobs": 0,
+                   "attempts": 0, "output_records": 0,
+                   "excluded_processed_jobs": 0, "total_tokens": None,
+                   "total_tokens_per_output_record": None},
+        "duration_ms": {"basis": "recorded_durations_of_all_terminal_attempts", "jobs": 0,
+                        "attempts": 0, "output_records": 0,
+                        "excluded_processed_jobs": 0, "total": None,
+                        "per_output_record": None},
+    }
+    matched_outputs: dict[str, set[str]] = {"tokens": set(), "duration_ms": set()}
+    for job in jobs.values():
+        outputs["jobs_without_success_receipt"] += not job["success_receipt"]
+        complete_outputs = job["manifest_valid"] and job["outputs"] and not job["unresolved"]
+        outputs["jobs_with_incomplete_output_metadata"] += not bool(complete_outputs)
+        outputs["unresolved_output_references"] += len(job["unresolved"])
+        complete_receipts = (
+            job["attempt_count"] > 0 and job["success_receipt"]
+            and job["receipts"] == job["attempt_count"]
+        )
+        for key, count, total in (
+            ("tokens", "reported_totals", "total_tokens"),
+            ("duration_ms", "duration_count", "duration_total"),
+        ):
+            item = per_output[key]
+            if not (complete_outputs and complete_receipts and job[count] == job["attempt_count"]):
+                item["excluded_processed_jobs"] += 1
+                continue
+            item["jobs"] += 1
+            item["attempts"] += job["attempt_count"]
+            total_key = "total_tokens" if key == "tokens" else "total"
+            item[total_key] = (item[total_key] or 0) + job[total]
+            matched_outputs[key].update(job["outputs"])
+    for key, item in ((key, per_output[key]) for key in matched_outputs):
+        item["output_records"] = len(matched_outputs[key])
+        total_key = "total_tokens" if key == "tokens" else "total"
+        ratio_key = "total_tokens_per_output_record" if key == "tokens" else "per_output_record"
+        item[ratio_key] = _ratio(item[total_key] or 0, item["output_records"])
+    return outputs, per_output
+
+
+def _efficiency_summary(
+    connection: sqlite3.Connection, workspace: str, attempts: Mapping[str, Any], present: bool,
+) -> dict[str, Any]:
+    outputs, per_output = _output_efficiency(connection, workspace, present)
+    return {
+        "net_savings": "not_measured",
+        "output_quality": "not_measured",
+        "duration_basis": "recorded_elapsed_time_may_exclude_unobserved_runtime",
+        "coverage": {
+            "expected_attempts": attempts["expected"],
+            "recorded_attempts": attempts["recorded"],
+            "attempts_without_receipt": attempts["without_receipt"],
+            "reported_attempts": attempts["reported"],
+            "partial_attempts": attempts["partial"],
+            "unknown_usage_attempts": attempts["unknown"],
+            "receipt_percent_of_expected_attempts": _ratio(
+                100 * attempts["recorded"], attempts["expected"],
+            ),
+            "reported_percent_of_recorded_attempts": _ratio(
+                100 * attempts["reported"], attempts["recorded"],
+            ),
+            "reported_percent_of_expected_attempts": _ratio(
+                100 * attempts["reported"], attempts["expected"],
+            ),
+        },
+        "outcomes": _outcome_efficiency(connection, workspace, attempts["recorded"], present),
+        "outputs": outputs,
+        "per_output": per_output,
+    }
 
 
 def observer_usage_summary(
@@ -589,6 +811,9 @@ def observer_usage_summary(
                     "totals": dict(result["totals"]),
                 }
             )
+        result["efficiency"] = _efficiency_summary(
+            connection, workspace, result["attempts"], False,
+        )
         return result
 
     aggregate_parts = [
@@ -614,6 +839,10 @@ def observer_usage_summary(
             f"COALESCE(SUM(CASE WHEN attempts.usage_status = '{status}' THEN attempts.{counter} ELSE 0 END), 0) AS {status}_{counter}"
             for counter in COUNTERS
         )
+        aggregate_parts.extend(
+            f"COUNT(CASE WHEN attempts.usage_status = '{status}' THEN attempts.{counter} END) AS {status}_{counter}_count"
+            for counter in COUNTERS
+        )
     sql = (
         "SELECT jobs.processor_id, jobs.model, jobs.reasoning_effort, "
         + ", ".join(aggregate_parts)
@@ -627,6 +856,9 @@ def observer_usage_summary(
     rows = [dict(zip(names, row)) for row in cursor.fetchall()]
     result["status"] = "available"
     if not rows:
+        result["efficiency"] = _efficiency_summary(
+            connection, workspace, result["attempts"], True,
+        )
         return result
     grouped = _group(rows)
     result["attempts"] = {
@@ -669,6 +901,9 @@ def observer_usage_summary(
                 "totals": model_group["totals"],
             }
         )
+    result["efficiency"] = _efficiency_summary(
+        connection, workspace, result["attempts"], True,
+    )
     return result
 
 

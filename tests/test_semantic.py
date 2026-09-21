@@ -265,7 +265,7 @@ class SemanticTests(unittest.TestCase):
         lookup = semantic.search(store, self.project, "roadmap", mode="lexical", limit=6)
         resumed = semantic.search(store, self.project, "roadmap", mode="lexical", intent="resume", limit=6)
         self.assertEqual(store.lexical_results, lookup["results"])
-        self.assertEqual(["alert", "note-one", "note-two", "tool", "session", "checkpoint"],
+        self.assertEqual(["alert", "note-two", "note-one", "tool", "session", "checkpoint"],
                          [record["id"] for record in resumed["results"]])
         self.assertEqual({record["id"] for record in lookup["results"]},
                          {record["id"] for record in resumed["results"]})

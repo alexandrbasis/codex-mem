@@ -8,6 +8,10 @@ from codex_mem.privacy import REDACTED, redact_tags, redact_text
 
 
 class PrivacyTests(unittest.TestCase):
+    def test_redacts_bare_typesafe_credentials(self) -> None:
+        token = "apikey_" + "a" * 32 + "_" + "b" * 64
+        self.assertEqual("before [REDACTED] after", redact_text("before " + token + " after"))
+
     def test_redacts_prefixed_env_and_json_assignments(self) -> None:
         raw = (
             "DATABASE_PASSWORD=hunter2 OPENAI_API_KEY=not-sk-shaped "

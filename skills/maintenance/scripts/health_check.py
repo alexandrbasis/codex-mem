@@ -864,27 +864,39 @@ def collect_report(
     service_global, service_errors, service_projects = _service_report(base_dir, selected, current_time)
 
     candidate_projects: list[str] = []
+    discovery_bounded = "service_state_bounded" in service_errors
+    discovery_unknown = False
     db_path = base_dir / "memory.sqlite3"
     if all_projects and db_path.is_file() and not db_path.is_symlink():
         try:
             connection = _connect_readonly(db_path)
             try:
-                for row in _rows(connection, "SELECT DISTINCT project FROM entries ORDER BY project LIMIT ?", (MAX_PROJECTS,)):
+                rows = _rows(connection, "SELECT DISTINCT project FROM entries ORDER BY project LIMIT ?", (MAX_PROJECTS + 1,))
+                discovery_bounded = discovery_bounded or len(rows) > MAX_PROJECTS
+                for row in rows:
                     value = _canonical(row["project"])
                     if value:
                         candidate_projects.append(value)
                 if _one(connection, "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'usage_sessions'"):
-                    for row in _rows(connection, "SELECT DISTINCT project FROM usage_sessions ORDER BY project LIMIT ?", (MAX_PROJECTS,)):
+                    rows = _rows(connection, "SELECT DISTINCT project FROM usage_sessions ORDER BY project LIMIT ?", (MAX_PROJECTS + 1,))
+                    discovery_bounded = discovery_bounded or len(rows) > MAX_PROJECTS
+                    for row in rows:
                         value = _canonical(row["project"])
                         if value:
                             candidate_projects.append(value)
             finally:
                 connection.close()
         except (OSError, sqlite3.Error):
-            pass
+            discovery_unknown = True
     if all_projects:
-        candidate_projects.extend(service_projects)
-        candidate_projects = sorted(set(candidate_projects))[:MAX_PROJECTS]
+        queued_projects = set(service_projects)
+        discovered_projects = set(candidate_projects) | queued_projects
+        discovery_bounded = discovery_bounded or len(discovered_projects) > MAX_PROJECTS
+        # An alphabetical cut can hide a blocked live project behind many old
+        # usage-only workspaces. Keep the service's affected scope visible.
+        candidate_projects = (
+            sorted(queued_projects) + sorted(discovered_projects - queued_projects)
+        )[:MAX_PROJECTS]
         if not candidate_projects:
             candidate_projects = [selected] if selected else []
     else:
@@ -980,7 +992,8 @@ def collect_report(
             }
         )
 
-    errors = sorted(set(config_errors + hook_errors + service_errors + db_errors))
+    coverage_errors = ["project_report_bounded"] if all_projects and discovery_bounded else []
+    errors = sorted(set(config_errors + hook_errors + service_errors + db_errors + coverage_errors))
     overall = "idle" if db["status"] == "missing" else "healthy"
     if any(item["status"] == "unavailable" for item in reports) or db["status"] == "unavailable":
         overall = "unavailable"
@@ -1002,6 +1015,18 @@ def collect_report(
         "status": overall,
         "end_to_end": "unknown",
         "scope": "all-projects" if all_projects else "project",
+        "project_coverage": {
+            "status": (
+                "selected_project" if not all_projects
+                else "unknown" if discovery_unknown
+                else "partial" if discovery_bounded
+                else "complete"
+            ),
+            "reported": len(reports),
+            "limit": MAX_PROJECTS if all_projects else 1,
+            "has_more": discovery_bounded if all_projects else False,
+            "queued_projects_reported": sum(path in service_projects for path in candidate_projects),
+        },
         "capture_scope": config.get("capture_scope", "selected"),
         "evidence": {
             "local": "observed",

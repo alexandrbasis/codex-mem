@@ -41,6 +41,7 @@ from .processor import (
     DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending,
 )
 from .store import MAX_LEASE_SECONDS, project_key
+from .observation_diagnostics import RUNNER_FAILURE_REASONS as _RUNNER_REASONS
 
 
 SERVICE_STATE_FILENAME = "service-state.json"
@@ -53,8 +54,10 @@ STATE_VERSION = 1
 MAX_STATE_BYTES = 256 * 1024
 MAX_QUEUED_PROJECTS = 256
 MAX_TIMEOUT_RETRIES = 5
-DEFAULT_MAX_TIMEOUT_RETRIES = 0
+DEFAULT_MAX_TIMEOUT_RETRIES = 2
 MAX_LEASE_RECOVERY_RETRIES = 2
+MAX_RUNNER_FAILURE_RETRIES = 2
+MAX_UNKNOWN_RUNNER_FAILURE_RETRIES = 1
 DEFAULT_POLL_INTERVAL = 1.0
 DEFAULT_STARTUP_TIMEOUT = 3.0
 DEFAULT_STARTUP_TTL = 15.0
@@ -78,6 +81,10 @@ _CONTENT_REJECTION_REASONS = frozenset({
     "skipped_with_content", "processed_without_content", "invalid_observation_metadata",
     "source_attribution_conflict", "invalid_summary_shape", "invalid_summary_attribution",
     "future_summary_source", "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+})
+_TRANSIENT_RUNNER_REASONS = frozenset({
+    "jev_filter_timeout", "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_failure",
+    "native_rate_limit", "native_server_error", "native_connection_error",
 })
 
 
@@ -113,7 +120,7 @@ def enqueue(
 
     The queue holds no observation text or model output. A normal enqueue
     wakes a project with quarantined batches without retrying those batches.
-    A project blocked by a global failure still requires explicit recovery.
+    Non-retryable or exhausted failures still require explicit recovery.
     """
 
     if not isinstance(retry_failed, bool):
@@ -144,7 +151,10 @@ def enqueue(
             return {"status": "blocked", "project": workspace, "code": record["last_code"]}
 
         record["generation"] += 1
-        record["due_at"] = min(record["due_at"], now)
+        # Fresh captures must not turn a scheduled recovery into a retry
+        # storm. Only an explicit recovery can override the durable backoff.
+        if retry_failed or not record["attempts"]:
+            record["due_at"] = min(record["due_at"], now)
         record["parked"] = None
         # Keep an explicit retry request distinct from the queue's local
         # failure state.  This permits recovery of a Store job that failed
@@ -153,6 +163,8 @@ def enqueue(
             record["retry_requested"] = True
             record["retry_generation"] = record["generation"]
             record["retry_job_id"] = None
+            record["retry_error_code"] = None
+            record["retry_attempt_count"] = None
         if record["blocked"]:
             record["blocked"] = False
             record["attempts"] = 0
@@ -163,6 +175,8 @@ def enqueue(
             record["retry_requested"] = True
             record["retry_generation"] = record["generation"]
             record["retry_job_id"] = None
+            record["retry_error_code"] = None
+            record["retry_attempt_count"] = None
         _write_state(base, state)
         return {"status": "queued", "project": workspace}
 
@@ -214,6 +228,8 @@ def resume_pending(
         record["retry_requested"] = False
         record["retry_generation"] = None
         record["retry_job_id"] = None
+        record["retry_error_code"] = None
+        record["retry_attempt_count"] = None
         _write_state(base, state)
     return {"status": "queued", "project": workspace,
             "rejected_job_id": rejected_job_id, "retry_failed": False}
@@ -279,8 +295,112 @@ def _recover_operational_failure(
         record["retry_requested"] = False
         record["retry_generation"] = None
         record["retry_job_id"] = job_id
+        record["retry_error_code"] = None
+        record["retry_attempt_count"] = None
         _write_state(base, state)
     return {"status": "queued", "project": workspace, "job_id": job_id, "retry_failed": False}
+
+
+def reconcile_batch_recovery(
+    project: str | os.PathLike[str],
+    data_dir: str | os.PathLike[str] | None = None,
+    *,
+    job_id: str,
+    expected_attempt_count: int,
+    recovered_error_code: str,
+    clock: Callable[[], float] = time.time,
+) -> dict[str, Any]:
+    """Reconcile queue warnings after a guarded recovery reached a terminal state.
+
+    The Store is read-only here. An inflight worker, an unrelated blocker, or
+    another failure of the same class remains authoritative.
+    """
+    if (not _valid_job_id(job_id) or isinstance(expected_attempt_count, bool)
+            or not isinstance(expected_attempt_count, int) or expected_attempt_count < 2
+            or not isinstance(recovered_error_code, str) or recovered_error_code not in {
+                "timeout", "runner_failure", "storage_failure", "invalid_response"
+            }):
+        raise ValueError("reconciliation requires the exact terminal recovery snapshot")
+    workspace = project_key(project)
+    base = _base_dir(data_dir)
+    connection = None
+    try:
+        with _state_lock(base):
+            state = _load_state(base)
+            record = state["projects"].get(workspace)
+            if record is None:
+                return {"status": "not_queued"}
+            if record["inflight_generation"] is not None:
+                return {"status": "deferred", "code": "work_inflight"}
+            database = base / "memory.sqlite3"
+            _reject_link_or_nonfile(database)
+            connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+            recovered = connection.execute(
+                "SELECT status,error_code FROM observation_jobs WHERE id=? AND project=? AND processor_id=? "
+                "AND model=? AND reasoning_effort=? AND status IN ('processed','skipped','failed') "
+                "AND attempt_count=? AND lease_token IS NULL AND lease_expires_at IS NULL",
+                (job_id, workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT, expected_attempt_count),
+            ).fetchone()
+            if recovered is None:
+                return {"status": "blocked", "code": "recovery_unavailable"}
+            from .observation_diagnostics import read_failure_receipts
+            recovered_failures = read_failure_receipts(connection, job_id)
+            current_reason = (recovered_failures[-1]["reason_code"] if recovered_failures
+                              and recovered_failures[-1]["attempt_count"] == expected_attempt_count else None)
+            failures = connection.execute(
+                "SELECT id,error_code FROM observation_jobs WHERE project=? AND processor_id=? "
+                "AND model=? AND reasoning_effort=? AND status='failed' ORDER BY updated_at DESC,id DESC",
+                (workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+            ).fetchall()
+            rejected = [row[0] for row in failures if row[1] == "invalid_response"]
+            previous_rejected_job = record["last_rejected_job"]
+            previous_rejected_reason = record["last_rejected_reason"]
+            record["rejected_batches"] = len(rejected)
+            record["last_rejected_job"] = rejected[0] if rejected else None
+            record["last_rejected_reason"] = None
+            if rejected:
+                details = read_failure_receipts(connection, rejected[0])
+                record["last_rejected_reason"] = (details[-1]["reason_code"] if details else
+                    previous_rejected_reason if rejected[0] == previous_rejected_job else None)
+            matching_blocker = record["blocked"] and record["last_code"] == recovered_error_code
+            matching_failure_remains = any(row[1] == recovered_error_code for row in failures)
+            failed_recovery = recovered[0] == "failed"
+            safe_content_rejection = recovered[1] == "invalid_response" and current_reason in _CONTENT_REJECTION_REASONS
+            replaced_blocker = matching_blocker and not matching_failure_remains
+            if failed_recovery and not safe_content_rejection and (not record["blocked"] or replaced_blocker):
+                # A rejected repair is a new observed outcome. Preserve any
+                # earlier unrelated blocker; otherwise stop on an operational
+                # or unexplained failure without losing another job's retry state.
+                record["blocked"] = True
+                record["last_code"] = _normalise_code(recovered[1])
+                record["last_failure_at"] = _checked_now(clock)
+                record["last_failure_detail"] = None
+            cleared_blocker = replaced_blocker and (not failed_recovery or safe_content_rejection)
+            quarantine_only = (not record["blocked"] and record["last_code"] in {None, "invalid_response"}
+                               and record["retry_job_id"] is None and not record["retry_requested"])
+            if cleared_blocker:
+                record["blocked"] = False
+            if cleared_blocker or quarantine_only:
+                record["last_code"] = "invalid_response" if rejected else None
+                if cleared_blocker:
+                    record["attempts"] = 0
+                # Do not change deliberate scope/feature parks. A future
+                # ordinary enqueue or configured worker can drain fresh work.
+                if record["parked"] == "rejected_batches":
+                    record["parked"] = None
+                    record["due_at"] = _checked_now(clock)
+                elif cleared_blocker:
+                    record["due_at"] = _checked_now(clock)
+            _write_state(base, state)
+            return {"status": "reconciled", "blocked": record["blocked"],
+                    "rejected_batches": len(rejected)}
+    except (OSError, sqlite3.Error, ServiceError, ValueError):
+        # The batch already committed. Surface this separate metadata gap;
+        # never present it as a failed model attempt that should be rerun.
+        return {"status": "unavailable", "code": "state_unavailable"}
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 def recover_expired(
@@ -322,6 +442,8 @@ def recover_expired(
         record["retry_requested"] = False
         record["retry_generation"] = None
         record["retry_job_id"] = None
+        record["retry_error_code"] = None
+        record["retry_attempt_count"] = None
         _write_state(base, state)
     return {"status": "queued", "project": workspace, "job_id": job_id, "retry_failed": False}
 
@@ -377,6 +499,7 @@ def run_service(
         cycles = 0
         next_usage_at = 0.0
         next_usage_reconcile_at = 0.0
+        checked_legacy_runner_blocks = False
         while True:
             if _event_is_set(stop_event):
                 return _service_receipt("stopped", jobs=jobs, code=last_code)
@@ -388,6 +511,9 @@ def run_service(
             gate = _refresh_queue_gates(base, data_dir, config_loader)
             if not gate["active"]:
                 return _service_receipt("paused", jobs=jobs, code=gate["reason"])
+            if not checked_legacy_runner_blocks and gate["processor_enabled"]:
+                _recover_legacy_runner_blocks(base, now, checked_backoff)
+                checked_legacy_runner_blocks = True
             if now >= next_usage_reconcile_at:
                 next_usage_reconcile_at = now + 30.0
                 _reconcile_observer_usage(base)
@@ -428,12 +554,22 @@ def run_service(
                 continue
 
             retry_failed = bool(choice["retry_requested"])
+            automatic_retry_allowed = True
             if processor_enabled:
                 result = _call_processor(
                     active_processor, project, data_dir, retry_failed, checked_timeout,
                     retry_job_id=None if retry_failed else choice["retry_job_id"],
+                    retry_error_code=None if retry_failed else choice["retry_error_code"],
+                    retry_attempt_count=None if retry_failed else choice["retry_attempt_count"],
                 )
                 jobs += 1
+                if (result.get("status") == "blocked" and result.get("code") == "recovery_unavailable"
+                        and choice["retry_error_code"] == "runner_failure" and not retry_failed):
+                    result = _reconcile_retry_snapshot(base, project, choice["retry_job_id"], _checked_now(clock))
+                    # A changed failed attempt has consumed the scheduled
+                    # permission. Only a genuinely expired running lease may
+                    # return to the ordinary atomic reclamation path.
+                    automatic_retry_allowed = result.get("code") == "lease_expired"
                 status, code = _processor_outcome(result)
                 last_code = code or last_code
             else:
@@ -478,6 +614,7 @@ def run_service(
                     rejected_job_id=result.get("job_id") if processor_enabled else None,
                     reason_code=result.get("reason_code") if processor_enabled else None,
                     failure_detail=failure_detail,
+                    automatic_retry_allowed=automatic_retry_allowed,
                 )
                 if retrying:
                     continue
@@ -877,9 +1014,13 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
         "retry_requested": retry_requested,
         "retry_generation": 1 if retry_requested else None,
         "retry_job_id": None,
+        "retry_error_code": None,
+        "retry_attempt_count": None,
         "last_code": None,
         "last_failure_at": None,
         "last_failure_detail": None,
+        "last_failure_job": None,
+        "runner_recovery_checked": True,
         "rejected_batches": 0,
         "last_rejected_job": None,
         "last_rejected_reason": None,
@@ -1037,13 +1178,27 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     if last_failure_at is not None and not _is_timestamp(last_failure_at):
         raise ServiceStateError("service state is unavailable")
     last_failure_detail = _safe_failure_detail(raw.get("last_failure_detail"))
+    last_failure_job = raw.get("last_failure_job")
+    if last_failure_job is not None and not _valid_job_id(last_failure_job):
+        raise ServiceStateError("service state is unavailable")
+    runner_recovery_checked = raw.get("runner_recovery_checked", False)
+    if not isinstance(runner_recovery_checked, bool):
+        raise ServiceStateError("service state is unavailable")
     retry_generation = raw.get("retry_generation", generation if retry_requested else None)
     retry_job_id = raw.get("retry_job_id")
+    retry_error_code = raw.get("retry_error_code")
+    retry_attempt_count = raw.get("retry_attempt_count")
     if ((retry_generation is None) != (not retry_requested)
             or (retry_generation is not None and (
                 isinstance(retry_generation, bool) or not isinstance(retry_generation, int)
                 or not 1 <= retry_generation <= generation))
             or (retry_job_id is not None and not _valid_job_id(retry_job_id))):
+        raise ServiceStateError("service state is unavailable")
+    if ((retry_error_code is None) != (retry_attempt_count is None)
+            or (retry_error_code is not None and (
+                retry_error_code != "runner_failure" or retry_job_id is None
+                or isinstance(retry_attempt_count, bool) or not isinstance(retry_attempt_count, int)
+                or not 1 <= retry_attempt_count <= 1_000_000_000))):
         raise ServiceStateError("service state is unavailable")
     if last_code is not None and not _safe_code(last_code):
         raise ServiceStateError("service state is unavailable")
@@ -1079,9 +1234,13 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         "retry_requested": retry_requested,
         "retry_generation": retry_generation,
         "retry_job_id": retry_job_id,
+        "retry_error_code": retry_error_code,
+        "retry_attempt_count": retry_attempt_count,
         "last_code": last_code,
         "last_failure_at": None if last_failure_at is None else float(last_failure_at),
         "last_failure_detail": last_failure_detail,
+        "last_failure_job": last_failure_job,
+        "runner_recovery_checked": runner_recovery_checked,
         "rejected_batches": rejected_batches,
         "last_rejected_job": last_rejected_job,
         "last_rejected_reason": last_rejected_reason,
@@ -1406,6 +1565,8 @@ def _claim_due_project(
             "attempts": record["attempts"],
             "retry_requested": record["retry_requested"],
             "retry_job_id": record["retry_job_id"],
+            "retry_error_code": record["retry_error_code"],
+            "retry_attempt_count": record["retry_attempt_count"],
         }
 
 
@@ -1466,6 +1627,12 @@ def _clear_consumed_retry(record: dict[str, Any], generation: int) -> None:
         record["retry_generation"] = None
 
 
+def _clear_retry_target(record: dict[str, Any]) -> None:
+    record["retry_job_id"] = None
+    record["retry_error_code"] = None
+    record["retry_attempt_count"] = None
+
+
 def _finish_deferred(base: Path, project: str, generation: int, retry_at: float, now: float) -> None:
     with _state_lock(base):
         state = _load_state(base)
@@ -1499,7 +1666,7 @@ def _finish_success(
         record["inflight_until"] = None
         record["attempts"] = 0
         _clear_consumed_retry(record, generation)
-        record["retry_job_id"] = None
+        _clear_retry_target(record)
         if record["rejected_batches"]:
             counts = _rejection_counts(base, [project])
             if counts is not None and not counts.get(project, 0):
@@ -1628,6 +1795,151 @@ def _persisted_failed_batch(base: Path, project: str, job_id: Any, code: str) ->
             connection.close()
 
 
+def _runner_failure_snapshot(base: Path, project: str, job_id: Any = None) -> dict[str, Any] | None:
+    """Read one durable failed attempt, using no record bodies or model text.
+
+    Legacy blocks lack a job ID. Recover only an unambiguous runner failure
+    with no other operational failure or running claim in that project.
+    """
+    if job_id is not None and not _valid_job_id(job_id):
+        return None
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        if job_id is None and connection.execute(
+            "SELECT 1 FROM observation_jobs WHERE project=? AND processor_id=? AND model=? "
+            "AND reasoning_effort=? AND (status='running' OR (status='failed' "
+            "AND error_code NOT IN ('runner_failure','invalid_response'))) LIMIT 1",
+            (project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+        ).fetchone() is not None:
+            return None
+        rows = connection.execute(
+            "SELECT j.id,j.attempt_count FROM observation_jobs AS j WHERE j.project=? "
+            "AND j.processor_id=? AND j.model=? AND j.reasoning_effort=? "
+            "AND j.status='failed' AND j.error_code='runner_failure' "
+            "AND j.lease_token IS NULL AND j.lease_expires_at IS NULL "
+            "AND (? IS NULL OR j.id=?) "
+            "AND EXISTS (SELECT 1 FROM observation_job_sources AS s WHERE s.job_id=j.id) "
+            "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS s "
+            "LEFT JOIN entries AS e ON e.id=s.source_id AND e.project=j.project "
+            "WHERE s.job_id=j.id AND e.id IS NULL) LIMIT 2",
+            (project, PROCESSOR_ID, MODEL, REASONING_EFFORT, job_id, job_id),
+        ).fetchall()
+        if len(rows) != 1:
+            return None
+        failed_job_id, attempt_count = rows[0]
+        if not isinstance(attempt_count, int) or not 1 <= attempt_count <= 1_000_000_000:
+            return None
+        from .observation_diagnostics import read_failure_receipts
+        receipts = read_failure_receipts(connection, failed_job_id)
+        current = receipts[-1] if receipts and receipts[-1]["attempt_count"] == attempt_count else None
+        reason = current["reason_code"] if current and current["error_code"] == "runner_failure" else None
+        return {"job_id": failed_job_id, "attempt_count": attempt_count,
+                "reason_code": reason if reason in _RUNNER_REASONS else None}
+    except (OSError, sqlite3.Error, ServiceError, ValueError):
+        return None
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def _reconcile_retry_snapshot(base: Path, project: str, job_id: Any, now: float) -> dict[str, Any]:
+    """Observe a concurrently changed retry target without widening its claim."""
+    unavailable = {"status": "failed", "code": "recovery_unavailable"}
+    if not _valid_job_id(job_id):
+        return unavailable
+    unavailable["job_id"] = job_id
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        row = connection.execute(
+            "SELECT status,error_code,attempt_count,lease_expires_at,lease_token IS NOT NULL "
+            "FROM observation_jobs WHERE id=? AND project=? AND processor_id=? AND model=? AND reasoning_effort=?",
+            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+        ).fetchone()
+        if row is None:
+            return unavailable
+        status, code, attempt_count, lease_expiry, has_lease = row
+        if status in {"processed", "skipped"} and not has_lease and lease_expiry is None:
+            # Keep the project due for an ordinary pass: a successful repair
+            # of this batch says nothing about independent pending evidence.
+            return {"status": "processed", "job_id": job_id}
+        if status == "failed" and not has_lease and lease_expiry is None:
+            if not isinstance(code, str) or not _safe_code(code):
+                return unavailable
+            from .observation_diagnostics import read_failure_receipts
+            receipts = read_failure_receipts(connection, job_id)
+            reason = (receipts[-1]["reason_code"] if receipts
+                      and receipts[-1]["attempt_count"] == attempt_count
+                      and receipts[-1]["error_code"] == code else None)
+            return {"status": "failed", "code": code, "job_id": job_id, "reason_code": reason}
+        if status == "running" and has_lease and isinstance(lease_expiry, str):
+            expires = datetime.fromisoformat(lease_expiry.replace("Z", "+00:00"))
+            if expires.tzinfo is None:
+                return unavailable
+            retry_at = expires.timestamp()
+            if not _is_timestamp(retry_at):
+                return unavailable
+            if retry_at > now:
+                return {"status": "deferred", "retry_at": retry_at, "job_id": job_id}
+            return {"status": "failed", "code": "lease_expired", "job_id": job_id}
+        return unavailable
+    except (OSError, sqlite3.Error, ServiceError, ValueError, OverflowError):
+        return unavailable
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def _runner_retry_limit(reason_code: Any) -> int:
+    if isinstance(reason_code, str) and reason_code in _TRANSIENT_RUNNER_REASONS:
+        return MAX_RUNNER_FAILURE_RETRIES
+    if reason_code is None or reason_code == "native_turn_failed":
+        return MAX_UNKNOWN_RUNNER_FAILURE_RETRIES
+    return 0
+
+
+def _schedule_runner_retry(
+    record: dict[str, Any], snapshot: Mapping[str, Any], now: float, retry_backoff: float,
+) -> bool:
+    limit = _runner_retry_limit(snapshot["reason_code"])
+    if record["attempts"] > limit or snapshot["attempt_count"] > limit:
+        return False
+    record["retry_job_id"] = snapshot["job_id"]
+    record["retry_error_code"] = "runner_failure"
+    record["retry_attempt_count"] = snapshot["attempt_count"]
+    record["blocked"] = False
+    record["due_at"] = now + min(MAX_BACKOFF_SECONDS, retry_backoff * (2 ** (record["attempts"] - 1)))
+    return True
+
+
+def _recover_legacy_runner_blocks(base: Path, now: float, retry_backoff: float) -> None:
+    """Apply the finite retry policy once to pre-policy queue records."""
+    with _state_lock(base):
+        state = _load_state(base)
+        changed = False
+        for project, record in state["projects"].items():
+            if (not record["blocked"] or record["last_code"] != "runner_failure"
+                    or record["runner_recovery_checked"] or record["parked"] is not None
+                    or record["inflight_generation"] is not None or record["retry_requested"]):
+                continue
+            record["runner_recovery_checked"] = True
+            changed = True
+            snapshot = _runner_failure_snapshot(base, project, record["last_failure_job"])
+            if snapshot is None:
+                continue
+            record["last_failure_job"] = snapshot["job_id"]
+            record["last_failure_detail"] = _runner_failure_detail(snapshot["reason_code"])
+            record["attempts"] = max(record["attempts"], snapshot["attempt_count"])
+            _schedule_runner_retry(record, snapshot, now, retry_backoff)
+        if changed:
+            _write_state(base, state)
+
+
 def _rejection_counts(base: Path, projects: list[str]) -> dict[str, int] | None:
     """Read unresolved failures, so a later explicit repair clears warnings."""
 
@@ -1685,7 +1997,7 @@ def _quarantine_rejection(
         record["inflight_generation"] = None
         record["inflight_until"] = None
         _clear_consumed_retry(record, generation)
-        record["retry_job_id"] = None
+        _clear_retry_target(record)
         record["attempts"] = 0
         record["blocked"] = False
         record["due_at"] = now
@@ -1705,9 +2017,19 @@ def _finish_failure(
     rejected_job_id: Any = None,
     reason_code: Any = None,
     failure_detail: Mapping[str, Any] | None = None,
+    automatic_retry_allowed: bool = True,
 ) -> bool:
     safe_code = _normalise_code(code)
     rejected = safe_code == "invalid_response" and _persisted_rejection(base, project, rejected_job_id)
+    runner_failure = (_runner_failure_snapshot(base, project, rejected_job_id)
+                      if safe_code == "runner_failure" and _valid_job_id(rejected_job_id) else None)
+    if (runner_failure is not None and runner_failure["reason_code"] is None
+            and isinstance(reason_code, str) and reason_code in _RUNNER_REASONS
+            and _runner_retry_limit(reason_code) == 0):
+        # A receipt can narrow recovery, never grant broader permission than
+        # the durable diagnostic. Mixed-version storage must not turn an
+        # observed authentication or cancellation failure into an unknown retry.
+        runner_failure["reason_code"] = reason_code
     with _state_lock(base):
         state = _load_state(base)
         record = state["projects"].get(project)
@@ -1716,12 +2038,17 @@ def _finish_failure(
         record["inflight_generation"] = None
         record["inflight_until"] = None
         _clear_consumed_retry(record, generation)
-        record["retry_job_id"] = None
+        _clear_retry_target(record)
         if rejected:
             _record_rejection(record, rejected_job_id, reason_code)
         record["last_code"] = safe_code
         record["last_failure_at"] = now
-        record["last_failure_detail"] = _safe_failure_detail(failure_detail)
+        record["last_failure_detail"] = (
+            _runner_failure_detail(runner_failure["reason_code"] if runner_failure else reason_code)
+            if safe_code == "runner_failure" else _safe_failure_detail(failure_detail)
+        )
+        record["last_failure_job"] = rejected_job_id if _valid_job_id(rejected_job_id) else None
+        record["runner_recovery_checked"] = True
         if record["retry_requested"]:
             # An explicit retry arriving during this failed invocation has
             # not been consumed. Honour it before applying the old failure.
@@ -1730,12 +2057,17 @@ def _finish_failure(
             record["due_at"] = now
             _write_state(base, state)
             return True
-        if safe_code in {"timeout", "lease_expired"}:
+        if runner_failure is not None:
+            record["attempts"] = max(record["attempts"] + 1, runner_failure["attempt_count"])
+            if automatic_retry_allowed and _schedule_runner_retry(record, runner_failure, now, retry_backoff):
+                _write_state(base, state)
+                return True
+        if automatic_retry_allowed and safe_code in {"timeout", "lease_expired"}:
             record["attempts"] += 1
             retry_limit = (MAX_LEASE_RECOVERY_RETRIES if safe_code == "lease_expired"
                            else max_timeout_retries)
             if record["attempts"] <= retry_limit and (
-                safe_code != "timeout" or _valid_job_id(rejected_job_id)
+                safe_code != "timeout" or _persisted_failed_batch(base, project, rejected_job_id, "timeout")
             ):
                 # Expired running jobs are reclaimed normally; never opt into
                 # retrying unrelated quarantined model responses.
@@ -1772,11 +2104,16 @@ def _call_processor(
     timeout: float,
     *,
     retry_job_id: str | None = None,
+    retry_error_code: str | None = None,
+    retry_attempt_count: int | None = None,
 ) -> Mapping[str, Any]:
     try:
         arguments = {"data_dir": data_dir, "retry_failed": retry_failed, "timeout": timeout}
         if retry_job_id is not None:
             arguments["retry_job_id"] = retry_job_id
+        if retry_error_code is not None:
+            arguments["retry_error_code"] = retry_error_code
+            arguments["retry_attempt_count"] = retry_attempt_count
         value = processor(project, **arguments)
     except Exception:
         return {"status": "failed", "code": "runner_failure"}
@@ -1837,9 +2174,19 @@ def _index_failure_detail(receipt: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _safe_failure_detail(value: Any) -> dict[str, Any] | None:
-    if not isinstance(value, Mapping) or value.get("stage") != "index":
+    if not isinstance(value, Mapping):
         return None
-    return _index_failure_detail(value)
+    if value.get("stage") == "index":
+        return _index_failure_detail(value)
+    if value.get("stage") == "processor" and value.get("code") == "runner_failure":
+        return _runner_failure_detail(value.get("reason_code"))
+    return None
+
+
+def _runner_failure_detail(reason_code: Any) -> dict[str, Any] | None:
+    if not isinstance(reason_code, str) or reason_code not in _RUNNER_REASONS:
+        return None
+    return {"stage": "processor", "status": "failed", "code": "runner_failure", "reason_code": reason_code}
 
 
 def _spawn_service_child(command: list[str], environment: Mapping[str, str]) -> subprocess.Popen[bytes]:

@@ -180,12 +180,14 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         key = key.strip()
         if not key:
             raise CLIError("--set key must not be empty")
-        if key in {"capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled", "usage_enabled"}:
+        if key in {"capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled"}:
             updates[key] = _parse_bool(value, field=key)
         elif key == "context_chars":
             updates[key] = _positive(value, field=key, maximum=6_000)
         elif key in {"excluded_projects", "included_projects"}:
             updates[key] = _parse_excluded_projects(value)
+        elif key == "jev_filter_projects":
+            updates[key] = _parse_string_array(value, field=key)
         elif key in {"skip_tools", "tool_skip_list"}:
             updates[key] = _parse_string_array(value, field=key)
         elif key == "capture_scope":
@@ -203,7 +205,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["capture_tools"] = namespace.capture_tools
     if namespace.processor_enabled is not None:
         updates["processor_enabled"] = namespace.processor_enabled
-    for name in ("service_enabled", "semantic_enabled", "usage_enabled"):
+    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects"):
         if getattr(namespace, name, None) is not None:
             updates[name] = getattr(namespace, name)
     if namespace.context_chars is not None:
@@ -303,6 +305,12 @@ def _build_parser() -> _ArgumentParser:
     process.add_argument("--project", required=True)
     process.add_argument("--retry-failed", action="store_true", help="Explicitly retry a failed observation batch")
     process.add_argument("--timeout", type=lambda value: _positive(value, field="timeout", minimum=10, maximum=240), default=240)
+    recovery = commands.add_parser("recover-batch", help="Retry one diagnosed failed job snapshot once")
+    recovery.add_argument("--project", required=True)
+    recovery.add_argument("--job-id", required=True)
+    recovery.add_argument("--expected-error", choices=("invalid_response", "runner_failure", "storage_failure", "timeout"), required=True)
+    recovery.add_argument("--expected-attempt", type=lambda value: _positive(value, field="expected-attempt", maximum=1_000_000_000), required=True)
+    recovery.add_argument("--timeout", type=lambda value: _positive(value, field="timeout", minimum=10, maximum=240), default=240)
 
     remember = commands.add_parser("remember", help="Store a project memory")
     remember.add_argument("--project", required=True)
@@ -331,7 +339,7 @@ def _build_parser() -> _ArgumentParser:
     search.add_argument("--concept", "--concepts", dest="concepts", action="append")
     search.add_argument("--file", "--files", dest="files", action="append")
     search.add_argument("--intent", choices=("lookup", "resume"),
-                        help="Resume prefers recent matching handoffs by source-event time and exposes later-summary links; returns retrieval metadata")
+                        help="Resume balances relevant findings and matching handoffs; broad current-state questions prioritize source-event recency; duplicates are reduced and explicit history preserved")
     search.add_argument("--mode", choices=("auto", "lexical", "semantic", "hybrid"),
                         help="Return results plus retrieval metadata; default automatically uses an available semantic index")
     search.add_argument("--detail", choices=("compact", "full"), default="compact",
@@ -470,6 +478,10 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--service-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--semantic-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--usage-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--jev-filter-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--jev-filter-key-file", help="Absolute path to the TypeSafe API key file")
+    config.add_argument("--jev-filter-project", dest="jev_filter_projects", action="append",
+                        help="Absolute project root eligible for Jev screening; repeat for more roots; empty config means all")
     config.add_argument("--context-chars", type=lambda value: _positive(value, field="context_chars", maximum=6_000))
     config.add_argument("--exclude-project", dest="excluded_projects", action="append")
     config.add_argument("--include-project", dest="included_projects", action="append")
@@ -672,6 +684,15 @@ def main(args: Sequence[str] | None = None) -> int:
                                     retry_failed=namespace.retry_failed, timeout=namespace.timeout)
             _emit(value)
             return 2 if value.get("status") == "failed" else 0
+        if namespace.command == "recover-batch":
+            from .processor import recover_failed_batch
+            value = recover_failed_batch(
+                _absolute_project(namespace.project), namespace.data_dir, job_id=namespace.job_id,
+                expected_error_code=namespace.expected_error,
+                expected_attempt_count=namespace.expected_attempt, timeout=namespace.timeout,
+            )
+            _emit(value)
+            return 0 if value.get("status") in {"processed", "skipped"} else 2
         if namespace.command == "service":
             from .service import (
                 recover_expired, recover_runner_failure, recover_storage_failure,

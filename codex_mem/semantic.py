@@ -412,15 +412,24 @@ def search(
                         record["lexical_score"] = record.pop("score")
                     candidates.append(record)
                     added_candidates += 1
-            results = _resume_selection(_resume_records(store, workspace, candidates), checked_limit)
+            results = _resume_selection(
+                _resume_records(store, workspace, candidates), checked_limit, query=checked_query
+            )
             if added_candidates and used_mode == "semantic":
                 used_mode = "hybrid"
         result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
         if checked_intent == "resume":
+            from .retrieval import broad_current_state_query, historical_query
+            selection = (
+                "query_relevance_with_history" if historical_query(checked_query)
+                else "latest_query_matched_handoffs_and_findings_by_event_time"
+                if broad_current_state_query(checked_query)
+                else "query_relevance_with_latest_session_handoffs"
+            )
             result.update(
                 resume_expansion_mode="lexical",
                 resume_added_candidates=added_candidates,
-                resume_selection="latest_query_matched_summary_by_event_time",
+                resume_selection=selection,
             )
         return result
 
@@ -778,22 +787,35 @@ def resume_priority(record: Mapping[str, Any]) -> int:
         return 0
     observation = record.get("observation")
     observation_type = observation.get("type") if isinstance(observation, Mapping) else None
-    if kind in {"decision", "bugfix", "security_alert"} or observation_type in {"decision", "bugfix", "security_alert"}:
+    if observation_type or kind in {
+        "decision", "bugfix", "security_alert", "discovery", "feature",
+        "refactor", "change", "security_note", "sensitive",
+    }:
         return 1
     if kind in {"session", "tool", "checkpoint"}:
         return 3
     return 2
 
 
-def _resume_selection(records: Sequence[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Balance recent query-matched handoffs with relevant findings.
+def _resume_selection(
+    records: Sequence[dict[str, Any]], limit: int, *, query: str = ""
+) -> list[dict[str, Any]]:
+    """Balance relevant handoffs with findings without erasing topic ranking.
 
     Summaries use source event time, with an explicitly identified recorded-time
     fallback. Delayed processing must not turn an old event into a new handoff.
-    A later summary on another topic cannot replace a query-matched historical
-    summary. Its metadata can identify that later record without retrieving it.
-    Stable sorting retains relevance when event telemetry is absent or tied.
+    The latest matched summary represents its session at that session's first
+    relevance position. Time must not reorder unrelated sessions; otherwise a
+    large semantic candidate window returns the same newest summaries for every
+    question. Explicit broad current-state requests instead prioritize source
+    chronology for both handoffs and findings. All curated observation types
+    share one lane. Historical requests retain intermediate records and caveats.
     """
+    from .retrieval import (
+        broad_current_state_query, historical_query, prefer_topic_followups, resume_duplicate_key,
+    )
+    if historical_query(query):
+        return list(records[:limit])
     summary_candidates: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
     for record in sorted(records, key=resume_priority):
@@ -801,23 +823,33 @@ def _resume_selection(records: Sequence[dict[str, Any]], limit: int) -> list[dic
             summary_candidates.append(record)
         else:
             findings.append(record)
-    summaries: list[dict[str, Any]] = []
-    sessions: set[str] = set()
-    for record in sorted(summary_candidates, key=_resume_event_time, reverse=True):
-        session = record.get("session_id")
-        if session:
-            if session in sessions:
-                continue
-            sessions.add(session)
-        summaries.append(record)
+    def representatives(candidates: Sequence[dict[str, Any]], *, summaries: bool) -> list[dict[str, Any]]:
+        selected: dict[tuple[str, ...], dict[str, Any]] = {}
+        for record in candidates:
+            session = record.get("session_id")
+            key = (("session", str(session)) if summaries and session
+                   else resume_duplicate_key(record) if not summaries else None)
+            key = key or ("id", record["id"])
+            earlier = selected.get(key)
+            if earlier is None or _resume_event_time(record) > _resume_event_time(earlier):
+                # Replacing a value preserves the group's original query rank.
+                selected[key] = record
+        return list(selected.values())
+
+    summaries = representatives(summary_candidates, summaries=True)
+    findings = representatives(findings, summaries=False)
+    if broad_current_state_query(query):
+        summaries.sort(key=_resume_event_time, reverse=True)
+        findings.sort(key=_resume_event_time, reverse=True)
+        findings.sort(key=resume_priority)
     selected: list[dict[str, Any]] = []
     for index in range(max(len(summaries), len(findings))):
         for lane in (summaries, findings):
             if index < len(lane):
                 selected.append(lane[index])
-                if len(selected) == limit:
-                    return selected
-    return selected
+    # An inferred relationship must never push an independent open obligation
+    # out of the caller's bounded view. Reorder only the already selected set.
+    return prefer_topic_followups(selected[:limit])
 
 
 def _resume_records(
@@ -847,6 +879,7 @@ def _resume_records(
                 for key in (
                     "event_at", "event_id", "event_time_basis",
                     "context_historical", "later_summary_id",
+                    "later_context_id", "later_context_relation", "later_context_basis",
                 )
                 if key in item
             }

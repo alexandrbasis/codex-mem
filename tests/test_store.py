@@ -1018,6 +1018,13 @@ class StoreTests(unittest.TestCase):
         )
         assert next_batch is not None
         self.assertEqual([second["id"]], [record["id"] for record in next_batch["sources"]])
+        completed = self.store.finish_observation_batch(
+            self.project_a,
+            next_batch["job_id"],
+            next_batch["lease_token"],
+            disposition="skipped",
+        )
+        self.assertEqual("skipped", completed["status"])
 
         prunable = self.store.remember(
             self.project_a,
@@ -1033,6 +1040,7 @@ class StoreTests(unittest.TestCase):
             self.project_a, "processor-prune", "gpt-5.6-luna", "medium"
         )
         assert prune_batch is not None
+        self.assertEqual([prunable["id"]], [record["id"] for record in prune_batch["sources"]])
         self.store.prune(days=90)
         with self.assertRaises(StoreError):
             self.store.finish_observation_batch(
@@ -1092,9 +1100,9 @@ class StoreTests(unittest.TestCase):
                         "source_ids": [first["id"]],
                     },
                     {
-                        "title": "Duplicate source",
-                        "body": "This has an invalid duplicate partition.",
-                        "source_ids": [first["id"]],
+                        "title": "Unknown source",
+                        "body": "This points outside the claimed source set.",
+                        "source_ids": ["unclaimed-source"],
                     },
                 ],
             )
@@ -1170,13 +1178,13 @@ class StoreTests(unittest.TestCase):
                 notes=[
                     {
                         "title": "Duplicate attribution",
-                        "body": "The same source cannot support two outputs.",
+                        "body": "A source may support distinct outputs.",
                         "source_ids": [first["id"]],
                     },
                     {
                         "title": "Duplicate attribution again",
-                        "body": "This must remain atomic.",
-                        "source_ids": [first["id"]],
+                        "body": "Duplicate IDs within one source list remain invalid.",
+                        "source_ids": [first["id"], first["id"]],
                     },
                 ],
             )

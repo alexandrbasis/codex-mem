@@ -755,6 +755,30 @@ def _register_query_functions(connection: sqlite3.Connection) -> None:
     connection.create_function("codex_mem_matches_version", 4, _matches_version, deterministic=True)
 
 
+def _register_prompt_query_function(connection: sqlite3.Connection, plan: Mapping[str, Any]) -> None:
+    from .retrieval import prompt_match_score
+
+    def score(title: str, body: str, tags: str, observation: str, summary: str) -> int:
+        parts = [title or "", body or "", tags or ""]
+        for raw, fields in ((observation, _OBSERVATION_METADATA_FIELDS),
+                            (summary, _SESSION_SUMMARY_FIELDS)):
+            try:
+                metadata = json.loads(raw or "{}")
+            except (ValueError, RecursionError):
+                continue
+            if not isinstance(metadata, dict):
+                continue
+            for field in fields:
+                value = metadata.get(field)
+                if isinstance(value, str):
+                    parts.append(value)
+                elif isinstance(value, list):
+                    parts.extend(item for item in value if isinstance(item, str))
+        return prompt_match_score(" ".join(parts), plan)
+
+    connection.create_function("codex_mem_prompt_score", 5, score, deterministic=True)
+
+
 def _version_search_sql(
     entry_alias: str, metadata_alias: str, tokens: Sequence[str]
 ) -> tuple[list[str], list[object]]:
@@ -2160,19 +2184,42 @@ class Store:
         can be recovered through the normal atomic claim path.
         """
         workspace = project_key(project)
-        contract = tuple(_validate_processor_value(value, field) for value, field in (
+        for value, field in (
             (processor_id, "processor_id"), (model, "model"), (reasoning_effort, "reasoning_effort"),
-        ))
+        ):
+            _validate_processor_value(value, field)
         with self._lock:
             self._require_open()
             row = self._read(lambda: self._connection.execute(
                 "SELECT MIN(j.lease_expires_at) FROM observation_jobs AS j "
-                "WHERE j.project = ? AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
+                "WHERE j.project = ? AND j.lease_expires_at > ? "
                 "AND j.status = 'running' AND j.lease_token IS NOT NULL "
                 "AND EXISTS (SELECT 1 FROM observation_job_sources AS s WHERE s.job_id = j.id)",
-                (workspace, *contract),
+                (workspace, _utc_now()),
             ).fetchone())
             return None if row is None else row[0]
+
+    def observation_job_status(self, project: str | Path, job_id: str) -> dict[str, Any] | None:
+        """Read one project's job receipt without including source content."""
+        workspace = project_key(project)
+        checked_job_id = _validate_ids([job_id], "job_id")[0]
+        with self._lock:
+            self._require_open()
+            row = self._read(lambda: self._connection.execute(
+                "SELECT * FROM observation_jobs WHERE project=? AND id=?",
+                (workspace, checked_job_id),
+            ).fetchone())
+            if row is None:
+                return None
+            result = self._observation_job_result(row)
+            result["source_count"] = self._read(lambda: self._connection.execute(
+                "SELECT COUNT(*) FROM observation_job_sources WHERE job_id=?", (checked_job_id,),
+            ).fetchone()[0])
+            from .observation_diagnostics import read_failure_receipts
+            result["failure_receipts"] = read_failure_receipts(self._connection, checked_job_id)
+            from .jev_audit import read_filter_attempts
+            result["jev_filter_attempts"] = read_filter_attempts(self._connection, checked_job_id)
+            return result
 
     def claim_observation_batch(
         self,
@@ -2188,6 +2235,8 @@ class Store:
         lease_seconds: int = DEFAULT_LEASE_SECONDS,
         retry_failed: bool = False,
         retry_job_id: str | None = None,
+        retry_error_code: str | None = None,
+        retry_attempt_count: int | None = None,
     ) -> dict[str, Any] | None:
         """Atomically lease one bounded, project-local raw hook batch.
 
@@ -2197,6 +2246,8 @@ class Store:
         ``retry_job_id`` permits just that timeout, runner, or storage failure in addition
         to ordinary fresh or expired work. ``retry_failed`` is the explicit
         broader recovery operation; the two selectors cannot be combined.
+        Supplying both retry_error_code and retry_attempt_count restricts the
+        claim to that exact failed snapshot, with no fresh-work fallback.
         """
 
         workspace = project_key(project)
@@ -2218,6 +2269,14 @@ class Store:
         retry_job = None if retry_job_id is None else _validate_ids([retry_job_id], "retry_job_id")[0]
         if retry_failed and retry_job is not None:
             raise ValueError("pass retry_failed or retry_job_id, not both")
+        guarded_retry = retry_error_code is not None or retry_attempt_count is not None
+        if guarded_retry and (
+            retry_job is None or retry_error_code not in {
+                "timeout", "runner_failure", "storage_failure", "invalid_response"
+            } or isinstance(retry_attempt_count, bool) or not isinstance(retry_attempt_count, int)
+            or retry_attempt_count < 1
+        ):
+            raise ValueError("exact recovery requires job, error code, and positive attempt count")
 
         with self._lock:
             self._require_open()
@@ -2225,10 +2284,34 @@ class Store:
 
             def claim() -> tuple[str, int] | None:
                 now = _utc_now()
+                # Manual recovery and hook-started workers share this lease
+                # boundary. Never run two observation model calls for the same
+                # project, even when they would claim different raw sources.
+                if connection.execute(
+                    "SELECT 1 FROM observation_jobs WHERE project=? AND status='running' "
+                    "AND lease_expires_at>? LIMIT 1", (workspace, now),
+                ).fetchone() is not None:
+                    return None
                 expires_at = (
                     datetime.now(timezone.utc) + timedelta(seconds=checked_lease)
                 ).isoformat(timespec="microseconds").replace("+00:00", "Z")
-                reusable = connection.execute(
+                if guarded_retry:
+                    reusable = connection.execute(
+                        "SELECT * FROM observation_jobs AS j WHERE id=? AND project=? "
+                        "AND processor_id=? AND model=? AND reasoning_effort=? "
+                        "AND status='failed' AND error_code=? AND attempt_count=? "
+                        "AND lease_token IS NULL AND lease_expires_at IS NULL AND output_ids_json='[]' "
+                        "AND EXISTS (SELECT 1 FROM observation_job_sources WHERE job_id=j.id) "
+                        "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
+                        "LEFT JOIN entries AS e ON e.id=links.source_id AND e.project=j.project "
+                        "WHERE links.job_id=j.id AND (e.id IS NULL OR e.superseded_by IS NOT NULL)) "
+                        "AND NOT EXISTS (SELECT 1 FROM observation_jobs AS active "
+                        "WHERE active.project=j.project AND active.status='running' AND active.lease_expires_at>?)",
+                        (retry_job, workspace, processor, required_model, required_effort,
+                         retry_error_code, retry_attempt_count, now),
+                    ).fetchone()
+                else:
+                    reusable = connection.execute(
                     """
                     SELECT * FROM observation_jobs
                     WHERE project = ? AND processor_id = ? AND model = ?
@@ -2251,7 +2334,7 @@ class Store:
                         retry_job,
                         retry_job,
                     ),
-                ).fetchone()
+                    ).fetchone()
                 if reusable is not None:
                     reusable_sources = connection.execute(
                         """
@@ -2265,6 +2348,11 @@ class Store:
                     if not reusable_sources:
                         return None
                     reusable_records = self._records_from_rows(reusable_sources)
+                    if guarded_retry:
+                        fingerprint = hashlib.sha256((workspace + "\x00" + processor + "\x00" +
+                            "\x00".join(str(row["id"]) for row in reusable_sources)).encode("utf-8")).hexdigest()
+                        if reusable["input_fingerprint"] != fingerprint:
+                            raise StoreError("Observation sources are unavailable")
                     hydrated_records = [
                         self._hydrate_observation_source(workspace, record)
                         for record in reusable_records
@@ -2315,6 +2403,11 @@ class Store:
                         ),
                     )
                     return str(reusable["id"]), effective_limit
+
+                if guarded_retry:
+                    # Stale or unavailable approval is a no-op. It cannot
+                    # fall through to an unrelated new or expired batch.
+                    return None
 
                 # A failed receipt blocks retries only for the current exact
                 # document snapshot.  A retired text profile must requeue.
@@ -2851,18 +2944,16 @@ class Store:
                     if len(checked_notes) == 1 and checked_notes[0]["source_ids"] is None:
                         note_sources = [source_ids]
                     else:
-                        seen: set[str] = set()
                         for note in checked_notes:
                             requested = note["source_ids"]
                             if requested is None:
                                 raise ValueError("multiple notes require note source_ids")
-                            if any(source_id not in source_ids or source_id in seen for source_id in requested):
-                                raise ValueError("note source_ids must partition claimed sources")
-                            seen.update(requested)
+                            if any(source_id not in source_ids for source_id in requested):
+                                raise ValueError("note source_ids must refer to claimed sources")
                             note_sources.append(requested)
                         # A processed batch may intentionally discard unrelated or
                         # non-durable raw sources.  Keep the source IDs that were
-                        # actually attributed disjoint and project-local, while
+                        # actually attributed project-local, while
                         # leaving unreferenced claimed records available for audit.
 
                 summary_source_ids: list[str] = []
@@ -2952,7 +3043,7 @@ class Store:
                         )
                         connection.execute(
                             f"UPDATE entries SET superseded_by = ?, superseded_at = ?, updated_at = ? "
-                            f"WHERE project = ? AND id IN ({placeholders})",
+                            f"WHERE project = ? AND id IN ({placeholders}) AND superseded_by IS NULL",
                             (entry_id, timestamp, timestamp, workspace, *note_source_ids),
                         )
                         output_ids.append(entry_id)
@@ -3086,6 +3177,7 @@ class Store:
         *,
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
+        reason_code: str | None = None,
     ) -> dict[str, Any]:
         """Record a safe failure code while leaving the raw evidence recoverable."""
 
@@ -3128,6 +3220,9 @@ class Store:
                     """,
                     (thread_id, turn_id, error_code, now, checked_job_id, workspace),
                 )
+                from .observation_diagnostics import record_failure_receipt
+                record_failure_receipt(connection, checked_job_id, job["attempt_count"],
+                                       error_code, reason_code, now)
                 current = connection.execute(
                     "SELECT * FROM observation_jobs WHERE id = ? AND project = ?",
                     (checked_job_id, workspace),
@@ -4028,7 +4123,7 @@ class Store:
 
     @staticmethod
     def _metadata_search_sql(
-        alias: str, tokens: Sequence[str]
+        alias: str, tokens: Sequence[str], *, any_token: bool = False
     ) -> tuple[str | None, list[object]]:
         if not tokens:
             return None, []
@@ -4048,7 +4143,7 @@ class Store:
             else:
                 clauses.append(f"{text} LIKE ?")
                 parameters.append(f"%{token.lower()}%")
-        return " AND ".join(clauses), parameters
+        return (" OR " if any_token else " AND ").join(clauses), parameters
 
     def _search_rows(
         self,
@@ -4179,34 +4274,66 @@ class Store:
                 concepts=checked_concepts,
                 files=checked_files,
             )
-            return self._records_from_rows(rows, preview=True, scores=scores)
+            records = self._records_from_rows(rows, preview=True, scores=scores)
+            metadata = self.resume_metadata(workspace, [record["id"] for record in records])
+            for record in records:
+                record.update({key: value for key, value in metadata.get(record["id"], {}).items()
+                               if key.startswith("later_context_")})
+            # A related followup is not proof that an older obligation is done.
+            # Keep query rank here; resume/context may reorder the final bounded
+            # view without losing an older obligation before the limit applies.
+            return records
 
     def resume_metadata(
-        self, project: str | Path, ids: Sequence[str] | str
+        self, project: str | Path, ids: Sequence[str] | str, *, exclude_session: str | None = None
     ) -> dict[str, dict[str, Any]]:
         """Read event chronology and later handoff links for bounded candidates.
 
         A later summary is a continuation pointer, not proof that an earlier
         finding is false, resolved, or superseded. Source order prevents delayed
         processing from making an earlier event appear current. Only active
-        project-local candidates and their same-session summary peers are read;
-        raw sources supply timestamps only, never returned text.
+        project-local candidates, same-session summary peers and at most 200
+        recent source-backed followups are compared. Cross-session pointers
+        require topic overlap as well as a later same-session tool source.
+        They never change durable supersession or assert completion/truth.
+        Raw sources supply timestamps only, never returned text.
         """
         workspace = project_key(project)
         checked_ids = _validate_ids(ids, "ids", allow_empty=True)
+        checked_exclude = _validate_text(
+            exclude_session, "exclude_session", MAX_SESSION_CHARS, required=False
+        )
         if not checked_ids:
             return {}
         placeholders = ", ".join("?" for _ in checked_ids)
         sql = (
-            "WITH selected AS (SELECT e.id, e.session_id FROM entries AS e "
+            "WITH scope AS (SELECT ? AS project, ? AS excluded_session), "
+            "selected AS (SELECT e.id, e.session_id FROM entries AS e "
             f"WHERE e.project = ? AND e.id IN ({placeholders}) "
-            "AND e.superseded_by IS NULL AND COALESCE(e.source, '') NOT GLOB 'hook:*'), "
-            "candidates AS (SELECT e.id, e.session_id, e.created_at, "
-            "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary "
+            "AND e.superseded_by IS NULL AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
+            "AND ((SELECT excluded_session FROM scope) IS NULL OR e.session_id IS NULL "
+            "OR e.session_id != (SELECT excluded_session FROM scope))), "
+            "followups AS (SELECT e.id FROM entries AS e "
+            "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
+            "WHERE e.project = (SELECT project FROM scope) AND e.superseded_by IS NULL "
+            "AND COALESCE(e.source, '') NOT GLOB 'hook:*' AND COALESCE(e.session_id, '') != '' "
+            "AND ((SELECT excluded_session FROM scope) IS NULL "
+            "OR e.session_id != (SELECT excluded_session FROM scope)) "
+            "AND (m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL) "
+            "AND EXISTS (SELECT 1 FROM entry_sources AS links JOIN entries AS raw ON raw.id = links.source_id "
+            "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
+            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*')) "
+            "ORDER BY e.created_at DESC, e.id DESC LIMIT 200), "
+            "candidates AS (SELECT e.id, e.session_id, e.created_at, e.title, e.body, "
+            "m.observation_json, m.session_summary_json, "
+            "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary, "
+            "(SELECT MAX(raw.created_at) FROM entry_sources AS links JOIN entries AS raw ON raw.id = links.source_id "
+            "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
+            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*')) AS latest_tool_at "
             "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             "WHERE e.project = ? AND e.superseded_by IS NULL "
             "AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
-            "AND (e.id IN (SELECT id FROM selected) OR ("
+            "AND (e.id IN (SELECT id FROM selected) OR e.id IN (SELECT id FROM followups) OR ("
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) "
             "AND e.session_id IN (SELECT session_id FROM selected "
             "WHERE session_id IS NOT NULL AND session_id != '')))), "
@@ -4224,18 +4351,20 @@ class Store:
             "summaries AS (SELECT dated.*, ROW_NUMBER() OVER (PARTITION BY session_id "
             "ORDER BY event_at DESC, event_id DESC, created_at DESC, id DESC) AS summary_rank "
             "FROM dated WHERE is_summary AND session_id IS NOT NULL AND session_id != '') "
-            "SELECT d.*, latest.id AS latest_summary_id, latest.event_at AS latest_event_at, "
+            "SELECT d.*, (d.id IN (SELECT id FROM selected)) AS requested, "
+            "latest.id AS latest_summary_id, latest.event_at AS latest_event_at, "
             "latest.event_id AS latest_event_id FROM dated AS d "
-            "LEFT JOIN summaries AS latest ON latest.session_id = d.session_id AND latest.summary_rank = 1 "
-            "WHERE d.id IN (SELECT id FROM selected)"
+            "LEFT JOIN summaries AS latest ON latest.session_id = d.session_id AND latest.summary_rank = 1"
         )
         with self._lock:
             self._require_open()
             rows = self._read(lambda: self._connection.execute(
-                sql, (workspace, *checked_ids, workspace, workspace)
+                sql, (workspace, checked_exclude, workspace, *checked_ids, workspace, workspace)
             ).fetchall())
         result: dict[str, dict[str, Any]] = {}
         for row in rows:
+            if not row["requested"]:
+                continue
             metadata = {key: row[key] for key in ("event_at", "event_id", "event_time_basis")}
             later = row["latest_summary_id"]
             if later and later != row["id"] and (
@@ -4245,6 +4374,38 @@ class Store:
                 if row["is_summary"]:
                     metadata["context_historical"] = True
             result[row["id"]] = metadata
+        from .retrieval import topic_followup_basis, topic_signature
+        descriptors: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            record = {"title": row["title"], "body": row["body"]}
+            for field in ("observation", "session_summary"):
+                try:
+                    value = json.loads(row[field + "_json"] or "{}")
+                except (ValueError, RecursionError):
+                    value = {}
+                record[field] = value if isinstance(value, dict) else {}
+            descriptors[row["id"]] = record
+        signatures = {entry_id: topic_signature(record) for entry_id, record in descriptors.items()}
+        followups = sorted(
+            (row for row in rows if row["session_id"] and row["latest_tool_at"]
+             and row["event_time_basis"] == "source_event" and row["latest_tool_at"] <= row["event_at"]
+             and (descriptors[row["id"]]["observation"]
+                  or descriptors[row["id"]]["session_summary"].get("completed"))),
+            key=lambda row: (row["event_at"], row["event_id"]), reverse=True,
+        )
+        for row in rows:
+            if not row["requested"] or not row["session_id"]:
+                continue
+            for followup in followups:
+                if (followup["session_id"] == row["session_id"]
+                    or followup["event_at"] <= row["event_at"]
+                    or followup["latest_tool_at"] <= row["event_at"]):
+                    continue
+                basis = topic_followup_basis(signatures[row["id"]], signatures[followup["id"]])
+                if basis:
+                    result[row["id"]].update(later_context_id=followup["id"],
+                        later_context_relation="related_later_evidence", later_context_basis=basis)
+                    break
         return result
 
     def get(self, project: str | Path, ids: Sequence[str] | str) -> list[dict[str, Any]]:
@@ -4551,6 +4712,14 @@ class Store:
                 "<notice>Historical summary; a later handoff exists. "
                 "This is not current session state.</notice>\n"
             )
+        if record.get("later_context_id"):
+            attributes.update(later_context_id=record["later_context_id"],
+                              later_context_relation=record["later_context_relation"],
+                              later_context_basis=record["later_context_basis"])
+            historical_notice += (
+                "<notice>Related later evidence exists in another session. "
+                "This is not proof that this finding or open work is resolved.</notice>\n"
+            )
         # Empty provenance values add no information; the ID always permits
         # retrieval of full source links and metadata.
         entry_open = "<entry " + " ".join(
@@ -4660,11 +4829,33 @@ class Store:
             )
             clauses.extend(metadata_clauses)
             parameters.extend(metadata_filter_parameters)
+            prompt_rank = "0"
             if query.strip():
-                expression = _fts_expression(query)
-                query_tokens = _fts_tokens(query)
-                metadata_search, metadata_parameters = self._metadata_search_sql("e", query_tokens)
-                version_clauses, version_parameters = _version_search_sql("e", "e", query_tokens)
+                from .retrieval import prompt_query_plan
+                plan = prompt_query_plan(query)
+                if plan:
+                    # Use one query through the same chronology, per-session
+                    # and lane selection as exact context. Two full scans can
+                    # exceed the native hook's three-second timeout.
+                    query_tokens = [stem for _, stem in plan["terms"]]
+                    expressions = [f'"{stem}"' + ('*' if stem != term else '')
+                                   for term, stem in plan["terms"]]
+                    exact = [*plan["identifiers"], *plan["versions"]]
+                    query_tokens.extend(exact)
+                    expressions.extend('(' + _fts_expression(term) + ')' for term in exact)
+                    expression = ' OR '.join(expressions)
+                    _register_prompt_query_function(self._connection, plan)
+                    prompt_rank = "codex_mem_prompt_score(e.title, e.body, e.tags_json, e.observation_json, e.session_summary_json)"
+                    clauses.append(f"{prompt_rank} > 0")
+                else:
+                    expression = _fts_expression(query)
+                    query_tokens = _fts_tokens(query)
+                metadata_search, metadata_parameters = self._metadata_search_sql(
+                    "e", query_tokens, any_token=plan is not None
+                )
+                version_clauses, version_parameters = _version_search_sql(
+                    "e", "e", plan["versions"] if plan else query_tokens
+                )
                 if version_clauses:
                     _register_query_functions(self._connection)
                     clauses.extend(version_clauses)
@@ -4691,7 +4882,8 @@ class Store:
                 "FROM entry_sources AS links JOIN entries AS derived ON derived.id = links.summary_id "
                 "JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
                 "AND raw.session_id IS derived.session_id "
-                "WHERE derived.project = ? AND raw.source GLOB 'hook:*'"
+                "WHERE derived.project = ? AND derived.superseded_by IS NULL "
+                "AND COALESCE(derived.source, '') NOT GLOB 'hook:*' AND raw.source GLOB 'hook:*'"
                 "), active AS (SELECT e.rowid AS context_rowid, e.*, "
                 "m.observation_json, m.session_summary_json, "
                 "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL THEN 0 "
@@ -4719,7 +4911,7 @@ class Store:
                 "AS latest_summary_id FROM active"
                 # Match before collapsing a session: a later unrelated handoff
                 # must not hide an older summary matching the requested topic.
-                "), matching AS (SELECT e.* FROM current_ranked AS e WHERE "
+                "), matching AS (SELECT e.*, " + prompt_rank + " AS prompt_rank FROM current_ranked AS e WHERE "
                 + " AND ".join(clauses)
                 + "), session_ranked AS (SELECT matching.*, "
                 "ROW_NUMBER() OVER (PARTITION BY CASE "
@@ -4731,7 +4923,7 @@ class Store:
                 # Rank lanes before the candidate cap; historical summaries
                 # cannot crowd out recent meaningful observations, or vice versa.
                 "ROW_NUMBER() OVER (PARTITION BY (context_priority = 0) "
-                "ORDER BY context_priority ASC, context_at DESC, context_event_id DESC, "
+                "ORDER BY prompt_rank DESC, context_priority ASC, context_at DESC, context_event_id DESC, "
                 "created_at DESC, id DESC) AS lane_rank "
                 "FROM candidates) SELECT * FROM ranked "
                 "ORDER BY lane_rank ASC, (context_priority != 0) ASC LIMIT 50"
@@ -4740,9 +4932,10 @@ class Store:
                 lambda: self._connection.execute(sql, tuple(parameters)).fetchall()
             )
             records = self._records_from_rows(rows)
-            for record, row in zip(records, rows):
-                if row["context_priority"] == 0 and row["latest_summary_id"] != record["id"]:
-                    record.update(context_historical=True, later_summary_id=row["latest_summary_id"])
+            metadata = self.resume_metadata(workspace, [record["id"] for record in records],
+                                            exclude_session=checked_exclude)
+            for record in records:
+                record.update(metadata.get(record["id"], {}))
 
         from .freshness import freshness_snapshot
         from .retrieval import freshness_markup
@@ -4768,6 +4961,10 @@ class Store:
         # A small set of readable excerpts is more useful than many records
         # whose labels and provenance consume most of the injection budget.
         candidates = self._context_diverse_records(records, limit)
+        from .retrieval import prefer_topic_followups
+        # Preserve the existing coverage window. Related later evidence is
+        # not a reason to displace an unresolved independent requirement.
+        candidates = prefer_topic_followups(candidates)
         chunks: list[str] = []
         for index, record in enumerate(candidates):
             later = candidates[index + 1:]
