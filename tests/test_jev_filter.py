@@ -62,7 +62,7 @@ class JevFilterTests(unittest.TestCase):
                 self.assertEqual(bool(result["sources"]), kept)
                 self.assertEqual(bool(result["context"]), kept)
 
-    def test_large_source_all_bytes_evaluated_and_useful_middle_retains_whole(self):
+    def test_large_source_evaluated_through_useful_middle_retains_whole(self):
         original = claim('界"\\' * 15000 + "MIDDLE_DECISION" + "x" * 80000)
         original["context"] = []
         original["sources"][0]["tool_io"] = {"stdout": "LAST_TOOL_OUTPUT"}
@@ -74,9 +74,10 @@ class JevFilterTests(unittest.TestCase):
             return answer() if "MIDDLE_DECISION" in fragment else answer(0.01, "routine")
         result, audit = jf.filter_claim(original, evaluator=evaluate)
         self.assertGreater(len(fragments), 5)
-        self.assertEqual(json.loads("".join(fragments)), original["sources"][0])
+        self.assertTrue(jf._encode(original["sources"][0]).decode().startswith("".join(fragments)))
         self.assertEqual(result["sources"], original["sources"])
         self.assertEqual(audit["counts"]["chunks"], len(fragments))
+        self.assertGreater(audit["counts"]["short_circuited_chunks"], 0)
 
     def test_invalid_responses_fail_closed(self):
         invalid = []
@@ -239,7 +240,7 @@ class JevFilterTests(unittest.TestCase):
             calls += 1
             if calls == 2:
                 raise ValueError('private failure')
-            return answer()
+            return answer(0.01, 'routine')
         with self.assertRaises(jf.JevFilterError) as error:
             jf.filter_claim(claim('x' * 80000), evaluator=evaluate)
         audit = error.exception.audit

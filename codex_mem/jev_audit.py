@@ -81,6 +81,8 @@ def _sanitize(connection: sqlite3.Connection, project: str, job_id: str,
         raise ValueError("failed audit usage cannot be complete")
     result = {"status": status, "error_code": code, "generator_started": started,
               "incomplete": incomplete, "usage_status": usage_status}
+    if "evaluation_strategy" in audit:
+        result["evaluation_strategy"] = _choice(audit["evaluation_strategy"], {"retain_short_circuit_v1"})
     if "duration_ms" in audit:
         result["duration_ms"] = _integer(audit["duration_ms"])
     for field, pattern in (("model", r"jev-\d+(?:\.\d+){1,2}"),
@@ -130,12 +132,21 @@ def _sanitize(connection: sqlite3.Connection, project: str, job_id: str,
                 clean_chunks[-1]["evaluation_source"] = _choice(chunk["evaluation_source"], {"live", "cache"})
         clean_decisions.append({"source_id": source_id, "location": location,
                                 "route": route, "chunks": clean_chunks})
+        if "short_circuited_chunks" in decision:
+            skipped = _integer(decision["short_circuited_chunks"])
+            if (skipped > 10000 or (skipped and
+                    (route != "retain" or not any(chunk["route"] == "retain" for chunk in clean_chunks)))):
+                raise ValueError("invalid audit short circuit")
+            clean_decisions[-1]["short_circuited_chunks"] = skipped
     result["decisions"] = clean_decisions
     retained = sum(item["route"] == "retain" for item in clean_decisions)
     discarded = sum(item["route"] == "discard" for item in clean_decisions)
     result["counts"] = {"evaluated": retained + discarded, "retained": retained,
                         "discarded": discarded,
                         "chunks": sum(len(item["chunks"]) for item in clean_decisions)}
+    skipped = sum(item.get("short_circuited_chunks", 0) for item in clean_decisions)
+    if skipped:
+        result["counts"]["short_circuited_chunks"] = skipped
     counters = audit.get("counts", {})
     for field in ("requests", "cache_hits"):
         if field in counters:

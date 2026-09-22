@@ -385,7 +385,8 @@ def search(
     # Current handoffs can rank below many repeated details. Keep resume's
     # candidate coverage independent of the requested final preview count.
     retrieval_limit = MAX_SEARCH_LIMIT if checked_intent == "resume" else checked_limit
-    checked_query = _checked_query(query)
+    from .query import normalize_retrieval_query
+    checked_query = _checked_query(normalize_retrieval_query(_checked_query(query)))
     checked_kinds = _checked_filter_values(kinds, "kinds") if kinds is not None else None
     checked_types = _checked_filter_values(types, "types") if types is not None else None
     checked_concepts = _checked_filter_values(concepts, "concepts") if concepts is not None else None
@@ -395,6 +396,7 @@ def search(
         results: list[dict[str, Any]], used_mode: str, fallback_reason: str | None
     ) -> dict[str, Any]:
         added_candidates = 0
+        linked_handoffs = 0
         if checked_intent == "resume":
             # General relevance windows can be filled entirely by repeated UI
             # details. Query priority categories separately before the final
@@ -412,8 +414,17 @@ def search(
                         record["lexical_score"] = record.pop("score")
                     candidates.append(record)
                     added_candidates += 1
+            candidates = _resume_records(store, workspace, candidates)
+            linked = _resume_linked_handoffs(
+                store, workspace, checked_query, candidates,
+                checked_kinds, checked_types, checked_concepts, checked_files,
+            )
+            candidates.extend(linked)
+            linked_handoffs = len(linked)
+            added_candidates += linked_handoffs
             results = _resume_selection(
-                _resume_records(store, workspace, candidates), checked_limit, query=checked_query
+                candidates, checked_limit, query=checked_query,
+                project=workspace,
             )
             if added_candidates and used_mode == "semantic":
                 used_mode = "hybrid"
@@ -423,12 +434,13 @@ def search(
             selection = (
                 "query_relevance_with_history" if historical_query(checked_query)
                 else "latest_query_matched_handoffs_and_findings_by_event_time"
-                if broad_current_state_query(checked_query)
+                if broad_current_state_query(checked_query, workspace)
                 else "query_relevance_with_latest_session_handoffs"
             )
             result.update(
-                resume_expansion_mode="lexical",
+                resume_expansion_mode="lexical_and_linked_handoffs" if linked_handoffs else "lexical",
                 resume_added_candidates=added_candidates,
+                resume_linked_handoffs=linked_handoffs,
                 resume_selection=selection,
             )
         return result
@@ -798,7 +810,7 @@ def resume_priority(record: Mapping[str, Any]) -> int:
 
 
 def _resume_selection(
-    records: Sequence[dict[str, Any]], limit: int, *, query: str = ""
+    records: Sequence[dict[str, Any]], limit: int, *, query: str = "", project: str | None = None
 ) -> list[dict[str, Any]]:
     """Balance relevant handoffs with findings without erasing topic ranking.
 
@@ -812,10 +824,20 @@ def _resume_selection(
     share one lane. Historical requests retain intermediate records and caveats.
     """
     from .retrieval import (
-        broad_current_state_query, historical_query, prefer_topic_followups, resume_duplicate_key,
+        current_state_scope, defer_prior_status, historical_query, prefer_topic_followups, resume_duplicate_key,
+        state_scope_matches,
     )
     if historical_query(query):
         return list(records[:limit])
+    state_scope = current_state_scope(query, project)
+    if state_scope == "release":
+        scoped = [record for record in records if state_scope_matches(record, state_scope)]
+        # Older in-process adapters may return ID-only previews. Without topic
+        # evidence retain their relevance order rather than inventing scope.
+        if scoped:
+            records = scoped
+        else:
+            state_scope = None
     summary_candidates: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
     for record in sorted(records, key=resume_priority):
@@ -838,7 +860,7 @@ def _resume_selection(
 
     summaries = representatives(summary_candidates, summaries=True)
     findings = representatives(findings, summaries=False)
-    if broad_current_state_query(query):
+    if state_scope:
         summaries.sort(key=_resume_event_time, reverse=True)
         findings.sort(key=_resume_event_time, reverse=True)
         findings.sort(key=resume_priority)
@@ -847,6 +869,8 @@ def _resume_selection(
         for lane in (summaries, findings):
             if index < len(lane):
                 selected.append(lane[index])
+    if state_scope:
+        selected = defer_prior_status(selected)
     # An inferred relationship must never push an independent open obligation
     # out of the caller's bounded view. Reorder only the already selected set.
     return prefer_topic_followups(selected[:limit])
@@ -900,6 +924,52 @@ def _resume_event_time(record: Mapping[str, Any]) -> datetime:
     except ValueError:
         return unknown
     return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+
+
+def _resume_linked_handoffs(
+    store: Store, project: str, query: str, records: Sequence[dict[str, Any]],
+    kinds: Sequence[str] | None, types: Sequence[str] | None,
+    concepts: Sequence[str] | None, files: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Read one bounded layer of explicit continuation links for state queries.
+
+    These are subsequent handoffs from an already-matched session, never an
+    arbitrary project-wide latest-record expansion. Explicit filters and
+    topic/history questions opt out. No row is superseded or claimed resolved.
+    """
+    from .retrieval import current_state_scope, state_scope_matches
+    from .store import _preview
+    scope = current_state_scope(query, project)
+    read = getattr(store, "get", None)
+    if not scope or not callable(read) or any(value is not None for value in (kinds, types, concepts, files)):
+        return []
+    present = {record["id"] for record in records}
+    origins: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        later = record.get("later_summary_id")
+        if isinstance(later, str) and later not in present and record.get("session_id"):
+            origins.setdefault(later, []).append(record)
+    ids = list(origins)[:MAX_SEARCH_LIMIT]
+    if not ids:
+        return []
+    records_by_id = {record["id"]: record for record in _preview_list(read(project, ids))}
+    candidates = []
+    for entry_id in ids:
+        record = records_by_id.get(entry_id)
+        if (not record or record.get("project") != project or record.get("superseded_by")
+            or str(record.get("source") or "").startswith("hook:")
+            or not (record.get("kind") == "session_summary" or record.get("session_summary"))
+            or not any(record.get("session_id") == origin.get("session_id") for origin in origins[entry_id])
+            or not state_scope_matches(record, scope)):
+            continue
+        record = dict(record)
+        body = record.pop("body", None)
+        if isinstance(body, str):
+            record["preview"] = _preview(body)
+        candidates.append(record)
+    return [record for record in _resume_records(store, project, candidates)
+            if any(_resume_event_time(record) > _resume_event_time(origin)
+                   for origin in origins[record["id"]])]
 
 
 def _checked_mode(mode: str) -> str:

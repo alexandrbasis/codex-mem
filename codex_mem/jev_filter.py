@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
 import math
 import os
@@ -17,6 +17,7 @@ from .privacy import redact_text
 
 MODEL = "jev-1.13.0"
 POLICY_VERSION = "memory-eligibility-v3"
+EVALUATION_STRATEGY = "retain_short_circuit_v1"
 ENDPOINT = "https://api.typesafe.ai/v1/systemone"
 MAX_PAYLOAD_BYTES = 24_000
 MAX_RESPONSE_BYTES = 128_000
@@ -220,13 +221,16 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
     """Gate current sources first, then needed history, with exact-payload caching.
 
     Cache callbacks run on the caller thread. Live requests run in at most four
-    workers, all joined before return. A failed batch forwards no partial claim.
+    workers, all joined before return. A retained fragment accepts its whole
+    source without evaluating the suffix; rejecting a source still requires
+    every fragment. A failed batch forwards no partial claim.
     """
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
         raise JevFilterError("jev_filter_invalid_input")
     started_at = time.perf_counter()
     deadline = time.monotonic() + timeout
     audit: dict[str, Any] = {"policy_version": POLICY_VERSION, "model": MODEL, "decisions": [],
+        "evaluation_strategy": EVALUATION_STRATEGY,
         "history_skipped": False, "usage": {"input_tokens": 0, "output_tokens": 0},
         "counts": {"evaluated": 0, "retained": 0, "discarded": 0, "chunks": 0, "requests": 0, "cache_hits": 0}}
     items = []
@@ -249,11 +253,16 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
             chunks = [completed[index] for index in range(first, end) if index in completed]
             if not chunks:
                 continue
-            full = len(chunks) == end - first
             keep = any(chunk["route"] == "retain" for chunk in chunks)
-            route = ("retain" if keep else "discard") if full else "incomplete"
-            audit["decisions"].append({"source_id": source["id"], "location": location, "route": route, "chunks": chunks})
-            if full:
+            decided = keep or len(chunks) == end - first
+            route = ("retain" if keep else "discard") if decided else "incomplete"
+            decision = {"source_id": source["id"], "location": location, "route": route, "chunks": chunks}
+            skipped = end - first - len(chunks) if keep else 0
+            if skipped:
+                decision["short_circuited_chunks"] = skipped
+                audit["counts"]["short_circuited_chunks"] = audit["counts"].get("short_circuited_chunks", 0) + skipped
+            audit["decisions"].append(decision)
+            if decided:
                 audit["counts"]["evaluated"] += 1
                 audit["counts"]["retained" if keep else "discarded"] += 1
             audit["counts"]["chunks"] += len(chunks)
@@ -291,7 +300,6 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
             raise JevFilterError("jev_filter_timeout")
 
     def run_phase(location, sources, required):
-        phase_start = len(jobs)
         item_start = len(items)
         for source in sources:
             if not isinstance(source, Mapping) or not isinstance(source.get("id"), str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,256}", source["id"]):
@@ -301,31 +309,56 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
             jobs.extend(_payloads(source, location, required))
             items.append((location, source, first, len(jobs)))
         live = []
-        for index in range(phase_start, len(jobs)):
-            if time.monotonic() >= deadline:
-                raise JevFilterError("jev_filter_timeout")
-            cached = None
-            if cache_get is not None:
-                try:
-                    cached = cache_get(jobs[index])
-                    if cached is not None:
-                        completed[index] = classify(cached, "cache")
-                except Exception:
-                    cached = None
-            if cached is not None:
+
+        def next_live(index, end):
+            # Walk a source in order. A retained prefix proves the OR outcome,
+            # so neither cached nor live judgments of its suffix are needed.
+            while index < end:
+                if time.monotonic() >= deadline:
+                    raise JevFilterError("jev_filter_timeout")
+                cached = None
+                if cache_get is not None:
+                    try:
+                        cached = cache_get(jobs[index])
+                        if cached is not None:
+                            completed[index] = classify(cached, "cache")
+                    except Exception:
+                        cached = None
+                if cached is None:
+                    live.append(index)
+                    return index
                 audit["counts"]["cache_hits"] += 1
-            else:
-                live.append(index)
+                if completed[index]["route"] == "retain":
+                    return None
+                index += 1
+            return None
+
         try:
             if evaluator is not None:
-                for index in live:
-                    evaluate(index, jobs[index])
-            elif live:
+                for _, _, first, end in items[item_start:]:
+                    index = next_live(first, end)
+                    while index is not None:
+                        evaluate(index, jobs[index])
+                        if completed[index]["route"] == "retain":
+                            break
+                        index = next_live(index + 1, end)
+            else:
                 pool = ThreadPoolExecutor(max_workers=4, thread_name_prefix="jev-filter")
                 try:
-                    futures = [pool.submit(evaluate, index, jobs[index]) for index in live]
-                    for future in futures:
-                        future.result()
+                    pending = {}
+                    for _, _, first, end in items[item_start:]:
+                        index = next_live(first, end)
+                        if index is not None:
+                            pending[pool.submit(evaluate, index, jobs[index])] = (index, end)
+                    while pending:
+                        done, _ = wait(pending, return_when=FIRST_COMPLETED)
+                        for future in done:
+                            index, end = pending.pop(future)
+                            future.result()
+                            if completed[index]["route"] != "retain":
+                                following = next_live(index + 1, end)
+                                if following is not None:
+                                    pending[pool.submit(evaluate, following, jobs[following])] = (following, end)
                 finally:
                     pool.shutdown(wait=True, cancel_futures=True)
         finally:
@@ -338,7 +371,7 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
                         except Exception:
                             pass
         for _, source, first, end in items[item_start:]:
-            if any(completed[index]["route"] == "retain" for index in range(first, end)):
+            if any(completed[index]["route"] == "retain" for index in range(first, end) if index in completed):
                 result[location].append(source)
 
     try:

@@ -90,6 +90,24 @@ class JevProcessorTests(unittest.TestCase):
             self.assertIsNone(original['superseded_by'])
         self.assertEqual('idle', process_pending(self.project, self.home, runner=runner)['status'])
 
+    def test_retained_prefix_reduces_jev_calls_but_generator_receives_all_bytes(self):
+        body = 'x' * 35_000 + ' MIDDLE_EVIDENCE ' + 'y' * 35_000 + ' FULL_TAIL'
+        self.remember(body)
+        evaluator = mock.Mock(return_value=answer())
+        def run(request):
+            self.assertEqual(request['sources'][0]['body'], body)
+            self.assertIn('MIDDLE_EVIDENCE', request['prompt'])
+            self.assertIn('FULL_TAIL', request['prompt'])
+            return self.skipped(request)
+        runner = mock.Mock(side_effect=run)
+        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluator)
+        self.assertEqual(result['status'], 'skipped', result)
+        self.assertEqual(evaluator.call_count, 1)
+        runner.assert_called_once()
+        audit = self.status(result)['jev_filter_attempts'][0]
+        self.assertTrue(audit['generator_started'])
+        self.assertGreater(audit['counts']['short_circuited_chunks'], 0)
+
     def test_transport_and_malformed_failures_preserve_sources_and_record_audit(self):
         for malformed in (False, True):
             with self.subTest(malformed=malformed):

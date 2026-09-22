@@ -147,7 +147,8 @@ class ResumeCurrentStateTests(unittest.TestCase):
             {"release-1.4": event("2026-08-01T10:00:00Z"),
              "release-1.9": event("2026-09-16T11:00:00Z")},
         )
-        result = self.search(store, limit=4)
+        result = semantic.search(store, self.project, "release signing current status",
+                                 mode="lexical", intent="resume", limit=4)
         self.assertEqual(
             ["release-1.4", "fix", "release-1.9", "detail"],
             [item["id"] for item in result["results"]],

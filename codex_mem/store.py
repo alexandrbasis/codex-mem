@@ -4706,6 +4706,19 @@ class Store:
             "verification": "not_assessed",
         }
         historical_notice = ""
+        if record.get("context_before_handoff"):
+            attributes.update(selection="before_later_handoff", later_summary_id=record["later_summary_id"])
+            historical_notice = (
+                "<notice>This status predates a later handoff citing this record. "
+                "Read that handoff for subsequent reported outcomes; this is not supersession.</notice>\n"
+            )
+        elif record.get("earlier_status"):
+            attributes.update(selection="earlier_status", later_summary_id=record["later_summary_id"])
+            historical_notice = (
+                "<notice>Earlier status from the same session; read the linked later handoff "
+                "for subsequent reported state. Chronology is not proof that this finding "
+                "or open work is resolved.</notice>\n"
+            )
         if record.get("context_historical"):
             attributes.update(selection="historical_match", later_summary_id=record["later_summary_id"])
             historical_notice = (
@@ -4796,6 +4809,12 @@ class Store:
             raise ValueError("query must be text")
         if len(query) > MAX_QUERY_CHARS:
             raise ValueError("query is too long")
+        from .query import normalize_retrieval_query
+        from .retrieval import current_state_scope, state_scope_plan
+        normalized_query = normalize_retrieval_query(query)
+        routing_only = bool(query.strip()) and not normalized_query.strip()
+        query = normalized_query
+        state_scope = current_state_scope(query, workspace)
         checked_exclude = _validate_text(
             exclude_session, "exclude_session", MAX_SESSION_CHARS, required=False
         )
@@ -4830,9 +4849,11 @@ class Store:
             clauses.extend(metadata_clauses)
             parameters.extend(metadata_filter_parameters)
             prompt_rank = "0"
-            if query.strip():
+            if routing_only:
+                clauses.append("0")
+            if query.strip() and state_scope != "project":
                 from .retrieval import prompt_query_plan
-                plan = prompt_query_plan(query)
+                plan = state_scope_plan(state_scope) if state_scope else prompt_query_plan(query)
                 if plan:
                     # Use one query through the same chronology, per-session
                     # and lane selection as exact context. Two full scans can
@@ -4847,6 +4868,10 @@ class Store:
                     _register_prompt_query_function(self._connection, plan)
                     prompt_rank = "codex_mem_prompt_score(e.title, e.body, e.tags_json, e.observation_json, e.session_summary_json)"
                     clauses.append(f"{prompt_rank} > 0")
+                    if state_scope:
+                        # The release aliases constrain the subject equally;
+                        # repeating more aliases must not outweigh event time.
+                        prompt_rank = "0"
                 else:
                     expression = _fts_expression(query)
                     query_tokens = _fts_tokens(query)
@@ -4960,6 +4985,9 @@ class Store:
 
         # A small set of readable excerpts is more useful than many records
         # whose labels and provenance consume most of the injection budget.
+        if state_scope:
+            from .retrieval import defer_prior_status
+            records = defer_prior_status(records)
         candidates = self._context_diverse_records(records, limit)
         from .retrieval import prefer_topic_followups
         # Preserve the existing coverage window. Related later evidence is

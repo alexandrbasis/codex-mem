@@ -280,9 +280,10 @@ def read_production_telemetry(database: Path, project: Path, since: str) -> dict
             "statuses": dict(Counter(audit.get("status", "unknown") for _, audit in records)),
             "models": dict(Counter(audit.get("model", "unknown") for _, audit in records)),
             "policy_versions": dict(Counter(audit.get("policy_version", "unknown") for _, audit in records)),
+            "evaluation_strategies": dict(Counter(audit.get("evaluation_strategy", "unreported") for _, audit in records)),
             "usage_statuses": dict(Counter(audit.get("usage_status", "unknown") for _, audit in records)),
             "counts": {key: sum(audit.get("counts", {}).get(key, 0) for _, audit in records)
-                       for key in ("evaluated", "retained", "discarded", "chunks", "requests", "cache_hits")},
+                       for key in ("evaluated", "retained", "discarded", "chunks", "requests", "cache_hits", "short_circuited_chunks")},
             "tokens_reported_or_partial": {key: sum(audit.get("usage", {}).get(key, 0) for _, audit in records)
                                            for key in ("input_tokens", "output_tokens")},
             "generator_started": sum(audit.get("generator_started") is True for _, audit in records),
@@ -291,6 +292,9 @@ def read_production_telemetry(database: Path, project: Path, since: str) -> dict
                 and row["status"] == "skipped" and row["attempt_count"] == row["latest_attempt"]
                 for row, audit in records),
             "count_unit": "source or context evaluations across attempts, not distinct captured events",
+            "fragment_count_units": {"chunks": "evaluated fragments", "requests": "live fragment requests",
+                                     "cache_hits": "cached fragment judgments",
+                                     "short_circuited_chunks": "unevaluated suffix fragments after a retained prefix"},
             "counter_coverage": {key: sum(key in audit.get("counts", {}) for _, audit in records)
                                  for key in ("requests", "cache_hits")},
             **duration_metrics([audit for _, audit in records]),
@@ -306,7 +310,7 @@ def read_production_telemetry(database: Path, project: Path, since: str) -> dict
             report["by_filter_policy"][policy] = {
                 "attempts": len(selected), "generator": generator_metrics(matched_usage),
                 "counts": {key: sum(audit.get("counts", {}).get(key, 0) for _, audit in selected)
-                           for key in ("evaluated", "retained", "discarded", "chunks", "requests", "cache_hits")},
+                           for key in ("evaluated", "retained", "discarded", "chunks", "requests", "cache_hits", "short_circuited_chunks")},
                 "counter_coverage": {key: sum(key in audit.get("counts", {}) for _, audit in selected)
                                      for key in ("requests", "cache_hits")},
                 "jev_input_tokens": input_tokens,

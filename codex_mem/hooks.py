@@ -662,9 +662,13 @@ def _prior_context(
     if memory_budget < 128:
         return ""
     try:
+        from .query import normalize_retrieval_query
+        normalized_query = normalize_retrieval_query(query)
+        if query.strip() and not normalized_query.strip():
+            return ""  # A routing-only prompt is not an unfiltered startup query.
         context = store.context(
             project,
-            query=_truncate(query, 1_000),
+            query=_truncate(normalized_query, 1_000),
             budget=memory_budget,
             exclude_session=exclude_session,
         )

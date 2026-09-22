@@ -59,6 +59,28 @@ class JevAuditTests(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 self.write(dict(self.audit, duration_ms=bad))
 
+    def test_short_circuit_is_content_free_and_requires_a_retained_fragment(self):
+        decision = self.audit['decisions'][0]
+        decision['short_circuited_chunks'] = 3
+        self.audit['counts'] = {'short_circuited_chunks': 999, 'cache_hits': 0}
+        self.write()
+        audit = read_filter_attempts(self.store._connection, 'job')[0]
+        self.assertEqual(audit['counts']['short_circuited_chunks'], 3)
+        self.assertEqual(audit['counts']['chunks'], 1)
+        self.assertEqual(audit['counts']['cache_hits'], 0)
+        for value in (-1, True, 'private', 10001):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                decision['short_circuited_chunks'] = value
+                self.write()
+        decision['short_circuited_chunks'] = 3
+        decision['route'] = 'discard'
+        with self.assertRaises(ValueError):
+            self.write()
+        decision['route'] = 'retain'
+        decision['chunks'][0]['route'] = 'discard'
+        with self.assertRaises(ValueError):
+            self.write()
+
     def test_v3_cache_metadata_and_categories_persist(self):
         from codex_mem.jev_audit import V3_CATEGORIES
         self.audit['policy_version'] = 'memory-eligibility-v3'

@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from datetime import datetime, timezone
 import json
 import math
+from pathlib import Path
 import re
 import unicodedata
 from typing import Any
@@ -20,7 +22,7 @@ _PROMPT_WORDS = frozenset((
     "happen happened happening handle handles doing now there then still "
     "как что почему когда где какой какая какие которое который которая ли и или а но "
     "в во на к ко по о об обо от из у с со за для до без это этот эта эти то так там "
-    "здесь он она оно они его ее её их мы наш наша наши наше вы ваш я мне мой моя "
+    "здесь он она оно они его ее её их мы нас наш наша наши наше вы ваш я мне мой моя "
     "ты твой про пусть уже еще ещё же бы был была было были есть будет будут "
     "расскажи покажи объясни поясни проверь посмотри проанализируй проверить "
     "работает работают работаешь работал работать справляется справляются своей "
@@ -120,38 +122,91 @@ _PROJECT_STATE_WORDS = _PROMPT_WORDS | frozenset((
     "improve improved change changes work task tasks done remaining remains unfinished "
     "unresolved pending outstanding open recent recently last latest current after "
     "before next left new up doing needs need fix fixes anything something "
+    "release releases released rollout shipped shipping delivered delivery publish published "
+    "verification verified unverified confirm confirmed included includes evidence well "
     "каково каковы над после перед осталось остались остается остаётся оставалось "
-    "нужно нужны сделать сделано дальше далее"
+    "нужно нужны сделать сделано дальше далее чем вошло входит выкатили выкачен "
+    "выпустили выпущено подтверждено подтверждён подтвержден подтвердили прошёл прошел"
 ).split())
 _PROJECT_STATE_RUSSIAN = re.compile(
     r"(?:плагин|памят|систем|проект|репозитор|приложен|программ|работ|задач|"
     r"состоян|статус|результат|улучш|изменен|изменён|последн|текущ|незаверш|"
-    r"незаконч|незакрыт|открыт|нужн|нов)[а-яё]*\Z"
+    r"незаконч|незакрыт|непровер|провер|открыт|нужн|нов|релиз|выпуск|подтвержд)[а-яё]*\Z"
 )
 _PROJECT_STATE_INTENT = re.compile(
-    r"(?:current|latest|recent|recently|status|state|remaining|remains|left|unfinished|"
-    r"unresolved|pending|outstanding|next|done|остал[а-яё]*|оста[её]т[а-яё]*|"
+    r"(?:current|latest|last|recent|recently|status|state|remaining|remains|left|unfinished|"
+    r"unresolved|pending|outstanding|next|done|now|сейчас|теперь|остал[а-яё]*|оста[её]т[а-яё]*|"
     r"текущ[а-яё]*|последн[а-яё]*|состоян[а-яё]*|статус[а-яё]*|незаверш[а-яё]*|"
     r"незаконч[а-яё]*|незакрыт[а-яё]*|нужн[а-яё]*|дальше|далее)\Z"
 )
 
 
-def broad_current_state_query(query: str) -> bool:
-    """Recognize generic project-state requests; unknown topic terms opt out.
+def current_state_scope(query: str, project: str | Path | None = None) -> str | None:
+    """Recognize bounded project/release questions, preserving topical limits.
 
-    This bounded RU/EN heuristic changes ranking, never match constraints.
-    Specific subjects, versions, paths, issue IDs and code identifiers retain
-    topical relevance. A broad request must also express a current/open state.
+    Generic project wording resolves to the already-scoped project; release
+    wording resolves to a bilingual release topic. Specific subjects, versions,
+    paths, issue IDs and code identifiers opt out and retain their constraints.
+    A broad request must also express a current/open state or project assessment.
     """
     if historical_query(query):
-        return False
+        return None
     raw = _PROMPT_TOKEN.findall(unicodedata.normalize("NFKC", query))
-    if any(re.search(r"[_./:-]|\d", word) or re.search(r"[a-z][A-Z]", word) for word in raw):
-        return False
-    words = [word.casefold() for word in raw]
-    return (any(_PROJECT_STATE_INTENT.fullmatch(word) for word in words)
-            and all(word in _PROJECT_STATE_WORDS or _PROJECT_STATE_RUSSIAN.fullmatch(word)
+    project_name = Path(project).name.casefold() if project is not None else None
+    words: list[str] = []
+    for original in raw:
+        word = original.casefold()
+        # A named current project is scope, not a code/path/version constraint.
+        # Generic hyphenated project names such as codex-mem also retain the
+        # same meaning as their already-supported spaced form.
+        if not re.search(r"[_./:]|\d", word) and word == project_name:
+            words.append("project")
+        elif "-" in word and all(part in _PROJECT_STATE_WORDS for part in word.split("-")):
+            words.extend(word.split("-"))
+        elif re.search(r"[_./:-]|\d", word) or re.search(r"[a-z][A-Z]", original):
+            return None
+        else:
+            words.append(word)
+    if not words or not all(word in _PROJECT_STATE_WORDS or _PROJECT_STATE_RUSSIAN.fullmatch(word)
+                            for word in words):
+        return None
+    explicit_state = any(_PROJECT_STATE_INTENT.fullmatch(word) for word in words)
+    project_anchor = any(word in {"project", "plugin", "memory", "codex", "repository"}
+                         or re.fullmatch(r"(?:плагин|проект|памят)[а-яё]*", word) for word in words)
+    assessment = project_anchor and (
+        any(word.startswith("справля") for word in words)
+        or (any(word in {"how", "как"} for word in words)
+            and any(word in {"doing", "работает", "работают", "проанализируй", "analyze", "review"}
                     for word in words))
+    )
+    if not (explicit_state or assessment):
+        return None
+    return "release" if any(re.fullmatch(r"releases?|released|rollout|релиз[а-яё]*|выпуск[а-яё]*", word)
+                            for word in words) else "project"
+
+
+def broad_current_state_query(query: str, project: str | Path | None = None) -> bool:
+    return current_state_scope(query, project) is not None
+
+
+def state_scope_plan(scope: str) -> dict[str, Any] | None:
+    """Release paraphrases share one bounded bilingual topic constraint."""
+    if scope != "release":
+        return None
+    return {"terms": [("release", "release"), ("released", "released"), ("rollout", "rollout"),
+                      ("релиза", "релиз"), ("выпуска", "выпуск")],
+            "identifiers": [], "versions": [], "minimum": 1}
+
+
+def state_scope_matches(record: Mapping[str, Any], scope: str) -> bool:
+    plan = state_scope_plan(scope)
+    if plan is None:
+        return True
+    if not any(record.get(key) for key in ("title", "body", "preview", "session_summary")):
+        return True  # ID-only adapters have already applied their query match.
+    text = " ".join(str(record.get(key) or "") for key in
+                    ("title", "body", "preview", "session_summary", "observation"))
+    return bool(prompt_match_score(text, plan))
 
 
 def resume_duplicate_key(record: Mapping[str, Any]) -> tuple[str, ...] | None:
@@ -231,6 +286,23 @@ def topic_followup_basis(earlier: TopicSignature, later: TopicSignature) -> str 
     return None
 
 
+_STATUS_TITLE = re.compile(
+    r"\b(?:pending|unverified|unconfirmed|requested|proposal|plan|"
+    r"not\s+(?:yet\s+)?(?:verified|confirmed|complete)|"
+    r"план[а-яё]*|неподтвержд[а-яё]*|непровер[а-яё]*|запрош[а-яё]*)\b", re.IGNORECASE,
+)
+
+
+def _declared_event_instant(record: Mapping[str, Any]) -> datetime | None:
+    if record.get("event_time_basis") not in {"source_event", "recorded_at"}:
+        return None
+    try:
+        value = datetime.fromisoformat(str(record.get("event_at") or "").replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+
 def prefer_topic_followups(records: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     """Show matching followups first, retaining every earlier requirement.
 
@@ -238,11 +310,73 @@ def prefer_topic_followups(records: Sequence[Mapping[str, Any]]) -> list[dict[st
     In particular, a diagnostic or documentation read can be a followup while
     leaving the earlier requirement unchanged. No inferred link deletes a row.
     """
-    available = {record["id"] for record in records}
-    linked = lambda record: record.get("later_context_id") in available
+    by_id = {record["id"]: record for record in records}
+    annotated = []
+    for record in records:
+        item = dict(record)
+        later = by_id.get(record.get("later_summary_id"))
+        earlier_at = _declared_event_instant(record)
+        later_at = _declared_event_instant(later) if later else None
+        if (later and record.get("kind") == "note" and not record.get("session_summary")
+                and (later.get("kind") == "session_summary" or later.get("session_summary"))
+                and record.get("session_id") and record.get("session_id") == later.get("session_id")
+                and earlier_at is not None and later_at is not None and earlier_at < later_at
+                and _STATUS_TITLE.search(str(record.get("title") or ""))):
+            # The pointer establishes chronology, not resolution. Even an
+            # uncited or still-open finding stays in this selected window.
+            item["earlier_status"] = True
+        annotated.append(item)
+    linked = lambda record: (2 if record.get("earlier_status")
+                             else int(record.get("later_context_id") in by_id))
     # Display both records, with later evidence before the earlier plan when
     # both are already selected. Do not use this to rank retrieval candidates.
-    return [dict(record) for record in sorted(records, key=linked)]
+    return sorted(annotated, key=linked)
+
+
+def defer_prior_status(records: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Put a source-linked later handoff ahead of its earlier status detail.
+
+    This is a current-state reading order, never a truth/supersession decision.
+    Require the same session, explicit source lineage, overlapping subject and
+    a reported action outcome. A later inspection or unrelated summary cannot
+    consume an open requirement's slot. Deferred records remain in the tail.
+    """
+    by_id = {record["id"]: record for record in records}
+    outcome = re.compile(r"\b(?:committed|pushed|shipped|deployed|implemented|completed|passed|"
+                         r"реализован[а-яё]*|выполнен[а-яё]*|опубликован[а-яё]*|пройден[а-яё]*)\b",
+                         re.IGNORECASE)
+    negation = re.compile(r"\b(?:not|never|no|не|нет)\b[^.;\n]{0,100}\b(?:"
+                          + outcome.pattern.removeprefix(r"\b(?:").removesuffix(r")\b")
+                          + r")\b", re.IGNORECASE)
+    current, prior = [], []
+    for record in records:
+        later = by_id.get(record.get("later_summary_id"))
+        summary = later.get("session_summary") if later else None
+        subject = topic_signature(record)[0]
+        completed = str(summary.get("completed") or "") if isinstance(summary, Mapping) else ""
+        next_steps = str(summary.get("next_steps") or "") if isinstance(summary, Mapping) else ""
+        later_subject = topic_signature({"body": completed})[1]
+        remaining_subject = topic_signature({"body": next_steps})[1]
+        earlier_at = _declared_event_instant(record)
+        later_at = _declared_event_instant(later) if later else None
+        deferred = bool(
+            later and isinstance(summary, Mapping) and record.get("session_id")
+            and record.get("session_id") == later.get("session_id")
+            and record["id"] in (later.get("source_ids") or [])
+            and earlier_at is not None and later_at is not None and earlier_at < later_at
+            and _STATUS_TITLE.search(str(record.get("title") or ""))
+            and outcome.search(completed) and not negation.search(completed)
+            and not _STATUS_TITLE.search(completed)
+            and len(subject & later_subject) >= 2
+            and len(subject & remaining_subject) < 2
+        )
+        item = dict(record)
+        if deferred:
+            item["context_before_handoff"] = True
+            prior.append(item)
+        else:
+            current.append(item)
+    return current + prior
 
 
 def freshness_markup(snapshot: Mapping[str, Any], *, budget: int) -> str:
@@ -274,7 +408,7 @@ _PREVIEW_FIELDS = (
     "id", "project", "title", "kind", "created_at", "session_id", "preview",
     "source", "provenance", "superseded_by", "superseded_at", "is_anchor",
     "score", "lexical_score", "semantic_score", "rrf_score",
-    "event_at", "event_id", "event_time_basis", "context_historical", "later_summary_id",
+    "event_at", "event_id", "event_time_basis", "context_historical", "context_before_handoff", "earlier_status", "later_summary_id",
     "later_context_id", "later_context_relation", "later_context_basis",
 )
 
