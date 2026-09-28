@@ -6,9 +6,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-# Native synchronous hooks need only SQLite and must fit their short deadline.
-# Avoid starting a second Python runtime or importing optional search/CLI code.
+# The public hook gets a hard child deadline. Keep its worker on this lean path
+# so neither entrypoint imports optional search/CLI code.
 if __name__ == "__main__" and sys.argv[1:] == ["hook"]:
+    from codex_mem.hook_runner import run_hook
+    raise SystemExit(run_hook(Path(__file__).resolve()))
+
+if __name__ == "__main__" and sys.argv[1:] == ["--hook-worker"]:
     from codex_mem.hooks import main as hook_main
     raise SystemExit(hook_main())
 

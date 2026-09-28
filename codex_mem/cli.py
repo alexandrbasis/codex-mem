@@ -180,13 +180,13 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         key = key.strip()
         if not key:
             raise CLIError("--set key must not be empty")
-        if key in {"capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled"}:
+        if key in {"capture_enabled", "capture_tools", "processor_enabled", "service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_quality_enabled", "jev_retrieval_enabled"}:
             updates[key] = _parse_bool(value, field=key)
         elif key == "context_chars":
             updates[key] = _positive(value, field=key, maximum=6_000)
         elif key in {"excluded_projects", "included_projects"}:
             updates[key] = _parse_excluded_projects(value)
-        elif key == "jev_filter_projects":
+        elif key in {"jev_filter_projects", "jev_quality_projects", "jev_retrieval_projects"}:
             updates[key] = _parse_string_array(value, field=key)
         elif key in {"skip_tools", "tool_skip_list"}:
             updates[key] = _parse_string_array(value, field=key)
@@ -205,7 +205,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["capture_tools"] = namespace.capture_tools
     if namespace.processor_enabled is not None:
         updates["processor_enabled"] = namespace.processor_enabled
-    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects"):
+    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects", "jev_quality_enabled", "jev_quality_projects", "jev_retrieval_enabled", "jev_retrieval_projects"):
         if getattr(namespace, name, None) is not None:
             updates[name] = getattr(namespace, name)
     if namespace.context_chars is not None:
@@ -482,6 +482,12 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--jev-filter-key-file", help="Absolute path to the TypeSafe API key file")
     config.add_argument("--jev-filter-project", dest="jev_filter_projects", action="append",
                         help="Absolute project root eligible for Jev screening; repeat for more roots; empty config means all")
+    config.add_argument("--jev-quality-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--jev-quality-project", dest="jev_quality_projects", action="append",
+                        help="Restrict quality checks to these roots within the input filter's project scope")
+    config.add_argument("--jev-retrieval-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--jev-retrieval-project", dest="jev_retrieval_projects", action="append",
+                        help="Absolute project root eligible for query reranking; independent of capture screening scope")
     config.add_argument("--context-chars", type=lambda value: _positive(value, field="context_chars", maximum=6_000))
     config.add_argument("--exclude-project", dest="excluded_projects", action="append")
     config.add_argument("--include-project", dest="included_projects", action="append")

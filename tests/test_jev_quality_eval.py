@@ -153,6 +153,19 @@ class JevQualityEvaluationTests(unittest.TestCase):
             self.assertIsNone(report["full_pipeline_duration_ms"])
             self.assertIsNone(report["cost_usd"])
             self.assertNotIn("PRIVATE BODY", json.dumps(report))
+            # Even complete old-stage receipts do not measure the new quality
+            # gate or establish full-pipeline wall time.
+            with sqlite3.connect(database) as connection:
+                for row in connection.execute("SELECT job_id,audit_json FROM jev_filter_attempts").fetchall():
+                    audit = json.loads(row[1])
+                    audit["duration_ms"] = 10
+                    connection.execute("UPDATE jev_filter_attempts SET audit_json=? WHERE job_id=?",
+                                       (json.dumps(audit), row[0]))
+                connection.execute("UPDATE observer_usage_attempts SET duration_ms=2000 WHERE job_id='j3'")
+            complete_stages = evaluation.read_production_telemetry(database, project, "2026-09-19T00:00:00Z")
+            self.assertEqual(3530, complete_stages["eligibility_and_generator_duration_ms"])
+            self.assertIsNone(complete_stages["full_pipeline_duration_ms"])
+            self.assertIn("post-generation quality", complete_stages["pipeline_duration_basis"])
 
     def test_missing_database_is_not_created(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
+import hashlib
 import json
 import math
 import os
@@ -19,10 +20,12 @@ import select
 import selectors
 import shutil
 import signal
+import sqlite3
 import subprocess
 import tempfile
 import time
 from typing import Any
+from xml.etree import ElementTree
 
 from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason
 
@@ -106,6 +109,7 @@ def recover_failed_batch(
     codex: str = "codex",
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
     jev_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+    jev_quality_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Retry one diagnosed failed snapshot once, returning metadata receipts.
 
@@ -143,7 +147,7 @@ def recover_failed_batch(
     result = process_pending(
         workspace, data_dir, retry_job_id=job_id, retry_error_code=expected_error_code,
         retry_attempt_count=expected_attempt_count, timeout=timeout, codex=codex, runner=runner,
-        jev_evaluator=jev_evaluator,
+        jev_evaluator=jev_evaluator, jev_quality_evaluator=jev_quality_evaluator,
     )
     with Store(data_dir) as store:
         after = store.observation_job_status(workspace, job_id)
@@ -169,6 +173,7 @@ def process_pending(
     codex: str = "codex",
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
     jev_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+    jev_quality_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     max_entries: int = MAX_OBSERVATION_ENTRIES,
     max_chars: int = DEFAULT_OBSERVATION_CHARS,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
@@ -199,6 +204,8 @@ def process_pending(
     settings = load_config(data_dir)
     if not getattr(settings, "valid", True):
         return _failed_receipt(None, "invalid_request", None, None)
+    from .jev_client import enabled
+    from .jev_quality import MAX_GATE_SECONDS
     filter_projects = settings.get("jev_filter_projects", [])
     jev_enabled = bool(settings.get("jev_filter_enabled")) and (
         not filter_projects or any(
@@ -206,8 +213,10 @@ def process_pending(
             for path in filter_projects
         )
     )
+    quality_enabled = enabled(settings, "jev_quality_enabled", workspace)
     effective_lease_seconds = _effective_lease_seconds(
-        lease_seconds, checked_timeout + (60 if jev_enabled else 0))
+        lease_seconds, checked_timeout + (60 if jev_enabled else 0)
+        + (MAX_GATE_SECONDS if quality_enabled else 0))
 
     claimed: Mapping[str, Any] | None = None
     try:
@@ -255,6 +264,7 @@ def process_pending(
             error_code: str | None = None
             receipt: dict[str, Any] | None = None
             filter_audit: dict[str, Any] | None = None
+            quality_audit: dict[str, Any] | None = None
             try:
                 from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt
                 _, _, sources = _claim_parts(claimed)
@@ -317,6 +327,40 @@ def process_pending(
                     lifecycle_only = set(filter_audit.get("lifecycle_only_ids", []))
                     if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
                         raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
+                if quality_enabled and (notes or summary is not None):
+                    from .jev_quality import JevQualityError, quality_gate
+                    quality_source_status = "current"
+
+                    def quality_sources_current() -> bool:
+                        nonlocal quality_source_status
+                        quality_source_status = _quality_source_status(store, workspace, claimed, generation_claim)
+                        return quality_source_status == "current"
+
+                    try:
+                        quality_audit = quality_gate(
+                            notes, summary, generation_claim, project=workspace, store=store,
+                            timeout=MAX_GATE_SECONDS, key_file=settings.get("jev_filter_key_file", ""),
+                            evaluator=jev_quality_evaluator,
+                            source_guard=quality_sources_current,
+                        )
+                    except JevQualityError as exc:
+                        quality_audit = exc.audit
+                        # A transport error may arrive after the last dispatch
+                        # guard; use the current ownership before quarantine.
+                        quality_source_status = _quality_source_status(store, workspace, claimed, generation_claim)
+                        if quality_source_status == "lease_expired":
+                            routes = {decision.get("route") for decision in quality_audit.get("decisions", [])}
+                            semantic_route = "rejected" if "rejected" in routes else (
+                                "uncertain" if "uncertain" in routes else None)
+                            if semantic_route is not None:
+                                quality_audit.update(route=semantic_route, blocked_by="lease_expired")
+                                raise ProcessorFailure("invalid_response", reason_code="jev_quality_" + semantic_route) from None
+                            # Preserve ordinary expiry recovery without writing
+                            # through an expired token or reviving revoked jobs.
+                            raise ObservationLeaseExpired from None
+                        # A semantic or transport failure quarantines the generated
+                        # result; automatic retries must not rerun the generator.
+                        raise ProcessorFailure("invalid_response", reason_code=exc.code) from None
                 finished = store.finish_observation_batch(
                     workspace,
                     job_id,
@@ -336,7 +380,10 @@ def process_pending(
                 metrics = exc.metrics or metrics
                 error_code = exc.code
                 receipt = _failed_after_claim(store, workspace, job_id, lease_token, exc.code, thread_id, turn_id,
-                                             reason_code=exc.reason_code)
+                                             reason_code=exc.reason_code,
+                                             expired_quality_quarantine_attempt=(attempt_count if
+                                                 exc.code == "invalid_response" and exc.reason_code in {
+                                                     "jev_quality_rejected", "jev_quality_uncertain"} else None))
             except ObservationLeaseExpired:
                 outcome = "lease_expired"
                 error_code = "lease_expired"
@@ -357,6 +404,8 @@ def process_pending(
             finally:
                 if receipt is not None and filter_audit is not None:
                     receipt["jev_filter"] = filter_audit
+                if receipt is not None and quality_audit is not None:
+                    receipt["jev_quality"] = quality_audit
                 if usage_started:
                     if receipt is not None and receipt.get("status") == "failed":
                         error_code = _safe_failure_code(receipt.get("code"))
@@ -385,6 +434,69 @@ def process_pending(
             return receipt or _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
     except (StoreError, OSError):
         return _failed_receipt(None, "storage_failure", None, None)
+
+
+def _quality_sources_current(
+    store: Store, workspace: str, claimed: Mapping[str, Any], evidence: Mapping[str, Any],
+) -> bool:
+    return _quality_source_status(store, workspace, claimed, evidence) == "current"
+
+
+def _quality_source_status(
+    store: Store, workspace: str, claimed: Mapping[str, Any], evidence: Mapping[str, Any],
+) -> str:
+    """Check the lease and retained evidence in one short read-only snapshot.
+
+    Use a separate connection so this check cannot hold Store's lock or a
+    transaction across an external call. Historical raw sources may already
+    be superseded; only the newly claimed sources must remain active.
+    """
+    connection = None
+    try:
+        original_ids = [source["id"] for source in claimed["sources"]]
+        evidence_ids = {source["id"] for source in [*evidence["sources"], *evidence.get("context", [])]}
+        reference = evidence.get("project_context", "")
+        if reference:
+            root = ElementTree.fromstring(reference)
+            if root.tag != "codex-mem-context":
+                return "unavailable"
+            evidence_ids.update(entry.attrib["id"] for entry in root.findall("./entry"))
+        if (not original_ids or len(set(original_ids)) != len(original_ids)
+                or any(not isinstance(source_id, str) or not _valid_source_id(source_id)
+                       for source_id in [*original_ids, *evidence_ids])):
+            return "unavailable"
+        fingerprint = hashlib.sha256(
+            (workspace + "\x00" + PROCESSOR_ID + "\x00" + "\x00".join(original_ids)).encode("utf-8")
+        ).hexdigest()
+        source_slots = ",".join("?" for _ in original_ids)
+        evidence_slots = ",".join("?" for _ in evidence_ids)
+        connection = sqlite3.connect(Path(store.db_path).resolve().as_uri() + "?mode=ro", uri=True, timeout=.02)
+        connection.row_factory = sqlite3.Row
+        row = connection.execute(
+            "SELECT j.lease_expires_at, "
+            "(SELECT COUNT(*) FROM observation_job_sources WHERE job_id=j.id) AS source_count, "
+            f"(SELECT COUNT(*) FROM entries e WHERE e.project=j.project AND e.id IN ({evidence_slots})) AS evidence_count, "
+            "NOT EXISTS (SELECT 1 FROM observation_job_sources l LEFT JOIN entries e ON e.id=l.source_id "
+            "WHERE l.job_id=j.id AND (e.id IS NULL OR e.project!=j.project OR e.superseded_by IS NOT NULL "
+            f"OR l.source_id NOT IN ({source_slots}))) AS sources_active "
+            "FROM observation_jobs j WHERE j.id=? AND j.project=? AND j.status='running' "
+            "AND j.lease_token=? AND j.attempt_count=? AND j.input_fingerprint=? "
+            "AND j.processor_id=? AND j.model=? AND j.reasoning_effort=?",
+            (*sorted(evidence_ids), *original_ids, claimed["job_id"], workspace, claimed["lease_token"],
+             claimed["attempt_count"], fingerprint, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+        ).fetchone()
+        if (row is None or row["source_count"] != len(original_ids)
+                or row["evidence_count"] != len(evidence_ids) or not row["sources_active"]):
+            return "unavailable"
+        expiry = datetime.fromisoformat(row["lease_expires_at"].replace("Z", "+00:00"))
+        if expiry.tzinfo is None:
+            return "unavailable"
+        return "current" if expiry.timestamp() > time.time() else "lease_expired"
+    except (AttributeError, KeyError, TypeError, ValueError, OSError, sqlite3.Error, ElementTree.ParseError):
+        return "unavailable"
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 def _filtered_lifecycle_claim(
@@ -1400,7 +1512,9 @@ def _build_prompt(
         "its response may establish a result only within the command's actual scope. "
         "A derived_note inherits its sources' uncertainty and is not independent corroboration. "
         "State that provenance and any missing verification in the body and each relevant "
-        "structured fact, not only in tags. Never strengthen a claim in the title or summary. "
+        "structured fact, not only in tags. Titles and subtitles must preserve the same "
+        "attribution, uncertainty and planned-versus-completed scope as the body. A cautious "
+        "body cannot repair a stronger title. Never strengthen a claim in the summary. "
         "When sources describe different versions or conflicting behavior, retain the version "
         "or event scope and the conflict. A newer timestamp alone does not resolve disagreement. "
         "Describe a replacement decision only when the evidence explicitly establishes it; "
@@ -1783,6 +1897,7 @@ def _failed_after_claim(
     turn_id: str | None,
     *,
     reason_code: str | None = None,
+    expired_quality_quarantine_attempt: int | None = None,
 ) -> dict[str, Any]:
     safe_code = _safe_failure_code(code)
     try:
@@ -1794,6 +1909,8 @@ def _failed_after_claim(
             worker_thread_id=thread_id,
             worker_turn_id=turn_id,
             reason_code=reason_code,
+            **({"expired_quality_quarantine_attempt": expired_quality_quarantine_attempt}
+               if expired_quality_quarantine_attempt is not None else {}),
         )
         returned_thread = failed.get("worker_thread_id") if isinstance(failed, Mapping) else thread_id
         returned_turn = failed.get("worker_turn_id") if isinstance(failed, Mapping) else turn_id
@@ -1804,6 +1921,12 @@ def _failed_after_claim(
         expired_code = "lease_expired" if safe_code == "timeout" else safe_code
         return _failed_receipt(job_id, expired_code, thread_id, turn_id, reason_code=reason_code)
     except (StoreError, ValueError, OSError):
+        if safe_code == "invalid_response" and reason_code in {
+            "jev_quality_unavailable", "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
+        }:
+            # A replaced/revoked lease must not turn cancellation into an
+            # automatic retry or mutate a newer worker's ownership.
+            return _failed_receipt(job_id, safe_code, thread_id, turn_id, reason_code=reason_code)
         return _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
 
 

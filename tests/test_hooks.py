@@ -41,6 +41,8 @@ class FakeStore:
         query: str = "",
         budget: int = 6000,
         exclude_session: str | None = None,
+        *,
+        hook_mode: bool = False,
     ) -> str:
         self.context_calls.append(
             {
@@ -48,6 +50,7 @@ class FakeStore:
                 "query": query,
                 "budget": budget,
                 "exclude_session": exclude_session,
+                "hook_mode": hook_mode,
             }
         )
         if query:

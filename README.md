@@ -180,7 +180,9 @@ python3 scripts/codex-mem.py semantic status --project /absolute/path/to/project
 python3 scripts/codex-mem.py semantic index --project /absolute/path/to/project
 ```
 
-`semantic index` processes one bounded batch and reports the number of pending records. Run it again until `pending` reaches zero, or let the enabled queue index approved projects. The model runs on the local CPU; normal search and indexing do not upload memory text. Model setup is the one explicit download path.
+`semantic index` processes one bounded batch and reports the number of pending records. Run it again until `pending` reaches zero, or let the enabled queue index approved projects. Embeddings run on the local CPU. Search stays local unless you separately enable TypeSafe retrieval; model setup is an explicit download.
+
+[TypeSafe memory checks](docs/TYPESAFE.md) describes optional source-support checks after generation and relevance ranking for both search and automatic prompt context, with project scopes, bounded requests, exact-input caching and a reproducible quality evaluation.
 
 ## Manage the local queue
 

@@ -150,19 +150,39 @@ def freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
     try:
         return _freshness_snapshot(store, project)
     except (AttributeError, TypeError, KeyError, ValueError, OSError, sqlite3.Error, StoreError):
-        return {
-            'status': 'unknown', 'knowledge_incomplete': None,
-            'latest_capture_at': None, 'last_successful_processing_at': None,
-            'last_ready_at': None, 'pending_capture_count': None, 'ready_count': None,
-            'blocked_reason': None, 'capture_enabled': None, 'processing_enabled': None,
-            'quarantined_batch_count': None, 'quarantine_reason': None,
-            'semantic_enabled': None,
-            'index': {'indexed': None, 'pending': None, 'stale': None},
-            'summary': 'Memory unknown; knowledge incomplete=unknown; capture=unknown; '
-                       'processed=unknown; ready=unknown; pending captures=unknown; '
-                       'quarantined batches=unknown; quarantine reason=unknown; '
-                       'capture/processing/semantic enabled=unknown/unknown/unknown; '
-                       'index ready records indexed/pending/stale=unknown/unknown/unknown; '
-                       'blocker=unknown. Telemetry unavailable; index coverage does not '
-                       'establish memory freshness.',
-        }
+        return _unknown_snapshot()
+
+
+def hook_freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
+    """Keep lifecycle context independent of full database/index health scans.
+
+    No stored timestamp or successful context lookup establishes freshness.
+    Explicit retrieval retains the complete check; hooks disclose its omission
+    rather than presenting cached or unverified health as current.
+    """
+    result = _unknown_snapshot()
+    result['summary'] = (
+        'Memory freshness unknown; knowledge completeness unknown. '
+        'Full freshness and index checks are deferred outside lifecycle hooks. '
+        'Use explicit memory retrieval for current freshness telemetry.'
+    )
+    return result
+
+
+def _unknown_snapshot() -> dict[str, Any]:
+    return {
+        'status': 'unknown', 'knowledge_incomplete': None,
+        'latest_capture_at': None, 'last_successful_processing_at': None,
+        'last_ready_at': None, 'pending_capture_count': None, 'ready_count': None,
+        'blocked_reason': None, 'capture_enabled': None, 'processing_enabled': None,
+        'quarantined_batch_count': None, 'quarantine_reason': None,
+        'semantic_enabled': None,
+        'index': {'indexed': None, 'pending': None, 'stale': None},
+        'summary': 'Memory unknown; knowledge incomplete=unknown; capture=unknown; '
+                   'processed=unknown; ready=unknown; pending captures=unknown; '
+                   'quarantined batches=unknown; quarantine reason=unknown; '
+                   'capture/processing/semantic enabled=unknown/unknown/unknown; '
+                   'index ready records indexed/pending/stale=unknown/unknown/unknown; '
+                   'blocker=unknown. Telemetry unavailable; index coverage does not '
+                   'establish memory freshness.',
+    }

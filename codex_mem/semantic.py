@@ -3,7 +3,8 @@
 The ordinary memory store stays dependency-free.  This module is the optional
 semantic layer: it only imports FastEmbed after a caller asks to encode text,
 and it never downloads a model while handling a search or a hook.  The one
-networking entrypoint is :func:`prepare_model`.
+embedding networking entrypoint is :func:`prepare_model`. An independently
+opted-in Jev reranker can evaluate a bounded redacted search shortlist.
 
 Stored text remains untrusted evidence.  It is redacted again before it reaches
 the embedding model, and results are previews supplied by :class:`Store`.
@@ -375,6 +376,7 @@ def search(
     concepts: Sequence[str] | None = None,
     files: Sequence[str] | None = None,
     backend: EmbeddingBackend | None = None,
+    jev_evaluator: Any = None,
 ) -> dict[str, Any]:
     """Search lexical, semantic, or hybrid previews with stable RRF ordering."""
 
@@ -391,12 +393,20 @@ def search(
     checked_types = _checked_filter_values(types, "types") if types is not None else None
     checked_concepts = _checked_filter_values(concepts, "concepts") if concepts is not None else None
     checked_files = _checked_filter_values(files, "files") if files is not None else None
+    from .config import load_config
+    from .jev_retrieval import MAX_CANDIDATES, allowed, rerank
+    settings = load_config(getattr(store, "data_dir", None))
+    jev_enabled = allowed(settings, workspace, checked_query)
+    if jev_enabled and checked_intent != "resume":
+        retrieval_limit = max(checked_limit, MAX_CANDIDATES)
 
     def receipt(
-        results: list[dict[str, Any]], used_mode: str, fallback_reason: str | None
+        results: list[dict[str, Any]], used_mode: str, fallback_reason: str | None,
+        baseline_results: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         added_candidates = 0
         linked_handoffs = 0
+        jev_receipt = None
         if checked_intent == "resume":
             # General relevance windows can be filled entirely by repeated UI
             # details. Query priority categories separately before the final
@@ -422,13 +432,36 @@ def search(
             candidates.extend(linked)
             linked_handoffs = len(linked)
             added_candidates += linked_handoffs
+            if jev_enabled:
+                candidates, jev_receipt = rerank(
+                    store, workspace, checked_query, candidates, kinds=checked_kinds,
+                    types=checked_types, concepts=checked_concepts, files=checked_files,
+                    settings=settings, evaluator=jev_evaluator, route="search")
             results = _resume_selection(
                 candidates, checked_limit, query=checked_query,
                 project=workspace,
             )
             if added_candidates and used_mode == "semantic":
                 used_mode = "hybrid"
+        elif jev_enabled:
+            results, jev_receipt = rerank(
+                store, workspace, checked_query,
+                baseline_results if baseline_results is not None else results[:checked_limit], candidates=results,
+                kinds=checked_kinds, types=checked_types, concepts=checked_concepts,
+                files=checked_files, settings=settings, evaluator=jev_evaluator, route="search")
+            results = results[:checked_limit]
+        if jev_receipt is not None:
+            from .store import _preview
+            previews = []
+            for record in results:
+                if "body" in record:
+                    record = dict(record)
+                    record["preview"] = _preview(record.pop("body"))
+                previews.append(record)
+            results = previews
         result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
+        if jev_receipt is not None:
+            result["jev_retrieval"] = jev_receipt
         if checked_intent == "resume":
             from .retrieval import broad_current_state_query, historical_query
             selection = (
@@ -494,6 +527,9 @@ def search(
             MAX_SEARCH_LIMIT if checked_intent == "resume"
             else min(MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
         )
+        original_candidate_limit = candidate_limit
+        if jev_enabled:
+            candidate_limit = max(candidate_limit, retrieval_limit)
         lexical = _lexical_results(
             store,
             workspace,
@@ -516,7 +552,9 @@ def search(
         )
         results = _rrf(lexical, semantic, retrieval_limit)
         used_mode = "hybrid"
-        return receipt(results, used_mode, None)
+        baseline_results = (_rrf(lexical[:original_candidate_limit], semantic[:original_candidate_limit], checked_limit)
+                            if jev_enabled and checked_intent != "resume" else None)
+        return receipt(results, used_mode, None, baseline_results)
     except SemanticError as exc:
         if requested_mode != "auto":
             raise

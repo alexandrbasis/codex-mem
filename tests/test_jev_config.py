@@ -29,6 +29,10 @@ class JevConfigTests(unittest.TestCase):
                 self.assertFalse(config["jev_filter_enabled"])
                 self.assertEqual("", config["jev_filter_key_file"])
                 self.assertEqual([], config["jev_filter_projects"])
+                self.assertFalse(config["jev_quality_enabled"])
+                self.assertEqual([], config["jev_quality_projects"])
+                self.assertFalse(config["jev_retrieval_enabled"])
+                self.assertEqual([], config["jev_retrieval_projects"])
 
     def test_path_persists_without_reading_credentials(self) -> None:
         key_file = self.home / "not-created-key-file"
@@ -46,6 +50,10 @@ class JevConfigTests(unittest.TestCase):
             {"jev_filter_enabled": "true"},
             {"jev_filter_enabled": 1},
             {"jev_filter_enabled": None},
+            {"jev_quality_enabled": "true"},
+            {"jev_quality_projects": ["relative"]},
+            {"jev_retrieval_enabled": 1},
+            {"jev_retrieval_projects": ["relative"]},
             *({"jev_filter_projects": value} for value in (
                 None, False, "all", ["relative"], [""], [None], ["/tmp/\x00project"]
             )),
@@ -107,6 +115,23 @@ class JevConfigTests(unittest.TestCase):
         status, _ = self.run_cli("--set", "jev_filter_projects=[]")
         self.assertEqual(0, status)
         self.assertEqual([], load_config(self.home)["jev_filter_projects"])
+
+    def test_quality_and_retrieval_are_separate_opt_ins_with_scoped_cli(self) -> None:
+        project = str((self.home / "project").resolve())
+        status, _ = self.run_cli("--jev-quality-enabled", "--jev-retrieval-enabled",
+                                 "--jev-quality-project", project,
+                                 "--jev-retrieval-project", project)
+        self.assertEqual(0, status)
+        settings = load_config(self.home)
+        self.assertTrue(settings["jev_quality_enabled"])
+        self.assertTrue(settings["jev_retrieval_enabled"])
+        self.assertFalse(settings["jev_filter_enabled"])
+        self.assertEqual([project], settings["jev_retrieval_projects"])
+        self.assertEqual([project], settings["jev_quality_projects"])
+        status, _ = self.run_cli("--set", "jev_quality_enabled=false", "--no-jev-retrieval-enabled")
+        self.assertEqual(0, status)
+        self.assertFalse(load_config(self.home)["jev_quality_enabled"])
+        self.assertFalse(load_config(self.home)["jev_retrieval_enabled"])
 
 
 if __name__ == "__main__":

@@ -81,6 +81,7 @@ _CONTENT_REJECTION_REASONS = frozenset({
     "skipped_with_content", "processed_without_content", "invalid_observation_metadata",
     "source_attribution_conflict", "invalid_summary_shape", "invalid_summary_attribution",
     "future_summary_source", "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+    "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
 })
 _TRANSIENT_RUNNER_REASONS = frozenset({
     "jev_filter_timeout", "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_failure",

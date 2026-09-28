@@ -6,10 +6,12 @@ the tiny hook state used to avoid injecting the same context on every turn.
 
 from __future__ import annotations
 
+import errno
 import json
 import os
 from pathlib import Path
 import tempfile
+import time
 from typing import Any, Mapping
 
 try:  # Hooks run on macOS/Linux today; keep imports portable for library users.
@@ -33,6 +35,12 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "jev_filter_key_file": "",
     # Empty means every captured project, only when screening is enabled.
     "jev_filter_projects": [],
+    "jev_quality_enabled": False,
+    # Optional narrower scope within the input filter's project scope.
+    "jev_quality_projects": [],
+    # Retrieval sends a query and curated excerpts; it has its own opt-in/scope.
+    "jev_retrieval_enabled": False,
+    "jev_retrieval_projects": [],
     "capture_scope": "selected",
     "context_chars": MAX_CONTEXT_CHARS,
     "excluded_projects": [],
@@ -401,6 +409,18 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
         "jev_filter_projects": _validate_jev_projects(
             raw.get("jev_filter_projects", []), strict
         ),
+        "jev_quality_enabled": _validate_bool(
+            raw.get("jev_quality_enabled", False), "jev_quality_enabled", strict
+        ),
+        "jev_quality_projects": _validate_jev_projects(
+            raw.get("jev_quality_projects", []), strict
+        ),
+        "jev_retrieval_enabled": _validate_bool(
+            raw.get("jev_retrieval_enabled", False), "jev_retrieval_enabled", strict
+        ),
+        "jev_retrieval_projects": _validate_jev_projects(
+            raw.get("jev_retrieval_projects", []), strict
+        ),
         "capture_scope": _validate_capture_scope(
             raw.get("capture_scope", DEFAULT_CONFIG["capture_scope"]), strict
         ),
@@ -448,13 +468,18 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
             _validate_bool(raw["capture_tools"], "capture_tools", True)
         if "processor_enabled" in raw:
             _validate_bool(raw["processor_enabled"], "processor_enabled", True)
-        for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled"):
+        for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled",
+                     "jev_quality_enabled", "jev_retrieval_enabled"):
             if name in raw:
                 _validate_bool(raw[name], name, True)
         if "jev_filter_key_file" in raw:
             _validate_key_file(raw["jev_filter_key_file"], True)
         if "jev_filter_projects" in raw:
             _validate_jev_projects(raw["jev_filter_projects"], True)
+        if "jev_quality_projects" in raw:
+            _validate_jev_projects(raw["jev_quality_projects"], True)
+        if "jev_retrieval_projects" in raw:
+            _validate_jev_projects(raw["jev_retrieval_projects"], True)
         if "capture_scope" in raw:
             _validate_capture_scope(raw["capture_scope"], True)
         if "context_chars" in raw:
@@ -610,6 +635,9 @@ def _load_hook_state(data_dir: str | os.PathLike[str] | None) -> dict[str, Any]:
 
 
 class _HookStateLock:
+    _ACQUIRE_TIMEOUT_SECONDS = 0.1
+    _RETRY_INTERVAL_SECONDS = 0.01
+
     def __init__(self, base: Path) -> None:
         self.base = base
         self.handle: Any | None = None
@@ -617,8 +645,24 @@ class _HookStateLock:
     def __enter__(self) -> "_HookStateLock":
         self.base.mkdir(mode=0o700, parents=True, exist_ok=True)
         self.handle = (self.base / ".hook-state.lock").open("a+", encoding="utf-8")
-        if fcntl is not None:
-            fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX)
+        try:
+            if fcntl is not None:
+                deadline = time.monotonic() + self._ACQUIRE_TIMEOUT_SECONDS
+                while True:
+                    try:
+                        fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        break
+                    except OSError as error:
+                        if error.errno not in (errno.EACCES, errno.EAGAIN, errno.EINTR):
+                            raise
+                        remaining = deadline - time.monotonic()
+                        if remaining <= 0:
+                            raise TimeoutError("timed out acquiring hook state lock") from error
+                        time.sleep(min(self._RETRY_INTERVAL_SECONDS, remaining))
+        except BaseException:
+            self.handle.close()
+            self.handle = None
+            raise
         return self
 
     def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
@@ -628,6 +672,7 @@ class _HookStateLock:
                     fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
             finally:
                 self.handle.close()
+                self.handle = None
 
 
 def _hook_state_lock(base: Path) -> _HookStateLock:

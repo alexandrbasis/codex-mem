@@ -15,6 +15,7 @@ INVALID_RESPONSE_REASONS = frozenset({
     "invalid_source_batch", "invalid_observation_metadata", "source_attribution_conflict",
     "invalid_summary_shape", "invalid_summary_attribution", "future_summary_source",
     "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+    "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_unavailable", "jev_quality_input_limit",
 })
 RUNNER_FAILURE_REASONS = frozenset({
     "jev_filter_failure", "jev_filter_credentials", "jev_filter_timeout",

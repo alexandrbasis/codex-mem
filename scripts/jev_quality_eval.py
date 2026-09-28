@@ -246,6 +246,7 @@ def read_production_telemetry(database: Path, project: Path, since: str) -> dict
         "event_quality": "unmeasured_no_record_bodies_or_independent_production_labels_read",
         "counterfactual_saved_tokens": None, "counterfactual_saved_cost_usd": None,
         "jev_duration_ms": None, "full_pipeline_duration_ms": None,
+        "eligibility_and_generator_duration_ms": None,
         "cost_usd": None, "cost_status": "public_price_scenarios_not_actual_billing",
     }
     uri = database.expanduser().resolve().as_uri() + "?mode=ro"
@@ -333,9 +334,12 @@ def read_production_telemetry(database: Path, project: Path, since: str) -> dict
         if (report["jev_duration_ms"] is not None
                 and not report["generator_receipts_missing_after_start"]
                 and all(row["duration_ms"] is not None for row in pipeline_generator)):
-            report["full_pipeline_duration_ms"] = (report["jev_duration_ms"]
+            report["eligibility_and_generator_duration_ms"] = (report["jev_duration_ms"]
                                                     + sum(row["duration_ms"] for row in pipeline_generator))
-        report["pipeline_duration_basis"] = "sum of recorded Jev gate and matching generator attempt durations; excludes queue wait"
+        report["pipeline_duration_basis"] = (
+            "sum of recorded eligibility and matching generator attempt durations only; "
+            "excludes post-generation quality, orchestration and queue wait; "
+            "full pipeline wall time is not measured")
         report["status"] = "completed"
     return report
 

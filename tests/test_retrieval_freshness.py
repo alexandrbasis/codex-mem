@@ -79,13 +79,13 @@ class FreshnessDeliveryTests(unittest.TestCase):
             self.assertLessEqual(len(context), budget)
             self.assertIn("blocked", ET.fromstring(context).find("freshness").text)
 
-    def test_session_start_empty_memory_injects_full_warning(self):
+    def test_session_start_empty_memory_discloses_deferred_health(self):
         response = handle_hook({"hook_event_name": "SessionStart", "cwd": str(self.project),
                                 "session_id": "new-session", "source": "startup"}, store=self.store)
         text = response["hookSpecificOutput"]["additionalContext"]
-        self.assertIn("runner_failure", text)
-        self.assertIn("849", text)
-        self.assertIn("2026-09-12T08:00:00Z", text)
+        self.assertIn("freshness unknown", text)
+        self.assertIn("deferred outside lifecycle hooks", text)
+        self.assertNotIn("Memory current", text)
         self.assertLessEqual(len(text), 6000)
 
     def test_session_start_tiny_budget_explicitly_reports_missing_context(self):
@@ -97,7 +97,7 @@ class FreshnessDeliveryTests(unittest.TestCase):
         self.assertIn("omitted by budget", text)
         self.assertLessEqual(len(text), 256)
 
-    def test_real_quarantine_reaches_mcp_context_and_session_start(self):
+    def test_real_quarantine_reaches_explicit_retrieval_while_hook_discloses_unknown(self):
         from codex_mem.service import _new_state, _new_record
         self.telemetry.stop()
         self.store.remember(self.project, "capture", "input", source="hook:Stop")
@@ -121,8 +121,8 @@ class FreshnessDeliveryTests(unittest.TestCase):
             response = handle_hook({"hook_event_name": "SessionStart", "cwd": str(self.project),
                                     "session_id": "quarantine-session", "source": "startup"}, store=self.store)
         text = response["hookSpecificOutput"]["additionalContext"]
-        self.assertIn("Memory quarantined", text)
-        self.assertIn("quarantined batches=1", text)
-        self.assertIn("knowledge incomplete=True", text)
-        self.assertIn("blocker=none", text)
+        self.assertIn("freshness unknown", text)
+        self.assertIn("knowledge completeness unknown", text)
+        self.assertIn("deferred outside lifecycle hooks", text)
+        self.assertNotIn("blocker=none", text)
         self.assertLessEqual(len(text), 6000)

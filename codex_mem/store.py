@@ -220,6 +220,24 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
+def _event_instant(value: object) -> int:
+    """Exact UTC microseconds for chronology; invalid timestamps sort last."""
+    if not isinstance(value, str):
+        return -9_223_372_036_854_775_808
+    try:
+        instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if instant.tzinfo is None:
+            instant = instant.replace(tzinfo=timezone.utc)
+        delta = instant.astimezone(timezone.utc) - datetime(1970, 1, 1, tzinfo=timezone.utc)
+        return (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
+    except (ValueError, OverflowError):
+        return -9_223_372_036_854_775_808
+
+
+def _register_event_functions(connection: sqlite3.Connection) -> None:
+    connection.create_function("codex_mem_event_instant", 1, _event_instant, deterministic=True)
+
+
 def _validate_text(
     value: object,
     field: str,
@@ -3178,6 +3196,7 @@ class Store:
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
         reason_code: str | None = None,
+        expired_quality_quarantine_attempt: int | None = None,
     ) -> dict[str, Any]:
         """Record a safe failure code while leaving the raw evidence recoverable."""
 
@@ -3187,6 +3206,14 @@ class Store:
         error_code = _validate_kind(code)
         thread_id = _validate_optional_processor_value(worker_thread_id, "worker_thread_id")
         turn_id = _validate_optional_processor_value(worker_turn_id, "worker_turn_id")
+        if expired_quality_quarantine_attempt is not None and (
+            isinstance(expired_quality_quarantine_attempt, bool)
+            or not isinstance(expired_quality_quarantine_attempt, int)
+            or expired_quality_quarantine_attempt < 1
+            or error_code != "invalid_response"
+            or reason_code not in {"jev_quality_rejected", "jev_quality_uncertain"}
+        ):
+            raise ValueError("Expired quality quarantine requires a semantic failure and exact attempt")
 
         with self._lock:
             self._require_open()
@@ -3199,16 +3226,18 @@ class Store:
                 ).fetchone()
                 if job is None:
                     raise ValueError("observation job is unavailable")
-                if job["status"] == "failed":
+                if job["status"] == "failed" and expired_quality_quarantine_attempt is None:
                     return job
                 now = _utc_now()
                 if (
                     job["status"] != "running"
                     or job["lease_token"] != checked_token
                     or not isinstance(job["lease_expires_at"], str)
+                    or (expired_quality_quarantine_attempt is not None
+                        and job["attempt_count"] != expired_quality_quarantine_attempt)
                 ):
                     raise StoreError("Observation job lease is unavailable")
-                if job["lease_expires_at"] <= now:
+                if job["lease_expires_at"] <= now and expired_quality_quarantine_attempt is None:
                     raise ObservationLeaseExpired("Observation job lease expired")
                 connection.execute(
                     """
@@ -4320,16 +4349,17 @@ class Store:
             "AND ((SELECT excluded_session FROM scope) IS NULL "
             "OR e.session_id != (SELECT excluded_session FROM scope)) "
             "AND (m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL) "
-            "AND EXISTS (SELECT 1 FROM entry_sources AS links JOIN entries AS raw ON raw.id = links.source_id "
+            "AND EXISTS (SELECT 1 FROM entry_sources AS links CROSS JOIN entries AS raw ON raw.id = links.source_id "
             "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
             "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*')) "
-            "ORDER BY e.created_at DESC, e.id DESC LIMIT 200), "
+            "ORDER BY codex_mem_event_instant(e.created_at) DESC, e.id DESC LIMIT 200), "
             "candidates AS (SELECT e.id, e.session_id, e.created_at, e.title, e.body, "
             "m.observation_json, m.session_summary_json, "
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary, "
-            "(SELECT MAX(raw.created_at) FROM entry_sources AS links JOIN entries AS raw ON raw.id = links.source_id "
+            "(SELECT raw.created_at FROM entry_sources AS links CROSS JOIN entries AS raw ON raw.id = links.source_id "
             "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
-            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*')) AS latest_tool_at "
+            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*') "
+            "ORDER BY codex_mem_event_instant(raw.created_at) DESC, raw.id DESC LIMIT 1) AS latest_tool_at "
             "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             "WHERE e.project = ? AND e.superseded_by IS NULL "
             "AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
@@ -4337,19 +4367,22 @@ class Store:
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) "
             "AND e.session_id IN (SELECT session_id FROM selected "
             "WHERE session_id IS NOT NULL AND session_id != '')))), "
+            # Force indexed summary -> source-link -> raw-ID lookup. Without
+            # this order SQLite can scan every raw event in a shared session
+            # for each derived candidate before applying the source link.
             "source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
             "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
             "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
-            "THEN 0 ELSE 1 END, raw.created_at DESC, raw.id DESC) AS event_rank "
-            "FROM candidates AS derived JOIN entry_sources AS links ON links.summary_id = derived.id "
-            "JOIN entries AS raw ON raw.id = links.source_id AND raw.project = ? "
+            "THEN 0 ELSE 1 END, codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
+            "FROM candidates AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
+            "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = ? "
             "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
             "dated AS (SELECT c.*, COALESCE(s.event_at, c.created_at) AS event_at, "
             "COALESCE(s.event_id, c.id) AS event_id, "
             "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
             "FROM candidates AS c LEFT JOIN source_order AS s ON s.summary_id = c.id AND s.event_rank = 1), "
             "summaries AS (SELECT dated.*, ROW_NUMBER() OVER (PARTITION BY session_id "
-            "ORDER BY event_at DESC, event_id DESC, created_at DESC, id DESC) AS summary_rank "
+            "ORDER BY codex_mem_event_instant(event_at) DESC, event_id DESC, codex_mem_event_instant(created_at) DESC, id DESC) AS summary_rank "
             "FROM dated WHERE is_summary AND session_id IS NOT NULL AND session_id != '') "
             "SELECT d.*, (d.id IN (SELECT id FROM selected)) AS requested, "
             "latest.id AS latest_summary_id, latest.event_at AS latest_event_at, "
@@ -4358,6 +4391,7 @@ class Store:
         )
         with self._lock:
             self._require_open()
+            _register_event_functions(self._connection)
             rows = self._read(lambda: self._connection.execute(
                 sql, (workspace, checked_exclude, workspace, *checked_ids, workspace, workspace)
             ).fetchall())
@@ -4368,8 +4402,8 @@ class Store:
             metadata = {key: row[key] for key in ("event_at", "event_id", "event_time_basis")}
             later = row["latest_summary_id"]
             if later and later != row["id"] and (
-                row["latest_event_at"], row["latest_event_id"]
-            ) >= (row["event_at"], row["event_id"]):
+                _event_instant(row["latest_event_at"]), row["latest_event_id"]
+            ) >= (_event_instant(row["event_at"]), row["event_id"]):
                 metadata["later_summary_id"] = later
                 if row["is_summary"]:
                     metadata["context_historical"] = True
@@ -4388,18 +4422,19 @@ class Store:
         signatures = {entry_id: topic_signature(record) for entry_id, record in descriptors.items()}
         followups = sorted(
             (row for row in rows if row["session_id"] and row["latest_tool_at"]
-             and row["event_time_basis"] == "source_event" and row["latest_tool_at"] <= row["event_at"]
+             and row["event_time_basis"] == "source_event"
+             and _event_instant(row["latest_tool_at"]) <= _event_instant(row["event_at"])
              and (descriptors[row["id"]]["observation"]
                   or descriptors[row["id"]]["session_summary"].get("completed"))),
-            key=lambda row: (row["event_at"], row["event_id"]), reverse=True,
+            key=lambda row: (_event_instant(row["event_at"]), row["event_id"]), reverse=True,
         )
         for row in rows:
             if not row["requested"] or not row["session_id"]:
                 continue
             for followup in followups:
                 if (followup["session_id"] == row["session_id"]
-                    or followup["event_at"] <= row["event_at"]
-                    or followup["latest_tool_at"] <= row["event_at"]):
+                    or _event_instant(followup["event_at"]) <= _event_instant(row["event_at"])
+                    or _event_instant(followup["latest_tool_at"]) <= _event_instant(row["event_at"])):
                     continue
                 basis = topic_followup_basis(signatures[row["id"]], signatures[followup["id"]])
                 if basis:
@@ -4779,6 +4814,160 @@ class Store:
         closing = "</body>\n" + marker + "</entry>\n"
         return prefix + "".join(rendered) + closing
 
+    def retrieval_candidates(
+        self, project: str | Path, *, query: str = "", ids: Sequence[str] | None = None,
+        exclude_session: str | None = None, kinds: Sequence[str] | None = None,
+        types: Sequence[str] | None = None, files: Sequence[str] | None = None,
+        concepts: Sequence[str] | None = None,
+        deadline: float | None = None,
+    ) -> list[dict[str, Any]]:
+        """Read at most twelve active curated records for optional reranking.
+
+        All boundaries and literal constraints are SQL predicates before any
+        body is returned. Recent expansion balances summaries and observations
+        and collapses summaries from the same session by source event order.
+        Raw source records supply timestamps only, never request text.
+        """
+        from .jev_retrieval import MAX_CANDIDATES, exact_constraints
+        workspace = project_key(project)
+        checked_ids = _validate_ids(ids, "ids", allow_empty=True) if ids is not None else None
+        if checked_ids == []:
+            return []
+        if checked_ids is not None and len(checked_ids) > MAX_CANDIDATES:
+            raise ValueError("too many retrieval candidates")
+        checked_exclude = _validate_text(exclude_session, "exclude_session", MAX_SESSION_CHARS, required=False)
+        checked_kinds = _validate_kinds(kinds)
+        checked_types = _validate_observation_types(types)
+        checked_files = _validate_metadata_filters(files, "files")
+        checked_concepts = _validate_metadata_filters(concepts, "concepts")
+        constraints = exact_constraints(query)
+        clauses = ["e.project = ?", "e.superseded_by IS NULL",
+                   "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                   "(e.kind NOT IN ('session', 'tool', 'checkpoint') "
+                   "OR m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL)"]
+        parameters: list[Any] = [workspace]
+        if checked_exclude is not None:
+            clauses.append("(e.session_id IS NULL OR e.session_id != ?)")
+            parameters.append(checked_exclude)
+        if checked_ids is not None:
+            clauses.append("e.id IN (" + ",".join("?" for _ in checked_ids) + ")")
+            parameters.extend(checked_ids)
+        if checked_kinds:
+            clauses.append("e.kind IN (" + ",".join("?" for _ in checked_kinds) + ")")
+            parameters.extend(checked_kinds)
+        metadata_clauses, metadata_parameters = self._metadata_filter_sql(
+            "m", types=checked_types, concepts=checked_concepts, files=checked_files)
+        clauses.extend(metadata_clauses)
+        parameters.extend(metadata_parameters)
+        version_clauses, version_parameters = _version_search_sql("e", "m", constraints["versions"])
+        clauses.extend(version_clauses)
+        parameters.extend(version_parameters)
+        if constraints["identifiers"]:
+            clauses.append("codex_mem_prompt_score(e.title, e.body, e.tags_json, m.observation_json, m.session_summary_json) > 0")
+        # Baseline IDs must remain individually available for history requests;
+        # only the recent expansion collapses a session's summary lane.
+        session_partition = ("CASE WHEN is_summary AND COALESCE(session_id, '') != '' "
+                             "THEN 'session:' || session_id ELSE 'id:' || id END"
+                             if checked_ids is None else "id")
+        def dated_scope(where: Sequence[str]) -> str:
+            # Rank only IDs and timestamps. In large sessions SQLite otherwise
+            # prefers derived -> every raw event in the session -> source link,
+            # creating a quadratic join. CROSS JOIN fixes the dependency order:
+            # bounded indexed source links, then each raw event's primary key.
+            return (
+                "WITH scoped AS (SELECT e.id, e.project, e.session_id, e.created_at, "
+                "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary "
+                "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id WHERE "
+                + " AND ".join(where)
+                + "), source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
+                "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
+                "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' THEN 0 ELSE 1 END, "
+                "codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
+                "FROM scoped AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
+                "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
+                "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
+                "dated AS (SELECT scoped.*, COALESCE(s.event_at, scoped.created_at) AS event_at, "
+                "COALESCE(s.event_id, scoped.id) AS event_id, "
+                "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
+                "FROM scoped LEFT JOIN source_order AS s ON s.summary_id = scoped.id AND s.event_rank = 1) "
+            )
+
+        chronology_order = ("codex_mem_event_instant(event_at) DESC, event_id DESC, "
+                            "codex_mem_event_instant(created_at) DESC, id DESC")
+        sql = (dated_scope(clauses)
+            + ", sessions AS (SELECT dated.*, ROW_NUMBER() OVER (PARTITION BY " + session_partition
+            + " ORDER BY " + chronology_order + ") AS session_rank FROM dated), "
+            "lanes AS (SELECT sessions.*, ROW_NUMBER() OVER (PARTITION BY is_summary "
+            "ORDER BY " + chronology_order + ") AS lane_rank "
+            "FROM sessions WHERE session_rank = 1) SELECT * FROM lanes "
+            "ORDER BY lane_rank ASC, is_summary DESC LIMIT ?"
+        )
+        if deadline is not None and not self._lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
+            raise StoreError("Retrieval deadline exceeded")
+        if deadline is None:
+            self._lock.acquire()
+        old_busy_timeout = None
+        try:
+            self._require_open()
+            _register_event_functions(self._connection)
+            if deadline is not None:
+                old_busy_timeout = self._connection.execute("PRAGMA busy_timeout").fetchone()[0]
+                self._connection.execute("PRAGMA busy_timeout = 20")
+                self._connection.set_progress_handler(lambda: int(time.monotonic() >= deadline), 2_000)
+            if version_clauses:
+                _register_query_functions(self._connection)
+            if constraints["identifiers"]:
+                _register_prompt_query_function(self._connection, constraints)
+            dated_rows = self._read(lambda: self._connection.execute(
+                sql, (*parameters, MAX_CANDIDATES)).fetchall())
+            if not dated_rows:
+                return []
+            # Read full text only after chronology, per-session collapse and
+            # lane caps. Reapply every scope/literal predicate at hydration.
+            placeholders = ", ".join("?" for _ in dated_rows)
+            rows = self._read(lambda: self._connection.execute(
+                "SELECT e.* FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id WHERE "
+                + " AND ".join(clauses) + f" AND e.id IN ({placeholders})",
+                (*parameters, *(row["id"] for row in dated_rows)),
+            ).fetchall())
+            by_id = {record["id"]: record for record in self._records_from_rows(rows)}
+            records = [by_id[row["id"]] for row in dated_rows if row["id"] in by_id]
+            # Same-session historical notices need timestamps, not the broad
+            # body/metadata scan used by resume's topic-followup diagnostics.
+            # Existing baseline followup pointers remain on the caller's record.
+            sessions = list(dict.fromkeys(row["session_id"] for row in dated_rows if row["session_id"]))
+            latest: dict[str, sqlite3.Row] = {}
+            if sessions:
+                peer_clauses = ["e.project = ?", "e.superseded_by IS NULL",
+                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                    "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL)",
+                    "e.session_id IN (" + ", ".join("?" for _ in sessions) + ")"]
+                peers = self._read(lambda: self._connection.execute(
+                    dated_scope(peer_clauses)
+                    + ", summaries AS (SELECT dated.*, ROW_NUMBER() OVER (PARTITION BY session_id "
+                    "ORDER BY " + chronology_order + ") AS summary_rank FROM dated) "
+                    "SELECT * FROM summaries WHERE summary_rank = 1", (workspace, *sessions),
+                ).fetchall())
+                latest = {row["session_id"]: row for row in peers}
+            for row in dated_rows:
+                record = by_id.get(row["id"])
+                if record is None:
+                    continue
+                record.update({key: row[key] for key in ("event_at", "event_id", "event_time_basis")})
+                later = latest.get(row["session_id"])
+                if later is not None and later["id"] != row["id"] and (
+                    _event_instant(later["event_at"]), later["event_id"]
+                ) >= (_event_instant(row["event_at"]), row["event_id"]):
+                    record["later_summary_id"] = later["id"]
+                    if row["is_summary"]:
+                        record["context_historical"] = True
+            return records
+        finally:
+            if deadline is not None and old_busy_timeout is not None:
+                self._connection.set_progress_handler(None, 0)
+                self._connection.execute(f"PRAGMA busy_timeout = {int(old_busy_timeout)}")
+            self._lock.release()
+
     def context(
         self,
         project: str | Path,
@@ -4791,6 +4980,10 @@ class Store:
         types: Sequence[str] | str | None = None,
         type: Sequence[str] | str | None = None,
         kinds: Sequence[str] | str | None = None,
+        jev_evaluator: Any = None,
+        allow_remote: bool = True,
+        remote_deadline: float | None = None,
+        hook_mode: bool = False,
     ) -> str:
         """Build a bounded, escaped wrapper of active memory records.
 
@@ -4827,6 +5020,7 @@ class Store:
 
         with self._lock:
             self._require_open()
+            _register_event_functions(self._connection)
             active_clauses = [
                 "e.project = ?",
                 "e.superseded_by IS NULL",
@@ -4898,14 +5092,16 @@ class Store:
             # must not make an earlier Stop appear newer than a later Stop.
             # Prefer the linked Stop; without one use other linked hook events,
             # and fall back to write order for manual/source-less records.
+            # CROSS JOIN fixes indexed derived -> source-link -> raw-ID lookup;
+            # an unrestricted planner can scan raw events in each session.
             sql = (
                 "WITH source_order AS ("
                 "SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
                 "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
                 "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
-                "THEN 0 ELSE 1 END, raw.created_at DESC, raw.id DESC) AS event_rank "
-                "FROM entry_sources AS links JOIN entries AS derived ON derived.id = links.summary_id "
-                "JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
+                "THEN 0 ELSE 1 END, codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
+                "FROM entries AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
+                "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
                 "AND raw.session_id IS derived.session_id "
                 "WHERE derived.project = ? AND derived.superseded_by IS NULL "
                 "AND COALESCE(derived.source, '') NOT GLOB 'hook:*' AND raw.source GLOB 'hook:*'"
@@ -4932,7 +5128,7 @@ class Store:
                 "FIRST_VALUE(id) OVER (PARTITION BY CASE "
                 "WHEN context_priority = 0 AND COALESCE(session_id, '') != '' "
                 "THEN 'session:' || session_id ELSE 'id:' || id END "
-                "ORDER BY context_at DESC, context_event_id DESC, created_at DESC, id DESC) "
+                "ORDER BY codex_mem_event_instant(context_at) DESC, context_event_id DESC, codex_mem_event_instant(created_at) DESC, id DESC) "
                 "AS latest_summary_id FROM active"
                 # Match before collapsing a session: a later unrelated handoff
                 # must not hide an older summary matching the requested topic.
@@ -4942,14 +5138,14 @@ class Store:
                 "ROW_NUMBER() OVER (PARTITION BY CASE "
                 "WHEN context_priority = 0 AND COALESCE(session_id, '') != '' "
                 "THEN 'session:' || session_id ELSE 'id:' || id END "
-                "ORDER BY context_at DESC, context_event_id DESC, created_at DESC, id DESC) AS session_rank "
+                "ORDER BY codex_mem_event_instant(context_at) DESC, context_event_id DESC, codex_mem_event_instant(created_at) DESC, id DESC) AS session_rank "
                 "FROM matching), candidates AS (SELECT e.* FROM session_ranked AS e "
                 "WHERE e.session_rank = 1), ranked AS (SELECT candidates.*, "
                 # Rank lanes before the candidate cap; historical summaries
                 # cannot crowd out recent meaningful observations, or vice versa.
                 "ROW_NUMBER() OVER (PARTITION BY (context_priority = 0) "
-                "ORDER BY prompt_rank DESC, context_priority ASC, context_at DESC, context_event_id DESC, "
-                "created_at DESC, id DESC) AS lane_rank "
+                "ORDER BY prompt_rank DESC, context_priority ASC, codex_mem_event_instant(context_at) DESC, context_event_id DESC, "
+                "codex_mem_event_instant(created_at) DESC, id DESC) AS lane_rank "
                 "FROM candidates) SELECT * FROM ranked "
                 "ORDER BY lane_rank ASC, (context_priority != 0) ASC LIMIT 50"
             )
@@ -4962,7 +5158,20 @@ class Store:
             for record in records:
                 record.update(metadata.get(record["id"], {}))
 
-        from .freshness import freshness_snapshot
+        # The optional remote call runs after releasing Store's lock. It never
+        # loads an embedder and preserves this exact candidate list on failure.
+        if allow_remote and query.strip() and not routing_only:
+            from .jev_retrieval import rerank
+            records, _jev_receipt = rerank(
+                self, workspace, query, records, exclude_session=checked_exclude,
+                kinds=checked_kinds, types=checked_types, files=checked_files,
+                concepts=checked_concepts, evaluator=jev_evaluator, route="context",
+                deadline_at=remote_deadline)
+
+        if hook_mode:
+            from .freshness import hook_freshness_snapshot as freshness_snapshot
+        else:
+            from .freshness import freshness_snapshot
         from .retrieval import freshness_markup
         freshness = freshness_snapshot(self, workspace)
         header = (

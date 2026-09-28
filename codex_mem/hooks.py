@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 import shlex
 import sys
+import time
 from typing import Any
 
 try:  # A partially upgraded plugin must still let Codex continue.
@@ -88,6 +89,11 @@ MAX_CAPTURE_CHARS = 6_000
 MAX_COMMAND_CHARS = 2_000
 MAX_TOOL_OUTPUT_CHARS = 2_000
 MAX_PATHS = 20
+# The worker keeps a two-second budget; the host additionally allows shell and
+# interpreter startup time. Optional retrieval must finish even
+# earlier so local state/readback and JSON serialization still have time.
+HOOK_TIMEOUT_SECONDS = 2.0
+HOOK_RESPONSE_RESERVE_SECONDS = 0.35
 
 _SUPPORTED_EVENTS = {
     "SessionStart",
@@ -212,7 +218,10 @@ def _handle_hook(
     *,
     store: Any | None,
     data_dir: str | os.PathLike[str] | None,
+    hook_deadline: float | None = None,
 ) -> dict[str, Any]:
+    if hook_deadline is None:
+        hook_deadline = time.monotonic() + HOOK_TIMEOUT_SECONDS
     response = _continue()
     if hooks_disabled() or not isinstance(payload, Mapping):
         return response
@@ -233,6 +242,19 @@ def _handle_hook(
         project = _project_for(payload)
         if project is None or not automatic_capture_enabled(project, config):
             return response
+        if (event == "UserPromptSubmit" and private_prompt_gate_enabled(config)
+                and is_private_prompt(payload.get("prompt"))):
+            # Persist before SQLite or the shared hook-state lock can stall.
+            # A cancelled worker must leave later tool hooks protected.
+            from .private_gate import mark_private
+            session_key = _session_key(payload, project)
+            try:
+                mark_private(session_key, active_data_dir)
+            except OSError:
+                # A marker-directory permission failure need not prevent the
+                # existing shared gate from recording the privacy decision.
+                mark_private_prompt_gate(session_key,
+                    turn_id=_optional_id(payload.get("turn_id")), data_dir=active_data_dir)
         if event == "PostToolUse" and not _tool_capture_candidate(
             payload, config, project=project, data_dir=active_data_dir
         ):
@@ -251,7 +273,8 @@ def _handle_hook(
             )
         if event == "UserPromptSubmit":
             return _user_prompt(
-                payload, active_store, project, config, active_data_dir, response
+                payload, active_store, project, config, active_data_dir, response,
+                remote_deadline=hook_deadline - HOOK_RESPONSE_RESERVE_SECONDS,
             )
         if event == "PostToolUse":
             _post_tool_use(payload, active_store, project, config, active_data_dir)
@@ -405,6 +428,9 @@ def _private_tool_gate_active(
     if not project or not private_prompt_gate_enabled(config):
         return False
     session_key = _session_key(payload, project)
+    from .private_gate import private_active
+    if private_active(session_key, data_dir):
+        return True
     return private_prompt_gate_active(
         session_key,
         turn_id=_optional_id(payload.get("turn_id")),
@@ -465,7 +491,10 @@ def _user_prompt(
     config: Mapping[str, Any],
     data_dir: str | os.PathLike[str] | None,
     response: dict[str, Any],
+    *,
+    remote_deadline: float | None = None,
 ) -> dict[str, Any]:
+    private_query = is_private_prompt(payload.get("prompt"))
     prompt = _safe_prompt(payload.get("prompt"))
     session_key = _session_key(payload, project)
     # The marker is detected before _safe_prompt/redact_text replaces private
@@ -474,7 +503,7 @@ def _user_prompt(
     # cannot inherit the privacy decision.
     if private_prompt_gate_enabled(config):
         try:
-            if is_private_prompt(payload.get("prompt")):
+            if private_query:
                 mark_private_prompt_gate(
                     session_key,
                     turn_id=_optional_id(payload.get("turn_id")),
@@ -482,6 +511,8 @@ def _user_prompt(
                 )
             else:
                 clear_private_prompt_gate(session_key, data_dir=data_dir)
+                from .private_gate import clear_private
+                clear_private(session_key, data_dir)
         except Exception:
             _stderr("codex-mem hook: privacy state unavailable")
     else:
@@ -502,6 +533,12 @@ def _user_prompt(
             dedupe_prefix="prompt",
         )
 
+    allow_remote = False
+    if not private_query:
+        try:
+            allow_remote = not _private_tool_gate_active(payload, project, config, data_dir)
+        except Exception:
+            pass  # Preserve local injection if privacy-state readback fails.
     context = _prior_context(
         store,
         project,
@@ -509,6 +546,8 @@ def _user_prompt(
         active_session_id=_optional_id(payload.get("session_id")),
         exclude_session=_optional_id(payload.get("session_id")),
         query=prompt,
+        allow_remote=allow_remote,
+        remote_deadline=remote_deadline,
     )
     context_marker = _context_marker(context)
     if not context_was_injected(session_key, source=context_marker, data_dir=data_dir):
@@ -649,6 +688,8 @@ def _prior_context(
     active_session_id: str | None,
     exclude_session: str | None,
     query: str,
+    allow_remote: bool = True,
+    remote_deadline: float | None = None,
 ) -> str:
     budget = _context_budget(config)
     if budget <= 0:
@@ -666,11 +707,18 @@ def _prior_context(
         normalized_query = normalize_retrieval_query(query)
         if query.strip() and not normalized_query.strip():
             return ""  # A routing-only prompt is not an unfiltered startup query.
+        remote_options = {"hook_mode": True}
+        if config.get("jev_retrieval_enabled"):
+            if not allow_remote:
+                remote_options["allow_remote"] = False
+            if remote_deadline is not None:
+                remote_options["remote_deadline"] = remote_deadline
         context = store.context(
             project,
             query=_truncate(normalized_query, 1_000),
             budget=memory_budget,
             exclude_session=exclude_session,
+            **remote_options,
         )
     except Exception:
         _stderr("codex-mem hook: context unavailable")
@@ -1176,6 +1224,11 @@ def main(
     data_dir: str | os.PathLike[str] | None = None,
 ) -> int:
     """Read one bounded hook JSON object from stdin and emit one JSON response."""
+    hook_deadline = time.monotonic() + HOOK_TIMEOUT_SECONDS
+    try:
+        hook_deadline = min(hook_deadline, float(os.environ.get("CODEX_MEM_HOOK_DEADLINE", hook_deadline)))
+    except (TypeError, ValueError):
+        pass
 
     # The launcher owns argument routing.  Accept a literal `hook` too, which
     # makes direct `python -m codex_mem.hooks hook` testing unsurprising.
@@ -1204,7 +1257,7 @@ def main(
         return 0
 
     try:
-        response = _handle_hook(payload, store=None, data_dir=data_dir)
+        response = _handle_hook(payload, store=None, data_dir=data_dir, hook_deadline=hook_deadline)
     except Exception:
         _stderr("codex-mem hook: memory unavailable")
         response = _continue()
