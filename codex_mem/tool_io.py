@@ -515,16 +515,20 @@ def _extract_text(value: Any, *, depth: int = 0) -> str:
         return value
     if isinstance(value, Mapping):
         parts: list[str] = []
+        seen: set[str] = set()
         for child in value.values():
             text = _extract_text(child, depth=depth + 1)
-            if text and text not in parts:
+            if text and text not in seen:
+                seen.add(text)
                 parts.append(text)
         return "\n".join(parts)
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         parts = []
+        seen = set()
         for child in value:
             text = _extract_text(child, depth=depth + 1)
-            if text and text not in parts:
+            if text and text not in seen:
+                seen.add(text)
                 parts.append(text)
         return "\n".join(parts)
     return ""

@@ -8,6 +8,7 @@ only means that this invocation did not add memory.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from contextlib import nullcontext
 import hashlib
 import json
 import os
@@ -17,6 +18,33 @@ import shlex
 import sys
 import time
 from typing import Any
+
+try:  # Diagnostics must never turn an incomplete upgrade into a hook failure.
+    from .hook_diagnostics import (
+        begin_trace, finish_trace, get_trace, trace_error, trace_event,
+        trace_payload, trace_stage,
+    )
+except Exception:  # pragma: no cover - only an incomplete installation
+    def get_trace() -> None:
+        return None
+
+    def begin_trace(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
+    def finish_trace(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
+    def trace_error(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
+    def trace_event(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
+    def trace_payload(*_args: Any, **_kwargs: Any) -> None:
+        return None
+
+    def trace_stage(*_args: Any, **_kwargs: Any):
+        return nullcontext()
 
 try:  # A partially upgraded plugin must still let Codex continue.
     from .config import (
@@ -29,7 +57,8 @@ try:  # A partially upgraded plugin must still let Codex continue.
         mark_context_injected,
         mark_private_prompt_gate,
         )
-except Exception:  # pragma: no cover - defensive bootstrap path
+except Exception as exc:  # pragma: no cover - defensive bootstrap path
+    trace_error("config_import_failed", exc)
     MAX_CONTEXT_CHARS = 6_000
 
     def automatic_capture_enabled(*_args: Any, **_kwargs: Any) -> bool:
@@ -55,20 +84,23 @@ except Exception:  # pragma: no cover - defensive bootstrap path
 
 try:
     from .privacy import redact_text
-except Exception:  # pragma: no cover - do not persist text when redaction is unavailable
+except Exception as exc:  # pragma: no cover - do not persist text when redaction is unavailable
+    trace_error("privacy_import_failed", exc)
     def redact_text(_value: str) -> str:
         return "[REDACTED]"
 
 try:  # Keep imports lazy/fail-open while an installation is being upgraded.
     from .store import Store, project_key
-except Exception:  # pragma: no cover - exercised only by incomplete installs
+except Exception as exc:  # pragma: no cover - exercised only by incomplete installs
+    trace_error("store_import_failed", exc)
     Store = None  # type: ignore[assignment,misc]
     project_key = None  # type: ignore[assignment,misc]
 
 try:  # The raw side index is optional during an in-place plugin upgrade.
     from .config import private_prompt_gate_active, private_prompt_gate_enabled
     from .tool_io import ToolCapture, is_private_prompt, normalize_capture
-except Exception:  # pragma: no cover - exercised only by incomplete installs
+except Exception as exc:  # pragma: no cover - exercised only by incomplete installs
+    trace_error("tool_io_import_failed", exc)
     ToolCapture = Any  # type: ignore[assignment,misc]
 
     def private_prompt_gate_active(*_args: Any, **_kwargs: Any) -> bool:
@@ -223,24 +255,43 @@ def _handle_hook(
     if hook_deadline is None:
         hook_deadline = time.monotonic() + HOOK_TIMEOUT_SECONDS
     response = _continue()
-    if hooks_disabled() or not isinstance(payload, Mapping):
+    if hooks_disabled():
+        trace_event("hook_skipped", reason="disabled")
+        return response
+    if not isinstance(payload, Mapping):
+        trace_event("hook_skipped", reason="invalid_payload")
         return response
 
+    trace_payload(payload)
     event = payload.get("hook_event_name")
     if not isinstance(event, str) or event not in _SUPPORTED_EVENTS:
+        trace_event("hook_skipped", reason="invalid_event")
         return response
     if not _event_payload_is_valid(event, payload):
+        trace_event("hook_skipped", reason="invalid_payload")
         return response
     owned_store = False
     active_store = store
     try:
         active_data_dir = data_dir if data_dir is not None else _store_data_dir(active_store)
-        config = load_config(active_data_dir)
+        with trace_stage("config_load"):
+            config = load_config(active_data_dir)
+        trace_event("config_loaded", capture_enabled=bool(config.get("capture_enabled")),
+                    capture_tools=bool(config.get("capture_tools")),
+                    processor_enabled=bool(config.get("processor_enabled")))
         if not getattr(config, "valid", True):
+            trace_event("hook_skipped", reason="invalid_config")
             _stderr("codex-mem hook: configuration unavailable")
             return response
-        project = _project_for(payload)
-        if project is None or not automatic_capture_enabled(project, config):
+        with trace_stage("project_scope"):
+            project = _project_for(payload)
+            captured = project is not None and automatic_capture_enabled(project, config)
+        trace_event("scope_result", captured=captured)
+        if project is None:
+            trace_event("hook_skipped", reason="invalid_project")
+            return response
+        if not captured:
+            trace_event("hook_skipped", reason="project_not_captured")
             return response
         if (event == "UserPromptSubmit" and private_prompt_gate_enabled(config)
                 and is_private_prompt(payload.get("prompt"))):
@@ -250,46 +301,57 @@ def _handle_hook(
             session_key = _session_key(payload, project)
             try:
                 mark_private(session_key, active_data_dir)
-            except OSError:
+            except OSError as exc:
+                trace_error("private_marker_failed", exc)
                 # A marker-directory permission failure need not prevent the
                 # existing shared gate from recording the privacy decision.
                 mark_private_prompt_gate(session_key,
                     turn_id=_optional_id(payload.get("turn_id")), data_dir=active_data_dir)
-        if event == "PostToolUse" and not _tool_capture_candidate(
-            payload, config, project=project, data_dir=active_data_dir
-        ):
-            return response
+        tool_capture = None
+        if event == "PostToolUse":
+            with trace_stage("tool_prepare"):
+                tool_capture = _prepare_tool_capture(
+                    payload, config, project=project, data_dir=active_data_dir
+                )
+            if tool_capture is None:
+                return response
         if event == "Stop" and not _stop_capture_candidate(payload, config):
             return response
         if active_store is None:
             if Store is None:
+                trace_event("hook_skipped", reason="store_unavailable")
                 return response
-            active_store = Store(data_dir=active_data_dir)
+            with trace_stage("store_open"):
+                active_store = Store(data_dir=active_data_dir)
             owned_store = True
 
-        if event == "SessionStart":
-            return _session_start(
-                payload, active_store, project, config, active_data_dir, response
-            )
-        if event == "UserPromptSubmit":
-            return _user_prompt(
-                payload, active_store, project, config, active_data_dir, response,
-                remote_deadline=hook_deadline - HOOK_RESPONSE_RESERVE_SECONDS,
-            )
-        if event == "PostToolUse":
-            _post_tool_use(payload, active_store, project, config, active_data_dir)
-        elif event == "Stop":
-            _stop(payload, active_store, project, config)
-        elif event == "PreCompact":
-            _pre_compact(payload, active_store, project, config)
-    except Exception:
+        with trace_stage("event_dispatch"):
+            if event == "SessionStart":
+                return _session_start(
+                    payload, active_store, project, config, active_data_dir, response
+                )
+            if event == "UserPromptSubmit":
+                return _user_prompt(
+                    payload, active_store, project, config, active_data_dir, response,
+                    remote_deadline=hook_deadline - HOOK_RESPONSE_RESERVE_SECONDS,
+                )
+            if event == "PostToolUse":
+                _post_tool_use(payload, active_store, project, config, active_data_dir,
+                               tool_capture=tool_capture)
+            elif event == "Stop":
+                _stop(payload, active_store, project, config)
+            elif event == "PreCompact":
+                _pre_compact(payload, active_store, project, config)
+    except Exception as exc:
+        trace_error("hook_unavailable", exc)
         _stderr("codex-mem hook: memory unavailable")
     finally:
         if owned_store and active_store is not None:
             try:
-                active_store.close()
-            except Exception:
-                pass
+                with trace_stage("store_close"):
+                    active_store.close()
+            except Exception as exc:
+                trace_error("store_close_failed", exc)
     return response
 
 
@@ -302,12 +364,18 @@ def _handle_process_hook(
     """Run the async processor path after all privacy/scope gates pass."""
 
     response = _continue()
-    if hooks_disabled() or not isinstance(payload, Mapping):
+    if hooks_disabled():
+        trace_event("hook_skipped", reason="disabled")
+        return response
+    if not isinstance(payload, Mapping):
+        trace_event("hook_skipped", reason="invalid_payload")
         return response
     if payload.get("hook_event_name") != "Stop" or not _event_payload_is_valid(
         "Stop", payload
     ):
+        trace_event("hook_skipped", reason="invalid_event_or_payload")
         return response
+    trace_payload(payload)
 
     owned_store = False
     active_store = store
@@ -316,47 +384,76 @@ def _handle_process_hook(
     try:
         if active_data_dir is None:
             active_data_dir = _store_data_dir(active_store)
-        config = load_config(active_data_dir)
+        with trace_stage("config_load"):
+            config = load_config(active_data_dir)
+        trace_event("config_loaded", capture_enabled=bool(config.get("capture_enabled")),
+                    capture_tools=bool(config.get("capture_tools")),
+                    processor_enabled=bool(config.get("processor_enabled")))
         if not getattr(config, "valid", True):
+            trace_event("hook_skipped", reason="invalid_config")
             _processor_diagnostic("configuration-unavailable")
             return response
-        project = _project_for(payload)
-        if project is None or not automatic_capture_enabled(project, config):
+        with trace_stage("project_scope"):
+            project = _project_for(payload)
+            captured = project is not None and automatic_capture_enabled(project, config)
+        trace_event("scope_result", captured=captured)
+        if project is None:
+            trace_event("hook_skipped", reason="invalid_project")
+            return response
+        if not captured:
+            trace_event("hook_skipped", reason="project_not_captured")
             return response
         if not config.get("processor_enabled"):
+            trace_event("hook_skipped", reason="processor_disabled")
             return response
         if payload.get("stop_hook_active") is True:
+            trace_event("hook_skipped", reason="reentrant_stop")
             return response
 
         if active_store is None:
             if Store is None:
+                trace_event("hook_skipped", reason="store_unavailable")
                 _processor_diagnostic("storage-unavailable")
                 return response
-            active_store = Store(data_dir=active_data_dir)
+            with trace_stage("store_open"):
+                active_store = Store(data_dir=active_data_dir)
             owned_store = True
 
         # The fast Stop hook can race this async hook.  Store de-duplication
         # makes this repeat safe and ensures the processor has the raw input.
-        _stop(payload, active_store, project, config)
-    except Exception:
+        with trace_stage("stop_capture"):
+            _stop(payload, active_store, project, config)
+    except Exception as exc:
+        trace_error("async_capture_unavailable", exc)
         _processor_diagnostic("capture-unavailable")
         return response
     finally:
         if owned_store and active_store is not None:
             try:
-                active_store.close()
-            except Exception:
-                pass
+                with trace_stage("store_close"):
+                    active_store.close()
+            except Exception as exc:
+                trace_error("store_close_failed", exc)
 
     try:
         assert project is not None
-        processor_result = _run_pending_processor(project, active_data_dir)
-        if isinstance(processor_result, Mapping) and processor_result.get("status") in {
-            "failed",
-            "error",
-        }:
+        with trace_stage("processor_run"):
+            processor_result = _run_pending_processor(project, active_data_dir)
+        reported_status = processor_result.get("status") if isinstance(processor_result, Mapping) else None
+        if not isinstance(reported_status, str):
+            reported_status = None
+        if reported_status in {"failed", "error"}:
+            trace_event("error", code="processor_reported_failure")
+            trace_event("processor_result", status="failed")
             _processor_diagnostic("processing-failed")
-    except Exception:
+        else:
+            safe_status = reported_status if reported_status in {
+                "queued", "disabled", "blocked", "processed", "skipped",
+                "idle", "deferred", "unavailable",
+            } else "unknown"
+            trace_event("processor_result", status=safe_status)
+    except Exception as exc:
+        trace_error("processor_unavailable", exc)
         _processor_diagnostic("processor-unavailable")
     return response
 
@@ -383,24 +480,42 @@ def _event_payload_is_valid(event: str, payload: Mapping[str, Any]) -> bool:
     return False
 
 
-def _tool_capture_candidate(
+def _prepare_tool_capture(
     payload: Mapping[str, Any],
     config: Mapping[str, Any],
     *,
     project: str | None = None,
     data_dir: str | os.PathLike[str] | None = None,
-) -> bool:
-    """Decide whether PostToolUse needs a Store before opening SQLite."""
+) -> ToolCapture | None:
+    """Filter and sanitize once before opening SQLite for PostToolUse.
 
-    if not config.get("capture_enabled") or not config.get("capture_tools"):
-        return False
+    Reuse the prepared capture after opening the store. Sanitizing a large
+    result twice can exhaust the worker deadline before anything is saved.
+    """
+
+    if not config.get("capture_enabled"):
+        trace_event("hook_skipped", reason="capture_disabled")
+        return None
+    if not config.get("capture_tools"):
+        trace_event("hook_skipped", reason="tool_capture_disabled")
+        return None
     tool_name = _safe_text(payload.get("tool_name"), maximum=160)
-    if not tool_name or _exclude_tool(tool_name, payload.get("tool_input")):
-        return False
-    if _private_tool_gate_active(payload, project, config, data_dir):
-        return False
-    if normalize_capture(payload, project=project, config=config) is None:
-        return False
+    if not tool_name:
+        trace_event("hook_skipped", reason="invalid_tool")
+        return None
+    if _exclude_tool(tool_name, payload.get("tool_input")):
+        trace_event("hook_skipped", reason="excluded_tool")
+        return None
+    with trace_stage("privacy_gate"):
+        private = _private_tool_gate_active(payload, project, config, data_dir)
+    if private:
+        trace_event("hook_skipped", reason="private_tool")
+        return None
+    with trace_stage("tool_normalize"):
+        tool_capture = normalize_capture(payload, project=project, config=config)
+    if tool_capture is None:
+        trace_event("hook_skipped", reason="normalization_rejected")
+        return None
     tool_input = payload.get("tool_input")
     raw_command = _command_text(tool_input)
     command = _safe_command(tool_name, tool_input)
@@ -412,11 +527,16 @@ def _tool_capture_candidate(
     exit_code = _exit_code(payload.get("tool_response"))
     paths = _affected_paths(tool_name, tool_input)
     if _is_boilerplate_output(output):
-        return False
+        trace_event("hook_skipped", reason="boilerplate_output")
+        return None
     # A successful command with no output or changed-path evidence is routine
     # activity. Failed commands remain useful even when the host supplied no
     # textual output.
-    return bool(output or paths or (exit_code is not None and exit_code != 0))
+    if output or paths or (exit_code is not None and exit_code != 0):
+        trace_event("tool_prepared", output_chars=len(output), path_count=len(paths), captured=True)
+        return tool_capture
+    trace_event("hook_skipped", reason="no_usable_output")
+    return None
 
 
 def _private_tool_gate_active(
@@ -439,9 +559,16 @@ def _private_tool_gate_active(
 
 
 def _stop_capture_candidate(payload: Mapping[str, Any], config: Mapping[str, Any]) -> bool:
-    if not config.get("capture_enabled") or payload.get("stop_hook_active") is True:
+    if not config.get("capture_enabled"):
+        trace_event("hook_skipped", reason="capture_disabled")
         return False
-    return bool(_safe_text(payload.get("last_assistant_message"), maximum=MAX_CAPTURE_CHARS))
+    if payload.get("stop_hook_active") is True:
+        trace_event("hook_skipped", reason="reentrant_stop")
+        return False
+    candidate = bool(_safe_text(payload.get("last_assistant_message"), maximum=MAX_CAPTURE_CHARS))
+    if not candidate:
+        trace_event("hook_skipped", reason="no_usable_output")
+    return candidate
 
 
 def _session_start(
@@ -459,14 +586,12 @@ def _session_start(
     # notes back.  A new startup/clear avoids echoing current-session captures.
     exclude_session = active_session_id if start_source in {"startup", "clear"} else None
 
-    context = _prior_context(
-        store,
-        project,
-        config,
-        active_session_id=active_session_id,
-        exclude_session=exclude_session,
-        query="",
-    )
+    with trace_stage("context_read"):
+        context = _prior_context(
+            store, project, config, active_session_id=active_session_id,
+            exclude_session=exclude_session, query="",
+        )
+    trace_event("context_result", context_chars=len(context))
     message = _trusted_context_message(
         context,
         session_id=active_session_id,
@@ -478,8 +603,10 @@ def _session_start(
             "additionalContext": message,
         }
     try:
-        _mark_context_delivery(session_key, context, data_dir=data_dir)
-    except Exception:
+        with trace_stage("context_delivery_state"):
+            _mark_context_delivery(session_key, context, data_dir=data_dir)
+    except Exception as exc:
+        trace_error("context_delivery_state_failed", exc)
         _stderr("codex-mem hook: state unavailable")
     return response
 
@@ -513,13 +640,14 @@ def _user_prompt(
                 clear_private_prompt_gate(session_key, data_dir=data_dir)
                 from .private_gate import clear_private
                 clear_private(session_key, data_dir)
-        except Exception:
+        except Exception as exc:
+            trace_error("privacy_state_write_failed", exc)
             _stderr("codex-mem hook: privacy state unavailable")
     else:
         try:
             clear_private_prompt_gate(session_key, data_dir=data_dir)
-        except Exception:
-            pass
+        except Exception as exc:
+            trace_error("privacy_state_clear_failed", exc)
     if config.get("capture_enabled") and prompt:
         _remember_safely(
             store,
@@ -537,26 +665,29 @@ def _user_prompt(
     if not private_query:
         try:
             allow_remote = not _private_tool_gate_active(payload, project, config, data_dir)
-        except Exception:
+        except Exception as exc:
+            trace_error("privacy_state_read_failed", exc)
             pass  # Preserve local injection if privacy-state readback fails.
-    context = _prior_context(
-        store,
-        project,
-        config,
-        active_session_id=_optional_id(payload.get("session_id")),
-        exclude_session=_optional_id(payload.get("session_id")),
-        query=prompt,
-        allow_remote=allow_remote,
-        remote_deadline=remote_deadline,
-    )
+    with trace_stage("context_read"):
+        context = _prior_context(
+            store, project, config,
+            active_session_id=_optional_id(payload.get("session_id")),
+            exclude_session=_optional_id(payload.get("session_id")),
+            query=prompt, allow_remote=allow_remote,
+            remote_deadline=remote_deadline,
+        )
+    trace_event("context_result", context_chars=len(context))
     context_marker = _context_marker(context)
-    if not context_was_injected(session_key, source=context_marker, data_dir=data_dir):
+    with trace_stage("context_delivery_state"):
+        already_injected = context_was_injected(session_key, source=context_marker, data_dir=data_dir)
+    if not already_injected:
         message = _trusted_context_message(
             context,
             session_id=_optional_id(payload.get("session_id")),
             budget=_context_budget(config),
         )
     else:
+        trace_event("context_skipped", reason="already_delivered")
         message = ""
     if message:
         response["hookSpecificOutput"] = {
@@ -566,7 +697,8 @@ def _user_prompt(
     try:
         if message:
             _mark_context_delivery(session_key, context, data_dir=data_dir)
-    except Exception:
+    except Exception as exc:
+        trace_error("context_delivery_state_failed", exc)
         _stderr("codex-mem hook: state unavailable")
     return response
 
@@ -577,16 +709,20 @@ def _post_tool_use(
     project: str,
     config: Mapping[str, Any],
     data_dir: str | os.PathLike[str] | None = None,
+    *,
+    tool_capture: ToolCapture,
 ) -> None:
     if not config.get("capture_enabled") or not config.get("capture_tools"):
+        trace_event("hook_skipped", reason="capture_disabled" if not config.get("capture_enabled") else "tool_capture_disabled")
         return
     tool_name = _safe_text(payload.get("tool_name"), maximum=160)
     if not tool_name or _exclude_tool(tool_name, payload.get("tool_input")):
+        trace_event("hook_skipped", reason="excluded_tool")
         return
+    # Opening SQLite may have waited while another prompt enabled privacy.
+    # Recheck the gate even though the sanitized payload is already prepared.
     if _private_tool_gate_active(payload, project, config, data_dir):
-        return
-    tool_capture = normalize_capture(payload, project=project, config=config)
-    if tool_capture is None:
+        trace_event("hook_skipped", reason="private_tool")
         return
 
     tool_input = payload.get("tool_input")
@@ -600,10 +736,13 @@ def _post_tool_use(
         sensitive_input=_sensitive_tool_input(tool_input),
     )
     if _is_boilerplate_output(output):
+        trace_event("hook_skipped", reason="boilerplate_output")
         return
     if not output and not paths and (exit_code is None or exit_code == 0):
+        trace_event("hook_skipped", reason="no_usable_output")
         return
     if _read_only_tool(tool_name, command) and not output and exit_code in (None, 0):
+        trace_event("hook_skipped", reason="read_only_no_output")
         return
 
     lines = ["[Tool metadata]", f"Tool: {tool_name}"]
@@ -640,11 +779,13 @@ def _stop(
     payload: Mapping[str, Any], store: Any, project: str, config: Mapping[str, Any]
 ) -> None:
     if not config.get("capture_enabled") or payload.get("stop_hook_active") is True:
+        trace_event("hook_skipped", reason="capture_disabled" if not config.get("capture_enabled") else "reentrant_stop")
         return
     final_message = _safe_text(
         payload.get("last_assistant_message"), maximum=MAX_CAPTURE_CHARS
     )
     if not final_message:
+        trace_event("hook_skipped", reason="no_usable_output")
         return
     _remember_safely(
         store,
@@ -665,6 +806,7 @@ def _pre_compact(
     """Record only a bounded lifecycle marker; never invent a summary."""
 
     if not config.get("capture_enabled"):
+        trace_event("hook_skipped", reason="capture_disabled")
         return
     trigger = _safe_text(payload.get("trigger"), maximum=32) or "unknown"
     _remember_safely(
@@ -693,6 +835,7 @@ def _prior_context(
 ) -> str:
     budget = _context_budget(config)
     if budget <= 0:
+        trace_event("context_skipped", reason="budget_exhausted")
         return ""
     # Reserve room for trusted framing so the final model-visible message is
     # bounded even if a custom Store ignores its requested budget.
@@ -701,11 +844,13 @@ def _prior_context(
     # Store.context deliberately rejects budgets below 128 characters.  A
     # user-selected tiny context budget still gets the compact trusted notice.
     if memory_budget < 128:
+        trace_event("context_skipped", reason="budget_too_small")
         return ""
     try:
         from .query import normalize_retrieval_query
         normalized_query = normalize_retrieval_query(query)
         if query.strip() and not normalized_query.strip():
+            trace_event("context_skipped", reason="routing_only_query")
             return ""  # A routing-only prompt is not an unfiltered startup query.
         remote_options = {"hook_mode": True}
         if config.get("jev_retrieval_enabled"):
@@ -720,10 +865,12 @@ def _prior_context(
             exclude_session=exclude_session,
             **remote_options,
         )
-    except Exception:
+    except Exception as exc:
+        trace_error("context_read_failed", exc)
         _stderr("codex-mem hook: context unavailable")
         return ""
     if not isinstance(context, str):
+        trace_event("context_skipped", reason="invalid_context")
         return ""
     return _truncate(context, memory_budget)
 
@@ -784,11 +931,11 @@ def _remember_safely(
         }
         if tool_capture is not None:
             remember_kwargs["tool_capture"] = tool_capture
-        store.remember(
-            project,
-            **remember_kwargs,
-        )
-    except Exception:
+        with trace_stage("capture_remember"):
+            store.remember(project, **remember_kwargs)
+        trace_event("capture_result", recorded=True, body_chars=len(remember_kwargs["body"]))
+    except Exception as exc:
+        trace_error("capture_remember_failed", exc)
         _stderr("codex-mem hook: capture unavailable")
         return
 
@@ -800,9 +947,14 @@ def _remember_safely(
         if data_dir is not None:
             try:
                 from .integration import after_write
-                after_write(project, data_dir, wait_for_start=False)
-            except Exception:
+                with trace_stage("queue_wake"):
+                    after_write(project, data_dir, wait_for_start=False)
+                trace_event("queue_result", queued=True)
+            except Exception as exc:
+                trace_error("queue_wake_failed", exc)
                 _stderr("codex-mem hook: queue unavailable")
+        else:
+            trace_event("queue_skipped", reason="store_data_dir_unavailable")
 
 
 def _project_for(payload: Mapping[str, Any]) -> str | None:
@@ -811,7 +963,8 @@ def _project_for(payload: Mapping[str, Any]) -> str | None:
         return None
     try:
         return project_key(cwd)
-    except Exception:
+    except Exception as exc:
+        trace_error("project_key_failed", exc)
         return None
 
 
@@ -826,10 +979,13 @@ def _run_pending_processor(
     project: str, data_dir: str | os.PathLike[str] | None
 ) -> Any:
     """Hand durable observations to the queue, or the explicit direct mode."""
-    config = load_config(data_dir)
+    with trace_stage("processor_config_load"):
+        config = load_config(data_dir)
     if config.get("service_enabled"):
+        trace_event("processor_mode", mode="queue")
         from .integration import enqueue_project
         return enqueue_project(project, data_dir)
+    trace_event("processor_mode", mode="direct")
     from .processor import process_pending
     return process_pending(project, data_dir=data_dir, timeout=240)
 
@@ -1032,6 +1188,7 @@ def _extract_tool_output(value: Any, *, key: str | None = None, depth: int = 0) 
         return value if key is None or key in _OUTPUT_KEYS else ""
     if isinstance(value, Mapping):
         parts: list[str] = []
+        seen: set[str] = set()
         for child_key, child in value.items():
             normalized_key = child_key.lower() if isinstance(child_key, str) else ""
             if normalized_key not in _OUTPUT_KEYS:
@@ -1046,7 +1203,8 @@ def _extract_tool_output(value: Any, *, key: str | None = None, depth: int = 0) 
             }:
                 continue
             text = _extract_tool_output(child, key=normalized_key, depth=depth + 1)
-            if text and text not in parts:
+            if text and text not in seen:
+                seen.add(text)
                 parts.append(text)
         return "\n".join(parts)
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
@@ -1065,9 +1223,11 @@ def _extract_tool_output(value: Any, *, key: str | None = None, depth: int = 0) 
         if key not in _OUTPUT_KEYS:
             return ""
         parts = []
+        seen = set()
         for child in value:
             text = _extract_tool_output(child, key=key, depth=depth + 1)
-            if text and text not in parts:
+            if text and text not in seen:
+                seen.add(text)
                 parts.append(text)
         return "\n".join(parts)
     return ""
@@ -1224,11 +1384,13 @@ def main(
     data_dir: str | os.PathLike[str] | None = None,
 ) -> int:
     """Read one bounded hook JSON object from stdin and emit one JSON response."""
+    if get_trace() is None:
+        begin_trace("hook", data_dir=data_dir)
     hook_deadline = time.monotonic() + HOOK_TIMEOUT_SECONDS
     try:
         hook_deadline = min(hook_deadline, float(os.environ.get("CODEX_MEM_HOOK_DEADLINE", hook_deadline)))
-    except (TypeError, ValueError):
-        pass
+    except (TypeError, ValueError) as exc:
+        trace_error("invalid_deadline", exc)
 
     # The launcher owns argument routing.  Accept a literal `hook` too, which
     # makes direct `python -m codex_mem.hooks hook` testing unsurprising.
@@ -1236,32 +1398,38 @@ def main(
     if supplied and supplied[0] == "hook":
         supplied.pop(0)
     if supplied:
+        trace_event("hook_skipped", reason="invalid_arguments")
         _stderr("codex-mem hook: invalid arguments")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="skipped")
         return 0
 
     raw = _read_bounded_stdin()
     if raw is None:
+        trace_event("hook_skipped", reason="invalid_input")
         _stderr("codex-mem hook: invalid input")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="invalid_input")
         return 0
     try:
-        payload = json.loads(raw)
-    except (TypeError, ValueError, json.JSONDecodeError):
+        with trace_stage("stdin_parse"):
+            payload = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        trace_error("stdin_json_parse_failed", exc)
         _stderr("codex-mem hook: invalid input")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="invalid_input")
         return 0
     if not isinstance(payload, Mapping):
+        trace_event("hook_skipped", reason="invalid_payload")
         _stderr("codex-mem hook: invalid input")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="invalid_input")
         return 0
 
     try:
         response = _handle_hook(payload, store=None, data_dir=data_dir, hook_deadline=hook_deadline)
-    except Exception:
+    except Exception as exc:
+        trace_error("hook_main_failed", exc)
         _stderr("codex-mem hook: memory unavailable")
         response = _continue()
-    _write_response(response)
+    _respond_and_finish(response)
     return 0
 
 
@@ -1270,60 +1438,85 @@ def process_hook_main(
 ) -> int:
     """Read one async Stop event and always release the host hook promptly."""
 
+    if get_trace() is None:
+        begin_trace("process_hook", data_dir=data_dir)
+
     raw = _read_bounded_stdin()
     if raw is None:
+        trace_event("hook_skipped", reason="invalid_input")
         _processor_diagnostic("invalid-input")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="invalid_input")
         return 0
     try:
-        payload = json.loads(raw)
-    except (TypeError, ValueError, json.JSONDecodeError):
+        with trace_stage("stdin_parse"):
+            payload = json.loads(raw)
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        trace_error("stdin_json_parse_failed", exc)
         _processor_diagnostic("invalid-input")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="invalid_input")
         return 0
     if not isinstance(payload, Mapping):
+        trace_event("hook_skipped", reason="invalid_payload")
         _processor_diagnostic("invalid-input")
-        _write_response(_continue())
+        _respond_and_finish(_continue(), status="invalid_input")
         return 0
 
     try:
         response = _handle_process_hook(payload, store=None, data_dir=data_dir)
-    except Exception:
+    except Exception as exc:
+        trace_error("process_hook_main_failed", exc)
         _processor_diagnostic("unavailable")
         response = _continue()
-    _write_response(response)
+    _respond_and_finish(response)
     return 0
 
 
 def _read_bounded_stdin() -> str | None:
     stream: Any = getattr(sys.stdin, "buffer", sys.stdin)
     try:
-        raw = stream.read(MAX_STDIN_BYTES + 1)
-    except Exception:
+        with trace_stage("stdin_read"):
+            raw = stream.read(MAX_STDIN_BYTES + 1)
+    except Exception as exc:
+        trace_error("stdin_read_failed", exc)
         return None
     if isinstance(raw, bytes):
+        trace_event("stdin_result", payload_bytes=len(raw))
         if len(raw) > MAX_STDIN_BYTES:
+            trace_event("hook_skipped", reason="stdin_too_large")
             return None
         try:
             return raw.decode("utf-8")
-        except UnicodeDecodeError:
+        except UnicodeDecodeError as exc:
+            trace_error("stdin_decode_failed", exc)
             return None
     if isinstance(raw, str):
         try:
-            if len(raw.encode("utf-8")) > MAX_STDIN_BYTES:
+            encoded_bytes = len(raw.encode("utf-8"))
+            trace_event("stdin_result", payload_bytes=encoded_bytes)
+            if encoded_bytes > MAX_STDIN_BYTES:
+                trace_event("hook_skipped", reason="stdin_too_large")
                 return None
-        except UnicodeEncodeError:
+        except UnicodeEncodeError as exc:
+            trace_error("stdin_encode_failed", exc)
             return None
         return raw
+    trace_event("hook_skipped", reason="invalid_stdin_type")
     return None
 
 
 def _write_response(response: Mapping[str, Any]) -> None:
     try:
-        sys.stdout.write(json.dumps(dict(response), ensure_ascii=False) + "\n")
+        encoded = json.dumps(dict(response), ensure_ascii=False) + "\n"
+        sys.stdout.write(encoded)
         sys.stdout.flush()
-    except Exception:
-        pass
+        trace_event("stdout_written", response_bytes=len(encoded.encode("utf-8")))
+    except Exception as exc:
+        trace_error("stdout_write_failed", exc)
+
+
+def _respond_and_finish(response: Mapping[str, Any], *, status: str = "ok") -> None:
+    _write_response(response)
+    finish_trace(status=status)
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised by the launcher

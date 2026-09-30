@@ -17,6 +17,7 @@ from .store import MAX_TOOL_USE_ID_CHARS, Store, StoreError
 from .semantic import SemanticError
 from .service import ServiceError
 from .mcp import bound_tool_uses
+from .hook_log_reader import recent_hook_logs
 
 try:  # The package initializer is created alongside the rest of the package.
     from . import __version__ as _VERSION
@@ -242,7 +243,7 @@ def _observation_metadata(namespace: argparse.Namespace) -> dict[str, Any] | Non
     return {key: value for key, value in fields.items() if value is not None}
 
 
-def _doctor() -> dict[str, Any]:
+def _doctor(data_dir: str | None = None) -> dict[str, Any]:
     """Return local, non-mutating diagnostics without claiming host integration."""
     runtime_ok = sys.version_info >= (3, 10)
     sqlite_fts = False
@@ -290,6 +291,7 @@ def _doctor() -> dict[str, Any]:
             "status": "UNKNOWN",
             "detail": "Host hook registration was not checked by this local command.",
         },
+        "hook_logs": recent_hook_logs(data_dir),
     }
 
 
@@ -799,7 +801,7 @@ def main(args: Sequence[str] | None = None) -> int:
             updates = _config_updates(namespace)
             value = configure(namespace.data_dir, **updates) if updates else load_config(namespace.data_dir)
         elif namespace.command == "doctor":
-            value = _doctor()
+            value = _doctor(namespace.data_dir)
         else:
             value = _run_store_command(namespace)
     except CLIError as exc:
