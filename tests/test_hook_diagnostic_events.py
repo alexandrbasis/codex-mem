@@ -40,7 +40,8 @@ class HookDiagnosticEventsTests(unittest.TestCase):
         self.project = self.root / "project"
         configure(self.data_dir, capture_scope="selected",
                   included_projects=[self.project])
-        self.env = mock.patch.dict("os.environ", {"CODEX_MEM_HOOK_LOG": "1",
+        self.env = mock.patch.dict("os.environ", {"CODEX_MEM_HOME": str(self.data_dir),
+                                                 "CODEX_MEM_HOOK_LOG": "1",
                                                  "CODEX_MEM_DISABLED": "0"})
         self.env.start()
         self.addCleanup(self.env.stop)

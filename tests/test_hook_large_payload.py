@@ -24,7 +24,9 @@ class LargeHookPayloadTests(unittest.TestCase):
     def test_large_results_are_captured_with_real_worker_deadline(self):
         cases = {
             "unique": [f"Verification row {index:05d}: passed" for index in range(20_000)],
-            "repeated": ["x"] * 190_000,
+            "repeated": [*[f"Warmup row {index}" for index in range(256)],
+                         *(["x"] * 190_000)],
+            "repeated_private": ["<private>hidden-fixture-value</private>"] * 10_000,
         }
         for name, items in cases.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:

@@ -316,7 +316,27 @@ def _redact_sensitive_path_tokens(value: str) -> str:
     return "".join(parts)
 
 
-def _sanitize(value: Any, *, key: str = "", depth: int = 0) -> Any:
+_SANITIZE_CACHE_ENTRIES = 128
+_SANITIZE_CACHE_TEXT_CHARS = 1_024
+
+
+def _sanitize_text(value: str, *, is_path: bool) -> Any:
+    if "\x00" in value:
+        return _OPAQUE
+    if _looks_like_media_text(value):
+        return _OPAQUE
+    redacted = _redact_sensitive_path_tokens(redact_text(value))
+    if is_path and _is_sensitive_path(redacted):
+        return REDACTED
+    # Commands and free text can contain private filenames too. Replace
+    # only a path-shaped token, keeping ordinary prose useful.
+    if _is_sensitive_path(redacted) and ("/" in redacted or "\\" in redacted):
+        return REDACTED
+    return redacted
+
+
+def _sanitize(value: Any, *, key: str = "", depth: int = 0,
+              _text_cache: dict[tuple[bool, str], Any] | None = None) -> Any:
     """Return JSON-safe, redacted content or ``_OPAQUE``.
 
     Structured text is retained recursively, while bytes, unsupported Python
@@ -327,19 +347,22 @@ def _sanitize(value: Any, *, key: str = "", depth: int = 0) -> Any:
 
     if depth > 12:
         return _OPAQUE
+    if _text_cache is None:
+        _text_cache = {}
     if isinstance(value, str):
-        if "\x00" in value:
-            return _OPAQUE
-        if _looks_like_media_text(value):
-            return _OPAQUE
-        redacted = _redact_sensitive_path_tokens(redact_text(value))
-        if key.casefold() in _PATH_KEYS and _is_sensitive_path(redacted):
-            return REDACTED
-        # Commands and free text can contain private filenames too.  Replace
-        # only a path-shaped token, keeping ordinary prose useful.
-        if _is_sensitive_path(redacted) and ("/" in redacted or "\\" in redacted):
-            return REDACTED
-        return redacted
+        is_path = key.casefold() in _PATH_KEYS
+        cache_key = (is_path, value) if len(value) <= _SANITIZE_CACHE_TEXT_CHARS else None
+        if cache_key is not None and cache_key in _text_cache:
+            return _text_cache[cache_key]
+        clean = _sanitize_text(value, is_path=is_path)
+        # Repeated output rows need only one redaction pass. This bounded
+        # cache belongs to this payload and is discarded after sanitization;
+        # path-field policy remains part of its key.
+        if cache_key is not None:
+            if len(_text_cache) >= _SANITIZE_CACHE_ENTRIES:
+                del _text_cache[next(iter(_text_cache))]
+            _text_cache[cache_key] = clean
+        return clean
     if value is None or isinstance(value, (bool, int, float)):
         if isinstance(value, float):
             if value != value or value in {float("inf"), float("-inf")}:
@@ -358,14 +381,14 @@ def _sanitize(value: Any, *, key: str = "", depth: int = 0) -> Any:
             if not isinstance(raw_key, str) or "\x00" in raw_key:
                 continue
             safe_key = redact_text(raw_key)
-            clean = _sanitize(child, key=safe_key, depth=depth + 1)
+            clean = _sanitize(child, key=safe_key, depth=depth + 1, _text_cache=_text_cache)
             if clean is not _OPAQUE:
                 result[safe_key] = clean
         return result
     if isinstance(value, Sequence):
         result_list: list[Any] = []
         for child in value:
-            clean = _sanitize(child, key=key, depth=depth + 1)
+            clean = _sanitize(child, key=key, depth=depth + 1, _text_cache=_text_cache)
             if clean is not _OPAQUE:
                 result_list.append(clean)
         return result_list

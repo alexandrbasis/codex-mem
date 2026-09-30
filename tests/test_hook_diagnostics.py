@@ -64,11 +64,17 @@ class HookDiagnosticsTests(unittest.TestCase):
             try:
                 connection.execute("SELECT PRIVATE_QUERY FROM PRIVATE_TABLE")
             except sqlite3.Error as exc:
+                expected_code = getattr(exc, "sqlite_errorcode", None)
                 diagnostics.trace_error("storage_failed", exc)
         diagnostics.finish_trace()
         error = next(row["error"] for row in self.rows() if row["event"] == "error")
-        self.assertEqual("SQLITE_ERROR", error["sqlite_errorname"])
-        self.assertEqual(sqlite3.SQLITE_ERROR, error["sqlite_errorcode"])
+        self.assertEqual("OperationalError", error["exception_type"])
+        if expected_code is None:  # Python 3.10 does not expose SQLite codes.
+            self.assertNotIn("sqlite_errorcode", error)
+            self.assertNotIn("sqlite_errorname", error)
+        else:
+            self.assertEqual(sqlite3.SQLITE_ERROR, error["sqlite_errorcode"])
+            self.assertEqual("SQLITE_ERROR", error["sqlite_errorname"])
         self.assertNotIn("PRIVATE_", json.dumps(self.rows()))
 
     def test_declared_event_is_available_before_payload_and_stays_distinct(self) -> None:
