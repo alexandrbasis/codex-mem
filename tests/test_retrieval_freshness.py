@@ -101,7 +101,7 @@ class FreshnessDeliveryTests(unittest.TestCase):
         from codex_mem.service import _new_state, _new_record
         self.telemetry.stop()
         self.store.remember(self.project, "capture", "input", source="hook:Stop")
-        job = self.store.claim_observation_batch(self.project, "fixture", "gpt-5.6-luna", "medium")
+        job = self.store.claim_observation_batch(self.project, "fixture", "gpt-6-luna", "medium")
         self.store.fail_observation_batch(self.project, job["job_id"], job["lease_token"], "invalid_response")
         state = _new_state()
         state["projects"][str(self.project.resolve())] = _new_record(1.0)

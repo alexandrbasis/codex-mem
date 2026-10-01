@@ -36,8 +36,11 @@ class PromptContextTests(unittest.TestCase):
                       "проанализируй как там наш плагин, как он справляется со своей задачей"):
             with self.subTest(query=query):
                 self.assertEqual([note["id"]], self.ids(query))
-        # Explicit lexical lookup remains an AND query.
-        self.assertEqual([], self.store.search(self.project, "Как работает плагин памяти?"))
+        # Natural questions use a coverage-gated fallback after exact AND misses.
+        self.assertEqual([note["id"]], [row["id"] for row in
+            self.store.search(self.project, "Как работает плагин памяти?")])
+        # A terse exact lookup still keeps its AND semantics.
+        self.assertEqual([], self.store.search(self.project, "плагин память"))
 
     def test_english_question_preserves_topic_and_filters(self):
         note = self.store.remember(

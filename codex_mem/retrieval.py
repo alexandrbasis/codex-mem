@@ -19,6 +19,7 @@ _PROMPT_WORDS = frozenset((
     "do does did can could would will should how what why when where which who whom "
     "i me my we us our you your it its this that these those please tell explain show "
     "describe investigate analyze analyse check review work works working worked "
+    "decide decided choose chose chosen select selected "
     "happen happened happening handle handles doing now there then still "
     "как что почему когда где какой какая какие которое который которая ли и или а но "
     "в во на к ко по о об обо от из у с со за для до без это этот эта эти то так там "
@@ -26,12 +27,30 @@ _PROMPT_WORDS = frozenset((
     "ты твой про пусть уже еще ещё же бы был была было были есть будет будут "
     "расскажи покажи объясни поясни проверь посмотри проанализируй проверить "
     "работает работают работаешь работал работать справляется справляются своей "
+    "решили решено выбрали выбран приняли принято "
     "своим свою своими задачей пожалуйста сейчас теперь"
 ).split())
 _PROMPT_TOKEN = re.compile(r"[vV]?\d+(?:\.\d+)+|[^\W_]+(?:[_.:/-][^\W_]+)*", re.UNICODE)
 _PROMPT_VERSION = re.compile(r"[vV]?\d+(?:\.\d+)+\Z")
 _RUSSIAN_WORD = re.compile(r"[а-яё]+\Z", re.IGNORECASE)
 _RUSSIAN_ENDING = re.compile(r"(?:иями|ями|ами|ого|ему|ому|ий|ый|ой|ая|яя|ое|ее|ых|их|ов|ев|ам|ям|ах|ях|ом|ем|ы|и|а|я|у|ю|е|ь)\Z")
+# Narrow bilingual aliases for literal software terms that commonly occur in
+# English source records and inflected Russian questions. Each term still
+# contributes at most one match to the topical coverage requirement.
+_SOFTWARE_ALIASES = {
+    "хук": ("hook", "hooks"), "hook": ("хук",), "hooks": ("хук",),
+    "таймаут": ("timeout", "timeouts"), "timeout": ("таймаут",),
+    "timeouts": ("таймаут",),
+}
+
+
+def prompt_term_variants(term: str, stem: str) -> tuple[str, ...]:
+    return tuple(dict.fromkeys((stem, *_SOFTWARE_ALIASES.get(stem, ()))))
+
+
+def prompt_variant_prefix(term: str, stem: str, variant: str) -> bool:
+    return bool(_RUSSIAN_WORD.fullmatch(variant) and len(variant) >= 3
+                and (variant != term or stem != term))
 
 
 def prompt_query_plan(query: str) -> dict[str, Any] | None:
@@ -57,30 +76,38 @@ def prompt_query_plan(query: str) -> dict[str, Any] | None:
             identifiers.append(token)
         else:
             terms.append(token)
-    terms = list(dict.fromkeys(terms))[:16]
+    terms = list(dict.fromkeys(terms))
     identifiers = list(dict.fromkeys(identifiers))
     versions = list(dict.fromkeys(versions))
-    if len(identifiers) > 16 or len(versions) > 16:
+    if len(terms) > 16 or len(identifiers) > 16 or len(versions) > 16:
         return None  # Never discard a mandatory exact constraint to fit a cap.
     if not (terms or identifiers or versions):
         return None
     stems = []
     for term in terms:
         stem = _RUSSIAN_ENDING.sub("", term) if _RUSSIAN_WORD.fullmatch(term) else term
-        stems.append(stem if len(stem) >= 4 else term)
+        stems.append(stem if len(stem) >= 3 else term)
     return {"terms": list(zip(terms, stems)), "identifiers": identifiers, "versions": versions,
-            "minimum": min(len(terms), max(1, math.ceil(len(terms) / 2)))}
+            "minimum": len(terms) if versions else min(len(terms), max(1, math.ceil(len(terms) / 2)))}
 
 
 def prompt_match_score(text: str, plan: Mapping[str, Any]) -> int:
     """Score topical coverage only after all exact constraints have matched."""
     normalized = unicodedata.normalize("NFKC", text).casefold()
+    for version in plan["versions"]:
+        number = version.lstrip("v")
+        if not re.search(r"(?<![\w.])v?" + re.escape(number) + r"(?!\w|\.[0-9])", normalized):
+            return 0
     for identifier in plan["identifiers"]:
         if not re.search(r"(?<![\w.-])" + re.escape(identifier) + r"(?![\w.-])", normalized):
             return 0
-    matched = sum(bool(re.search(r"(?<!\w)" + re.escape(stem) +
-                                (r"[а-яё]*\b" if term != stem else r"(?!\w)"), normalized))
-                  for term, stem in plan["terms"])
+    matched = 0
+    for term, stem in plan["terms"]:
+        if any(re.search(r"(?<!\w)" + re.escape(variant) +
+                         (r"[а-яё]*\b" if prompt_variant_prefix(term, stem, variant)
+                          else r"(?!\w)"), normalized)
+               for variant in prompt_term_variants(term, stem)):
+            matched += 1
     if matched < plan["minimum"]:
         return 0
     return matched + len(plan["identifiers"]) + len(plan["versions"])

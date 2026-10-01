@@ -26,7 +26,7 @@ class FreshnessTests(unittest.TestCase):
     def failed_batch(self, code='invalid_response', *, project=None):
         project = project or self.project
         self.store.remember(project, 'capture', 'input', source='hook:Stop')
-        job = self.store.claim_observation_batch(project, 'fixture', 'gpt-5.6-luna', 'medium')
+        job = self.store.claim_observation_batch(project, 'fixture', 'gpt-6-luna', 'medium')
         self.store.fail_observation_batch(project, job['job_id'], job['lease_token'], code)
         return job
 
@@ -105,12 +105,12 @@ class FreshnessTests(unittest.TestCase):
 
     def test_failed_receipt_blocks_until_successful_retry(self):
         self.store.remember(self.project, 'capture', 'input', source='hook:Stop')
-        job = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-5.6-luna', 'medium')
+        job = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-6-luna', 'medium')
         self.store.fail_observation_batch(self.project, job['job_id'], job['lease_token'], 'runner_failure')
         result = self.snapshot()
         self.assertEqual(result['status'], 'blocked')
         self.assertEqual(result['pending_capture_count'], 1)
-        retry = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-5.6-luna', 'medium', retry_failed=True)
+        retry = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-6-luna', 'medium', retry_failed=True)
         self.store.finish_observation_batch(self.project, retry['job_id'], retry['lease_token'], disposition='skipped')
         result = self.snapshot()
         self.assertEqual(result['status'], 'current')
@@ -134,7 +134,7 @@ class FreshnessTests(unittest.TestCase):
         self.assertIn('blocker=none', result['summary'])
         self.assertLess(len(result['summary']), 850)
 
-        retry = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-5.6-luna', 'medium', retry_failed=True)
+        retry = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-6-luna', 'medium', retry_failed=True)
         self.store.finish_observation_batch(self.project, retry['job_id'], retry['lease_token'], disposition='skipped')
         with patch('codex_mem.service._load_state_readonly', return_value=state):
             result = self.snapshot()
@@ -195,7 +195,7 @@ class FreshnessTests(unittest.TestCase):
 
     def test_quarantine_is_cleared_by_successful_coverage_from_another_processor(self):
         self.failed_batch()
-        retry = self.store.claim_observation_batch(self.project, 'new-processor', 'gpt-5.6-luna', 'medium', retry_failed=True)
+        retry = self.store.claim_observation_batch(self.project, 'new-processor', 'gpt-6-luna', 'medium', retry_failed=True)
         self.store.finish_observation_batch(self.project, retry['job_id'], retry['lease_token'], disposition='skipped')
         with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
             result = self.snapshot()
@@ -254,7 +254,7 @@ class FreshnessTests(unittest.TestCase):
 
     def test_pending_query_uses_source_index_and_preserves_receipt_scope(self):
         self.store.remember(self.project, 'processed', 'input', source='hook:Stop')
-        job = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-5.6-luna', 'medium')
+        job = self.store.claim_observation_batch(self.project, 'fixture', 'gpt-6-luna', 'medium')
         self.store.finish_observation_batch(self.project, job['job_id'], job['lease_token'], disposition='skipped')
         self.store.remember(self.project, 'pending', 'input', source='hook:Stop')
         statements = []

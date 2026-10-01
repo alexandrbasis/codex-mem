@@ -32,7 +32,7 @@ class ObserverUsageStoreTests(unittest.TestCase):
         *,
         project: str | None = None,
         attempts: int = 1,
-        model: str = "gpt-5.6-luna",
+        model: str = "gpt-6-luna",
         effort: str = "medium",
     ) -> None:
         workspace = project or self.project
@@ -448,7 +448,7 @@ class ObserverUsageStoreTests(unittest.TestCase):
         first = self.store.claim_observation_batch(
             self.project,
             "codex-mem-native-observation-v1",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             lease_seconds=1,
         )
@@ -464,7 +464,7 @@ class ObserverUsageStoreTests(unittest.TestCase):
         reclaimed = self.store.claim_observation_batch(
             self.project,
             "codex-mem-native-observation-v1",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             lease_seconds=1,
         )
@@ -495,7 +495,7 @@ class ObserverUsageStoreTests(unittest.TestCase):
         first = self.store.claim_observation_batch(
             self.project,
             "codex-mem-native-observation-v1",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
         )
         begin_attempt(self.store, self.project, first["job_id"], first["attempt_count"])
@@ -509,7 +509,7 @@ class ObserverUsageStoreTests(unittest.TestCase):
         retried = self.store.claim_observation_batch(
             self.project,
             "codex-mem-native-observation-v1",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             retry_failed=True,
         )

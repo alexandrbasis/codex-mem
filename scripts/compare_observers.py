@@ -230,6 +230,7 @@ def codex_case(event: Mapping[str, Any], timeout: float) -> dict[str, Any]:
         clean = [{"title": clip(str(x.get("title", "")), 500), "body": clip(str(x.get("body", "")), 2_000), "tags": x.get("tags", []) if isinstance(x.get("tags"), list) else []} for x in notes if isinstance(x, Mapping)]
         return {"id": event["id"], "status": result.get("status"), "code": result.get("code"), "timeout": timeout, "capture_pipeline": "hooks.handle_hook->tool_uses->process_pending_hydration", "capture_rows": len(captures), "source_body_chars": len(str(source_row.get("body", ""))), "worker_thread_id": result.get("worker_thread_id"), "worker_turn_id": result.get("worker_turn_id"), "note_count": len(clean), "source_superseded": source_row.get("superseded_by") is not None, "checks": output_checks(event, len(clean), clean), "notes": clean, "model": result.get("model"), "reasoning_effort": result.get("reasoning_effort")}
 def codex_live(corpus: Mapping[str, Any], available: Mapping[str, Any], timeout: float, limit: int) -> dict[str, Any]:
+    from codex_mem.processor import MODEL, REASONING_EFFORT
     if not available.get("executables", {}).get("codex", {}).get("available"):
         return {"status": "skipped", "reason": "codex_unavailable", "cases": []}
     cases = []
@@ -239,7 +240,7 @@ def codex_live(corpus: Mapping[str, Any], available: Mapping[str, Any], timeout:
         except Exception:
             cases.append({"id": event["id"], "status": "failed", "reason": "codex_pipeline_failed"})
     okay = cases and all(x.get("status") in {"processed", "skipped"} and all(check.get("passed") for check in x.get("checks", [])) for x in cases)
-    return {"status": "ok" if okay else "partial", "provider": "codex-mem", "model": "gpt-5.6-luna", "reasoning_effort": "medium", "scope": "provider-level", "cases": cases}
+    return {"status": "ok" if okay else "partial", "provider": "codex-mem", "model": MODEL, "reasoning_effort": REASONING_EFFORT, "scope": "provider-level", "cases": cases}
 def capture_contract(corpus: Mapping[str, Any]) -> dict[str, Any]:
     from codex_mem import hooks
     from codex_mem.store import Store

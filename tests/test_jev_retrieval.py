@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from codex_mem.config import configure
 from codex_mem.jev_client import MODEL, JevError
-from codex_mem.jev_retrieval import MAX_CANDIDATES, rerank
+from codex_mem.jev_retrieval import MAX_CANDIDATES, exact_constraints, rerank
 from codex_mem.store import Store, StoreError
 
 
@@ -61,6 +61,13 @@ class JevRetrievalTests(unittest.TestCase):
                 self.assertEqual(1, receipt["requests"])
                 self.assertEqual(1, receipt["added_candidates"])
                 self.assertTrue(receipt["audit_recorded"])
+
+    def test_named_project_in_broad_status_question_is_not_exact_identifier(self):
+        project = self.root / "codex-mem-public"
+        self.assertEqual([], exact_constraints(
+            "Как сейчас работает codex-mem и что осталось проверить?", project)["identifiers"])
+        self.assertEqual(["codex-mem"], exact_constraints(
+            "What happened to codex-mem hooks in 1.9.1?", project)["identifiers"])
 
     def test_no_match_and_uncertain_expansion_do_not_invent_context(self):
         self.note("Payment idempotency")

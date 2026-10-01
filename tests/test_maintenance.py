@@ -225,6 +225,10 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         self.assertEqual(1, project_data["observation_queue"]["stale_running"])
         self.assertEqual("gpt-5.6-luna", project_data["processing"]["model_profiles"][0]["model"])
         self.assertEqual("medium", project_data["processing"]["model_profiles"][0]["reasoning_effort"])
+        expectation = project_data["observation_queue"]["model_expectation"]
+        self.assertEqual("gpt-6-luna", expectation["model"])
+        self.assertEqual("medium", expectation["reasoning_effort"])
+        self.assertFalse(expectation["recorded_match"])
 
         with Store(self.data_dir) as store:
             store.remember(self.project_b, "Idle note", "separate project body", source="manual:test")

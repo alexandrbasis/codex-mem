@@ -36,8 +36,11 @@ def allowed(settings: Mapping[str, Any], project: str | Path, query: str) -> boo
                 and enabled(settings, "jev_retrieval_enabled", project))
 
 
-def exact_constraints(query: str) -> dict[str, Any]:
+def exact_constraints(query: str, project: str | Path | None = None) -> dict[str, Any]:
     """Use the existing prompt tokenizer even for a terse identifier lookup."""
+    if project is not None and current_state_scope(query, project) is not None:
+        # A named project in a broad status question is already the SQL scope.
+        return {"terms": [], "identifiers": [], "versions": [], "minimum": 0}
     plan = prompt_query_plan("How " + query)
     if plan is None:
         # A cap in the lexical planner must never discard mandatory literals.
@@ -200,7 +203,7 @@ def rerank(
             str(item.get("title") or "") + "\n" + str(item.get("body") or ""))]
         if not pool:
             return baseline, receipt
-        constraints = exact_constraints(query)
+        constraints = exact_constraints(query, project)
         protected = historical_query(query) or bool(constraints["identifiers"] or constraints["versions"])
         baseline_ids = {item["id"] for item in baseline}
         if protected and all(item["id"] in baseline_ids for item in pool):

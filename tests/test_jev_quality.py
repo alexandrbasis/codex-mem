@@ -32,6 +32,44 @@ def claim(*sources, **changes):
 
 
 class JevQualityTests(unittest.TestCase):
+    def test_list_assertions_are_checked_individually_with_complete_context(self):
+        candidate = note(observation={
+            "facts": ["The assistant reported a local test pass.", "Production is independently verified."],
+            "narrative": "The assistant only reported local results; production evidence is missing.",
+        })
+        calls = []
+
+        def evaluate(payload):
+            calls.append(payload)
+            if len(calls) == 1:
+                return response(payload, .5, .5)
+            self.assertEqual(candidate, payload["state"]["items"][0]["candidate"])
+            result = response(payload)
+            targets = [question["instructions"]["question"] for question in payload["questions"].values()]
+            self.assertTrue(any("observation.facts[0]`" in target for target in targets))
+            self.assertTrue(any("observation.facts[1]`" in target for target in targets))
+            for key, question in payload["questions"].items():
+                if "observation.facts[1]`" in question["instructions"]["question"]:
+                    result["answers"][key]["noul"] = .01 if key.endswith("grounded") else .99
+            return result
+
+        with self.assertRaises(JevQualityError) as raised:
+            quality_gate([candidate], None, claim(), project="/quality", evaluator=evaluate)
+        self.assertEqual("jev_quality_rejected", raised.exception.code)
+        fields = raised.exception.audit["decisions"][0]["fields"]
+        self.assertEqual("rejected", next(field["route"] for field in fields
+                                           if field["field_path"] == "observation.facts[1]"))
+        self.assertEqual(2, len(calls))
+
+    def test_list_overflow_is_not_silently_partially_checked(self):
+        candidate = note(observation={"facts": [f"Claim {index}" for index in range(33)]})
+        evaluate = mock.Mock(side_effect=lambda payload: response(payload, .5, .5))
+        with self.assertRaises(JevQualityError) as raised:
+            quality_gate([candidate], None, claim(), project="/quality", evaluator=evaluate)
+        self.assertEqual("jev_quality_input_limit", raised.exception.code)
+        evaluate.assert_called_once()
+        self.assertEqual(0, raised.exception.audit["counts"]["refined"])
+
     def test_complete_candidates_and_canonical_roles_share_one_request(self):
         sources = [
             {"id": "assistant", "source": "hook:Stop", "body": "PRIVATE_ASSISTANT reported a pass.",
@@ -120,7 +158,7 @@ class JevQualityTests(unittest.TestCase):
             self.assertNotIn("candidate_claims.request", questions)
             self.assertNotIn("candidate_claims.next_steps", questions)
             for question in payload["questions"].values():
-                self.assertIn("another field's attribution cannot weaken", question["instructions"]["field_scope"])
+                self.assertIn("A caveat elsewhere cannot undo an explicit claim", question["instructions"]["field_scope"])
                 self.assertIn("files_modified means edits; files_read means reads", question["instructions"]["field_scope"])
             return response(payload)
         audit = quality_gate([candidate], summary, claim(), project="/quality", evaluator=evaluate)
@@ -134,8 +172,8 @@ class JevQualityTests(unittest.TestCase):
         for decision in audit["decisions"]:
             self.assertEqual("uncertain", decision["initial"]["route"])
             self.assertEqual("refinement", decision["decision_source"])
-        self.assertEqual({"title", "body", "observation.type", "observation.subtitle", "observation.facts",
-                          "observation.narrative", "observation.concepts", "observation.files_read", "observation.files_modified"},
+        self.assertEqual({"title", "body", "observation.type", "observation.subtitle", "observation.facts[0]",
+                          "observation.narrative", "observation.concepts[0]", "observation.files_read[0]", "observation.files_modified[0]"},
                          {field["field_path"] for field in audit["decisions"][0]["fields"]})
         self.assertEqual({"title", "completed", "notes"}, {field["field_path"] for field in audit["decisions"][1]["fields"]})
         self.assertEqual(originals, (candidate, summary))

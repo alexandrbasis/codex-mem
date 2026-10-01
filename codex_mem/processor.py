@@ -41,6 +41,7 @@ from .store import (
     _validate_session_summary,
     OBSERVATION_MODEL,
     OBSERVATION_REASONING_EFFORT,
+    _observation_fingerprint,
     Store,
     StoreError,
     ObservationLeaseExpired,
@@ -465,9 +466,9 @@ def _quality_source_status(
                 or any(not isinstance(source_id, str) or not _valid_source_id(source_id)
                        for source_id in [*original_ids, *evidence_ids])):
             return "unavailable"
-        fingerprint = hashlib.sha256(
-            (workspace + "\x00" + PROCESSOR_ID + "\x00" + "\x00".join(original_ids)).encode("utf-8")
-        ).hexdigest()
+        fingerprint = _observation_fingerprint(
+            workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT, original_ids,
+        )
         source_slots = ",".join("?" for _ in original_ids)
         evidence_slots = ",".join("?" for _ in evidence_ids)
         connection = sqlite3.connect(Path(store.db_path).resolve().as_uri() + "?mode=ro", uri=True, timeout=.02)

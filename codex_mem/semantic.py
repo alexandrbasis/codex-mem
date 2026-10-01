@@ -508,6 +508,17 @@ def search(
             return receipt(results, "lexical", code)
         raise SemanticError(code)
 
+    literal_kwargs: dict[str, str] = {}
+    if isinstance(store, Store):
+        from .jev_retrieval import exact_constraints
+        try:
+            constraints = exact_constraints(checked_query, workspace)
+        except ValueError as exc:
+            # Do not relax an over-constrained query into vector neighbors.
+            raise SemanticError("too_many_literal_constraints") from exc
+        if constraints["identifiers"] or constraints["versions"]:
+            literal_kwargs["literal_query"] = checked_query
+
     try:
         query_vector = _normalized_query_vector(active_backend, checked_query)
         if requested_mode == "semantic":
@@ -520,6 +531,7 @@ def search(
                 checked_types,
                 checked_concepts,
                 checked_files,
+                **literal_kwargs,
             )
             return receipt(results, "semantic", None)
 
@@ -549,6 +561,7 @@ def search(
             checked_types,
             checked_concepts,
             checked_files,
+            **literal_kwargs,
         )
         results = _rrf(lexical, semantic, retrieval_limit)
         used_mode = "hybrid"
@@ -1379,8 +1392,12 @@ def _semantic_results(
     types: Sequence[str] | None = None,
     concepts: Sequence[str] | None = None,
     files: Sequence[str] | None = None,
+    *, literal_query: str | None = None,
 ) -> list[dict[str, Any]]:
     kwargs = {"limit": limit, **_filter_kwargs(kinds, types, concepts, files)}
+    if literal_query is not None:
+        # Apply exact literals in SQL before cosine ordering and the limit.
+        kwargs["literal_query"] = literal_query
     return _preview_list(
         store.semantic_search(
             project,

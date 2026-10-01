@@ -31,9 +31,9 @@ python3 scripts/codex-mem.py config --no-jev-quality-enabled --no-jev-retrieval-
 
 ## What happens to a generated record
 
-After structural validation, Jev evaluates source support and overclaiming independently. The initial policy requires support of at least `0.8` and overclaiming of at most `0.2` for every note and session summary. A result is accepted only when every item passes.
+After structural validation, Jev evaluates source support and overclaiming independently. Policy `memory-quality-v8` requires support of at least `0.8` and overclaiming of at most `0.2` for every note and session summary. It checks the assertions the candidate makes; a candidate need not summarize every detail in the source. A result is accepted only when every item passes.
 
-An uncertain aggregate judgment gets one narrower check of the candidate's factual fields against the same complete evidence. Every field must pass the same thresholds. A clearly rejected candidate is not reconsidered. The audit preserves both the initial judgment and the field judgments; both stages share the 20-second budget.
+An uncertain aggregate judgment gets one narrower check of the candidate's factual fields against the same complete evidence. List members are checked separately. The complete candidate stays available so an introductory attribution can govern its list; an unrelated caveat cannot excuse an explicit unsupported claim of independent verification or completed execution. Every field must pass the same thresholds. A clearly rejected candidate is not reconsidered. The audit preserves both the initial judgment and the indexed field judgments; both stages share the 20-second budget. Refinement has at most 64 questions. Larger candidates remain quarantined instead of having assertions silently omitted. Detailed refinements can cost more tokens than aggregate checks.
 
 The check preserves distinctions between a request, an assistant's report, a tool result, and an inherited note. Same-session history can resolve references in a new note; it cannot supply a new completion result absent from current sources. Session summaries can also describe historical evidence within its original scope.
 
@@ -45,7 +45,7 @@ Complete candidate evidence must fit the quality stage's `96,000`-byte request l
 
 Both automatic prompt context and `memory_search` can evaluate up to 12 candidates in one request. A bounded recent-memory pool can supply a relevant record when the query and note use different languages or wording. This cannot recover every older record outside that pool.
 
-Code enforces project, current-session, activity, source and metadata boundaries, and literal identifiers. Jev evaluates relevance. New candidates require a relevance probability of at least `0.8` and a relevance Score of at least `2` on the four-level rubric. A Score's distribution concentration does not prove that the record is true.
+Code enforces project, current-session, activity, source and metadata boundaries, and literal identifiers. Exact version and identifier constraints also apply before local semantic ranking. Natural-language lexical questions can use a bounded fallback after exact search misses, with Russian and English equivalents for hook and timeout terms. Jev evaluates relevance. New candidates require a relevance probability of at least `0.8` and a relevance Score of at least `2` on the four-level rubric. A Score's distribution concentration does not prove that the record is true.
 
 The optional retrieval stage has a 1.5-second budget. Automatic hooks skip it when local work leaves insufficient time to return context within the hook deadline. A service error or invalid response restores the original result. Exact and historical queries preserve their ordering constraints. Existing results are not deleted solely because the model rates them poorly.
 

@@ -14,7 +14,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest import mock
 
-from codex_mem.store import MAX_LIMIT, SCHEMA_VERSION, Store, StoreError, project_key
+from codex_mem.store import (
+    MAX_LIMIT, SCHEMA_VERSION, Store, StoreError,
+    _legacy_observation_fingerprint, _observation_fingerprint, project_key,
+)
 from codex_mem.tool_io import get_tool_capture_for_entry, normalize_capture
 
 
@@ -384,7 +387,7 @@ class StoreTests(unittest.TestCase):
         batch = self.store.claim_observation_batch(
             self.project_a,
             "processor-large-raw",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             max_chars=256,
         )
@@ -552,7 +555,7 @@ class StoreTests(unittest.TestCase):
         batch = self.store.claim_observation_batch(
             self.project_a,
             "codex-mem.observation.luna-max.v1",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             worker_thread_id="processor-thread-1",
             worker_turn_id="processor-turn-1",
@@ -560,7 +563,7 @@ class StoreTests(unittest.TestCase):
         self.assertIsNotNone(batch)
         assert batch is not None
         self.assertEqual("running", batch["status"])
-        self.assertEqual("gpt-5.6-luna", batch["model"])
+        self.assertEqual("gpt-6-luna", batch["model"])
         self.assertEqual("medium", batch["reasoning_effort"])
         self.assertEqual("session-1", batch["session_id"])
         self.assertEqual(
@@ -617,7 +620,7 @@ class StoreTests(unittest.TestCase):
             source="hook:Stop",
         )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-summary", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-summary", "gpt-6-luna", "medium"
         )
         assert batch is not None
         completed = self.store.finish_observation_batch(
@@ -687,7 +690,7 @@ class StoreTests(unittest.TestCase):
         first = self.store.claim_observation_batch(
             self.project_a,
             "processor-delayed-stop",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             max_entries=1,
         )
@@ -719,7 +722,7 @@ class StoreTests(unittest.TestCase):
         second = self.store.claim_observation_batch(
             self.project_a,
             "processor-delayed-stop",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             max_entries=1,
         )
@@ -776,7 +779,7 @@ class StoreTests(unittest.TestCase):
         batch = self.store.claim_observation_batch(
             self.project_a,
             "processor-stop-boundary",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
         )
         assert batch is not None
@@ -815,7 +818,7 @@ class StoreTests(unittest.TestCase):
         batch = self.store.claim_observation_batch(
             self.project_a,
             "processor-legacy-stop",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
         )
         assert batch is not None
@@ -834,15 +837,9 @@ class StoreTests(unittest.TestCase):
             (batch["job_id"],),
         ).fetchall()
         source_ids = [str(row["id"]) for row in source_rows]
-        fingerprint = hashlib.sha256(
-            (
-                project_key(self.project_a)
-                + "\x00"
-                + "processor-legacy-stop"
-                + "\x00"
-                + "\x00".join(source_ids)
-            ).encode("utf-8")
-        ).hexdigest()
+        fingerprint = _observation_fingerprint(
+            project_key(self.project_a), "processor-legacy-stop", "gpt-6-luna", "medium", source_ids,
+        )
         connection.execute(
             "UPDATE observation_jobs SET input_fingerprint = ? WHERE id = ?",
             (fingerprint, batch["job_id"]),
@@ -872,7 +869,7 @@ class StoreTests(unittest.TestCase):
             source="hook:UserPromptSubmit",
         )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-v1", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-v1", "gpt-6-luna", "medium"
         )
         assert batch is not None
         failed = self.store.fail_observation_batch(
@@ -882,13 +879,13 @@ class StoreTests(unittest.TestCase):
         self.assertIsNone(self.store.get(self.project_a, [raw["id"]])[0]["superseded_by"])
         self.assertIsNone(
             self.store.claim_observation_batch(
-                self.project_a, "processor-v1", "gpt-5.6-luna", "medium"
+                self.project_a, "processor-v1", "gpt-6-luna", "medium"
             )
         )
         retried = self.store.claim_observation_batch(
             self.project_a,
             "processor-v1",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             retry_failed=True,
         )
@@ -901,7 +898,7 @@ class StoreTests(unittest.TestCase):
             ("2000-01-01T00:00:00.000000Z", retried["job_id"]),
         )
         recovered = self.store.claim_observation_batch(
-            self.project_a, "processor-v1", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-v1", "gpt-6-luna", "medium"
         )
         assert recovered is not None
         self.assertEqual(batch["job_id"], recovered["job_id"])
@@ -922,7 +919,7 @@ class StoreTests(unittest.TestCase):
         batch = self.store.claim_observation_batch(
             self.project_a,
             "processor-boundary",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             max_chars=14_000,
         )
@@ -949,7 +946,7 @@ class StoreTests(unittest.TestCase):
             [record["id"] for record in self.store.get(self.project_a, [sources[2]["id"]])],
         )
         next_batch = self.store.claim_observation_batch(
-            self.project_a, "processor-boundary", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-boundary", "gpt-6-luna", "medium"
         )
         assert next_batch is not None
         self.assertEqual([sources[2]["id"]], [record["id"] for record in next_batch["sources"]])
@@ -965,7 +962,7 @@ class StoreTests(unittest.TestCase):
                 source=f"hook:PostToolUse:recovery-{index}",
             )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-recovery", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-recovery", "gpt-6-luna", "medium"
         )
         assert batch is not None
         self.store._connection.execute(  # type: ignore[attr-defined]
@@ -975,7 +972,7 @@ class StoreTests(unittest.TestCase):
         recovered = self.store.claim_observation_batch(
             self.project_a,
             "processor-recovery",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             max_chars=256,
         )
@@ -998,7 +995,7 @@ class StoreTests(unittest.TestCase):
             source="hook:Stop",
         )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-forget", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-forget", "gpt-6-luna", "medium"
         )
         assert batch is not None
         self.store.forget(self.project_a, [first["id"]])
@@ -1014,7 +1011,7 @@ class StoreTests(unittest.TestCase):
             )
         self.assertEqual([], self.store.search(self.project_a, "forgotten sentinel"))
         next_batch = self.store.claim_observation_batch(
-            self.project_a, "processor-forget", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-forget", "gpt-6-luna", "medium"
         )
         assert next_batch is not None
         self.assertEqual([second["id"]], [record["id"] for record in next_batch["sources"]])
@@ -1037,7 +1034,7 @@ class StoreTests(unittest.TestCase):
             ("2000-01-01T00:00:00.000000Z", prunable["id"]),
         )
         prune_batch = self.store.claim_observation_batch(
-            self.project_a, "processor-prune", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-prune", "gpt-6-luna", "medium"
         )
         assert prune_batch is not None
         self.assertEqual([prunable["id"]], [record["id"] for record in prune_batch["sources"]])
@@ -1061,7 +1058,7 @@ class StoreTests(unittest.TestCase):
         batch = self.store.claim_observation_batch(
             self.project_a,
             "processor-oversized",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "medium",
             max_chars=256,
         )
@@ -1085,7 +1082,7 @@ class StoreTests(unittest.TestCase):
             source="hook:Stop",
         )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-v2", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-v2", "gpt-6-luna", "medium"
         )
         assert batch is not None
         with self.assertRaises(ValueError):
@@ -1133,7 +1130,7 @@ class StoreTests(unittest.TestCase):
         )
         self.assertIsNone(
             self.store.claim_observation_batch(
-                self.project_a, "processor-v2", "gpt-5.6-luna", "medium"
+                self.project_a, "processor-v2", "gpt-6-luna", "medium"
             )
         )
 
@@ -1153,7 +1150,7 @@ class StoreTests(unittest.TestCase):
             source="hook:PostToolUse:subset-call",
         )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-subset", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-subset", "gpt-6-luna", "medium"
         )
         assert batch is not None
 
@@ -1213,7 +1210,7 @@ class StoreTests(unittest.TestCase):
         self.assertEqual({first["id"], second["id"]}, set(by_id))
         self.assertIsNone(
             self.store.claim_observation_batch(
-                self.project_a, "processor-subset", "gpt-5.6-luna", "medium"
+                self.project_a, "processor-subset", "gpt-6-luna", "medium"
             )
         )
 
@@ -1238,7 +1235,7 @@ class StoreTests(unittest.TestCase):
                 return worker.claim_observation_batch(
                     self.project_a,
                     "processor-v3",
-                    "gpt-5.6-luna",
+                    "gpt-6-luna",
                     "medium",
                     worker_thread_id=f"thread-{index}",
                 )
@@ -1249,11 +1246,11 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(1, len(claimed))
         self.assertIsNotNone(
             self.store.claim_observation_batch(
-                self.project_b, "processor-v3", "gpt-5.6-luna", "medium"
+                self.project_b, "processor-v3", "gpt-6-luna", "medium"
             )
         )
 
-    def test_observation_claim_rejects_non_luna_or_non_medium_before_writing(self) -> None:
+    def test_observation_claim_rejects_legacy_model_or_non_medium_before_writing(self) -> None:
         self.store.remember(
             self.project_a,
             "Raw session",
@@ -1266,14 +1263,148 @@ class StoreTests(unittest.TestCase):
             )
         with self.assertRaises(ValueError):
             self.store.claim_observation_batch(
-                self.project_a, "processor-v4", "gpt-5.6-luna", "max"
+                self.project_a, "processor-v4", "gpt-5.6-luna", "medium"
+            )
+        with self.assertRaises(ValueError):
+            self.store.claim_observation_batch(
+                self.project_a, "processor-v4", "gpt-6-luna", "max"
             )
         self.assertEqual(0, self.store.status(self.project_a)["observation_jobs"]["jobs"])
         self.assertIsNotNone(
             self.store.claim_observation_batch(
-                self.project_a, "processor-v4", "gpt-5.6-luna", "medium"
+                self.project_a, "processor-v4", "gpt-6-luna", "medium"
             )
         )
+
+    def test_expired_legacy_lease_is_closed_before_new_profile_claim(self) -> None:
+        from codex_mem.observer_usage_store import begin_attempt
+
+        source = self.store.remember(
+            self.project_a,
+            "Legacy lease source",
+            "A new observer profile must be able to process this source after expiry.",
+            source="hook:Stop",
+        )
+        processor_id = "codex-mem-native-observation-v1"
+        old = self.store.claim_observation_batch(
+            self.project_a, processor_id, "gpt-6-luna", "medium", lease_seconds=60
+        )
+        assert old is not None
+        begin_attempt(self.store, self.project_a, old["job_id"], old["attempt_count"])
+        legacy_fingerprint = _legacy_observation_fingerprint(
+            project_key(self.project_a), processor_id, [source["id"]],
+        )
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            "UPDATE observation_jobs SET model='gpt-5.6-luna', input_fingerprint=?, "
+            "lease_expires_at=? WHERE id=?",
+            (legacy_fingerprint, "2999-01-01T00:00:00Z", old["job_id"]),
+        )
+
+        # A live legacy lease still owns the project-wide processing slot.
+        self.assertIsNone(
+            self.store.claim_observation_batch(
+                self.project_a, processor_id, "gpt-6-luna", "medium"
+            )
+        )
+
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            "UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE id=?",
+            (old["job_id"],),
+        )
+        current = self.store.claim_observation_batch(
+            self.project_a, processor_id, "gpt-6-luna", "medium"
+        )
+        self.assertIsNotNone(current)
+        assert current is not None
+        self.assertNotEqual(old["job_id"], current["job_id"])
+        historic = self.store._connection.execute(
+            "SELECT model, status, disposition, error_code, lease_token, lease_expires_at "
+            "FROM observation_jobs WHERE id=?",
+            (old["job_id"],),
+        ).fetchone()
+        self.assertEqual(
+            ("gpt-5.6-luna", "failed", "profile_retired", "lease_expired", None, None),
+            tuple(historic),
+        )
+        usage = self.store._connection.execute(
+            "SELECT outcome, error_code FROM observer_usage_attempts WHERE job_id=?",
+            (old["job_id"],),
+        ).fetchone()
+        self.assertEqual(("lease_expired", "lease_expired"), tuple(usage))
+        self.assertEqual([source["id"]], [row["id"] for row in current["sources"]])
+
+    def test_profile_expiry_exception_does_not_unblock_legacy_quarantines(self) -> None:
+        failed_sources: list[str] = []
+        for index, (code, reason_code) in enumerate((
+            ("invalid_response", "jev_quality_uncertain"),
+            ("invalid_response", "jev_quality_rejected"),
+            ("jev_quality_input_limit", None),
+        )):
+            raw = self.store.remember(
+                self.project_a, f"Legacy quarantine {index}", "Keep this raw source quarantined.",
+                source="hook:Stop", session_id=f"legacy-quality-{index}",
+            )
+            claim = self.store.claim_observation_batch(
+                self.project_a, "processor-old", "gpt-6-luna", "medium"
+            )
+            assert claim is not None
+            self.store._connection.execute(  # type: ignore[attr-defined]
+                "UPDATE observation_jobs SET model='gpt-5.6-luna' WHERE id=?",
+                (claim["job_id"],),
+            )
+            self.store.fail_observation_batch(
+                self.project_a, claim["job_id"], claim["lease_token"],
+                code=code, reason_code=reason_code,
+            )
+            failed_sources.append(raw["id"])
+
+        prior_expired_failure = self.store.remember(
+            self.project_a, "Prior expired failure", "A historical failed lease stays blocked.",
+            source="hook:Stop", session_id="legacy-expired-failure",
+        )
+        prior = self.store.claim_observation_batch(
+            self.project_a, "processor-old", "gpt-6-luna", "medium"
+        )
+        assert prior is not None
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            "UPDATE observation_jobs SET model='gpt-5.6-luna' WHERE id=?",
+            (prior["job_id"],),
+        )
+        self.store.fail_observation_batch(
+            self.project_a, prior["job_id"], prior["lease_token"], code="lease_expired"
+        )
+        failed_sources.append(prior_expired_failure["id"])
+
+        expired_source = self.store.remember(
+            self.project_a, "Expired legacy lease", "Only this source should move to gpt6.",
+            source="hook:Stop", session_id="legacy-expired",
+        )
+        old = self.store.claim_observation_batch(
+            self.project_a, "processor-old", "gpt-6-luna", "medium"
+        )
+        assert old is not None
+        self.store._connection.execute(  # type: ignore[attr-defined]
+            "UPDATE observation_jobs SET model='gpt-5.6-luna', "
+            "lease_expires_at='2000-01-01T00:00:00Z' WHERE id=?",
+            (old["job_id"],),
+        )
+
+        current = self.store.claim_observation_batch(
+            self.project_a, "processor-new", "gpt-6-luna", "medium"
+        )
+        self.assertIsNotNone(current)
+        assert current is not None
+        self.assertEqual([expired_source["id"]], [row["id"] for row in current["sources"]])
+        self.assertTrue(all(
+            self.store._connection.execute(
+                "SELECT 1 FROM observation_job_sources links "
+                "JOIN observation_jobs jobs ON jobs.id=links.job_id "
+                "WHERE links.source_id=? AND jobs.status='failed' "
+                "AND jobs.disposition IS NULL",
+                (source_id,),
+            ).fetchone()
+            for source_id in failed_sources
+        ))
 
     def test_historical_max_observation_metadata_remains_readable(self) -> None:
         self.store.remember(
@@ -1283,14 +1414,18 @@ class StoreTests(unittest.TestCase):
             source="hook:Stop",
         )
         batch = self.store.claim_observation_batch(
-            self.project_a, "processor-historical", "gpt-5.6-luna", "medium"
+            self.project_a, "processor-historical", "gpt-6-luna", "medium"
         )
         assert batch is not None
         # Simulate an existing v1.0 job.  Opening the current Store must not
         # rewrite its immutable execution receipt to the new medium contract.
+        legacy_fingerprint = _legacy_observation_fingerprint(
+            project_key(self.project_a), "processor-historical",
+            [source["id"] for source in batch["sources"]],
+        )
         self.store._connection.execute(  # type: ignore[attr-defined]
-            "UPDATE observation_jobs SET reasoning_effort = ? WHERE id = ?",
-            ("max", batch["job_id"]),
+            "UPDATE observation_jobs SET model = ?, reasoning_effort = ?, input_fingerprint = ? WHERE id = ?",
+            ("gpt-5.6-luna", "max", legacy_fingerprint, batch["job_id"]),
         )
         self.store.close()
         self.store = Store(self.data_dir)
@@ -1331,12 +1466,12 @@ class StoreTests(unittest.TestCase):
             source="hook:Stop",
         )
         observation = self.store.claim_observation_batch(
-            self.project_a, "migration-processor", "gpt-5.6-luna", "medium"
+            self.project_a, "migration-processor", "gpt-6-luna", "medium"
         )
         assert observation is not None
         self.store._connection.execute(  # type: ignore[attr-defined]
-            "UPDATE observation_jobs SET reasoning_effort = ? WHERE id = ?",
-            ("max", observation["job_id"]),
+            "UPDATE observation_jobs SET model = ?, reasoning_effort = ? WHERE id = ?",
+            ("gpt-5.6-luna", "max", observation["job_id"]),
         )
         self.store.close()
         database = self.data_dir / "memory.sqlite3"

@@ -24,6 +24,8 @@ Verify plugin registration, MCP tools, hook discovery and trust, and the backgro
 
 ## Current release
 
+Version `1.9.2` moves the observer to `gpt-6-luna` with `medium` reasoning. Expired jobs from the previous model can recover without reopening historical quarantine or losing attempt receipts. Natural-language search handles Russian and English hook/timeout terms while preserving exact versions and identifiers. TypeSafe quality policy `memory-quality-v8` checks supported assertions and applicable qualifiers, with separate checks for list members; acceptance thresholds are unchanged.
+
 Version `1.9.0` exposes memory freshness in search and session context: capture and processing timestamps, pending events, blockers, and separate index coverage. It adds exact recovery for inspected runner/storage failures without retrying content quarantine, and shortens observation-claim transactions.
 
 Version `1.8.0` adds period-based usage reports with separate API-equivalent cost and Codex credit estimates. Reports read the local ledger by default; an explicit refresh imports a bounded batch of usage metadata without model calls. The collector repairs missing Standard/Fast attribution while keeping requested and provider-confirmed settings separate. The observer now saves usage during a running attempt so recovery can retain a partial total. The observer remains Luna with medium reasoning. See the verification record for tested behavior and installation checks.
@@ -36,7 +38,7 @@ Version `1.8.0` adds period-based usage reports with separate API-equivalent cos
 - Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, `memory_status`, `memory_get_tool_uses`, `memory_usage_report`, and `memory_usage_refresh` through a local MCP server.
 - Uses SQLite FTS5 for lexical search. Optional local multilingual semantic search uses `intfloat/multilingual-e5-base` with FastEmbed and ONNX Runtime.
 - Keeps project and session provenance, source links for consolidated notes, and bounded execution receipts.
-- Runs a durable local queue. A worker processes small observation batches in fresh `gpt-5.6-luna` sessions with `medium` reasoning, then updates the local semantic index.
+- Runs a durable local queue. A worker processes small observation batches in fresh `gpt-6-luna` sessions with `medium` reasoning, then updates the local semantic index.
 - Retains redacted tool input and response in a local side index, up to 64 KiB per field. Oversized fields keep marked head/tail excerpts inside valid JSON. The observer receives the retained payload, including its middle; raw records stay outside normal memory search. Images and transcript files are not copied.
 - Writes observations with type, facts, narrative, concepts, and read/modified files. Substantive Stop events produce a separate session summary with the request, investigation, learning, completion, and next steps.
 

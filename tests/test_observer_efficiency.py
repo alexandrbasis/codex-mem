@@ -31,7 +31,7 @@ class ObserverEfficiencyTests(unittest.TestCase):
                 id, project, processor_id, model, reasoning_effort,
                 input_fingerprint, input_limit, status, attempt_count,
                 output_ids_json, created_at, updated_at
-            ) VALUES (?, ?, 'observer-v1', 'gpt-5.6-luna', 'medium', ?, 1000,
+            ) VALUES (?, ?, 'observer-v1', 'gpt-6-luna', 'medium', ?, 1000,
                       ?, ?, ?, '2026-09-17T00:00:00Z', '2026-09-17T00:00:00Z')""",
             (job_id, project or self.project, job_id, status, attempts,
              json.dumps(outputs)),

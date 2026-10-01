@@ -61,8 +61,29 @@ DEFAULT_OBSERVATION_CONTEXT_CHARS = 6_000
 MAX_PROCESSOR_CHARS = 128
 MAX_LEASE_SECONDS = 3_600
 DEFAULT_LEASE_SECONDS = 300
-OBSERVATION_MODEL = "gpt-5.6-luna"
+OBSERVATION_MODEL = "gpt-6-luna"
 OBSERVATION_REASONING_EFFORT = "medium"
+_LEGACY_OBSERVATION_MODEL = "gpt-5.6-luna"
+
+
+def _observation_fingerprint(
+    workspace: str,
+    processor_id: str,
+    model: str,
+    reasoning_effort: str,
+    source_ids: Sequence[str],
+) -> str:
+    """Bind an observation input snapshot to its processor execution profile."""
+    parts = (workspace, processor_id, model, reasoning_effort, *source_ids)
+    return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
+
+
+def _legacy_observation_fingerprint(
+    workspace: str, processor_id: str, source_ids: Sequence[str],
+) -> str:
+    """Fingerprint written before observation receipts included model profile."""
+    parts = (workspace, processor_id, "\x00".join(source_ids))
+    return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
 
 # Structured Claude-Mem compatible observation metadata.  The values are
 # deliberately kept in a side table instead of widening ``entries``: v3
@@ -718,7 +739,8 @@ def _fts_tokens(query: object) -> list[str]:
     if len(value) > MAX_QUERY_CHARS:
         raise ValueError("query is too long")
     normalized = unicodedata.normalize("NFKC", value)
-    return _FTS_TOKEN_RE.findall(normalized)[:32]
+    tokens = _FTS_TOKEN_RE.findall(normalized)
+    return tokens if len(tokens) <= 32 else []
 
 
 def _fts_expression(query: object) -> str:
@@ -2276,7 +2298,7 @@ class Store:
             required_model != OBSERVATION_MODEL
             or required_effort != OBSERVATION_REASONING_EFFORT
         ):
-            raise ValueError("observation processing requires gpt-5.6-luna with medium reasoning")
+            raise ValueError("observation processing requires gpt-6-luna with medium reasoning")
         thread_id = _validate_optional_processor_value(worker_thread_id, "worker_thread_id")
         turn_id = _validate_optional_processor_value(worker_turn_id, "worker_turn_id")
         entries_limit, chars_limit, checked_lease = _validate_observation_limits(
@@ -2302,6 +2324,29 @@ class Store:
 
             def claim() -> tuple[str, int] | None:
                 now = _utc_now()
+                # A lease from a retired profile cannot be reused for the
+                # current model. Close expired legacy attempts before looking
+                # for fresh sources; keep their original profile and receipt.
+                legacy_expired = connection.execute(
+                    "SELECT id, attempt_count FROM observation_jobs "
+                    "WHERE project=? AND status='running' AND lease_expires_at<=? "
+                    "AND (model<>? OR reasoning_effort<>?)",
+                    (workspace, now, required_model, required_effort),
+                ).fetchall()
+                if legacy_expired:
+                    from .observer_usage_store import recover_attempt
+                    for job in legacy_expired:
+                        recover_attempt(
+                            connection, str(job["id"]), int(job["attempt_count"]),
+                            outcome="lease_expired", error_code="lease_expired",
+                        )
+                    connection.executemany(
+                        "UPDATE observation_jobs SET status='failed', disposition='profile_retired', "
+                        "lease_token=NULL, lease_expires_at=NULL, error_code='lease_expired', updated_at=?, "
+                        "completed_at=? WHERE id=? AND project=? AND status='running' "
+                        "AND lease_expires_at<=?",
+                        [(now, now, str(job["id"]), workspace, now) for job in legacy_expired],
+                    )
                 # Manual recovery and hook-started workers share this lease
                 # boundary. Never run two observation model calls for the same
                 # project, even when they would claim different raw sources.
@@ -2367,8 +2412,10 @@ class Store:
                         return None
                     reusable_records = self._records_from_rows(reusable_sources)
                     if guarded_retry:
-                        fingerprint = hashlib.sha256((workspace + "\x00" + processor + "\x00" +
-                            "\x00".join(str(row["id"]) for row in reusable_sources)).encode("utf-8")).hexdigest()
+                        fingerprint = _observation_fingerprint(
+                            workspace, processor, required_model, required_effort,
+                            [str(row["id"]) for row in reusable_sources],
+                        )
                         if reusable["input_fingerprint"] != fingerprint:
                             raise StoreError("Observation sources are unavailable")
                     hydrated_records = [
@@ -2427,8 +2474,9 @@ class Store:
                     # fall through to an unrelated new or expired batch.
                     return None
 
-                # A failed receipt blocks retries only for the current exact
-                # document snapshot.  A retired text profile must requeue.
+                # A failed receipt blocks retries for its exact snapshot. The
+                # sole exception is an expired lease closed above for a retired
+                # profile; every historical failure and quarantine stays blocked.
                 # Keep the correlated anti-join source-first. An ordinary JOIN
                 # can scan every project job for each raw entry while holding
                 # the write transaction, starving unrelated writer attempts.
@@ -2443,7 +2491,10 @@ class Store:
                         WHERE links.source_id = e.id AND jobs.project = e.project
                           AND (
                             jobs.status IN ('processed', 'skipped', 'running')
-                            OR (? = 0 AND jobs.status = 'failed')
+                            OR (? = 0 AND jobs.status = 'failed'
+                                AND NOT (COALESCE(jobs.disposition,'')='profile_retired'
+                                    AND jobs.error_code='lease_expired'
+                                    AND (jobs.model<>? OR jobs.reasoning_effort<>?)))
                           )
                       )
                     ORDER BY e.created_at ASC, e.id ASC LIMIT 100
@@ -2455,6 +2506,8 @@ class Store:
                         _OBSERVATION_TOOL_SOURCE,
                         _OBSERVATION_TOOL_SOURCE + ":%",
                         1 if retry_failed else 0,
+                        required_model,
+                        required_effort,
                     ),
                 ).fetchall()
                 if not candidates:
@@ -2506,9 +2559,9 @@ class Store:
                 if not selected:
                     return None
                 source_ids = [str(row["id"]) for row in selected]
-                fingerprint = hashlib.sha256(
-                    (workspace + "\x00" + processor + "\x00" + "\x00".join(source_ids)).encode("utf-8")
-                ).hexdigest()
+                fingerprint = _observation_fingerprint(
+                    workspace, processor, required_model, required_effort, source_ids,
+                )
                 job_id = uuid.uuid4().hex
                 token = uuid.uuid4().hex
                 connection.execute(
@@ -2941,19 +2994,21 @@ class Store:
                     default=None,
                 )
                 source_by_id = {str(row["id"]): row for row in source_rows}
-                fingerprint = hashlib.sha256(
-                    (
-                        workspace
-                        + "\x00"
-                        + str(job["processor_id"])
-                        + "\x00"
-                        + "\x00".join(source_ids)
-                    ).encode("utf-8")
-                ).hexdigest()
+                fingerprint = _observation_fingerprint(
+                    workspace, str(job["processor_id"]), str(job["model"]),
+                    str(job["reasoning_effort"]), source_ids,
+                )
+                legacy_fingerprint_valid = (
+                    job["model"] == _LEGACY_OBSERVATION_MODEL
+                    and job["input_fingerprint"]
+                    == _legacy_observation_fingerprint(
+                        workspace, str(job["processor_id"]), source_ids,
+                    )
+                )
                 if (
                     not source_ids
                     or any(row["superseded_by"] is not None for row in source_rows)
-                    or job["input_fingerprint"] != fingerprint
+                    or (job["input_fingerprint"] != fingerprint and not legacy_fingerprint_valid)
                 ):
                     raise StoreError("Observation sources are unavailable")
 
@@ -3861,6 +3916,7 @@ class Store:
         concepts: Sequence[str] | str | None = None,
         types: Sequence[str] | str | None = None,
         type: Sequence[str] | str | None = None,
+        literal_query: str | None = None,
     ) -> list[dict[str, Any]]:
         """Return active project-local previews ranked by exact-profile cosine."""
 
@@ -3876,6 +3932,11 @@ class Store:
         checked_types = _validate_observation_types(types if types is not None else type)
         checked_files = _validate_metadata_filters(files, "files")
         checked_concepts = _validate_metadata_filters(concepts, "concepts")
+        if literal_query is not None:
+            from .jev_retrieval import exact_constraints
+            constraints = exact_constraints(literal_query, workspace)
+        else:
+            constraints = {"identifiers": [], "versions": []}
         with self._lock:
             self._require_open()
             clauses = [
@@ -3902,6 +3963,15 @@ class Store:
             )
             clauses.extend(metadata_clauses)
             parameters.extend(metadata_filter_parameters)
+            version_clauses, version_parameters = _version_search_sql("e", "m", constraints["versions"])
+            if version_clauses:
+                _register_query_functions(self._connection)
+                clauses.extend(version_clauses)
+                parameters.extend(version_parameters)
+            if constraints["identifiers"]:
+                _register_prompt_query_function(self._connection, constraints)
+                clauses.append("codex_mem_prompt_score(e.title, e.body, e.tags_json, "
+                               "m.observation_json, m.session_summary_json) > 0")
             parameters.append(MAX_EMBEDDING_SCAN)
             rows = self._read(
                 lambda: self._connection.execute(
@@ -4303,6 +4373,15 @@ class Store:
                 concepts=checked_concepts,
                 files=checked_files,
             )
+            if not rows:
+                from .retrieval import prompt_query_plan
+                plan = prompt_query_plan(query)
+                # Only natural questions receive a second, coverage-gated
+                # pass. Terse exact searches retain their AND semantics.
+                if plan and len(plan["terms"]) >= 2:
+                    rows, scores = self._prompt_search_rows(
+                        workspace, plan, checked_limit, checked_kinds,
+                        checked_types, checked_concepts, checked_files)
             records = self._records_from_rows(rows, preview=True, scores=scores)
             metadata = self.resume_metadata(workspace, [record["id"] for record in records])
             for record in records:
@@ -4312,6 +4391,57 @@ class Store:
             # Keep query rank here; resume/context may reorder the final bounded
             # view without losing an older obligation before the limit applies.
             return records
+
+    def _prompt_search_rows(
+        self, workspace: str, plan: Mapping[str, Any], limit: int,
+        kinds: Sequence[str] | None, types: Sequence[str] | None,
+        concepts: Sequence[str] | None, files: Sequence[str] | None,
+    ) -> tuple[list[sqlite3.Row], dict[str, float]]:
+        """Bounded natural-question fallback after exact lexical search misses."""
+        from .retrieval import prompt_term_variants, prompt_variant_prefix
+        _register_prompt_query_function(self._connection, plan)
+        variants = [(variant, term, stem) for term, stem in plan["terms"]
+                    for variant in prompt_term_variants(term, stem)]
+        query_tokens = [variant for variant, _, _ in variants]
+        expression_parts = [f'"{variant}"' + ('*' if prompt_variant_prefix(term, stem, variant) else '')
+                            for variant, term, stem in variants]
+        for exact in [*plan["identifiers"], *plan["versions"]]:
+            query_tokens.append(exact)
+            expression_parts.append('(' + _fts_expression(exact) + ')')
+        expression = ' OR '.join(expression_parts)
+        metadata_search, metadata_parameters = self._metadata_search_sql(
+            "m", query_tokens, any_token=True)
+        clauses = ["e.project = ?", "e.superseded_by IS NULL",
+                   "COALESCE(e.source, '') NOT GLOB 'hook:*'"]
+        parameters: list[object] = [workspace]
+        if kinds:
+            clauses.append("e.kind IN (" + ",".join("?" for _ in kinds) + ")")
+            parameters.extend(kinds)
+        metadata_clauses, filter_parameters = self._metadata_filter_sql(
+            "m", types=types, concepts=concepts, files=files)
+        clauses.extend(metadata_clauses)
+        parameters.extend(filter_parameters)
+        version_clauses, version_parameters = _version_search_sql("e", "m", plan["versions"])
+        if version_clauses:
+            _register_query_functions(self._connection)
+            clauses.extend(version_clauses)
+            parameters.extend(version_parameters)
+        match = "e.rowid IN (SELECT rowid FROM entries_fts WHERE entries_fts MATCH ?)"
+        match_parameters: list[object] = [expression]
+        if metadata_search:
+            match += " OR (" + metadata_search + ")"
+            match_parameters.extend(metadata_parameters)
+        clauses.append("(" + match + ")")
+        score = "codex_mem_prompt_score(e.title, e.body, e.tags_json, "
+        score += "m.observation_json, m.session_summary_json)"
+        clauses.append(score + " > 0")
+        sql = (f"SELECT e.*, {score} AS prompt_rank FROM entries AS e "
+               "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id WHERE "
+               + " AND ".join(clauses)
+               + " ORDER BY prompt_rank DESC, e.created_at DESC, e.id DESC LIMIT ?")
+        rows = self._read(lambda: self._connection.execute(
+            sql, (*parameters, *match_parameters, limit)).fetchall())
+        return rows, {row["id"]: float(row["prompt_rank"]) for row in rows}
 
     def resume_metadata(
         self, project: str | Path, ids: Sequence[str] | str, *, exclude_session: str | None = None
@@ -4840,7 +4970,7 @@ class Store:
         checked_types = _validate_observation_types(types)
         checked_files = _validate_metadata_filters(files, "files")
         checked_concepts = _validate_metadata_filters(concepts, "concepts")
-        constraints = exact_constraints(query)
+        constraints = exact_constraints(query, workspace)
         clauses = ["e.project = ?", "e.superseded_by IS NULL",
                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
                    "(e.kind NOT IN ('session', 'tool', 'checkpoint') "
@@ -5046,15 +5176,17 @@ class Store:
             if routing_only:
                 clauses.append("0")
             if query.strip() and state_scope != "project":
-                from .retrieval import prompt_query_plan
+                from .retrieval import prompt_query_plan, prompt_term_variants, prompt_variant_prefix
                 plan = state_scope_plan(state_scope) if state_scope else prompt_query_plan(query)
                 if plan:
                     # Use one query through the same chronology, per-session
                     # and lane selection as exact context. Two full scans can
                     # exceed the native hook's three-second timeout.
-                    query_tokens = [stem for _, stem in plan["terms"]]
-                    expressions = [f'"{stem}"' + ('*' if stem != term else '')
-                                   for term, stem in plan["terms"]]
+                    variants = [(variant, term, stem) for term, stem in plan["terms"]
+                                for variant in prompt_term_variants(term, stem)]
+                    query_tokens = [variant for variant, _, _ in variants]
+                    expressions = [f'"{variant}"' + ('*' if prompt_variant_prefix(term, stem, variant) else '')
+                                   for variant, term, stem in variants]
                     exact = [*plan["identifiers"], *plan["versions"]]
                     query_tokens.extend(exact)
                     expressions.extend('(' + _fts_expression(term) + ')' for term in exact)

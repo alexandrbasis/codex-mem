@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 from codex_mem import semantic
 from codex_mem.config import configure
-from codex_mem.retrieval import preview_records
+from codex_mem.retrieval import preview_records, prompt_match_score, prompt_query_plan
 from codex_mem.store import Store
 from tests.test_resume_current_state import Backend, CandidateStore, event, summary
 
@@ -226,7 +226,7 @@ class AuditContextTests(unittest.TestCase):
             session_id=session, source_ids=[raw["id"]], kind="session_summary", **kwargs)
 
     def ids(self, query):
-        context = self.store.context(self.project, query=query, budget=6000)
+        context = self.store.context(self.project, query=query, budget=6000, allow_remote=False)
         return [row.attrib["id"] for row in ET.fromstring(context).findall("entry")]
 
     def test_automatic_context_uses_current_evidence_across_language(self):
@@ -238,6 +238,78 @@ class AuditContextTests(unittest.TestCase):
         for query in AUDIT_QUERIES:
             with self.subTest(query=query):
                 self.assertEqual(latest["id"], self.ids(query)[0])
+
+    def test_russian_hook_timeout_question_finds_only_requested_release(self):
+        query = "Что решили и почему по таймауту хуков в 1.9.1?"
+        self.note("Hook timeout in 1.8.0", "The old hook deadline was investigated.", "old", 14)
+        target = self.note("Hook timeout decision in 1.9.1",
+            "We chose a supervised hook worker and a two second internal deadline because the host kills slow hooks.",
+            "target", 28)
+        self.note("Hook timeout decision in 1.9.2", "A later release changed the worker.", "new", 29)
+        self.assertEqual([target["id"]], self.ids(query))
+        self.assertEqual([target["id"]], [row["id"] for row in self.store.search(self.project, query)])
+
+    def test_semantic_and_hybrid_enforce_requested_version_before_ranking(self):
+        query = "Что решили и почему по таймауту хуков в 1.9.1?"
+        old = self.note("Hook timeout decision in 1.8.0", "Old worker implementation.", "old", 14)
+        target = self.note("Hook timeout decision in 1.9.1", "Supervised worker fixed the hook deadline.",
+                           "target", 28)
+        batch = self.store.claim_embedding_batch(
+            self.project, semantic.MODEL, semantic.MODEL_REVISION, semantic.DIMENSIONS)
+        self.assertIsNotNone(batch)
+        self.store.complete_embedding_batch(self.project, batch["job_id"], batch["lease_token"],
+            vectors=[{"entry_id": item["id"], "content_hash": item["content_hash"],
+                      "vector": ([1.0, 0.0] if item["id"] == old["id"] else [0.0, 1.0])
+                                + [0.0] * (semantic.DIMENSIONS - 2)} for item in batch["entries"]])
+        for mode in ("semantic", "hybrid", "auto"):
+            with self.subTest(mode=mode):
+                result = semantic.search(self.store, self.project, query, mode=mode,
+                    backend=Backend(), limit=5)
+                self.assertEqual([target["id"]], [row["id"] for row in result["results"]])
+
+    def test_named_project_in_broad_state_question_is_scope_not_literal(self):
+        target = self.note("Hook worker status", "The latest check remains pending.", "target", 28)
+        batch = self.store.claim_embedding_batch(
+            self.project, semantic.MODEL, semantic.MODEL_REVISION, semantic.DIMENSIONS)
+        self.store.complete_embedding_batch(self.project, batch["job_id"], batch["lease_token"],
+            vectors=[{"entry_id": item["id"], "content_hash": item["content_hash"],
+                      "vector": [1.0] + [0.0] * (semantic.DIMENSIONS - 1)}
+                     for item in batch["entries"]])
+        result = semantic.search(self.store, self.project,
+            "Как сейчас работает codex-mem и что осталось проверить?",
+            mode="semantic", backend=Backend(), limit=5)
+        self.assertEqual([target["id"]], [row["id"] for row in result["results"]])
+
+    def test_version_and_extra_topic_cannot_be_relaxed_by_natural_fallback(self):
+        self.note("Hook timeout decision in 1.9.1", "Supervised worker fixed hook timeouts.",
+                  "target", 28)
+        for query in ("Что решили и почему по таймауту хуков и биллингу в 1.9.1?",
+                      "Что решили и почему по таймауту хуков в 1.9.10?"):
+            with self.subTest(query=query):
+                self.assertEqual([], self.ids(query))
+                self.assertEqual([], self.store.search(self.project, query))
+        plan = prompt_query_plan("Что решили и почему по таймауту хуков в 1.9.1?")
+        self.assertIsNotNone(plan)
+        self.assertEqual(0, prompt_match_score("Hook timeout decision in 1.9.10", plan))
+
+    def test_natural_fallback_keeps_project_and_raw_source_boundaries(self):
+        query = "Что решили и почему по таймауту хуков в 1.9.1?"
+        self.store.remember(self.project / "foreign", "Hook timeout decision in 1.9.1",
+                            "The unrelated project chose a worker.")
+        self.store.remember(self.project, "Hook timeout decision in 1.9.1",
+                            "Raw source event only.", source="hook:Stop")
+        self.assertEqual([], self.ids(query))
+        self.assertEqual([], self.store.search(self.project, query))
+
+    def test_overflowed_topical_terms_do_not_drop_the_last_constraint(self):
+        topics = ("atlas", "beryl", "cedar", "delta", "elm", "fable", "glade",
+                  "harbor", "iris", "juniper", "keel", "lotus", "maple",
+                  "north", "opal", "pine", "quartz")
+        self.note(" ".join((*topics[:-1], "1.9.1")), "A different decision.", "target", 28)
+        query = "What about " + " ".join(topics) + " in 1.9.1?"
+        self.assertIsNone(prompt_query_plan(query))
+        self.assertEqual([], self.ids(query))
+        self.assertEqual([], self.store.search(self.project, query))
 
     def test_release_context_excludes_newer_unrelated_records(self):
         release = self.note("Release verification completed", "The release was pushed.", "release", 21)
