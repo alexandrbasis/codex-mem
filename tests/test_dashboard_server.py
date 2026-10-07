@@ -87,6 +87,20 @@ class DashboardHTTPTests(unittest.TestCase):
         for path in ("/../config.json", "/%2e%2e/config.json", "/assets/index.html", "/api/start", "/api/refresh"):
             self.assertEqual(404, self.request(path)[0])
 
+    def test_plugin_assets_serve_english_ui_without_a_frontend_build(self):
+        import codex_mem.dashboard as dashboard
+        self.server.static_dir = Path(dashboard.__file__).parent / "ui_static"
+        status, _, page = self.request("/")
+        self.assertEqual(200, status)
+        self.assertIn(b'lang="en"', page)
+        self.assertIn(b"Overview", page)
+        self.assertIn(b"Projects", page)
+        status, _, script = self.request("/app.js")
+        self.assertEqual(200, status)
+        self.assertIn(b"en-US", script)
+        self.assertNotRegex((page + script).decode("utf-8"), r"[\u0400-\u04ff]")
+        self.assertEqual(200, self.request("/styles.css")[0])
+
     def test_filters_are_bounded_and_validated(self):
         bad = ("/api/projects?period=year", "/api/projects?page=0", "/api/projects?limit=101",
                "/api/projects?page=-1", "/api/projects?page=1&page=2", "/api/projects?other=x",

@@ -164,14 +164,16 @@ class DashboardReader:
                 result['tables'][table] = rows[:ROW_LIMIT]
                 result['coverage']['available_tables'].append(table)
             result['pending_observations'] = None
+            result['pending_oldest_at'] = None
             if {'entries', 'observation_jobs', 'observation_job_sources'} <= available:
                 entry_columns = {row[1] for row in connection.execute('PRAGMA table_info(entries)')}
                 if {'source', 'superseded_by'} <= entry_columns:
                     from .store import OBSERVATION_MODEL, OBSERVATION_REASONING_EFFORT
                     project_clause = ' AND e.project=?' if project else ''
                     parameters = [OBSERVATION_MODEL, OBSERVATION_REASONING_EFFORT] + ([project] if project else [])
-                    pending = connection.execute("SELECT e.project,COUNT(*) FROM entries e WHERE e.superseded_by IS NULL AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse') OR e.source LIKE 'hook:PostToolUse:%') AND NOT EXISTS (SELECT 1 FROM observation_job_sources links CROSS JOIN observation_jobs jobs ON jobs.id=links.job_id WHERE links.source_id=e.id AND jobs.project=e.project AND (jobs.status IN ('processed','skipped','running') OR (jobs.status='failed' AND NOT (COALESCE(jobs.disposition,'')='profile_retired' AND jobs.error_code='lease_expired' AND (jobs.model<>? OR jobs.reasoning_effort<>?)))))" + project_clause + ' GROUP BY e.project', parameters).fetchall()
+                    pending = connection.execute("SELECT e.project,COUNT(*),MIN(e.created_at) FROM entries e WHERE e.superseded_by IS NULL AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse') OR e.source LIKE 'hook:PostToolUse:%') AND NOT EXISTS (SELECT 1 FROM observation_job_sources links CROSS JOIN observation_jobs jobs ON jobs.id=links.job_id WHERE links.source_id=e.id AND jobs.project=e.project AND (jobs.status IN ('processed','skipped','running') OR (jobs.status='failed' AND NOT (COALESCE(jobs.disposition,'')='profile_retired' AND jobs.error_code='lease_expired' AND (jobs.model<>? OR jobs.reasoning_effort<>?)))))" + project_clause + ' GROUP BY e.project', parameters).fetchall()
                     result['pending_observations'] = {row[0]: row[1] for row in pending}
+                    result['pending_oldest_at'] = {row[0]: row[2] for row in pending}
             result['status'] = 'partial' if result['coverage']['truncated_tables'] else 'available'
             result['coverage']['status'] = result['status']
         except (sqlite3.Error, OSError, ValueError) as error:
@@ -302,6 +304,39 @@ class DashboardReader:
             snapshot['_service_records'] = records
         return snapshot['_service_records']
 
+    @staticmethod
+    def _queue_progress(snapshot, jobs):
+        coverage = snapshot['coverage']
+        end = _instant(coverage.get('snapshot_at'))
+        available = (end is not None and 'observation_jobs' in coverage['available_tables']
+                     and 'observation_jobs' not in coverage['truncated_tables']
+                     and 'observation_jobs' not in coverage.get('interrupted_tables', ()))
+        result = {'available': available, 'window_seconds': 3600,
+                  'processed_jobs': None, 'skipped_jobs': None, 'failed_jobs': None,
+                  'last_completed_at': None, 'last_attempt_at': None,
+                  'basis': 'current_snapshot_last_hour'}
+        if not available:
+            return result
+        start = end - timedelta(seconds=result['window_seconds'])
+        counts = Counter()
+        last_completed = last_attempt = None
+        for row in jobs:
+            status = row.get('status')
+            if status not in ('processed', 'skipped', 'failed'):
+                continue
+            completed = _instant(row.get('completed_at')) or _instant(row.get('updated_at'))
+            if completed is None or completed > end:
+                continue
+            last_attempt = max(last_attempt, completed) if last_attempt else completed
+            if status in ('processed', 'skipped'):
+                last_completed = max(last_completed, completed) if last_completed else completed
+            if start <= completed <= end:
+                counts[status] += 1
+        result.update({status + '_jobs': counts[status] for status in ('processed', 'skipped', 'failed')})
+        result['last_completed_at'] = last_completed.isoformat() if last_completed else None
+        result['last_attempt_at'] = last_attempt.isoformat() if last_attempt else None
+        return result
+
     def _queue(self, snapshot, project=None):
         jobs = [row for row in snapshot['tables']['observation_jobs'] if project is None or row.get('project') == project]
         counts = Counter(row.get('status') for row in jobs)
@@ -310,7 +345,10 @@ class DashboardReader:
         pending = snapshot.get('pending_observations')
         pending_count = None if pending is None else (pending.get(project, 0) if project is not None else sum(pending.values()))
         available = 'observation_jobs' in snapshot['coverage']['available_tables']
-        return {'queued_projects': len(records), 'blocked_projects': sum(bool(row.get('blocked')) for row in records), 'service_record': service_records.get(project) if project else None, 'pending_observations': pending_count, 'pending_basis': 'Unclaimed raw captures using current processor eligibility, excluding running, completed, skipped and quarantined source snapshots.', 'basis': 'current_snapshot_all_dates', 'available': available, 'pending': pending_count, 'pending_jobs': counts['pending'] if available else None, **{state: counts[state] if available else None for state in ('running', 'failed')}, 'quarantined': sum(row.get('status') == 'failed' and row.get('error_code') == 'invalid_response' for row in jobs) if available else None, 'status_counts': dict(counts)}
+        oldest = snapshot.get('pending_oldest_at')
+        oldest_values = (oldest.get(project),) if oldest is not None and project is not None else (oldest or {}).values()
+        pending_oldest = min((value for value in oldest_values if _instant(value) is not None), key=_instant, default=None)
+        return {'progress': self._queue_progress(snapshot, jobs), 'pending_oldest_at': pending_oldest, 'queued_projects': len(records), 'blocked_projects': sum(bool(row.get('blocked')) for row in records), 'service_record': service_records.get(project) if project else None, 'pending_observations': pending_count, 'pending_basis': 'Unclaimed raw captures using current processor eligibility, excluding running, completed, skipped and quarantined source snapshots.', 'basis': 'current_snapshot_all_dates', 'available': available, 'pending': pending_count, 'pending_jobs': counts['pending'] if available else None, **{state: counts[state] if available else None for state in ('running', 'failed')}, 'quarantined': sum(row.get('status') == 'failed' and row.get('error_code') == 'invalid_response' for row in jobs) if available else None, 'status_counts': dict(counts)}
 
     def _capture(self, snapshot, project=None):
         rows = [row for row in snapshot['tables']['entries'] if (project is None or row.get('project') == project) and self._in_period(row, 'created_at', snapshot)]

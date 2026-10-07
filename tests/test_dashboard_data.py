@@ -138,6 +138,74 @@ class DashboardDataTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             reader.overview('month')
 
+    def test_queue_progress_uses_terminal_jobs_and_snapshot_hour_across_periods(self):
+        end = datetime.fromisoformat(self.now)
+        recent = (end - timedelta(minutes=10)).isoformat()
+        older = (end - timedelta(hours=2)).isoformat()
+        later = (end + timedelta(minutes=1)).isoformat()
+        with self.database() as connection:
+            connection.execute('ALTER TABLE observation_jobs ADD COLUMN completed_at TEXT')
+            connection.executemany('INSERT INTO observation_jobs(id,project,status,created_at,updated_at,completed_at) VALUES (?,?,?,?,?,?)', [
+                ('processed', self.project, 'processed', self.old, recent, recent),
+                ('skipped', self.project, 'skipped', self.old, recent, None),
+                ('failed', self.project, 'failed', self.old, self.now, self.now),
+                ('old', self.project, 'processed', self.old, self.now, older),
+                ('running', self.project, 'running', self.old, self.now, None),
+                ('pending', self.project, 'pending', self.old, self.now, None),
+                ('future', self.project, 'processed', self.old, later, later),
+                ('beta', '/projects/beta', 'skipped', self.old, recent, recent),
+            ])
+        reader = DashboardReader(self.home)
+        for period in ('all', 'today', '7d', '30d'):
+            window = dict(_window(period), to=self.now)
+            with patch('codex_mem.dashboard_data._window', return_value=window):
+                queue = reader.overview(period)['queue']
+                scoped = reader.project(self.project, period)['queue']['progress']
+            self.assertEqual('current_snapshot_last_hour', scoped['basis'])
+            self.assertEqual(3600, scoped['window_seconds'])
+            self.assertTrue(scoped['available'])
+            self.assertEqual(1, scoped['processed_jobs'])
+            self.assertEqual(1, scoped['skipped_jobs'])
+            self.assertEqual(1, scoped['failed_jobs'])
+            self.assertEqual(recent, scoped['last_completed_at'])
+            self.assertEqual(self.now, scoped['last_attempt_at'])
+            self.assertEqual(2, queue['progress']['skipped_jobs'])
+            self.assertEqual(1, queue['running'])
+            self.assertEqual(1, queue['pending_jobs'])
+
+    def test_queue_progress_never_claims_work_from_running_or_pending_updates(self):
+        with self.database() as connection:
+            connection.executemany('INSERT INTO observation_jobs(id,project,status,updated_at) VALUES (?,?,?,?)', [
+                ('running', self.project, 'running', self.now),
+                ('pending', self.project, 'pending', self.now),
+            ])
+        progress = DashboardReader(self.home).overview()['queue']['progress']
+        self.assertTrue(progress['available'])
+        self.assertEqual(0, progress['processed_jobs'])
+        self.assertEqual(0, progress['skipped_jobs'])
+        self.assertEqual(0, progress['failed_jobs'])
+        self.assertIsNone(progress['last_completed_at'])
+        self.assertIsNone(progress['last_attempt_at'])
+
+    def test_queue_progress_requires_complete_jobs_but_preserves_unrelated_partial_reads(self):
+        reader = DashboardReader(self.home)
+        missing = reader.overview()['queue']['progress']
+        self.assertFalse(missing['available'])
+        self.assertIsNone(missing['processed_jobs'])
+        self.seed()
+        with self.connection() as connection:
+            connection.execute('INSERT INTO observation_jobs(id,project,status,updated_at) VALUES (?,?,?,?)', ('extra', self.project, 'processed', self.now))
+        with patch('codex_mem.dashboard_data.ROW_LIMIT', 1):
+            truncated = DashboardReader(self.home).overview()['queue']['progress']
+        self.assertFalse(truncated['available'])
+        self.assertIsNone(truncated['failed_jobs'])
+        snapshot = reader._read('all')
+        snapshot['coverage']['interrupted_tables'] = ['observation_jobs']
+        self.assertFalse(reader._queue(snapshot)['progress']['available'])
+        snapshot['coverage']['interrupted_tables'] = ['jev_judgment_audits']
+        snapshot['status'] = 'partial'
+        self.assertTrue(reader._queue(snapshot)['progress']['available'])
+
     def test_pagination_search_and_usage_only_project(self):
         self.seed()
         with self.connection() as connection:
@@ -157,13 +225,15 @@ class DashboardDataTests(unittest.TestCase):
         with self.connection() as connection:
             connection.executescript("ALTER TABLE entries ADD COLUMN source TEXT; ALTER TABLE entries ADD COLUMN superseded_by TEXT; ALTER TABLE observation_jobs ADD COLUMN disposition TEXT; ALTER TABLE observation_jobs ADD COLUMN reasoning_effort TEXT; CREATE TABLE observation_job_sources(job_id TEXT,source_id TEXT);")
             connection.execute("UPDATE entries SET source='hook:Stop'")
-            connection.execute("INSERT INTO entries(id,project,kind,session_id,created_at,updated_at,source) VALUES ('fresh',?,'raw','session',?,?,'hook:PostToolUse:x')", (self.project,self.now,self.now))
+            connection.execute("INSERT INTO entries(id,project,kind,session_id,created_at,updated_at,source) VALUES ('fresh',?,'raw','session',?,?,'hook:PostToolUse:x')", (self.project,self.old,self.now))
             connection.execute("INSERT INTO observation_job_sources VALUES ('job','note')")
             large = {'decisions': ['PRIVATE_SENTINEL' * 10000], 'usage': {'input_tokens': 11, 'output_tokens': 4}, 'usage_status': 'reported', 'counts': {'requests': 1}}
             connection.execute('UPDATE jev_filter_attempts SET audit_json=?', (json.dumps(large,sort_keys=True),))
         report = DashboardReader(self.home).overview()
         self.assertEqual(1, report['queue']['pending_observations'])
         self.assertEqual(1, report['queue']['pending'])
+        self.assertEqual(self.old, report['queue']['pending_oldest_at'])
+        self.assertEqual(self.old, DashboardReader(self.home).project(self.project, 'today')['queue']['pending_oldest_at'])
         self.assertEqual(11, report['jev']['filter']['input_tokens'])
         self.assertNotIn('PRIVATE_SENTINEL', json.dumps(report))
 
@@ -270,9 +340,16 @@ class DashboardDataTests(unittest.TestCase):
         self.assertEqual('query_deadline', report['coverage']['status'])
         self.assertEqual(440, report['combined']['total_tokens'])
         self.assertEqual(1, report['capture']['entries'])
+        self.assertTrue(report['queue']['progress']['available'])
+        self.assertEqual(1, report['queue']['progress']['failed_jobs'])
         self.assertIsNone(report['jev']['quality']['receipts'])
         self.assertNotIn('jev_judgment_audits', report['coverage']['available_tables'])
         self.assertNotIn('PRIVATE', json.dumps(report))
+        interrupted_table = 'observation_jobs'
+        with patch('codex_mem.dashboard_data.sqlite3.connect', InterruptJudgments):
+            interrupted = DashboardReader(self.home).overview()['queue']['progress']
+        self.assertFalse(interrupted['available'])
+        self.assertIsNone(interrupted['failed_jobs'])
         interrupted_table = 'observer_usage_attempts'
         reader = DashboardReader(self.home)
         with patch('codex_mem.dashboard_data.sqlite3.connect', InterruptJudgments):
