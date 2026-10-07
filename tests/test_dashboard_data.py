@@ -1,8 +1,10 @@
 """Dashboard isolation, accounting identity, time bounds and readonly behavior."""
 import json
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import sqlite3
 import tempfile
+import threading
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
@@ -63,6 +65,9 @@ class DashboardDataTests(unittest.TestCase):
         self.assertEqual('unavailable', result['status'])
         self.assertIsNone(result['main']['total_tokens'])
         self.assertIsNone(result['combined']['api_equivalent_usd']['total'])
+        self.assertIsNone(result['capture']['entries'])
+        self.assertIsNone(result['queue']['failed'])
+        self.assertIsNone(result['jev']['filter']['receipts'])
         (self.home / 'memory.sqlite3').write_bytes(b'corrupt')
         before = sorted(self.home.iterdir())
         self.assertEqual('unavailable', DashboardReader(self.home).overview()['status'])
@@ -197,6 +202,115 @@ class DashboardDataTests(unittest.TestCase):
         with patch('codex_mem.dashboard_data.QUERY_SECONDS', -1):
             report = DashboardReader(self.home).overview()
         self.assertEqual('unavailable', report['status'])
+
+    def test_deadline_retries_before_normal_cache_expiry(self):
+        self.seed()
+        reader = DashboardReader(self.home)
+        with patch('codex_mem.dashboard_data.QUERY_SECONDS', -1):
+            failed = reader.overview()
+        self.assertEqual('query_deadline', failed['coverage']['status'])
+        timestamp, snapshot = reader._failures[('all', None)]
+        reader._failures[('all', None)] = (timestamp - 3, snapshot)
+        with patch.object(reader, '_read', wraps=reader._read) as read:
+            recovered = reader.overview()
+        self.assertEqual('available', recovered['status'])
+        self.assertEqual(440, recovered['combined']['total_tokens'])
+        self.assertEqual(1, read.call_count)
+
+    def test_expired_snapshot_survives_transient_deadline_with_staleness(self):
+        self.seed()
+        reader = DashboardReader(self.home)
+        before = reader.overview()
+        cache_key = ('all', None)
+        reader._cache[cache_key] = (0, reader._cache[cache_key][1])
+        with patch('codex_mem.dashboard_data.QUERY_SECONDS', -1):
+            failed = reader.overview()
+        self.assertEqual('stale', failed['status'])
+        self.assertEqual(before['combined']['total_tokens'], failed['combined']['total_tokens'])
+        self.assertTrue(failed['coverage']['stale'])
+        self.assertEqual('query_deadline', failed['coverage']['refresh_error'])
+        self.assertEqual('stale', failed['completeness']['collection']['status'])
+        self.assertGreaterEqual(failed['coverage']['snapshot_age_seconds'], 30)
+        self.assertEqual('available', before['coverage']['status'])
+        self.assertEqual('available', reader._cache[cache_key][1]['status'])
+
+    def test_missing_and_corrupt_have_distinct_failure_reasons(self):
+        self.assertEqual('database_missing', DashboardReader(self.home).overview()['coverage']['status'])
+        (self.home / 'memory.sqlite3').write_bytes(b'corrupt')
+        self.assertEqual('database_corrupt', DashboardReader(self.home).overview()['coverage']['status'])
+
+    def test_ancillary_query_deadline_preserves_completed_accounting_ledgers(self):
+        self.seed()
+        connect = sqlite3.connect
+        interrupted_table = 'jev_judgment_audits'
+
+        class InterruptJudgments:
+            def __init__(self, *args, **kwargs):
+                self.connection = connect(*args, **kwargs)
+
+            @property
+            def row_factory(self):
+                return self.connection.row_factory
+
+            @row_factory.setter
+            def row_factory(self, value):
+                self.connection.row_factory = value
+
+            def __getattr__(self, name):
+                return getattr(self.connection, name)
+
+            def execute(self, query, *args):
+                if query.startswith('SELECT ') and f'FROM {interrupted_table}' in query and not query.startswith('SELECT DISTINCT '):
+                    raise sqlite3.OperationalError('interrupted')
+                return self.connection.execute(query, *args)
+
+        with patch('codex_mem.dashboard_data.sqlite3.connect', InterruptJudgments):
+            report = DashboardReader(self.home).overview()
+        self.assertEqual('partial', report['status'])
+        self.assertEqual('query_deadline', report['coverage']['status'])
+        self.assertEqual(440, report['combined']['total_tokens'])
+        self.assertEqual(1, report['capture']['entries'])
+        self.assertIsNone(report['jev']['quality']['receipts'])
+        self.assertNotIn('jev_judgment_audits', report['coverage']['available_tables'])
+        self.assertNotIn('PRIVATE', json.dumps(report))
+        interrupted_table = 'observer_usage_attempts'
+        reader = DashboardReader(self.home)
+        with patch('codex_mem.dashboard_data.sqlite3.connect', InterruptJudgments):
+            report = reader.overview()
+        self.assertEqual('partial', report['status'])
+        self.assertEqual(220, report['main']['total_tokens'])
+        self.assertIsNone(report['observer']['total_tokens'])
+        self.assertIsNone(report['combined']['total_tokens'])
+        self.assertEqual(1, report['completeness']['observer_overlap_events_excluded_from_main'])
+        timestamp, snapshot = reader._failures[('all', None)]
+        reader._failures[('all', None)] = (timestamp - 3, snapshot)
+        with patch('codex_mem.dashboard_data.QUERY_SECONDS', -1):
+            failed_again = reader.overview()
+        self.assertEqual('stale', failed_again['status'])
+        self.assertEqual(220, failed_again['main']['total_tokens'])
+        self.assertIsNone(failed_again['observer']['total_tokens'])
+
+    def test_slow_project_read_does_not_block_other_snapshot_scopes(self):
+        self.seed()
+        reader = DashboardReader(self.home)
+        entered, release = threading.Event(), threading.Event()
+        read = reader._read
+
+        def delayed(period, project=None):
+            if project is not None:
+                entered.set()
+                release.wait(2)
+            return read(period, project)
+
+        with patch.object(reader, '_read', side_effect=delayed), ThreadPoolExecutor(max_workers=2) as pool:
+            project = pool.submit(reader.project, self.project)
+            try:
+                self.assertTrue(entered.wait(1))
+                report = pool.submit(reader.overview).result(timeout=1)
+                self.assertEqual(440, report['combined']['total_tokens'])
+            finally:
+                release.set()
+            self.assertEqual('available', project.result(timeout=1)['status'])
 
 
 if __name__ == '__main__':

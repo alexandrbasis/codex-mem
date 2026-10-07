@@ -18,6 +18,9 @@ from .store import project_key
 ZONE = 'Asia/Jerusalem'
 ROW_LIMIT = 500_000
 QUERY_SECONDS = 8.0
+CACHE_SECONDS = 30
+RETRY_SECONDS = 2
+TRANSIENT_FAILURES = {'query_deadline', 'database_busy'}
 # Column allowlists also protect older or extended schemas from exposing content.
 FIELDS = {
     'entries': 'id project kind session_id created_at updated_at superseded_by',
@@ -60,22 +63,48 @@ class DashboardReader:
     def __init__(self, data_dir=None):
         self.data_dir = data_dir_path(data_dir)
         self._cache = {}
+        self._failures = {}
+        self._snapshot_locks = {}
         self._lock = threading.RLock()
 
     def _snapshot(self, period, project=None):
         _window(period)  # Validate even on cache hits.
+        cache_key = (period, project)
         with self._lock:
-            cache_key = (period, project)
+            lock = self._snapshot_locks.setdefault(cache_key, threading.RLock())
+        # Requests for one scope share a read, without blocking other scopes.
+        with lock:
             cached = self._cache.get(cache_key)
-            if cached and time.monotonic() - cached[0] < 30:
+            now = time.monotonic()
+            if cached and now - cached[0] < CACHE_SECONDS and cached[1]['coverage']['status'] not in TRANSIENT_FAILURES:
                 return cached[1]
+            failure = self._failures.get(cache_key)
+            if failure and now - failure[0] < RETRY_SECONDS:
+                return self._after_failure(cached, failure[1], now)
             result = self._read(period, project)
-            self._cache[cache_key] = (time.monotonic(), result)
-            return result
+            now = time.monotonic()
+            if result['status'] != 'unavailable' and result['coverage']['status'] not in TRANSIENT_FAILURES:
+                self._cache[cache_key] = (now, result)
+                self._failures.pop(cache_key, None)
+                return result
+            self._failures[cache_key] = (now, result)
+            response = self._after_failure(cached, result, now)
+            if not cached and result['status'] == 'partial':
+                # Keep sound sections from a cold partial read as a fallback.
+                # Its failure status prevents the normal healthy cache TTL.
+                self._cache[cache_key] = (now, result)
+            return response
+
+    @staticmethod
+    def _after_failure(cached, failed, now):
+        if cached and failed['coverage']['status'] in TRANSIENT_FAILURES:
+            previous = cached[1]
+            return {**previous, 'status': 'stale', 'coverage': {**previous['coverage'], 'status': 'stale', 'stale': True, 'snapshot_age_seconds': max(0, now - cached[0]), 'refresh_error': failed['coverage']['status'], 'retry_after_seconds': RETRY_SECONDS}}
+        return failed
 
     def _read(self, period, project=None):
         window = _window(period)
-        result = {'period': window, 'status': 'unavailable', 'coverage': {'status': 'database_missing', 'read_only': True, 'refresh': 'not_requested', 'row_limit_per_table': ROW_LIMIT, 'snapshot_cache_seconds': 30, 'scope_project': project, 'collection_complete': False, 'basis': 'Existing local ledgers only; no source discovery or refresh.', 'truncated_tables': [], 'available_tables': []}, 'tables': {name: [] for name in FIELDS}}
+        result = {'period': window, 'status': 'unavailable', 'coverage': {'status': 'database_missing', 'read_only': True, 'refresh': 'not_requested', 'row_limit_per_table': ROW_LIMIT, 'snapshot_cache_seconds': CACHE_SECONDS, 'scope_project': project, 'collection_complete': False, 'basis': 'Existing local ledgers only; no source discovery or refresh.', 'truncated_tables': [], 'available_tables': [], 'stale': False, 'snapshot_at': window['to']}, 'tables': {name: [] for name in FIELDS}}
         path = self.data_dir / 'memory.sqlite3'
         if not path.is_file():
             return result
@@ -88,7 +117,17 @@ class DashboardReader:
             connection.execute('PRAGMA query_only=ON')
             connection.execute('BEGIN')
             available = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            result['coverage']['available_tables'] = sorted(set(FIELDS) & available)
+            result['coverage']['present_tables'] = sorted(set(FIELDS) & available)
+            # Main accounting excludes every known observer worker, including
+            # workers whose attempt rows fall outside this project or period.
+            # Read this dependency first so a later timeout cannot double count.
+            result['_observer_workers'] = []
+            if 'observer_usage_attempts' in available:
+                observer_columns = {row[1] for row in connection.execute('PRAGMA table_info(observer_usage_attempts)')}
+                if 'worker_thread_id' in observer_columns:
+                    workers = [row[0] for row in connection.execute('SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL LIMIT ?', (ROW_LIMIT + 1,))]
+                    result['_observer_workers'] = workers[:ROW_LIMIT]
+                    result['coverage']['observer_workers_complete'] = len(workers) <= ROW_LIMIT
             for table, whitelist in FIELDS.items():
                 if time.monotonic() > deadline:
                     raise sqlite3.OperationalError('query deadline exceeded')
@@ -123,11 +162,7 @@ class DashboardReader:
                 if len(rows) > ROW_LIMIT:
                     result['coverage']['truncated_tables'].append(table)
                 result['tables'][table] = rows[:ROW_LIMIT]
-            result['_observer_workers'] = []
-            if 'observer_usage_attempts' in available:
-                observer_columns = {row[1] for row in connection.execute('PRAGMA table_info(observer_usage_attempts)')}
-                if 'worker_thread_id' in observer_columns:
-                    result['_observer_workers'] = [row[0] for row in connection.execute('SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL LIMIT ?', (ROW_LIMIT,))]
+                result['coverage']['available_tables'].append(table)
             result['pending_observations'] = None
             if {'entries', 'observation_jobs', 'observation_job_sources'} <= available:
                 entry_columns = {row[1] for row in connection.execute('PRAGMA table_info(entries)')}
@@ -139,10 +174,28 @@ class DashboardReader:
                     result['pending_observations'] = {row[0]: row[1] for row in pending}
             result['status'] = 'partial' if result['coverage']['truncated_tables'] else 'available'
             result['coverage']['status'] = result['status']
-        except (sqlite3.Error, OSError, ValueError):
+        except (sqlite3.Error, OSError, ValueError) as error:
             result['status'] = 'unavailable'
-            result['coverage']['status'] = 'database_unreadable_or_query_deadline'
-            result['tables'] = {name: [] for name in FIELDS}
+            code = getattr(error, 'sqlite_errorcode', None)
+            code = code & 0xff if code is not None else None
+            if code == sqlite3.SQLITE_INTERRUPT or str(error) in ('query deadline exceeded', 'interrupted'):
+                reason = 'query_deadline'
+            elif code in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+                reason = 'database_busy'
+            elif code in (sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB):
+                reason = 'database_corrupt'
+            else:
+                reason = 'database_unreadable'
+            result['coverage']['status'] = reason
+            result['coverage']['retry_after_seconds'] = RETRY_SECONDS
+            if reason in TRANSIENT_FAILURES and result['coverage']['available_tables']:
+                # Every retained table finished in the same read transaction.
+                # An optional receipt or pending-count query cannot erase them.
+                result['status'] = 'partial'
+                result['coverage']['interrupted_tables'] = sorted(set(result['coverage']['present_tables']) - set(result['coverage']['available_tables']))
+            else:
+                result['coverage']['available_tables'] = []
+                result['tables'] = {name: [] for name in FIELDS}
         finally:
             if connection:
                 connection.close()
@@ -168,9 +221,21 @@ class DashboardReader:
     @staticmethod
     def _in_period(row, field, snapshot):
         moment = _instant(row.get(field))
-        return moment is not None and _instant(snapshot['period']['from']) <= moment < _instant(snapshot['period']['to'])
+        if '_period_bounds' not in snapshot:
+            snapshot['_period_bounds'] = (_instant(snapshot['period']['from']), _instant(snapshot['period']['to']))
+        start, end = snapshot['_period_bounds']
+        return moment is not None and start <= moment < end
 
     def _report(self, snapshot, project=None, session_id=None, group_by=()):
+        with self._lock:
+            lock = snapshot.setdefault('_report_lock', threading.RLock())
+        with lock:
+            report = self._build_report(snapshot, project, session_id, group_by)
+        # Derived reports can be shared with a stale snapshot, but freshness
+        # metadata belongs to this response, not the cached accounting totals.
+        return {**report, 'completeness': {**report['completeness'], 'collection': snapshot['coverage']}}
+
+    def _build_report(self, snapshot, project=None, session_id=None, group_by=()):
         cache_key = (project, session_id, tuple(group_by))
         report_cache = snapshot.setdefault('_reports', {})
         if cache_key in report_cache:
@@ -206,9 +271,11 @@ class DashboardReader:
             attempts = [row for row in attempts if row.get('session_id') == session_id]
         report = build_report(events, attempts, from_date=snapshot['period']['from'], to_date=snapshot['period']['to'], timezone=ZONE, project=project, session_id=session_id, group_by=group_by, max_groups=1000, observer_thread_ids=snapshot.get('_observer_workers', ()), coverage=snapshot['coverage'])
         for stream, required in (('main', ('usage_events', 'usage_sessions')), ('observer', ('observer_usage_attempts', 'observation_jobs'))):
-            if snapshot['status'] == 'unavailable' or not all(table in snapshot['coverage']['available_tables'] for table in required) or snapshot['coverage']['truncated_tables']:
-                if snapshot['status'] == 'unavailable' or not all(table in snapshot['coverage']['available_tables'] for table in required):
+            unavailable = snapshot['status'] == 'unavailable' or not all(table in snapshot['coverage']['available_tables'] for table in required) or (stream == 'main' and snapshot['coverage'].get('observer_workers_complete') is False)
+            if unavailable or snapshot['coverage']['truncated_tables']:
+                if unavailable:
                     report[stream]['event_count'] = None
+                    report['combined']['event_count'] = None
                     for field in TOKEN_FIELDS:
                         report[stream][field] = None
                         report['combined'][field] = None
@@ -242,11 +309,13 @@ class DashboardReader:
         records = list(service_records.values()) if project is None else ([service_records[project]] if project in service_records else [])
         pending = snapshot.get('pending_observations')
         pending_count = None if pending is None else (pending.get(project, 0) if project is not None else sum(pending.values()))
-        return {'queued_projects': len(records), 'blocked_projects': sum(bool(row.get('blocked')) for row in records), 'service_record': service_records.get(project) if project else None, 'pending_observations': pending_count, 'pending_basis': 'Unclaimed raw captures using current processor eligibility, excluding running, completed, skipped and quarantined source snapshots.', 'basis': 'current_snapshot_all_dates', 'available': 'observation_jobs' in snapshot['coverage']['available_tables'], 'pending': pending_count, 'pending_jobs': counts['pending'], **{state: counts[state] for state in ('running', 'failed')}, 'quarantined': sum(row.get('status') == 'failed' and row.get('error_code') == 'invalid_response' for row in jobs), 'status_counts': dict(counts)}
+        available = 'observation_jobs' in snapshot['coverage']['available_tables']
+        return {'queued_projects': len(records), 'blocked_projects': sum(bool(row.get('blocked')) for row in records), 'service_record': service_records.get(project) if project else None, 'pending_observations': pending_count, 'pending_basis': 'Unclaimed raw captures using current processor eligibility, excluding running, completed, skipped and quarantined source snapshots.', 'basis': 'current_snapshot_all_dates', 'available': available, 'pending': pending_count, 'pending_jobs': counts['pending'] if available else None, **{state: counts[state] if available else None for state in ('running', 'failed')}, 'quarantined': sum(row.get('status') == 'failed' and row.get('error_code') == 'invalid_response' for row in jobs) if available else None, 'status_counts': dict(counts)}
 
     def _capture(self, snapshot, project=None):
         rows = [row for row in snapshot['tables']['entries'] if (project is None or row.get('project') == project) and self._in_period(row, 'created_at', snapshot)]
-        return {'available': 'entries' in snapshot['coverage']['available_tables'], 'entries': len(rows), 'by_kind': dict(Counter(row.get('kind') for row in rows)), 'last_capture_at': max((row.get('created_at') for row in rows if row.get('created_at')), default=None), 'last_note_at': max((row.get('created_at') for row in rows if row.get('kind') in ('observation', 'session_summary', 'note') or row.get('processor_note')), default=None)}
+        available = 'entries' in snapshot['coverage']['available_tables']
+        return {'available': available, 'entries': len(rows) if available else None, 'by_kind': dict(Counter(row.get('kind') for row in rows)), 'last_capture_at': max((row.get('created_at') for row in rows if row.get('created_at')), default=None), 'last_note_at': max((row.get('created_at') for row in rows if row.get('kind') in ('observation', 'session_summary', 'note') or row.get('processor_note')), default=None)}
 
     def _jev(self, snapshot, project=None, job_ids=None):
         jobs = {row['id']: row for row in snapshot['tables']['observation_jobs']}
@@ -291,6 +360,9 @@ class DashboardReader:
         result = {'estimated_usd': None, 'cost_status': 'rate_unavailable', 'malformed_receipts': malformed, 'basis': 'Persistent filter attempts and retained judgment audits. Filter timestamp is latest receipt update; original call time is unavailable. Quality and retrieval retain at most 2000 audits per project and are not lifetime totals.'}
         for route, rows in streams.items():
             result[route] = {'available': ('jev_filter_attempts' if route == 'filter' else 'jev_judgment_audits') in snapshot['coverage']['available_tables'], 'receipts': len(rows), 'input_tokens': sum(row['usage'].get('input_tokens', 0) for row in rows), 'output_tokens': sum(row['usage'].get('output_tokens', 0) for row in rows), 'requests': sum(row['counts'].get('requests', 0) for row in rows), 'cache_hits': sum(row['counts'].get('cache_hits', 0) for row in rows), 'usage_unavailable_receipts': sum(row.get('usage_status') not in ('reported', 'partial') for row in rows), 'attempts': rows[-20:] if job_ids is not None else [], 'coverage': 'persistent_attempts' if route == 'filter' else 'bounded_retained_history'}
+            if not result[route]['available']:
+                for name in ('receipts', 'input_tokens', 'output_tokens', 'requests', 'cache_hits', 'usage_unavailable_receipts'):
+                    result[route][name] = None
         return result
 
     def overview(self, period='all'):

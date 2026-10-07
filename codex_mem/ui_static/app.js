@@ -1,7 +1,7 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
-  const state = {period: 'all', paused: false, page: 1, query: '', route: null, data: null, request: 0, controller: null, busy: false};
+  const state = {period: 'all', paused: false, page: 1, query: '', route: null, data: null, request: 0, controller: null, busy: false, lastUpdated: null, dataContext: null, failure: null};
   const number = value => value == null ? 'Нет данных' : new Intl.NumberFormat('ru-RU').format(Number(value));
   const money = value => value == null ? 'Недоступно' : new Intl.NumberFormat('ru-RU', {style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:4}).format(Number(value));
   const compact = value => value == null ? 'Нет данных' : new Intl.NumberFormat('ru-RU',{notation:'compact',maximumFractionDigits:1}).format(Number(value));
@@ -41,11 +41,91 @@
   function session(data) {const n=el('div');n.append(summary(data),streams(data),tokens(data),models(data));const threads=data.threads||[];const threadIds=new Set(threads.map(t=>t.thread_id));n.append(panel('Иерархия потоков','Родитель и дочерние агенты в пределах сессии.',table(['Поток / родитель','Роль','Модели / провайдер','Токены','API-оценка · USD'],threads.map(t=>{const node=el('div');const title=el('div',t.is_child?'hierarchy':null);if(t.is_child)title.append(icon('arrow'));title.append(el('span','path',t.agent_nickname||t.agent_path||t.thread_id));node.append(title,el('span','path',t.thread_id));if(t.parent_thread_id)node.append(el('span','path','Родитель: '+t.parent_thread_id+(threadIds.has(t.parent_thread_id)?'':' · вне записанной сессии')));return [node,t.agent_role||'Основной',(t.models?.length?t.models.join(', '):'Модель не записана')+' · '+(t.model_provider||'Провайдер неизвестен'),number(t.usage?.total_tokens),cost(t.usage)];}))));const jobs=data.jobs||[];n.append(panel('Задания обработки','Текущее состояние за всё время, включая задания вне выбранного периода.',table(['Задание','Процессор / модель','Состояние','Попытки','Рабочий поток','Обновлено'],jobs.map(j=>[j.id,(j.processor_id||'Неизвестно')+' · '+(j.model||'Неизвестно'),badge(j.status),number(j.attempt_count),j.worker_thread_id||'Нет данных',date(j.updated_at)]))));n.append(panel('Попытки обработки','Попытки, начатые в выбранный период. Все повторы учитываются.',table(['Задание / попытка','Результат','Запрошенная модель','Токены','API-оценка · USD','Сценарий Standard · USD','Сценарий Fast · USD','Использование','Рабочий поток','Начало / длительность'],(data.processor_attempts||[]).map(a=>{const out=el('div');out.append(badge(a.outcome));if(a.error_code)out.append(el('span','path',a.error_code));return [String(a.job_id)+' / '+number(a.attempt_count),out,a.model||'Модель неизвестна',number(a.total_tokens),attemptCost(a),money(a.priced_usage?.api_equivalent_usd?.standard),money(a.priced_usage?.api_equivalent_usd?.fast),badge(a.usage_status),a.worker_thread_id||'Нет данных',date(a.started_at)+' · '+(a.duration_ms==null?'Нет данных':number(a.duration_ms)+' мс')];}))));if(data.failure_receipts?.length)n.append(panel('Ошибки обработки','Сохранённые коды ошибок сессии за всё время. Содержимое отклонённых ответов не отображается.',table(['Задание / попытка','Код ошибки','Причина','Записано'],data.failure_receipts.map(r=>[String(r.job_id)+' / '+number(r.attempt_count),r.error_code||'Неизвестно',r.reason_code||'Неизвестно',date(r.created_at)]))));n.append(pricing(data),jev(data));return n;}
   function parseRoute() {const parts=location.hash.slice(1).split('/');try{if(parts[0]==='project'&&parts[1])return {name:'project',project:decodeURIComponent(parts[1])};if(parts[0]==='session'&&parts[1]&&parts[2])return {name:'session',project:decodeURIComponent(parts[1]),session_id:decodeURIComponent(parts[2])};}catch(_){}return {name:parts[0]==='projects'?'projects':'overview'};}
   function setHeading(data) {const r=state.route;$('page-title').textContent=r.name==='overview'?'Обзор':r.name==='projects'?'Проекты':r.name==='project'?(data.name||'Проект'):'Сессия';$('subtitle').textContent=r.name==='overview'?'Сессии Codex и обработка памяти в одном месте.':r.name==='projects'?'Локальные каталоги, для которых сохранены метаданные.':r.name==='project'?(data.path||r.project):(data.session_id||r.session_id);$('eyebrow').textContent=r.name==='session'?'Детали использования':'Использование и обработка';const crumbs=$('breadcrumbs');crumbs.replaceChildren();if(r.name!=='overview'){crumbs.append(link('Обзор','#overview'),el('span',null,'/'));crumbs.append(r.name==='projects'?el('span',null,'Проекты'):link('Проекты','#projects'));if(r.project){crumbs.append(el('span',null,'/'));const name=r.project.split('/').filter(Boolean).pop()||r.project;crumbs.append(r.name==='session'?link(name,projectHash(r.project)):el('span',null,name));}if(r.name==='session')crumbs.append(el('span',null,'/'),el('span',null,'Сессия'));}$('nav-overview').removeAttribute('aria-current');$('nav-projects').removeAttribute('aria-current');$(r.name==='overview'?'nav-overview':'nav-projects').setAttribute('aria-current','page');document.title=$('page-title').textContent+' · Codex Mem';}
-  function restoreFocus(focus) {if(!focus?.id)return;const node=$(focus.id);if(node){node.focus({preventScroll:true});if(typeof focus.start==='number'&&typeof node.setSelectionRange==='function')try{node.setSelectionRange(focus.start,focus.end);}catch(_){}}}
-  async function load(options={}) {const serial=++state.request;if(state.controller)state.controller.abort();state.controller=new AbortController();state.busy=true;const route=state.route||parseRoute(),params=new URLSearchParams({period:state.period});if(route.name==='projects'||route.name==='project'){params.set('page',String(state.page));params.set('limit','20');}if(route.name==='projects')params.set('query',state.query);if(route.project)params.set('project',route.project);if(route.session_id)params.set('session_id',route.session_id);$('refresh').disabled=true;$('content').setAttribute('aria-busy','true');if(!state.data)$('updated').textContent='Загружаем данные…';try{const response=await fetch('/api/'+route.name+'?'+params,{credentials:'same-origin',cache:'no-store',signal:state.controller.signal});if(!response.ok)throw new Error(response.status===401||response.status===403?'Доступ истёк. Откройте адрес с токеном из терминала.':`Не удалось получить данные · HTTP ${response.status}`);const data=await response.json();if(serial!==state.request)return;const active=document.activeElement,focus={id:active?.id,start:active?.selectionStart,end:active?.selectionEnd};const scroll=[window.scrollX,window.scrollY];state.data=data;setHeading(data);$('content').replaceChildren(({overview,projects,project,session}[route.name]||overview)(data));restoreFocus(focus);if(options.background)window.scrollTo(...scroll);$('error').hidden=true;$('export').disabled=false;$('updated').textContent='Обновлено '+new Intl.DateTimeFormat('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())+' · '+(state.paused?'автообновление на паузе':'каждые 15 с');const notice=$('notice');const truncated=data.coverage?.truncated_tables||[];notice.hidden=data.status==='available';notice.textContent=data.status==='partial'?'Данные частичные. Токены показывают наблюдаемую часть; полная стоимость недоступна.'+(truncated.length?' Ограничены таблицы: '+truncated.join(', ')+'.':''):'Локальная база недоступна. Неизвестные значения показаны как «Нет данных», а не как ноль.';}catch(error){if(error.name==='AbortError'||serial!==state.request)return;$('error').hidden=false;$('error').textContent=error.message||'Нет связи с локальным сервером.';if(!state.data)$('content').replaceChildren(el('div','empty','Данные не загружены. Нажмите «Обновить», чтобы повторить.'));$('updated').textContent=state.data?'Обновить данные не удалось · показана предыдущая версия':'Данные недоступны';}finally{if(serial===state.request){state.busy=false;$('refresh').disabled=false;$('content').setAttribute('aria-busy','false');}}}
-  function navigate() {state.route=parseRoute();state.page=1;state.data=null;$('export').disabled=true;$('content').replaceChildren(el('div','empty','Загружаем локальные данные…'));setHeading({});$('main').focus({preventScroll:true});window.scrollTo(0,0);load();}
-  $('period').addEventListener('change',()=>{state.period=$('period').value;state.page=1;load();});$('refresh').addEventListener('click',()=>load());$('pause').addEventListener('click',()=>{state.paused=!state.paused;$('pause').setAttribute('aria-pressed',String(state.paused));$('pause-label').textContent=state.paused?'Продолжить':'Пауза';$('pause').querySelector('[data-icon]').replaceChildren(icon(state.paused?'play':'pause'));document.body.classList.toggle('paused',state.paused);$('updated').textContent=state.paused?'Автообновление на паузе': 'Автообновление каждые 15 с';if(!state.paused)load();});
+  function skeletonLine(size='') {return el('span','skeleton-line'+(size?' skeleton-'+size:''));}
+  function loadingMetrics() {
+    const grid=el('div','metrics');
+    for(let i=0;i<4;i++) {const card=el('div','metric');card.append(skeletonLine('label'),skeletonLine('value'),skeletonLine('note'));grid.append(card);}
+    return grid;
+  }
+  function loadingPanel(title, kind='table', columns=6) {
+    const section=panel(title),body=el('div','skeleton-'+kind);
+    if(kind==='queue') for(let i=0;i<4;i++) {const cell=el('div','queue-cell');cell.append(skeletonLine('value'),skeletonLine('note'));body.append(cell);}
+    else if(kind==='facts') for(let i=0;i<5;i++) {const row=el('div','fact');row.append(skeletonLine('label'),skeletonLine('label'));body.append(row);}
+    else {body.style.setProperty('--skeleton-columns',String(columns));for(let i=0;i<5;i++){const row=el('div','skeleton-row');for(let j=0;j<columns;j++)row.append(skeletonLine());body.append(row);}}
+    section.append(body);return section;
+  }
+  function loadingView(route) {
+    const view=el('div','loading-view');view.setAttribute('aria-hidden','true');
+    if(route.name==='projects') {view.append(loadingPanel('Проекты','table',7));return view;}
+    view.append(loadingMetrics());
+    if(route.name!=='session') view.append(loadingPanel('Очередь обработки','queue'));
+    if(route.name==='project') view.append(loadingPanel('Сессии проекта'));
+    view.append(loadingPanel('Расходы и токены'));
+    if(route.name==='session') view.append(loadingPanel('Разбивка токенов','table',4),loadingPanel('Использование по моделям'),loadingPanel('Иерархия потоков','table',5),loadingPanel('Задания обработки'),loadingPanel('Попытки обработки'));
+    else {const grid=el('div','grid-two');grid.append(loadingPanel('Запись памяти','facts'),loadingPanel(route.name==='overview'?'Сервис и хранилище':'Покрытие оценки','facts'));view.append(grid);}
+    return view;
+  }
+  function captureView() {
+    const content=$('content'),active=document.activeElement,focus={node:active,id:active?.id,start:active?.selectionStart,end:active?.selectionEnd,path:null,tag:active?.tagName,href:active?.getAttribute?.('href')};
+    if(content.contains(active)){focus.path=[];for(let node=active;node!==content;node=node.parentElement)focus.path.unshift(Array.prototype.indexOf.call(node.parentElement.children,node));}
+    return {focus,scroll:[window.scrollX,window.scrollY],tables:Array.from(content.querySelectorAll('.table-wrap'),node=>[node.scrollLeft,node.scrollTop])};
+  }
+  function restoreView(view) {
+    const focus=view.focus;let node=focus.node?.isConnected?focus.node:focus.id?$(focus.id):null;
+    if(!node&&focus.href)node=Array.from($('content').querySelectorAll('a')).find(link=>link.getAttribute('href')===focus.href);
+    if(!node&&focus.path){node=$('content');for(const index of focus.path)node=node?.children[index];if(node?.tagName!==focus.tag||focus.href&&node.getAttribute('href')!==focus.href)node=null;}
+    if(node?.focus){node.focus({preventScroll:true});if(typeof focus.start==='number'&&typeof node.setSelectionRange==='function')try{node.setSelectionRange(focus.start,focus.end);}catch(_){}}
+    $('content').querySelectorAll('.table-wrap').forEach((node,index)=>{if(view.tables[index])[node.scrollLeft,node.scrollTop]=view.tables[index];});
+    window.scrollTo(...view.scroll);
+  }
+  function updateStatus() {
+    const suffix=state.paused?'автообновление на паузе':'каждые 15 с';
+    $('updated').textContent=state.busy?(state.data?'Обновляем данные… · показана предыдущая версия':'Загружаем локальные данные…'):state.failure?(state.data?'Обновить данные не удалось · показана предыдущая версия':'Данные недоступны'):state.lastUpdated?'Обновлено '+state.lastUpdated+' · '+suffix:'Данные не загружены';
+    document.body.dataset.loadState=state.failure?'error':state.busy?'loading':'ready';
+  }
+  function showFailure(error) {
+    state.failure=error.message||'Нет связи с локальным сервером.';
+    $('error').hidden=false;$('error').textContent=state.failure+(state.data?' Показаны ранее загруженные данные. Они могут быть устаревшими.':'');
+    if(!state.data){$('notice').hidden=true;$('content').replaceChildren(el('div','empty','Данные не загружены. Нажмите «Обновить», чтобы повторить.'));}
+  }
+  function responseFailure(data) {
+    const reason=data.coverage?.refresh_error||data.coverage?.status;
+    return ({query_deadline:'Локальная база не ответила вовремя. Повторите обновление.',database_busy:'Локальная база занята. Повторите обновление.',database_missing:'Локальная база не найдена.',database_corrupt:'Локальную базу не удалось прочитать.',database_unreadable:'Нет доступа к локальной базе.'}[reason]||'Локальная база недоступна. Данные обновить не удалось.');
+  }
+  async function load() {
+    const serial=++state.request;if(state.controller)state.controller.abort();state.controller=new AbortController();state.busy=true;
+    const route=state.route||parseRoute(),params=new URLSearchParams({period:state.period});
+    if(route.name==='projects'||route.name==='project'){params.set('page',String(state.page));params.set('limit','20');}
+    if(route.name==='projects')params.set('query',state.query);if(route.project)params.set('project',route.project);if(route.session_id)params.set('session_id',route.session_id);
+    const context=params.toString();
+    $('refresh').setAttribute('aria-busy','true');$('content').setAttribute('aria-busy','true');
+    if(!state.data){$('content').replaceChildren(loadingView(route));$('error').hidden=true;$('notice').hidden=true;state.failure=null;}
+    else if(state.dataContext!==context){$('notice').hidden=false;$('notice').textContent='Загружаем выбранные данные. Пока показана предыдущая версия.';}
+    updateStatus();
+    try {
+      const response=await fetch('/api/'+route.name+'?'+params,{credentials:'same-origin',cache:'no-store',signal:state.controller.signal});
+      if(!response.ok)throw new Error(response.status===401||response.status===403?'Доступ истёк. Откройте адрес с токеном из терминала.':`Не удалось получить данные · HTTP ${response.status}`);
+      const data=await response.json();if(serial!==state.request)return;
+      if(data.status==='unavailable')throw new Error(responseFailure(data));
+      const view=captureView();state.data=data;state.dataContext=context;state.failure=null;setHeading(data);
+      $('content').replaceChildren(({overview,projects,project,session}[route.name]||overview)(data));restoreView(view);
+      $('error').hidden=true;$('export').disabled=false;
+      const snapshot=new Date(data.coverage?.snapshot_at||Date.now());
+      state.lastUpdated=new Intl.DateTimeFormat('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(Number.isNaN(snapshot.valueOf())?new Date():snapshot);
+      const notice=$('notice'),truncated=data.coverage?.truncated_tables||[],interrupted=data.coverage?.interrupted_tables||[];
+      notice.hidden=data.status==='available'||data.status==='stale';notice.textContent=data.status==='partial'?'Данные частичные. Токены показывают наблюдаемую часть; полная стоимость недоступна.'+(truncated.length?' Ограничены таблицы: '+truncated.join(', ')+'.':'')+(interrupted.length?' Не завершено чтение: '+interrupted.join(', ')+'.':'')+(data.coverage?.status==='query_deadline'?' Локальная база не ответила вовремя. Повторите обновление.':''):'Состояние локальных данных неизвестно.';
+      if(data.status==='stale'||data.coverage?.stale)showFailure(new Error(responseFailure(data)));
+    } catch(error) {if(error.name==='AbortError'||serial!==state.request)return;showFailure(error);}
+    finally {if(serial===state.request){state.busy=false;$('refresh').setAttribute('aria-busy','false');$('content').setAttribute('aria-busy','false');updateStatus();}}
+  }
+  function navigate() {
+    const initial=state.route===null;
+    state.route=parseRoute();state.page=1;state.data=null;state.dataContext=null;state.lastUpdated=null;state.failure=null;
+    $('export').disabled=true;$('error').hidden=true;$('notice').hidden=true;setHeading({});
+    if(!initial)$('main').focus({preventScroll:true});window.scrollTo(0,0);load();
+  }
+  $('period').addEventListener('change',()=>{state.period=$('period').value;state.page=1;load();});$('refresh').addEventListener('click',()=>load());$('pause').addEventListener('click',()=>{state.paused=!state.paused;$('pause').setAttribute('aria-pressed',String(state.paused));$('pause-label').textContent=state.paused?'Продолжить':'Пауза';$('pause').querySelector('[data-icon]').replaceChildren(icon(state.paused?'play':'pause'));document.body.classList.toggle('paused',state.paused);updateStatus();if(!state.paused)load();});
   function applyTheme(theme) {document.documentElement.classList.add('theme-switching');document.documentElement.dataset.theme=theme;$('theme-label').textContent=theme==='dark'?'Светлая тема':'Тёмная тема';$('theme').querySelector('[data-icon]').replaceChildren(icon(theme==='dark'?'sun':'moon'));void document.body.offsetHeight;requestAnimationFrame(()=>document.documentElement.classList.remove('theme-switching'));}
   let initialTheme;try{initialTheme=localStorage.getItem('codex-mem-theme');}catch(_){}applyTheme(initialTheme==='dark'||(!initialTheme&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');$('theme').addEventListener('click',()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';applyTheme(theme);try{localStorage.setItem('codex-mem-theme',theme);}catch(_){}});
-  $('export').addEventListener('click',()=>{if(!state.data)return;const url=URL.createObjectURL(new Blob([JSON.stringify(state.data,null,2)],{type:'application/json'}));const a=link('',url);a.download='codex-mem-'+state.route.name+'-'+state.period+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);});window.addEventListener('hashchange',()=>{if(location.hash==='#main'){$('main').focus({preventScroll:true});return;}navigate();});setInterval(()=>{if(!state.paused&&!state.busy&&!document.hidden)load({background:true});},15000);navigate();
+  $('export').addEventListener('click',()=>{if(!state.data)return;const url=URL.createObjectURL(new Blob([JSON.stringify(state.data,null,2)],{type:'application/json'}));const a=link('',url);a.download='codex-mem-'+state.route.name+'-'+(new URLSearchParams(state.dataContext).get('period')||state.period)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);});window.addEventListener('hashchange',()=>{if(location.hash==='#main'){$('main').focus({preventScroll:true});return;}navigate();});setInterval(()=>{if(!state.paused&&!state.busy&&!document.hidden)load({background:true});},15000);navigate();
 })();
