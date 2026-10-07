@@ -28,7 +28,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from codex_mem import __version__
-from codex_mem.config import configure
+from codex_mem.config import configure, load_config, mark_context_injected, context_was_injected
 from codex_mem.processor import MODEL, REASONING_EFFORT, ProcessorFailure, _AppServer
 from codex_mem.processor import _normalized_usage_totals, _verify_luna_available
 from codex_mem.store import Store
@@ -224,6 +224,30 @@ def processing_checks(snapshot: Mapping[str, Any], session_id: str, *, expected:
     return checks
 
 
+def judgment_receipts(data_dir: Path, project: Path) -> list[dict[str, Any]]:
+    """Read only the already content-free judgment accounting table."""
+    database = data_dir / "memory.sqlite3"
+    if not database.is_file():
+        return []
+    with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as connection:
+        exists = connection.execute("SELECT 1 FROM sqlite_master WHERE name='jev_judgment_audits'").fetchone()
+        if not exists:
+            return []
+        return [{"id": row[0], "owner_id": row[1], **json.loads(row[2])}
+                for row in connection.execute("SELECT id,owner_id,audit_json FROM jev_judgment_audits WHERE project=? ORDER BY id LIMIT 100", (str(project),))]
+
+
+def configured_jev_settings(projects: list[Path]) -> dict[str, Any]:
+    """Reuse only the credential path, never read or copy credential contents."""
+    host = load_config()
+    require(getattr(host, "valid", True), "host_config_invalid")
+    key_file = host.get("jev_filter_key_file", "")
+    require(isinstance(key_file, str) and bool(key_file) and Path(key_file).is_file(), "configured_jev_key_file_required")
+    return {"jev_filter_key_file": key_file,
+            **{f"jev_{gate}_enabled": True for gate in ("filter", "quality", "retrieval")},
+            **{f"jev_{gate}_projects": [str(path) for path in projects] for gate in ("filter", "quality", "retrieval")}}
+
+
 def run_turn(args: argparse.Namespace, project: Path, data_dir: Path, *, name: str,
              prompt: str, shell: bool, hooks: bool = True, process: bool = False,
              absent: bool = False, structured: bool = True,
@@ -239,6 +263,7 @@ def run_turn(args: argparse.Namespace, project: Path, data_dir: Path, *, name: s
     client: _AppServer | None = None
     thread_id = turn_id = None
     stage = "initialize"
+    initial_judgment_ids = {row["id"] for row in judgment_receipts(data_dir, project)}
     try:
         require(expected_processing in {"processed", "skipped"}, "invalid_expected_processing")
         environment = dict(os.environ)
@@ -307,6 +332,14 @@ def run_turn(args: argparse.Namespace, project: Path, data_dir: Path, *, name: s
             require(all(receipt["processing_checks"].values()), "automatic_processing_contract_failed")
             if name == "completed_source":
                 require(snapshot["latest_fact_in_tool_response"] and snapshot["latest_fact_absent_from_input"] and snapshot["latest_fact_absent_from_user_and_assistant"], "tool_only_fact_not_proven")
+        audits = [row for row in judgment_receipts(data_dir, project) if row["id"] not in initial_judgment_ids]
+        receipt["jev_judgment_audits"] = audits
+        if getattr(args, "configured_jev", False) and process:
+            quality = [row for row in audits if str(row.get("route", "")).startswith("quality_")]
+            require(bool(quality) and all(row.get("status") == "success" for row in quality)
+                    and any(row.get("route") in {"quality_accept", "quality_refinement_accept"} for row in quality), "strict_quality_receipt_required")
+        if getattr(args, "configured_jev", False) and name in {"recall_ru", "recall_en"}:
+            receipt["retrieval_live_evidence"] = "reported" if any(str(row.get("route", "")).startswith("retrieval_") and row.get("status") == "success" for row in audits) else "not_exercised"
         if structured:
             stage = "answer_validation"
             answer = json.loads(events.answer)
@@ -380,8 +413,9 @@ def native(args: argparse.Namespace) -> dict[str, Any]:
     outside.mkdir()
     data_dir.mkdir()
     fixture(project, completed=False)
-    configure(data_dir, capture_scope="selected", included_projects=[str(project), str(outside)], capture_tools=True, processor_enabled=True, service_enabled=False, semantic_enabled=False)
-    receipt: dict[str, Any] = {"status": "running", "mode": "native", "package_version": __version__, "project": str(project), "data_dir": str(data_dir), "fixture_root": str(root), "processor_invoked_manually": False, "explicit_memory_writes": False, "runs": [], "retention": "synthetic fixture and metadata receipts retained"}
+    jev_settings = configured_jev_settings([project, outside]) if args.configured_jev else {}
+    configure(data_dir, capture_scope="selected", included_projects=[str(project), str(outside)], capture_tools=True, processor_enabled=True, service_enabled=False, semantic_enabled=False, **jev_settings)
+    receipt: dict[str, Any] = {"status": "running", "mode": "native", "package_version": __version__, "configured_jev_enabled": args.configured_jev, "project": str(project), "data_dir": str(data_dir), "fixture_root": str(root), "processor_invoked_manually": False, "explicit_memory_writes": False, "runs": [], "retention": "synthetic fixture and metadata receipts retained"}
     try:
         for name, completed in (("unfinished_source", False), ("completed_source", True)):
             fixture(project, completed=completed)
@@ -391,6 +425,9 @@ def native(args: argparse.Namespace) -> dict[str, Any]:
             _write_receipt(args.output, receipt)
             require(result["status"] == "passed", f"{name}_failed")
         configure(data_dir, processor_enabled=False)
+        if args.saturated_delivery:
+            for index in range(256):
+                mark_context_injected(f"zz-synthetic-cache-{index:03}", source="synthetic-marker", data_dir=data_dir)
         for name, prompt, target, absent, shell, hooks in (
             ("recall_ru", RECALL_RU, project, False, False, True),
             ("recall_en", RECALL_EN, project, False, False, True),
@@ -405,6 +442,14 @@ def native(args: argparse.Namespace) -> dict[str, Any]:
             receipt["runs"].append(result)
             _write_receipt(args.output, receipt)
             require(result["status"] == "passed", f"{name}_failed")
+            if args.saturated_delivery and name == "recall_ru":
+                digest = hashlib.sha256(str(project).encode()).hexdigest()[:16]
+                session_key = f"project:{digest}:session:{result['thread_id']}"
+                before = context_was_injected(session_key, data_dir=data_dir)
+                mark_context_injected("zz-synthetic-following-session", source="synthetic-marker", data_dir=data_dir)
+                retained = context_was_injected(session_key, data_dir=data_dir)
+                receipt["saturated_delivery"] = {"preloaded_sessions": 256, "native_delivery_recorded": before, "native_delivery_retained_after_following_session": retained}
+                require(before and retained, "saturated_native_delivery_lost")
         if args.paired:
             receipt["paired_comparison"] = paired_comparison(receipt["runs"][-2], receipt["runs"][-1])
             require(receipt["paired_comparison"]["status"] == "passed", "paired_comparison_failed")
@@ -438,6 +483,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native", action="store_true")
     parser.add_argument("--paired", action="store_true")
+    parser.add_argument("--configured-jev", action="store_true", help="Enable scoped eligibility, strict quality and retrieval using only the configured credential path.")
+    parser.add_argument("--saturated-delivery", action="store_true", help="Check actual native delivery survives a 256-session isolated cache.")
     parser.add_argument("--codex", default="codex")
     parser.add_argument("--timeout", type=int, default=360)
     parser.add_argument("--output", type=Path, default=Path("native-memory-acceptance.json"))

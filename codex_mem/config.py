@@ -295,13 +295,28 @@ def mark_context_injected(
         while len(sources) > 128:
             del sources[0]
 
-        # Dict insertion order is deterministic on supported Python versions.
+        # JSON writes sort keys, so dictionary order after a reload is not
+        # delivery order. Persist a sequence under the state lock and refresh
+        # reused sessions. Legacy records without a sequence age out first.
+        record["delivery_order"] = max(
+            (_context_delivery_order(item) for item in injections.values()),
+            default=0,
+        ) + 1
         while len(injections) > 256:
-            oldest = next(iter(injections), None)
-            if oldest is None:
-                break
+            oldest = min(injections, key=lambda key: (
+                _context_delivery_order(injections[key]), key
+            ))
             del injections[oldest]
         _write_json(base / HOOK_STATE_FILENAME, state)
+
+
+def _context_delivery_order(record: Any) -> int:
+    if not isinstance(record, dict):
+        return 0
+    value = record.get("delivery_order")
+    if isinstance(value, int) and not isinstance(value, bool) and value > 0:
+        return value
+    return 0
 
 
 def mark_private_prompt_gate(

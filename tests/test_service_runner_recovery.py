@@ -122,16 +122,139 @@ class ServiceRunnerRecoveryTests(unittest.TestCase):
         enqueue(self.project, self.data_dir, clock=self.clock)
         result = run_service(self.data_dir, processor=processor, clock=self.clock, sleeper=self.sleep,
                              retry_backoff=5, poll_interval=20, max_cycles=3)
-        self.assertEqual("halted", result["status"])
+        self.assertEqual("cycle_limit", result["status"])
         self.assertEqual([1000.0, 1005.0, 1015.0], [row[0] for row in calls])
         self.assertEqual([None, 1, 2], [row[1].get("retry_attempt_count") for row in calls])
         self.assertEqual([None, job_id, job_id], [row[1].get("retry_job_id") for row in calls])
+        # Exhausting the fast retries switches to a durable cooldown. Restart
+        # and new captures cannot reset it or expand the target batch.
+        for delay in (3600, 7200, 14400, 21600, 21600):
+            record = self.state()["projects"][self.workspace]
+            self.assertFalse(record["blocked"])
+            self.assertEqual(calls[-1][0] + delay, record["due_at"])
+            due = record["due_at"]
+            enqueue(self.project, self.data_dir, clock=self.clock)
+            self.assertEqual(due, self.state()["projects"][self.workspace]["due_at"])
+            count = len(calls)
+            run_service(self.data_dir, processor=processor, clock=self.clock,
+                        sleeper=self.sleep, max_cycles=1)
+            self.assertEqual(count, len(calls))
+            self.now = due
+            run_service(self.data_dir, processor=processor, clock=self.clock,
+                        sleeper=self.sleep, max_cycles=1)
+            self.assertEqual(count + 1, len(calls))
+            self.assertEqual(job_id, calls[-1][1]["retry_job_id"])
         self.assertTrue(all(row[1]["retry_failed"] is False for row in calls))
-        self.assertEqual(1, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
-        run_service(self.data_dir, processor=processor, clock=self.clock, sleeper=self.sleep, max_cycles=3)
-        self.assertEqual(3, len(calls))
         with Store(self.data_dir) as store:
-            self.assertEqual(3, store.observation_job_status(self.project, job_id)["attempt_count"])
+            self.assertEqual(len(calls), store.observation_job_status(self.project, job_id)["attempt_count"])
+
+    def test_legacy_exhausted_transient_block_recovers_after_cooldown(self) -> None:
+        enqueue(self.project, self.data_dir, clock=self.clock)
+        calls = []
+        processor = self.failing_processor("native_connection_error", calls)
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.sleep, poll_interval=20, max_cycles=5)
+        state = self.state()
+        record = state["projects"][self.workspace]
+        job_id = record["retry_job_id"]
+        record.update(blocked=True, runner_recovery_checked=True, retry_job_id=None,
+                      retry_error_code=None, retry_attempt_count=None)
+        (self.data_dir / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+        self.now += 14 * 86400
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.sleep, max_cycles=1)
+        record = self.state()["projects"][self.workspace]
+        self.assertFalse(record["blocked"])
+        self.assertEqual(job_id, record["retry_job_id"])
+        self.assertEqual(3, len(calls))
+        self.now = record["due_at"]
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.sleep, max_cycles=1)
+        self.assertEqual(4, len(calls))
+        self.assertEqual(3, calls[-1][1]["retry_attempt_count"])
+
+    def test_predispatch_transport_failure_recovers_exact_batch_after_restart(self) -> None:
+        for code in ("runner_unavailable", "protocol_error"):
+            with self.subTest(code=code):
+                data_dir = self.root / code
+                configure(data_dir, capture_scope="selected", included_projects=[self.project],
+                          semantic_enabled=False)
+                self.seed(data_dir)
+                with Store(data_dir) as store:
+                    job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+                    store.fail_observation_batch(self.project, job["job_id"], job["lease_token"], code=code)
+                enqueue(self.project, data_dir, clock=self.clock)
+                path = data_dir / SERVICE_STATE_FILENAME
+                state = json.loads(path.read_text())
+                state["projects"][self.workspace].update(blocked=True, last_code=code)
+                path.write_text(json.dumps(state))
+                runner = mock.Mock(return_value=self.skipped_receipt())
+                processor = lambda project, **kwargs: process_pending(project, runner=runner, **kwargs)
+                run_service(data_dir, processor=processor, clock=self.clock,
+                            sleeper=self.sleep, max_cycles=1)
+                runner.assert_not_called()
+                self.now = json.loads(path.read_text())["projects"][self.workspace]["due_at"]
+                run_service(data_dir, processor=processor, clock=self.clock,
+                            sleeper=self.sleep, max_cycles=1)
+                self.assertEqual(1, runner.call_count)
+                with Store(data_dir) as store:
+                    current = store.observation_job_status(self.project, job["job_id"])
+                self.assertEqual(("skipped", 2), (current["status"], current["attempt_count"]))
+
+    def test_transport_error_with_dispatched_turn_stays_blocked(self) -> None:
+        with Store(self.data_dir) as store:
+            job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+            store.fail_observation_batch(self.project, job["job_id"], job["lease_token"],
+                                         code="protocol_error", worker_turn_id="uncertain-turn")
+        enqueue(self.project, self.data_dir, clock=self.clock)
+        state = self.state()
+        state["projects"][self.workspace].update(blocked=True, last_code="protocol_error")
+        (self.data_dir / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+        processor = mock.Mock(side_effect=AssertionError("uncertain remote ownership"))
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.sleep, max_cycles=3)
+        processor.assert_not_called()
+        self.assertTrue(self.state()["projects"][self.workspace]["blocked"])
+
+    def test_transport_error_with_lost_turn_start_response_stays_blocked(self) -> None:
+        with Store(self.data_dir) as store:
+            job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+            store.fail_observation_batch(self.project, job["job_id"], job["lease_token"],
+                                         code="protocol_error", worker_thread_id="started-thread")
+        enqueue(self.project, self.data_dir, clock=self.clock)
+        state = self.state()
+        state["projects"][self.workspace].update(blocked=True, last_code="protocol_error")
+        (self.data_dir / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+        processor = mock.Mock(side_effect=AssertionError("turn/start may have reached server"))
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.sleep, max_cycles=3)
+        processor.assert_not_called()
+        self.assertTrue(self.state()["projects"][self.workspace]["blocked"])
+
+    def test_profile_upgrade_drains_fresh_work_without_replaying_old_failure(self) -> None:
+        old_model = "gpt-5.6-luna"
+        with Store(self.data_dir) as store:
+            job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+            store.fail_observation_batch(self.project, job["job_id"], job["lease_token"],
+                                         code="protocol_error", worker_thread_id="old-uncertain-thread")
+            store._connection.execute("UPDATE observation_jobs SET model=? WHERE id=?",
+                                      (old_model, job["job_id"]))
+        self.seed(self.data_dir, session="fresh-upgraded-capture")
+        enqueue(self.project, self.data_dir, clock=self.clock)
+        state = self.state()
+        state["projects"][self.workspace].update(blocked=True, last_code="protocol_error",
+                                                last_failure_job=job["job_id"])
+        (self.data_dir / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+        runner = mock.Mock(return_value=self.skipped_receipt())
+        processor = lambda project, **kwargs: process_pending(project, runner=runner, **kwargs)
+        run_service(self.data_dir, processor=processor, clock=self.clock,
+                    sleeper=self.sleep, max_cycles=3)
+        self.assertEqual(1, runner.call_count)
+        with Store(self.data_dir) as store:
+            previous = store.observation_job_status(self.project, job["job_id"])
+        self.assertEqual(("failed", 1, old_model),
+                         (previous["status"], previous["attempt_count"], previous["model"]))
+        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
 
     def test_unknown_runner_failure_stops_after_one_retry(self) -> None:
         enqueue(self.project, self.data_dir, clock=self.clock)

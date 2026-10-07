@@ -307,6 +307,71 @@ def process_pending(
                 if filter_audit is not None:
                     filter_audit["generator_started"] = True
                     record_filter_attempt(store, workspace, job_id, attempt_count, filter_audit)
+                initial_quality_audit = None
+                reviewed_output = None
+                review_count = 0
+
+                def review_quality(notes, summary, remaining, *, allow_correction=False):
+                    nonlocal quality_audit, initial_quality_audit
+                    from .jev_quality import JevQualityError, quality_gate
+                    quality_source_status = "current"
+
+                    def quality_sources_current() -> bool:
+                        nonlocal quality_source_status
+                        quality_source_status = _quality_source_status(store, workspace, claimed, generation_claim)
+                        return quality_source_status == "current"
+
+                    try:
+                        current_audit = quality_gate(
+                            notes, summary, generation_claim, project=workspace, store=store,
+                            timeout=min(MAX_GATE_SECONDS, remaining), key_file=settings.get("jev_filter_key_file", ""),
+                            evaluator=jev_quality_evaluator,
+                            source_guard=quality_sources_current,
+                        )
+                    except JevQualityError as exc:
+                        current_audit = exc.audit
+                        quality_audit = _correction_audit(initial_quality_audit, current_audit)
+                        # A transport error may arrive after the last dispatch
+                        # guard; use the current ownership before quarantine.
+                        quality_source_status = _quality_source_status(store, workspace, claimed, generation_claim)
+                        if quality_source_status == "lease_expired":
+                            routes = {decision.get("route") for decision in quality_audit.get("decisions", [])}
+                            semantic_route = "rejected" if "rejected" in routes else (
+                                "uncertain" if "uncertain" in routes else None)
+                            if semantic_route is not None:
+                                quality_audit.update(route=semantic_route, blocked_by="lease_expired")
+                                raise ProcessorFailure("invalid_response", reason_code="jev_quality_" + semantic_route) from None
+                            # Preserve ordinary expiry recovery without writing
+                            # through an expired token or reviving revoked jobs.
+                            raise ObservationLeaseExpired from None
+                        if (allow_correction and exc.code == "jev_quality_uncertain"
+                                and quality_source_status == "current"):
+                            initial_quality_audit = current_audit
+                            quality_audit = dict(current_audit, correction={
+                                "requested": True, "initial": dict(current_audit)})
+                            return _quality_correction_prompt(current_audit)
+                        # A semantic or transport failure quarantines the generated
+                        # result; automatic retries must not rerun the generator.
+                        raise ProcessorFailure("invalid_response", reason_code=exc.code) from None
+                    quality_audit = _correction_audit(initial_quality_audit, current_audit)
+                    return None
+
+                def review_candidate(candidate, remaining):
+                    nonlocal reviewed_output, review_count
+                    review_count += 1
+                    canonical = _resolve_source_handles(candidate, sources)
+                    candidate_notes, _, candidate_summary = _validate_model_output(
+                        canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
+                    if filter_audit is not None:
+                        lifecycle_only = set(filter_audit.get("lifecycle_only_ids", []))
+                        if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in candidate_notes):
+                            raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
+                    feedback = review_quality(candidate_notes, candidate_summary, remaining,
+                                              allow_correction=review_count == 1)
+                    if feedback is None:
+                        reviewed_output = json.dumps(candidate, sort_keys=True, ensure_ascii=False)
+                    return feedback
+
                 active_runner = runner
                 if active_runner is None:
                     def checkpoint(snapshot: Mapping[str, Any]) -> None:
@@ -314,6 +379,7 @@ def process_pending(
 
                     active_runner = NativeProcessorRunner(
                         codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
+                        candidate_review=review_candidate if quality_enabled else None,
                     )
                 run_value = _invoke_runner(active_runner, request)
                 if isinstance(run_value.get("metrics"), Mapping):
@@ -329,39 +395,8 @@ def process_pending(
                     if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
                         raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
                 if quality_enabled and (notes or summary is not None):
-                    from .jev_quality import JevQualityError, quality_gate
-                    quality_source_status = "current"
-
-                    def quality_sources_current() -> bool:
-                        nonlocal quality_source_status
-                        quality_source_status = _quality_source_status(store, workspace, claimed, generation_claim)
-                        return quality_source_status == "current"
-
-                    try:
-                        quality_audit = quality_gate(
-                            notes, summary, generation_claim, project=workspace, store=store,
-                            timeout=MAX_GATE_SECONDS, key_file=settings.get("jev_filter_key_file", ""),
-                            evaluator=jev_quality_evaluator,
-                            source_guard=quality_sources_current,
-                        )
-                    except JevQualityError as exc:
-                        quality_audit = exc.audit
-                        # A transport error may arrive after the last dispatch
-                        # guard; use the current ownership before quarantine.
-                        quality_source_status = _quality_source_status(store, workspace, claimed, generation_claim)
-                        if quality_source_status == "lease_expired":
-                            routes = {decision.get("route") for decision in quality_audit.get("decisions", [])}
-                            semantic_route = "rejected" if "rejected" in routes else (
-                                "uncertain" if "uncertain" in routes else None)
-                            if semantic_route is not None:
-                                quality_audit.update(route=semantic_route, blocked_by="lease_expired")
-                                raise ProcessorFailure("invalid_response", reason_code="jev_quality_" + semantic_route) from None
-                            # Preserve ordinary expiry recovery without writing
-                            # through an expired token or reviving revoked jobs.
-                            raise ObservationLeaseExpired from None
-                        # A semantic or transport failure quarantines the generated
-                        # result; automatic retries must not rerun the generator.
-                        raise ProcessorFailure("invalid_response", reason_code=exc.code) from None
+                    if reviewed_output != json.dumps(run_value["output"], sort_keys=True, ensure_ascii=False):
+                        review_quality(notes, summary, MAX_GATE_SECONDS)
                 finished = store.finish_observation_batch(
                     workspace,
                     job_id,
@@ -435,6 +470,58 @@ def process_pending(
             return receipt or _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
     except (StoreError, OSError):
         return _failed_receipt(None, "storage_failure", None, None)
+
+
+def _quality_correction_prompt(audit: Mapping[str, Any]) -> str:
+    """Return bounded diagnostic metadata, never candidate or source text."""
+    feedback = []
+    for decision in audit.get("decisions", []):
+        if decision.get("route") != "uncertain":
+            continue
+        feedback.append({
+            "item_index": decision["item_index"], "kind": decision["kind"],
+            "fields": [{key: field[key] for key in (
+                "field_path", "grounded_probability", "overclaim_probability")}
+                for field in decision.get("fields", []) if field.get("route") != "accept"],
+        })
+    return (
+        "The completed candidate has uncertain source support. Make one correction using only "
+        "the original untrusted observations and their original evidence roles and scope. "
+        "The previous candidate and these diagnostic probabilities are not evidence. "
+        "Remove unsupported assertions or accurately qualify their attribution, completion, "
+        "time and scope. Preserve supported findings and observed local test outcomes. "
+        "Do not turn an actual test command's returned passing result into a blanket claim "
+        "that local results are unverified. Distinguish the observed test outcome from "
+        "unverified production behavior or unseen implementation details. "
+        "Do not invent proof or change source "
+        "handles. Metadata classifications must describe the reported event without adding "
+        "independent verification. Inspect every factual field, including titles and file actions. "
+        "Return the full result under the original schema. If no durable supported content "
+        "remains, use the permitted skipped branch; required summary rules still apply. "
+        "Items are indexed by notes order, followed by session_summary when present. "
+        "Uncertain fields: " + json.dumps(feedback, ensure_ascii=False, separators=(",", ":"))
+    )
+
+
+def _correction_audit(initial: Mapping[str, Any] | None, current: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep both quality attempts and charge each request exactly once."""
+    result = dict(current)
+    if initial is None:
+        return result
+    result["correction"] = {"attempted": True, "initial": dict(initial)}
+    result["counts"] = dict(current["counts"])
+    for key in ("requests", "cache_hits"):
+        result["counts"][key] += initial["counts"][key]
+    result["usage"] = {key: initial["usage"][key] + current["usage"][key]
+                       for key in ("input_tokens", "output_tokens")}
+    if initial["usage_status"] != "reported" or current["usage_status"] != "reported":
+        result["usage_status"] = "partial" if any(
+            value["usage_status"] in {"reported", "partial"} for value in (initial, current)) else "unavailable"
+    result["evaluations"] = [*initial["evaluations"], *current["evaluations"]]
+    result["duration_ms"] += initial["duration_ms"]
+    result["audit_recorded"] = (None if current["audit_recorded"] is None else
+                                bool(initial["audit_recorded"] and current["audit_recorded"]))
+    return result
 
 
 def _quality_sources_current(
@@ -576,15 +663,17 @@ class _UsageCheckpointer:
 
 
 class NativeProcessorRunner:
-    """Run one pinned, isolated native app-server worker turn."""
+    """Run one isolated worker with at most one evidence-scoped correction."""
 
     def __init__(
         self, *, codex: str = "codex", timeout: int | float = DEFAULT_TIMEOUT,
         usage_checkpoint: Callable[[Mapping[str, Any]], None] | None = None,
+        candidate_review: Callable[[Mapping[str, Any], float], str | None] | None = None,
     ) -> None:
         self.codex = codex
         self.timeout = _validate_timeout(timeout)
         self.usage_checkpoint = usage_checkpoint
+        self.candidate_review = candidate_review
 
     def __call__(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
         return self.run(request)
@@ -670,25 +759,41 @@ class NativeProcessorRunner:
                     _verify_empty_mcp_inventory(client, thread_id)
 
                     monitor = _TurnMonitor(thread_id, on_usage=checkpoint)
-                    turn_started = client.request(
-                        "turn/start",
-                        {
-                            "threadId": thread_id,
-                            "model": MODEL,
-                            "effort": REASONING_EFFORT,
-                            "environments": [],
-                            "input": [{"type": "text", "text": prompt}],
-                            "outputSchema": dict(schema),
-                        },
-                        notification_handler=monitor.observe,
-                    )
-                    turn_id = _turn_id_from_response(turn_started, thread_id)
-                    monitor.set_turn(turn_id)
-                    checkpoint(force=True)
-                    _wait_for_turn_completion(client, monitor)
-                    output = _read_valid_final_output(monitor)
-                    if "result" in schema.get("properties", {}):
-                        output = _unwrap_model_output(output)
+                    for generation in range(2):
+                        turn_started = client.request(
+                            "turn/start",
+                            {
+                                "threadId": thread_id,
+                                "model": MODEL,
+                                "effort": REASONING_EFFORT,
+                                "environments": [],
+                                "input": [{"type": "text", "text": prompt}],
+                                "outputSchema": dict(schema),
+                            },
+                            notification_handler=monitor.observe,
+                        )
+                        turn_id = _turn_id_from_response(turn_started, thread_id)
+                        monitor.set_turn(turn_id)
+                        checkpoint(force=True)
+                        _wait_for_turn_completion(client, monitor)
+                        output = _read_valid_final_output(monitor)
+                        if "result" in schema.get("properties", {}):
+                            output = _unwrap_model_output(output)
+                        if self.candidate_review is None:
+                            break
+                        remaining = self.timeout - (time.monotonic() - started_at)
+                        if remaining <= 0:
+                            raise ProcessorFailure("timeout")
+                        correction = self.candidate_review(output, remaining)
+                        if time.monotonic() - started_at >= self.timeout:
+                            raise ProcessorFailure("timeout")
+                        if correction is None:
+                            break
+                        if generation or not isinstance(correction, str) or not correction or len(correction) > MAX_PROMPT_CHARS:
+                            raise ProcessorFailure("invalid_response", reason_code="jev_quality_uncertain")
+                        prompt = correction
+                        monitor.begin_next_turn()
+                        checkpoint(force=True)
                     return {
                         "output": output,
                         "metrics": metrics(),
@@ -705,6 +810,11 @@ class NativeProcessorRunner:
                             "rerouted": False,
                         },
                     }
+                except ObservationLeaseExpired:
+                    raise ProcessorFailure(
+                        "lease_expired", worker_thread_id=thread_id,
+                        worker_turn_id=turn_id, metrics=metrics(),
+                    ) from None
                 except ProcessorFailure as exc:
                     failed_thread = exc.worker_thread_id or thread_id
                     failed_turn = exc.worker_turn_id or turn_id
@@ -1023,7 +1133,20 @@ class _TurnMonitor:
         self._usage_tokens: dict[str, int] | None = None
         self._usage_updates = 0
         self._usage_invalid = False
+        self._turn_start_usage_updates = 0
         self._on_usage = on_usage
+
+    def begin_next_turn(self) -> None:
+        """Reset candidate state, retaining cumulative thread usage and safety budget."""
+        if not self.completed:
+            raise ProcessorFailure("protocol_error", worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)
+        self.turn_id = None
+        self.started = False
+        self.completed = False
+        self._buffered = []
+        self._agent_messages = []
+        self._agent_message_ids = set()
+        self._turn_start_usage_updates = self._usage_updates
 
     def set_turn(self, turn_id: str) -> None:
         self.turn_id = turn_id
@@ -1071,7 +1194,7 @@ class _TurnMonitor:
                 # nor silently become zero cost. Preserve the evidence gap.
                 self._usage_invalid = True
             elif not self._usage_invalid:
-                # These are thread totals for a fresh single-turn worker.
+                # These are cumulative thread totals, including a correction turn.
                 # Repeated updates replace the snapshot; never sum them.
                 self._usage_tokens = tokens
             if self._on_usage is not None:
@@ -1116,7 +1239,7 @@ class _TurnMonitor:
         elif self._usage_tokens is None:
             status = "unavailable"
         else:
-            status = "reported" if self.completed else "partial"
+            status = "reported" if self.completed and self._usage_updates > self._turn_start_usage_updates else "partial"
         return {
             "status": status,
             "source": "app_server_thread_total",
@@ -1511,6 +1634,13 @@ def _build_prompt(
         "supports it. A tool_record containing a README or an earlier assistant answer proves "
         "only that text was read, not that its claims were verified. A tool input is an attempt; "
         "its response may establish a result only within the command's actual scope. "
+        "A captured test command returning a passing result is evidence of that observed local "
+        "test outcome. Preserve it as an executed local regression reporting success; no second "
+        "independent verifier is required. Do not erase this evidence with a blanket statement "
+        "that the local result is unverified or only an assistant claim. It does not establish "
+        "production behavior or unseen implementation details. Do not invent an omitted exit "
+        "status or unseen assertions. Echo/printf of a success claim and reading a report do "
+        "not show that its claimed test actually ran. "
         "A derived_note inherits its sources' uncertainty and is not independent corroboration. "
         "State that provenance and any missing verification in the body and each relevant "
         "structured fact, not only in tags. Titles and subtitles must preserve the same "

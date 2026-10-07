@@ -342,6 +342,21 @@ def _observation_queue(
         if code is not None:
             failure_codes[code] = int(row["count"] or 0)
 
+    failure_reasons: list[dict[str, Any]] = []
+    if _one(connection, "SELECT 1 FROM sqlite_master WHERE type='table' "
+            "AND name='observation_failure_receipts'"):
+        for row in _rows(
+            connection,
+            """SELECT r.reason_code, COUNT(*) AS count FROM observation_jobs j
+               LEFT JOIN observation_failure_receipts r
+                 ON r.job_id=j.id AND r.attempt_count=j.attempt_count
+               WHERE j.project=? AND j.status='failed'
+               GROUP BY r.reason_code""",
+            (project,),
+        ):
+            reason = _safe_atom(row["reason_code"], maximum=64)
+            failure_reasons.append({"reason": reason or "unknown", "jobs": int(row["count"] or 0)})
+
     stale_running_rows = _rows(
         connection,
         """SELECT lease_expires_at FROM observation_jobs
@@ -382,6 +397,7 @@ def _observation_queue(
             {"code": code, "jobs": count}
             for code, count in sorted(failure_codes.items())[:MAX_FAILURE_CODES]
         ],
+        "failure_reasons": sorted(failure_reasons, key=lambda item: item["reason"])[:MAX_FAILURE_CODES],
         "oldest_running_at": _safe_timestamp(oldest.get("running")),
         "oldest_failed_at": _safe_timestamp(oldest.get("failed")),
         "latest_failed_at": _safe_timestamp(latest.get("failed")),
@@ -818,8 +834,11 @@ def _db_report(
                     errors.append(_error("integrity_check_failed"))
             except sqlite3.Error:
                 connection.set_progress_handler(None, 0)
-                base["integrity"] = {"status": "failed"}
-                errors.append(_error("integrity_check_timeout" if time.monotonic() >= deadline else "integrity_check_failed"))
+                timed_out = time.monotonic() >= deadline
+                base["integrity"] = {"status": "unavailable" if timed_out else "failed"}
+                if timed_out:
+                    base["integrity"]["reason"] = "timeout"
+                errors.append(_error("integrity_check_timeout" if timed_out else "integrity_check_failed"))
         for project in projects:
             try:
                 counts = _project_counts(connection, project)
@@ -864,6 +883,7 @@ def collect_report(
     service_global, service_errors, service_projects = _service_report(base_dir, selected, current_time)
 
     candidate_projects: list[str] = []
+    memory_projects: set[str] = set()
     discovery_bounded = "service_state_bounded" in service_errors
     discovery_unknown = False
     db_path = base_dir / "memory.sqlite3"
@@ -877,6 +897,7 @@ def collect_report(
                     value = _canonical(row["project"])
                     if value:
                         candidate_projects.append(value)
+                        memory_projects.add(value)
                 if _one(connection, "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'usage_sessions'"):
                     rows = _rows(connection, "SELECT DISTINCT project FROM usage_sessions ORDER BY project LIMIT ?", (MAX_PROJECTS + 1,))
                     discovery_bounded = discovery_bounded or len(rows) > MAX_PROJECTS
@@ -892,10 +913,12 @@ def collect_report(
         queued_projects = set(service_projects)
         discovered_projects = set(candidate_projects) | queued_projects
         discovery_bounded = discovery_bounded or len(discovered_projects) > MAX_PROJECTS
-        # An alphabetical cut can hide a blocked live project behind many old
-        # usage-only workspaces. Keep the service's affected scope visible.
+        # Usage-only workspaces can outnumber the memory-bearing projects.
+        # Preserve queued work first, then actual memory, before usage metadata.
         candidate_projects = (
-            sorted(queued_projects) + sorted(discovered_projects - queued_projects)
+            sorted(queued_projects)
+            + sorted(memory_projects - queued_projects)
+            + sorted(discovered_projects - queued_projects - memory_projects)
         )[:MAX_PROJECTS]
         if not candidate_projects:
             candidate_projects = [selected] if selected else []

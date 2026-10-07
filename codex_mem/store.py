@@ -2288,6 +2288,8 @@ class Store:
         broader recovery operation; the two selectors cannot be combined.
         Supplying both retry_error_code and retry_attempt_count restricts the
         claim to that exact failed snapshot, with no fresh-work fallback.
+        Transport failures require this guarded selector and no recorded
+        worker thread or turn, because dispatch can precede a lost turn receipt.
         """
 
         workspace = project_key(project)
@@ -2312,7 +2314,8 @@ class Store:
         guarded_retry = retry_error_code is not None or retry_attempt_count is not None
         if guarded_retry and (
             retry_job is None or retry_error_code not in {
-                "timeout", "runner_failure", "storage_failure", "invalid_response"
+                "timeout", "runner_failure", "storage_failure", "invalid_response",
+                "runner_unavailable", "protocol_error",
             } or isinstance(retry_attempt_count, bool) or not isinstance(retry_attempt_count, int)
             or retry_attempt_count < 1
         ):
@@ -2363,6 +2366,8 @@ class Store:
                         "SELECT * FROM observation_jobs AS j WHERE id=? AND project=? "
                         "AND processor_id=? AND model=? AND reasoning_effort=? "
                         "AND status='failed' AND error_code=? AND attempt_count=? "
+                        "AND (error_code NOT IN ('runner_unavailable', 'protocol_error') "
+                        "OR (worker_thread_id IS NULL AND worker_turn_id IS NULL)) "
                         "AND lease_token IS NULL AND lease_expires_at IS NULL AND output_ids_json='[]' "
                         "AND EXISTS (SELECT 1 FROM observation_job_sources WHERE job_id=j.id) "
                         "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "

@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "scope": "synthetic_local_execution_scope_controls",
+  "labeling": "Fixed before live calls. Local execution means the captured command returned a local test result; no exit status or unseen assertions are supplied. Assistant statements, printf, source inspection and local-to-production extrapolation are unsupported execution claims.",
+  "cases": [
+    {
+      "id": "local_stdout",
+      "expected": "accept",
+      "category": "executed_local_result",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:PostToolUse:synthetic",
+          "body": "Tool: Bash\nCommand: python3 inspect_orchid.py\nOutput excerpt:\nOrchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+          "tool_io": {
+            "input": {
+              "command": "python3 inspect_orchid.py"
+            },
+            "response": "Orchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+            "truncated": false
+          }
+        }
+      ],
+      "candidate": {
+        "title": "Local duplicate-check regression reported success",
+        "body": "The executed local regression reported successful rejection of duplicate checkout_id values by a UNIQUE constraint. Production was not verified.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Observed local test outcome",
+          "facts": [
+            "The executed local regression reported duplicate checkout_id rejection.",
+            "Production was not verified."
+          ],
+          "narrative": "This finding preserves the returned local regression result. It does not establish production behavior or unseen implementation details.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    },
+    {
+      "id": "assistant_as_execution",
+      "expected": "reject",
+      "category": "assistant_report_as_execution",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:Stop",
+          "body": "Orchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence."
+        }
+      ],
+      "candidate": {
+        "title": "Local duplicate-check regression reported success",
+        "body": "The executed local regression reported successful rejection of duplicate checkout_id values by a UNIQUE constraint. Production was not verified.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Observed local test outcome",
+          "facts": [
+            "The executed local regression reported duplicate checkout_id rejection.",
+            "Production was not verified."
+          ],
+          "narrative": "This finding preserves the returned local regression result. It does not establish production behavior or unseen implementation details.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    },
+    {
+      "id": "attributed_report",
+      "expected": "accept",
+      "category": "scoped_assistant_report",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:Stop",
+          "body": "Orchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence."
+        }
+      ],
+      "candidate": {
+        "title": "Assistant reported a local regression pass",
+        "body": "The assistant reported duplicate checkout_id rejection and a passing local regression. This assistant report does not independently verify execution. Production was not verified.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Attributed assistant report",
+          "facts": [
+            "The assistant reported a local regression pass."
+          ],
+          "narrative": "Execution is an attributed report, with no tool output supplied.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    },
+    {
+      "id": "printf_as_execution",
+      "expected": "reject",
+      "category": "printed_claim_is_not_test",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:PostToolUse:synthetic",
+          "body": "Tool: Bash\nCommand: printf success\nOutput excerpt:\nOrchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+          "tool_io": {
+            "input": {
+              "command": "printf success"
+            },
+            "response": "Orchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+            "truncated": false
+          }
+        }
+      ],
+      "candidate": {
+        "title": "Local duplicate-check regression reported success",
+        "body": "The executed local regression reported successful rejection of duplicate checkout_id values by a UNIQUE constraint. Production was not verified.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Observed local test outcome",
+          "facts": [
+            "The executed local regression reported duplicate checkout_id rejection.",
+            "Production was not verified."
+          ],
+          "narrative": "This finding preserves the returned local regression result. It does not establish production behavior or unseen implementation details.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    },
+    {
+      "id": "code_as_execution",
+      "expected": "reject",
+      "category": "test_source_is_not_execution",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:PostToolUse:synthetic",
+          "body": "Tool: Bash\nCommand: cat inspect_orchid.py\nOutput excerpt:\nassert duplicate_rejected is True\nprint(\"regression passed\")",
+          "tool_io": {
+            "input": {
+              "command": "cat inspect_orchid.py"
+            },
+            "response": "assert duplicate_rejected is True\nprint(\"regression passed\")",
+            "truncated": false
+          }
+        }
+      ],
+      "candidate": {
+        "title": "Local duplicate-check regression reported success",
+        "body": "The executed local regression reported successful rejection of duplicate checkout_id values by a UNIQUE constraint. Production was not verified.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Observed local test outcome",
+          "facts": [
+            "The executed local regression reported duplicate checkout_id rejection.",
+            "Production was not verified."
+          ],
+          "narrative": "This finding preserves the returned local regression result. It does not establish production behavior or unseen implementation details.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    },
+    {
+      "id": "production_expansion",
+      "expected": "reject",
+      "category": "local_is_not_production",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:PostToolUse:synthetic",
+          "body": "Tool: Bash\nCommand: python3 inspect_orchid.py\nOutput excerpt:\nOrchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+          "tool_io": {
+            "input": {
+              "command": "python3 inspect_orchid.py"
+            },
+            "response": "Orchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+            "truncated": false
+          }
+        }
+      ],
+      "candidate": {
+        "title": "Production duplicate rejection verified",
+        "body": "Production checkout retries reject duplicate checkout_id values. The deployed UNIQUE constraint was verified.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Production verification",
+          "facts": [
+            "Production duplicate checkout_id rejection is verified."
+          ],
+          "narrative": "The production verification is complete.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    },
+    {
+      "id": "denied_execution",
+      "expected": "reject",
+      "category": "invented_evidence_gap",
+      "sources": [
+        {
+          "id": "s",
+          "source": "hook:PostToolUse:synthetic",
+          "body": "Tool: Bash\nCommand: python3 inspect_orchid.py\nOutput excerpt:\nOrchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+          "tool_io": {
+            "input": {
+              "command": "python3 inspect_orchid.py"
+            },
+            "response": "Orchid local retry work is completed: duplicate checkout_id is rejected by a UNIQUE constraint; retry limit is 11; regression passed.\nProduction has not been deployed or verified. Production verification requires separate evidence.",
+            "truncated": false
+          }
+        }
+      ],
+      "candidate": {
+        "title": "No local test result is available",
+        "body": "No local test executed or returned a result. Duplicate rejection remains unverified because no execution evidence exists.",
+        "observation": {
+          "type": "discovery",
+          "subtitle": "Absent execution evidence",
+          "facts": [
+            "No local test result is available."
+          ],
+          "narrative": "The supplied evidence contains no local regression execution result.",
+          "concepts": [
+            "how-it-works"
+          ],
+          "files_read": [],
+          "files_modified": []
+        },
+        "tags": [],
+        "source_ids": [
+          "s"
+        ]
+      }
+    }
+  ]
+}

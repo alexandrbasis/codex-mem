@@ -32,6 +32,35 @@ def claim(*sources, **changes):
 
 
 class JevQualityTests(unittest.TestCase):
+    def test_only_known_concept_labels_are_exempt_from_factual_refinement(self):
+        from codex_mem.jev_quality import _field_paths
+        claims = {"title": "what-changed", "observation": {
+            "type": "change", "concepts": ["what-changed", "Production deployment passed"],
+            "files_modified": ["what-changed"], "facts": ["what-changed"],
+        }}
+        self.assertEqual({("title",), ("observation", "type"),
+                          ("observation", "concepts", 1),
+                          ("observation", "files_modified", 0), ("observation", "facts", 0)},
+                         set(_field_paths(claims)))
+
+    def test_type_classification_preserves_report_attribution_and_event_status(self):
+        candidate = note(observation={"type": "bugfix", "concepts": ["what-changed"]})
+        calls = []
+
+        def evaluate(payload):
+            calls.append(payload)
+            for question in payload["questions"].values():
+                scope = question["instructions"]["classification_scope"]
+                self.assertIn("bugfix means a correction", scope)
+                self.assertIn("accepted choice, not a suggestion", scope)
+                self.assertIn("without establishing independent execution", scope)
+            return response(payload, .5, .5) if len(calls) == 1 else response(payload)
+
+        audit = quality_gate([candidate], None, claim(), project="/quality", evaluator=evaluate)
+        self.assertEqual("accept", audit["route"])
+        self.assertEqual({"title", "body", "observation.type"},
+                         {field["field_path"] for field in audit["decisions"][0]["fields"]})
+
     def test_list_assertions_are_checked_individually_with_complete_context(self):
         candidate = note(observation={
             "facts": ["The assistant reported a local test pass.", "Production is independently verified."],
@@ -153,7 +182,7 @@ class JevQualityTests(unittest.TestCase):
             self.assertEqual(original, item["candidate"])
             self.assertEqual("Tests passed.", item["cited_sources"][0]["body"])
             self.assertEqual([], item["session_history"])
-            self.assertEqual(18 if item["candidate_kind"] == "note" else 6, len(payload["questions"]))
+            self.assertEqual(16 if item["candidate_kind"] == "note" else 6, len(payload["questions"]))
             questions = json.dumps(payload["questions"])
             self.assertNotIn("candidate_claims.request", questions)
             self.assertNotIn("candidate_claims.next_steps", questions)
@@ -166,14 +195,14 @@ class JevQualityTests(unittest.TestCase):
         self.assertEqual(3, len(seen))
         self.assertEqual(2, audit["counts"]["initial_uncertain"])
         self.assertEqual(2, audit["counts"]["refined"])
-        self.assertEqual(12, audit["counts"]["fields_evaluated"])
+        self.assertEqual(11, audit["counts"]["fields_evaluated"])
         self.assertEqual(2, audit["counts"]["accepted"])
         self.assertEqual(0, audit["counts"]["uncertain"])
         for decision in audit["decisions"]:
             self.assertEqual("uncertain", decision["initial"]["route"])
             self.assertEqual("refinement", decision["decision_source"])
         self.assertEqual({"title", "body", "observation.type", "observation.subtitle", "observation.facts[0]",
-                          "observation.narrative", "observation.concepts[0]", "observation.files_read[0]", "observation.files_modified[0]"},
+                          "observation.narrative", "observation.files_read[0]", "observation.files_modified[0]"},
                          {field["field_path"] for field in audit["decisions"][0]["fields"]})
         self.assertEqual({"title", "completed", "notes"}, {field["field_path"] for field in audit["decisions"][1]["fields"]})
         self.assertEqual(originals, (candidate, summary))

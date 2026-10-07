@@ -77,6 +77,8 @@ def main():
     parser.add_argument("--baseline-source", type=Path, required=True,
                         help="Explicit trusted baseline Python source copied before modification")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--fixture", type=Path, default=FIXTURE,
+                        help="Fixed synthetic cases with labels declared before evaluation")
     args = parser.parse_args()
     if not args.live:
         print(json.dumps({"status": "not_run", "reason": "requires_explicit_live_flag"}))
@@ -84,10 +86,10 @@ def main():
     spec = importlib.util.spec_from_file_location("codex_mem.quality_comparison_baseline", args.baseline_source)
     baseline = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(baseline)
-    fixture = json.loads(FIXTURE.read_text())
+    fixture = json.loads(args.fixture.read_text())
     key_file = load_config().get("jev_filter_key_file", "")
     report = compare(baseline, fixture, key_file=key_file)
-    report["fixture_sha256"] = digest(FIXTURE)
+    report["fixture_sha256"] = digest(args.fixture)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({"report": str(args.output), "dispatched_requests": report["dispatched_requests"],
                       "passes": [{key: value for key, value in phase.items() if key != "cases"}

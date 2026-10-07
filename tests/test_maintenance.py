@@ -83,6 +83,26 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         self.assertEqual("selected_project", report["project_coverage"]["status"])
         self.assertFalse(report["project_coverage"]["has_more"])
 
+    def test_all_projects_prioritizes_memory_over_usage_only_workspaces(self) -> None:
+        configure(self.data_dir, capture_scope="all")
+        memory_project = self.root / "z-memory"
+        with Store(self.data_dir) as store:
+            store.remember(memory_project, "Decision", "Retain real project knowledge")
+            store._connection.execute(
+                "CREATE TABLE IF NOT EXISTS usage_sessions (project TEXT NOT NULL)"
+            )
+            store._connection.executemany(
+                "INSERT INTO usage_sessions(project) VALUES (?)",
+                [(str(self.root / f"a-usage-{i}"),) for i in range(4)],
+            )
+            store._connection.commit()
+        with patch.object(health_check, "MAX_PROJECTS", 3), patch.object(
+            health_check, "_usage_report", return_value={"status": "unknown"}
+        ):
+            report = self.report(all_projects=True)
+        self.assertIn(str(memory_project.resolve()), {p["path"] for p in report["projects"]})
+        self.assertTrue(report["project_coverage"]["has_more"])
+
     def test_existing_database_and_config_are_not_changed(self) -> None:
         configure(self.data_dir, capture_scope="all")
         with Store(self.data_dir) as store:
@@ -101,6 +121,25 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         for path, state in before.items():
             self.assertEqual(state, (path.stat().st_size, path.stat().st_mtime_ns, path.read_bytes()))
         self.assertEqual("all", report["capture_scope"])
+
+    def test_integrity_timeout_does_not_report_database_corruption(self) -> None:
+        with Store(self.data_dir) as store:
+            store.remember(self.project_a, "Fixture", "Synthetic decision")
+        read_rows = health_check._rows
+
+        def interrupted_check(connection, query, *args, **kwargs):
+            if query == "PRAGMA quick_check":
+                raise sqlite3.OperationalError("interrupted")
+            return read_rows(connection, query, *args, **kwargs)
+
+        with patch.object(health_check, "_rows", side_effect=interrupted_check), patch.object(
+            health_check, "DEEP_CHECK_BUDGET_SECONDS", -1
+        ):
+            report = self.report(deep=True)
+
+        self.assertEqual({"status": "unavailable", "reason": "timeout"}, report["storage"]["integrity"])
+        self.assertIn("integrity_check_timeout", report["errors"])
+        self.assertNotIn("integrity_check_failed", report["errors"])
 
     def test_raw_observations_are_not_counted_as_pending_semantic_memories(self) -> None:
         configure(self.data_dir, capture_scope="all")
@@ -326,6 +365,25 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         self.assertEqual(0, project["observations"]["blocked_observations"])
         self.assertEqual(1, project["observations"]["quarantined_observations"])
         self.assertFalse(project["service"]["queue_metadata"]["blocked"])
+
+    def test_failed_job_reports_safe_current_reason_without_private_text(self) -> None:
+        with Store(self.data_dir) as store:
+            failed = store.remember(
+                self.project_a, "Failed source", "PRIVATE_SENTINEL", source="hook:Stop"
+            )
+        self._insert_job(failed["id"], status="failed", created="2025-12-29T00:00:00Z",
+                         updated="2025-12-29T01:00:00Z", attempts=2)
+        job = f"job-failed-{failed['id'][:8]}"
+        with closing(sqlite3.connect(self.data_dir / "memory.sqlite3")) as connection, connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS observation_failure_receipts "
+                               "(job_id TEXT,attempt_count INTEGER,error_code TEXT,reason_code TEXT,created_at TEXT)")
+            connection.executemany("INSERT INTO observation_failure_receipts VALUES (?,?,?,?,?)", [
+                (job, 1, "failed-code", "invalid_json", "2025-12-29T00:00:00Z"),
+                (job, 2, "failed-code", "jev_quality_uncertain", "2025-12-29T01:00:00Z"),
+            ])
+        queue = self.report()["projects"][0]["observation_queue"]
+        self.assertEqual([{"reason": "jev_quality_uncertain", "jobs": 1}], queue["failure_reasons"])
+        self.assertNotIn("PRIVATE_SENTINEL", json.dumps(queue))
 
     def test_service_block_is_reported_even_with_historical_success(self) -> None:
         with Store(self.data_dir) as store:

@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
+import tempfile
 
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
@@ -32,6 +34,24 @@ def run(**updates):
 
 
 class NativeMemoryAcceptanceTests(unittest.TestCase):
+    def test_configured_jev_reuses_only_key_path_and_scopes_every_gate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            key = Path(temporary) / "key"
+            key.write_text("synthetic-key-never-read")
+            projects = [Path(temporary) / "project", Path(temporary) / "outside"]
+            with patch.object(probe, "load_config", return_value={"jev_filter_key_file": str(key), "included_projects": ["/foreign"]}):
+                settings = probe.configured_jev_settings(projects)
+            self.assertEqual(str(key), settings["jev_filter_key_file"])
+            for gate in ("filter", "quality", "retrieval"):
+                self.assertTrue(settings[f"jev_{gate}_enabled"])
+                self.assertEqual([str(path) for path in projects], settings[f"jev_{gate}_projects"])
+            self.assertNotIn("included_projects", settings)
+
+    def test_configured_jev_refuses_missing_credential_path(self):
+        with patch.object(probe, "load_config", return_value={}):
+            with self.assertRaisesRegex(probe.AcceptanceError, "configured_jev_key_file_required"):
+                probe.configured_jev_settings([Path("/fixture")])
+
     def test_meaningful_stop_requires_note_summary_and_native_tool_provenance(self):
         snapshot = {"jobs": [{"status": "processed", "model": probe.MODEL, "reasoning_effort": probe.REASONING_EFFORT,
                              "worker_thread_id": "worker", "worker_turn_id": "turn", "output_ids": ["note", "summary"]}],
