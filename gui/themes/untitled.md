@@ -164,7 +164,7 @@ Generated from the current project, including edits awaiting autosave. Return to
   "buttonRadius": "s",
   "colorEmphasis": 52,
   "primaryForeground": {
-    "dark": "neutral-9",
+    "dark": "neutral-2",
     "light": "neutral-2"
   },
   "primaryActionColor": "color-1"
@@ -201,17 +201,17 @@ Define these in the app’s existing theme scope for this mode. Keep component s
 | `--motion-large-iterations` | infinite |
 | `--motion-popup-scale` | 0.96 |
 | `--motion-press-distance` | 1px |
-| `--option-badge-background` | #07376b |
+| `--option-badge-background` | #00afe8 |
 | `--option-badge-foreground` | #fbfbfb |
 | `--navigation-active-foreground` | #fbfbfb |
-| `--emphasis-chart-fill` | #07376b33 |
+| `--emphasis-chart-fill` | #00afe833 |
 | `--emphasis-balance-background` | #cdcdcd |
 | `--emphasis-rewards-background` | #f4f4f4 |
 | `--emphasis-icon-background` | #f4f4f4 |
 | `--emphasis-icon-foreground` | #000000 |
 | `--emphasis-type-background` | #f4f4f4 |
 | `--emphasis-type-foreground` | #000000 |
-| `--navigation-active-background` | #07376b |
+| `--navigation-active-background` | #00afe8 |
 | `--surface-raised-image` | none |
 | `--surface-raised-shadow` | 0 0 0 0 transparent |
 | `--surface-recessed-image` | none |
@@ -278,14 +278,14 @@ Define these in the app’s existing theme scope for this mode. Keep component s
 | `--weight-data-medium` | 500 |
 | `--weight-data-heavy` | 600 |
 | `--color-none` | transparent |
-| `--color-1` | #07376b |
-| `--color-1-transparent` | #07376b33 |
-| `--color-2` | #ff5a00 |
-| `--color-2-transparent` | #ff5a0033 |
-| `--color-3` | #87d8f5 |
-| `--color-3-transparent` | #87d8f533 |
-| `--color-4` | #ffed9b |
-| `--color-4-transparent` | #ffed9b33 |
+| `--color-1` | #00afe8 |
+| `--color-1-transparent` | #00afe833 |
+| `--color-2` | #085e55 |
+| `--color-2-transparent` | #085e5533 |
+| `--color-3` | #ffed9b |
+| `--color-3-transparent` | #ffed9b33 |
+| `--color-4` | #ffb5aa |
+| `--color-4-transparent` | #ffb5aa33 |
 | `--neutral-1` | #ffffff |
 | `--neutral-1-transparent` | #ffffff33 |
 | `--neutral-2` | #fbfbfb |
@@ -322,10 +322,10 @@ Define these in the app’s existing theme scope for this mode. Keep component s
 | `--cte-text` | #000000 |
 | `--cte-text-muted` | #7d7d7d |
 | `--cte-border` | #e7e7e733 |
-| `--cte-accent` | #07376b |
+| `--cte-accent` | #00afe8 |
 | `--cte-accent-text` | #fbfbfb |
 | `--cte-danger` | #fc032d |
-| `--cte-focus` | #07376b |
+| `--cte-focus` | #00afe8 |
 | `--cte-font` | "Timeless Grotesk", sans-serif |
 | `--cte-font-size` | 14px |
 | `--cte-font-weight` | 400 |
@@ -365,17 +365,17 @@ Define these in the app’s existing theme scope for this mode. Keep component s
 | `--motion-large-iterations` | infinite |
 | `--motion-popup-scale` | 0.96 |
 | `--motion-press-distance` | 1px |
-| `--option-badge-background` | #07376b |
+| `--option-badge-background` | #00afe8 |
 | `--option-badge-foreground` | #fbfbfb |
 | `--navigation-active-foreground` | #fbfbfb |
-| `--emphasis-chart-fill` | #07376b33 |
+| `--emphasis-chart-fill` | #00afe833 |
 | `--emphasis-balance-background` | #565656 |
 | `--emphasis-rewards-background` | #2b2b2b |
 | `--emphasis-icon-background` | #2b2b2b |
 | `--emphasis-icon-foreground` | #ffffff |
 | `--emphasis-type-background` | #2b2b2b |
 | `--emphasis-type-foreground` | #ffffff |
-| `--navigation-active-background` | #07376b |
+| `--navigation-active-background` | #00afe8 |
 | `--surface-raised-image` | none |
 | `--surface-raised-shadow` | 0 0 0 0 transparent |
 | `--surface-recessed-image` | none |
@@ -442,14 +442,14 @@ Define these in the app’s existing theme scope for this mode. Keep component s
 | `--weight-data-medium` | 500 |
 | `--weight-data-heavy` | 600 |
 | `--color-none` | transparent |
-| `--color-1` | #07376b |
-| `--color-1-transparent` | #07376b33 |
-| `--color-2` | #ff5a00 |
-| `--color-2-transparent` | #ff5a0033 |
-| `--color-3` | #87d8f5 |
-| `--color-3-transparent` | #87d8f533 |
-| `--color-4` | #ffed9b |
-| `--color-4-transparent` | #ffed9b33 |
+| `--color-1` | #00afe8 |
+| `--color-1-transparent` | #00afe833 |
+| `--color-2` | #085e55 |
+| `--color-2-transparent` | #085e5533 |
+| `--color-3` | #ffed9b |
+| `--color-3-transparent` | #ffed9b33 |
+| `--color-4` | #ffb5aa |
+| `--color-4-transparent` | #ffb5aa33 |
 | `--neutral-1` | #000000 |
 | `--neutral-1-transparent` | #00000033 |
 | `--neutral-2` | #202020 |
@@ -486,10 +486,10 @@ Define these in the app’s existing theme scope for this mode. Keep component s
 | `--cte-text` | #ffffff |
 | `--cte-text-muted` | #ababab |
 | `--cte-border` | #3d3d3d33 |
-| `--cte-accent` | #07376b |
-| `--cte-accent-text` | #f4f4f4 |
+| `--cte-accent` | #00afe8 |
+| `--cte-accent-text` | #202020 |
 | `--cte-danger` | #fc032d |
-| `--cte-focus` | #07376b |
+| `--cte-focus` | #00afe8 |
 | `--cte-font` | "Timeless Grotesk", sans-serif |
 | `--cte-font-size` | 14px |
 | `--cte-font-weight` | 400 |
