@@ -33,11 +33,11 @@ class PricingTests(unittest.TestCase):
         self.assertEqual(Decimal("5.44752"), Decimal(long["api_equivalent_usd"]["selected"]))
         self.assertEqual(Decimal("68.12525"), Decimal(long["estimated_codex_credits"]["selected"]))
 
-    def test_api_fast_and_codex_fast_have_different_multipliers(self):
+    def test_api_fast_and_purchased_codex_credit_fast_use_double_rates(self):
         standard = price_event(event())
         fast = price_event(event(service_tier="priority"))
         self.assertEqual(Decimal(standard["api_equivalent_usd"]["selected"]) * 2, Decimal(fast["api_equivalent_usd"]["selected"]))
-        self.assertEqual(Decimal(standard["estimated_codex_credits"]["selected"]) * Decimal("2.5"), Decimal(fast["estimated_codex_credits"]["selected"]))
+        self.assertEqual(Decimal(standard["estimated_codex_credits"]["selected"]) * 2, Decimal(fast["estimated_codex_credits"]["selected"]))
 
     def test_confirmed_tier_wins_but_requested_tier_is_only_an_estimate(self):
         self.assertEqual("standard", price_event(event(requested_service_tier="fast"))["tier"]["selected"])
@@ -62,7 +62,7 @@ class PricingTests(unittest.TestCase):
                 self.assertEqual("requested", priced["tier"]["status"])
 
     def test_unknown_model_is_unpriced_including_auto_review(self):
-        for model in (None, "codex-auto-review", "gpt-6-astra-unknown-snapshot"):
+        for model in (None, "codex-auto-review", "gpt-6-astra-unknown-snapshot", "gpt-6.1", "gpt-6-luna-latest"):
             with self.subTest(model=model):
                 priced = price_event(event(model=model))
                 self.assertEqual("unknown_model_rate", priced["api_equivalent_usd"]["reason"])
@@ -84,11 +84,30 @@ class PricingTests(unittest.TestCase):
                 self.assertIsNone(priced["api_equivalent_usd"]["standard"])
                 self.assertEqual("partial_usage_counters", priced["api_equivalent_usd"]["reason"])
 
-    def test_all_four_reviewed_models_match_independent_known_costs(self):
-        expected = {"gpt-6-astra": ".0078", "gpt-5.6-sol": ".00312", "gpt-5.6-terra": ".00176", "gpt-5.6-luna": ".000176"}
+    def test_all_reviewed_models_match_independent_known_costs(self):
+        expected = {"gpt-6.1-sol": ".00148", "gpt-6-luna": ".000078", "gpt-6-astra": ".0078", "gpt-5.6-sol": ".00312", "gpt-5.6-terra": ".00176", "gpt-5.6-luna": ".000176"}
         for model, amount in expected.items():
             with self.subTest(model=model):
                 self.assertEqual(Decimal(amount), Decimal(price_event(event(model=model))["api_equivalent_usd"]["selected"]))
+
+    def test_new_models_match_published_standard_and_long_context_rates(self):
+        # One million input tokens is above the long-context threshold. Use a
+        # small independent fixture for short rates, then price all cache types.
+        for model, api_short, credits_short, api_long in (
+            ("gpt-6.1-sol", ".00148", ".037", "2.56"),
+            ("gpt-6-luna", ".000078", ".00195", ".136"),
+        ):
+            with self.subTest(model=model):
+                short = price_event(event(model=model))
+                self.assertEqual(Decimal(api_short), Decimal(short["api_equivalent_usd"]["selected"]))
+                self.assertEqual(Decimal(credits_short), Decimal(short["estimated_codex_credits"]["selected"]))
+                long = price_event(event(model=model, input_tokens=1_000_000,
+                    cached_input_tokens=800_000, cache_write_input_tokens=100_000,
+                    output_tokens=100_000, reasoning_output_tokens=50_000,
+                    total_tokens=1_100_000))
+                self.assertTrue(long["long_context"])
+                self.assertEqual(Decimal(api_long), Decimal(long["api_equivalent_usd"]["selected"]))
+                self.assertIsNone(long["estimated_codex_credits"]["selected"])
 
     def test_exact_arithmetic_does_not_depend_on_caller_decimal_precision(self):
         expected = price_event(event(input_tokens=123456789, cached_input_tokens=123000000, total_tokens=123456889))
@@ -98,10 +117,14 @@ class PricingTests(unittest.TestCase):
 
     def test_snapshot_has_sources_and_no_invented_historical_effective_date(self):
         snapshot = snapshot_metadata()
-        self.assertEqual("2026-09-12", snapshot["reviewed_at"])
+        self.assertEqual("2026-10-07", snapshot["reviewed_at"])
         self.assertIsNone(snapshot["effective_from"])
         self.assertIn("reprice_with_snapshot", snapshot["historical_policy"])
-        self.assertEqual(4, len(snapshot["model_sources"]))
+        self.assertEqual(6, len(snapshot["model_sources"]))
+        self.assertEqual("2026-09-12", snapshot["model_reviewed_at"]["gpt-6-astra"])
+        self.assertEqual("2026-10-07", snapshot["model_reviewed_at"]["gpt-6.1-sol"])
+        self.assertEqual("2", snapshot["codex_fast_multiplier"])
+        self.assertEqual("2.5", snapshot["codex_included_subscription_fast_multiplier"])
 
 
 if __name__ == "__main__":

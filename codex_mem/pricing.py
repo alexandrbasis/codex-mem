@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from decimal import Decimal, localcontext
 from typing import Any, Mapping
 
-SNAPSHOT_VERSION = "openai-2026-09-12.1"
-SNAPSHOT_REVIEWED_AT = "2026-09-12"
+SNAPSHOT_VERSION = "openai-2026-10-07.1"
+SNAPSHOT_REVIEWED_AT = "2026-10-07"
 API_SOURCE = "https://developers.openai.com/api/docs/pricing"
 CREDIT_SOURCE = "https://learn.chatgpt.com/docs/pricing#token-rates"
 SPEED_SOURCE = "https://learn.chatgpt.com/docs/agent-configuration/speed"
@@ -41,6 +41,8 @@ def _rates(*values: str) -> Rates:
 # Exact public model identifiers only. An unlisted alias is not assumed to be
 # the same backend or price. All numbers are per million tokens.
 CATALOG = {
+    "gpt-6.1-sol": _rates("2", ".1", "2.5", "10", "50", "2.5", "250"),
+    "gpt-6-luna": _rates(".1", ".01", ".125", ".5", "2.5", ".25", "12.5"),
     "gpt-6-astra": _rates("10", "1", "12.5", "50", "250", "25", "1250"),
     "gpt-5.6-sol": _rates("4", ".4", "5", "20", "100", "10", "500"),
     "gpt-5.6-terra": _rates("2", ".2", "2.5", "12", "50", "5", "300"),
@@ -62,13 +64,16 @@ def snapshot_metadata() -> dict[str, Any]:
         "supported_models": sorted(CATALOG),
         "sources": [API_SOURCE, CREDIT_SOURCE, SPEED_SOURCE],
         "model_sources": {model: f"https://developers.openai.com/api/docs/models/{model}" for model in CATALOG},
+        "model_reviewed_at": {model: "2026-10-07" if model in {"gpt-6.1-sol", "gpt-6-luna"} else "2026-09-12" for model in CATALOG},
         "api_long_context": {"input_tokens_greater_than": LONG_CONTEXT_THRESHOLD, "input_and_cache_multiplier": "2", "output_multiplier": "1.5", "applies_to": "entire_response"},
         "api_fast_multiplier": "2",
-        "codex_fast_multiplier": "2.5",
-        "codex_credit_policy": "published_flat_token_rates; cache_write_rate_unavailable",
+        "codex_fast_multiplier": "2",
+        "codex_included_subscription_fast_multiplier": "2.5",
+        "codex_credit_policy": "published_flat_token_rates_for_purchased_credits_and_enterprise_payg; cache_write_rate_unavailable",
         "exclusions": ["subscription_payments", "actual_credit_purchases", "taxes", "regional_processing_uplift", "tool_fees", "account_discounts"],
         "notes": [
-            "Sol promotional rates were published as available at least through 2026-11-21; refresh the snapshot to use later rates.",
+            "Existing gpt-6-astra and gpt-5.6 rates are retained from the 2026-09-12 review; new gpt-6.1-sol and gpt-6-luna rates were reviewed on 2026-10-07.",
+            "Fast uses 2x purchased credits and Enterprise pay-as-you-go credits. Included subscription usage uses 2.5x and is not estimated here.",
             "The rate card review date does not establish an effective date for historical billing.",
             "Model and requested tier attribution in local logs is not proof of the provider's billed model or tier.",
         ],
@@ -158,5 +163,5 @@ def _price_event(event: Mapping[str, Any]) -> dict[str, Any]:
         "tokens": counts,
         "long_context": long_context,
         "api_equivalent_usd": _amounts(api_standard, Decimal(2), tier, reason),
-        "estimated_codex_credits": _amounts(credit_standard, Decimal("2.5"), tier, credit_reason),
+        "estimated_codex_credits": _amounts(credit_standard, Decimal(2), tier, credit_reason),
     }

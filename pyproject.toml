@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "codex-mem-local"
-version = "1.9.3"
+version = "1.10.0"
 description = "Project-scoped persistent memory for Codex, using Python and SQLite"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,3 +25,6 @@ codex-mem = "codex_mem.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["codex_mem*"]
+
+[tool.setuptools.package-data]
+codex_mem = ["ui_static/*.html", "ui_static/*.css", "ui_static/*.js"]

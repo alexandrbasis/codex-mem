@@ -301,6 +301,9 @@ def _build_parser() -> _ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     commands.add_parser("serve", help="Run the newline-delimited MCP stdio server")
+    ui = commands.add_parser("ui", help="Open the local read-only monitoring dashboard")
+    ui.add_argument("--port", type=lambda value: _positive(value, field="port", maximum=65535), default=8765)
+    ui.add_argument("--open", action="store_true", help="Open the authenticated dashboard URL in your browser")
     commands.add_parser("hook", help="Run the local hook entrypoint")
     commands.add_parser("process-hook", help="Process captured observations from a native asynchronous hook")
     process = commands.add_parser("process", help="Process one observation batch in a fresh Luna/medium session")
@@ -677,6 +680,13 @@ def main(args: Sequence[str] | None = None) -> int:
             from .mcp import serve
 
             return serve(namespace.data_dir)
+        if namespace.command == "ui":
+            from .dashboard import DashboardServerError, run_dashboard
+
+            try:
+                return run_dashboard(namespace.data_dir, port=namespace.port, open_browser=namespace.open)
+            except DashboardServerError as exc:
+                return _error("dashboard_unavailable", str(exc))
         if namespace.command == "hook":
             from . import hooks
 
