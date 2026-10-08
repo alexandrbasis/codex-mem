@@ -162,6 +162,14 @@ class DashboardReader:
                 expressions = [self._audit_projection() if name == 'audit_json' else name for name in selected]
                 if table == 'entries' and 'source' in columns:
                     expressions.append("CASE WHEN source LIKE 'processor:%' THEN 1 ELSE 0 END AS processor_note")
+                if table == 'observation_jobs':
+                    entry_columns = {row[1] for row in connection.execute('PRAGMA table_info(entries)')} if 'entries' in available else set()
+                    link_columns = {row[1] for row in connection.execute('PRAGMA table_info(observation_job_sources)')} if 'observation_job_sources' in available else set()
+                    failure_metadata = ({'id', 'project', 'status'} <= columns
+                                        and {'id', 'project', 'source', 'superseded_by'} <= entry_columns
+                                        and {'job_id', 'source_id'} <= link_columns)
+                    result['coverage']['active_failure_metadata_available'] = failure_metadata
+                    expressions.append(self._active_failure_projection() if failure_metadata else 'NULL AS active_failure')
                 predicates, args = [], []
                 if table == 'usage_events' and period != 'all' and 'recorded_at' in columns:
                     predicates.extend(('julianday(recorded_at)>=julianday(?)', 'julianday(recorded_at)<julianday(?)'))
@@ -227,6 +235,24 @@ class DashboardReader:
             if connection:
                 connection.close()
         return result
+
+    @staticmethod
+    def _active_failure_projection():
+        # Match retrieval freshness without loading source bodies or link rows.
+        # Successful/skipped coverage resolves an old failed batch only when no
+        # eligible, unsuperseded source in that batch remains uncovered.
+        return """CASE WHEN observation_jobs.status = 'failed' THEN EXISTS (
+            SELECT 1 FROM observation_job_sources s JOIN entries e ON e.id = s.source_id
+            WHERE s.job_id = observation_jobs.id AND e.project = observation_jobs.project
+                AND e.superseded_by IS NULL
+                AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse')
+                     OR e.source LIKE 'hook:PostToolUse:%')
+                AND NOT EXISTS (
+                    SELECT 1 FROM observation_job_sources s2
+                    CROSS JOIN observation_jobs j2 ON j2.id = s2.job_id
+                    WHERE s2.source_id = e.id AND j2.project = e.project
+                        AND j2.status IN ('processed','skipped')))
+            ELSE 0 END AS active_failure"""
 
     @staticmethod
     def _audit_projection():
@@ -370,10 +396,14 @@ class DashboardReader:
         pending = snapshot.get('pending_observations')
         pending_count = None if pending is None else (pending.get(project, 0) if project is not None else sum(pending.values()))
         available = 'observation_jobs' in snapshot['coverage']['available_tables']
+        failure_available = (available and snapshot['coverage'].get('active_failure_metadata_available', False)
+                             and 'observation_jobs' not in snapshot['coverage']['truncated_tables']
+                             and 'observation_jobs' not in snapshot['coverage'].get('interrupted_tables', ()))
+        active_failures = [row for row in jobs if row.get('status') == 'failed' and row.get('active_failure')]
         oldest = snapshot.get('pending_oldest_at')
         oldest_values = (oldest.get(project),) if oldest is not None and project is not None else (oldest or {}).values()
         pending_oldest = min((value for value in oldest_values if _instant(value) is not None), key=_instant, default=None)
-        return {'progress': self._queue_progress(snapshot, jobs), 'pending_oldest_at': pending_oldest, 'queued_projects': len(records), 'blocked_projects': sum(bool(row.get('blocked')) for row in records), 'service_record': service_records.get(project) if project else None, 'pending_observations': pending_count, 'pending_basis': 'Unclaimed raw captures using current processor eligibility, excluding running, completed, skipped and quarantined source snapshots.', 'basis': 'current_snapshot_all_dates', 'available': available, 'pending': pending_count, 'pending_jobs': counts['pending'] if available else None, **{state: counts[state] if available else None for state in ('running', 'failed')}, 'quarantined': sum(row.get('status') == 'failed' and row.get('error_code') == 'invalid_response' for row in jobs) if available else None, 'status_counts': dict(counts)}
+        return {'progress': self._queue_progress(snapshot, jobs), 'pending_oldest_at': pending_oldest, 'queued_projects': len(records), 'blocked_projects': sum(bool(row.get('blocked')) for row in records), 'service_record': service_records.get(project) if project else None, 'pending_observations': pending_count, 'pending_basis': 'Unclaimed raw captures using current processor eligibility, excluding running, completed, skipped and quarantined source snapshots.', 'basis': 'current_snapshot_all_dates', 'available': available, 'pending': pending_count, 'pending_jobs': counts['pending'] if available else None, 'running': counts['running'] if available else None, 'failed': len(active_failures) if failure_available else None, 'quarantined': sum(row.get('error_code') == 'invalid_response' for row in active_failures) if failure_available else None, 'active_failures_available': failure_available, 'failure_basis': 'Failed batches with uncovered eligible unsuperseded raw captures; processed/skipped coverage resolves historical failures.', 'status_counts': dict(counts), 'status_counts_basis': 'Retained job states, including historical failures.'}
 
     def _capture(self, snapshot, project=None):
         rows = [row for row in snapshot['tables']['entries'] if (project is None or row.get('project') == project) and self._in_period(row, 'created_at', snapshot)]

@@ -1071,6 +1071,12 @@ class Store:
         def migrate_and_install_indexes() -> None:
             migrate()
             self._create_dashboard_indexes(connection)
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS observation_job_recoveries ("
+                "parent_job_id TEXT PRIMARY KEY REFERENCES observation_jobs(id) ON DELETE CASCADE,"
+                "successor_job_id TEXT NOT NULL UNIQUE REFERENCES observation_jobs(id) ON DELETE CASCADE,"
+                "project TEXT NOT NULL, created_at TEXT NOT NULL)"
+            )
 
         self._write(migrate_and_install_indexes)
         # Raw tool I/O is maintained by the capture parity module.  Keeping
@@ -2281,6 +2287,14 @@ class Store:
             result["failure_receipts"] = read_failure_receipts(self._connection, checked_job_id)
             from .jev_audit import read_filter_attempts
             result["jev_filter_attempts"] = read_filter_attempts(self._connection, checked_job_id)
+            recovery = self._read(lambda: self._connection.execute(
+                "SELECT r.successor_job_id,j.status FROM observation_job_recoveries r "
+                "JOIN observation_jobs j ON j.id=r.successor_job_id AND j.project=r.project "
+                "WHERE r.parent_job_id=? AND r.project=?", (checked_job_id, workspace),
+            ).fetchone())
+            if recovery is not None:
+                result["successor_job_id"] = recovery["successor_job_id"]
+                result["successor_status"] = recovery["status"]
             return result
 
     def claim_observation_batch(
@@ -2299,6 +2313,9 @@ class Store:
         retry_job_id: str | None = None,
         retry_error_code: str | None = None,
         retry_attempt_count: int | None = None,
+        retry_input_fingerprint: str | None = None,
+        retry_previous_profile: bool = False,
+        retry_one_shot: bool = False,
         parallel_sessions: bool = False,
     ) -> dict[str, Any] | None:
         """Atomically lease one bounded, project-local raw hook batch.
@@ -2311,6 +2328,11 @@ class Store:
         broader recovery operation; the two selectors cannot be combined.
         Supplying both retry_error_code and retry_attempt_count restricts the
         claim to that exact failed snapshot, with no fresh-work fallback.
+        ``retry_previous_profile`` creates one current-profile successor for an
+        exact failed legacy snapshot. It requires the original fingerprint and
+        preserves the old job and receipts; its durable relation prevents reuse.
+        ``retry_one_shot`` consumes one exact recovery attempt. A crash closes
+        its expired lease as failed instead of allowing automatic lease retry.
         Transport failures require this guarded selector and no recorded
         worker thread or turn, because dispatch can precede a lost turn receipt.
         ``parallel_sessions`` permits separate known sessions to run together.
@@ -2339,10 +2361,22 @@ class Store:
         if retry_failed and retry_job is not None:
             raise ValueError("pass retry_failed or retry_job_id, not both")
         guarded_retry = retry_error_code is not None or retry_attempt_count is not None
+        if retry_input_fingerprint is not None:
+            _validate_content_hash(retry_input_fingerprint)
+            if not guarded_retry:
+                raise ValueError("source fingerprint requires an exact recovery")
+        if not isinstance(retry_previous_profile, bool):
+            raise ValueError("retry_previous_profile must be true or false")
+        if retry_previous_profile and (not guarded_retry or retry_input_fingerprint is None):
+            raise ValueError("previous profile recovery requires an exact fingerprint selector")
+        if not isinstance(retry_one_shot, bool):
+            raise ValueError("retry_one_shot must be true or false")
+        if retry_one_shot and not guarded_retry:
+            raise ValueError("one-shot recovery requires an exact selector")
         if guarded_retry and (
             retry_job is None or retry_error_code not in {
                 "timeout", "runner_failure", "storage_failure", "invalid_response",
-                "runner_unavailable", "protocol_error",
+                "runner_unavailable", "protocol_error", "lease_expired",
             } or isinstance(retry_attempt_count, bool) or not isinstance(retry_attempt_count, int)
             or retry_attempt_count < 1
         ):
@@ -2354,6 +2388,28 @@ class Store:
 
             def claim() -> tuple[str, int] | None:
                 now = _utc_now()
+                # Maintenance approval authorizes one execution, including when
+                # the process disappears before it can save a terminal result.
+                exhausted = connection.execute(
+                    "SELECT id,attempt_count FROM observation_jobs WHERE project=? "
+                    "AND status='running' AND disposition='recovery_one_shot' "
+                    "AND lease_expires_at<=?", (workspace, now),
+                ).fetchall()
+                if exhausted:
+                    from .observer_usage_store import recover_attempt
+                    from .observation_diagnostics import record_failure_receipt
+                    for job in exhausted:
+                        recover_attempt(connection, str(job["id"]), int(job["attempt_count"]),
+                                        outcome="lease_expired", error_code="lease_expired")
+                        record_failure_receipt(connection, str(job["id"]), int(job["attempt_count"]),
+                                               "lease_expired", None, now)
+                    connection.executemany(
+                        "UPDATE observation_jobs SET status='failed',disposition='recovery_exhausted',"
+                        "lease_token=NULL,lease_expires_at=NULL,error_code='lease_expired',"
+                        "updated_at=?,completed_at=? WHERE id=? AND project=? AND status='running' "
+                        "AND disposition='recovery_one_shot' AND lease_expires_at<=?",
+                        [(now, now, str(job["id"]), workspace, now) for job in exhausted],
+                    )
                 # A lease from a retired profile cannot be reused for the
                 # current model. Close expired legacy attempts before looking
                 # for fresh sources; keep their original profile and receipt.
@@ -2424,6 +2480,7 @@ class Store:
                     reusable = connection.execute(
                         "SELECT * FROM observation_jobs AS j WHERE id=? AND project=? "
                         "AND processor_id=? AND model=? AND reasoning_effort=? "
+                        "AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=j.id) "
                         "AND status='failed' AND error_code=? AND attempt_count=? "
                         "AND (error_code NOT IN ('runner_unavailable', 'protocol_error') "
                         "OR (worker_thread_id IS NULL AND worker_turn_id IS NULL)) "
@@ -2433,8 +2490,9 @@ class Store:
                         "LEFT JOIN entries AS e ON e.id=links.source_id AND e.project=j.project "
                         "WHERE links.job_id=j.id AND (e.id IS NULL OR e.superseded_by IS NOT NULL)) "
                         "AND " + free_lane.format(session="j.session_id"),
-                        (retry_job, workspace, processor, required_model, required_effort,
-                         retry_error_code, retry_attempt_count, *lane_args),
+                        (retry_job, workspace, processor,
+                         _LEGACY_OBSERVATION_MODEL if retry_previous_profile else required_model,
+                         required_effort, retry_error_code, retry_attempt_count, *lane_args),
                     ).fetchone()
                 else:
                     reusable = connection.execute(
@@ -2442,6 +2500,7 @@ class Store:
                     SELECT * FROM observation_jobs
                     WHERE project = ? AND processor_id = ? AND model = ?
                       AND reasoning_effort = ?
+                      AND COALESCE(disposition,'') NOT IN ('recovery_one_shot','recovery_exhausted')
                       AND ((status = 'running' AND lease_expires_at <= ?)
                         OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code IN ('timeout', 'runner_failure', 'storage_failure')))))
                       AND EXISTS (
@@ -2466,6 +2525,9 @@ class Store:
                     ),
                     ).fetchone()
                 if reusable is not None:
+                    if (retry_input_fingerprint is not None
+                            and reusable["input_fingerprint"] != retry_input_fingerprint):
+                        return None
                     reusable_sources = connection.execute(
                         """
                         SELECT e.* FROM observation_job_sources AS links
@@ -2480,10 +2542,14 @@ class Store:
                     reusable_records = self._records_from_rows(reusable_sources)
                     if guarded_retry:
                         fingerprint = _observation_fingerprint(
-                            workspace, processor, required_model, required_effort,
+                            workspace, processor, str(reusable["model"]), str(reusable["reasoning_effort"]),
                             [str(row["id"]) for row in reusable_sources],
                         )
-                        if reusable["input_fingerprint"] != fingerprint:
+                        legacy_valid = (retry_previous_profile and reusable["input_fingerprint"]
+                                        == _legacy_observation_fingerprint(
+                                            workspace, processor,
+                                            [str(row["id"]) for row in reusable_sources]))
+                        if reusable["input_fingerprint"] != fingerprint and not legacy_valid:
                             raise StoreError("Observation sources are unavailable")
                     hydrated_records = [
                         self._hydrate_observation_source(workspace, record)
@@ -2506,6 +2572,37 @@ class Store:
                     if parallel_sessions and reusable["session_id"] is not None:
                         token = "session-" + token
                     now = _utc_now()
+                    if retry_previous_profile:
+                        source_ids = [str(row["id"]) for row in reusable_sources]
+                        fingerprint = _observation_fingerprint(
+                            workspace, processor, required_model, required_effort, source_ids,
+                        )
+                        if connection.execute(
+                            "SELECT 1 FROM observation_jobs WHERE project=? AND processor_id=? "
+                            "AND input_fingerprint=?", (workspace, processor, fingerprint),
+                        ).fetchone() is not None:
+                            return None
+                        successor_id = uuid.uuid4().hex
+                        connection.execute(
+                            "INSERT INTO observation_jobs(id,project,processor_id,model,reasoning_effort,"
+                            "session_id,input_fingerprint,input_limit,status,disposition,lease_token,"
+                            "lease_expires_at,attempt_count,worker_thread_id,worker_turn_id,error_code,"
+                            "output_ids_json,created_at,updated_at,completed_at) "
+                            "VALUES (?,?,?,?,?,?,?,?,'running',?,?,?,1,?,?,NULL,'[]',?,?,NULL)",
+                            (successor_id, workspace, processor, required_model, required_effort,
+                             reusable["session_id"], fingerprint, effective_limit,
+                             "recovery_one_shot" if retry_one_shot else None, token, expires_at,
+                             thread_id, turn_id, now, now),
+                        )
+                        connection.executemany(
+                            "INSERT INTO observation_job_sources(job_id,source_id) VALUES (?,?)",
+                            [(successor_id, source_id) for source_id in source_ids],
+                        )
+                        connection.execute(
+                            "INSERT INTO observation_job_recoveries(parent_job_id,successor_job_id,project,created_at) "
+                            "VALUES (?,?,?,?)", (reusable["id"], successor_id, workspace, now),
+                        )
+                        return successor_id, effective_limit
                     # Finalize the old attempt while its original job outcome
                     # is still known, atomically with taking the new lease.
                     from .observer_usage_store import recover_attempt
@@ -2518,7 +2615,7 @@ class Store:
                     connection.execute(
                         """
                         UPDATE observation_jobs
-                        SET status = 'running', disposition = NULL, lease_token = ?,
+                        SET status = 'running', disposition = ?, lease_token = ?,
                             lease_expires_at = ?, input_limit = ?, attempt_count = attempt_count + 1,
                             worker_thread_id = COALESCE(?, worker_thread_id),
                             worker_turn_id = COALESCE(?, worker_turn_id), error_code = NULL,
@@ -2526,6 +2623,7 @@ class Store:
                         WHERE id = ? AND project = ?
                         """,
                         (
+                            "recovery_one_shot" if retry_one_shot else None,
                             token,
                             expires_at,
                             effective_limit,
@@ -2563,6 +2661,7 @@ class Store:
                         WHERE links.source_id = e.id AND jobs.project = e.project
                           AND (
                             jobs.status IN ('processed', 'skipped', 'running')
+                            OR COALESCE(jobs.disposition,'')='recovery_exhausted'
                             OR (? = 0 AND jobs.status = 'failed'
                                 AND NOT (COALESCE(jobs.disposition,'')='profile_retired'
                                     AND jobs.error_code='lease_expired'

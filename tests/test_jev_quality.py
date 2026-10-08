@@ -95,9 +95,10 @@ class JevQualityTests(unittest.TestCase):
         evaluate = mock.Mock(side_effect=lambda payload: response(payload, .5, .5))
         with self.assertRaises(JevQualityError) as raised:
             quality_gate([candidate], None, claim(), project="/quality", evaluator=evaluate)
-        self.assertEqual("jev_quality_input_limit", raised.exception.code)
-        evaluate.assert_called_once()
-        self.assertEqual(0, raised.exception.audit["counts"]["refined"])
+        self.assertEqual("jev_quality_uncertain", raised.exception.code)
+        self.assertGreater(evaluate.call_count, 2)
+        self.assertEqual(1, raised.exception.audit["counts"]["refined"])
+        self.assertEqual(35, raised.exception.audit["counts"]["fields_evaluated"])
 
     def test_complete_candidates_and_canonical_roles_share_one_request(self):
         sources = [
@@ -296,23 +297,19 @@ class JevQualityTests(unittest.TestCase):
                          {field["field_path"]: field["route"] for field in audit["decisions"][0]["fields"]})
         self.assertEqual(["aggregate", "refinement"], [entry["stage"] for entry in audit["evaluations"]])
 
-    def test_refinement_preflight_rejects_full_payload_and_question_overflow(self):
-        candidates = (
-            (note(observation={"type": "decision", "subtitle": "Choice", "facts": ["Choice was stated."],
-                              "narrative": "Reason", "concepts": ["trade-off"], "files_read": ["a"], "files_modified": ["b"]}),
-             claim({"id": "source", "source": "hook:Stop", "body": "x" * 80_000})),
-            (note(**{f"field_{index}": "value" for index in range(33)}), claim()),
-        )
-        for candidate, current in candidates:
-            with self.subTest(fields=len(candidate)):
-                evaluator = mock.Mock(side_effect=lambda payload: response(payload, .5, .5))
-                with self.assertRaises(JevQualityError) as raised:
-                    quality_gate([candidate], None, current, project="/quality", evaluator=evaluator)
-                self.assertEqual("jev_quality_input_limit", raised.exception.code)
-                evaluator.assert_called_once()
-                self.assertEqual(1, raised.exception.audit["counts"]["requests"])
-                self.assertEqual(0, raised.exception.audit["counts"]["refined"])
-                self.assertEqual("refinement", raised.exception.audit["evaluations"][-1]["stage"])
+    def test_refinement_preflight_rejects_single_field_that_cannot_fit(self):
+        # Aggregate fits, but even one field pair with complete evidence exceeds
+        # the limit. Splitting questions cannot solve a genuinely oversized state.
+        current = claim({"id": "source", "source": "hook:Stop", "body": "x" * 89_000},
+                        context=[{"id": "old", "source": "hook:Stop", "body": "History"}])
+        evaluator = mock.Mock(side_effect=lambda payload: response(payload, .5, .5))
+        with self.assertRaises(JevQualityError) as raised:
+            quality_gate([note()], None, current, project="/quality", evaluator=evaluator)
+        self.assertEqual("jev_quality_input_limit", raised.exception.code)
+        evaluator.assert_called_once()
+        self.assertEqual(1, raised.exception.audit["counts"]["requests"])
+        self.assertEqual(0, raised.exception.audit["counts"]["refined"])
+        self.assertEqual("refinement", raised.exception.audit["evaluations"][-1]["stage"])
 
     def test_failed_refinement_preserves_aggregate_usage_and_initial_uncertainty(self):
         calls = []

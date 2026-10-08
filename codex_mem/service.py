@@ -160,6 +160,7 @@ def enqueue(
         if retry_failed:
             _preserve_retry_target(record)
         record["generation"] += 1
+        record["fresh_work_due"] = True
         # Fresh captures must not turn a scheduled recovery into a retry
         # storm. Only an explicit recovery can override the durable backoff.
         if retry_failed or not record["attempts"]:
@@ -525,6 +526,7 @@ def run_service(
         next_usage_at = 0.0
         next_usage_reconcile_at = 0.0
         checked_legacy_runner_blocks = False
+        recovery_turns: set[str] = set()
         while True:
             if _event_is_set(stop_event):
                 return _service_receipt("stopped", jobs=jobs, code=last_code)
@@ -579,10 +581,28 @@ def run_service(
                 continue
 
             retry_failed = bool(choice["retry_requested"])
+            # Maintenance permissions are consumed only by this coordinator,
+            # before worker futures exist. Alternate with ordinary work so a
+            # large quarantine manifest cannot starve fresh captures.
+            if (processor_enabled and not retry_failed and choice["retry_job_id"] is None
+                    and not choice["attempts"]):
+                if project in recovery_turns:
+                    recovery_turns.remove(project)
+                else:
+                    from .quarantine_recovery import run_next
+                    recovery = run_next(project, data_dir, processor=active_processor,
+                                        timeout=checked_timeout)
+                    if recovery is not None:
+                        recovery_turns.add(project)
+                        jobs += int(recovery["result"]["status"] in {"processed", "skipped", "failed"})
+                        _finish_maintenance(base, project, generation, _checked_now(clock))
+                        continue
             if processor_enabled and (configured_workers > 1 or choice["pending_retries"]):
                 if pool is None:
                     pool = ThreadPoolExecutor(max_workers=configured_workers, thread_name_prefix="observation")
                 width = 1 if retry_failed or choice["retry_job_id"] is not None or choice["attempts"] else effective_workers
+                if choice.get("fresh_retry_width"):
+                    width = min(width, choice["fresh_retry_width"])
                 # All futures have a slot now. Never queue leased projects behind
                 # another long-running model call, and never refill a partial cohort.
                 _record_workers(base, configured_workers, effective_workers, width)
@@ -1084,6 +1104,7 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
         "retry_error_code": None,
         "retry_attempt_count": None,
         "pending_retries": [],
+        "fresh_work_due": False,
         "last_code": None,
         "last_failure_at": None,
         "last_failure_detail": None,
@@ -1225,6 +1246,10 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     generation = raw.get("generation")
     attempts = raw.get("attempts")
     retry_requested = raw.get("retry_requested")
+    # Old queue records get one ordinary probe while an exact retry cools.
+    fresh_work_due = raw.get("fresh_work_due", raw.get("retry_job_id") is not None)
+    if not isinstance(fresh_work_due, bool):
+        raise ServiceStateError("service state is unavailable")
     blocked = raw.get("blocked")
     parked = raw.get("parked")
     due_at = raw.get("due_at")
@@ -1306,6 +1331,7 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         "retry_error_code": retry_error_code,
         "retry_attempt_count": retry_attempt_count,
         "pending_retries": pending_retries,
+        "fresh_work_due": fresh_work_due,
         "last_code": last_code,
         "last_failure_at": None if last_failure_at is None else float(last_failure_at),
         "last_failure_detail": last_failure_detail,
@@ -1594,6 +1620,43 @@ def _consume_stop_request(base: Path) -> None:
             _write_state(base, state)
 
 
+def _has_fresh_retry_work(base: Path, project: str) -> bool:
+    """Conservative scheduling hint; Store still atomically owns every claim.
+
+    Never inspect evidence bodies or replay linked jobs here. In particular,
+    failed links remain excluded even when their session has other fresh work.
+    """
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        return connection.execute(
+            "SELECT 1 FROM entries AS e WHERE e.project=? AND e.superseded_by IS NULL "
+            "AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse') "
+            "OR e.source LIKE 'hook:PostToolUse:%') "
+            "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
+            "WHERE links.source_id=e.id) "
+            "AND NOT EXISTS (SELECT 1 FROM observation_jobs AS j WHERE j.project=e.project "
+            "AND j.status='running' AND (j.session_id IS NULL OR e.session_id IS NULL "
+            "OR j.session_id=e.session_id OR COALESCE(j.lease_token,'') NOT LIKE 'session-%')) LIMIT 1",
+            (project,),
+        ).fetchone() is not None
+    except (OSError, sqlite3.Error, ServiceError, ValueError):
+        return False
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def _fresh_retry_capacity(record: Mapping[str, Any]) -> int:
+    """Reserve room for every possible fresh failure without widening the queue."""
+    if not record["fresh_work_due"] or record["retry_requested"]:
+        return 0
+    count = len(record["pending_retries"]) + int(record["retry_job_id"] is not None)
+    return max(0, MAX_PROCESSOR_WORKERS - count) if count else 0
+
+
 def _claim_due_project(
     base: Path, now: float, processor_timeout: float, *, allowed_projects: set[str] | None = None,
 ) -> dict[str, Any]:
@@ -1608,6 +1671,13 @@ def _claim_due_project(
                 record["inflight_until"] = None
                 record["due_at"] = min(record["due_at"], now)
 
+        for project, record in projects.items():
+            if (not record["blocked"] and record["parked"] is None
+                    and record["inflight_generation"] is None and record["due_at"] > now
+                    and _fresh_retry_capacity(record) > 0
+                    and not _has_fresh_retry_work(base, project)):
+                record["fresh_work_due"] = False
+
         ready = [
             project
             for project, record in projects.items()
@@ -1615,7 +1685,7 @@ def _claim_due_project(
             and not record["blocked"]
             and record["parked"] is None
             and record["inflight_generation"] is None
-            and record["due_at"] <= now
+            and (record["due_at"] <= now or _fresh_retry_capacity(record) > 0)
         ]
         if not ready:
             due_values = [
@@ -1632,6 +1702,13 @@ def _claim_due_project(
         cursor = state["cursor"]
         chosen = next((item for item in ordered if cursor is None or item > cursor), ordered[0])
         record = projects[chosen]
+        fresh_retry_width = 0
+        if record["due_at"] > now and _fresh_retry_capacity(record) > 0:
+            fresh_retry_width = _fresh_retry_capacity(record)
+            _preserve_retry_target(record)
+            _clear_retry_target(record)
+            record["attempts"] = 0
+        record["fresh_work_due"] = False
         record["inflight_generation"] = record["generation"]
         record["inflight_until"] = now + processor_timeout + _INFLIGHT_GRACE_SECONDS
         state["cursor"] = chosen
@@ -1646,6 +1723,7 @@ def _claim_due_project(
             "retry_error_code": record["retry_error_code"],
             "retry_attempt_count": record["retry_attempt_count"],
             "pending_retries": record["pending_retries"],
+            "fresh_retry_width": fresh_retry_width,
         }
 
 
@@ -1728,6 +1806,35 @@ def _finish_deferred(base: Path, project: str, generation: int, retry_at: float,
         _write_state(base, state)
 
 
+def _pending_maintenance(base: Path, project: str) -> bool:
+    from .quarantine_recovery import STATE_FILENAME, status, RecoveryStateError
+    if not (base / STATE_FILENAME).exists():
+        return False
+    try:
+        return any(row["state"] == "scheduled" for row in status(base, project=project))
+    except RecoveryStateError:
+        return False
+
+
+def _finish_maintenance(base: Path, project: str, generation: int, now: float) -> None:
+    """Release maintenance ownership without granting another model attempt.
+
+    Existing operational retries, blockers and their backoff stay authoritative.
+    The terminal job receipt supplies processing counts, not this scheduling hint.
+    """
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(project)
+        if record is None or record["inflight_generation"] != generation:
+            return
+        record["inflight_generation"] = None
+        record["inflight_until"] = None
+        if record["retry_job_id"] is None and not record["pending_retries"]:
+            record["due_at"] = now
+        record["fresh_work_due"] = True
+        _write_state(base, state)
+
+
 def _finish_success(
     base: Path,
     project: str,
@@ -1756,7 +1863,10 @@ def _finish_success(
         if record["generation"] != generation:
             record["due_at"] = now
         elif status == "idle" and not index_pending:
-            if record["rejected_batches"]:
+            if _pending_maintenance(base, project):
+                record["parked"] = None
+                record["due_at"] = now
+            elif record["rejected_batches"]:
                 # Preserve a visible warning while dormant. Ordinary enqueue
                 # wakes new work; polling cannot repeatedly invoke the model.
                 record["parked"] = "rejected_batches"
@@ -2008,6 +2118,7 @@ def _schedule_runner_retry(
     record["retry_attempt_count"] = snapshot["attempt_count"]
     record["blocked"] = False
     record["due_at"] = now + delay
+    record["fresh_work_due"] = True
     return True
 
 
@@ -2338,6 +2449,7 @@ def _finish_cohort(
         blocker_failure = None
         latest_failure = None
         progress = False
+        finished_batch = False
         retry_times = []
         last_code = None
         for result, status, code, rejected, snapshot, timeout_persisted, automatic in prepared:
@@ -2360,6 +2472,7 @@ def _finish_cohort(
                 progress = progress or status in {"processed", "skipped"}
                 continue
             last_code = code
+            finished_batch = finished_batch or rejected or snapshot is not None or timeout_persisted
             if rejected and isinstance(reason, str) and reason in _CONTENT_REJECTION_REASONS and record["last_rejected_job"] != job_id:
                 _record_rejection(record, job_id, reason)
                 progress = True
@@ -2406,14 +2519,19 @@ def _finish_cohort(
         record["last_code"] = blocker or last_code or ("invalid_response" if record["rejected_batches"] else None)
         if targets:
             _activate_retry(record, targets)
+            record["fresh_work_due"] = (progress or finished_batch
+                                        or record["generation"] != generation)
         else:
+            record["fresh_work_due"] = False
             record["attempts"] = choice["attempts"] if retry_times and not progress else 0
             record["due_at"] = min(retry_times) if retry_times and not progress else now
         if record["generation"] != generation and (record["retry_requested"] or not targets):
             record["due_at"] = now
         if (not record["blocked"] and not targets and not record["retry_requested"]
                 and not progress and not retry_times and not index_pending and record["generation"] == generation):
-            if record["rejected_batches"]:
+            if _pending_maintenance(base, project):
+                record["parked"] = None
+            elif record["rejected_batches"]:
                 record["parked"] = "rejected_batches"
             else:
                 del state["projects"][project]

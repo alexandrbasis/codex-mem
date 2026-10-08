@@ -40,6 +40,9 @@ class DashboardDataTests(unittest.TestCase):
         ''')
         return connection
 
+    def failure_source_schema(self, connection):
+        connection.executescript("ALTER TABLE entries ADD COLUMN source TEXT; ALTER TABLE entries ADD COLUMN superseded_by TEXT; ALTER TABLE observation_jobs ADD COLUMN disposition TEXT; ALTER TABLE observation_jobs ADD COLUMN reasoning_effort TEXT; CREATE TABLE observation_job_sources(job_id TEXT,source_id TEXT);")
+
     def event(self, connection, event='e', thread='main', response='r', recorded=None, model='gpt-6-astra'):
         connection.execute('INSERT INTO usage_events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (event, thread, 'session', response, model, 'response', 'standard', 'token_usage_record', recorded or self.now, 'response', 100, 20, 0, 10, 5, 110, 'PRIVATE_SENTINEL'))
 
@@ -149,6 +152,9 @@ class DashboardDataTests(unittest.TestCase):
     def test_period_bounds_and_queue_use_distinct_time_bases(self):
         self.seed()
         with self.connection() as connection:
+            self.failure_source_schema(connection)
+            connection.execute("UPDATE entries SET source='hook:Stop'")
+            connection.execute("INSERT INTO observation_job_sources VALUES ('job','note')")
             self.event(connection, 'old', response='old', recorded=self.old)
             connection.execute('UPDATE observation_jobs SET created_at=?,updated_at=?', (self.old, self.old))
         reader = DashboardReader(self.home)
@@ -163,6 +169,45 @@ class DashboardDataTests(unittest.TestCase):
             self.assertLess(datetime.fromisoformat(window['from']), datetime.fromisoformat(window['to']))
         with self.assertRaises(ValueError):
             reader.overview('month')
+
+    def test_active_failures_resolve_only_after_source_coverage(self):
+        with self.database() as connection:
+            self.failure_source_schema(connection)
+            connection.execute("INSERT INTO entries(id,project,created_at,updated_at,body,source) VALUES ('raw',?,?,?,'PRIVATE_SENTINEL','hook:Stop')", (self.project, self.old, self.old))
+            connection.execute("INSERT INTO observation_jobs(id,project,status,error_code,updated_at,model,disposition,attempt_count) VALUES ('legacy',?,'failed','invalid_response',?,'legacy-model','profile_retired',3)", (self.project, self.now))
+            connection.execute("INSERT INTO observation_job_sources VALUES ('legacy','raw')")
+        reader = DashboardReader(self.home)
+        before = reader.overview()['queue']
+        self.assertTrue(before['active_failures_available'])
+        self.assertEqual(1, before['failed'])
+        self.assertEqual(1, before['quarantined'])
+        with self.connection() as connection:
+            connection.execute("INSERT INTO observation_jobs(id,project,status,error_code,updated_at) VALUES ('successor',?,'running','invalid_response',?)", (self.project, self.now))
+            connection.execute("INSERT INTO observation_job_sources VALUES ('successor','raw')")
+        for status, active in (('running', 1), ('processed', 0), ('skipped', 0), ('failed', 2)):
+            with self.subTest(status=status), self.connection() as connection:
+                connection.execute("UPDATE observation_jobs SET status=? WHERE id='successor'", (status,))
+            report = DashboardReader(self.home).overview('today')
+            queue = report['queue']
+            self.assertEqual(active, queue['failed'])
+            self.assertEqual(active, queue['quarantined'])
+            self.assertEqual(2 if status == 'failed' else 1, queue['status_counts']['failed'])
+            self.assertEqual(2 if status == 'failed' else 1, queue['progress']['failed_jobs'])
+            self.assertNotIn('PRIVATE_SENTINEL', json.dumps(report))
+        with self.connection() as connection:
+            original = connection.execute("SELECT status,model,disposition,attempt_count FROM observation_jobs WHERE id='legacy'").fetchone()
+            self.assertEqual(('failed', 'legacy-model', 'profile_retired', 3), original)
+            connection.execute("UPDATE entries SET superseded_by='replacement' WHERE id='raw'")
+        self.assertEqual(0, DashboardReader(self.home).overview()['queue']['failed'])
+
+    def test_active_failures_unknown_without_source_metadata(self):
+        self.seed()
+        queue = DashboardReader(self.home).overview()['queue']
+        self.assertFalse(queue['active_failures_available'])
+        self.assertIsNone(queue['failed'])
+        self.assertIsNone(queue['quarantined'])
+        self.assertEqual(1, queue['status_counts']['failed'])
+        self.assertEqual(1, queue['progress']['failed_jobs'])
 
     def test_queue_progress_uses_terminal_jobs_and_snapshot_hour_across_periods(self):
         end = datetime.fromisoformat(self.now)

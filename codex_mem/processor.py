@@ -170,6 +170,9 @@ def process_pending(
     retry_job_id: str | None = None,
     retry_error_code: str | None = None,
     retry_attempt_count: int | None = None,
+    retry_input_fingerprint: str | None = None,
+    retry_previous_profile: bool = False,
+    retry_one_shot: bool = False,
     timeout: int | float = DEFAULT_TIMEOUT,
     codex: str = "codex",
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
@@ -239,6 +242,10 @@ def process_pending(
                 retry_job_id=retry_job_id,
                 retry_error_code=retry_error_code,
                 retry_attempt_count=retry_attempt_count,
+                **({"retry_input_fingerprint": retry_input_fingerprint}
+                   if retry_input_fingerprint is not None else {}),
+                **({"retry_previous_profile": True} if retry_previous_profile else {}),
+                **({"retry_one_shot": True} if retry_one_shot else {}),
                 **({"parallel_sessions": True} if parallel_sessions else {}),
             )
             if claimed is None:

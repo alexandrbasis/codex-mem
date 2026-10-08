@@ -156,6 +156,27 @@ class ProcessorRecoveryTests(unittest.TestCase):
         self.assertEqual("processor_disabled", self.recover(runner=runner)["code"])
         runner.assert_not_called()
 
+    def test_inspected_source_fingerprint_is_rechecked_before_dispatch(self):
+        with Store(self.base) as store:
+            fingerprint = store._connection.execute(
+                "SELECT input_fingerprint FROM observation_jobs WHERE id=?",
+                (self.jobs["rejected"],),
+            ).fetchone()[0]
+        runner = mock.Mock(side_effect=AssertionError("must not invoke model"))
+        result = processor.process_pending(
+            self.project, self.base, retry_job_id=self.jobs["rejected"],
+            retry_error_code="invalid_response", retry_attempt_count=1,
+            retry_input_fingerprint="0" * 64, runner=runner,
+        )
+        self.assertEqual("recovery_unavailable", result["code"])
+        runner.assert_not_called()
+        accepted = processor.process_pending(
+            self.project, self.base, retry_job_id=self.jobs["rejected"],
+            retry_error_code="invalid_response", retry_attempt_count=1,
+            retry_input_fingerprint=fingerprint, runner=self.valid_receipt,
+        )
+        self.assertEqual("processed", accepted["status"], accepted)
+
     def test_active_project_claim_prevents_parallel_manual_recovery(self):
         with Store(self.base) as store:
             active = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
