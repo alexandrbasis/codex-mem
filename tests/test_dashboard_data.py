@@ -313,6 +313,70 @@ class DashboardDataTests(unittest.TestCase):
         self.assertEqual(440, recovered['combined']['total_tokens'])
         self.assertEqual(1, read.call_count)
 
+    def timed_snapshot(self, statement_seconds, query_seconds, snapshot_seconds):
+        real_connect = sqlite3.connect
+        clock = [0.0]
+
+        class TimedConnection(sqlite3.Connection):
+            def set_progress_handler(self, callback, instructions):
+                self.check_deadline = callback
+                return super().set_progress_handler(callback, instructions)
+
+            def execute(self, query, *args, **kwargs):
+                cursor = super().execute(query, *args, **kwargs)
+                if query.startswith('SELECT ') and not query.startswith(('SELECT name ', 'SELECT DISTINCT ')):
+                    clock[0] += statement_seconds
+                    if self.check_deadline():
+                        raise sqlite3.OperationalError('interrupted')
+                return cursor
+
+        def connect(*args, **kwargs):
+            return real_connect(*args, factory=TimedConnection, **kwargs)
+
+        with patch('codex_mem.dashboard_data.sqlite3.connect', side_effect=connect), \
+                patch('codex_mem.dashboard_data.time.monotonic', side_effect=lambda: clock[0]), \
+                patch('codex_mem.dashboard_data.QUERY_SECONDS', query_seconds), \
+                patch('codex_mem.dashboard_data.SNAPSHOT_SECONDS', snapshot_seconds):
+            snapshot = DashboardReader(self.home)._read('all')
+        return snapshot, clock[0]
+
+    def test_fast_statements_do_not_share_one_query_deadline(self):
+        self.seed()
+        snapshot, elapsed = self.timed_snapshot(1, 2, 20)
+        self.assertGreater(elapsed, 2)
+        self.assertEqual('available', snapshot['status'])
+        self.assertEqual(7, len(snapshot['coverage']['available_tables']))
+
+    def test_statement_and_whole_snapshot_deadlines_still_stop_slow_reads(self):
+        self.seed()
+        snapshot, elapsed = self.timed_snapshot(3, 2, 20)
+        self.assertEqual('query_deadline', snapshot['coverage']['status'])
+        self.assertEqual('unavailable', snapshot['status'])
+        self.assertEqual(3, elapsed)
+        snapshot, elapsed = self.timed_snapshot(1, 2, 3)
+        self.assertEqual('query_deadline', snapshot['coverage']['status'])
+        self.assertEqual('partial', snapshot['status'])
+        self.assertEqual(3, elapsed)
+        self.assertNotIn('observation_jobs', snapshot['coverage']['available_tables'])
+
+    def test_warm_failure_does_not_retain_a_second_full_dataset(self):
+        self.seed()
+        reader = DashboardReader(self.home)
+        before = reader.overview()
+        reader._cache[('all', None)] = (0, reader._cache[('all', None)][1])
+        failed = reader._read('all')
+        failed['status'] = 'partial'
+        failed['coverage']['status'] = 'query_deadline'
+        with patch.object(reader, '_read', return_value=failed) as read:
+            after = reader.overview()
+            retried = reader.overview()
+        self.assertEqual(1, read.call_count)
+        self.assertEqual('stale', retried['status'])
+        self.assertEqual('query_deadline', retried['coverage']['refresh_error'])
+        self.assertEqual('stale', after['status'])
+        self.assertEqual(before['combined']['total_tokens'], after['combined']['total_tokens'])
+        self.assertNotIn('tables', reader._failures[('all', None)][1])
+
     def test_expired_snapshot_survives_transient_deadline_with_staleness(self):
         self.seed()
         reader = DashboardReader(self.home)

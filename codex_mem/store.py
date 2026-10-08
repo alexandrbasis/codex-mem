@@ -1068,12 +1068,34 @@ class Store:
                 return
             self._validate_schema(connection)
 
-        self._write(migrate)
+        def migrate_and_install_indexes() -> None:
+            migrate()
+            self._create_dashboard_indexes(connection)
+
+        self._write(migrate_and_install_indexes)
         # Raw tool I/O is maintained by the capture parity module.  Keeping
         # its schema installer optional lets v3 stores open during an
         # interrupted upgrade while still installing the durable side index
         # whenever the module is present.
         self._install_tool_io_schema()
+
+    @staticmethod
+    def _create_dashboard_indexes(connection: sqlite3.Connection) -> None:
+        """Install body-free dashboard reads for new and existing stores.
+
+        These additive indexes do not change the schema contract. Keep the
+        pending index partial so superseded captures incur no extra index row.
+        """
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS entries_dashboard_metadata_idx "
+            "ON entries(project, created_at, id, kind, session_id, updated_at, superseded_by, source)"
+        )
+        connection.execute(
+            "CREATE INDEX IF NOT EXISTS entries_dashboard_pending_idx "
+            # Include the predicate column so SQLite recognizes this as
+            # covering and prefers it to the larger metadata index.
+            "ON entries(project, source, id, created_at, superseded_by) WHERE superseded_by IS NULL"
+        )
 
     @staticmethod
     def _create_schema(connection: sqlite3.Connection) -> None:

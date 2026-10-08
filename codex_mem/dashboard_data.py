@@ -18,6 +18,7 @@ from .store import project_key
 ZONE = 'Asia/Jerusalem'
 ROW_LIMIT = 500_000
 QUERY_SECONDS = 8.0
+SNAPSHOT_SECONDS = 20.0
 CACHE_SECONDS = 30
 RETRY_SECONDS = 2
 TRANSIENT_FAILURES = {'query_deadline', 'database_busy'}
@@ -87,7 +88,10 @@ class DashboardReader:
                 self._cache[cache_key] = (now, result)
                 self._failures.pop(cache_key, None)
                 return result
-            self._failures[cache_key] = (now, result)
+            # A warm fallback needs only the failure reason. Retaining another
+            # complete set of ledger rows increases allocation pressure on retry.
+            failure = {'coverage': result['coverage']} if cached and result['coverage']['status'] in TRANSIENT_FAILURES else result
+            self._failures[cache_key] = (now, failure)
             response = self._after_failure(cached, result, now)
             if not cached and result['status'] == 'partial':
                 # Keep sound sections from a cold partial read as a fallback.
@@ -112,8 +116,22 @@ class DashboardReader:
         try:
             connection = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=.2)
             connection.row_factory = sqlite3.Row
-            deadline = time.monotonic() + QUERY_SECONDS
+            snapshot_deadline = time.monotonic() + SNAPSHOT_SECONDS
+            deadline = snapshot_deadline
+
+            def start_query():
+                nonlocal deadline
+                now = time.monotonic()
+                if now >= snapshot_deadline or QUERY_SECONDS <= 0:
+                    raise sqlite3.OperationalError('query deadline exceeded')
+                deadline = min(now + QUERY_SECONDS, snapshot_deadline)
+
+            def finish_query():
+                if time.monotonic() > deadline:
+                    raise sqlite3.OperationalError('query deadline exceeded')
+
             connection.set_progress_handler(lambda: int(time.monotonic() > deadline), 1000)
+            start_query()
             connection.execute('PRAGMA query_only=ON')
             connection.execute('BEGIN')
             available = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
@@ -125,12 +143,13 @@ class DashboardReader:
             if 'observer_usage_attempts' in available:
                 observer_columns = {row[1] for row in connection.execute('PRAGMA table_info(observer_usage_attempts)')}
                 if 'worker_thread_id' in observer_columns:
+                    start_query()
                     workers = [row[0] for row in connection.execute('SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL LIMIT ?', (ROW_LIMIT + 1,))]
+                    finish_query()
                     result['_observer_workers'] = workers[:ROW_LIMIT]
                     result['coverage']['observer_workers_complete'] = len(workers) <= ROW_LIMIT
             for table, whitelist in FIELDS.items():
-                if time.monotonic() > deadline:
-                    raise sqlite3.OperationalError('query deadline exceeded')
+                start_query()
                 if table not in available:
                     continue
                 columns = {row[1] for row in connection.execute(f'PRAGMA table_info({table})')}
@@ -159,6 +178,7 @@ class DashboardReader:
                         args.append(project)
                 predicate = ' WHERE ' + ' AND '.join(predicates) if predicates else ''
                 rows = [dict(row) for row in connection.execute(f'SELECT {",".join(expressions)} FROM {table}{predicate}{order} LIMIT ?', (*args, ROW_LIMIT + 1))]
+                finish_query()
                 if len(rows) > ROW_LIMIT:
                     result['coverage']['truncated_tables'].append(table)
                 result['tables'][table] = rows[:ROW_LIMIT]
@@ -171,7 +191,9 @@ class DashboardReader:
                     from .store import OBSERVATION_MODEL, OBSERVATION_REASONING_EFFORT
                     project_clause = ' AND e.project=?' if project else ''
                     parameters = [OBSERVATION_MODEL, OBSERVATION_REASONING_EFFORT] + ([project] if project else [])
+                    start_query()
                     pending = connection.execute("SELECT e.project,COUNT(*),MIN(e.created_at) FROM entries e WHERE e.superseded_by IS NULL AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse') OR e.source LIKE 'hook:PostToolUse:%') AND NOT EXISTS (SELECT 1 FROM observation_job_sources links CROSS JOIN observation_jobs jobs ON jobs.id=links.job_id WHERE links.source_id=e.id AND jobs.project=e.project AND (jobs.status IN ('processed','skipped','running') OR (jobs.status='failed' AND NOT (COALESCE(jobs.disposition,'')='profile_retired' AND jobs.error_code='lease_expired' AND (jobs.model<>? OR jobs.reasoning_effort<>?)))))" + project_clause + ' GROUP BY e.project', parameters).fetchall()
+                    finish_query()
                     result['pending_observations'] = {row[0]: row[1] for row in pending}
                     result['pending_oldest_at'] = {row[0]: row[2] for row in pending}
             result['status'] = 'partial' if result['coverage']['truncated_tables'] else 'available'
