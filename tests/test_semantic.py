@@ -124,8 +124,8 @@ class FakeIndexStore:
     def fail_embedding_batch(self, *args: object) -> None:
         self.failed.append(args)
 
-    def embedding_status(self, *_args: object) -> dict[str, int]:
-        return {"pending": 0}
+    def pending_embedding_count(self, *_args: object) -> int:
+        return 0
 
 
 class SemanticTests(unittest.TestCase):

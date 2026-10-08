@@ -169,6 +169,17 @@ def hook_freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
     return result
 
 
+def reference_freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
+    """Keep background reference lookup independent of full-project audits."""
+    result = _unknown_snapshot()
+    result['summary'] = (
+        'Memory freshness unknown; knowledge completeness unknown. '
+        'Full freshness and index checks are deferred for this reference. '
+        'Use explicit memory retrieval for current freshness telemetry.'
+    )
+    return result
+
+
 def _unknown_snapshot() -> dict[str, Any]:
     return {
         'status': 'unknown', 'knowledge_incomplete': None,

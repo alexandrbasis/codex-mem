@@ -2621,7 +2621,8 @@ class Store:
             # Separate cross-session reference from the temporally bounded
             # source context. This history may postdate the claimed events.
             result["project_context"] = (
-                self.context(workspace, budget=3_000, exclude_session=sources[0]["session_id"])
+                self.context(workspace, budget=3_000, exclude_session=sources[0]["session_id"],
+                             include_health=False)
                 if sources and sources[0]["session_id"] else ""
             )
             summary_required, context_new_notes = self._summary_context_requirement(
@@ -4019,6 +4020,51 @@ class Store:
                 record["semantic_score"] = round(scores[record["id"]], 6)
             return records
 
+    def pending_embedding_count(
+        self,
+        project: str | Path,
+        model: str,
+        revision: str,
+        dimensions: int,
+    ) -> int:
+        """Count project-local backlog using persisted document/profile metadata.
+
+        Includes missing and stale embeddings, even when a job blocks claiming
+        them. This does not rehash source text or validate vector bytes; callers
+        that need a full integrity audit must use ``embedding_status``.
+        """
+
+        workspace = project_key(project)
+        checked_model, checked_revision, checked_dimensions = _validate_embedding_profile(
+            model, revision, dimensions
+        )
+        with self._lock:
+            self._require_open()
+            connection = self._connection
+            row = self._read(
+                lambda: connection.execute(
+                    """
+                    SELECT COUNT(*) AS pending
+                    FROM entries AS e
+                    LEFT JOIN embedding_documents AS documents ON documents.entry_id = e.id
+                        AND documents.project = e.project
+                    LEFT JOIN embedding_vectors AS vectors ON vectors.entry_id = e.id
+                        AND vectors.project = e.project AND vectors.model = ?
+                        AND vectors.revision = ? AND vectors.dimensions = ?
+                    WHERE e.project = ? AND e.superseded_by IS NULL
+                      AND COALESCE(e.source, '') NOT GLOB 'hook:*'
+                      AND (
+                          documents.entry_id IS NULL OR documents.text_version IS NULL
+                          OR documents.text_version != ? OR vectors.entry_id IS NULL
+                          OR vectors.content_hash != documents.content_hash
+                      )
+                    """,
+                    (checked_model, checked_revision, checked_dimensions,
+                     workspace, EMBEDDING_TEXT_VERSION),
+                ).fetchone()
+            )
+            return int(row["pending"])
+
     def embedding_status(
         self,
         project: str | Path | None = None,
@@ -5119,14 +5165,19 @@ class Store:
         allow_remote: bool = True,
         remote_deadline: float | None = None,
         hook_mode: bool = False,
+        include_health: bool = True,
     ) -> str:
         """Build a bounded, escaped wrapper of active memory records.
 
         The wrapper makes it explicit that memory is untrusted reference data,
         rather than executable instructions for a consuming model or hook.
+        Background references can defer full-project health scans without
+        changing record selection. Their wrapper reports freshness as unknown.
         """
 
         workspace = project_key(project)
+        if not isinstance(include_health, bool):
+            raise ValueError("include_health must be a boolean")
         if isinstance(budget, bool) or not isinstance(budget, int) or not (
             MIN_CONTEXT_BUDGET <= budget <= MAX_CONTEXT_BUDGET
         ):
@@ -5307,6 +5358,8 @@ class Store:
 
         if hook_mode:
             from .freshness import hook_freshness_snapshot as freshness_snapshot
+        elif not include_health:
+            from .freshness import reference_freshness_snapshot as freshness_snapshot
         else:
             from .freshness import freshness_snapshot
         from .retrieval import freshness_markup

@@ -1449,10 +1449,19 @@ def _rrf(
 
 
 def _pending_count(store: Store, project: str) -> int:
-    status = store.embedding_status(project, MODEL, MODEL_REVISION, DIMENSIONS)
-    if not isinstance(status, Mapping):
-        raise SemanticError("storage_protocol_error")
-    pending = status.get("pending")
+    absent = object()
+    fast_count = getattr(store, "pending_embedding_count", absent)
+    if fast_count is not absent:
+        if not callable(fast_count):
+            raise SemanticError("storage_protocol_error")
+        pending = fast_count(project, MODEL, MODEL_REVISION, DIMENSIONS)
+    else:
+        # Compatibility for older in-process adapters. Store always uses the
+        # metadata aggregate instead of running a full audit after each batch.
+        status = store.embedding_status(project, MODEL, MODEL_REVISION, DIMENSIONS)
+        if not isinstance(status, Mapping):
+            raise SemanticError("storage_protocol_error")
+        pending = status.get("pending")
     if isinstance(pending, bool) or not isinstance(pending, int) or pending < 0:
         raise SemanticError("storage_protocol_error")
     return pending
