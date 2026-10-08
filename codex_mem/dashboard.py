@@ -5,8 +5,11 @@ import hmac
 from http.cookies import SimpleCookie, CookieError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
+import re
 import secrets
+import stat
 from urllib.parse import parse_qs, urlencode, urlsplit
 import webbrowser
 
@@ -16,6 +19,44 @@ STATIC_FILES = {"/": ("index.html", "text/html; charset=utf-8"),
 MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 COOKIE_NAME = "codex_mem_token"
 PERIODS = {"all", "today", "7d", "30d"}
+TOKEN_FILENAME = ".dashboard-token"
+
+
+def _persistent_token(data_dir=None):
+    """Keep local browser authentication valid across supervised restarts."""
+    from .config import data_dir_path
+    try:
+        import fcntl
+        base = data_dir_path(data_dir)
+        base.mkdir(parents=True, exist_ok=True, mode=0o700)
+        flags = os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK
+        fd = os.open(base / TOKEN_FILENAME, flags, 0o600)
+        with os.fdopen(fd, "r+", encoding="ascii") as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid():
+                raise ValueError("invalid token file")
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+            token = stream.read(128).strip()
+            if token and re.fullmatch(r"[A-Za-z0-9_-]{43}", token) is None:
+                raise ValueError("invalid token")
+            os.fchmod(stream.fileno(), 0o600)
+            if not token:
+                token = secrets.token_urlsafe(32)
+                stream.seek(0)
+                stream.write(token + "\n")
+                stream.truncate()
+                stream.flush()
+                os.fsync(stream.fileno())
+            return token
+    except (OSError, ValueError, UnicodeError, ImportError):
+        raise DashboardServerError("Persistent dashboard authentication is unavailable. Check the local data directory.") from None
+
+
+def persistent_dashboard_url(data_dir=None, port=8765):
+    """Return the local authenticated URL without reading memory content."""
+    if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
+        raise DashboardServerError("Dashboard port must be between 1 and 65535.")
+    return f"http://127.0.0.1:{port}/?{urlencode({'token': _persistent_token(data_dir)})}"
 
 
 def _token_matches(candidate, expected):
@@ -33,7 +74,8 @@ class _RequestError(Exception):
 
 class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
-    allow_reuse_address = False
+    # Rebind after shutdown without allowing another active listener.
+    allow_reuse_address = True
 
     @property
     def url(self) -> str:
@@ -195,10 +237,12 @@ class _Handler(BaseHTTPRequestHandler):
     do_POST = do_PUT = do_PATCH = do_DELETE = do_OPTIONS = do_HEAD = _reject_method
 
 
-def make_server(data_dir=None, port=8765, *, reader=None, static_dir=None):
+def make_server(data_dir=None, port=8765, *, reader=None, static_dir=None, token=None):
     """Create a server without starting it or writing dashboard data."""
     if isinstance(port, bool) or not isinstance(port, int) or not 0 <= port <= 65535:
         raise DashboardServerError("Dashboard port must be between 0 and 65535.")
+    if token is not None and (not isinstance(token, str) or re.fullmatch(r"[A-Za-z0-9_-]{43}", token) is None):
+        raise DashboardServerError("The local dashboard credential is invalid.")
     if reader is None:
         from .dashboard_data import DashboardReader
         reader = DashboardReader(data_dir=data_dir)
@@ -207,14 +251,15 @@ def make_server(data_dir=None, port=8765, *, reader=None, static_dir=None):
     except OSError as exc:
         raise DashboardServerError(f"Cannot start the local dashboard on port {port}. The port may be in use.") from exc
     server.reader = reader
-    server.token = secrets.token_urlsafe(32)
+    server.token = token if token is not None else secrets.token_urlsafe(32)
     server.static_dir = Path(static_dir) if static_dir is not None else Path(__file__).parent / "ui_static"
     return server
 
 
-def run_dashboard(data_dir=None, port=8765, open_browser=False):
+def run_dashboard(data_dir=None, port=8765, open_browser=False, persistent_token=False):
     """Run the local dashboard until Ctrl+C closes its listener."""
-    with make_server(data_dir=data_dir, port=port) as server:
+    token = _persistent_token(data_dir) if persistent_token else None
+    with make_server(data_dir=data_dir, port=port, token=token) as server:
         print(f"Codex Mem dashboard: {server.url}", flush=True)
         print("Read-only local dashboard. Press Ctrl+C to stop.", flush=True)
         if open_browser:

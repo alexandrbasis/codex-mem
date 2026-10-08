@@ -308,6 +308,10 @@ def _build_parser() -> _ArgumentParser:
     ui = commands.add_parser("ui", help="Open the local read-only monitoring dashboard")
     ui.add_argument("--port", type=lambda value: _positive(value, field="port", maximum=65535), default=8765)
     ui.add_argument("--open", action="store_true", help="Open the authenticated dashboard URL in your browser")
+    ui_startup = ui.add_mutually_exclusive_group()
+    ui_startup.add_argument("--autostart", action="store_true", help="Start the UI and enable login startup and crash recovery on macOS")
+    ui_startup.add_argument("--remove-autostart", action="store_true", help="Stop the managed UI and remove its macOS login startup")
+    ui.add_argument("--persistent-token", action="store_true", help=argparse.SUPPRESS)
     commands.add_parser("hook", help="Run the local hook entrypoint")
     commands.add_parser("process-hook", help="Process captured observations from a native asynchronous hook")
     process = commands.add_parser("process", help="Process one observation batch in a fresh Luna/medium session")
@@ -690,6 +694,24 @@ def main(args: Sequence[str] | None = None) -> int:
             from .dashboard import DashboardServerError, run_dashboard
 
             try:
+                if namespace.remove_autostart:
+                    if namespace.open or namespace.persistent_token:
+                        raise CLIError("Do not combine --remove-autostart with --open or --persistent-token")
+                    from .ui_autostart import remove_autostart
+                    _emit(remove_autostart(namespace.data_dir))
+                    return 0
+                if namespace.autostart:
+                    from .dashboard import persistent_dashboard_url
+                    from .ui_autostart import install_autostart
+                    value = install_autostart(namespace.data_dir, port=namespace.port)
+                    value["url"] = persistent_dashboard_url(namespace.data_dir, port=namespace.port)
+                    if namespace.open:
+                        import webbrowser
+                        webbrowser.open(value["url"])
+                    _emit(value)
+                    return 0
+                if namespace.persistent_token:
+                    return run_dashboard(namespace.data_dir, port=namespace.port, open_browser=namespace.open, persistent_token=True)
                 return run_dashboard(namespace.data_dir, port=namespace.port, open_browser=namespace.open)
             except DashboardServerError as exc:
                 return _error("dashboard_unavailable", str(exc))
