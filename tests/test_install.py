@@ -3,6 +3,7 @@ import io
 import itertools
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -11,9 +12,22 @@ import tempfile
 import unittest
 from unittest import mock
 
+from codex_mem import __version__
+
 _SPEC = importlib.util.spec_from_file_location("codex_mem_installer", Path(__file__).resolve().parents[1] / "scripts/install.py")
 installer = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(installer)
+
+
+class ReleaseVersionTests(unittest.TestCase):
+    def test_manifest_package_and_runtime_versions_match(self):
+        root = Path(__file__).resolve().parents[1]
+        manifest = json.loads((root / ".codex-plugin/plugin.json").read_text())
+        package = re.search(r'^version\s*=\s*"([^"]+)"',
+                            (root / "pyproject.toml").read_text(), re.MULTILINE)
+        self.assertIsNotNone(package)
+        self.assertEqual(manifest["version"], package.group(1))
+        self.assertEqual(manifest["version"], __version__)
 
 
 class InstallTests(unittest.TestCase):
