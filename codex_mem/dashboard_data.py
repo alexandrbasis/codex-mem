@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 
 from .config import data_dir_path
 from .cost_report import build_report
+from .freshness import _terminal_recovery_exclusion
 from .pricing import TOKEN_FIELDS, price_event
 from .store import project_key
 
@@ -169,7 +170,7 @@ class DashboardReader:
                                         and {'id', 'project', 'source', 'superseded_by'} <= entry_columns
                                         and {'job_id', 'source_id'} <= link_columns)
                     result['coverage']['active_failure_metadata_available'] = failure_metadata
-                    expressions.append(self._active_failure_projection() if failure_metadata else 'NULL AS active_failure')
+                    expressions.append(self._active_failure_projection('observation_job_recoveries' in available) if failure_metadata else 'NULL AS active_failure')
                 predicates, args = [], []
                 if table == 'usage_events' and period != 'all' and 'recorded_at' in columns:
                     predicates.extend(('julianday(recorded_at)>=julianday(?)', 'julianday(recorded_at)<julianday(?)'))
@@ -237,11 +238,12 @@ class DashboardReader:
         return result
 
     @staticmethod
-    def _active_failure_projection():
+    def _active_failure_projection(recoveries_available=False):
         # Match retrieval freshness without loading source bodies or link rows.
         # Successful/skipped coverage resolves an old failed batch only when no
         # eligible, unsuperseded source in that batch remains uncovered.
-        return """CASE WHEN observation_jobs.status = 'failed' THEN EXISTS (
+        recovery_clause = _terminal_recovery_exclusion('observation_jobs') if recoveries_available else ''
+        return f"""CASE WHEN observation_jobs.status = 'failed' {recovery_clause} THEN EXISTS (
             SELECT 1 FROM observation_job_sources s JOIN entries e ON e.id = s.source_id
             WHERE s.job_id = observation_jobs.id AND e.project = observation_jobs.project
                 AND e.superseded_by IS NULL

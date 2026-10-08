@@ -63,6 +63,20 @@ class ServiceTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
+    def test_no_maintenance_permission_does_not_dispatch_recovery_worker(self) -> None:
+        enqueue(self.first, self.data_dir, clock=self.clock)
+
+        def idle(project, data_dir=None, **kwargs):
+            state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
+            self.assertEqual(0, state["owner"]["workers"]["active"])
+            return {"status": "idle"}
+
+        with mock.patch("codex_mem.quarantine_recovery.run_next") as recovery:
+            run_service(self.data_dir, processor=idle, processor_workers=1,
+                        indexer=lambda *args, **kwargs: None,
+                        clock=self.clock, sleeper=self.clock.sleep, max_cycles=2)
+        recovery.assert_not_called()
+
     def test_enqueue_is_explicit_and_selected_scope_only(self) -> None:
         rejected = enqueue(self.outside, self.data_dir, clock=self.clock)
         self.assertEqual("disabled", rejected["status"])

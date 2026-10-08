@@ -588,10 +588,14 @@ def run_service(
                     and not choice["attempts"]):
                 if project in recovery_turns:
                     recovery_turns.remove(project)
-                else:
+                elif _pending_maintenance(base, project):
                     from .quarantine_recovery import run_next
-                    recovery = run_next(project, data_dir, processor=active_processor,
-                                        timeout=checked_timeout)
+                    _record_workers(base, configured_workers, effective_workers, 1)
+                    try:
+                        recovery = run_next(project, data_dir, processor=active_processor,
+                                            timeout=checked_timeout)
+                    finally:
+                        _record_workers(base, configured_workers, effective_workers, 0)
                     if recovery is not None:
                         recovery_turns.add(project)
                         jobs += int(recovery["result"]["status"] in {"processed", "skipped", "failed"})

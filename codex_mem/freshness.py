@@ -14,6 +14,30 @@ _SAFE_CODES = frozenset({
 })
 
 
+def _terminal_recovery_exclusion(job_alias: str) -> str:
+    """Exclude only declared terminal successors of the same source snapshot."""
+    return f'''AND NOT EXISTS (
+        SELECT 1 FROM observation_job_recoveries recovery
+        JOIN observation_jobs successor ON successor.id = recovery.successor_job_id
+        WHERE recovery.parent_job_id = {job_alias}.id
+            AND recovery.project = {job_alias}.project
+            AND successor.project = {job_alias}.project
+            AND successor.id <> {job_alias}.id
+            AND successor.status IN ('failed', 'processed', 'skipped')
+            AND NOT EXISTS (
+                SELECT 1 FROM observation_job_sources parent_source
+                WHERE parent_source.job_id = {job_alias}.id AND NOT EXISTS (
+                    SELECT 1 FROM observation_job_sources successor_source
+                    WHERE successor_source.job_id = successor.id
+                        AND successor_source.source_id = parent_source.source_id))
+            AND NOT EXISTS (
+                SELECT 1 FROM observation_job_sources successor_source
+                WHERE successor_source.job_id = successor.id AND NOT EXISTS (
+                    SELECT 1 FROM observation_job_sources parent_source
+                    WHERE parent_source.job_id = {job_alias}.id
+                        AND parent_source.source_id = successor_source.source_id)))'''
+
+
 def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
     """Inspect existing storage only; do not claim jobs, start workers or repair indexes.
 
@@ -69,10 +93,15 @@ def _freshness_snapshot(store: Any, project: Any) -> dict[str, Any]:
             # Group only safe codes, keeping the result bounded and private even
             # if a historic failure code contains unexpected values.
             safe_codes = tuple(sorted(_SAFE_CODES))
+            recoveries_available = store._read(lambda: connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observation_job_recoveries'"
+            ).fetchone()) is not None
+            recovery_clause = _terminal_recovery_exclusion('j') if recoveries_available else ''
             failures = store._read(lambda: connection.execute(f'''
                 SELECT CASE WHEN j.error_code IN ({','.join('?' for _ in safe_codes)})
                         THEN j.error_code ELSE 'processing_failed' END AS code, COUNT(*) AS count
                 FROM observation_jobs j WHERE j.project = ? AND j.status = 'failed'
+                    {recovery_clause}
                     AND EXISTS (SELECT 1 FROM observation_job_sources s JOIN entries e ON e.id = s.source_id
                         WHERE s.job_id = j.id AND e.project = j.project AND e.superseded_by IS NULL
                         AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop', 'hook:PostToolUse')

@@ -209,6 +209,46 @@ class DashboardDataTests(unittest.TestCase):
         self.assertEqual(1, queue['status_counts']['failed'])
         self.assertEqual(1, queue['progress']['failed_jobs'])
 
+    def test_declared_recovery_counts_only_terminal_successor(self):
+        with self.database() as connection:
+            self.failure_source_schema(connection)
+            connection.execute('CREATE TABLE observation_job_recoveries(parent_job_id TEXT,successor_job_id TEXT,project TEXT,created_at TEXT)')
+            connection.execute("INSERT INTO entries(id,project,created_at,updated_at,source) VALUES ('raw',?,?,?,'hook:Stop')", (self.project, self.old, self.old))
+            connection.executemany("INSERT INTO observation_jobs(id,project,status,error_code,updated_at,model) VALUES (?,?,'failed','invalid_response',?,?)", [('parent', self.project, self.now, 'legacy-model'), ('successor', self.project, self.now, 'gpt-6-luna')])
+            connection.executemany("INSERT INTO observation_job_sources VALUES (?,'raw')", [('parent',), ('successor',)])
+            connection.execute("INSERT INTO observation_job_recoveries VALUES ('parent','successor',?,?)", (self.project, self.now))
+        for status, active in (('pending', 1), ('running', 1), ('failed', 1), ('processed', 0), ('skipped', 0)):
+            with self.subTest(status=status), self.connection() as connection:
+                connection.execute("UPDATE observation_jobs SET status=? WHERE id='successor'", (status,))
+            queue = DashboardReader(self.home).overview()['queue']
+            self.assertEqual(active, queue['failed'])
+            self.assertEqual(active, queue['quarantined'])
+            self.assertEqual(2 if status == 'failed' else 1, queue['status_counts']['failed'])
+            self.assertEqual(2 if status == 'failed' else 1, queue['progress']['failed_jobs'])
+
+    def test_invalid_recovery_edges_do_not_hide_failures(self):
+        with self.database() as connection:
+            self.failure_source_schema(connection)
+            connection.execute('CREATE TABLE observation_job_recoveries(parent_job_id TEXT,successor_job_id TEXT,project TEXT,created_at TEXT)')
+            connection.executemany("INSERT INTO entries(id,project,created_at,updated_at,source) VALUES (?,?,?,?,'hook:Stop')", [('raw', self.project, self.old, self.old), ('extra', self.project, self.old, self.old)])
+            connection.executemany("INSERT INTO observation_jobs(id,project,status,error_code,updated_at) VALUES (?,?,'failed','invalid_response',?)", [('parent', self.project, self.now), ('successor', self.project, self.now)])
+            connection.executemany("INSERT INTO observation_job_sources VALUES (?,'raw')", [('parent',), ('successor',)])
+        self.assertEqual(2, DashboardReader(self.home).overview()['queue']['quarantined'])
+        with self.connection() as connection:
+            connection.execute("INSERT INTO observation_job_recoveries VALUES ('parent','successor','/projects/other',?)", (self.now,))
+        self.assertEqual(2, DashboardReader(self.home).overview()['queue']['quarantined'])
+        with self.connection() as connection:
+            connection.execute('UPDATE observation_job_recoveries SET project=?', (self.project,))
+            connection.execute("UPDATE observation_jobs SET project='/projects/other' WHERE id='successor'")
+        self.assertEqual(1, DashboardReader(self.home).overview()['queue']['quarantined'])
+        with self.connection() as connection:
+            connection.execute("UPDATE observation_jobs SET project=? WHERE id='successor'", (self.project,))
+            connection.execute("INSERT INTO observation_job_sources VALUES ('successor','extra')")
+        self.assertEqual(2, DashboardReader(self.home).overview()['queue']['quarantined'])
+        with self.connection() as connection:
+            connection.execute("DELETE FROM observation_job_sources WHERE job_id='successor' AND source_id='raw'")
+        self.assertEqual(2, DashboardReader(self.home).overview()['queue']['quarantined'])
+
     def test_queue_progress_uses_terminal_jobs_and_snapshot_hour_across_periods(self):
         end = datetime.fromisoformat(self.now)
         recent = (end - timedelta(minutes=10)).isoformat()

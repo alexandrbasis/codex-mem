@@ -38,6 +38,16 @@ class FreshnessTests(unittest.TestCase):
         state['projects'][str(project or self.project)] = record
         return state
 
+    def recovery_successor(self, parent, *, status='failed'):
+        connection = self.store._connection
+        row = dict(connection.execute('SELECT * FROM observation_jobs WHERE id=?', (parent['job_id'],)).fetchone())
+        row.update(id='successor', input_fingerprint='successor-fingerprint', status=status)
+        columns = ','.join(row)
+        connection.execute(f"INSERT INTO observation_jobs({columns}) VALUES ({','.join('?' for _ in row)})", tuple(row.values()))
+        connection.execute('INSERT INTO observation_job_sources SELECT ?,source_id FROM observation_job_sources WHERE job_id=?', ('successor', parent['job_id']))
+        connection.execute('INSERT INTO observation_job_recoveries VALUES (?,?,?,?)', (parent['job_id'], 'successor', str(self.project), row['created_at']))
+        return 'successor'
+
     def test_empty_is_known_empty_without_fabricated_timestamps(self):
         result = self.snapshot()
         self.assertEqual(result['status'], 'empty')
@@ -202,6 +212,47 @@ class FreshnessTests(unittest.TestCase):
         self.assertEqual(result['status'], 'current')
         self.assertEqual(result['quarantined_batch_count'], 0)
         self.assertEqual(result['pending_capture_count'], 0)
+
+    def test_declared_recovery_counts_only_terminal_successor(self):
+        parent = self.failed_batch()
+        child = self.recovery_successor(parent)
+        self.store._connection.execute("UPDATE observation_jobs SET model='legacy-model' WHERE id=?", (parent['job_id'],))
+        for status, count, pending in (('pending', 1, 1), ('running', 1, 1), ('failed', 1, 1), ('processed', 0, 0), ('skipped', 0, 0)):
+            with self.subTest(status=status):
+                self.store._connection.execute('UPDATE observation_jobs SET status=? WHERE id=?', (status, child))
+                with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
+                    result = self.snapshot()
+                self.assertEqual(count, result['quarantined_batch_count'])
+                self.assertEqual(pending, result['pending_capture_count'])
+        self.assertEqual('failed', self.store._connection.execute('SELECT status FROM observation_jobs WHERE id=?', (parent['job_id'],)).fetchone()[0])
+
+    def test_overlapping_failures_require_valid_same_snapshot_recovery(self):
+        parent = self.failed_batch()
+        child = self.recovery_successor(parent)
+        connection = self.store._connection
+        with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
+            connection.execute('DELETE FROM observation_job_recoveries')
+            self.assertEqual(2, self.snapshot()['quarantined_batch_count'])
+            connection.execute('INSERT INTO observation_job_recoveries VALUES (?,?,?,?)', (parent['job_id'], child, str(self.base / 'other'), '2026-01-01'))
+            self.assertEqual(2, self.snapshot()['quarantined_batch_count'])
+            connection.execute('UPDATE observation_job_recoveries SET project=?', (str(self.project),))
+            connection.execute('UPDATE observation_jobs SET project=? WHERE id=?', (str(self.base / 'other'), child))
+            self.assertEqual(1, self.snapshot()['quarantined_batch_count'])
+            connection.execute('UPDATE observation_jobs SET project=? WHERE id=?', (str(self.project), child))
+            extra = self.store.remember(self.project, 'extra capture', 'input', source='hook:Stop')
+            connection.execute('INSERT INTO observation_job_sources VALUES (?,?)', (child, extra['id']))
+            self.assertEqual(2, self.snapshot()['quarantined_batch_count'])
+            connection.execute('DELETE FROM observation_job_sources WHERE job_id=? AND source_id<>?', (child, extra['id']))
+            self.assertEqual(2, self.snapshot()['quarantined_batch_count'])
+
+    def test_legacy_store_without_recovery_table_keeps_failures(self):
+        parent = self.failed_batch()
+        self.recovery_successor(parent)
+        self.store._connection.execute('DROP TABLE observation_job_recoveries')
+        with patch('codex_mem.service._load_state_readonly', return_value=self.service_state()):
+            result = self.snapshot()
+        self.assertEqual(2, result['quarantined_batch_count'])
+        self.assertEqual('quarantined', result['status'])
 
     def test_index_backlog_is_distinct_from_capture_backlog(self):
         configure(self.store.data_dir, semantic_enabled=True)

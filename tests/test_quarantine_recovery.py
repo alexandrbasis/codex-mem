@@ -185,10 +185,20 @@ class QuarantineRecoveryTests(unittest.TestCase):
 
         def execute(project, data_dir=None, **kwargs):
             calls.append(kwargs.get("retry_job_id"))
+            if kwargs.get("retry_job_id") is not None:
+                state = json.loads((self.base / service.SERVICE_STATE_FILENAME).read_text())
+                self.assertEqual({"configured": 2, "effective": 2, "active": 1},
+                                 state["owner"]["workers"])
             return processor.process_pending(project, data_dir, runner=runner, **kwargs)
 
-        service.run_service(self.base, processor=execute, processor_workers=2,
-                            max_cycles=8, sleeper=lambda _: None)
+        record_workers = service._record_workers
+        with mock.patch.object(service, "_record_workers", wraps=record_workers) as records:
+            service.run_service(self.base, processor=execute, processor_workers=2,
+                                max_cycles=8, sleeper=lambda _: None)
+        active_counts = [call.args[-1] for call in records.call_args_list]
+        for index, active in enumerate(active_counts):
+            if active == 1:
+                self.assertEqual(0, active_counts[index + 1])
         self.assertEqual(["skipped"] * 3, [item["outcome"] for item in recovery.status(self.base)])
         for job in self.jobs[:3]:
             self.assertEqual(1, calls.count(job["job_id"]))
@@ -209,10 +219,15 @@ class QuarantineRecoveryTests(unittest.TestCase):
 
         def execute(project, data_dir=None, **kwargs):
             calls.append(kwargs.get("retry_job_id"))
+            if kwargs.get("retry_job_id") is not None:
+                state = json.loads((self.base / service.SERVICE_STATE_FILENAME).read_text())
+                self.assertEqual(1, state["owner"]["workers"]["active"])
             return processor.process_pending(project, data_dir, runner=runner, **kwargs)
 
-        service.run_service(self.base, processor=execute, processor_workers=1,
-                            max_cycles=5, sleeper=lambda _: None)
+        with mock.patch.object(service, "_record_workers", wraps=service._record_workers) as records:
+            service.run_service(self.base, processor=execute, processor_workers=1,
+                                max_cycles=5, sleeper=lambda _: None)
+        self.assertEqual([0, 1, 0], [call.args[-1] for call in records.call_args_list])
         self.assertEqual(1, runner.call_count)
         self.assertEqual(1, calls.count(self.jobs[0]["job_id"]))
         self.assertEqual("failed", recovery.status(self.base)[0]["outcome"])
@@ -220,6 +235,25 @@ class QuarantineRecoveryTests(unittest.TestCase):
             status = store.observation_job_status(self.project, self.jobs[0]["job_id"])
             self.assertEqual(("failed", 2, "timeout"),
                              (status["status"], status["attempt_count"], status["error_code"]))
+
+    def test_service_resets_maintenance_workers_after_dispatch_exception(self):
+        from codex_mem import service
+        configure(self.base, semantic_enabled=False)
+        self.schedule()
+        service.enqueue(self.project, self.base)
+
+        def crash(project, data_dir=None, **kwargs):
+            state = json.loads((self.base / service.SERVICE_STATE_FILENAME).read_text())
+            self.assertEqual({"configured": 2, "effective": 2, "active": 1},
+                             state["owner"]["workers"])
+            raise RuntimeError("synthetic processor failure")
+
+        with mock.patch.object(service, "_record_workers", wraps=service._record_workers) as records, \
+                mock.patch.object(recovery, "run_next", side_effect=crash):
+            with self.assertRaisesRegex(RuntimeError, "synthetic processor failure"):
+                service.run_service(self.base, processor=crash, processor_workers=2,
+                                    max_cycles=2, sleeper=lambda _: None)
+        self.assertEqual([0, 1, 0], [call.args[-1] for call in records.call_args_list])
 
     def test_busy_lane_preserves_permission_until_a_real_claim(self):
         from codex_mem.processor import process_pending
