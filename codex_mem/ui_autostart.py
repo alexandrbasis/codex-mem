@@ -123,7 +123,9 @@ def install_autostart(data_dir=None, port=8765, *, _home=None, _run=None, _platf
         "ProgramArguments": [sys.executable, str(launcher), "--data-dir", str(base), "ui", "--port", str(port), "--persistent-token"],
         "EnvironmentVariables": {MARKER: "1"},
         "RunAtLoad": True, "KeepAlive": True, "ThrottleInterval": 10,
-        "ProcessType": "Background", "StandardOutPath": str(stdout), "StandardErrorPath": str(stderr),
+        # This process serves user-requested pages over HTTP, rather than XPC.
+        # Background classification throttles reads enough to miss deadlines.
+        "ProcessType": "Interactive", "StandardOutPath": str(stdout), "StandardErrorPath": str(stderr),
     }
     try:
         base.mkdir(parents=True, exist_ok=True, mode=0o700)

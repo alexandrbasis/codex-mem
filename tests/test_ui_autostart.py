@@ -57,7 +57,7 @@ class AutostartTests(unittest.TestCase):
         self.assertTrue(value["RunAtLoad"])
         self.assertTrue(value["KeepAlive"])
         self.assertEqual(value["ThrottleInterval"], 10)
-        self.assertEqual(value["ProcessType"], "Background")
+        self.assertEqual(value["ProcessType"], "Interactive")
         self.assertEqual(value["ProgramArguments"][2:], ["--data-dir", str(self.base.resolve()), "ui", "--port", "8765", "--persistent-token"])
         self.assertTrue(Path(value["ProgramArguments"][1]).is_absolute())
         self.assertEqual(log.read_text(), "existing\n")
@@ -73,6 +73,19 @@ class AutostartTests(unittest.TestCase):
         self.install(8766)
         self.assertEqual([c[1] for c in self.launchctl.calls], ["print", "bootout", "bootstrap", "print"])
         self.assertEqual(self.launchctl.calls[1][2], "gui/" + str(os.getuid()) + "/" + LABEL)
+
+    def test_background_dashboard_is_reloaded_for_interactive_requests(self):
+        self.install()
+        value = plistlib.loads(self.path.read_bytes())
+        value['ProcessType'] = 'Background'
+        self.path.write_bytes(plistlib.dumps(value))
+        self.launchctl.calls.clear()
+        self.install()
+        self.assertEqual([call[1] for call in self.launchctl.calls],
+                         ['print', 'bootout', 'bootstrap', 'print'])
+        upgraded = plistlib.loads(self.path.read_bytes())
+        self.assertEqual('Interactive', upgraded['ProcessType'])
+        self.assertEqual(value['ProgramArguments'], upgraded['ProgramArguments'])
 
     def test_failure_explicit_and_no_subprocess_details(self):
         self.launchctl.fail_bootstrap = True
