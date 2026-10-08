@@ -185,6 +185,8 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
             updates[key] = _parse_bool(value, field=key)
         elif key == "context_chars":
             updates[key] = _positive(value, field=key, maximum=6_000)
+        elif key == "processor_workers":
+            updates[key] = _positive(value, field=key, maximum=4)
         elif key in {"excluded_projects", "included_projects"}:
             updates[key] = _parse_excluded_projects(value)
         elif key in {"jev_filter_projects", "jev_quality_projects", "jev_retrieval_projects"}:
@@ -206,6 +208,8 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["capture_tools"] = namespace.capture_tools
     if namespace.processor_enabled is not None:
         updates["processor_enabled"] = namespace.processor_enabled
+    if getattr(namespace, "processor_workers", None) is not None:
+        updates["processor_workers"] = namespace.processor_workers
     for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects", "jev_quality_enabled", "jev_quality_projects", "jev_retrieval_enabled", "jev_retrieval_projects"):
         if getattr(namespace, name, None) is not None:
             updates[name] = getattr(namespace, name)
@@ -480,6 +484,8 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--capture-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--capture-tools", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--processor-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--processor-workers", type=lambda value: _positive(value, field="processor_workers", maximum=4),
+                        help="Concurrent session workers, from 1 to 4; default 2")
     config.add_argument("--service-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--semantic-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--usage-enabled", action=argparse.BooleanOptionalAction, default=None)

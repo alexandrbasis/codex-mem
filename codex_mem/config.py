@@ -27,6 +27,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "capture_enabled": True,
     "capture_tools": True,
     "processor_enabled": True,
+    # Session lanes preserve turn order while overlapping model requests.
+    "processor_workers": 2,
     "service_enabled": True,
     "semantic_enabled": True,
     "usage_enabled": True,
@@ -412,6 +414,9 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
             "processor_enabled",
             strict,
         ),
+        "processor_workers": _validate_processor_workers(
+            raw.get("processor_workers", DEFAULT_CONFIG["processor_workers"]), strict
+        ),
         "service_enabled": _validate_bool(raw.get("service_enabled", True), "service_enabled", strict),
         "semantic_enabled": _validate_bool(raw.get("semantic_enabled", True), "semantic_enabled", strict),
         "usage_enabled": _validate_bool(raw.get("usage_enabled", True), "usage_enabled", strict),
@@ -483,6 +488,8 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
             _validate_bool(raw["capture_tools"], "capture_tools", True)
         if "processor_enabled" in raw:
             _validate_bool(raw["processor_enabled"], "processor_enabled", True)
+        if "processor_workers" in raw:
+            _validate_processor_workers(raw["processor_workers"], True)
         for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled",
                      "jev_quality_enabled", "jev_retrieval_enabled"):
             if name in raw:
@@ -510,6 +517,14 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _validate_processor_workers(value: Any, strict: bool) -> int:
+    if not isinstance(value, bool) and isinstance(value, int) and 1 <= value <= 4:
+        return value
+    if strict:
+        raise ValueError("processor_workers must be an integer between 1 and 4")
+    return int(DEFAULT_CONFIG["processor_workers"])
 
 
 def _validate_bool(value: Any, name: str, strict: bool) -> bool:

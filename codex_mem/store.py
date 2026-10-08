@@ -2277,6 +2277,7 @@ class Store:
         retry_job_id: str | None = None,
         retry_error_code: str | None = None,
         retry_attempt_count: int | None = None,
+        parallel_sessions: bool = False,
     ) -> dict[str, Any] | None:
         """Atomically lease one bounded, project-local raw hook batch.
 
@@ -2290,6 +2291,8 @@ class Store:
         claim to that exact failed snapshot, with no fresh-work fallback.
         Transport failures require this guarded selector and no recorded
         worker thread or turn, because dispatch can precede a lost turn receipt.
+        ``parallel_sessions`` permits separate known sessions to run together.
+        Default and unknown-session leases remain exclusive to the project.
         """
 
         workspace = project_key(project)
@@ -2308,6 +2311,8 @@ class Store:
         )
         if not isinstance(retry_failed, bool):
             raise ValueError("retry_failed must be true or false")
+        if not isinstance(parallel_sessions, bool):
+            raise ValueError("parallel_sessions must be true or false")
         retry_job = None if retry_job_id is None else _validate_ids([retry_job_id], "retry_job_id")[0]
         if retry_failed and retry_job is not None:
             raise ValueError("pass retry_failed or retry_job_id, not both")
@@ -2350,14 +2355,46 @@ class Store:
                         "AND lease_expires_at<=?",
                         [(now, now, str(job["id"]), workspace, now) for job in legacy_expired],
                     )
-                # Manual recovery and hook-started workers share this lease
-                # boundary. Never run two observation model calls for the same
-                # project, even when they would claim different raw sources.
-                if connection.execute(
-                    "SELECT 1 FROM observation_jobs WHERE project=? AND status='running' "
-                    "AND lease_expires_at>? LIMIT 1", (workspace, now),
-                ).fetchone() is not None:
+                # Encode scope in the opaque token, avoiding a schema change.
+                # Old and default callers issue unmarked tokens, so parallel
+                # workers also respect their project-wide exclusive leases.
+                # Unknown sessions take the same conservative project scope.
+                running = connection.execute(
+                    "SELECT id, session_id, lease_token, lease_expires_at FROM observation_jobs "
+                    "WHERE project=? AND status='running'", (workspace,),
+                ).fetchall()
+                if any(
+                    job["lease_expires_at"] is not None and job["lease_expires_at"] > now
+                    and (not parallel_sessions or job["session_id"] is None
+                         or not str(job["lease_token"] or "").startswith("session-"))
+                    for job in running
+                ):
                     return None
+                # Snapshot occupied lanes once under BEGIN IMMEDIATE. Looking
+                # them up per candidate would scan this project's job history
+                # repeatedly. JSON list parameters also avoid SQLite's bound
+                # variable limit when recovering a large legacy queue.
+                session_counts: dict[str | None, int] = {}
+                for job in running:
+                    session = job["session_id"]
+                    session_counts[session] = session_counts.get(session, 0) + 1
+                lane_args: tuple[str, ...] = ()
+                if not running:
+                    free_lane = "1"
+                elif None in session_counts:
+                    free_lane = "0"
+                else:
+                    free_lane = (
+                        "({session} IS NOT NULL AND {session} NOT IN "
+                        "(SELECT value FROM json_each(?)))"
+                    )
+                    lane_args = (json.dumps(list(session_counts)),)
+                recoverable_ids = json.dumps([
+                    job["id"] for job in running
+                    if (len(running) == 1 or (
+                        None not in session_counts and session_counts[job["session_id"]] == 1
+                    ))
+                ])
                 expires_at = (
                     datetime.now(timezone.utc) + timedelta(seconds=checked_lease)
                 ).isoformat(timespec="microseconds").replace("+00:00", "Z")
@@ -2373,14 +2410,13 @@ class Store:
                         "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
                         "LEFT JOIN entries AS e ON e.id=links.source_id AND e.project=j.project "
                         "WHERE links.job_id=j.id AND (e.id IS NULL OR e.superseded_by IS NOT NULL)) "
-                        "AND NOT EXISTS (SELECT 1 FROM observation_jobs AS active "
-                        "WHERE active.project=j.project AND active.status='running' AND active.lease_expires_at>?)",
+                        "AND " + free_lane.format(session="j.session_id"),
                         (retry_job, workspace, processor, required_model, required_effort,
-                         retry_error_code, retry_attempt_count, now),
+                         retry_error_code, retry_attempt_count, *lane_args),
                     ).fetchone()
                 else:
                     reusable = connection.execute(
-                    """
+                    f"""
                     SELECT * FROM observation_jobs
                     WHERE project = ? AND processor_id = ? AND model = ?
                       AND reasoning_effort = ?
@@ -2390,6 +2426,8 @@ class Store:
                         SELECT 1 FROM observation_job_sources
                         WHERE observation_job_sources.job_id = observation_jobs.id
                       )
+                      AND ((status = 'running' AND id IN (SELECT value FROM json_each(?)))
+                        OR (status = 'failed' AND {free_lane.format(session="session_id")}))
                     ORDER BY CASE WHEN id = ? THEN 0 ELSE 1 END, created_at ASC LIMIT 1
                     """,
                     (
@@ -2400,6 +2438,8 @@ class Store:
                         now,
                         1 if retry_failed else 0,
                         retry_job,
+                        recoverable_ids,
+                        *lane_args,
                         retry_job,
                     ),
                     ).fetchone()
@@ -2441,6 +2481,8 @@ class Store:
                         raise StoreError("Storage database contains invalid data")
                     effective_limit = max(stored_limit, hydrated_chars)
                     token = uuid.uuid4().hex
+                    if parallel_sessions and reusable["session_id"] is not None:
+                        token = "session-" + token
                     now = _utc_now()
                     # Finalize the old attempt while its original job outcome
                     # is still known, atomically with taking the new lease.
@@ -2485,11 +2527,14 @@ class Store:
                 # Keep the correlated anti-join source-first. An ordinary JOIN
                 # can scan every project job for each raw entry while holding
                 # the write transaction, starving unrelated writer attempts.
+                # Exclude occupied sessions before LIMIT. Expired leases also
+                # hold their session until recovery, so Stop cannot pass them.
                 candidates = connection.execute(
-                    """
+                    f"""
                     SELECT e.* FROM entries AS e
                     WHERE e.project = ? AND e.superseded_by IS NULL
                       AND (e.source IN (?, ?) OR e.source = ? OR e.source LIKE ?)
+                      AND {free_lane.format(session="e.session_id")}
                       AND NOT EXISTS (
                         SELECT 1 FROM observation_job_sources AS links
                         CROSS JOIN observation_jobs AS jobs ON jobs.id = links.job_id
@@ -2510,6 +2555,7 @@ class Store:
                         _OBSERVATION_SOURCES[1],
                         _OBSERVATION_TOOL_SOURCE,
                         _OBSERVATION_TOOL_SOURCE + ":%",
+                        *lane_args,
                         1 if retry_failed else 0,
                         required_model,
                         required_effort,
@@ -2569,6 +2615,8 @@ class Store:
                 )
                 job_id = uuid.uuid4().hex
                 token = uuid.uuid4().hex
+                if parallel_sessions and session_id is not None:
+                    token = "session-" + token
                 connection.execute(
                     """
                     INSERT INTO observation_jobs(

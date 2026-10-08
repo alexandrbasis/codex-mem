@@ -44,6 +44,27 @@ class ConfigTests(unittest.TestCase):
         second = load_config(self.data_dir)
         self.assertEqual([], second["included_projects"])
 
+    def test_worker_count_defaults_and_serial_override(self) -> None:
+        self.assertEqual(2, load_config(self.data_dir)["processor_workers"])
+        configure(self.data_dir, processor_workers=1)
+        self.assertEqual(1, load_config(self.data_dir)["processor_workers"])
+        configure(self.data_dir, processor_workers=4)
+        self.assertEqual(4, load_config(self.data_dir)["processor_workers"])
+
+    def test_invalid_worker_count_fails_closed_without_losing_scope(self) -> None:
+        self.data_dir.mkdir()
+        for value in (0, 5, True, "2", 2.5, None):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    configure(self.data_dir, processor_workers=value)
+                (self.data_dir / "config.json").write_text(
+                    json.dumps({"capture_scope": "all", "processor_workers": value}),
+                    encoding="utf-8",
+                )
+                settings = load_config(self.data_dir)
+                self.assertFalse(settings.valid)
+                self.assertFalse(settings["capture_enabled"])
+
     def test_whitespace_home_environment_uses_store_default_location(self) -> None:
         with mock.patch.dict(os.environ, {"CODEX_MEM_HOME": "   "}, clear=False):
             location = data_dir_path()

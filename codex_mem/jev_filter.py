@@ -14,6 +14,7 @@ import urllib.request
 from typing import Any
 
 from .privacy import redact_text
+from .request_limits import acquire_jev_slot
 
 MODEL = "jev-1.13.0"
 POLICY_VERSION = "memory-eligibility-v3"
@@ -98,30 +99,31 @@ def _encode(value: Any) -> bytes:
 def _post(payload: Mapping[str, Any], deadline: float, key_file: str = "") -> Mapping[str, Any]:
     key = _credentials(key_file)
     try:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            raise JevFilterError("jev_filter_timeout")
-        request = urllib.request.Request(ENDPOINT, data=_encode(payload), headers={
-            "Authorization": "Bearer " + key, "Content-Type": "application/json",
-        }, method="POST")
-        opener = urllib.request.build_opener(_NoRedirect())
-        with opener.open(request, timeout=remaining) as response:
-            if response.status != 200:
-                raise JevFilterError("jev_filter_transport")
-            content = bytearray()
-            while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise JevFilterError("jev_filter_timeout")
-                # Refresh the socket deadline between bounded reads, including slow responses.
-                response.fp.raw._sock.settimeout(remaining)
-                part = response.read1(min(8192, MAX_RESPONSE_BYTES + 1 - len(content)))
-                content.extend(part)
-                if len(content) > MAX_RESPONSE_BYTES:
-                    raise JevFilterError("jev_filter_invalid_response")
-                if not part or response.isclosed():
-                    break
-            return json.loads(content)
+        with acquire_jev_slot(deadline):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise JevFilterError("jev_filter_timeout")
+            request = urllib.request.Request(ENDPOINT, data=_encode(payload), headers={
+                "Authorization": "Bearer " + key, "Content-Type": "application/json",
+            }, method="POST")
+            opener = urllib.request.build_opener(_NoRedirect())
+            with opener.open(request, timeout=remaining) as response:
+                if response.status != 200:
+                    raise JevFilterError("jev_filter_transport")
+                content = bytearray()
+                while True:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise JevFilterError("jev_filter_timeout")
+                    # Refresh the socket deadline between bounded reads, including slow responses.
+                    response.fp.raw._sock.settimeout(remaining)
+                    part = response.read1(min(8192, MAX_RESPONSE_BYTES + 1 - len(content)))
+                    content.extend(part)
+                    if len(content) > MAX_RESPONSE_BYTES:
+                        raise JevFilterError("jev_filter_invalid_response")
+                    if not part or response.isclosed():
+                        break
+                return json.loads(content)
     except JevFilterError:
         raise
     except TimeoutError:
@@ -221,9 +223,10 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
     """Gate current sources first, then needed history, with exact-payload caching.
 
     Cache callbacks run on the caller thread. Live requests run in at most four
-    workers, all joined before return. A retained fragment accepts its whole
-    source without evaluating the suffix; rejecting a source still requires
-    every fragment. A failed batch forwards no partial claim.
+    workers, all joined before return. Live HTTP calls also share a process-wide
+    four-call bound with quality and other Jev clients. A retained fragment
+    accepts its whole source without evaluating the suffix; rejecting a source
+    still requires every fragment. A failed batch forwards no partial claim.
     """
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
         raise JevFilterError("jev_filter_invalid_input")

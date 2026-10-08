@@ -15,6 +15,7 @@ signals to a PID that might have been reused by an unrelated process.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import errno
 import json
@@ -61,6 +62,8 @@ MAX_UNKNOWN_RUNNER_FAILURE_RETRIES = 1
 COOLDOWN_BACKOFF_SECONDS = 3600.0
 MAX_COOLDOWN_BACKOFF_SECONDS = 6 * 3600.0
 _TRANSPORT_FAILURE_CODES = frozenset({"runner_unavailable", "protocol_error"})
+MAX_PROCESSOR_WORKERS = 4
+WORKER_RECOVERY_SUCCESSES = 4
 DEFAULT_POLL_INTERVAL = 1.0
 DEFAULT_STARTUP_TIMEOUT = 3.0
 DEFAULT_STARTUP_TTL = 15.0
@@ -154,6 +157,8 @@ def enqueue(
         if record["blocked"] and not retry_failed:
             return {"status": "blocked", "project": workspace, "code": record["last_code"]}
 
+        if retry_failed:
+            _preserve_retry_target(record)
         record["generation"] += 1
         # Fresh captures must not turn a scheduled recovery into a retry
         # storm. Only an explicit recovery can override the durable backoff.
@@ -223,6 +228,7 @@ def resume_pending(
             record = state["projects"][workspace] = _new_record(now)
         if record["inflight_generation"] is not None:
             return {"status": "blocked", "project": workspace, "code": "work_inflight"}
+        _preserve_retry_target(record)
         _record_rejection(record, rejected_job_id)
         record["generation"] += 1
         record["blocked"] = False
@@ -290,6 +296,7 @@ def _recover_operational_failure(
             return {"status": "blocked", "project": workspace, "code": "work_inflight"}
         if not _persisted_failed_batch(base, workspace, job_id, code):
             return {"status": "blocked", "project": workspace, "code": "failed_claim_unavailable"}
+        _preserve_retry_target(record)
         record["generation"] += 1
         record["blocked"] = False
         record["parked"] = None
@@ -437,6 +444,7 @@ def recover_expired(
             return {"status": "blocked", "project": workspace, "code": "work_inflight"}
         if not _persisted_expired_claim(base, workspace, job_id, now):
             return {"status": "blocked", "project": workspace, "code": "expired_claim_unavailable"}
+        _preserve_retry_target(record)
         record["generation"] += 1
         record["blocked"] = False
         record["parked"] = None
@@ -468,11 +476,12 @@ def run_service(
     indexer: Callable[..., Any] | None = None,
     max_cycles: int | None = None,
     usage_collector: Callable[..., Mapping[str, Any]] | None = None,
+    processor_workers: int | None = None,
 ) -> dict[str, Any]:
     """Run one local worker until stopped.
 
     A running service is single-instance per data directory.  It uses the
-    processor's own Store leases and processes one project batch at a time.
+    processor's own Store leases and processes bounded project cohorts.
     ``runner`` is a backwards-friendly test seam alias for ``processor``;
     only one may be supplied.  With ``max_cycles=None`` this is a persistent
     foreground service.  Tests can supply a finite cycle count and fake clock.
@@ -484,6 +493,17 @@ def run_service(
     checked_retries = _validate_retries(max_timeout_retries)
     checked_backoff = _validate_positive_number(retry_backoff, "retry_backoff")
     checked_cycles = _validate_cycles(max_cycles)
+    # Preserve historical injected-processor behavior unless the caller opts in.
+    if processor_workers is None and processor is None and runner is None:
+        try:
+            processor_workers = config_loader(data_dir).get("processor_workers", 2)
+        except Exception:
+            # The normal gate returns a paused receipt for unavailable config.
+            processor_workers = 1
+    configured_workers = _validate_workers(1 if processor_workers is None else processor_workers)
+    effective_workers = configured_workers
+    successful_calls = 0
+    pool = None
     _validate_stop_event(stop_event)
 
     base = _base_dir(data_dir)
@@ -500,6 +520,7 @@ def run_service(
     try:
         _record_owner(base, pid_lock.pid, pid_lock.nonce, _checked_now(clock))
 
+        _record_workers(base, configured_workers, effective_workers, 0)
         cycles = 0
         next_usage_at = 0.0
         next_usage_reconcile_at = 0.0
@@ -558,6 +579,44 @@ def run_service(
                 continue
 
             retry_failed = bool(choice["retry_requested"])
+            if processor_enabled and (configured_workers > 1 or choice["pending_retries"]):
+                if pool is None:
+                    pool = ThreadPoolExecutor(max_workers=configured_workers, thread_name_prefix="observation")
+                width = 1 if retry_failed or choice["retry_job_id"] is not None or choice["attempts"] else effective_workers
+                # All futures have a slot now. Never queue leased projects behind
+                # another long-running model call, and never refill a partial cohort.
+                _record_workers(base, configured_workers, effective_workers, width)
+                futures = [pool.submit(_call_processor, active_processor, project, data_dir,
+                    retry_failed, checked_timeout,
+                    retry_job_id=None if retry_failed else choice["retry_job_id"],
+                    retry_error_code=None if retry_failed else choice["retry_error_code"],
+                    retry_attempt_count=None if retry_failed else choice["retry_attempt_count"],
+                    parallel_sessions=True) for _ in range(width)]
+                results = []
+                for future in as_completed(futures):
+                    results.append(future.result())
+                    _record_workers(base, configured_workers, effective_workers, width - len(results))
+                jobs += len(results)
+                transient = any((isinstance(r.get("reason_code"), str) and r["reason_code"] in _TRANSIENT_RUNNER_REASONS)
+                                or (isinstance(r.get("code"), str) and r["code"] in {"timeout", *_TRANSPORT_FAILURE_CODES})
+                                for r in results)
+                if transient:
+                    effective_workers, successful_calls = 1, 0
+                else:
+                    successful_calls += sum(r.get("status") in {"processed", "skipped"} for r in results)
+                    if successful_calls >= WORKER_RECOVERY_SUCCESSES:
+                        effective_workers = min(configured_workers, effective_workers + 1)
+                        successful_calls = 0
+                _record_workers(base, configured_workers, effective_workers, 0)
+                outcome = _finish_cohort(base, project, generation, choice, results,
+                    data_dir=data_dir, semantic_enabled=semantic_enabled, indexer=indexer,
+                    now=_checked_now(clock), max_timeout_retries=checked_retries,
+                    retry_backoff=checked_backoff)
+                last_code = outcome.get("code") or last_code
+                if outcome["status"] == "halted" and not _has_other_eligible_project(
+                    base, data_dir, config_loader, excluded_project=project):
+                    return _service_receipt("halted", jobs=jobs, code=last_code)
+                continue
             automatic_retry_allowed = True
             if processor_enabled:
                 result = _call_processor(
@@ -663,6 +722,8 @@ def run_service(
     except ServiceError:
         return _service_receipt("error", jobs=jobs, code="service_unavailable")
     finally:
+        if pool is not None:
+            pool.shutdown(wait=True)
         try:
             _clear_owner(base, pid_lock.pid, pid_lock.nonce)
         except ServiceError:
@@ -878,6 +939,8 @@ def service_status(
         result["pid"] = lock["pid"]
         result["owner_id"] = f"{lock['pid']}:{lock['nonce']}"
         result["runtime_version"] = owner.get("runtime_version")
+        if "workers" in owner:
+            result["workers"] = owner["workers"]
     elif starting and startup is not None:
         result["pid"] = startup["pid"]
     return result
@@ -1020,6 +1083,7 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
         "retry_job_id": None,
         "retry_error_code": None,
         "retry_attempt_count": None,
+        "pending_retries": [],
         "last_code": None,
         "last_failure_at": None,
         "last_failure_detail": None,
@@ -1204,6 +1268,7 @@ def _validate_record(raw: Any) -> dict[str, Any]:
                 or isinstance(retry_attempt_count, bool) or not isinstance(retry_attempt_count, int)
                 or not 1 <= retry_attempt_count <= 1_000_000_000))):
         raise ServiceStateError("service state is unavailable")
+    pending_retries = _validate_pending_retries(raw.get("pending_retries", []))
     if last_code is not None and not _safe_code(last_code):
         raise ServiceStateError("service state is unavailable")
     rejected_batches = raw.get("rejected_batches", 0)
@@ -1240,6 +1305,7 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         "retry_job_id": retry_job_id,
         "retry_error_code": retry_error_code,
         "retry_attempt_count": retry_attempt_count,
+        "pending_retries": pending_retries,
         "last_code": last_code,
         "last_failure_at": None if last_failure_at is None else float(last_failure_at),
         "last_failure_detail": last_failure_detail,
@@ -1272,6 +1338,14 @@ def _validate_owner(raw: Any) -> dict[str, Any] | None:
                 or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-" for c in version)):
             raise ServiceStateError("service state is unavailable")
         result["runtime_version"] = version
+    if "workers" in raw:
+        workers = raw["workers"]
+        if (not isinstance(workers, Mapping) or set(workers) != {"configured", "effective", "active"}
+                or any(isinstance(v, bool) or not isinstance(v, int) for v in workers.values())
+                or not 1 <= workers["effective"] <= workers["configured"] <= MAX_PROCESSOR_WORKERS
+                or not 0 <= workers["active"] <= workers["configured"]):
+            raise ServiceStateError("service state is unavailable")
+        result["workers"] = dict(workers)
     return result
 
 
@@ -1571,6 +1645,7 @@ def _claim_due_project(
             "retry_job_id": record["retry_job_id"],
             "retry_error_code": record["retry_error_code"],
             "retry_attempt_count": record["retry_attempt_count"],
+            "pending_retries": record["pending_retries"],
         }
 
 
@@ -2138,6 +2213,216 @@ def _finish_failure(
         return False
 
 
+def _validate_workers(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= MAX_PROCESSOR_WORKERS:
+        raise ValueError("processor_workers must be an integer from 1 to 4")
+    return value
+
+
+def _record_workers(base: Path, configured: int, effective: int, active: int) -> None:
+    with _state_lock(base):
+        state = _load_state(base)
+        if state["owner"] is not None:
+            state["owner"]["workers"] = {"configured": configured, "effective": effective, "active": active}
+            _write_state(base, state)
+
+
+def _validate_pending_retries(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or len(value) > MAX_PROCESSOR_WORKERS:
+        raise ServiceStateError("service state is unavailable")
+    result = []
+    for target in value:
+        if (not isinstance(target, Mapping)
+                or set(target) != {"job_id", "error_code", "attempt_count", "attempts", "due_at"}
+                or (target["job_id"] is not None and not _valid_job_id(target["job_id"]))
+                or not _is_timestamp(target["due_at"])
+                or isinstance(target["attempts"], bool) or not isinstance(target["attempts"], int)
+                or not 0 <= target["attempts"] <= 1_000_000_000
+                or ((target["error_code"] is None) != (target["attempt_count"] is None))
+                or (target["error_code"] is not None and (
+                    target["error_code"] not in {"runner_failure", *_TRANSPORT_FAILURE_CODES}
+                    or target["job_id"] is None or isinstance(target["attempt_count"], bool)
+                    or not isinstance(target["attempt_count"], int)
+                    or not 1 <= target["attempt_count"] <= 1_000_000_000))):
+            raise ServiceStateError("service state is unavailable")
+        result.append(dict(target))
+    return result
+
+
+def _retry_target(record: Mapping[str, Any]) -> dict[str, Any]:
+    return {"job_id": record["retry_job_id"], "error_code": record["retry_error_code"],
+            "attempt_count": record["retry_attempt_count"], "attempts": record["attempts"],
+            "due_at": record["due_at"]}
+
+
+def _preserve_retry_target(record: dict[str, Any]) -> None:
+    """Do not lose another lane's retry when explicit recovery takes priority."""
+    if record["retry_job_id"] is not None and all(
+            target["job_id"] != record["retry_job_id"] for target in record["pending_retries"]):
+        record["pending_retries"].append(_retry_target(record))
+
+
+def _activate_retry(record: dict[str, Any], targets: list[dict[str, Any]]) -> None:
+    # A reconciled retry may refer to a target already waiting in the queue.
+    # Keep one permission per job and never accelerate its durable backoff.
+    unique: dict[str | None, dict[str, Any]] = {}
+    for candidate in targets:
+        previous = unique.get(candidate["job_id"])
+        if previous is None:
+            unique[candidate["job_id"]] = dict(candidate)
+        else:
+            newer = candidate if (candidate["attempt_count"] or 0) > (previous["attempt_count"] or 0) else previous
+            unique[candidate["job_id"]] = dict(newer, due_at=max(previous["due_at"], candidate["due_at"]))
+    ordered = sorted(unique.values(), key=lambda target: target["due_at"])
+    target, *remaining = ordered
+    record["retry_job_id"] = target["job_id"]
+    record["retry_error_code"] = target["error_code"]
+    record["retry_attempt_count"] = target["attempt_count"]
+    record["attempts"] = target["attempts"]
+    record["due_at"] = target["due_at"]
+    record["pending_retries"] = remaining
+
+
+def _finish_cohort(
+    base: Path, project: str, generation: int, choice: Mapping[str, Any],
+    results: list[Mapping[str, Any]], *, data_dir: str | os.PathLike[str] | None,
+    semantic_enabled: bool, indexer: Callable[..., Any] | None, now: float,
+    max_timeout_retries: int, retry_backoff: float,
+) -> dict[str, Any]:
+    """Commit every result once, before releasing the project generation.
+
+    Retry cohorts contain a single exact target. Fresh cohorts can produce up
+    to four independent failures; each retry permission stays bound to its job
+    and attempt. Local indexing runs only here, on the owning coordinator.
+    """
+    prepared = []
+    for original in results:
+        result = original
+        automatic_retry_allowed = True
+        if (result.get("status") == "blocked" and result.get("code") == "recovery_unavailable"
+                and choice["retry_error_code"] in {"runner_failure", *_TRANSPORT_FAILURE_CODES}
+                and not choice["retry_requested"]):
+            result = _reconcile_retry_snapshot(base, project, choice["retry_job_id"], now)
+            automatic_retry_allowed = result.get("code") == "lease_expired"
+        status, code = _processor_outcome(result)
+        job_id = result.get("job_id")
+        reason = result.get("reason_code")
+        rejected = code == "invalid_response" and _persisted_rejection(base, project, job_id)
+        snapshot = (_runner_failure_snapshot(base, project, job_id, code=code)
+                    if code in {"runner_failure", *_TRANSPORT_FAILURE_CODES} and _valid_job_id(job_id) else None)
+        if (snapshot is not None and snapshot["reason_code"] is None
+                and isinstance(reason, str) and reason in _RUNNER_REASONS and _runner_retry_limit(reason) == 0):
+            snapshot["reason_code"] = reason
+        timeout_persisted = (code == "timeout" and _persisted_failed_batch(base, project, job_id, "timeout"))
+        prepared.append((result, status, code, rejected, snapshot, timeout_persisted, automatic_retry_allowed))
+    index_pending = False
+    index_detail = None
+    try:
+        if semantic_enabled:
+            index_pending = _run_indexer(indexer, project, data_dir, bool(choice["retry_requested"]))
+    except _IndexFailure as exc:
+        index_detail = exc.detail
+    except Exception:
+        index_detail = _index_failure_detail({})
+
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(project)
+        if record is None or record["inflight_generation"] != generation:
+            return {"status": "deferred"}
+        targets = list(record["pending_retries"])
+        record["pending_retries"] = []
+        _clear_consumed_retry(record, generation)
+        _clear_retry_target(record)
+        blocker = None
+        blocker_failure = None
+        latest_failure = None
+        progress = False
+        retry_times = []
+        last_code = None
+        for result, status, code, rejected, snapshot, timeout_persisted, automatic in prepared:
+            job_id, reason = result.get("job_id"), result.get("reason_code")
+            if status == "deferred":
+                retry_times.append(max(now + 1, min(result["retry_at"], now + MAX_LEASE_SECONDS)))
+                if choice["retry_job_id"] is not None:
+                    target = {"job_id": choice["retry_job_id"], "error_code": choice["retry_error_code"],
+                              "attempt_count": choice["retry_attempt_count"], "attempts": choice["attempts"],
+                              "due_at": retry_times[-1]}
+                    targets.append(target)
+                # A deferred explicit retry has not consumed authorization.
+                if choice["retry_requested"] and not record["retry_requested"]:
+                    record["retry_requested"] = True
+                    record["retry_generation"] = generation
+                continue
+            if status != "failed":
+                if _valid_job_id(job_id):
+                    targets = [target for target in targets if target["job_id"] != job_id]
+                progress = progress or status in {"processed", "skipped"}
+                continue
+            last_code = code
+            if rejected and isinstance(reason, str) and reason in _CONTENT_REJECTION_REASONS and record["last_rejected_job"] != job_id:
+                _record_rejection(record, job_id, reason)
+                progress = True
+                continue
+            if rejected:
+                _record_rejection(record, job_id, reason)
+            latest_failure = {
+                "last_failure_at": now,
+                "last_failure_job": job_id if _valid_job_id(job_id) else None,
+                "last_failure_detail": _runner_failure_detail(snapshot["reason_code"] if snapshot else reason),
+                "runner_recovery_checked": True,
+            }
+            # Per-job counters prevent another lane's attempt from consuming
+            # this job's retry budget. A normal fresh batch starts at zero.
+            candidate = _new_record(now)
+            candidate["attempts"] = choice["attempts"] if choice["retry_job_id"] == job_id or code == "lease_expired" else 0
+            if snapshot is not None:
+                candidate["attempts"] = max(candidate["attempts"] + 1, snapshot["attempt_count"])
+                if automatic and _schedule_runner_retry(candidate, snapshot, now, retry_backoff):
+                    targets.append(_retry_target(candidate))
+                    continue
+            if automatic and code in {"timeout", "lease_expired"}:
+                candidate["attempts"] += 1
+                limit = MAX_LEASE_RECOVERY_RETRIES if code == "lease_expired" else max_timeout_retries
+                if candidate["attempts"] <= limit and (code != "timeout" or timeout_persisted):
+                    candidate["retry_job_id"] = job_id if code == "timeout" else None
+                    candidate["due_at"] = now + min(MAX_BACKOFF_SECONDS, retry_backoff * 2 ** (candidate["attempts"] - 1))
+                    targets.append(_retry_target(candidate))
+                    continue
+            # Keep the blocking code and its job/detail together. Otherwise a
+            # later transient failure could make startup reconciliation retry
+            # that transient and silently release a non-retryable blocker.
+            blocker = code or "invalid_result"
+            blocker_failure = latest_failure
+        if index_detail is not None and blocker is None:
+            blocker = last_code = "index_failure"
+            blocker_failure = {"last_failure_at": now, "last_failure_job": None,
+                               "last_failure_detail": index_detail, "runner_recovery_checked": True}
+        if blocker_failure is not None or latest_failure is not None:
+            record.update(blocker_failure or latest_failure)
+        record["inflight_generation"] = None
+        record["inflight_until"] = None
+        record["blocked"] = blocker is not None and not record["retry_requested"]
+        record["last_code"] = blocker or last_code or ("invalid_response" if record["rejected_batches"] else None)
+        if targets:
+            _activate_retry(record, targets)
+        else:
+            record["attempts"] = choice["attempts"] if retry_times and not progress else 0
+            record["due_at"] = min(retry_times) if retry_times and not progress else now
+        if record["generation"] != generation and (record["retry_requested"] or not targets):
+            record["due_at"] = now
+        if (not record["blocked"] and not targets and not record["retry_requested"]
+                and not progress and not retry_times and not index_pending and record["generation"] == generation):
+            if record["rejected_batches"]:
+                record["parked"] = "rejected_batches"
+            else:
+                del state["projects"][project]
+                if state["cursor"] == project:
+                    state["cursor"] = None
+        _write_state(base, state)
+        return {"status": "halted" if record["blocked"] else "continue", "code": record["last_code"]}
+
+
 def _choose_processor(
     processor: Callable[..., Mapping[str, Any]] | None,
     runner: Callable[..., Mapping[str, Any]] | None,
@@ -2162,9 +2447,12 @@ def _call_processor(
     retry_job_id: str | None = None,
     retry_error_code: str | None = None,
     retry_attempt_count: int | None = None,
+    parallel_sessions: bool = False,
 ) -> Mapping[str, Any]:
     try:
         arguments = {"data_dir": data_dir, "retry_failed": retry_failed, "timeout": timeout}
+        if parallel_sessions:
+            arguments["parallel_sessions"] = True
         if retry_job_id is not None:
             arguments["retry_job_id"] = retry_job_id
         if retry_error_code is not None:

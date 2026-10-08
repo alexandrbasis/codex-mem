@@ -140,6 +140,8 @@ def quality_gate(
     questions share one request when they fit. Only uncertain candidates may
     receive one field-level refinement. All calls, including cache hits and
     refinement, share one deadline and are recorded before another call starts.
+    Live HTTP calls share the process-wide four-call bound with eligibility
+    through jev_client's common transport; no permit is held around this gate.
     """
     started = perf_counter()
     audit: dict[str, Any] = {

@@ -178,6 +178,7 @@ def process_pending(
     max_entries: int = MAX_OBSERVATION_ENTRIES,
     max_chars: int = DEFAULT_OBSERVATION_CHARS,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
+    parallel_sessions: bool = False,
 ) -> dict[str, Any]:
     """Process at most one leased observation batch.
 
@@ -197,6 +198,8 @@ def process_pending(
     workspace = project_key(project)
     checked_timeout = _validate_timeout(timeout)
     _validate_processor_arguments(retry_failed, max_entries, max_chars, lease_seconds)
+    if not isinstance(parallel_sessions, bool):
+        raise ValueError("parallel_sessions must be true or false")
     if retry_job_id is not None and (not isinstance(retry_job_id, str) or not _valid_source_id(retry_job_id)):
         raise ValueError("retry_job_id is invalid")
     if retry_failed and retry_job_id is not None:
@@ -236,6 +239,7 @@ def process_pending(
                 retry_job_id=retry_job_id,
                 retry_error_code=retry_error_code,
                 retry_attempt_count=retry_attempt_count,
+                **({"parallel_sessions": True} if parallel_sessions else {}),
             )
             if claimed is None:
                 if retry_attempt_count is not None:
