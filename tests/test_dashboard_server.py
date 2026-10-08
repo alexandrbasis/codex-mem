@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from urllib.parse import urlsplit
 
 from codex_mem.dashboard import DashboardServerError, make_server
@@ -65,6 +66,25 @@ class DashboardHTTPTests(unittest.TestCase):
         self.assertEqual(200, self.request("/api/overview", headers={"Cookie": cookie}, authenticated=False)[0])
         self.assertEqual(401, self.request("/?token=wrong", authenticated=False)[0])
         self.assertEqual(401, self.request("/?token=%E2%98%83", authenticated=False)[0])
+
+    def test_empty_query_works_with_older_strict_query_parser(self):
+        import codex_mem.dashboard as dashboard
+        original = dashboard.parse_qs
+
+        def older_parse_qs(query, **kwargs):
+            if not query and kwargs.get("strict_parsing"):
+                raise ValueError("bad query field: ''")
+            return original(query, **kwargs)
+
+        with patch.object(dashboard, "parse_qs", side_effect=older_parse_qs):
+            self.assertEqual(200, self.request("/api/overview")[0])
+            self.assertEqual(200, self.request("/")[0])
+            self.assertEqual(401, self.request("/api/overview", authenticated=False)[0])
+            self.assertEqual(403, self.request("/api/overview", headers={"Origin": "null"})[0])
+            self.assertEqual(405, self.request("/api/overview", method="POST")[0])
+            for query in ("period", "period=all&broken", "period=all&period=today"):
+                with self.subTest(query=query):
+                    self.assertEqual(400, self.request("/api/overview?" + query)[0])
 
     def test_host_and_origin_refused(self):
         port = self.server.server_port

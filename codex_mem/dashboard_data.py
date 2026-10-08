@@ -180,11 +180,14 @@ class DashboardReader:
             result['status'] = 'unavailable'
             code = getattr(error, 'sqlite_errorcode', None)
             code = code & 0xff if code is not None else None
-            if code == sqlite3.SQLITE_INTERRUPT or str(error) in ('query deadline exceeded', 'interrupted'):
+            # Python 3.10 has neither these named result codes nor error codes.
+            # SQLite primary result codes are stable; exact messages cover older errors.
+            message = str(error)
+            if code == getattr(sqlite3, 'SQLITE_INTERRUPT', 9) or message in ('query deadline exceeded', 'interrupted'):
                 reason = 'query_deadline'
-            elif code in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED):
+            elif code in (getattr(sqlite3, 'SQLITE_BUSY', 5), getattr(sqlite3, 'SQLITE_LOCKED', 6)) or message in ('database is locked', 'database table is locked', 'database schema is locked'):
                 reason = 'database_busy'
-            elif code in (sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB):
+            elif code in (getattr(sqlite3, 'SQLITE_CORRUPT', 11), getattr(sqlite3, 'SQLITE_NOTADB', 26)) or message in ('database disk image is malformed', 'file is not a database'):
                 reason = 'database_corrupt'
             else:
                 reason = 'database_unreadable'

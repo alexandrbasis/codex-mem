@@ -79,7 +79,8 @@ class QualityCorrectionTests(unittest.TestCase):
         FakeServer.include_second_usage = True
         FakeServer.fail_second = False
         FakeServer.unsafe_second = False
-        stack = self.enterContext(ExitStack())
+        stack = ExitStack()
+        self.addCleanup(stack.close)
         for name, value in (
             ("_AppServer", FakeServer), ("_verify_luna_available", lambda _: None),
             ("_isolated_config_overrides", lambda _: {}),

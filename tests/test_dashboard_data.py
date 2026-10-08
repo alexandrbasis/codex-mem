@@ -58,6 +58,32 @@ class DashboardDataTests(unittest.TestCase):
             connection.execute('INSERT INTO jev_judgment_audits VALUES (?,?,?,?,?)', (1, self.project, 'job', json.dumps(dict(audit, route='quality_refinement_commit')), self.now))
             connection.execute('INSERT INTO jev_judgment_audits VALUES (?,?,?,?,?)', (2, self.project, None, json.dumps(dict(audit, route='retrieval_rank_success')), self.now))
 
+    def test_failure_reasons_without_new_sqlite_attributes(self):
+        (self.home / 'memory.sqlite3').touch()
+        constants = ('SQLITE_INTERRUPT', 'SQLITE_BUSY', 'SQLITE_LOCKED', 'SQLITE_CORRUPT', 'SQLITE_NOTADB')
+        cases = (
+            ('query deadline exceeded', 'query_deadline'),
+            ('interrupted', 'query_deadline'),
+            ('database is locked', 'database_busy'),
+            ('database table is locked', 'database_busy'),
+            ('database disk image is malformed', 'database_corrupt'),
+            ('file is not a database', 'database_corrupt'),
+            ('private path /secret unreadable', 'database_unreadable'),
+        )
+        with patch.dict(sqlite3.__dict__):
+            for name in constants:
+                sqlite3.__dict__.pop(name, None)
+            for message, expected in cases:
+                with self.subTest(message=message):
+                    error = sqlite3.OperationalError(message)
+                    self.assertFalse(hasattr(error, 'sqlite_errorcode'))
+                    with patch.object(sqlite3, 'connect', side_effect=error):
+                        result = DashboardReader(self.home).overview()
+                    self.assertEqual(expected, result['coverage']['status'])
+                    self.assertIsNone(result['main']['total_tokens'])
+                    self.assertIsNone(result['combined']['api_equivalent_usd']['total'])
+                    self.assertNotIn('/secret', json.dumps(result))
+
     def test_missing_corrupt_do_not_create_files_or_fake_zero_cost(self):
         absent = self.home / 'absent'
         result = DashboardReader(absent).overview()

@@ -88,7 +88,8 @@ class _Handler(BaseHTTPRequestHandler):
         if parsed.scheme or parsed.netloc or parsed.fragment:
             raise _RequestError(400, "invalid_query", "Use a local dashboard path.")
         try:
-            query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=8, strict_parsing=True)
+            # Python 3.10 strict parsing rejects even an empty query.
+            query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=8, strict_parsing=True) if parsed.query else {}
         except ValueError:
             raise _RequestError(400, "invalid_query", "The query is invalid.") from None
         if any(len(values) != 1 for values in query.values()):
