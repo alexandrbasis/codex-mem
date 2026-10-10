@@ -439,7 +439,15 @@ def recover_expired(
         record = state["projects"].get(workspace)
         if record is None or not record["blocked"]:
             return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
-        if record["last_code"] not in {"storage_failure", "lease_expired"}:
+        # Older filter timeouts could leave the Store lease running while the
+        # scheduler recorded runner_failure. Release only that exact mismatch;
+        # ordinary runner failures still require a durable failed receipt.
+        legacy_filter_timeout = (
+            record["last_code"] == "runner_failure"
+            and record["last_failure_job"] == job_id
+            and record["last_failure_detail"] == _runner_failure_detail("jev_filter_timeout")
+        )
+        if record["last_code"] not in {"storage_failure", "lease_expired"} and not legacy_filter_timeout:
             return {"status": "blocked", "project": workspace, "code": record["last_code"]}
         if record["inflight_generation"] is not None:
             return {"status": "blocked", "project": workspace, "code": "work_inflight"}
@@ -451,7 +459,10 @@ def recover_expired(
         record["parked"] = None
         record["last_code"] = None
         record["due_at"] = now
-        record["attempts"] = 0
+        # Releasing this stale claim grants an attempt, not a fresh automatic
+        # lease-recovery budget if that attempt expires again.
+        if not legacy_filter_timeout:
+            record["attempts"] = 0
         record["retry_requested"] = False
         record["retry_generation"] = None
         record["retry_job_id"] = None

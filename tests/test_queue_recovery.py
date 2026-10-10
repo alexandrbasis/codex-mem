@@ -13,7 +13,7 @@ from codex_mem.processor import (
     ProcessorFailure,
     process_pending,
 )
-from codex_mem.service import SERVICE_STATE_FILENAME, _claim_due_project, enqueue, recover_runner_failure, recover_storage_failure, run_service
+from codex_mem.service import SERVICE_STATE_FILENAME, _claim_due_project, enqueue, recover_expired, recover_runner_failure, recover_storage_failure, run_service
 from codex_mem.store import Store
 
 
@@ -29,6 +29,111 @@ class Clock:
 
 
 class QueueRecoveryTests(unittest.TestCase):
+    def _legacy_expired_runner_block(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        root = Path(temporary.name)
+        project = root / "project"
+        project.mkdir()
+        base = root / "memory"
+        clock = Clock()
+        configure(base, capture_scope="selected", included_projects=[project])
+        quarantined = []
+        with Store(base) as store:
+            for code in ("invalid_response", "runner_failure"):
+                store.remember(project, code, code, source="hook:PostToolUse", session_id=code)
+                job = store.claim_observation_batch(project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+                store.fail_observation_batch(project, job["job_id"], job["lease_token"], code)
+                quarantined.append(job["job_id"])
+            store.remember(project, "legacy", "pending evidence", source="hook:PostToolUse", session_id="legacy")
+            job = store.claim_observation_batch(project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+            store._connection.execute("UPDATE observation_jobs SET lease_expires_at=? WHERE id=?",
+                                      ("1970-01-01T00:01:00Z", job["job_id"]))
+        enqueue(project, base, clock=clock)
+        path = base / SERVICE_STATE_FILENAME
+        state = json.loads(path.read_text())
+        record = state["projects"][str(project.resolve())]
+        record.update(blocked=True, last_code="runner_failure", last_failure_job=job["job_id"],
+                      last_failure_detail={"stage": "processor", "status": "failed", "code": "runner_failure",
+                                           "reason_code": "jev_filter_timeout"}, attempts=2)
+        path.write_text(json.dumps(state))
+        return project, base, clock, job, quarantined
+
+    def test_recover_expired_legacy_jev_timeout_reclaims_only_running_batch(self):
+        project, base, clock, job, quarantined = self._legacy_expired_runner_block()
+        result = recover_expired(project, base, job_id=job["job_id"], clock=clock)
+        self.assertEqual("queued", result["status"])
+        self.assertFalse(result["retry_failed"])
+        record = json.loads((base / SERVICE_STATE_FILENAME).read_text())["projects"][str(project.resolve())]
+        self.assertEqual(2, record["attempts"])
+        seen = []
+
+        def processor(owner, **kwargs):
+            self.assertFalse(kwargs["retry_failed"])
+            self.assertIsNone(kwargs.get("retry_job_id"))
+            with Store(base) as store:
+                claim = store.claim_observation_batch(owner, PROCESSOR_ID, MODEL, REASONING_EFFORT)
+                seen.append(claim["job_id"])
+                self.assertNotEqual(job["lease_token"], claim["lease_token"])
+                store.finish_observation_batch(owner, claim["job_id"], claim["lease_token"],
+                                               notes=[], disposition="skipped")
+            return {"status": "skipped"}
+
+        run_service(base, processor=processor, clock=clock, sleeper=clock.sleep, max_cycles=1)
+        self.assertEqual([job["job_id"]], seen)
+        with Store(base) as store:
+            for job_id in quarantined:
+                row = store._connection.execute("SELECT status,attempt_count FROM observation_jobs WHERE id=?",
+                                                (job_id,)).fetchone()
+                self.assertEqual(("failed", 1), tuple(row))
+
+    def test_recover_expired_legacy_jev_timeout_preserves_lease_retry_budget(self):
+        project, base, clock, job, _ = self._legacy_expired_runner_block()
+        self.assertEqual("queued", recover_expired(project, base, job_id=job["job_id"], clock=clock)["status"])
+        run_service(base, processor=lambda *_a, **_k: {"status": "failed", "code": "lease_expired",
+                                                     "job_id": job["job_id"]},
+                    clock=clock, sleeper=clock.sleep, max_cycles=1)
+        record = json.loads((base / SERVICE_STATE_FILENAME).read_text())["projects"][str(project.resolve())]
+        self.assertTrue(record["blocked"])
+        self.assertEqual(3, record["attempts"])
+
+    def test_recover_expired_legacy_jev_timeout_rejects_unsafe_claims(self):
+        for case in ("wrong_job", "wrong_reason", "missing_detail", "inflight", "nonexpired", "missing",
+                     "wrong_model", "missing_source", "failed", "disabled"):
+            with self.subTest(case=case):
+                project, base, clock, job, quarantined = self._legacy_expired_runner_block()
+                path = base / SERVICE_STATE_FILENAME
+                state = json.loads(path.read_text())
+                record = state["projects"][str(project.resolve())]
+                if case == "wrong_job":
+                    record["last_failure_job"] = quarantined[0]
+                elif case == "wrong_reason":
+                    record["last_failure_detail"]["reason_code"] = "jev_filter_invalid_response"
+                elif case == "missing_detail":
+                    record["last_failure_detail"] = None
+                elif case == "inflight":
+                    record["inflight_generation"] = record["generation"]
+                    record["inflight_until"] = clock() + 100
+                path.write_text(json.dumps(state))
+                with Store(base) as store:
+                    if case == "nonexpired":
+                        store._connection.execute("UPDATE observation_jobs SET lease_expires_at=? WHERE id=?",
+                                                  ("2099-01-01T00:01:00Z", job["job_id"]))
+                    elif case == "wrong_model":
+                        store._connection.execute("UPDATE observation_jobs SET model='wrong' WHERE id=?", (job["job_id"],))
+                    elif case == "missing_source":
+                        store._connection.execute("DELETE FROM observation_job_sources WHERE job_id=?", (job["job_id"],))
+                    elif case == "failed":
+                        store._connection.execute("UPDATE observation_jobs SET lease_expires_at=? WHERE id=?",
+                                                  ("2099-01-01T00:01:00Z", job["job_id"]))
+                        store.fail_observation_batch(project, job["job_id"], job["lease_token"], "runner_failure")
+                if case == "disabled":
+                    configure(base, capture_scope="selected", included_projects=[])
+                before = path.read_bytes()
+                result = recover_expired(project, base, job_id="missing" if case == "missing" else job["job_id"], clock=clock)
+                self.assertIn(result["status"], {"blocked", "disabled"})
+                self.assertEqual(before, path.read_bytes())
+
     def test_default_timeout_backoff_stops_after_two_retries_and_survives_restart(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

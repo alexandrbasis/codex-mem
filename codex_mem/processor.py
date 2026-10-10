@@ -2058,9 +2058,17 @@ def _failed_after_claim(
         returned_turn = failed.get("worker_turn_id") if isinstance(failed, Mapping) else turn_id
         return _failed_receipt(job_id, safe_code, returned_thread, returned_turn, reason_code=reason_code)
     except ObservationLeaseExpired:
-        # Lease expiry may mask a timeout, but must not downgrade a hard
-        # validation/security failure into an automatically retried condition.
-        expired_code = "lease_expired" if safe_code == "timeout" else safe_code
+        # An operational failure cannot be persisted through an expired lease.
+        # Report the authoritative expiry so bounded lease recovery can proceed,
+        # while retaining semantic, policy, and ownership failures as blockers.
+        recoverable = safe_code in {"timeout", "storage_failure"} or (
+            safe_code == "runner_failure" and reason_code in {
+                None, "native_turn_failed", "jev_filter_timeout", "jev_filter_transport",
+                "jev_filter_invalid_response", "jev_filter_failure", "native_rate_limit",
+                "native_server_error", "native_connection_error",
+            }
+        )
+        expired_code = "lease_expired" if recoverable else safe_code
         return _failed_receipt(job_id, expired_code, thread_id, turn_id, reason_code=reason_code)
     except (StoreError, ValueError, OSError):
         if safe_code == "invalid_response" and reason_code in {
