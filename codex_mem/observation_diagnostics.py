@@ -1,6 +1,10 @@
 """Content-free, per-attempt failure receipts for observation maintenance."""
 
+from __future__ import annotations
+
 import sqlite3
+import errno
+from collections.abc import Mapping
 from typing import Any
 
 
@@ -14,7 +18,7 @@ INVALID_RESPONSE_REASONS = frozenset({
     "missing_required_summary", "skipped_with_content", "processed_without_content",
     "invalid_source_batch", "invalid_observation_metadata", "source_attribution_conflict",
     "invalid_summary_shape", "invalid_summary_attribution", "future_summary_source",
-    "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+    "invalid_summary_text", "invalid_summary_metadata", "empty_session_summary", "invalid_text", "invalid_tags",
     "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_unavailable", "jev_quality_input_limit",
 })
 RUNNER_FAILURE_REASONS = frozenset({
@@ -29,6 +33,65 @@ _FAILURE_CODES = frozenset({
     "rerouted", "runner_failure", "runner_unavailable", "storage_failure", "lease_expired",
     "timeout", "tool_called", "tools_available",
 })
+
+# SQLite result codes are stable, but older Python sqlite3 modules do not
+# export their names. Keep hook imports working on the system interpreter.
+_STORAGE_SQLITE_REASONS = {
+    getattr(sqlite3, "SQLITE_BUSY", 5): "sqlite_busy", getattr(sqlite3, "SQLITE_LOCKED", 6): "sqlite_locked",
+    getattr(sqlite3, "SQLITE_CORRUPT", 11): "sqlite_corrupt", getattr(sqlite3, "SQLITE_NOTADB", 26): "sqlite_notadb",
+    getattr(sqlite3, "SQLITE_READONLY", 8): "sqlite_readonly", getattr(sqlite3, "SQLITE_FULL", 13): "sqlite_full",
+    getattr(sqlite3, "SQLITE_IOERR", 10): "sqlite_io", getattr(sqlite3, "SQLITE_CANTOPEN", 14): "sqlite_cantopen",
+    getattr(sqlite3, "SQLITE_CONSTRAINT", 19): "sqlite_constraint",
+}
+_STORAGE_OS_REASONS = {
+    errno.EACCES: "permission_denied", errno.EPERM: "permission_denied",
+    errno.ENOENT: "path_unavailable", errno.ENOTDIR: "path_unavailable",
+    errno.ENOSPC: "storage_full", errno.EIO: "storage_io",
+}
+_STORAGE_REASONS = frozenset({*_STORAGE_SQLITE_REASONS.values(), *_STORAGE_OS_REASONS.values(), "unknown"})
+_STORAGE_OPERATIONS = frozenset({"open", "reconcile", "claim", "lease_lookup", "process", "finalize"})
+_PRECLAIM_OPERATIONS = frozenset({"open", "reconcile", "claim", "lease_lookup"})
+
+
+def storage_error_metadata(error: BaseException) -> dict[str, Any]:
+    """Extract numeric OS/SQLite evidence only; exception text stays private."""
+    sqlite_code = getattr(error, "sqlite_errorcode", None)
+    if isinstance(sqlite_code, bool) or not isinstance(sqlite_code, int) or not 0 < sqlite_code <= 0x7fffffff:
+        sqlite_code = None
+    os_code = error.errno if isinstance(error, OSError) else getattr(error, "os_errno", None)
+    if isinstance(os_code, bool) or not isinstance(os_code, int) or os_code not in errno.errorcode:
+        os_code = None
+    reason = (_STORAGE_SQLITE_REASONS.get(sqlite_code & 255, "unknown") if sqlite_code is not None
+              else _STORAGE_OS_REASONS.get(os_code, "unknown"))
+    return {"reason_code": reason, "sqlite_errorcode": sqlite_code, "os_errno": os_code}
+
+
+def storage_failure_detail(error: BaseException, operation: str, *, preclaim: bool) -> dict[str, Any]:
+    metadata = storage_error_metadata(error)
+    return {"stage": "storage", "code": "storage_failure", "operation": operation, **metadata,
+            "retry_safe": bool(preclaim and operation in _PRECLAIM_OPERATIONS
+                               and getattr(error, "retry_safe", False) is True
+                               and metadata["reason_code"] in {"sqlite_busy", "sqlite_locked"})}
+
+
+def safe_storage_failure_detail(value: object) -> dict[str, Any] | None:
+    """Validate persisted metadata without widening a retry permission."""
+    if (not isinstance(value, Mapping) or value.get("stage") != "storage"
+            or value.get("code") != "storage_failure" or not isinstance(value.get("operation"), str)
+            or value["operation"] not in _STORAGE_OPERATIONS):
+        return None
+    sqlite_code, os_code = value.get("sqlite_errorcode"), value.get("os_errno")
+    if isinstance(sqlite_code, bool) or not isinstance(sqlite_code, int) or not 0 < sqlite_code <= 0x7fffffff:
+        sqlite_code = None
+    if isinstance(os_code, bool) or not isinstance(os_code, int) or os_code not in errno.errorcode:
+        os_code = None
+    reason = value.get("reason_code")
+    reason = reason if isinstance(reason, str) and reason in _STORAGE_REASONS else "unknown"
+    expected = _STORAGE_SQLITE_REASONS.get(sqlite_code & 255, "unknown") if sqlite_code is not None else "unknown"
+    return {"stage": "storage", "code": "storage_failure", "operation": value["operation"],
+            "reason_code": reason, "sqlite_errorcode": sqlite_code, "os_errno": os_code,
+            "retry_safe": bool(value.get("retry_safe") is True and value["operation"] in _PRECLAIM_OPERATIONS
+                               and reason in {"sqlite_busy", "sqlite_locked"} and reason == expected)}
 
 
 def record_failure_receipt(

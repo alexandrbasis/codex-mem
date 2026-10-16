@@ -19,8 +19,8 @@ FILES = (".codex-plugin", ".mcp.json", "codex_mem", "hooks", "skills", "scripts"
          "tests", "docs", "fixtures", "assets", "README.md", "README.ru.md", "UPSTREAM.md", "LICENSE", "pyproject.toml")
 MARKER = ".codex-mem-managed"
 _CACHE_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}\Z")
-MAX_CACHE_PACKAGES = 32
-MAX_CACHE_BACKUP_BYTES = 128 * 1024 * 1024
+MAX_CACHE_PACKAGES = 64
+MAX_CACHE_BACKUP_BYTES = 256 * 1024 * 1024
 LEGACY_LAUNCHER = Path("scripts") / "codex-mem.py"
 LEGACY_LAUNCHER_BACKUP = Path("scripts") / "codex-mem.py.codex-mem-original"
 _FORWARDER_MARKER = "# codex-mem managed legacy cache forwarder v1"

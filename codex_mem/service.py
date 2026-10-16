@@ -42,7 +42,7 @@ from .processor import (
     DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending,
 )
 from .store import MAX_LEASE_SECONDS, project_key
-from .observation_diagnostics import RUNNER_FAILURE_REASONS as _RUNNER_REASONS
+from .observation_diagnostics import RUNNER_FAILURE_REASONS as _RUNNER_REASONS, safe_storage_failure_detail
 
 
 SERVICE_STATE_FILENAME = "service-state.json"
@@ -57,6 +57,7 @@ MAX_QUEUED_PROJECTS = 256
 MAX_TIMEOUT_RETRIES = 5
 DEFAULT_MAX_TIMEOUT_RETRIES = 2
 MAX_LEASE_RECOVERY_RETRIES = 2
+MAX_PRECLAIM_STORAGE_RETRIES = 2
 MAX_RUNNER_FAILURE_RETRIES = 2
 MAX_UNKNOWN_RUNNER_FAILURE_RETRIES = 1
 COOLDOWN_BACKOFF_SECONDS = 3600.0
@@ -86,7 +87,7 @@ _CONTENT_REJECTION_REASONS = frozenset({
     "unknown_source_handle", "invalid_disposition", "too_many_notes", "missing_required_summary",
     "skipped_with_content", "processed_without_content", "invalid_observation_metadata",
     "source_attribution_conflict", "invalid_summary_shape", "invalid_summary_attribution",
-    "future_summary_source", "invalid_summary_text", "invalid_summary_metadata", "invalid_text", "invalid_tags",
+    "future_summary_source", "invalid_summary_text", "invalid_summary_metadata", "empty_session_summary", "invalid_text", "invalid_tags",
     "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
 })
 _TRANSIENT_RUNNER_REASONS = frozenset({
@@ -120,6 +121,7 @@ def enqueue(
     data_dir: str | os.PathLike[str] | None = None,
     *,
     retry_failed: bool = False,
+    coalesce_seconds: float = 0,
     config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]] = load_config,
     clock: Callable[[], float] = time.time,
 ) -> dict[str, Any]:
@@ -132,6 +134,9 @@ def enqueue(
 
     if not isinstance(retry_failed, bool):
         raise ValueError("retry_failed must be true or false")
+    if (isinstance(coalesce_seconds, bool) or not isinstance(coalesce_seconds, (int, float))
+            or not math.isfinite(coalesce_seconds) or not 0 <= coalesce_seconds <= 5):
+        raise ValueError("coalesce_seconds must be between 0 and 5")
     workspace = project_key(project)
     eligible, reason, _, _ = _eligibility(workspace, data_dir, config_loader)
     if not eligible:
@@ -151,6 +156,9 @@ def enqueue(
             # caller's decision even though this service state has not itself
             # recorded a blocked failure yet.
             projects[workspace] = _new_record(now, retry_requested=retry_failed)
+            if coalesce_seconds and not retry_failed:
+                projects[workspace]["capture_due_at"] = now + coalesce_seconds
+                projects[workspace]["due_at"] = now + coalesce_seconds
             _write_state(base, state)
             return {"status": "queued", "project": workspace}
 
@@ -159,12 +167,24 @@ def enqueue(
 
         if retry_failed:
             _preserve_retry_target(record)
+            record["storage_attempts"] = 0
+        # Only automatic tool captures coalesce. Keep the first deadline,
+        # so an uninterrupted stream cannot postpone processing indefinitely.
+        # Ordinary writes and lifecycle boundaries clear the capture delay.
+        if not coalesce_seconds or retry_failed:
+            record["capture_due_at"] = None
+        elif not record["attempts"] and not record["retry_requested"] and not record["pending_retries"]:
+            if record["capture_due_at"] is None and (
+                    record["parked"] is not None or record["inflight_generation"] is not None):
+                record["capture_due_at"] = now + coalesce_seconds
         record["generation"] += 1
         record["fresh_work_due"] = True
         # Fresh captures must not turn a scheduled recovery into a retry
         # storm. Only an explicit recovery can override the durable backoff.
         if retry_failed or not record["attempts"]:
-            record["due_at"] = min(record["due_at"], now)
+            record["due_at"] = (record["capture_due_at"]
+                                if record["capture_due_at"] is not None
+                                else min(record["due_at"], now))
         record["parked"] = None
         # Keep an explicit retry request distinct from the queue's local
         # failure state.  This permits recovery of a Store job that failed
@@ -246,6 +266,80 @@ def resume_pending(
             "rejected_job_id": rejected_job_id, "retry_failed": False}
 
 
+def resume_storage_pending(
+    project: str | os.PathLike[str],
+    data_dir: str | os.PathLike[str] | None = None,
+    *,
+    config_loader: Callable[[str | os.PathLike[str] | None], Mapping[str, Any]] = load_config,
+    clock: Callable[[], float] = time.time,
+) -> dict[str, Any]:
+    """Explicitly resume fresh work after repairing a preclaim storage failure.
+
+    No durable failed job is retried. Existing exact retry permissions keep
+    their attempt selectors and deadlines, and running leases remain exclusive.
+    """
+    workspace = project_key(project)
+    eligible, reason, _, _ = _eligibility(workspace, data_dir, config_loader)
+    if not eligible:
+        return {"status": "disabled", "project": workspace, "reason": reason}
+    base = _base_dir(data_dir)
+    now = _checked_now(clock)
+    with _state_lock(base):
+        state = _load_state(base)
+        record = state["projects"].get(workspace)
+        if record is None or not record["blocked"] or record["last_code"] != "storage_failure":
+            return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
+        detail = safe_storage_failure_detail(record["last_failure_detail"])
+        if (record["last_failure_job"] is not None or detail is None
+                or detail["operation"] not in {"open", "reconcile", "claim", "lease_lookup"}
+                or record["retry_requested"]):
+            return {"status": "blocked", "project": workspace, "code": "preclaim_failure_unavailable"}
+        if record["inflight_generation"] is not None:
+            return {"status": "blocked", "project": workspace, "code": "work_inflight"}
+        if not _project_leases_clear(base, workspace, now):
+            return {"status": "blocked", "project": workspace, "code": "lease_unavailable"}
+        target_count = len(record["pending_retries"]) + int(record["retry_job_id"] is not None)
+        if target_count >= MAX_PROCESSOR_WORKERS:
+            return {"status": "blocked", "project": workspace, "code": "retry_capacity_unavailable"}
+        record["generation"] += 1
+        record["blocked"] = False
+        record["parked"] = None
+        record["capture_due_at"] = None
+        record["fresh_work_due"] = True
+        record["last_code"] = "invalid_response" if record["rejected_batches"] else None
+        if not target_count:
+            record["attempts"] = 0
+            record["storage_attempts"] = 0
+            record["due_at"] = now
+        _write_state(base, state)
+    return {"status": "queued", "project": workspace, "retry_failed": False}
+
+
+def _project_leases_clear(base: Path, project: str, now: float) -> bool:
+    """Fail closed on missing or ambiguous durable lease metadata."""
+    connection = None
+    try:
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        rows = connection.execute(
+            "SELECT lease_expires_at FROM observation_jobs WHERE project=? AND status='running'",
+            (project,),
+        ).fetchall()
+        for row in rows:
+            if not isinstance(row[0], str):
+                return False
+            expiry = datetime.fromisoformat(row[0].replace("Z", "+00:00"))
+            if expiry.tzinfo is None or expiry > datetime.fromtimestamp(now, timezone.utc):
+                return False
+        return True
+    except (OSError, sqlite3.Error, ServiceError, ValueError, OverflowError):
+        return False
+    finally:
+        if connection is not None:
+            connection.close()
+
+
 def recover_runner_failure(
     project: str | os.PathLike[str],
     data_dir: str | os.PathLike[str] | None = None,
@@ -289,15 +383,40 @@ def _recover_operational_failure(
     with _state_lock(base):
         state = _load_state(base)
         record = state["projects"].get(workspace)
-        if record is None or not record["blocked"]:
+        if record is None:
             return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
-        if record["last_code"] != code:
-            return {"status": "blocked", "project": workspace, "code": record["last_code"]}
         if record["inflight_generation"] is not None:
             return {"status": "blocked", "project": workspace, "code": "work_inflight"}
+        scheduled_target = None
+        if not record["blocked"]:
+            # Explicit recovery may accelerate one exact scheduled runner
+            # retry after its cause is repaired. Keep the attempt-bound claim
+            # and all other lanes' cooldowns; never widen to failed batches.
+            if (code == "runner_failure" and record["last_code"] in {None, code, "invalid_response"}
+                    and record["parked"] is None and not record["retry_requested"]):
+                targets = [_retry_target(record), *record["pending_retries"]]
+                matching = [target for target in targets if target["job_id"] == job_id
+                            and target["error_code"] == code]
+                if len(matching) == 1:
+                    snapshot = _runner_failure_snapshot(base, workspace, job_id)
+                    if (snapshot is not None
+                            and snapshot["attempt_count"] == matching[0]["attempt_count"]
+                            and snapshot["reason_code"] in _TRANSIENT_RUNNER_REASONS):
+                        scheduled_target = matching[0]
+            if scheduled_target is None:
+                return {"status": "blocked", "project": workspace, "code": "blocker_unavailable"}
+        elif record["last_code"] != code:
+            return {"status": "blocked", "project": workspace, "code": record["last_code"]}
         if not _persisted_failed_batch(base, workspace, job_id, code):
             return {"status": "blocked", "project": workspace, "code": "failed_claim_unavailable"}
-        _preserve_retry_target(record)
+        if scheduled_target is None:
+            _preserve_retry_target(record)
+        elif record["retry_job_id"] != job_id:
+            # Swap a selected pending retry into the active slot. Removing it
+            # first reserves space for the previous active permission.
+            record["pending_retries"] = [target for target in record["pending_retries"]
+                                         if target["job_id"] != job_id]
+            _preserve_retry_target(record)
         record["generation"] += 1
         record["blocked"] = False
         record["parked"] = None
@@ -307,8 +426,8 @@ def _recover_operational_failure(
         record["retry_requested"] = False
         record["retry_generation"] = None
         record["retry_job_id"] = job_id
-        record["retry_error_code"] = None
-        record["retry_attempt_count"] = None
+        record["retry_error_code"] = scheduled_target["error_code"] if scheduled_target else None
+        record["retry_attempt_count"] = scheduled_target["attempt_count"] if scheduled_target else None
         _write_state(base, state)
     return {"status": "queued", "project": workspace, "job_id": job_id, "retry_failed": False}
 
@@ -678,7 +797,7 @@ def run_service(
 
             # Indexing also runs when observation processing is idle: explicit
             # memory notes can need embedding even when no raw observations do.
-            failure_detail = None
+            failure_detail = _safe_failure_detail(result.get("failure_detail")) if processor_enabled else None
             try:
                 index_pending = (
                     _run_indexer(indexer, project, data_dir, retry_failed) if semantic_enabled else False
@@ -1112,6 +1231,8 @@ def _new_record(now: float, *, retry_requested: bool = False) -> dict[str, Any]:
     return {
         "generation": 1,
         "due_at": now,
+        "capture_due_at": None,
+        "storage_attempts": 0,
         "attempts": 0,
         "retry_requested": retry_requested,
         "retry_generation": 1 if retry_requested else None,
@@ -1260,6 +1381,10 @@ def _validate_record(raw: Any) -> dict[str, Any]:
         raise ServiceStateError("service state is unavailable")
     generation = raw.get("generation")
     attempts = raw.get("attempts")
+    storage_attempts = raw.get("storage_attempts", 0)
+    if (isinstance(storage_attempts, bool) or not isinstance(storage_attempts, int)
+            or not 0 <= storage_attempts <= 1_000_000_000):
+        raise ServiceStateError("service state is unavailable")
     retry_requested = raw.get("retry_requested")
     # Old queue records get one ordinary probe while an exact retry cools.
     fresh_work_due = raw.get("fresh_work_due", raw.get("retry_job_id") is not None)
@@ -1268,6 +1393,9 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     blocked = raw.get("blocked")
     parked = raw.get("parked")
     due_at = raw.get("due_at")
+    capture_due_at = raw.get("capture_due_at")
+    if capture_due_at is not None and not _is_timestamp(capture_due_at):
+        raise ServiceStateError("service state is unavailable")
     if (
         isinstance(generation, bool)
         or not isinstance(generation, int)
@@ -1339,7 +1467,9 @@ def _validate_record(raw: Any) -> dict[str, Any]:
     return {
         "generation": generation,
         "due_at": float(due_at),
+        "capture_due_at": None if capture_due_at is None else float(capture_due_at),
         "attempts": attempts,
+        "storage_attempts": storage_attempts,
         "retry_requested": retry_requested,
         "retry_generation": retry_generation,
         "retry_job_id": retry_job_id,
@@ -1724,6 +1854,7 @@ def _claim_due_project(
             _clear_retry_target(record)
             record["attempts"] = 0
         record["fresh_work_due"] = False
+        record["capture_due_at"] = None
         record["inflight_generation"] = record["generation"]
         record["inflight_until"] = now + processor_timeout + _INFLIGHT_GRACE_SECONDS
         state["cursor"] = chosen
@@ -1733,6 +1864,7 @@ def _claim_due_project(
             "project": chosen,
             "generation": record["generation"],
             "attempts": record["attempts"],
+            "storage_attempts": record["storage_attempts"],
             "retry_requested": record["retry_requested"],
             "retry_job_id": record["retry_job_id"],
             "retry_error_code": record["retry_error_code"],
@@ -1800,6 +1932,7 @@ def _clear_consumed_retry(record: dict[str, Any], generation: int) -> None:
 
 
 def _clear_retry_target(record: dict[str, Any]) -> None:
+    record["storage_attempts"] = 0
     record["retry_job_id"] = None
     record["retry_error_code"] = None
     record["retry_attempt_count"] = None
@@ -1866,17 +1999,13 @@ def _finish_success(
         record["inflight_generation"] = None
         record["inflight_until"] = None
         record["attempts"] = 0
+        record["storage_attempts"] = 0
         _clear_consumed_retry(record, generation)
         _clear_retry_target(record)
-        if record["rejected_batches"]:
-            counts = _rejection_counts(base, [project])
-            if counts is not None and not counts.get(project, 0):
-                record["rejected_batches"] = 0
-                record["last_rejected_job"] = None
-                record["last_rejected_reason"] = None
+        _refresh_rejection_count(base, project, record)
         record["last_code"] = "invalid_response" if record["rejected_batches"] else None
         if record["generation"] != generation:
-            record["due_at"] = now
+            record["due_at"] = max(now, record["capture_due_at"] or now)
         elif status == "idle" and not index_pending:
             if _pending_maintenance(base, project):
                 record["parked"] = None
@@ -2222,6 +2351,19 @@ def _rejection_counts(base: Path, projects: list[str]) -> dict[str, int] | None:
             connection.close()
 
 
+def _refresh_rejection_count(base: Path, project: str, record: dict[str, Any]) -> None:
+    """Reconcile repaired batches before deciding whether an idle queue parks."""
+    if not record["rejected_batches"]:
+        return
+    counts = _rejection_counts(base, [project])
+    if counts is None:
+        return
+    record["rejected_batches"] = counts.get(project, 0)
+    if not record["rejected_batches"]:
+        record["last_rejected_job"] = None
+        record["last_rejected_reason"] = None
+
+
 def _record_rejection(record: dict[str, Any], job_id: str, reason_code: Any = None) -> None:
     if record["last_rejected_job"] != job_id:
         record["rejected_batches"] += 1
@@ -2294,8 +2436,11 @@ def _finish_failure(
             return False
         record["inflight_generation"] = None
         record["inflight_until"] = None
-        _clear_consumed_retry(record, generation)
-        _clear_retry_target(record)
+        preclaim = (safe_code == "storage_failure" and rejected_job_id is None
+                    and _safe_preclaim_retry(failure_detail))
+        if not preclaim:
+            _clear_consumed_retry(record, generation)
+            _clear_retry_target(record)
         if rejected:
             _record_rejection(record, rejected_job_id, reason_code)
         record["last_code"] = safe_code
@@ -2306,6 +2451,12 @@ def _finish_failure(
         )
         record["last_failure_job"] = rejected_job_id if _valid_job_id(rejected_job_id) else None
         record["runner_recovery_checked"] = True
+        if preclaim:
+            retrying = automatic_retry_allowed and _schedule_preclaim_storage_retry(
+                record, record["last_failure_detail"], now, retry_backoff)
+            record["blocked"] = not retrying
+            _write_state(base, state)
+            return bool(retrying)
         if record["retry_requested"]:
             # An explicit retry arriving during this failed invocation has
             # not been consumed. Honour it before applying the old failure.
@@ -2319,6 +2470,10 @@ def _finish_failure(
             if automatic_retry_allowed and _schedule_runner_retry(record, runner_failure, now, retry_backoff):
                 _write_state(base, state)
                 return True
+        if (automatic_retry_allowed and safe_code == "storage_failure" and rejected_job_id is None
+                and _schedule_preclaim_storage_retry(record, record["last_failure_detail"], now, retry_backoff)):
+            _write_state(base, state)
+            return True
         if automatic_retry_allowed and safe_code in {"timeout", "lease_expired"}:
             record["attempts"] += 1
             retry_limit = (MAX_LEASE_RECOVERY_RETRIES if safe_code == "lease_expired"
@@ -2337,6 +2492,26 @@ def _finish_failure(
         record["due_at"] = now
         _write_state(base, state)
         return False
+
+
+def _safe_preclaim_retry(detail: Any) -> bool:
+    checked = safe_storage_failure_detail(detail)
+    return bool(checked is not None and checked["retry_safe"])
+
+
+def _schedule_preclaim_storage_retry(
+    record: dict[str, Any], detail: Any, now: float, retry_backoff: float,
+) -> bool:
+    if not _safe_preclaim_retry(detail):
+        return False
+    record["storage_attempts"] = record.get("storage_attempts", 0) + 1
+    if record["retry_job_id"] is None and not record["retry_requested"]:
+        record["attempts"] = record["storage_attempts"]
+    if record["storage_attempts"] > MAX_PRECLAIM_STORAGE_RETRIES:
+        return False
+    record["blocked"] = False
+    record["due_at"] = now + min(MAX_BACKOFF_SECONDS, retry_backoff * 2 ** (record["storage_attempts"] - 1))
+    return True
 
 
 def _validate_workers(value: Any) -> int:
@@ -2359,7 +2534,10 @@ def _validate_pending_retries(value: Any) -> list[dict[str, Any]]:
     result = []
     for target in value:
         if (not isinstance(target, Mapping)
-                or set(target) != {"job_id", "error_code", "attempt_count", "attempts", "due_at"}
+                or set(target) - {"storage_attempts"} != {"job_id", "error_code", "attempt_count", "attempts", "due_at"}
+                or isinstance(target.get("storage_attempts", 0), bool)
+                or not isinstance(target.get("storage_attempts", 0), int)
+                or not 0 <= target.get("storage_attempts", 0) <= 1_000_000_000
                 or (target["job_id"] is not None and not _valid_job_id(target["job_id"]))
                 or not _is_timestamp(target["due_at"])
                 or isinstance(target["attempts"], bool) or not isinstance(target["attempts"], int)
@@ -2378,7 +2556,8 @@ def _validate_pending_retries(value: Any) -> list[dict[str, Any]]:
 def _retry_target(record: Mapping[str, Any]) -> dict[str, Any]:
     return {"job_id": record["retry_job_id"], "error_code": record["retry_error_code"],
             "attempt_count": record["retry_attempt_count"], "attempts": record["attempts"],
-            "due_at": record["due_at"]}
+            "due_at": record["due_at"],
+            **({"storage_attempts": record["storage_attempts"]} if record.get("storage_attempts") else {})}
 
 
 def _preserve_retry_target(record: dict[str, Any]) -> None:
@@ -2398,13 +2577,19 @@ def _activate_retry(record: dict[str, Any], targets: list[dict[str, Any]]) -> No
             unique[candidate["job_id"]] = dict(candidate)
         else:
             newer = candidate if (candidate["attempt_count"] or 0) > (previous["attempt_count"] or 0) else previous
-            unique[candidate["job_id"]] = dict(newer, due_at=max(previous["due_at"], candidate["due_at"]))
+            merged = dict(newer, due_at=max(previous["due_at"], candidate["due_at"]))
+            if (candidate["attempt_count"], candidate["error_code"]) == (previous["attempt_count"], previous["error_code"]):
+                storage_attempts = max(previous.get("storage_attempts", 0), candidate.get("storage_attempts", 0))
+                if storage_attempts:
+                    merged["storage_attempts"] = storage_attempts
+            unique[candidate["job_id"]] = merged
     ordered = sorted(unique.values(), key=lambda target: target["due_at"])
     target, *remaining = ordered
     record["retry_job_id"] = target["job_id"]
     record["retry_error_code"] = target["error_code"]
     record["retry_attempt_count"] = target["attempt_count"]
     record["attempts"] = target["attempts"]
+    record["storage_attempts"] = target.get("storage_attempts", 0)
     record["due_at"] = target["due_at"]
     record["pending_retries"] = remaining
 
@@ -2456,9 +2641,13 @@ def _finish_cohort(
         record = state["projects"].get(project)
         if record is None or record["inflight_generation"] != generation:
             return {"status": "deferred"}
+        unconsumed_preclaim = any(code == "storage_failure" and result.get("job_id") is None
+                                  and _safe_preclaim_retry(result.get("failure_detail"))
+                                  for result, _, code, *_ in prepared)
         targets = list(record["pending_retries"])
         record["pending_retries"] = []
-        _clear_consumed_retry(record, generation)
+        if not unconsumed_preclaim:
+            _clear_consumed_retry(record, generation)
         _clear_retry_target(record)
         blocker = None
         blocker_failure = None
@@ -2497,7 +2686,8 @@ def _finish_cohort(
             latest_failure = {
                 "last_failure_at": now,
                 "last_failure_job": job_id if _valid_job_id(job_id) else None,
-                "last_failure_detail": _runner_failure_detail(snapshot["reason_code"] if snapshot else reason),
+                "last_failure_detail": (_safe_failure_detail(result.get("failure_detail")) if code == "storage_failure"
+                                        else _runner_failure_detail(snapshot["reason_code"] if snapshot else reason)),
                 "runner_recovery_checked": True,
             }
             # Per-job counters prevent another lane's attempt from consuming
@@ -2509,6 +2699,19 @@ def _finish_cohort(
                 if automatic and _schedule_runner_retry(candidate, snapshot, now, retry_backoff):
                     targets.append(_retry_target(candidate))
                     continue
+            if code == "storage_failure" and job_id is None and _safe_preclaim_retry(latest_failure["last_failure_detail"]):
+                candidate["retry_job_id"] = choice["retry_job_id"]
+                candidate["retry_error_code"] = choice["retry_error_code"]
+                candidate["retry_attempt_count"] = choice["retry_attempt_count"]
+                candidate["retry_requested"] = choice["retry_requested"]
+                candidate["attempts"] = choice["attempts"]
+                candidate["storage_attempts"] = choice.get("storage_attempts", 0)
+                if automatic and _schedule_preclaim_storage_retry(candidate, latest_failure["last_failure_detail"], now, retry_backoff):
+                    targets.append(_retry_target(candidate))
+                    continue
+                # Exhaustion blocks further dispatch but retains the exact
+                # unconsumed permission for a later explicit repair.
+                targets.append(_retry_target(candidate))
             if automatic and code in {"timeout", "lease_expired"}:
                 candidate["attempts"] += 1
                 limit = MAX_LEASE_RECOVERY_RETRIES if code == "lease_expired" else max_timeout_retries
@@ -2530,7 +2733,9 @@ def _finish_cohort(
             record.update(blocker_failure or latest_failure)
         record["inflight_generation"] = None
         record["inflight_until"] = None
-        record["blocked"] = blocker is not None and not record["retry_requested"]
+        record["blocked"] = blocker is not None and (not record["retry_requested"]
+                            or (unconsumed_preclaim and record["retry_generation"] <= generation))
+        _refresh_rejection_count(base, project, record)
         record["last_code"] = blocker or last_code or ("invalid_response" if record["rejected_batches"] else None)
         if targets:
             _activate_retry(record, targets)
@@ -2538,10 +2743,12 @@ def _finish_cohort(
                                         or record["generation"] != generation)
         else:
             record["fresh_work_due"] = False
+            record["storage_attempts"] = 0
             record["attempts"] = choice["attempts"] if retry_times and not progress else 0
             record["due_at"] = min(retry_times) if retry_times and not progress else now
         if record["generation"] != generation and (record["retry_requested"] or not targets):
-            record["due_at"] = now
+            record["due_at"] = (now if record["retry_requested"]
+                                else max(now, record["capture_due_at"] or now))
         if (not record["blocked"] and not targets and not record["retry_requested"]
                 and not progress and not retry_times and not index_pending and record["generation"] == generation):
             if _pending_maintenance(base, project):
@@ -2657,6 +2864,8 @@ def _safe_failure_detail(value: Any) -> dict[str, Any] | None:
         return _index_failure_detail(value)
     if value.get("stage") == "processor" and value.get("code") == "runner_failure":
         return _runner_failure_detail(value.get("reason_code"))
+    if value.get("stage") == "storage":
+        return safe_storage_failure_detail(value)
     return None
 
 

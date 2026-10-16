@@ -395,8 +395,7 @@ class StoreTests(unittest.TestCase):
         self.assertGreater(batch["input_limit"], 24_000)
         source = batch["sources"][0]
         self.assertEqual(entry["id"], source["id"])
-        self.assertIn("middle-evidence-", source["tool_io"]["tool_response"])
-        self.assertIn(response[-1_000:], source["tool_io"]["tool_response"])
+        self.assertEqual(response, source["tool_io"]["tool_response"]["text"])
 
     def test_consolidation_keeps_source_evidence_but_hides_it_by_default(self) -> None:
         source_a = self.store.remember(self.project_a, "First observation", "alpha source evidence one")

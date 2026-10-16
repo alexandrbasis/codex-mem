@@ -189,7 +189,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
             updates[key] = _positive(value, field=key, maximum=4)
         elif key in {"excluded_projects", "included_projects"}:
             updates[key] = _parse_excluded_projects(value)
-        elif key in {"jev_filter_projects", "jev_quality_projects", "jev_retrieval_projects"}:
+        elif key in {"jev_filter_projects", "jev_quality_projects", "jev_retrieval_projects", "jev_excluded_projects"}:
             updates[key] = _parse_string_array(value, field=key)
         elif key in {"skip_tools", "tool_skip_list"}:
             updates[key] = _parse_string_array(value, field=key)
@@ -210,7 +210,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["processor_enabled"] = namespace.processor_enabled
     if getattr(namespace, "processor_workers", None) is not None:
         updates["processor_workers"] = namespace.processor_workers
-    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects", "jev_quality_enabled", "jev_quality_projects", "jev_retrieval_enabled", "jev_retrieval_projects"):
+    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects", "jev_quality_enabled", "jev_quality_projects", "jev_retrieval_enabled", "jev_retrieval_projects", "jev_excluded_projects"):
         if getattr(namespace, name, None) is not None:
             updates[name] = getattr(namespace, name)
     if namespace.context_chars is not None:
@@ -392,6 +392,9 @@ def _build_parser() -> _ArgumentParser:
         "recover-storage-failure", help="Retry one inspected storage failure after repairing its cause")
     recover_storage.add_argument("--project", required=True)
     recover_storage.add_argument("--job-id", required=True)
+    resume_storage = service_commands.add_parser(
+        "resume-storage-pending", help="Resume fresh work after repairing a preclaim storage failure")
+    resume_storage.add_argument("--project", required=True)
 
     usage = commands.add_parser("usage", help="Collect token usage or estimate costs with explicit coverage")
     usage_commands = usage.add_subparsers(dest="usage_command", required=True)
@@ -503,6 +506,8 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--jev-retrieval-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--jev-retrieval-project", dest="jev_retrieval_projects", action="append",
                         help="Absolute project root eligible for query reranking; independent of capture screening scope")
+    config.add_argument("--jev-exclude-project", dest="jev_excluded_projects", action="append",
+                        help="Disable all Jev judgments for this root and descendants without disabling capture")
     config.add_argument("--context-chars", type=lambda value: _positive(value, field="context_chars", maximum=6_000))
     config.add_argument("--exclude-project", dest="excluded_projects", action="append")
     config.add_argument("--include-project", dest="included_projects", action="append")
@@ -742,7 +747,7 @@ def main(args: Sequence[str] | None = None) -> int:
         if namespace.command == "service":
             from .service import (
                 recover_expired, recover_runner_failure, recover_storage_failure,
-                resume_pending, run_service, service_status, start_service, stop_service,
+                resume_pending, resume_storage_pending, run_service, service_status, start_service, stop_service,
             )
             from .integration import enqueue_project, index_project
             action = namespace.service_command
@@ -766,6 +771,8 @@ def main(args: Sequence[str] | None = None) -> int:
             elif action == "recover-storage-failure":
                 value = recover_storage_failure(_absolute_project(namespace.project), namespace.data_dir,
                                                 job_id=namespace.job_id)
+            elif action == "resume-storage-pending":
+                value = resume_storage_pending(_absolute_project(namespace.project), namespace.data_dir)
             elif action == "recover-expired":
                 value = recover_expired(_absolute_project(namespace.project), namespace.data_dir,
                                         job_id=namespace.job_id)

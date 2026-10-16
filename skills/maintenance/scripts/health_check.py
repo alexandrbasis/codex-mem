@@ -273,6 +273,12 @@ def _observations(connection: sqlite3.Connection, project: str, now: float) -> d
             JOIN observation_jobs AS jobs ON jobs.id = links.job_id
             WHERE links.source_id = e.id AND jobs.project = e.project AND jobs.status = 'failed'
           )
+          AND NOT EXISTS (
+            SELECT 1 FROM observation_job_sources AS done_links
+            JOIN observation_jobs AS done ON done.id = done_links.job_id
+            WHERE done_links.source_id = e.id AND done.project = e.project
+              AND done.status IN ('processed', 'skipped')
+          )
         """,
         (project,),
     )
@@ -357,6 +363,45 @@ def _observation_queue(
             reason = _safe_atom(row["reason_code"], maximum=64)
             failure_reasons.append({"reason": reason or "unknown", "jobs": int(row["count"] or 0)})
 
+    resolution = _one(
+        connection,
+        """WITH source_state AS (
+            SELECT j.id AS job_id, links.source_id,
+                CASE WHEN links.source_id IS NULL OR e.id IS NULL THEN 1 ELSE 0 END AS missing,
+                CASE WHEN e.id IS NOT NULL AND e.superseded_by IS NULL
+                     AND NOT EXISTS (
+                       SELECT 1 FROM observation_job_sources done_links
+                       JOIN observation_jobs done ON done.id=done_links.job_id
+                       WHERE done_links.source_id=e.id AND done.project=j.project
+                         AND done.status IN ('processed','skipped')
+                     ) THEN 1 ELSE 0 END AS unresolved
+            FROM observation_jobs j
+            LEFT JOIN observation_job_sources links ON links.job_id=j.id
+            LEFT JOIN entries e ON e.id=links.source_id AND e.project=j.project
+            WHERE j.project=? AND j.status='failed'
+        ), job_state AS (
+            SELECT job_id, MAX(unresolved) AS unresolved, MAX(missing) AS missing,
+                   MAX(source_id IS NOT NULL) AS has_links
+            FROM source_state GROUP BY job_id
+        ) SELECT
+            COALESCE(SUM(unresolved),0) AS unresolved_jobs,
+            COALESCE(SUM(unresolved=0 AND missing=0),0) AS historical_jobs,
+            COALESCE(SUM(unresolved=0 AND missing=1),0) AS unknown_jobs,
+            COALESCE(SUM(has_links=0),0) AS missing_links,
+            COALESCE(SUM(has_links=1 AND missing=1),0) AS missing_sources,
+            (SELECT COUNT(DISTINCT source_id) FROM source_state WHERE unresolved=1) AS unresolved_sources
+          FROM job_state""",
+        (project,),
+    )
+    unresolved_failed_jobs = int(_value(resolution, "unresolved_jobs", 0) or 0)
+    unknown_failed_jobs = int(_value(resolution, "unknown_jobs", 0) or 0)
+    resolution_gaps = [
+        {"reason": reason, "jobs": int(_value(resolution, column, 0) or 0)}
+        for reason, column in (("missing_source_links", "missing_links"),
+                               ("missing_source_records", "missing_sources"))
+        if int(_value(resolution, column, 0) or 0)
+    ]
+
     stale_running_rows = _rows(
         connection,
         """SELECT lease_expires_at FROM observation_jobs
@@ -383,8 +428,10 @@ def _observation_queue(
         status = "stale"
     elif counts["running"]:
         status = "in_progress"
-    elif counts["failed"]:
+    elif unresolved_failed_jobs:
         status = "quarantined"
+    elif unknown_failed_jobs:
+        status = "unavailable"
     elif counts["processed"] or counts["skipped"]:
         status = "healthy"
     result: dict[str, Any] = {
@@ -392,7 +439,12 @@ def _observation_queue(
         "counts": {**counts, "invalid": invalid},
         "pending_jobs": 0,
         "pending_sources": pending_observations,
-        "quarantined_jobs": counts["failed"],
+        "quarantined_jobs": unresolved_failed_jobs,
+        "unresolved_failed_jobs": unresolved_failed_jobs,
+        "historical_failed_jobs": int(_value(resolution, "historical_jobs", 0) or 0),
+        "unknown_failed_jobs": unknown_failed_jobs,
+        "unresolved_failed_sources": int(_value(resolution, "unresolved_sources", 0) or 0),
+        "failure_resolution_gaps": resolution_gaps,
         "failure_codes": [
             {"code": code, "jobs": count}
             for code, count in sorted(failure_codes.items())[:MAX_FAILURE_CODES]

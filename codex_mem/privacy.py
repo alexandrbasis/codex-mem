@@ -9,7 +9,7 @@ snippets, URLs, and explicitly private blocks.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 
 REDACTED = "[REDACTED]"
@@ -189,3 +189,50 @@ def redact_tags(tags: Iterable[str]) -> list[str]:
             result.append(cleaned)
             seen.add(cleaned)
     return result
+
+
+# Search previews are a discovery surface. Contact evidence remains available
+# through an explicit record read, but is unnecessary in routine topic results.
+_SEARCH_EMAIL_RE = re.compile(r"(?i)(?<![\w.+-])[\w.+-]+@[\w.-]+\.[a-z]{2,}(?![\w.-])")
+_SEARCH_PHONE_RE = re.compile(r"(?<![\w])\+\d[\d ()-]{7,}\d(?!\w)")
+_SEARCH_CYRILLIC_FULL_NAME_RE = re.compile(
+    r"(?<![А-Яа-яЁё])(?:[А-ЯЁ][а-яё]{2,}[ \t]+){1,2}[А-ЯЁ][а-яё]{2,}(?![А-Яа-яЁё])")
+_SEARCH_PERSON_LABEL_RE = re.compile(
+    r"(?im)(\b(?:full[_ ]?name|display[_ ]?name|ФИО|полное имя|"
+    r"telegram(?:[_ ]user)?[_ ]?id|chat[_ ]?id|user[_ ]?id)\s*[:=]\s*)"
+    r"([^\n,;]+)")
+_SEARCH_PERSON_FIELDS = frozenset((
+    "full_name", "display_name", "first_name", "last_name", "phone",
+    "phone_number", "email", "email_address", "telegram_id", "chat_id",
+    "user_id", "contact_name", "participant_name", "candidate_name",
+))
+_SEARCH_IDENTITY_FIELDS = frozenset((
+    "id", "project", "session_id", "turn_id", "source_ids", "source_id",
+    "source_path", "event_id", "later_summary_id", "later_context_id",
+    "superseded_by", "files_read", "files_modified",
+))
+
+
+def redact_search_text(value: str) -> str:
+    """Hide high-confidence contact shapes in search, without changing storage."""
+    text = redact_text(value)
+    text = _SEARCH_EMAIL_RE.sub("[CONTACT]", text)
+    text = _SEARCH_PHONE_RE.sub("[CONTACT]", text)
+    text = _SEARCH_PERSON_LABEL_RE.sub(r"\1[PERSONAL]", text)
+    return _SEARCH_CYRILLIC_FULL_NAME_RE.sub("[PERSONAL]", text)
+
+
+def redact_search_value(value: object, *, field: str = "") -> object:
+    """Copy presentation data, preserving record identity and evidence lineage."""
+    if field in _SEARCH_IDENTITY_FIELDS:
+        return value
+    if field.casefold() in _SEARCH_PERSON_FIELDS:
+        return "[PERSONAL]"
+    if isinstance(value, str):
+        return redact_search_text(value)
+    if isinstance(value, Mapping):
+        return {key: redact_search_value(item, field=str(key))
+                for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact_search_value(item) for item in value]
+    return value

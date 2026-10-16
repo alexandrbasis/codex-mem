@@ -98,6 +98,22 @@ class HookTests(unittest.TestCase):
         self.assertEqual(1, service_status(self.data_dir)["queued_projects"])
         self.start_service_mock.assert_called_once_with(self.data_dir.resolve(), startup_timeout=0)
 
+    def test_queue_receipt_does_not_claim_failed_or_disabled_wake(self) -> None:
+        for receipt in (
+            {"status": "failed", "code": "queue_unavailable"},
+            {"status": "disabled", "reason": "not_selected"},
+            {"status": "blocked", "code": "runner_failure"},
+        ):
+            with self.subTest(receipt=receipt), mock.patch(
+                "codex_mem.integration.after_write", return_value=receipt,
+            ), mock.patch("codex_mem.hooks.trace_event") as trace:
+                handle_hook(self.payload("PostToolUse", tool_name="Bash", tool_use_id="receipt",
+                    tool_input={"command": "pytest"}, tool_response={"output": "tests passed"}), self.store)
+                results = [call.kwargs for call in trace.call_args_list if call.args == ("queue_result",)]
+                self.assertEqual(1, len(results))
+                self.assertFalse(results[0]["queued"])
+                self.assertEqual(receipt["status"], results[0]["status"])
+
     def test_queue_failure_does_not_lose_committed_tool_capture(self) -> None:
         with Store(self.data_dir) as store, mock.patch("codex_mem.integration.after_write", side_effect=RuntimeError("queue unavailable")):
             response = handle_hook(self.payload("PostToolUse", tool_name="Bash", tool_use_id="queue-failed",

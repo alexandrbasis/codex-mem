@@ -316,6 +316,10 @@ def _handle_hook(
             if tool_capture is None:
                 return response
         if event == "Stop" and not _stop_capture_candidate(payload, config):
+            # A valid empty Stop still ends the capture burst. It must release
+            # already committed tool evidence without inventing a final answer.
+            if config.get("capture_enabled") and payload.get("stop_hook_active") is not True:
+                _wake_capture_queue(project, active_data_dir)
             return response
         if active_store is None:
             if Store is None:
@@ -942,19 +946,33 @@ def _remember_safely(
     # Commit evidence first. A long or interrupted turn must not depend on a
     # later Stop event to wake the durable queue. Scope/configuration gates and
     # detached startup remain owned by integration; never run the model here.
-    if source == "hook:Stop" or source.startswith("hook:PostToolUse"):
+    if source in {"hook:Stop", "hook:PreCompact"} or source.startswith("hook:PostToolUse"):
         data_dir = _store_data_dir(store)
         if data_dir is not None:
-            try:
-                from .integration import after_write
-                with trace_stage("queue_wake"):
-                    after_write(project, data_dir, wait_for_start=False)
-                trace_event("queue_result", queued=True)
-            except Exception as exc:
-                trace_error("queue_wake_failed", exc)
-                _stderr("codex-mem hook: queue unavailable")
+            _wake_capture_queue(project, data_dir,
+                                coalesce_seconds=5 if source.startswith("hook:PostToolUse") else 0)
         else:
             trace_event("queue_skipped", reason="store_data_dir_unavailable")
+
+
+def _wake_capture_queue(project: str, data_dir: str | os.PathLike[str] | None, *, coalesce_seconds: int = 0) -> None:
+    try:
+        from .integration import after_write
+        with trace_stage("queue_wake"):
+            wake_kwargs = {"wait_for_start": False}
+            if coalesce_seconds:
+                wake_kwargs["coalesce_seconds"] = coalesce_seconds
+            receipt = after_write(project, data_dir, **wake_kwargs)
+        if not isinstance(receipt, Mapping):
+            receipt = {"status": "failed", "code": "invalid_queue_receipt"}
+        status = receipt.get("status", "failed")
+        trace_event("queue_result", queued=status == "queued", status=status,
+                    code=receipt.get("code"), reason=receipt.get("reason"))
+        if status == "failed":
+            _stderr("codex-mem hook: queue unavailable")
+    except Exception as exc:
+        trace_error("queue_wake_failed", exc)
+        _stderr("codex-mem hook: queue unavailable")
 
 
 def _project_for(payload: Mapping[str, Any]) -> str | None:

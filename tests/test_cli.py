@@ -76,6 +76,15 @@ class CLITests(unittest.TestCase):
         self.assertEqual("blocked", result["status"])
         self.assertFalse((self.data_dir / "service-state.json").exists())
 
+    def test_resume_storage_pending_rejects_unverified_block_without_creating_state(self) -> None:
+        self._run("config", "--data-dir", str(self.data_dir), "--capture-scope", "all")
+        result = self._run(
+            "service", "resume-storage-pending", "--data-dir", str(self.data_dir),
+            "--project", str(self.project), expected=2,
+        )
+        self.assertEqual("blocked", result["status"])
+        self.assertFalse((self.data_dir / "service-state.json").exists())
+
     def test_anchor_timeline_and_preview_detail(self) -> None:
         with Store(self.data_dir) as store:
             anchor = store.remember(self.project, "Rollback", "Fixture checked rollback.",

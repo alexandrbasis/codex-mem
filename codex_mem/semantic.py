@@ -21,6 +21,7 @@ import importlib.util
 import math
 import os
 from pathlib import Path
+import re
 import tempfile
 import threading
 from typing import Any, Protocol, runtime_checkable
@@ -386,7 +387,8 @@ def search(
     checked_intent = _checked_intent(intent)
     # Current handoffs can rank below many repeated details. Keep resume's
     # candidate coverage independent of the requested final preview count.
-    retrieval_limit = MAX_SEARCH_LIMIT if checked_intent == "resume" else checked_limit
+    retrieval_limit = MAX_SEARCH_LIMIT if checked_intent == "resume" else min(
+        MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
     from .query import normalize_retrieval_query
     checked_query = _checked_query(normalize_retrieval_query(_checked_query(query)))
     checked_kinds = _checked_filter_values(kinds, "kinds") if kinds is not None else None
@@ -406,12 +408,16 @@ def search(
     ) -> dict[str, Any]:
         added_candidates = 0
         linked_handoffs = 0
+        recent_candidates = 0
         jev_receipt = None
+        results, quality_added = _quality_candidates(
+            store, workspace, checked_query, results, checked_kinds,
+            checked_types, checked_concepts, checked_files)
         if checked_intent == "resume":
             # General relevance windows can be filled entirely by repeated UI
             # details. Query priority categories separately before the final
             # cap, while keeping project/activity and caller filters in Store.
-            candidates = list(results[:retrieval_limit])
+            candidates = list(results[:MAX_SEARCH_LIMIT * 2])
             seen = {record["id"] for record in candidates}
             for record in _resume_candidates(
                 store, workspace, checked_query, checked_limit, checked_kinds,
@@ -423,6 +429,15 @@ def search(
                         record = dict(record)
                         record["lexical_score"] = record.pop("score")
                     candidates.append(record)
+                    added_candidates += 1
+            for record in _resume_recent_candidates(
+                store, workspace, checked_query, checked_kinds,
+                checked_types, checked_concepts, checked_files,
+            ):
+                if record["id"] not in seen:
+                    seen.add(record["id"])
+                    candidates.append(record)
+                    recent_candidates += 1
                     added_candidates += 1
             candidates = _resume_records(store, workspace, candidates)
             linked = _resume_linked_handoffs(
@@ -450,6 +465,11 @@ def search(
                 kinds=checked_kinds, types=checked_types, concepts=checked_concepts,
                 files=checked_files, settings=settings, evaluator=jev_evaluator, route="search")
             results = results[:checked_limit]
+        else:
+            from .retrieval import retrieval_query_hints, resume_answer_score
+            if retrieval_query_hints(checked_query):
+                results = sorted(results, key=lambda row: resume_answer_score(row, checked_query), reverse=True)
+            results = results[:checked_limit]
         if jev_receipt is not None:
             from .store import _preview
             previews = []
@@ -459,7 +479,23 @@ def search(
                     record["preview"] = _preview(record.pop("body"))
                 previews.append(record)
             results = previews
+        if isinstance(store, Store) and results:
+            from .evidence import expand_source_evidence
+            from .privacy import redact_search_text
+            full = {row["id"]: row for row in store.get(workspace, [row["id"] for row in results])}
+            expanded = expand_source_evidence(
+                [dict(full.get(row["id"], {}), **row) for row in results],
+                checked_query, workspace,
+                load_records=lambda ids: store.get(workspace, ids),
+                load_capture=lambda entry_id: store.get_source_capture(workspace, entry_id),
+                redact=redact_search_text)
+            # Full evidence is opt-in through memory_get; search carries only
+            # bounded source excerpts plus the existing preview contract.
+            results = [{key: value for key, value in row.items() if key != "body"} for row in expanded]
+        if quality_added and used_mode == "semantic":
+            used_mode = "hybrid"
         result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
+        result["quality_added_candidates"] = quality_added
         if jev_receipt is not None:
             result["jev_retrieval"] = jev_receipt
         if checked_intent == "resume":
@@ -471,9 +507,11 @@ def search(
                 else "query_relevance_with_latest_session_handoffs"
             )
             result.update(
-                resume_expansion_mode="lexical_and_linked_handoffs" if linked_handoffs else "lexical",
+                resume_expansion_mode=("lexical_and_recent_curated" if recent_candidates else
+                    "lexical_and_linked_handoffs" if linked_handoffs else "lexical"),
                 resume_added_candidates=added_candidates,
                 resume_linked_handoffs=linked_handoffs,
+                resume_recent_candidates=recent_candidates,
                 resume_selection=selection,
             )
         return result
@@ -875,20 +913,38 @@ def _resume_selection(
     share one lane. Historical requests retain intermediate records and caveats.
     """
     from .retrieval import (
-        current_state_scope, defer_prior_status, historical_query, prefer_topic_followups, resume_duplicate_key,
-        state_scope_matches,
+        continuation_state_matches, continuation_state_plan, current_state_scope,
+        defer_prior_status, historical_query, installation_receipt, prefer_topic_followups, resume_duplicate_key,
+        state_scope_matches, resume_subject_plan, resume_subject_matches, resume_answer_score,
+        retrieval_query_hints, current_installation_question,
     )
     if historical_query(query):
         return list(records[:limit])
     state_scope = current_state_scope(query, project)
-    if state_scope == "release":
-        scoped = [record for record in records if state_scope_matches(record, state_scope)]
-        # Older in-process adapters may return ID-only previews. Without topic
-        # evidence retain their relevance order rather than inventing scope.
-        if scoped:
-            records = scoped
-        else:
-            state_scope = None
+    if not state_scope and current_installation_question(query, project):
+        state_scope = "installation"
+    if state_scope and state_scope != "project":
+        scoped = [record for record in records if state_scope_matches(record, state_scope, project)]
+        # Full records must retain the requested subject. ID-only adapters
+        # remain eligible because they already applied their query boundary.
+        records = scoped
+    if not state_scope:
+        subject = resume_subject_plan(query, project)
+        if subject and subject["names"]:
+            # Store already enforces exact identifiers/versions. Named topics
+            # also need concrete evidence before vector neighbors can answer.
+            named = dict(subject, identifiers=[], versions=[])
+            # The owning project can be a location qualifier, as in
+            # "Redis installed in Atlas". Its name cannot satisfy the
+            # explicitly requested foreign dependency by itself.
+            owner_words = set(re.split(r"[-_]", Path(project).name.casefold())) if project else set()
+            foreign_names = [name for name in named["names"] if name not in owner_words]
+            if foreign_names:
+                named["names"] = foreign_names
+            records = [record for record in records if resume_subject_matches(record, named)]
+        if (retrieval_query_hints(query) or
+                subject and any(subject.values()) and any(resume_subject_matches(record, subject) for record in records)):
+            records = sorted(records, key=lambda record: resume_answer_score(record, query), reverse=True)
     summary_candidates: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
     for record in sorted(records, key=resume_priority):
@@ -920,10 +976,28 @@ def _resume_selection(
         for lane in (summaries, findings):
             if index < len(lane):
                 selected.append(lane[index])
+    if state_scope in {"installation", "version"}:
+        # An installed-version question needs the newest matching receipt.
+        # A historical summary must not outrank a newer installation finding
+        # merely because the generic resume policy reserves a summary lane.
+        selected.sort(key=_resume_event_time, reverse=True)
+        if state_scope == "installation":
+            selected.sort(key=lambda record: not installation_receipt(record))
     if state_scope:
         selected = defer_prior_status(selected)
+    continuation_plan = continuation_state_plan(query)
+    if continuation_plan:
+        # Promote only handoffs that contain the named topic and outcome.
+        # Newer notes about another topic (or just SDK docs) keep their rank.
+        matched = [record for record in selected if resume_priority(record) == 0
+                   and continuation_state_matches(record, continuation_plan)]
+        matched.sort(key=_resume_event_time, reverse=True)
+        matched_ids = {record["id"] for record in matched}
+        selected = matched + [record for record in selected if record["id"] not in matched_ids]
     # An inferred relationship must never push an independent open obligation
     # out of the caller's bounded view. Reorder only the already selected set.
+    if not state_scope and retrieval_query_hints(query):
+        selected.sort(key=lambda row: resume_answer_score(row, query), reverse=True)
     return prefer_topic_followups(selected[:limit])
 
 
@@ -977,6 +1051,93 @@ def _resume_event_time(record: Mapping[str, Any]) -> datetime:
     return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
 
 
+def _resume_recent_candidates(
+    store: Store, project: str, query: str,
+    kinds: Sequence[str] | None, types: Sequence[str] | None,
+    concepts: Sequence[str] | None, files: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Cover current state beyond a full or empty relevance window.
+
+    The existing storage boundary supplies at most twelve active curated
+    records, balancing source-dated handoffs and findings. Only broad current
+    state requests qualify; topical/history queries and explicit filters keep
+    their original candidate boundary. Release questions retain release scope.
+    """
+    from .retrieval import current_state_scope, state_scope_matches
+    from .store import _preview
+    scope = current_state_scope(query, project)
+    read = getattr(store, "retrieval_candidates", None)
+    if not scope or not callable(read) or any(value is not None for value in (kinds, types, concepts, files)):
+        return []
+    records = []
+    for record in _preview_list(read(project, query=query)):
+        if (record.get("project") != project or record.get("superseded_by")
+            or str(record.get("source") or "").startswith("hook:")
+            or not state_scope_matches(record, scope, project)):
+            continue
+        record = dict(record)
+        body = record.pop("body", None)
+        if isinstance(body, str):
+            record["preview"] = _preview(body)
+        records.append(record)
+    return records
+
+
+def _quality_candidates(
+    store: Store, project: str, query: str, records: Sequence[dict[str, Any]],
+    kinds: Sequence[str] | None, types: Sequence[str] | None,
+    concepts: Sequence[str] | None, files: Sequence[str] | None,
+) -> tuple[list[dict[str, Any]], int]:
+    """Bounded bilingual recall and independently evidenced pre-issue links."""
+    from .retrieval import (historical_query, retrieval_query_hints,
+                            resume_subject_plan, resume_subject_matches,
+                            issue_discovery_association)
+    if historical_query(query):
+        return list(records), 0
+    candidates = list(records)
+    seen = {row["id"] for row in candidates}
+    subject = resume_subject_plan(query, project)
+    anchors = [*(subject or {}).get("identifiers", []), *(subject or {}).get("versions", [])]
+    exact_subject = dict(subject, names=[]) if subject else None
+    if anchors:
+        # A question may ask about a facet not repeated in the task-creation
+        # note. Resolve the exact anchors before expanding proved discovery.
+        for row in _lexical_results(store, project, " ".join(anchors), 40,
+                                    kinds, types, concepts, files):
+            if row["id"] not in seen and resume_subject_matches(row, exact_subject):
+                seen.add(row["id"])
+                candidates.append(row)
+    for hint in retrieval_query_hints(query):
+        probe = " ".join([*anchors, hint])
+        for row in _lexical_results(store, project, probe, 20, kinds, types, concepts, files):
+            if (row["id"] in seen or len(candidates) >= MAX_SEARCH_LIMIT * 2
+                    or subject and not resume_subject_matches(row, subject)):
+                continue
+            seen.add(row["id"])
+            candidates.append(row)
+    read = getattr(store, "retrieval_session_peers", None)
+    if callable(read) and subject and subject.get("identifiers") and not any(
+            item is not None for item in (kinds, types, concepts, files)):
+        sessions: dict[str, list[dict[str, Any]]] = {}
+        for origin in candidates:
+            session = origin.get("session_id")
+            if isinstance(session, str) and resume_subject_matches(origin, exact_subject):
+                sessions.setdefault(session, []).append(origin)
+        for session, origins in list(sessions.items())[:4]:
+            for row in read(project, session, limit=64):
+                if row["id"] in seen:
+                    continue
+                origin = next((item for item in origins if issue_discovery_association(item, row, query)), None)
+                if origin is not None:
+                    row = dict(row, issue_association={
+                        "origin_id": origin["id"], "basis": "same_session_shared_task_file",
+                        "query_identifiers": subject["identifiers"],
+                        "inferred": True, "verification": "not_assessed"})
+                    seen.add(row["id"])
+                    candidates.append(row)
+    return candidates, len(candidates) - len(records)
+
+
 def _resume_linked_handoffs(
     store: Store, project: str, query: str, records: Sequence[dict[str, Any]],
     kinds: Sequence[str] | None, types: Sequence[str] | None,
@@ -986,18 +1147,36 @@ def _resume_linked_handoffs(
 
     These are subsequent handoffs from an already-matched session, never an
     arbitrary project-wide latest-record expansion. Explicit filters and
-    topic/history questions opt out. No row is superseded or claimed resolved.
+    history questions opt out. Topical disablement followups must match both
+    their named subject and outcome. No row is superseded or claimed resolved.
     """
-    from .retrieval import current_state_scope, state_scope_matches
+    from .retrieval import (continuation_state_matches, continuation_state_plan,
+                            current_state_scope, state_scope_matches,
+                            linked_handoff_matches, historical_query, resume_subject_plan)
     from .store import _preview
     scope = current_state_scope(query, project)
     read = getattr(store, "get", None)
-    if not scope or not callable(read) or any(value is not None for value in (kinds, types, concepts, files)):
+    continuation_plan = continuation_state_plan(query)
+    subject = resume_subject_plan(query, project)
+    if historical_query(query) or subject and (subject["identifiers"] or subject["versions"]):
+        return []
+    if not callable(read) or any(value is not None for value in (kinds, types, concepts, files)):
         return []
     present = {record["id"] for record in records}
     origins: dict[str, list[dict[str, Any]]] = {}
     for record in records:
         later = record.get("later_summary_id")
+        if not scope and not continuation_plan:
+            from .retrieval import (resume_subject_matches, prompt_query_plan,
+                                    prompt_match_score, resume_evidence_text)
+            if subject and any(subject.values()):
+                if not resume_subject_matches(record, subject):
+                    continue
+            else:
+                topical = prompt_query_plan(query)
+                if not topical or not prompt_match_score(
+                        resume_evidence_text(record), dict(topical, minimum=1)):
+                    continue
         if isinstance(later, str) and later not in present and record.get("session_id"):
             origins.setdefault(later, []).append(record)
     ids = list(origins)[:MAX_SEARCH_LIMIT]
@@ -1011,7 +1190,10 @@ def _resume_linked_handoffs(
             or str(record.get("source") or "").startswith("hook:")
             or not (record.get("kind") == "session_summary" or record.get("session_summary"))
             or not any(record.get("session_id") == origin.get("session_id") for origin in origins[entry_id])
-            or not state_scope_matches(record, scope)):
+            or not (state_scope_matches(record, scope, project) if scope else
+                    continuation_state_matches(record, continuation_plan) if continuation_plan else
+                    any(linked_handoff_matches(origin, record, query, project)
+                        for origin in origins[entry_id]))):
             continue
         record = dict(record)
         body = record.pop("body", None)
@@ -1373,6 +1555,27 @@ def _resume_candidates(
         scopes.append((kinds, decision_types))
     results: list[dict[str, Any]] = []
     seen: set[str] = set()
+    from .retrieval import historical_query, resume_subject_plan, resume_subject_matches
+    subject = resume_subject_plan(query, project)
+    if subject and not historical_query(query):
+        # Answer prose can use another language than the question. Retrieve a
+        # bounded exact subject window before scoring answer facets locally.
+        # This preserves every literal constraint and every caller filter.
+        anchors = [*subject["identifiers"], *subject["versions"]]
+        anchor_queries = [" ".join(anchors + [name]) for name in subject["names"]]
+        if not anchor_queries and anchors:
+            anchor_queries = [" ".join(anchors)]
+        focused_queries = []
+        if re.search(r"disabl|отключ", query, re.IGNORECASE):
+            focused_queries = [anchor_query + " disabled" for anchor_query in anchor_queries]
+        for anchor_query in (focused_queries + anchor_queries)[:16]:
+            for record in _lexical_results(
+                store, project, anchor_query, MAX_SEARCH_LIMIT, kinds, types, concepts, files
+            ):
+                if (len(results) < MAX_SEARCH_LIMIT and record["id"] not in seen
+                        and resume_subject_matches(record, subject)):
+                    seen.add(record["id"])
+                    results.append(record)
     for scoped_kinds, scoped_types in scopes:
         for record in _lexical_results(
             store, project, query, limit, scoped_kinds, scoped_types, concepts, files

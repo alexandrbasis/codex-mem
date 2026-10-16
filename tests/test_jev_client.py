@@ -235,6 +235,7 @@ class JevClientTests(unittest.TestCase):
         self.assertTrue(client.enabled(settings, "jev_quality_enabled", self.project + "/child"))
         self.assertFalse(client.enabled(settings, "jev_quality_enabled", self.project + "-neighbor"))
         self.assertFalse(client.enabled(settings, "jev_retrieval_enabled", self.project))
+
         settings["jev_quality_projects"] = [self.project + "/child"]
         self.assertFalse(client.enabled(settings, "jev_quality_enabled", self.project))
         self.assertTrue(client.enabled(settings, "jev_quality_enabled", self.project + "/child"))
@@ -244,6 +245,17 @@ class JevClientTests(unittest.TestCase):
         settings.update(jev_retrieval_enabled=True, excluded_projects=[self.project])
         self.assertFalse(client.enabled(settings, "jev_quality_enabled", self.project))
         self.assertFalse(client.enabled(settings, "jev_retrieval_enabled", self.project))
+
+    def test_jev_exclusion_wins_for_all_gates_and_keeps_neighbor_enabled(self):
+        gates = ("filter", "quality", "retrieval")
+        settings = {**{f"jev_{gate}_enabled": True for gate in gates},
+                    "jev_excluded_projects": [self.project]}
+        for gate in gates:
+            flag = f"jev_{gate}_enabled"
+            with self.subTest(gate=gate):
+                self.assertFalse(client.enabled(settings, flag, self.project))
+                self.assertFalse(client.enabled(settings, flag, self.project + "/child"))
+                self.assertTrue(client.enabled(settings, flag, self.project + "-neighbor"))
 
 
 if __name__ == "__main__":

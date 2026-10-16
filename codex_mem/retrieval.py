@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
+from functools import lru_cache
 import json
 import math
 from pathlib import Path
@@ -22,13 +23,13 @@ _PROMPT_WORDS = frozenset((
     "decide decided choose chose chosen select selected "
     "happen happened happening handle handles doing now there then still "
     "как что почему когда где какой какая какие которое который которая ли и или а но "
-    "в во на к ко по о об обо от из у с со за для до без это этот эта эти то так там "
+    "в во на к ко по о об обо от из из-за из-под у с со за для до без это этот эта эти то так там "
     "здесь он она оно они его ее её их мы нас наш наша наши наше вы ваш я мне мой моя "
     "ты твой про пусть уже еще ещё же бы был была было были есть будет будут "
     "расскажи покажи объясни поясни проверь посмотри проанализируй проверить "
     "работает работают работаешь работал работать справляется справляются своей "
     "решили решено выбрали выбран приняли принято "
-    "своим свою своими задачей пожалуйста сейчас теперь"
+    "своим свою своими задачей пожалуйста сейчас теперь нужно можно"
 ).split())
 _PROMPT_TOKEN = re.compile(r"[vV]?\d+(?:\.\d+)+|[^\W_]+(?:[_.:/-][^\W_]+)*", re.UNICODE)
 _PROMPT_VERSION = re.compile(r"[vV]?\d+(?:\.\d+)+\Z")
@@ -41,11 +42,56 @@ _SOFTWARE_ALIASES = {
     "хук": ("hook", "hooks"), "hook": ("хук",), "hooks": ("хук",),
     "таймаут": ("timeout", "timeouts"), "timeout": ("таймаут",),
     "timeouts": ("таймаут",),
+    "disabled": ("disable", "disabling", "отключен", "отключён", "отключ"),
 }
 
+# Literal, bilingual software vocabulary. These aliases improve recall without
+# calling a model, inventing a translation or replacing mandatory identifiers.
+_TOPICAL_EQUIVALENTS = (
+    (r"(?:тест[а-яё]*|tests?)", ("test", "tests", "тест")),
+    (r"(?:сервер[а-яё]*|servers?)", ("server", "servers", "сервер")),
+    (r"(?:очеред[а-яё]*|queues?)", ("queue", "queues", "очеред")),
+    (r"(?:завис[а-яё]*|stalls?|stalled|hangs?|hung)", ("stall", "stalled", "hung", "blocked", "завис")),
+    (r"(?:исправ[а-яё]*|fix(?:ed|es)?)", ("fix", "fixed", "fixes", "исправ")),
+    (r"(?:событ[а-яё]*|events?)", ("event", "events", "событ")),
+    (r"(?:ход[а-яё]*|turns?)", ("turn", "turns", "ход")),
+    (r"(?:задани[а-яё]*|jobs?)", ("job", "jobs", "задани")),
+    (r"(?:объедин[а-яё]*|группир[а-яё]*|накоп[а-яё]*|batch(?:ing|es)?|coalesc[а-яa-z]*)",
+     ("batch", "batching", "group", "coalescing", "объедин", "группир", "накоп")),
+    (r"(?:обработ[а-яё]*|process(?:ing|ed|es)?)", ("processing", "processed", "process", "обработ")),
+    (r"(?:эконом[а-яё]*|econom(?:y|ic|ics))", ("economics", "economy", "economic", "эконом")),
+    (r"(?:вознагражд[а-яё]*|rewards?)", ("reward", "rewards", "вознагражд")),
+    (r"(?:начисл[а-яё]*|credit(?:ing|ed)?|payouts?)", ("credit", "crediting", "payout", "payouts", "начисл")),
+    (r"(?:мгновенн[а-яё]*|instant(?:ly)?)", ("instant", "instantly", "мгновенн")),
+    (r"(?:финансир[а-яё]*|fund(?:ing|ed)?)", ("funding", "funded", "финансир")),
+    (r"(?:уведомлен[а-яё]*|notifications?)", ("notification", "notifications", "уведомлен")),
+    (r"(?:регистрац[а-яё]*|registrations?)", ("registration", "registrations", "регистрац")),
+    (r"(?:расписан[а-яё]*|schedules?|scheduled)", ("schedule", "scheduled", "расписан")),
+    (r"(?:географ[а-яё]*|geograph[а-яa-z]*)", ("geography", "geographic", "географ")),
+    (r"sla", ("sla",)),
+    (r"(?:доступ[а-яё]*|credentials?|access)", ("credentials", "credential", "access", "доступ")),
+    (r"(?:аккаунт[а-яё]*|accounts?)", ("account", "accounts", "аккаунт")),
+    (r"(?:сет(?:ь|и|ей|ям|ях|ями|ев[а-яё]+)|networks?)", ("network", "networks", "сет")),
+    (r"(?:реализац[а-яё]*|implement(?:ation|ed|ing)?)",
+     ("implementation", "implemented", "implement", "реализац")),
+    (r"(?:согласова[а-яё]*|agre(?:e|ed|ement)|decisions?)",
+     ("agreed", "agreement", "decision", "decisions", "unconfirmed", "unresolved", "undecided", "согласова")),
+    (r"(?:подключ[а-яё]*|connect(?:ion|ed|ing)?|permissions?|allowed)",
+     ("connect", "connected", "connection", "allowed", "permission", "permissions", "integrated", "подключ")),
+    (r"(?:владел[а-яё]*|ответствен[а-яё]*|ownership|owners?)",
+     ("ownership", "owner", "owners", "владел", "ответствен")),
+    (r"(?:сурс[а-яё]*|источник[а-яё]*|sources?)", ("source", "sources", "сурс", "источник")),
+    (r"(?:проверк[а-яё]*|верификац[а-яё]*|verif(?:y|ied|ication))",
+     ("verification", "verified", "verify", "check", "checks", "checked", "test", "tests", "ci", "проверк", "верификац")),
+    (r"(?:ожидани[а-яё]*|waiting|awaiting)", ("waiting", "awaiting", "ожидани")),
+)
 
+
+@lru_cache(maxsize=2048)
 def prompt_term_variants(term: str, stem: str) -> tuple[str, ...]:
-    return tuple(dict.fromkeys((stem, *_SOFTWARE_ALIASES.get(stem, ()))))
+    topical = [variant for pattern, variants in _TOPICAL_EQUIVALENTS
+               if re.fullmatch(pattern, term, re.IGNORECASE) for variant in variants]
+    return tuple(dict.fromkeys((stem, *_SOFTWARE_ALIASES.get(stem, ()), *topical)))
 
 
 def prompt_variant_prefix(term: str, stem: str, variant: str) -> bool:
@@ -53,14 +99,33 @@ def prompt_variant_prefix(term: str, stem: str, variant: str) -> bool:
                 and (variant != term or stem != term))
 
 
-def prompt_query_plan(query: str) -> dict[str, Any] | None:
+def _prompt_tokens(query: str, *, natural_compounds: bool | None = None) -> list[str]:
+    normalized = unicodedata.normalize("NFKC", query)
+    matches = list(_PROMPT_TOKEN.finditer(normalized))
+    if natural_compounds is None:
+        natural_compounds = any(match.group().casefold() in _PROMPT_WORDS for match in matches)
+    quoted = [match.span() for match in re.finditer(r"`[^`\n]*`|\"[^\"\n]*\"|'[^'\n]*'", normalized)]
+    result: list[str] = []
+    for match in matches:
+        token = match.group()
+        # In Russian prose, an acronym joined to an inflected noun is an
+        # ordinary phrase. Preserve explicit quotes and all code/path shapes.
+        if (natural_compounds and re.fullmatch(r"[A-Za-z][A-Za-z0-9]+-[А-Яа-яЁё]+", token)
+                and not any(start <= match.start() < end for start, end in quoted)):
+            result.extend(token.split("-", 1))
+        else:
+            result.append(token)
+    return result
+
+
+def prompt_query_plan(query: str, *, natural_compounds: bool | None = None) -> dict[str, Any] | None:
     """Bounded lexical fallback for questions, without loading an embedder.
 
     An ordinary exact query is never relaxed. Prompt words must actually be
     present; versions and code-shaped identifiers are always mandatory. This
     is lexical recall, not semantic or cross-language understanding.
     """
-    raw = _PROMPT_TOKEN.findall(unicodedata.normalize("NFKC", query))
+    raw = _prompt_tokens(query, natural_compounds=natural_compounds)
     words = [token.casefold() for token in raw]
     if not any(token in _PROMPT_WORDS for token in words):
         return None
@@ -113,6 +178,304 @@ def prompt_match_score(text: str, plan: Mapping[str, Any]) -> int:
     return matched + len(plan["identifiers"]) + len(plan["versions"])
 
 
+def resume_subject_plan(query: str, project: str | Path | None = None) -> dict[str, Any] | None:
+    """Extract explicit names for bounded resume recall, never inferred topics.
+
+    Names in a question written in another alphabet are especially useful:
+    vector proximity alone does not establish evidence about that name. Code
+    identifiers and versions retain their existing all-required semantics.
+    """
+    natural_compounds = prompt_query_plan(query) is not None
+    plan = prompt_query_plan("How " + query, natural_compounds=natural_compounds)
+    if plan is None:
+        return None
+    tokens = _prompt_tokens(query, natural_compounds=natural_compounds)
+    non_latin = bool(re.search(r"[а-яё]", query, re.IGNORECASE))
+    names = []
+    for index, token in enumerate(tokens):
+        folded = token.casefold()
+        if (folded in _PROJECT_STATE_WORDS or folded in {"pr", "sdk", "api"}
+                or not re.fullmatch(r"[A-Za-z]+", token)):
+            continue
+        if (non_latin or (token[0].isupper()
+                and (index > 0 or len(tokens) == 1 or token.isupper()
+                     or re.search(r"[a-z][A-Z]", token)))):
+            names.append(folded)
+    project_words = set(re.split(r"[-_]", Path(project).name.casefold())) if project is not None else set()
+    # A product name already present in the scoped project's slug need not
+    # occur again as a standalone word in each version receipt. Paths, issue
+    # IDs, symbols and numeric constraints are never removed by this rule.
+    scoped_names = project_words if plan["versions"] else set()
+    return {"names": [name for name in dict.fromkeys(names) if name not in scoped_names],
+            "identifiers": [word for word in plan["identifiers"]
+                            if not (word.isalpha() and word in scoped_names)],
+            "versions": plan["versions"]}
+
+
+def resume_evidence_text(record: Mapping[str, Any]) -> str:
+    """Search evidence fields, excluding source IDs and chronology notices."""
+    parts = [str(record.get(key) or "") for key in ("title", "body", "preview")]
+    for key in ("observation", "session_summary"):
+        value = record.get(key)
+        if isinstance(value, Mapping):
+            parts.extend(str(value.get(field) or "") for field in (
+                "request", "investigated", "learned", "completed", "next_steps",
+                "decisions", "notes", "narrative", "facts", "subtitle"))
+    return "\n".join(parts)
+
+
+def resume_subject_matches(record: Mapping[str, Any], plan: Mapping[str, Any]) -> bool:
+    text = resume_evidence_text(record)
+    exact = {"terms": [], "minimum": 0, "identifiers": plan["identifiers"],
+             "versions": plan["versions"]}
+    if (exact["identifiers"] or exact["versions"]) and not prompt_match_score(text, exact):
+        return False
+    names = plan["names"]
+    return not names or any(re.search(r"(?<!\w)" + re.escape(name) + r"(?!\w)",
+                                     text, re.IGNORECASE) for name in names)
+
+
+# These are bounded lexical evidence hints, not judgments that a deployment
+# succeeded or an open condition was resolved. They only rank existing facts.
+_ANSWER_FACETS = (
+    (r"\bwhy\b|почему", r"\bbecause\b|\breasons?\b|\brationale\b|\bdue to\b|причин|потому|из-за"),
+    (r"disabl|отключ", r"disabl|отключ"),
+    (r"verif|\btests?\b|\bchecked\b|провер|тест", r"verif|\btests?\b|\bchecked\b|\bpassed\b|провер|тест"),
+    (r"deploy|install|выклад|выкат|установ|разв[её]р", r"deploy|install|выклад|выкат|установ|разв[её]р"),
+    (r"remain|unresolved|unconfirmed|pending|\bleft\b|остал|согласован|непровер|неизвест", r"remain|unresolved|unconfirmed|unverified|pending|unknown|not agreed|not confirmed|остал|не согласован|не подтверж|непровер|неизвест"),
+    (r"notification|уведомлен", r"notification|уведомлен"),
+    (r"не\s+(?:реш[а-яё]*|согласова[а-яё]*)|open\s+decisions?|unresolved",
+     r"unresolved|undecided|unknown|pending|not\s+(?:decided|agreed)|remain|не\s+(?:реш[а-яё]*|согласова[а-яё]*)"),
+    (r"согласова|agre(?:e|ed|ement)|decisions?",
+     r"\bagreed\b|\bagreement\b|\bdecisions?\b|\ballowed\b|\bonly\b|согласова|решен|решён"),
+)
+
+
+def resume_answer_score(record: Mapping[str, Any], query: str) -> tuple[int, int]:
+    """Prefer requested answer facets over repeated mentions of the subject."""
+    text = resume_evidence_text(record).casefold()
+    title = str(record.get("title") or "").casefold()
+    requested = [evidence for request, evidence in _ANSWER_FACETS
+                 if re.search(request, query, re.IGNORECASE)]
+    topics = [variants for pattern, variants in _TOPICAL_EQUIVALENTS
+              if any(re.fullmatch(pattern, token, re.IGNORECASE)
+                     for token in _prompt_tokens(query))]
+    def coverage(value: str) -> int:
+        return sum(any(re.search(r"(?<!\w)" + re.escape(word) +
+                                 (r"[а-яё]*\b" if _RUSSIAN_WORD.fullmatch(word) else r"(?!\w)"), value)
+                           for word in variants) for variants in topics)
+    if topics and not coverage(text):
+        # A generic verification caveat cannot substitute for the requested
+        # event/queue/reward topic merely because both mention unfinished work.
+        return (0, 0)
+    concrete = 0
+    timing_words = re.search(r"\bwhen\b|когда|задерж|\bdelay\b|\bdeadline\b", query, re.IGNORECASE)
+    processing_timing = re.search(r"обработ|событ|очеред|накоп|задани|\bprocess|\bevents?\b|"
+                                  r"\bqueue|\bbatch|\bcoalesc|\bjobs?\b|задерж|\bdelay\b|\bdeadline\b",
+                                  query, re.IGNORECASE)
+    if timing_words and processing_timing:
+        # A concrete duration answers "when" more fully than another mention
+        # of processing or an immediate flush trigger. Counts without time
+        # units, such as passing tests, cannot supply this evidence.
+        duration = (r"\b(?:\d+(?:\.\d+)?|zero|one|two|three|four|five|six|seven|eight|nine|ten|"
+                    r"eleven|twelve|twenty|thirty|sixty|одну|один|два|две|три|четыре|пять|десять)"
+                    r"[ -]+(?:milliseconds?|seconds?|minutes?|hours?|мс|секунд[а-яё]*|минут[а-яё]*)\b")
+        concrete += 4 * bool(re.search(duration, text))
+        concrete += bool(re.search(r"\bimmediate(?:ly)?\b|\bflush(?:es|ed)?\b|немедлен|сразу", text))
+        concrete += 3 * bool(re.search(r"\bfirst\s+deadline\b|\b(?:cannot|not|never)\s+postpone\b|"
+                                       r"перв[а-яё]*\s+(?:срок|дедлайн)|не\s+откладыва", text))
+    if re.search(r"разн[а-яё]*\s+ход[а-яё]*|\b(?:different|distinct|known|unknown|same)[ -]+"
+                 r"(?:known[ -]+)?turns?\b|\bturn[ -]+boundar", query, re.IGNORECASE):
+        # Concrete boundary qualifications and their legacy exception are
+        # complementary evidence. Generic event/job vocabulary supplies neither.
+        concrete += 3 * bool(re.search(r"\b(?:known|different|distinct|same)[ -]+(?:known[ -]+)?turn"
+                                       r"|известн[а-яё]*\s+ход|разн[а-яё]*\s+ход", text))
+        concrete += 3 * bool(re.search(r"\b(?:unknown|legacy)[ -]+(?:turn|batch|boundar)|"
+                                       r"\blegacy[^.!?\n]{0,64}\bturn[ _-]+ids?\b|"
+                                       r"\b(?:without|missing|unknown)[ -]+turn[ _-]+ids?\b"
+                                       r"|неизвестн[а-яё]*\s+ход", text))
+    if re.search(r"стади|этап|начина|\bstages?\b|\bphases?\b|\bstart", query, re.IGNORECASE):
+        # Starting-stage questions need the proposed work and its dependency
+        # order, not only repeated descriptions of the commercial model.
+        concrete += 3 * bool(re.search(r"\bresearch\b|\btechnical study\b|исследован|рес[её]рч", text))
+        dependency = re.search(r"\bbackend\b|\bdependencies\b|\bprerequisites?\b|зависим|серверн", text)
+        sequence = re.search(r"\bbefore\b|\bparallel\b|\bindependent\b|паралл|до\s+|независим", text)
+        concrete += 2 * bool(dependency and sequence)
+    checks_requested = re.search(r"проверк|тест|\bchecks?\b|\btests?\b|\bci\b|verification", query, re.IGNORECASE)
+    outcome_requested = re.search(r"прош[её]л|прошли|результат|\bpassed\b|\bresults?\b|\boutcomes?\b", query, re.IGNORECASE)
+    if checks_requested and outcome_requested:
+        # Answering which checks passed requires outcomes, not another generic
+        # "verification pending" heading. These remain reported claims with
+        # their original provenance and execution limits, never truth labels.
+        outcome = re.search(r"\b(?:passed|passing|successful|success)\b", text)
+        if outcome and not re.search(r"\bnot\s+$|\bне\s+$", text[max(0, outcome.start() - 12):outcome.start()]):
+            concrete += 3
+        concrete += 2 * bool(re.search(r"\b\d+\s+(?:(?:integration|e2e|pending|passing|existing)\s+)?"
+                                       r"(?:tests?|suites?|skips?)\b|\b\d+\s+тест[а-яё]*", text))
+    if re.search(r"провайдер|\bproviders?\b", query, re.IGNORECASE):
+        execution_scope = re.search(r"\breal[ -][^.!?\n]{0,90}(?:tests?|suites?|providers?)[^.!?\n]{0,90}"
+                                    r"(?:disabled|not\s+(?:run|executed|enabled))|"
+                                    r"реальн[а-яё]*\s+провайдер[^.!?\n]{0,90}(?:отключ|не\s+запуск)", text)
+        concrete += 3 * bool(execution_scope)
+    return (concrete + sum(bool(re.search(pattern, text)) for pattern in requested) + coverage(text),
+            sum(bool(re.search(pattern, title)) for pattern in requested) + coverage(title))
+
+
+def retrieval_query_hints(query: str) -> list[str]:
+    """Bounded lexical probes for explicit software topics in the question.
+
+    Callers must reapply original literal constraints and project/filter scope
+    to every candidate. Hints alone are never authority to widen that scope.
+    """
+    groups = [variants for pattern, variants in _TOPICAL_EQUIVALENTS
+              if any(re.fullmatch(pattern, token, re.IGNORECASE)
+                     for token in _prompt_tokens(query))]
+    english = [next(word for word in variants if word.isascii()) for variants in groups]
+    # Pairing explicit topics avoids filling a window with generic "events".
+    probes = [" ".join(english[index:index + 2]) for index in range(0, len(english), 2)]
+    preferred: list[str] = []
+    if re.search(r"разн[а-яё]*\s+ход[а-яё]*|\b(?:different|distinct|known|unknown)[ -]+turns?\b",
+                 query, re.IGNORECASE):
+        preferred.extend(("known turn", "unknown turn"))
+    if any("coalescing" in variants for variants in groups):
+        # A bare "batch" misses inflected "batching" and "coalescing" in
+        # unicode FTS. Probe the explicit accumulation topic separately.
+        preferred.append("coalescing")
+        if re.search(r"\bwhen\b|когда|задерж|\bdelay\b|\bdeadline\b", query, re.IGNORECASE):
+            preferred.append("deadline")
+    # Keep variant probes bounded. Original question literals and caller
+    # filters are reapplied by the candidate loader before these can rank.
+    return list(dict.fromkeys([*preferred, *probes]))[:6]
+
+
+def current_installation_question(query: str, project: str | Path | None = None) -> bool:
+    """Recognize installation ordering intent even with configuration subquestions.
+
+    This only changes ordering within scoped candidates. It does not grant
+    recent-project expansion or relax a named feature, path, issue or version.
+    """
+    if historical_query(query):
+        return False
+    if re.search(r"\bwas\s+installed\b|\bбыла\s+установлена\b", query, re.IGNORECASE):
+        return False
+    words = _PROMPT_TOKEN.findall(query.casefold())
+    if any(_PROMPT_VERSION.fullmatch(word) or re.search(r"[_./:]|\d", word) for word in words):
+        return False
+    version_word = re.search(r"\b(?:version|верси[а-яё]*)\b", query, re.IGNORECASE)
+    if not version_word:
+        return False
+    installed_word = re.search(r"\b(?:install(?:ed|ation)?|установ[а-яё]*)\b",
+                               query[version_word.end():], re.IGNORECASE)
+    if not installed_word:
+        return False
+    # The installed-version subject is before the installed verb. A project
+    # named later in "Redis is installed in Atlas" is a location, not the
+    # software whose version the user requested.
+    subject_text = query[version_word.end():version_word.end() + installed_word.start()]
+    prefix = re.split(r"[:,;?!]", query[:version_word.start()])[-1].strip()
+    owner_pattern = None
+    if project is not None:
+        owner = re.sub(r"[-_]public$", "", Path(project).name.casefold())
+        parts = [re.escape(part) for part in re.split(r"[\W_]+", owner) if part]
+        if parts:
+            owner_pattern = r"(?<!\w)" + r"[\W_]*".join(parts) + r"(?!\w)"
+            subject_text = re.sub(owner_pattern, " ", subject_text, flags=re.IGNORECASE)
+    plan = prompt_query_plan("How " + subject_text)
+    if plan and any(term not in _PROJECT_STATE_WORDS and not _PROJECT_STATE_RUSSIAN.fullmatch(term)
+                    for term, _ in plan["terms"]):
+        return False
+    prefix_words = _PROMPT_TOKEN.findall(prefix.casefold())
+    if prefix_words and not (owner_pattern and re.search(owner_pattern + r"\s*$", prefix, re.IGNORECASE)):
+        previous = prefix_words[-1]
+        if previous not in _PROJECT_STATE_WORDS and not _PROJECT_STATE_RUSSIAN.fullmatch(previous):
+            return False
+    return True
+
+
+def linked_handoff_matches(origin: Mapping[str, Any], later: Mapping[str, Any],
+                           query: str, project: str | Path) -> bool:
+    """Accept only a topical explicit continuation in the same project/session."""
+    if historical_query(query) or not origin.get("session_id"):
+        return False
+    if (origin.get("later_summary_id") != later.get("id")
+            or later.get("project") != str(project) or later.get("superseded_by")
+            or later.get("session_id") != origin.get("session_id")
+            or str(later.get("source") or "").startswith("hook:")):
+        return False
+    plan = resume_subject_plan(query, project)
+    if plan and any(plan.values()):
+        return resume_subject_matches(origin, plan) and resume_subject_matches(later, plan)
+    topical = prompt_query_plan(query)
+    if not topical:
+        return False
+    broad = dict(topical, minimum=1)
+    return bool(prompt_match_score(resume_evidence_text(origin), broad)
+                and prompt_match_score(resume_evidence_text(later), broad))
+
+
+def issue_discovery_association(origin: Mapping[str, Any], candidate: Mapping[str, Any],
+                                query: str) -> bool:
+    """Link pre-ID discovery through an already exact-matched task record.
+
+    Same session alone is insufficient. Both records must name the same scoped
+    task file, and all non-issue literal constraints remain mandatory. This is
+    an evidence association, never a claim that the issue text contains it.
+    """
+    project = origin.get("project")
+    if (not isinstance(project, str) or candidate.get("project") != project
+            or not origin.get("session_id") or candidate.get("session_id") != origin.get("session_id")
+            or candidate.get("superseded_by") or str(candidate.get("source") or "").startswith("hook:")
+            or historical_query(query)):
+        return False
+    plan = resume_subject_plan(query, project)
+    if not plan or not resume_subject_matches(origin, dict(plan, names=[])):
+        return False
+    issues = [word for word in plan["identifiers"] if re.fullmatch(r"[a-z][a-z0-9]*-\d+", word)]
+    if not issues:
+        return False
+    candidate_issues = set(re.findall(r"(?<![\w.-])[a-z][a-z0-9]*-\d+(?![\w.-])",
+                                     resume_evidence_text(candidate).casefold()))
+    if candidate_issues - set(issues):
+        return False
+    remaining = dict(plan, identifiers=[word for word in plan["identifiers"] if word not in issues])
+    if not resume_subject_matches(candidate, remaining):
+        return False
+    def task_files(record: Mapping[str, Any]) -> set[str]:
+        metadata = record.get("observation")
+        if not isinstance(metadata, Mapping):
+            return set()
+        paths: set[str] = set()
+        for field in ("files_read", "files_modified"):
+            values = metadata.get(field)
+            if not isinstance(values, list):
+                continue
+            for value in values:
+                if not isinstance(value, str):
+                    continue
+                path = Path(value)
+                if path.is_absolute():
+                    try:
+                        path = path.relative_to(project)
+                    except ValueError:
+                        continue
+                parts = tuple(part.casefold() for part in path.parts)
+                if ".." in parts or path.suffix.casefold() not in {".md", ".rst", ".txt"}:
+                    continue
+                shared = {"shared", "common", "template", "templates", "_templates",
+                          "boilerplate", "example", "examples", "general", "misc", "global"}
+                if any(part in shared for part in parts[:-1]) or path.stem.casefold() == "readme":
+                    continue
+                exact_issue_path = any(re.search(r"(?<![\w])" + re.escape(issue) + r"(?![\w])", path.as_posix(), re.IGNORECASE)
+                                       for issue in issues)
+                task_root = bool(parts and parts[0] in {"tasks", "issues", "tickets"})
+                categories = {"backlog", "grooming", "complete", "completed", "archive", "active", "open", "closed"}
+                owned_folders = [part for part in parts[1:-1] if part not in categories]
+                if exact_issue_path or (task_root and owned_folders):
+                    paths.add(path.as_posix())
+        return paths
+    return bool(task_files(origin) & task_files(candidate))
+
+
 _TOPIC_NOISE = _PROMPT_WORDS | frozenset((
     "completed complete completion checked verified verification unverified verify pending "
     "blocked unfinished unresolved remaining proposal proposed suggestion suggested focused "
@@ -151,14 +514,16 @@ _PROJECT_STATE_WORDS = _PROMPT_WORDS | frozenset((
     "before next left new up doing needs need fix fixes anything something "
     "release releases released rollout shipped shipping delivered delivery publish published "
     "verification verified unverified confirm confirmed included includes evidence well "
+    "version versions installed installation install readme differs difference compare comparison "
     "каково каковы над после перед осталось остались остается остаётся оставалось "
     "нужно нужны сделать сделано дальше далее чем вошло входит выкатили выкачен "
-    "выпустили выпущено подтверждено подтверждён подтвержден подтвердили прошёл прошел"
+    "выпустили выпущено подтверждено подтверждён подтвержден подтвердили прошёл прошел отличается различается"
 ).split())
 _PROJECT_STATE_RUSSIAN = re.compile(
     r"(?:плагин|памят|систем|проект|репозитор|приложен|программ|работ|задач|"
     r"состоян|статус|результат|улучш|изменен|изменён|последн|текущ|незаверш|"
-    r"незаконч|незакрыт|непровер|провер|открыт|нужн|нов|релиз|выпуск|подтвержд)[а-яё]*\Z"
+    r"незаконч|незакрыт|непровер|провер|открыт|нужн|нов|релиз|выпуск|подтвержд|"
+    r"подтверд|верси|установ|исправ)[а-яё]*\Z"
 )
 _PROJECT_STATE_INTENT = re.compile(
     r"(?:current|latest|last|recent|recently|status|state|remaining|remains|left|unfinished|"
@@ -206,8 +571,15 @@ def current_state_scope(query: str, project: str | Path | None = None) -> str | 
             and any(word in {"doing", "работает", "работают", "проанализируй", "analyze", "review"}
                     for word in words))
     )
-    if not (explicit_state or assessment):
+    installed_version = project_anchor and any(
+        re.fullmatch(r"install(?:ed|ation)?|установ[а-яё]*", word) for word in words
+    ) and any(re.fullmatch(r"versions?|верси[а-яё]*", word) for word in words)
+    if not (explicit_state or assessment or installed_version):
         return None
+    if any(re.fullmatch(r"install(?:ed|ation)?|установ[а-яё]*", word) for word in words):
+        return "installation"
+    if any(re.fullmatch(r"versions?|верси[а-яё]*", word) for word in words):
+        return "version"
     return "release" if any(re.fullmatch(r"releases?|released|rollout|релиз[а-яё]*|выпуск[а-яё]*", word)
                             for word in words) else "project"
 
@@ -216,24 +588,119 @@ def broad_current_state_query(query: str, project: str | Path | None = None) -> 
     return current_state_scope(query, project) is not None
 
 
-def state_scope_plan(scope: str) -> dict[str, Any] | None:
-    """Release paraphrases share one bounded bilingual topic constraint."""
-    if scope != "release":
+def continuation_state_plan(query: str) -> dict[str, Any] | None:
+    """Match a named disablement outcome after maintenance, without widening history.
+
+    This narrow topical route permits explicit same-session continuation links.
+    Both the named subject and the disabled state must occur in the later
+    handoff. It does not authorize project-wide recent-record expansion.
+    """
+    if historical_query(query):
         return None
-    return {"terms": [("release", "release"), ("released", "released"), ("rollout", "rollout"),
-                      ("релиза", "релиз"), ("выпуска", "выпуск")],
+    words = _PROMPT_TOKEN.findall(unicodedata.normalize("NFKC", query).casefold())
+    if not (any(word in {"after", "после"} for word in words)
+            and any(_PROJECT_STATE_INTENT.fullmatch(word) for word in words)
+            and any(re.fullmatch(r"disable[ds]?|отключ[а-яё]*", word) for word in words)):
+        return None
+    plan = prompt_query_plan(query)
+    if not plan or plan["identifiers"] or plan["versions"]:
+        return None
+    topics = [(term, stem) for term, stem in plan["terms"]
+              if term not in _PROJECT_STATE_WORDS
+              and not _PROJECT_STATE_RUSSIAN.fullmatch(term)
+              and not re.fullmatch(r"disable[ds]?|maintenance|problems?|отключ[а-яё]*|"
+                                   r"обслужив[а-яё]*|проблем[а-яё]*", term)]
+    if not topics:
+        return None
+    return {"terms": topics + [("disabled", "disabled")], "identifiers": [],
+            "versions": [], "minimum": len(topics) + 1}
+
+
+def state_scope_plan(scope: str) -> dict[str, Any] | None:
+    """Current-state paraphrases retain their bounded bilingual subject."""
+    if scope == "installation":
+        terms = [("install", "install"), ("installed", "installed"), ("installation", "installation"),
+                 ("установлена", "установлен"), ("установки", "установк")]
+    elif scope == "version":
+        terms = [("version", "version"), ("versions", "versions"), ("runtime", "runtime"),
+                 ("версии", "верс"), ("release", "release"), ("релиза", "релиз")]
+    elif scope == "release":
+        terms = [("release", "release"), ("released", "released"), ("rollout", "rollout"),
+                 ("релиза", "релиз"), ("выпуска", "выпуск")]
+    else:
+        return None
+    return {"terms": terms,
             "identifiers": [], "versions": [], "minimum": 1}
 
 
-def state_scope_matches(record: Mapping[str, Any], scope: str) -> bool:
+def software_subject_matches(title: str, project: str | Path, evidence: str = "") -> bool:
+    """Require the project subject or a generic project-runtime heading.
+
+    The latter keeps existing source-bound install reports usable without
+    accepting arbitrary package names. This positive boundary is independent
+    of package name, word order, language and whether a version is present.
+    """
+    words = _PROMPT_TOKEN.findall(unicodedata.normalize("NFKC", title).casefold())
+    project_name = re.sub(r"[-_]public$", "", Path(project).name.casefold())
+    own = re.sub(r"\W|_", "", project_name)
+    if own and own in re.sub(r"\W|_", "", " ".join(words)):
+        return True
+    if evidence:
+        # A platform heading need not repeat the application's name. Require
+        # an actual installation assertion with this project as its subject;
+        # mentioning a project alongside an installed dependency is weaker.
+        parts = [re.escape(part) for part in re.split(r"[\W_]+", project_name) if part]
+        subject = r"(?<!\w)" + r"[\W_]*".join(parts) + r"(?!\w)"
+        version = r"(?:\s+(?:version|верси[а-яё]*)\s*v?\d+(?:\.\d+)*|\s+v?\d+(?:\.\d+)+)?"
+        copula = r"(?:\s+(?:runtime|is|was|has|been|now|currently|был|была|сейчас))*\s+"
+        installed = r"(?:installed|установлен[а-яё]*)\b"
+        if parts and (re.search(subject + version + copula + installed, evidence, re.IGNORECASE)
+                      or re.search(installed + r"\s+" + subject, evidence, re.IGNORECASE)):
+            return True
+    noise = _PROJECT_STATE_WORDS | _TOPIC_NOISE | frozenset((
+        "three two one roots root report reports reported showed shows matching matched across "
+        "installer package packaging files file source passed passing completed checked verified runtime "
+        "verification local captured command parity refreshed refresh restarted restart "
+        "проверка отчет отчёт показал сообщила установлена установлено"
+    ).split())
+    return bool(words) and all(word in noise or word.isdigit() or _PROMPT_VERSION.fullmatch(word)
+                               or _PROJECT_STATE_RUSSIAN.fullmatch(word) for word in words)
+
+
+def state_scope_matches(record: Mapping[str, Any], scope: str, project: str | Path | None = None) -> bool:
     plan = state_scope_plan(scope)
     if plan is None:
         return True
     if not any(record.get(key) for key in ("title", "body", "preview", "session_summary")):
         return True  # ID-only adapters have already applied their query match.
+    if scope in {"installation", "version"} and project is not None and not software_subject_matches(
+        str(record.get("title") or ""), project, resume_evidence_text(record)
+    ):
+        return False
     text = " ".join(str(record.get(key) or "") for key in
                     ("title", "body", "preview", "session_summary", "observation"))
     return bool(prompt_match_score(text, plan))
+
+
+def continuation_state_matches(record: Mapping[str, Any], plan: Mapping[str, Any]) -> bool:
+    text = " ".join(str(record.get(key) or "") for key in
+                    ("title", "body", "preview", "session_summary", "observation"))
+    return bool(prompt_match_score(text, plan))
+
+
+def installation_receipt(record: Mapping[str, Any]) -> bool:
+    """Prefer records about installation over text merely quoting its query.
+
+    This is an evidence-subject preference, not verification of the report.
+    Source inspection, test definitions and version-file edits remain available
+    after installation reports even if captured more recently.
+    """
+    heading = str(record.get("title") or "").casefold()
+    if re.search(r"\b(?:regressions?|diagnostics?|test\s+(?:cases?|definitions?)|"
+                 r"регресси[а-яё]*|диагност[а-яё]*)\b", heading):
+        return False
+    return bool(re.search(r"\b(?:installed|installation|runtime|install\s+report|"
+                          r"release\s+verification|установ[а-яё]*)\b", heading))
 
 
 def resume_duplicate_key(record: Mapping[str, Any]) -> tuple[str, ...] | None:
@@ -437,6 +904,8 @@ _PREVIEW_FIELDS = (
     "score", "lexical_score", "semantic_score", "rrf_score",
     "event_at", "event_id", "event_time_basis", "context_historical", "context_before_handoff", "earlier_status", "later_summary_id",
     "later_context_id", "later_context_relation", "later_context_basis",
+    "source_evidence", "evidence_truncated", "query_relevant_evidence",
+    "issue_association",
 )
 
 
@@ -452,8 +921,9 @@ def preview_records(
     """
     if not isinstance(detail, str) or detail not in {"compact", "full"}:
         raise ValueError("detail must be compact or full")
+    from .privacy import redact_search_value
     if detail == "full":
-        return [dict(record) for record in records]
+        return [redact_search_value(dict(record)) for record in records]
     result = []
     for record in records:
         preview = {key: record[key] for key in _PREVIEW_FIELDS if key in record}
@@ -463,5 +933,5 @@ def preview_records(
         preview["source_count"] = len(record.get("source_ids") or [])
         preview["detail"] = "compact"
         preview["details_available"] = True
-        result.append(preview)
+        result.append(redact_search_value(preview))
     return result

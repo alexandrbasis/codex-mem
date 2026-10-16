@@ -4,23 +4,40 @@ from __future__ import annotations
 from .config import automatic_capture_enabled, load_config, hooks_disabled
 
 
-def enqueue_project(project, data_dir=None, *, retry_failed=False, wait_for_start=True):
+def enqueue_project(project, data_dir=None, *, retry_failed=False, wait_for_start=True, coalesce_seconds=0):
     config = load_config(data_dir)
     if hooks_disabled() or not config.get("service_enabled") or not automatic_capture_enabled(project, config):
         return {"status": "disabled"}
     from .service import enqueue, start_service
-    queued = enqueue(project, data_dir, retry_failed=retry_failed)
+    enqueue_kwargs = {"retry_failed": retry_failed}
+    if coalesce_seconds and config.get("processor_enabled"):
+        enqueue_kwargs["coalesce_seconds"] = coalesce_seconds
+    queued = enqueue(project, data_dir, **enqueue_kwargs)
     if queued.get("status") == "queued":
-        service = start_service(data_dir) if wait_for_start else start_service(data_dir, startup_timeout=0)
+        try:
+            service = start_service(data_dir) if wait_for_start else start_service(data_dir, startup_timeout=0)
+        except Exception as exc:
+            # The durable enqueue already succeeded. Keep that receipt even
+            # when detached startup fails so a later worker can drain it.
+            from .hook_diagnostics import trace_error
+            trace_error("service_start_unavailable", exc)
+            service = {"status": "failed", "code": "service_start_unavailable"}
         return {**queued, "service": service}
     return queued
 
 
-def after_write(project, data_dir=None, *, wait_for_start=True):
+def after_write(project, data_dir=None, *, wait_for_start=True, coalesce_seconds=0):
     """A queue failure must not turn an already committed note into an error."""
     try:
-        return enqueue_project(project, data_dir, wait_for_start=wait_for_start)
-    except Exception:
+        queue_kwargs = {"wait_for_start": wait_for_start}
+        if coalesce_seconds:
+            queue_kwargs["coalesce_seconds"] = coalesce_seconds
+        return enqueue_project(project, data_dir, **queue_kwargs)
+    except Exception as exc:
+        # Diagnostics retain safe exception classes and code locations, never
+        # the exception text, which can contain paths or captured content.
+        from .hook_diagnostics import trace_error
+        trace_error("queue_unavailable", exc)
         return {"status": "failed", "code": "queue_unavailable"}
 
 
@@ -75,4 +92,16 @@ def search_memory(
         result.update(requested_mode="auto", fallback_reason="semantic_disabled")
     from .freshness import freshness_snapshot
     result["freshness"] = freshness_snapshot(store, project)
+    from . import __version__
+    settings = load_config(store.data_dir)
+    result["runtime"] = {
+        "codex_mem_version": __version__,
+        "source": "search_process_and_current_configuration",
+        "jev_flags": {key: settings.get(key) for key in (
+            "jev_filter_enabled", "jev_quality_enabled", "jev_retrieval_enabled")},
+    }
+    if not result["results"]:
+        from .project_scopes import discover_project_scopes
+        result["scope_discovery"] = discover_project_scopes(
+            store, project, config=load_config(store.data_dir))
     return result

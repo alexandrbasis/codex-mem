@@ -2,7 +2,7 @@
 """Opt-in native capture, automatic processing, and fresh-session recall probe.
 
 All authored facts, files, and memory writes stay in a new temporary fixture.
-The installed native Stop hook starts the processor. This driver never calls
+Native hooks start processing, directly or through --service-queue. This driver never calls
 process_pending, memory_remember, or memory_consolidate. The default dry run
 launches no Codex sessions. Native receipts contain only synthetic answers and
 bounded protocol/database metadata, never host configuration or tool bodies.
@@ -31,6 +31,7 @@ from codex_mem import __version__
 from codex_mem.config import configure, load_config, mark_context_injected, context_was_injected
 from codex_mem.processor import MODEL, REASONING_EFFORT, ProcessorFailure, _AppServer
 from codex_mem.processor import _normalized_usage_totals, _verify_luna_available
+from codex_mem.service import service_status, stop_service
 from codex_mem.store import Store
 from codex_mem.tool_io import list_tool_captures
 from native_auto_test import LifecycleObserver, NativeAutoError, _safe_job, _write_receipt
@@ -191,7 +192,14 @@ def raw_snapshot(data_dir: Path, project: Path, session_id: str, turn_id: str) -
         capture_ids = {row.get("entry_id") for row in captures}
         failures = {job["job_id"]: (store.observation_job_status(project, job["job_id"]) or {}).get("failure_receipts", [])
                     for job in jobs if job.get("status") == "failed"}
+        terminal_ids = {row[0] for row in store._connection.execute(
+            "SELECT links.source_id FROM observation_job_sources AS links "
+            "JOIN observation_jobs AS jobs ON jobs.id=links.job_id "
+            "WHERE jobs.project=? AND jobs.session_id=? AND jobs.status IN ('processed','skipped')",
+            (str(project), session_id))}
+        raw_ids = {row["id"] for row in records if str(row.get("source", "")).startswith("hook:")}
         return {
+            "raw_sources_drained": bool(raw_ids) and raw_ids.issubset(terminal_ids),
             "jobs": [_safe_job(job) for job in jobs],
             "failure_receipts": failures,
             "capture_counts": source_counts,
@@ -205,15 +213,23 @@ def raw_snapshot(data_dir: Path, project: Path, session_id: str, turn_id: str) -
 
 
 def processing_checks(snapshot: Mapping[str, Any], session_id: str, *, expected: str,
-                      require_note: bool = False) -> dict[str, bool]:
+                      require_note: bool = False, service_queue: bool = False) -> dict[str, bool]:
     jobs = snapshot.get("jobs", [])
     job = jobs[0] if len(jobs) == 1 else {}
+    if service_queue:
+        job = next((row for row in jobs if row.get("status") == expected), {})
     outputs = snapshot.get("derived_outputs", [])
     checks = {
         "single_expected_job": len(jobs) == 1 and job.get("status") == expected,
         "processor_model": job.get("model") == MODEL and job.get("reasoning_effort") == REASONING_EFFORT,
         "separate_native_worker": bool(job.get("worker_thread_id")) and job["worker_thread_id"] != session_id and bool(job.get("worker_turn_id")),
     }
+    if service_queue:
+        del checks["single_expected_job"]
+        checks["terminal_batches_include_expected"] = bool(jobs) and any(row.get("status") == expected for row in jobs) and all(row.get("status") in {"processed", "skipped"} for row in jobs)
+        checks["processor_model"] = bool(jobs) and all(row.get("model") == MODEL and row.get("reasoning_effort") == REASONING_EFFORT for row in jobs)
+        checks["separate_native_worker"] = bool(jobs) and all(row.get("worker_thread_id") and row["worker_thread_id"] != session_id and row.get("worker_turn_id") for row in jobs)
+        checks["raw_sources_drained"] = snapshot.get("raw_sources_drained") is True
     if expected == "processed":
         checks["tool_source_cited"] = bool(snapshot.get("tool_captures")) and snapshot.get("derived_output_cites_tool") is True
         checks["session_summary_retained"] = any(row.get("kind") == "session_summary" for row in outputs)
@@ -310,8 +326,14 @@ def run_turn(args: argparse.Namespace, project: Path, data_dir: Path, *, name: s
                 snapshot = raw_snapshot(data_dir, project, thread_id, turn_id)
                 receipt["store"] = snapshot
                 _write_receipt(target, receipt)
+                if getattr(args, "service_queue", False):
+                    receipt["service_queue"] = service_status(data_dir)
                 if process:
-                    if any(job.get("status") in {"processed", "skipped", "failed"} for job in snapshot["jobs"]):
+                    if getattr(args, "service_queue", False):
+                        if snapshot["capture_counts"]["hook:Stop"] and snapshot["raw_sources_drained"] and all(job.get("status") in {"processed", "skipped"} for job in snapshot["jobs"]):
+                            break
+                        require(not any(job.get("status") == "failed" for job in snapshot["jobs"]), "automatic_processing_job_failed")
+                    elif any(job.get("status") in {"processed", "skipped", "failed"} for job in snapshot["jobs"]):
                         break
                 elif snapshot["capture_counts"]["hook:Stop"]:
                     break
@@ -328,7 +350,7 @@ def run_turn(args: argparse.Namespace, project: Path, data_dir: Path, *, name: s
             require(events.answer.strip() == expected_final, "seed_answer_not_controlled")
         if process:
             snapshot = receipt["store"]
-            receipt["processing_checks"] = processing_checks(snapshot, thread_id, expected=expected_processing, require_note=require_note)
+            receipt["processing_checks"] = processing_checks(snapshot, thread_id, expected=expected_processing, require_note=require_note, service_queue=getattr(args, "service_queue", False))
             require(all(receipt["processing_checks"].values()), "automatic_processing_contract_failed")
             if name == "completed_source":
                 require(snapshot["latest_fact_in_tool_response"] and snapshot["latest_fact_absent_from_input"] and snapshot["latest_fact_absent_from_user_and_assistant"], "tool_only_fact_not_proven")
@@ -414,8 +436,8 @@ def native(args: argparse.Namespace) -> dict[str, Any]:
     data_dir.mkdir()
     fixture(project, completed=False)
     jev_settings = configured_jev_settings([project, outside]) if args.configured_jev else {}
-    configure(data_dir, capture_scope="selected", included_projects=[str(project), str(outside)], capture_tools=True, processor_enabled=True, service_enabled=False, semantic_enabled=False, **jev_settings)
-    receipt: dict[str, Any] = {"status": "running", "mode": "native", "package_version": __version__, "configured_jev_enabled": args.configured_jev, "project": str(project), "data_dir": str(data_dir), "fixture_root": str(root), "processor_invoked_manually": False, "explicit_memory_writes": False, "runs": [], "retention": "synthetic fixture and metadata receipts retained"}
+    configure(data_dir, capture_scope="selected", included_projects=[str(project), str(outside)], capture_tools=True, processor_enabled=True, service_enabled=getattr(args, "service_queue", False), semantic_enabled=False, **jev_settings)
+    receipt: dict[str, Any] = {"status": "running", "mode": "native", "package_version": __version__, "configured_jev_enabled": args.configured_jev, "project": str(project), "data_dir": str(data_dir), "fixture_root": str(root), "service_queue_enabled": getattr(args, "service_queue", False), "processor_invoked_manually": False, "explicit_memory_writes": False, "runs": [], "retention": "synthetic fixture and metadata receipts retained"}
     try:
         for name, completed in (("unfinished_source", False), ("completed_source", True)):
             fixture(project, completed=completed)
@@ -424,6 +446,10 @@ def native(args: argparse.Namespace) -> dict[str, Any]:
             receipt["runs"].append(result)
             _write_receipt(args.output, receipt)
             require(result["status"] == "passed", f"{name}_failed")
+        if getattr(args, "service_queue", False):
+            queue = service_status(data_dir)
+            receipt["service_queue_after_processing"] = queue
+            require(queue.get("running") is True and bool(queue.get("owner_id")) and queue.get("runtime_version") == __version__, "fixture_queue_worker_not_proven")
         configure(data_dir, processor_enabled=False)
         if args.saturated_delivery:
             for index in range(256):
@@ -460,11 +486,27 @@ def native(args: argparse.Namespace) -> dict[str, Any]:
     except AcceptanceError as exc:
         receipt.update(status="failed", failure_code=str(exc))
     finally:
+        if getattr(args, "service_queue", False):
+            receipt["service_queue_cleanup"] = cleanup_fixture_service(data_dir)
+            if not receipt["service_queue_cleanup"]["complete"]:
+                receipt.update(status="failed", failure_code="fixture_queue_cleanup_failed")
         receipt["observer_usage"] = observer_usage(data_dir)
         seed_tokens = [row["usage"]["tokens"]["total_tokens"] for row in receipt["runs"][:2] if row.get("usage", {}).get("status") == "reported"]
         receipt["seed_main_reported_total_tokens"] = sum(seed_tokens) if seed_tokens else None
         _write_receipt(args.output, receipt)
     return receipt
+
+
+def cleanup_fixture_service(data_dir: Path) -> dict[str, Any]:
+    """Stop only this isolated home's worker, using cooperative service APIs."""
+    before = service_status(data_dir)
+    stopped = stop_service(data_dir, expected_owner=before.get("owner_id"))
+    deadline = time.monotonic() + 15
+    after = service_status(data_dir)
+    while after.get("status") in {"running", "starting"} and time.monotonic() < deadline:
+        time.sleep(0.2)
+        after = service_status(data_dir)
+    return {"request": stopped, "final": after, "complete": after.get("status") == "stopped"}
 
 
 def dry_run() -> dict[str, Any]:
@@ -482,6 +524,7 @@ def dry_run() -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native", action="store_true")
+    parser.add_argument("--service-queue", action="store_true", help="Use native hook wakes and the real isolated background queue; never enqueue manually.")
     parser.add_argument("--paired", action="store_true")
     parser.add_argument("--configured-jev", action="store_true", help="Enable scoped eligibility, strict quality and retrieval using only the configured credential path.")
     parser.add_argument("--saturated-delivery", action="store_true", help="Check actual native delivery survives a 256-session isolated cache.")

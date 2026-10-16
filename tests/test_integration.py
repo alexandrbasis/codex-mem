@@ -11,6 +11,65 @@ from codex_mem.service import _index_pending
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_system_python_hook_can_enqueue_without_semantic_runtime(self):
+        # macOS native hooks use the system interpreter before the optional
+        # semantic-runtime handoff. Exercise the full lazy service import.
+        import subprocess
+        system_python = Path("/usr/bin/python3")
+        if not system_python.is_file():
+            self.skipTest("system Python unavailable")
+        probe = subprocess.run([str(system_python), "-c", "import sys; print(sys.version_info[:2])"],
+                               capture_output=True, text=True, check=True)
+        if probe.stdout.strip() != "(3, 9)":
+            self.skipTest("Python 3.9 native hook interpreter unavailable")
+        script = """
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+from codex_mem.config import configure
+from codex_mem.integration import after_write
+with TemporaryDirectory() as temporary:
+    data = Path(temporary) / 'memory'
+    project = Path(temporary) / 'project'
+    project.mkdir()
+    configure(data, capture_scope='all')
+    # Patch startup only after enqueue has imported the actual service module.
+    # Importing it here also exposes compatibility errors swallowed by after_write.
+    with patch('codex_mem.service.start_service', return_value={'status': 'test-disabled'}):
+        receipt = after_write(project, data, wait_for_start=False)
+    assert receipt['status'] == 'queued', receipt
+"""
+        result = subprocess.run([str(system_python), "-c", script],
+                                cwd=Path(__file__).resolve().parents[1],
+                                capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_queue_failure_reports_safe_diagnostic_and_preserves_fail_open(self):
+        from codex_mem.integration import after_write
+        failure = OSError("secret capture text")
+        with patch("codex_mem.integration.enqueue_project", side_effect=failure), patch(
+            "codex_mem.hook_diagnostics.trace_error",
+        ) as trace:
+            receipt = after_write("/project", "/memory")
+        self.assertEqual({"status": "failed", "code": "queue_unavailable"}, receipt)
+        trace.assert_called_once_with("queue_unavailable", failure)
+        self.assertNotIn("secret", str(receipt))
+
+    def test_start_failure_preserves_durable_queue_receipt(self):
+        from codex_mem.config import configure
+        from codex_mem.integration import after_write
+        from codex_mem.service import service_status
+        with tempfile.TemporaryDirectory() as temporary:
+            data = Path(temporary) / "memory"
+            project = Path(temporary) / "project"
+            project.mkdir()
+            configure(data, capture_scope="all")
+            with patch("codex_mem.service.start_service", side_effect=OSError("private failure")):
+                result = after_write(project, data)
+            self.assertEqual("queued", result["status"])
+            self.assertEqual({"status": "failed", "code": "service_start_unavailable"}, result["service"])
+            self.assertEqual(1, service_status(data)["queued_projects"])
+
     def test_search_memory_propagates_structured_filters_to_semantic_boundary(self):
         with tempfile.TemporaryDirectory() as temporary:
             data = Path(temporary) / "memory"

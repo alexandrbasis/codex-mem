@@ -27,7 +27,7 @@ import time
 from typing import Any
 from xml.etree import ElementTree
 
-from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason
+from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason, storage_failure_detail
 
 from .store import (
     DEFAULT_LEASE_SECONDS,
@@ -191,7 +191,8 @@ def process_pending(
     :class:`NativeProcessorRunner`; tests never need to launch Codex.
 
     The returned receipt intentionally contains no source text, prompt, model
-    output, raw configuration, or exception details.
+    output, raw configuration, or exception text. Storage failures retain only
+    fixed reason and operation codes plus numeric SQLite/OS error codes.
     ``deferred`` means another running lease still owns the sources; its
     ``retry_at`` is a UTC Unix timestamp for the next safe claim attempt.
     ``retry_job_id`` retries only the matching timeout, runner, or storage failure. It never
@@ -213,23 +214,21 @@ def process_pending(
         return _failed_receipt(None, "invalid_request", None, None)
     from .jev_client import enabled
     from .jev_quality import MAX_GATE_SECONDS
-    filter_projects = settings.get("jev_filter_projects", [])
-    jev_enabled = bool(settings.get("jev_filter_enabled")) and (
-        not filter_projects or any(
-            Path(workspace) == Path(path) or Path(path) in Path(workspace).parents
-            for path in filter_projects
-        )
-    )
+    jev_enabled = enabled(settings, "jev_filter_enabled", workspace)
     quality_enabled = enabled(settings, "jev_quality_enabled", workspace)
     effective_lease_seconds = _effective_lease_seconds(
         lease_seconds, checked_timeout + (60 if jev_enabled else 0)
         + (MAX_GATE_SECONDS if quality_enabled else 0))
 
     claimed: Mapping[str, Any] | None = None
+    storage_operation = "open"
+    job_id: str | None = None
     try:
         with Store(data_dir) as store:
             from .observer_usage_store import reconcile_attempts
+            storage_operation = "reconcile"
             reconcile_attempts(store, workspace)
+            storage_operation = "claim"
             claimed = store.claim_observation_batch(
                 workspace,
                 PROCESSOR_ID,
@@ -251,6 +250,7 @@ def process_pending(
             if claimed is None:
                 if retry_attempt_count is not None:
                     return {**_idle_receipt(), "status": "blocked", "code": "recovery_unavailable"}
+                storage_operation = "lease_lookup"
                 expiry = store.next_observation_lease_expiry(workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT)
                 if expiry is not None:
                     return _deferred_receipt(expiry)
@@ -264,8 +264,10 @@ def process_pending(
                 or not isinstance(raw_lease_token, str)
                 or not _valid_source_id(raw_lease_token)
             ):
-                return _failed_receipt(None, "storage_failure", None, None)
+                return {**_failed_receipt(None, "storage_failure", None, None),
+                        "failure_detail": storage_failure_detail(StoreError("Invalid storage claim"), "claim", preclaim=False)}
             job_id = raw_job_id
+            storage_operation = "process"
             lease_token = raw_lease_token
             thread_id: str | None = None
             turn_id: str | None = None
@@ -435,11 +437,13 @@ def process_pending(
                 outcome = "lease_expired"
                 error_code = "lease_expired"
                 receipt = _failed_receipt(job_id, "lease_expired", thread_id, turn_id)
-            except (StoreError, OSError):
+            except (StoreError, OSError) as exc:
                 error_code = "storage_failure"
                 receipt = _failed_after_claim(
                     store, workspace, job_id, lease_token, "storage_failure", thread_id, turn_id
                 )
+                if receipt.get("code") == "storage_failure" and "failure_detail" not in receipt:
+                    receipt["failure_detail"] = storage_failure_detail(exc, "process", preclaim=False)
             except Exception:
                 # A test runner and a native process both remain untrusted at
                 # this boundary; do not pass exception content into durable
@@ -472,15 +476,17 @@ def process_pending(
                             finish_attempt(store, workspace, job_id, attempt_count, metrics=None, **terminal)
                         if receipt is not None:
                             receipt["observer_usage_recorded"] = True
-                    except (StoreError, OSError, ValueError):
+                    except (StoreError, OSError, ValueError) as exc:
                         # A failed receipt write cannot roll back an already
                         # committed note. Its running/unknown row remains an
                         # explicit accounting gap instead of invented zero.
                         if receipt is not None:
                             receipt["observer_usage_recorded"] = False
+                            receipt["observer_usage_failure_detail"] = storage_failure_detail(exc, "finalize", preclaim=False)
             return receipt or _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
-    except (StoreError, OSError):
-        return _failed_receipt(None, "storage_failure", None, None)
+    except (StoreError, OSError) as exc:
+        return {**_failed_receipt(job_id, "storage_failure", None, None),
+                "failure_detail": storage_failure_detail(exc, storage_operation, preclaim=claimed is None)}
 
 
 def _quality_correction_prompt(audit: Mapping[str, Any]) -> str:
@@ -1546,7 +1552,11 @@ def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any
         "processed for supported durable content, or skipped with notes [] and "
         "session_summary null when no durable content is justified. For a Stop batch, "
         "every processed result requires a session_summary even when notes is empty. "
-        "Without a Stop, processed requires at least one note and session_summary null."
+        "Without a Stop, processed requires at least one note and session_summary null. "
+        "A session_summary must contain substantive nonempty text in at least one field "
+        "other than title and source_ids. If the Stop adds only an acknowledgement and "
+        "there is no substantive earlier session history, choose skipped instead of an "
+        "empty summary. Never invent content to fill an empty field."
     )
     return {
         "job_id": job_id,
@@ -1664,6 +1674,16 @@ def _build_prompt(
         "Include only relevant source_ids on each note. Unrelated sources may be omitted. "
         "A source may support multiple distinct notes when it contains evidence for each. "
         "Combine related facts instead of repeating the same finding in several notes. "
+        "Preserve material limits and unresolved conditions together with the decision or "
+        "result they qualify. Do not compress away conditions about funding, permissions, "
+        "scope, rollout, concurrency, or operational verification while retaining the success "
+        "claim. Keep distinct local, synthetic and production verification scopes. A code "
+        "comment or test source is implementation evidence, not an executed result. "
+        "Retain concrete task identifiers and task-document paths present in the evidence "
+        "so a discovery can later be associated with its task. Include those observed paths "
+        "in files_read or files_modified as appropriate, even when the task ID is assigned "
+        "later. Do not invent an ID or infer that two topics share a task from session "
+        "membership alone. "
         "Prefer zero notes over a generic activity summary. Return "
         "only JSON that satisfies the provided schema.\n\n"
         f"Each note includes structured observation fields: type ({', '.join(OBSERVATION_TYPES)}), "
@@ -1981,9 +2001,13 @@ def _validated_summary(value: object, sources: Sequence[Mapping[str, Any]]) -> d
         item = value[field]
         if field == "request" and item is None:
             continue
-        if not isinstance(item, str) or len(item) > (MAX_TITLE_CHARS if field == "title" else 3000):
+        if (not isinstance(item, str) or "\x00" in item
+                or len(item) > (MAX_TITLE_CHARS if field == "title" else 3000)):
             raise ProcessorFailure("invalid_response", reason_code="invalid_summary_text")
     _bounded_nonempty_text(value["title"], MAX_TITLE_CHARS)
+    if not any(isinstance(value[field], str) and value[field].strip()
+               for field in fields - {"title", "source_ids"}):
+        raise ProcessorFailure("invalid_response", reason_code="empty_session_summary")
     try:
         return _validate_session_summary(value)
     except (ValueError, TypeError):
@@ -2070,14 +2094,15 @@ def _failed_after_claim(
         )
         expired_code = "lease_expired" if recoverable else safe_code
         return _failed_receipt(job_id, expired_code, thread_id, turn_id, reason_code=reason_code)
-    except (StoreError, ValueError, OSError):
+    except (StoreError, ValueError, OSError) as exc:
         if safe_code == "invalid_response" and reason_code in {
             "jev_quality_unavailable", "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
         }:
             # A replaced/revoked lease must not turn cancellation into an
             # automatic retry or mutate a newer worker's ownership.
             return _failed_receipt(job_id, safe_code, thread_id, turn_id, reason_code=reason_code)
-        return _failed_receipt(job_id, "storage_failure", thread_id, turn_id)
+        return {**_failed_receipt(job_id, "storage_failure", thread_id, turn_id),
+                "failure_detail": storage_failure_detail(exc, "finalize", preclaim=False)}
 
 
 def _deferred_receipt(expiry: str) -> dict[str, Any]:

@@ -17,7 +17,7 @@ import sqlite3
 import time
 from typing import Any
 
-from .config import is_excluded_project
+from .config import is_excluded_project, is_jev_excluded_project
 from .jev_filter import MODEL, MAX_PAYLOAD_BYTES, JevFilterError, _post
 from .privacy import REDACTED, _SECRET_NAME, redact_text
 from .store import project_key
@@ -45,9 +45,10 @@ class JevError(RuntimeError):
 
 def enabled(settings: Mapping[str, Any], flag: str, project: str | Path) -> bool:
     """Each new remote use is opt-in; exclusions always win over its scope."""
-    if (flag not in {"jev_quality_enabled", "jev_retrieval_enabled"}
+    if (flag not in {"jev_filter_enabled", "jev_quality_enabled", "jev_retrieval_enabled"}
             or not getattr(settings, "valid", True) or settings.get(flag) is not True
-            or is_excluded_project(project, settings)):
+            or is_excluded_project(project, settings)
+            or is_jev_excluded_project(project, settings)):
         return False
     scope = "jev_retrieval_projects" if flag == "jev_retrieval_enabled" else "jev_filter_projects"
     scopes = [settings.get(scope, [])]

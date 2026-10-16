@@ -173,6 +173,27 @@ class JevProcessorTests(unittest.TestCase):
                 self.assertIn('UNFILTERED_SENTINEL', runner.call_args.args[0]['prompt'])
                 self.assertEqual([], self.status(result)['jev_filter_attempts'])
 
+    def test_project_baseline_bypasses_remote_gates_but_keeps_source_validation(self):
+        configure(self.home, jev_quality_enabled=True,
+                  jev_excluded_projects=[str(self.project)])
+        self.remember('Use local storage for offline access.')
+        evaluator = mock.Mock(side_effect=AssertionError('No external judgment allowed'))
+        result = process_pending(self.project, self.home, runner=self.note,
+                                 jev_evaluator=evaluator, jev_quality_evaluator=evaluator)
+        self.assertEqual('processed', result['status'], result)
+        evaluator.assert_not_called()
+        self.assertEqual([], self.status(result)['jev_filter_attempts'])
+        self.remember('Another source event.')
+        def invalid(request):
+            receipt = self.note(request)
+            receipt['output']['notes'][0]['source_ids'] = ['missing-source']
+            return receipt
+        invalid_result = process_pending(self.project, self.home, runner=invalid,
+                                         jev_evaluator=evaluator, jev_quality_evaluator=evaluator)
+        self.assertEqual('failed', invalid_result['status'], invalid_result)
+        self.assertEqual('invalid_response', invalid_result['code'])
+        evaluator.assert_not_called()
+
     def test_required_summary_cannot_replace_rejected_derived_note_with_raw_history(self):
         raw = self.remember('Original decision evidence.')
         earlier = process_pending(self.project, self.home, runner=self.note, jev_evaluator=lambda _: answer())

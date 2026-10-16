@@ -366,6 +366,73 @@ class MaintenanceHealthCheckTests(unittest.TestCase):
         self.assertEqual(1, project["observations"]["quarantined_observations"])
         self.assertFalse(project["service"]["queue_metadata"]["blocked"])
 
+    def test_resolved_failed_history_does_not_quarantine_current_queue(self) -> None:
+        with Store(self.data_dir) as store:
+            raw = store.remember(self.project_a, "Raw", "evidence", source="hook:Stop")
+        self._insert_job(raw["id"], status="failed", created="2025-12-29T00:00:00Z",
+                         updated="2025-12-29T01:00:00Z")
+        with closing(sqlite3.connect(self.data_dir / "memory.sqlite3")) as connection, connection:
+            connection.execute("UPDATE observation_jobs SET input_fingerprint=?", ("0" * 64,))
+        self._insert_job(raw["id"], status="processed", created="2025-12-30T00:00:00Z",
+                         updated="2025-12-30T01:00:00Z", completed="2025-12-30T01:00:00Z")
+        project = self.report()["projects"][0]
+        queue = project["observation_queue"]
+        self.assertEqual("healthy", queue["status"])
+        self.assertEqual(1, queue["counts"]["failed"])
+        self.assertEqual(1, queue["historical_failed_jobs"])
+        self.assertEqual(0, queue["unresolved_failed_jobs"])
+        self.assertEqual(0, queue["quarantined_jobs"])
+        self.assertEqual(0, project["observations"]["failed_observations"])
+
+    def test_superseded_failed_source_is_historical(self) -> None:
+        with Store(self.data_dir) as store:
+            raw = store.remember(self.project_a, "Raw", "evidence", source="hook:Stop")
+            store.remember(self.project_a, "Derived", "completed", source_ids=[raw["id"]])
+        self._insert_job(raw["id"], status="failed", created="2025-12-29T00:00:00Z",
+                         updated="2025-12-29T01:00:00Z")
+        queue = self.report()["projects"][0]["observation_queue"]
+        self.assertNotEqual("quarantined", queue["status"])
+        self.assertEqual(1, queue["historical_failed_jobs"])
+        self.assertEqual(0, queue["unresolved_failed_sources"])
+
+    def test_dangling_failed_source_link_reports_unknown(self) -> None:
+        with Store(self.data_dir) as store:
+            raw = store.remember(self.project_a, "Raw", "evidence", source="hook:Stop")
+        self._insert_job(raw["id"], status="failed", created="2025-12-29T00:00:00Z",
+                         updated="2025-12-29T01:00:00Z")
+        with closing(sqlite3.connect(self.data_dir / "memory.sqlite3")) as connection, connection:
+            connection.execute("UPDATE observation_job_sources SET source_id='missing-source'")
+        queue = self.report()["projects"][0]["observation_queue"]
+        self.assertEqual("unavailable", queue["status"])
+        self.assertEqual(1, queue["unknown_failed_jobs"])
+        self.assertEqual([{"reason": "missing_source_records", "jobs": 1}],
+                         queue["failure_resolution_gaps"])
+
+    def test_failed_job_without_source_links_is_unknown(self) -> None:
+        with Store(self.data_dir) as store:
+            raw = store.remember(self.project_a, "Raw", "evidence", source="hook:Stop")
+        self._insert_job(raw["id"], status="failed", created="2025-12-29T00:00:00Z",
+                         updated="2025-12-29T01:00:00Z")
+        with closing(sqlite3.connect(self.data_dir / "memory.sqlite3")) as connection, connection:
+            connection.execute("DELETE FROM observation_job_sources")
+        queue = self.report()["projects"][0]["observation_queue"]
+        self.assertEqual("unavailable", queue["status"])
+        self.assertEqual(1, queue["unknown_failed_jobs"])
+        self.assertEqual(0, queue["historical_failed_jobs"])
+        self.assertEqual(0, queue["unresolved_failed_jobs"])
+        self.assertEqual("missing_source_links", queue["failure_resolution_gaps"][0]["reason"])
+
+    def test_active_failed_source_remains_quarantined(self) -> None:
+        with Store(self.data_dir) as store:
+            raw = store.remember(self.project_a, "Raw", "evidence", source="hook:Stop")
+        self._insert_job(raw["id"], status="failed", created="2025-12-29T00:00:00Z",
+                         updated="2025-12-29T01:00:00Z")
+        queue = self.report()["projects"][0]["observation_queue"]
+        self.assertEqual("quarantined", queue["status"])
+        self.assertEqual(1, queue["unresolved_failed_jobs"])
+        self.assertEqual(1, queue["unresolved_failed_sources"])
+        self.assertEqual(0, queue["historical_failed_jobs"])
+
     def test_failed_job_reports_safe_current_reason_without_private_text(self) -> None:
         with Store(self.data_dir) as store:
             failed = store.remember(

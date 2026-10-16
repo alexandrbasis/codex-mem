@@ -41,7 +41,8 @@ def exact_constraints(query: str, project: str | Path | None = None) -> dict[str
     if project is not None and current_state_scope(query, project) is not None:
         # A named project in a broad status question is already the SQL scope.
         return {"terms": [], "identifiers": [], "versions": [], "minimum": 0}
-    plan = prompt_query_plan("How " + query)
+    plan = prompt_query_plan("How " + query,
+                             natural_compounds=prompt_query_plan(query) is not None)
     if plan is None:
         # A cap in the lexical planner must never discard mandatory literals.
         if re.search(r"[_./:]|\d|[a-z][A-Z]", query):

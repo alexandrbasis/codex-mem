@@ -2,11 +2,12 @@
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 from codex_mem import semantic
 from codex_mem.config import configure
-from codex_mem.retrieval import preview_records, prompt_match_score, prompt_query_plan
+from codex_mem.retrieval import current_state_scope, preview_records, prompt_match_score, prompt_query_plan
 from codex_mem.store import Store
 from tests.test_resume_current_state import Backend, CandidateStore, event, summary
 
@@ -16,6 +17,8 @@ AUDIT_QUERIES = (
     "Что вошло в последний релиз и чем подтверждено, что его выкатили?",
     "Что у нас осталось непроверенным после последнего релиза?",
     "проанализируй как там наш плагин как справляется с задачей своей",
+    "Какая версия codex-mem сейчас установлена и что подтвердило её работу?",
+    "Что сейчас с плагином codex-mem, что уже исправили и что осталось сделать?",
 )
 
 
@@ -37,7 +40,7 @@ class AuditRetrievalTests(unittest.TestCase):
                     body="The release had unresolved freshness work.",
                     fixture_time="2026-09-14T10:00:00Z"),
             summary("current", "release-session", title="Release verification completed",
-                    body="The codex-mem release was pushed; native integration remains unverified.",
+                    body="The codex-mem release was installed and pushed; native integration remains unverified.",
                     fixture_time="2026-09-21T10:00:00Z"),
         ]
 
@@ -71,6 +74,41 @@ class AuditRetrievalTests(unittest.TestCase):
         ):
             with self.subTest(query=query):
                 self.assertEqual("old", self.search(query, self.releases(), limit=1)[0]["id"])
+
+    def test_installed_state_keeps_specific_subjects_and_history(self):
+        for query in (
+            "Какая версия codex-mem 1.6.0 сейчас установлена?",
+            "Какая версия memory_search сейчас установлена?",
+            "Какая версия queue-worker сейчас установлена?",
+            "Какая версия codex-mem раньше была установлена?",
+            "Что сейчас с плагином codex-mem и фильтрацией Jev?",
+            "Что сейчас исправили в codex_mem/retrieval.py?",
+        ):
+            with self.subTest(query=query):
+                self.assertIsNone(current_state_scope(query, self.project))
+
+    def test_live_state_phrases_prefer_october_install_over_september_version(self):
+        for query in AUDIT_QUERIES[-2:]:
+            with self.subTest(query=query):
+                records = [
+                    summary("september", "old-session", title="Codex Mem 1.6.0 installed",
+                        body="The old plugin installation passed its check.",
+                        fixture_time="2026-09-10T10:00:00Z"),
+                    summary("october", "current-session", title="Codex Mem 1.11.8 installed",
+                        body="Queue recovery and real-session search checks passed.",
+                        fixture_time="2026-10-10T10:00:00Z"),
+                ]
+                self.assertEqual(["october"], [row["id"] for row in self.search(query, records, limit=1)])
+
+    def test_installed_version_prioritizes_new_install_finding_over_old_handoff(self):
+        records = [
+            summary("old", "old-session", title="Version 1.6.0 installed",
+                fixture_time="2026-09-10T10:00:00Z"),
+            {"id": "current", "kind": "note", "session_id": "install-session",
+             "title": "Install report showed runtime 1.11.8", "body": "Installed runtime verified.",
+             "observation": {"type": "discovery"}, "fixture_time": "2026-10-10T10:00:00Z"},
+        ]
+        self.assertEqual(["current"], [row["id"] for row in self.search(AUDIT_QUERIES[-2], records, limit=1)])
 
     def test_same_topic_later_handoff_moves_before_old_status_note(self):
         old = {"id": "pending", "kind": "note", "session_id": "release-session",
@@ -232,7 +270,7 @@ class AuditContextTests(unittest.TestCase):
     def test_automatic_context_uses_current_evidence_across_language(self):
         self.note("Плагин Codex Mem: старый релиз", "Плагин памяти задерживает обработку.",
                   "old", 14, session_summary={"next_steps": "Проверить обработку памяти."})
-        latest = self.note("Release verification completed", "The codex-mem release was pushed.",
+        latest = self.note("Release verification completed", "The codex-mem release was installed and pushed.",
                           "current", 21, session_summary={"completed": "CI passed.",
                           "next_steps": "Native integration remains unverified."})
         for query in AUDIT_QUERIES:
@@ -248,6 +286,74 @@ class AuditContextTests(unittest.TestCase):
         self.note("Hook timeout decision in 1.9.2", "A later release changed the worker.", "new", 29)
         self.assertEqual([target["id"]], self.ids(query))
         self.assertEqual([target["id"]], [row["id"] for row in self.store.search(self.project, query)])
+
+    def test_russian_causal_preposition_does_not_require_literal_hyphen(self):
+        target = self.note("Jev: обработка памяти застревала",
+            "Память застревала при Jev. Очередь исправили и проверили обработку.", "target", 28)
+        self.note("Invoice parser", "Reviewed VAT rounding.", "other", 29)
+        query = "Почему память застревала из-за Jev и как это исправили?"
+        self.assertEqual([target["id"]], [row["id"] for row in self.store.search(self.project, query)])
+        self.assertEqual([target["id"]], self.ids(query))
+        self.assertEqual([], prompt_query_plan(query)["identifiers"])
+
+    def test_broad_resume_recovers_recent_evidence_missing_from_relevance_window(self):
+        old = self.note("Codex Mem 1.6.0 installed", "Old install verification.", "old", 10)
+        current = self.note("Install report showed runtime 1.11.8",
+            "Queue recovery and real-session search checks passed.", "current", 28)
+        newer_unrelated = self.note("Invoice parser review", "VAT rounding passed.", "other", 29)
+        for mode in ("lexical", "semantic", "hybrid", "auto"):
+            with self.subTest(mode=mode), patch.object(semantic, "_lexical_results", return_value=[old]), \
+                    patch.object(semantic, "_semantic_results", return_value=[old]), \
+                    patch.object(semantic, "_resume_candidates", return_value=[]):
+                result = semantic.search(self.store, self.project, AUDIT_QUERIES[-2],
+                    mode=mode, intent="resume", limit=5, backend=Backend())
+                self.assertIn(current["id"], [row["id"] for row in result["results"]])
+                self.assertNotIn(newer_unrelated["id"], [row["id"] for row in result["results"]])
+                self.assertGreater(result["resume_added_candidates"], 0)
+
+    def test_recent_resume_expansion_keeps_release_scope_and_opt_outs(self):
+        release = self.note("Release checks passed", "Release 1.11.8 shipped.", "release", 28)
+        self.note("Invoice parser review", "VAT rounding passed.", "other", 29)
+        with patch.object(semantic, "_lexical_results", return_value=[]), \
+                patch.object(semantic, "_resume_candidates", return_value=[]):
+            result = semantic.search(self.store, self.project, AUDIT_QUERIES[1],
+                mode="lexical", intent="resume", limit=5)
+        self.assertEqual([release["id"]], [row["id"] for row in result["results"]])
+        with patch.object(self.store, "retrieval_candidates", side_effect=AssertionError("No recent expansion")):
+            for query, intent, filters in (
+                (AUDIT_QUERIES[-2], "lookup", {}),
+                ("Какая версия codex-mem 1.6.0 сейчас установлена?", "resume", {}),
+                ("Покажи историю версий codex-mem", "resume", {}),
+                ("Что осталось проверить в фильтрации Jev?", "resume", {}),
+                (AUDIT_QUERIES[-2], "resume", {"files": ["worker.py"]}),
+            ):
+                semantic.search(self.store, self.project, query, mode="lexical", intent=intent, **filters)
+
+    def test_installation_scope_filters_recent_inspection_before_candidate_cap(self):
+        target = self.note("Install report showed runtime 1.11.8",
+            "The plugin was installed; CI verification remained pending.", "install", 10)
+        for day in range(11, 30):
+            self.note("Inspected worker leases and health checks",
+                "Source inspection found expired leases; no behavior was changed.", f"inspect-{day}", day)
+        query = AUDIT_QUERIES[-2]
+        pool = self.store.retrieval_candidates(self.project, query=query)
+        self.assertEqual([target["id"]], [row["id"] for row in pool])
+        with patch.object(semantic, "_lexical_results", return_value=[]), \
+                patch.object(semantic, "_resume_candidates", return_value=[]):
+            result = semantic.search(self.store, self.project, query, mode="lexical", intent="resume", limit=5)
+        self.assertEqual([target["id"]], [row["id"] for row in result["results"]])
+        broad = semantic.search(self.store, self.project, AUDIT_QUERIES[-1],
+            mode="lexical", intent="resume", limit=5)
+        self.assertIn("Inspected worker leases", broad["results"][0]["title"])
+
+    def test_causal_preposition_preserves_technical_hyphen_constraints(self):
+        for identifier in ("queue-worker", "AIAN-700", "очередь-воркер"):
+            query = f"Почему память застревала из-за {identifier} и как это исправили?"
+            plan = prompt_query_plan(query)
+            self.assertEqual([identifier.casefold()], plan["identifiers"])
+            self.assertEqual(0, prompt_match_score("Память застревала. Очередь исправили.", plan))
+            self.assertGreater(prompt_match_score(
+                f"Память застревала при {identifier}; очередь исправили.", plan), 0)
 
     def test_semantic_and_hybrid_enforce_requested_version_before_ranking(self):
         query = "Что решили и почему по таймауту хуков в 1.9.1?"

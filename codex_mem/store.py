@@ -186,7 +186,17 @@ _T = TypeVar("_T")
 
 
 class StoreError(RuntimeError):
-    """A safe, non-diagnostic error raised for a local storage failure."""
+    """A safe storage message with optional content-free error provenance."""
+
+    def __init__(self, message: str, *, cause: BaseException | None = None, retry_safe: bool = False):
+        super().__init__(message)
+        from .observation_diagnostics import storage_error_metadata
+        metadata = storage_error_metadata(cause) if cause is not None else {
+            "reason_code": "unknown", "sqlite_errorcode": None, "os_errno": None}
+        self.reason_code = metadata["reason_code"]
+        self.sqlite_errorcode = metadata["sqlite_errorcode"]
+        self.os_errno = metadata["os_errno"]
+        self.retry_safe = bool(retry_safe and self.reason_code in {"sqlite_busy", "sqlite_locked"})
 
 
 class ObservationLeaseExpired(StoreError):
@@ -912,9 +922,9 @@ class Store:
         except StoreError:
             self._close_quietly()
             raise
-        except (OSError, sqlite3.Error):
+        except (OSError, sqlite3.Error) as error:
             self._close_quietly()
-            raise StoreError("Storage could not be initialized") from None
+            raise StoreError("Storage could not be initialized", cause=error) from None
 
     def __enter__(self) -> "Store":
         self._require_open()
@@ -954,8 +964,8 @@ class Store:
             )
             os.close(descriptor)
             os.chmod(self.db_path, 0o600)
-        except OSError:
-            raise StoreError("Storage directory could not be secured") from None
+        except OSError as error:
+            raise StoreError("Storage directory could not be secured", cause=error) from None
 
     @property
     def _connection(self) -> sqlite3.Connection:
@@ -970,6 +980,9 @@ class Store:
 
     @staticmethod
     def _is_busy(error: sqlite3.OperationalError) -> bool:
+        code = getattr(error, "sqlite_errorcode", None)
+        if isinstance(code, int):
+            return code & 255 in {getattr(sqlite3, "SQLITE_BUSY", 5), getattr(sqlite3, "SQLITE_LOCKED", 6)}
         message = str(error).lower()
         return "locked" in message or "busy" in message
 
@@ -990,34 +1003,41 @@ class Store:
                     time.sleep(0.04 * (attempt + 1))
                     continue
                 if self._is_busy(error):
-                    raise StoreError("Storage database is busy") from None
-                raise StoreError("Storage operation failed") from None
-            except sqlite3.Error:
-                raise StoreError("Storage operation failed") from None
+                    raise StoreError("Storage database is busy", cause=error) from None
+                raise StoreError("Storage operation failed", cause=error) from None
+            except sqlite3.Error as error:
+                raise StoreError("Storage operation failed", cause=error) from None
         raise StoreError("Storage database is busy")
 
     def _write(self, operation: Callable[[], _T]) -> _T:
         connection = self._connection
         for attempt in range(5):
+            phase = "begin"
             try:
                 connection.execute("BEGIN IMMEDIATE")
+                phase = "operation"
                 result = operation()
+                phase = "commit"
                 connection.execute("COMMIT")
                 return result
-            except (StoreError, ValueError, TypeError):
+            except (StoreError, ValueError, TypeError) as error:
                 self._rollback_quietly()
+                if isinstance(error, StoreError):
+                    # An inner operation's evidence cannot prove the outer
+                    # transaction never began or that its outcome is known.
+                    error.retry_safe = False
                 raise
             except sqlite3.OperationalError as error:
                 self._rollback_quietly()
-                if self._is_busy(error) and attempt < 4:
+                if phase == "begin" and self._is_busy(error) and attempt < 4:
                     time.sleep(0.04 * (attempt + 1))
                     continue
                 if self._is_busy(error):
-                    raise StoreError("Storage database is busy") from None
-                raise StoreError("Storage operation failed") from None
-            except sqlite3.Error:
+                    raise StoreError("Storage database is busy", cause=error, retry_safe=phase == "begin") from None
+                raise StoreError("Storage operation failed", cause=error) from None
+            except sqlite3.Error as error:
                 self._rollback_quietly()
-                raise StoreError("Storage operation failed") from None
+                raise StoreError("Storage operation failed", cause=error) from None
         raise StoreError("Storage database is busy")
 
     def _initialize(self) -> None:
@@ -1029,8 +1049,8 @@ class Store:
             for sidecar in (self.db_path.with_name(self.db_path.name + "-wal"), self.db_path.with_name(self.db_path.name + "-shm")):
                 if sidecar.exists():
                     os.chmod(sidecar, 0o600)
-        except OSError:
-            raise StoreError("Storage directory could not be secured") from None
+        except OSError as error:
+            raise StoreError("Storage directory could not be secured", cause=error) from None
 
         def migrate() -> None:
             version = int(connection.execute("PRAGMA user_version").fetchone()[0])
@@ -2224,7 +2244,22 @@ class Store:
             return dict(record)
         if not isinstance(hydrated, Mapping):
             raise StoreError("Raw tool capture returned invalid data")
-        return dict(hydrated)
+        result = dict(hydrated)
+        tool_io = result.get("tool_io")
+        if isinstance(tool_io, Mapping):
+            # Raw capture APIs retain canonical JSON text. Decode only the
+            # observer copy so prompt serialization does not escape it twice.
+            # JSON values remain inert data; legacy non-JSON text stays whole.
+            prompt_io = dict(tool_io)
+            for field in ("tool_input", "tool_response"):
+                value = prompt_io.get(field)
+                if isinstance(value, str):
+                    try:
+                        prompt_io[field] = json.loads(value)
+                    except (ValueError, RecursionError):
+                        pass
+            result["tool_io"] = prompt_io
+        return result
 
     def _bounded_observation_sources(
         self, rows: Sequence[sqlite3.Row], max_chars: int, workspace: str | None = None
@@ -2689,6 +2724,7 @@ class Store:
                 remaining = chars_limit
                 selected_chars = 0
                 stop_reached = False
+                source_turn_id = None
                 for row in candidates:
                     if row["session_id"] != session_id:
                         continue
@@ -2698,6 +2734,13 @@ class Store:
                     # before this worker claimed the queue.
                     if stop_reached or len(selected) >= entries_limit:
                         break
+                    # Legacy events may lack turn IDs. Keep grouping those,
+                    # but never bridge two distinct known turns if Stop is
+                    # missing or delayed. Other sessions cannot set this ID.
+                    if row["turn_id"]:
+                        if source_turn_id is not None and row["turn_id"] != source_turn_id:
+                            break
+                        source_turn_id = row["turn_id"]
                     body = row["body"]
                     if not isinstance(body, str):
                         raise StoreError("Storage database contains invalid data")
@@ -4477,6 +4520,7 @@ class Store:
         concepts: Sequence[str] | None = None,
         files: Sequence[str] | None = None,
         resume: bool = False,
+        literal_plan: Mapping[str, Any] | None = None,
     ) -> tuple[list[sqlite3.Row], dict[str, float]]:
         if not expression:
             return [], {}
@@ -4488,6 +4532,13 @@ class Store:
             "COALESCE(e.source, '') NOT GLOB 'hook:*'",
         ]
         base_parameters: list[object] = [workspace]
+        if literal_plan and literal_plan["identifiers"]:
+            # FTS and metadata LIKE tokenize hyphenated IDs. Require the
+            # original identifier too, before either lane applies its cap.
+            _register_prompt_query_function(connection, literal_plan)
+            base_clauses.append(
+                "codex_mem_prompt_score(e.title, e.body, e.tags_json, "
+                "m.observation_json, m.session_summary_json) > 0")
         version_clauses, version_parameters = _version_search_sql("e", "m", metadata_tokens)
         if version_clauses:
             _register_query_functions(connection)
@@ -4581,6 +4632,11 @@ class Store:
         checked_types = _validate_observation_types(types if types is not None else type)
         checked_files = _validate_metadata_filters(files, "files")
         checked_concepts = _validate_metadata_filters(concepts, "concepts")
+        from .jev_retrieval import exact_constraints
+        try:
+            literal_plan = exact_constraints(query, workspace)
+        except ValueError:
+            return []  # A planner cap must never relax mandatory literals.
         with self._lock:
             self._require_open()
             rows, scores = self._search_rows(
@@ -4592,6 +4648,7 @@ class Store:
                 observation_types=checked_types,
                 concepts=checked_concepts,
                 files=checked_files,
+                literal_plan=literal_plan,
             )
             if not rows:
                 from .retrieval import prompt_query_plan
@@ -4810,6 +4867,53 @@ class Store:
             records = self._records_from_rows(rows)
             by_id = {record["id"]: record for record in records}
             return [by_id[entry_id] for entry_id in checked_ids if entry_id in by_id]
+
+    def retrieval_session_peers(
+        self, project: str | Path, session_id: str, *, limit: int = 64,
+    ) -> list[dict[str, Any]]:
+        """Read bounded curated peers for an explicitly proved issue association."""
+        workspace = project_key(project)
+        session = _validate_text(session_id, "session_id", MAX_SESSION_CHARS, required=True)
+        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 64:
+            raise ValueError("limit must be between 1 and 64")
+        with self._lock:
+            self._require_open()
+            rows = self._read(lambda: self._connection.execute(
+                "SELECT e.* FROM entries e WHERE e.project=? AND e.session_id=? "
+                "AND e.superseded_by IS NULL AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
+                "AND e.kind NOT IN ('session','tool','checkpoint') "
+                "ORDER BY e.created_at ASC,e.id ASC LIMIT ?",
+                (workspace, session, limit),
+            ).fetchall())
+            return self._records_from_rows(rows)
+
+    def get_source_capture(
+        self, project: str | Path, entry_id: str,
+    ) -> dict[str, Any] | None:
+        """Read one bounded raw capture by its exact project-local source ID."""
+        workspace = project_key(project)
+        checked_id = _validate_ids(entry_id, "entry_id")[0]
+        from .tool_io import get_tool_capture_for_entry
+
+        with self._lock:
+            self._require_open()
+
+            def read() -> dict[str, Any] | None:
+                # Check size before materializing payloads, including legacy
+                # rows not written by the current 64-KiB-per-field normalizer.
+                size = self._connection.execute(
+                    "SELECT length(CAST(COALESCE(tool_input, '') AS BLOB)) + "
+                    "length(CAST(COALESCE(tool_response, '') AS BLOB)) + "
+                    "length(CAST(COALESCE(input_metadata_json, '') AS BLOB)) + "
+                    "length(CAST(COALESCE(response_metadata_json, '') AS BLOB)) "
+                    "FROM tool_uses WHERE entry_id = ? AND project = ? ORDER BY id DESC LIMIT 1",
+                    (checked_id, workspace),
+                ).fetchone()
+                if size is None or size[0] > 262_144:
+                    return None
+                return get_tool_capture_for_entry(self._connection, checked_id, workspace)
+
+            return self._read(read)
 
     def get_tool_uses(
         self,
@@ -5179,6 +5283,7 @@ class Store:
         Raw source records supply timestamps only, never request text.
         """
         from .jev_retrieval import MAX_CANDIDATES, exact_constraints
+        from .retrieval import current_state_scope, software_subject_matches, state_scope_plan, resume_evidence_text
         workspace = project_key(project)
         checked_ids = _validate_ids(ids, "ids", allow_empty=True) if ids is not None else None
         if checked_ids == []:
@@ -5191,6 +5296,9 @@ class Store:
         checked_files = _validate_metadata_filters(files, "files")
         checked_concepts = _validate_metadata_filters(concepts, "concepts")
         constraints = exact_constraints(query, workspace)
+        state_scope = current_state_scope(query, workspace)
+        topic_plan = state_scope_plan(state_scope)
+        match_plan = topic_plan or (constraints if constraints["identifiers"] else None)
         clauses = ["e.project = ?", "e.superseded_by IS NULL",
                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
                    "(e.kind NOT IN ('session', 'tool', 'checkpoint') "
@@ -5212,8 +5320,10 @@ class Store:
         version_clauses, version_parameters = _version_search_sql("e", "m", constraints["versions"])
         clauses.extend(version_clauses)
         parameters.extend(version_parameters)
-        if constraints["identifiers"]:
+        if match_plan:
             clauses.append("codex_mem_prompt_score(e.title, e.body, e.tags_json, m.observation_json, m.session_summary_json) > 0")
+        if state_scope in {"installation", "version"}:
+            clauses.append("codex_mem_software_subject(e.title, e.body, m.observation_json, m.session_summary_json) > 0")
         # Baseline IDs must remain individually available for history requests;
         # only the recent expansion collapses a session's summary lane.
         session_partition = ("CASE WHEN is_summary AND COALESCE(session_id, '') != '' "
@@ -5266,8 +5376,22 @@ class Store:
                 self._connection.set_progress_handler(lambda: int(time.monotonic() >= deadline), 2_000)
             if version_clauses:
                 _register_query_functions(self._connection)
-            if constraints["identifiers"]:
-                _register_prompt_query_function(self._connection, constraints)
+            if match_plan:
+                _register_prompt_query_function(self._connection, match_plan)
+            if state_scope in {"installation", "version"}:
+                def subject_matches(title: str, body: str, observation: str, summary: str) -> int:
+                    evidence: dict[str, Any] = {"body": body}
+                    for field, raw in (("observation", observation), ("session_summary", summary)):
+                        try:
+                            value = json.loads(raw or "{}")
+                        except (ValueError, RecursionError):
+                            continue
+                        if isinstance(value, dict):
+                            evidence[field] = value
+                    return int(software_subject_matches(str(title or ""), workspace,
+                                                        resume_evidence_text(evidence)))
+                self._connection.create_function("codex_mem_software_subject", 4,
+                                                 subject_matches, deterministic=True)
             dated_rows = self._read(lambda: self._connection.execute(
                 sql, (*parameters, MAX_CANDIDATES)).fetchall())
             if not dated_rows:

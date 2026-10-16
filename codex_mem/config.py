@@ -43,6 +43,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     # Retrieval sends a query and curated excerpts; it has its own opt-in/scope.
     "jev_retrieval_enabled": False,
     "jev_retrieval_projects": [],
+    # Disable optional remote judgments for a project without disabling capture.
+    "jev_excluded_projects": [],
     "capture_scope": "selected",
     "context_chars": MAX_CONTEXT_CHARS,
     "excluded_projects": [],
@@ -185,6 +187,13 @@ def is_included_project(
 
     settings = config if config is not None else load_config()
     return _matches_project_paths(project, settings.get("included_projects", []))
+
+
+def is_jev_excluded_project(
+    project: str | os.PathLike[str] | None, config: Mapping[str, Any]
+) -> bool:
+    """Keep selected project roots on the local, no-Jev processing path."""
+    return _matches_project_paths(project, config.get("jev_excluded_projects", []))
 
 
 def automatic_capture_enabled(
@@ -441,6 +450,9 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
         "jev_retrieval_projects": _validate_jev_projects(
             raw.get("jev_retrieval_projects", []), strict
         ),
+        "jev_excluded_projects": _validate_jev_projects(
+            raw.get("jev_excluded_projects", []), strict
+        ),
         "capture_scope": _validate_capture_scope(
             raw.get("capture_scope", DEFAULT_CONFIG["capture_scope"]), strict
         ),
@@ -502,6 +514,8 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
             _validate_jev_projects(raw["jev_quality_projects"], True)
         if "jev_retrieval_projects" in raw:
             _validate_jev_projects(raw["jev_retrieval_projects"], True)
+        if "jev_excluded_projects" in raw:
+            _validate_jev_projects(raw["jev_excluded_projects"], True)
         if "capture_scope" in raw:
             _validate_capture_scope(raw["capture_scope"], True)
         if "context_chars" in raw:

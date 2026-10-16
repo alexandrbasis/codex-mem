@@ -790,6 +790,10 @@ def install_schema(connection: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS tool_uses_tool_name_idx "
         "ON tool_uses(project, tool_name)"
     )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS tool_uses_entry_project_idx "
+        "ON tool_uses(entry_id, project, id DESC)"
+    )
     columns = {
         row[1]
         for row in connection.execute("PRAGMA table_info(tool_uses)").fetchall()

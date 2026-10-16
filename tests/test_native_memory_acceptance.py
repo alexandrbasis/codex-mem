@@ -68,6 +68,36 @@ class NativeMemoryAcceptanceTests(unittest.TestCase):
         snapshot["jobs"][0]["output_ids"] = ["unexpected-note"]
         self.assertFalse(all(probe.processing_checks(snapshot, "main", expected="skipped").values()))
 
+    def test_queue_accepts_multiple_batches_only_after_every_source_is_drained(self):
+        job = {"status": "processed", "model": probe.MODEL, "reasoning_effort": probe.REASONING_EFFORT,
+               "worker_thread_id": "worker", "worker_turn_id": "turn"}
+        snapshot = {"jobs": [job, dict(job, status="skipped")], "raw_sources_drained": True,
+                    "tool_captures": [{"entry_id": "tool"}], "derived_output_cites_tool": True,
+                    "derived_outputs": [{"kind": "session_summary"}]}
+        self.assertTrue(all(probe.processing_checks(snapshot, "main", expected="processed", service_queue=True).values()))
+        self.assertFalse(all(probe.processing_checks(snapshot, "main", expected="processed").values()))
+        for field, value in (("raw_sources_drained", False), ("jobs", [job, dict(job, status="running")]),
+                             ("jobs", [job, dict(job, status="failed")]),
+                             ("jobs", [job, dict(job, worker_thread_id="main")])):
+            changed = dict(snapshot, **{field: value})
+            self.assertFalse(all(probe.processing_checks(changed, "main", expected="processed", service_queue=True).values()))
+
+    def test_queue_cleanup_uses_only_fixture_home_and_observed_owner(self):
+        home = Path("/private/tmp/synthetic-memory-home")
+        before = {"status": "running", "owner_id": "fixture-owner"}
+        after = {"status": "stopped"}
+        with patch.object(probe, "service_status", side_effect=[before, after]) as status, \
+                patch.object(probe, "stop_service", return_value={"status": "stopping"}) as stop:
+            result = probe.cleanup_fixture_service(home)
+        self.assertTrue(result["complete"])
+        stop.assert_called_once_with(home, expected_owner="fixture-owner")
+        self.assertEqual([home, home], [call.args[0] for call in status.call_args_list])
+
+    def test_service_queue_flag_dry_run_launches_no_native_sessions(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.object(probe, "native") as native:
+            self.assertEqual(0, probe.main(["--service-queue", "--output", str(Path(temporary) / "receipt.json")]))
+        native.assert_not_called()
+
     def test_zero_turn_fixture_proves_before_and_after_without_answer_in_prompt(self):
         result = probe.dry_run()
         self.assertEqual("passed", result["status"])

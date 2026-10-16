@@ -272,6 +272,45 @@ class InstallTests(unittest.TestCase):
             json.loads((target / ".codex-plugin/plugin.json").read_text())["version"], "1.2.0"
         )
 
+    def test_snapshot_accepts_33_small_managed_cache_versions(self):
+        target = self.source
+        cache_root = self.cache_root()
+        cache_root.mkdir(parents=True)
+        for index in range(33):
+            version = f"1.0.{index}"
+            package = cache_root / version
+            shutil.copytree(target, package)
+            (package / installer.MARKER).write_text("managed\n")
+            manifest_path = package / ".codex-plugin/plugin.json"
+            manifest_value = json.loads(manifest_path.read_text())
+            manifest_value["version"] = version
+            manifest_path.write_text(json.dumps(manifest_value))
+
+        backups, total = installer._snapshot_existing_caches(
+            cache_root, Path(self.temp.name) / "backup"
+        )
+
+        self.assertEqual(len(backups), 33)
+        self.assertGreater(total, 0)
+        self.assertEqual({entry[2] for entry in backups}, {f"1.0.{index}" for index in range(33)})
+
+    def test_snapshot_still_rejects_cache_count_above_configured_cap(self):
+        cache_root = self.cache_root()
+        cache_root.mkdir(parents=True)
+        for index in range(2):
+            version = f"1.0.{index}"
+            package = cache_root / version
+            shutil.copytree(self.source, package)
+            (package / installer.MARKER).write_text("managed\n")
+            manifest_path = package / ".codex-plugin/plugin.json"
+            manifest_value = json.loads(manifest_path.read_text())
+            manifest_value["version"] = version
+            manifest_path.write_text(json.dumps(manifest_value))
+
+        with mock.patch.object(installer, "MAX_CACHE_PACKAGES", 1):
+            with self.assertRaisesRegex(ValueError, "too many package entries"):
+                installer._snapshot_existing_caches(cache_root, Path(self.temp.name) / "backup")
+
     def test_activation_failure_keeps_its_error_after_cache_recovery(self):
         self.run_install()
         old_target = self.home / "plugins/codex-mem"
