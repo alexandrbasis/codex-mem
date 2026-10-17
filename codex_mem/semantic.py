@@ -1124,7 +1124,8 @@ def _quality_candidates(
             if isinstance(session, str) and resume_subject_matches(origin, exact_subject):
                 sessions.setdefault(session, []).append(origin)
         for session, origins in list(sessions.items())[:4]:
-            for row in read(project, session, limit=64):
+            peer_kwargs = {"limit": 64, **({"query": query} if isinstance(store, Store) else {})}
+            for row in read(project, session, **peer_kwargs):
                 if row["id"] in seen:
                     continue
                 origin = next((item for item in origins if issue_discovery_association(item, row, query)), None)

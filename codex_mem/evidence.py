@@ -67,6 +67,23 @@ def _response_text(value: Any, *, depth: int = 0) -> list[str]:
     if depth > 8:
         return []
     if isinstance(value, str):
+        # Legacy captures can wrap a real text response in several JSON
+        # strings. Decode data syntax within the existing depth/size budget
+        # before splitting excerpts, so escaped newlines do not hide facts
+        # behind an unrelated first qualification. Never evaluate commands.
+        if len(value) <= 131_072 and value.lstrip().startswith(('{', '[', '"')):
+            try:
+                decoded = json.loads(value)
+            except (ValueError, RecursionError):
+                pass
+            else:
+                if isinstance(decoded, (str, list, Mapping)):
+                    parts = _response_text(decoded, depth=depth + 1)
+                    if parts:
+                        return parts
+                    # A serialized quantitative receipt has no display-text
+                    # fields. Preserve its original representation rather
+                    # than losing counts while unwrapping a surrounding log.
         return [value]
     if isinstance(value, list):
         return [text for item in value[:100] for text in _response_text(item, depth=depth + 1)]

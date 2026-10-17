@@ -229,3 +229,26 @@ class EvidenceTests(unittest.TestCase):
             'Preparing a document is not a recommendation to submit it.'})
         result = self.expand()
         self.assertIn('not a recommendation', result['source_evidence'][0]['text'])
+
+    def test_nested_legacy_response_json_keeps_distinct_source_lines(self):
+        document = ('Funding remains unverified.\n' + 'Unrelated trace ' + 'x' * 1800 +
+                    '\nPurchase detection differs from final confirmation.')
+        self.capture['tool_response'] = json.dumps({'output': json.dumps({
+            'chunk_id': 'synthetic-wrapper', 'output': document})})
+        result = expand_source_evidence([self.parent],
+            'What funding and purchase detection were reviewed?', self.project,
+            load_records=lambda ids: [self.raw], load_capture=lambda ident: self.capture)[0]
+        text = ' '.join(item['text'] for item in result['source_evidence'])
+        self.assertIn('Funding remains unverified.', text)
+        self.assertIn('Purchase detection differs from final confirmation.', text)
+        self.assertNotIn('synthetic-wrapper', text)
+
+    def test_nested_legacy_json_still_removes_private_blocks(self):
+        value = {'output': 'Funding remains unverified.\n<private>Secret Company Plan</private>'}
+        for _ in range(3):
+            value = json.dumps(value)
+        self.capture['tool_response'] = value
+        result = self.expand()
+        text = ' '.join(item['text'] for item in result['source_evidence'])
+        self.assertIn('Funding remains unverified.', text)
+        self.assertNotIn('Secret Company', text)

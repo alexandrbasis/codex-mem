@@ -4870,14 +4870,73 @@ class Store:
 
     def retrieval_session_peers(
         self, project: str | Path, session_id: str, *, limit: int = 64,
+        query: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Read bounded curated peers for an explicitly proved issue association."""
+        """Read bounded curated peers for an explicitly proved issue association.
+
+        Query-aware selection ranks lexical matches before the limit. Only
+        issue IDs may be absent from pre-issue discovery; paths, versions and
+        other literal constraints remain required. Returned peers still need
+        the caller's independent task-file association check before admission.
+        Omitting query preserves the original chronological adapter contract.
+        """
         workspace = project_key(project)
         session = _validate_text(session_id, "session_id", MAX_SESSION_CHARS, required=True)
         if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 64:
             raise ValueError("limit must be between 1 and 64")
+        peer_plan = None
+        match_sql = ""
+        match_parameters: list[Any] = []
+        if query is not None:
+            _fts_tokens(query)  # Use the normal query type/size/empty guards.
+            from .tool_io import is_private_prompt
+            from .retrieval import (historical_query, prompt_query_plan,
+                                    prompt_term_variants, prompt_variant_prefix)
+            if is_private_prompt(query) or historical_query(query):
+                return []
+            peer_plan = prompt_query_plan("How " + query,
+                natural_compounds=prompt_query_plan(query) is not None)
+            if peer_plan is None:
+                return []
+            peer_plan = dict(peer_plan, identifiers=[word for word in peer_plan["identifiers"]
+                if not re.fullmatch(r"[a-z][a-z0-9]*-\d+", word)],
+                minimum=1 if peer_plan["terms"] else 0)
+            if not (peer_plan["terms"] or peer_plan["identifiers"] or peer_plan["versions"]):
+                return []
+            expression_parts = []
+            tokens = []
+            for term, stem in peer_plan["terms"]:
+                for variant in prompt_term_variants(term, stem):
+                    tokens.append(variant)
+                    expression_parts.append('"' + variant.replace('"', '""') + '"' +
+                        ('*' if prompt_variant_prefix(term, stem, variant) else ''))
+            for exact in (*peer_plan["identifiers"], *peer_plan["versions"]):
+                tokens.append(exact)
+                expression_parts.append('(' + _fts_expression(exact) + ')')
+            metadata_match, metadata_parameters = self._metadata_search_sql("m", tokens, any_token=True)
+            match_sql = " AND (e.rowid IN (SELECT rowid FROM entries_fts WHERE entries_fts MATCH ?)"
+            match_parameters.append(' OR '.join(dict.fromkeys(expression_parts)))
+            if metadata_match:
+                match_sql += " OR (" + metadata_match + ")"
+                match_parameters.extend(metadata_parameters)
+            match_sql += ")"
         with self._lock:
             self._require_open()
+            if peer_plan is not None:
+                _register_query_functions(self._connection)
+                _register_prompt_query_function(self._connection, peer_plan)
+                score = ("codex_mem_prompt_score(e.title,e.body,e.tags_json,"
+                         "m.observation_json,m.session_summary_json)")
+                ids = self._read(lambda: self._connection.execute(
+                    "SELECT e.id FROM entries e LEFT JOIN entry_metadata m ON m.entry_id=e.id "
+                    "WHERE e.project=? AND e.session_id=? AND e.superseded_by IS NULL "
+                    "AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
+                    "AND e.kind NOT IN ('session','tool','checkpoint')" + match_sql +
+                    " AND " + score + ">0 ORDER BY " + score + " DESC,e.created_at ASC,e.id ASC LIMIT ?",
+                    (workspace, session, *match_parameters, limit),
+                ).fetchall())
+                # Hydrate only the bounded scoped IDs, never the whole session.
+                return self.get(workspace, [row["id"] for row in ids]) if ids else []
             rows = self._read(lambda: self._connection.execute(
                 "SELECT e.* FROM entries e WHERE e.project=? AND e.session_id=? "
                 "AND e.superseded_by IS NULL AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
