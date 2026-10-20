@@ -1,0 +1,82 @@
+{
+  "source": "Explicit user request in Codex chat 01a159d1-5e22-7e13-9fe0-99f4c15c6000",
+  "date": "2026-10-20",
+  "base_commit": "f8764f6",
+  "scope": "Implement bounded consolidation of one task across episodes and sessions, and measure its effect with live models.",
+  "preserved_unrelated_changes": {
+    "AGENTS.md": "9557a80a4a08936a65671effc367c2dc652761584410fd9f36b8cbbe6791c8a0",
+    "docs/agents/installation-checks.json": "0cb9455eec4f87d3eb8c0c0882c987b6cb70a51b42a0212b36153e2621eb053a"
+  },
+  "product_requirements": [
+    "Merge only with supported task identity. Shared chat, topic, or words alone are insufficient.",
+    "Retain goals, active constraints, decision reasons, confirmed results, and unfinished work. Apply late corrections while retaining provenance.",
+    "An assistant report is not independent evidence of completion. Keep local validation, deployment, and production distinct.",
+    "Keep ambiguous links and contradictions visible. Do not close obligations to simplify a summary.",
+    "Keep exact evidence for each material field and links from derived records to original events.",
+    "Make jobs repeatable, restart safe, and safe against concurrent writes or source deletion. Old jobs must not restore forgotten content.",
+    "Bound input, source disclosure, attempts, and time. Account for every attempt. Reads must not invoke a model.",
+    "Keep observation coverage gaps visible. Captured events are not a complete transcript."
+  ],
+  "test_contract": {
+    "entrypoint": "process_project_memory",
+    "observation": "Read results through ProjectMemory on a real temporary Store.",
+    "injected_dependencies": [
+      "External generator",
+      "External evaluator"
+    ],
+    "required_scenarios": [
+      "One task across sessions",
+      "Independent tasks in one chat",
+      "Late correction without Stop",
+      "Repeated job",
+      "Restart",
+      "Concurrent write",
+      "Deletion during processing",
+      "Two projects",
+      "Existing database migration if schema changes"
+    ]
+  },
+  "experiment_requirements": {
+    "baseline": "f8764f6",
+    "comparison_controls": [
+      "Same model and reasoning effort",
+      "Same Jev setting",
+      "Same context budgets",
+      "Same questions"
+    ],
+    "target": "20 new fictional histories with six questions each, split into development and held-out sets.",
+    "freeze": "Freeze code and criteria before revealing held-out histories to the implementer.",
+    "reader": "A fresh model receives memory and questions only.",
+    "judge": "A separate model receives source history, expected facts, forbidden conclusions, evidence, and the answer without the variant label.",
+    "metrics": [
+      "Correct current state and useful continuation",
+      "Retention of constraints, obligations, and decision reasons",
+      "Source support",
+      "False merges, closures, project mixing, and deleted-content resurrection",
+      "Latency, context size, and full attempt usage/cost"
+    ],
+    "repetition": "Repeat a subset to assess instability, including generation.",
+    "empty_answers": "Cautious but empty answers are not improvements.",
+    "pilot_gate": {
+      "critical_errors": 0,
+      "fully_supported_answers_minimum": 0.9,
+      "minimum_gain_when_baseline_below_threshold_percentage_points": 10,
+      "important_constraint_loss_allowed": false
+    }
+  },
+  "completion_requirements": [
+    "Required test suite, acceptance, and package build",
+    "Architecture source review, candidate update, snapshot, full finalize, seal, and check",
+    "Document review",
+    "Independent standards and requirements code reviews",
+    "Reproducible experiment with per-question results and error analysis",
+    "Local commit excluding unrelated changes",
+    "Separate pilot readiness from installed service state"
+  ],
+  "not_authorized_or_requested": [
+    "Change global settings",
+    "Install or restart the production service",
+    "Publish a release or push a commit",
+    "Write personal memory"
+  ]
+}

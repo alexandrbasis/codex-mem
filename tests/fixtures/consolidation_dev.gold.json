@@ -1,0 +1,947 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "questions": {
+    "fiction-01/q1": {
+      "required_facts": [
+        {
+          "text": "Rebuild the report with locked parcels excluded",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "Rebuild the report with locked parcels excluded"
+            }
+          ]
+        },
+        {
+          "text": "I have not rebuilt the report yet.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 4,
+              "event_id": "fiction-01-s2-e005",
+              "fragment": "I have not rebuilt the report yet."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The existing dry-run report is ready for approval.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-01/q2": {
+      "required_facts": [
+        {
+          "text": "It lists 37 retry candidates.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 1,
+              "event_id": "fiction-01-s2-e002",
+              "fragment": "It lists 37 retry candidates."
+            }
+          ]
+        },
+        {
+          "text": "The preview omitted locked parcels.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "The preview omitted locked parcels."
+            }
+          ]
+        },
+        {
+          "text": "then show me the new candidate count.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "then show me the new candidate count."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "37 is the corrected candidate count.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-01/q3": {
+      "required_facts": [
+        {
+          "text": "Local ledger tests passed: 18 tests.",
+          "support": [
+            {
+              "session_id": "fiction-01-s1",
+              "event_index": 2,
+              "event_id": "fiction-01-s1-e003",
+              "fragment": "Local ledger tests passed: 18 tests."
+            }
+          ]
+        },
+        {
+          "text": "I have not connected to the production queue.",
+          "support": [
+            {
+              "session_id": "fiction-01-s1",
+              "event_index": 2,
+              "event_id": "fiction-01-s1-e003",
+              "fragment": "I have not connected to the production queue."
+            }
+          ]
+        },
+        {
+          "text": "No live replay was run.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 1,
+              "event_id": "fiction-01-s2-e002",
+              "fragment": "No live replay was run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Production replay has been validated.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-01/q4": {
+      "required_facts": [
+        {
+          "text": "Continue MQ-12 from yesterday. This is the same retry-ledger task",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 0,
+              "event_id": "fiction-01-s2-e001",
+              "fragment": "Continue MQ-12 from yesterday. This is the same retry-ledger task"
+            }
+          ]
+        },
+        {
+          "text": "Correction on MQ-12:",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "Correction on MQ-12:"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The correction belongs to a separate queue task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-01/q5": {
+      "required_facts": [
+        {
+          "text": "the live approval request must wait.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "the live approval request must wait."
+            }
+          ]
+        },
+        {
+          "text": "I have not approved replay.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "I have not approved replay."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The user already approved replay.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-01/q6": {
+      "required_facts": [
+        {
+          "text": "Local ledger tests passed: 18 tests.",
+          "support": [
+            {
+              "session_id": "fiction-01-s1",
+              "event_index": 2,
+              "event_id": "fiction-01-s1-e003",
+              "fragment": "Local ledger tests passed: 18 tests."
+            }
+          ]
+        },
+        {
+          "text": "The local dry-run report now exists",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 1,
+              "event_id": "fiction-01-s2-e002",
+              "fragment": "The local dry-run report now exists"
+            }
+          ]
+        },
+        {
+          "text": "Rebuild the report with locked parcels excluded",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 3,
+              "event_id": "fiction-01-s2-e004",
+              "fragment": "Rebuild the report with locked parcels excluded"
+            }
+          ]
+        },
+        {
+          "text": "I have not rebuilt the report yet.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 4,
+              "event_id": "fiction-01-s2-e005",
+              "fragment": "I have not rebuilt the report yet."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "MQ-12 is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-02/q1": {
+      "required_facts": [
+        {
+          "text": "HC-31 concerns duplicate book editions. Keep the earliest accession number.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 0,
+              "event_id": "fiction-02-s1-e001",
+              "fragment": "HC-31 concerns duplicate book editions. Keep the earliest accession number."
+            }
+          ]
+        },
+        {
+          "text": "HC-31 sample review has not started.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 1,
+              "event_id": "fiction-02-s2-e002",
+              "fragment": "HC-31 sample review has not started."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Book editions keep the best scan.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-02/q2": {
+      "required_facts": [
+        {
+          "text": "Keep the copy with the best scan",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 2,
+              "event_id": "fiction-02-s1-e003",
+              "fragment": "Keep the copy with the best scan"
+            }
+          ]
+        },
+        {
+          "text": "HC-44 preview estimates 420 MB recovered.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 1,
+              "event_id": "fiction-02-s2-e002",
+              "fragment": "HC-44 preview estimates 420 MB recovered."
+            }
+          ]
+        },
+        {
+          "text": "changes stay in preview until I approve them.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "changes stay in preview until I approve them."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The storage estimate is still missing.",
+          "error_type": "false_closure"
+        },
+        {
+          "text": "HC-44 must use the earliest accession number.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-02/q3": {
+      "required_facts": [
+        {
+          "text": "This is independent of HC-31.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 2,
+              "event_id": "fiction-02-s1-e003",
+              "fragment": "This is independent of HC-31."
+            }
+          ]
+        },
+        {
+          "text": "Do not use this rule for magazine issue duplicates.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 0,
+              "event_id": "fiction-02-s1-e001",
+              "fragment": "Do not use this rule for magazine issue duplicates."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Merge HC-31 and HC-44 because they share a chat.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-02/q4": {
+      "required_facts": [
+        {
+          "text": "for reference only",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "for reference only"
+            }
+          ]
+        },
+        {
+          "text": "This is not a request to run it.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "This is not a request to run it."
+            }
+          ]
+        },
+        {
+          "text": "changes stay in preview until I approve them.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "changes stay in preview until I approve them."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "CLI help authorizes deletion.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-02/q5": {
+      "required_facts": [
+        {
+          "text": "scan-quality comparison passes six fixtures.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 3,
+              "event_id": "fiction-02-s1-e004",
+              "fragment": "scan-quality comparison passes six fixtures."
+            }
+          ]
+        },
+        {
+          "text": "preview estimates 420 MB recovered.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 1,
+              "event_id": "fiction-02-s2-e002",
+              "fragment": "preview estimates 420 MB recovered."
+            }
+          ]
+        },
+        {
+          "text": "The preview has no write permission.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 1,
+              "event_id": "fiction-02-s2-e002",
+              "fragment": "The preview has no write permission."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Magazine duplicates were deleted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-02/q6": {
+      "required_facts": [
+        {
+          "text": "HC-31 sample review has not started.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 1,
+              "event_id": "fiction-02-s2-e002",
+              "fragment": "HC-31 sample review has not started."
+            }
+          ]
+        },
+        {
+          "text": "changes stay in preview until I approve them.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "changes stay in preview until I approve them."
+            }
+          ]
+        },
+        {
+          "text": "HC-44 preview estimates 420 MB recovered.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 1,
+              "event_id": "fiction-02-s2-e002",
+              "fragment": "HC-44 preview estimates 420 MB recovered."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The HC-44 estimate closes the HC-31 sample review.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-03/q1": {
+      "required_facts": [
+        {
+          "text": "drop the carousel. Use a plain list with one play button per clip.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 0,
+              "event_id": "fiction-03-s2-e001",
+              "fragment": "drop the carousel. Use a plain list with one play button per clip."
+            }
+          ]
+        },
+        {
+          "text": "show clip duration beside each play button.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "show clip duration beside each play button."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Finish the carousel as the accepted design.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-03/q2": {
+      "required_facts": [
+        {
+          "text": "I have not wired audio playback or run keyboard checks for the list.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 1,
+              "event_id": "fiction-03-s2-e002",
+              "fragment": "I have not wired audio playback or run keyboard checks for the list."
+            }
+          ]
+        },
+        {
+          "text": "playback, duration, and keyboard checks all work.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "playback, duration, and keyboard checks all work."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The list is ready for review.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-03/q3": {
+      "required_facts": [
+        {
+          "text": "The keyboard check failed.",
+          "support": [
+            {
+              "session_id": "fiction-03-s1",
+              "event_index": 1,
+              "event_id": "fiction-03-s1-e002",
+              "fragment": "The keyboard check failed."
+            }
+          ]
+        },
+        {
+          "text": "Keyboard checks for the replacement list have not run.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 1,
+              "event_id": "fiction-03-s2-e002",
+              "fragment": "I have not wired audio playback or run keyboard checks for the list."
+            }
+          ]
+        },
+        {
+          "text": "Keyboard navigation is still required.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 0,
+              "event_id": "fiction-03-s2-e001",
+              "fragment": "Keyboard navigation is still required."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Keyboard navigation passed.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-03/q4": {
+      "required_facts": [
+        {
+          "text": "The prototype does not count as the final design.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 0,
+              "event_id": "fiction-03-s2-e001",
+              "fragment": "The prototype does not count as the final design."
+            }
+          ]
+        },
+        {
+          "text": "For the same CM-8 ticket",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 0,
+              "event_id": "fiction-03-s2-e001",
+              "fragment": "For the same CM-8 ticket"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The replacement is a separate unrelated ticket.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-03/q5": {
+      "required_facts": [
+        {
+          "text": "The list markup is in place.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 1,
+              "event_id": "fiction-03-s2-e002",
+              "fragment": "The list markup is in place."
+            }
+          ]
+        },
+        {
+          "text": "I have not wired audio playback",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 1,
+              "event_id": "fiction-03-s2-e002",
+              "fragment": "I have not wired audio playback"
+            }
+          ]
+        },
+        {
+          "text": "show clip duration beside each play button.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "show clip duration beside each play button."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Audio playback and duration are already implemented.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-03/q6": {
+      "required_facts": [
+        {
+          "text": "playback, duration, and keyboard checks all work.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "playback, duration, and keyboard checks all work."
+            }
+          ]
+        },
+        {
+          "text": "keyboard focus wraps to the wrong clip.",
+          "support": [
+            {
+              "session_id": "fiction-03-s1",
+              "event_index": 1,
+              "event_id": "fiction-03-s1-e002",
+              "fragment": "keyboard focus wraps to the wrong clip."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Pointer selection alone is sufficient to finish CM-8.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-04/q1": {
+      "required_facts": [
+        {
+          "text": "FS-27 still needs its weight rounding check.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 2,
+              "event_id": "fiction-04-s2-e003",
+              "fragment": "FS-27 still needs its weight rounding check."
+            }
+          ]
+        },
+        {
+          "text": "The local packing-list preview has been generated.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 2,
+              "event_id": "fiction-04-s1-e003",
+              "fragment": "The local packing-list preview has been generated."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The task was deleted with the temporary label.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-04/q2": {
+      "required_facts": [
+        {
+          "text": "The packing-list preview can be reviewed locally.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 2,
+              "event_id": "fiction-04-s2-e003",
+              "fragment": "The packing-list preview can be reviewed locally."
+            }
+          ]
+        },
+        {
+          "text": "Do not dispatch a shipment from this exercise.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 1,
+              "event_id": "fiction-04-s1-e002",
+              "fragment": "Do not dispatch a shipment from this exercise."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Dispatch is authorized.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-04/q3": {
+      "required_facts": [
+        {
+          "text": "Forget the temporary shipment label I gave earlier. Remove that stored observation.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 0,
+              "event_id": "fiction-04-s2-e001",
+              "fragment": "Forget the temporary shipment label I gave earlier. Remove that stored observation."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "SABLE-TEMP-62",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "Omit the deleted temporary label and continue FS-27 using its task id."
+    },
+    "fiction-04/q4": {
+      "required_facts": [
+        {
+          "text": "Keep FS-27 and its remaining weight check available for continuation.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 0,
+              "event_id": "fiction-04-s2-e001",
+              "fragment": "Keep FS-27 and its remaining weight check available for continuation."
+            }
+          ]
+        },
+        {
+          "text": "FS-27 still needs its weight rounding check.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 2,
+              "event_id": "fiction-04-s2-e003",
+              "fragment": "FS-27 still needs its weight rounding check."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "FS-27 is closed.",
+          "error_type": "false_closure"
+        },
+        {
+          "text": "SABLE-TEMP-62",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-04/q5": {
+      "required_facts": [
+        {
+          "text": "The weight rounding check has not run. No shipment was dispatched.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 2,
+              "event_id": "fiction-04-s1-e003",
+              "fragment": "The weight rounding check has not run. No shipment was dispatched."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The weight check passed.",
+          "error_type": "false_closure"
+        },
+        {
+          "text": "A production shipment was sent.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    },
+    "fiction-04/q6": {
+      "required_facts": [
+        {
+          "text": "FS-27 still needs its weight rounding check.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 2,
+              "event_id": "fiction-04-s2-e003",
+              "fragment": "FS-27 still needs its weight rounding check."
+            }
+          ]
+        },
+        {
+          "text": "Forget the temporary shipment label",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 0,
+              "event_id": "fiction-04-s2-e001",
+              "fragment": "Forget the temporary shipment label"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "SABLE-TEMP-62",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue the work according to the supported remaining steps."
+    }
+  }
+}

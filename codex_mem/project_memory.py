@@ -17,7 +17,9 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from .store import Store
 
-PROCESSOR_VERSION = "project-memory-v1"
+PROCESSOR_VERSION = "project-memory-v2"
+RECONSIDERATION_VERSION = "task-consolidation-v1"
+TASK_ID_PATTERN = r"(?<![\w-])[A-Za-z][A-Za-z0-9]{1,15}-[0-9]{1,10}(?![\w-])"
 RELATIONS = {"supports", "contradicts", "replaces", "closes", "summarizes"}
 STATES = {"proposed", "accepted", "open", "blocked", "completed"}
 
@@ -158,9 +160,15 @@ class ProjectMemory:
         omitted = c.execute("SELECT COALESCE(SUM(COALESCE(json_extract(receipt_json,'$.omitted_transitions_count'),0)),0) FROM pm_jobs WHERE project=? AND status='completed'", (project,)).fetchone()[0]
         downgraded = c.execute("SELECT COALESCE(SUM(COALESCE(json_extract(receipt_json,'$.downgraded_states_count'),0)),0) FROM pm_jobs WHERE project=? AND status='completed'", (project,)).fetchone()[0]
         continuities = c.execute("SELECT COALESCE(SUM(COALESCE(json_extract(receipt_json,'$.omitted_continuities_count'),0)),0) FROM pm_jobs WHERE project=? AND status='completed'", (project,)).fetchone()[0]
-        return {"omitted_continuities_count": continuities, "omitted_transitions_count": omitted, "downgraded_states_count": downgraded, "pending_reconciliation": bool(omitted or downgraded or continuities), "complete_transcript": False, "observations_only": True, "event_time_basis": "source_capture_time", "partially_processed_events": row["fragmented"], "quarantined_events": row["quarantined"], "coverage_gaps": bool(row["quarantined"] or omitted or downgraded or continuities), "captured_events": row["n"], "processed_events": row["done"], "pending_events": row["n"]-row["done"], "latest_event_seq": row["latest"], "processed_through_seq": cursor, "running_jobs": jobs.get("running", 0), "failed_jobs": jobs.get("failed", 0), "quarantined_jobs": jobs.get("quarantined", 0)}
+        historical_context = c.execute("SELECT COUNT(*) FROM pm_objects o JOIN pm_episode_heads h ON h.project=o.project AND h.head_id=o.id AND h.logical_episode_id=json_extract(o.data_json,'$.logical_episode_id') WHERE o.project=? AND json_extract(o.data_json,'$.prior_context_status') IS NOT NULL", (project,)).fetchone()[0]
+        discovery = {}
+        reconsideration = self._reconsideration(project, include_completed=True, discovery=discovery)
+        reconsideration_coverage = reconsideration["reconsideration"] if reconsideration else {
+            "candidate_window_bounded": True, "head_limit": 100, "complete_history": False,
+            "candidate_head_ids": [], "omitted_sources": 0, **discovery}
+        return {"historical_context_heads": historical_context, "reconsideration": reconsideration_coverage, "omitted_continuities_count": continuities, "omitted_transitions_count": omitted, "downgraded_states_count": downgraded, "pending_reconciliation": bool(omitted or downgraded or continuities or reconsideration or historical_context or discovery.get("identity_sources_omitted") or discovery.get("ambiguous_heads")), "complete_transcript": False, "observations_only": True, "event_time_basis": "source_capture_time", "partially_processed_events": row["fragmented"], "quarantined_events": row["quarantined"], "coverage_gaps": bool(row["quarantined"] or omitted or downgraded or continuities or reconsideration or discovery.get("identity_sources_omitted")), "captured_events": row["n"], "processed_events": row["done"], "pending_events": row["n"]-row["done"], "latest_event_seq": row["latest"], "processed_through_seq": cursor, "running_jobs": jobs.get("running", 0), "failed_jobs": jobs.get("failed", 0), "quarantined_jobs": jobs.get("quarantined", 0)}
 
-    def _state(self, project: str, limit: int, signal_limit: int, exclude_session_id: str | None = None, query: str = "", environment: str | None = None, version: str | None = None, topic_query: bool = False, include_episode_history: bool = False, include_project_obligations: bool = False) -> dict[str, Any]:
+    def _state(self, project: str, limit: int, signal_limit: int, exclude_session_id: str | None = None, query: str = "", environment: str | None = None, version: str | None = None, topic_query: bool = False, include_episode_history: bool = False, include_project_obligations: bool = False, include_coverage: bool = True) -> dict[str, Any]:
         c = self.store._connection
         row = c.execute("SELECT * FROM pm_projects WHERE project=?", (project,)).fetchone()
         objects = []
@@ -208,7 +216,7 @@ class ProjectMemory:
         for relation in relations:
             relation["evidence"], relation["evidence_omitted"] = _bounded_evidence(relation["evidence"])
         signals = self._signals(project, signal_limit, exclude_session_id)
-        coverage = self._coverage(project)
+        coverage = self._coverage(project) if include_coverage else {"pending_events": 0}
         obligations = _project_obligations(c, project, min(limit, 32), exclude_session_id) if include_project_obligations else []
         return {"project_obligations": obligations, "project": project, "revision": row["revision"] if row else 0, "deletion_generation": row["deletion_generation"] if row else 0, "claims": [o for o in objects if o["object_type"] == "claim"], "episodes": [o for o in objects if o["object_type"] == "episode"], "relations": relations, "provisional_signals": signals, "coverage": coverage, "pending": bool(coverage["pending_events"])}
 
@@ -261,7 +269,14 @@ class ProjectMemory:
                     params.extend(keys)
                 sql += " GROUP BY v.project ORDER BY first LIMIT ?"
                 params.append(max(1, min(int(limit), 1000)))
-                return [r[0] for r in self.store._connection.execute(sql, params)]
+                found = [r[0] for r in self.store._connection.execute(sql, params)]
+                candidates = keys if projects is not None else [r[0] for r in self.store._connection.execute("SELECT project FROM pm_projects ORDER BY project LIMIT 100")]
+                for candidate in candidates:
+                    if len(found) >= max(1, min(int(limit), 1000)):
+                        break
+                    if candidate not in found and self._reconsideration(candidate) is not None:
+                        found.append(candidate)
+                return found
             return self.store._read(read)
 
     def claim(self, project: Any, max_events: int = 32, max_chars: int = 24000, lease_seconds: int = 120, ready_only: bool = False) -> dict[str, Any] | None:
@@ -278,7 +293,7 @@ class ProjectMemory:
                     lane_params.extend((now-30, now-120, now-5))
                 lane = c.execute(lane_sql+" ORDER BY v.seq LIMIT 1", lane_params).fetchone()
                 if lane is None:
-                    return None
+                    return self._claim_reconsideration(project, now, lease_seconds, max_events, max_chars)
                 sources = []
                 remaining = max_chars
                 for row in c.execute("SELECT e.*,v.seq,v.offset FROM pm_events v JOIN entries e ON e.id=v.source_id WHERE v.project=? AND v.session_id=? AND v.done=0 AND v.blocked_job_id IS NULL ORDER BY v.seq LIMIT ?", (project, lane[0], max_events)):
@@ -288,17 +303,166 @@ class ProjectMemory:
                     sources.append({k: row[k] for k in ("id", "title", "source", "session_id", "turn_id", "created_at", "seq") } | {"body": body, "body_offset": row["offset"], "body_length": len(row["body"]), "source_role": _role(row["source"]), "truncated": row["offset"]+len(body)<len(row["body"])})
                     remaining -= len(body)
                 state = _bounded_generation_state(self._state(project, 100, 0, include_project_obligations=True), sources)
+                historical_context = self._disclose_history(project, state, sources, max_chars, max_events)
                 fingerprint = _hash({"sources": sources, "revision": state["revision"], "generation": state["deletion_generation"], "processor_version": PROCESSOR_VERSION})
                 job_id = "pmj_" + _hash([project, lane[0], fingerprint])[:40]
                 prior = c.execute("SELECT attempts FROM pm_jobs WHERE id=?", (job_id,)).fetchone()
                 token = uuid.uuid4().hex
-                snapshot = {"job_id": job_id, "token": token, "project": project, "session_id": lane[0], "revision": state["revision"], "deletion_generation": state["deletion_generation"], "input_fingerprint": fingerprint, "processor_version": PROCESSOR_VERSION, "sources": sources, "state": state}
+                snapshot = {"job_id": job_id, "token": token, "project": project, "session_id": lane[0], "revision": state["revision"], "deletion_generation": state["deletion_generation"], "input_fingerprint": fingerprint, "processor_version": PROCESSOR_VERSION, "sources": sources, "state": state, "historical_context": historical_context}
                 # Expired work in this lane is revoked even if changed state or
                 # new events produced a different deterministic job identifier.
                 c.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE project=? AND session_id=? AND status IN ('running','failed') AND id!=?", (project, lane[0], job_id))
                 c.execute("INSERT INTO pm_jobs(id,project,session_id,fingerprint,token,status,lease_until,attempts,revision,generation,input_json) VALUES (?,?,?,?,?,'running',?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,status='running',lease_until=excluded.lease_until,attempts=excluded.attempts,input_json=excluded.input_json,error=NULL", (job_id, project, lane[0], fingerprint, token, now+max(1,min(int(lease_seconds),3600)), (prior[0]+1) if prior else 1, state["revision"], state["deletion_generation"], _json(snapshot)))
                 return snapshot
             return self.store._write(claim_job)
+
+    def _disclose_history(self, project: str, state: dict, sources: list[dict], max_chars: int, max_sources: int) -> dict:
+        """Supply original evidence for retained fields, within the existing input budget."""
+        c = self.store._connection
+        fresh_ids = {value.casefold() for source in sources if source["source_role"] == "user_intent"
+                     for value in re.findall(TASK_ID_PATTERN, source["body"])}
+        records = [item for item in state["episodes"] if fresh_ids &
+                   {value.casefold() for value in re.findall(TASK_ID_PATTERN, item.get("goal", ""))}]
+        omitted_heads = max(0, len(records)-4)
+        records = records[:4]
+        seen = {item["id"] for item in records}
+        omitted_ancestors = 0
+        for head in list(records):
+            parent = head.get("parent_episode_id")
+            for _ in range(8):
+                if not parent or parent in seen:
+                    break
+                row = c.execute("SELECT data_json FROM pm_objects WHERE project=? AND id=?", (project, parent)).fetchone()
+                if not row:
+                    break
+                record = json.loads(row[0])
+                records.append(record)
+                seen.add(parent)
+                parent = record.get("parent_episode_id")
+            if parent and parent not in seen:
+                omitted_ancestors += 1
+        ids = list(dict.fromkeys(ref["source_id"] for item in records for refs in item.get("evidence", {}).values() for ref in refs))
+        included = {source["id"] for source in sources}
+        remaining = max_chars - sum(len(source["body"]) for source in sources)
+        disclosed = omitted = 0
+        for source_id in ids:
+            if source_id in included:
+                continue
+            row = c.execute("SELECT e.*,v.seq FROM entries e JOIN pm_events v ON v.source_id=e.id WHERE e.project=? AND e.id=? AND v.done=1 AND length(e.body)<=?", (project, source_id, remaining)).fetchone() if len(sources) < max_sources else None
+            if row is None:
+                omitted += 1
+                continue
+            sources.append({key: row[key] for key in ("id", "title", "source", "session_id", "turn_id", "created_at", "seq")} |
+                {"body": row["body"], "body_offset": 0, "body_length": len(row["body"]), "source_role": _role(row["source"]), "truncated": False, "historical": True})
+            included.add(source_id)
+            remaining -= len(row["body"])
+            disclosed += 1
+        return {"disclosed_sources": disclosed, "omitted_sources": omitted,
+                "omitted_ancestor_chains": omitted_ancestors, "omitted_heads": omitted_heads, "complete_history": False,
+                "source_char_limit": max_chars, "source_limit": max_sources}
+
+    def _reconsideration(self, project: str, *, include_completed: bool = False, discovery: dict | None = None, max_sources: int = 32, max_chars: int = 24000) -> dict[str, Any] | None:
+        """Discover a bounded pair of split heads; reads never call a model."""
+        c = self.store._connection
+        state = self._state(project, 100, 0, include_project_obligations=True, include_coverage=False)
+        groups: dict[str, list[dict]] = {}
+        contexts: dict[str, str] = {}
+        inspected = set()
+        identity_chars = 0
+        discovery = discovery if discovery is not None else {}
+        discovery.update(identity_source_limit=64, identity_char_limit=24000,
+                         identity_sources_omitted=0, ambiguous_heads=0)
+        for episode in state["episodes"]:
+            for field in ("goal", "summary"):
+                for ref in episode.get("evidence", {}).get(field, []):
+                    source_id = ref["source_id"]
+                    if ref.get("source_role") != "user_intent" or source_id in inspected:
+                        continue
+                    if len(inspected) >= 64:
+                        discovery["identity_sources_omitted"] += 1
+                        continue
+                    inspected.add(source_id)
+                    row = c.execute("SELECT body FROM entries WHERE project=? AND id=? AND length(body)<=?", (project, source_id, 24000-identity_chars)).fetchone()
+                    if row:
+                        contexts[source_id] = row[0]
+                        identity_chars += len(row[0])
+                    else:
+                        discovery["identity_sources_omitted"] += 1
+            identity = _source_task_identity(episode, contexts)
+            if identity:
+                groups.setdefault(identity, []).append(episode)
+            elif re.search(TASK_ID_PATTERN, episode.get("goal", "")):
+                discovery["ambiguous_heads"] += 1
+        for identity, heads in sorted(groups.items()):
+            if len(heads) < 2:
+                continue
+            all_heads = sorted(heads, key=lambda item: (item["revision"], item["id"]))
+            heads = all_heads if len(all_heads) <= 4 else [*all_heads[:3], all_heads[-1]]
+            fingerprint = _hash([RECONSIDERATION_VERSION, project, state["deletion_generation"], max_sources, max_chars, [item["id"] for item in all_heads]])
+            job_id = "pmj_" + fingerprint[:40]
+            job = c.execute("SELECT status,lease_until,retry_after FROM pm_jobs WHERE id=?", (job_id,)).fetchone()
+            if not include_completed and job and (job["status"] in {"completed", "quarantined"} or
+                        job["status"] == "running" and job["lease_until"] > time.time() or
+                        job["status"] == "failed" and job["retry_after"] > time.time()):
+                continue
+            records = list(heads)
+            # Include bounded ancestors so an old goal or reason can survive a
+            # newer head that only cited its last delta. No transcript replay.
+            seen = {item["id"] for item in records}
+            omitted_ancestors = 0
+            for head in heads:
+                parent = head.get("parent_episode_id")
+                for _ in range(8):
+                    if not parent or parent in seen:
+                        break
+                    row = c.execute("SELECT data_json FROM pm_objects WHERE project=? AND id=?", (project, parent)).fetchone()
+                    if not row:
+                        break
+                    record = json.loads(row[0])
+                    records.append(record)
+                    seen.add(parent)
+                    parent = record.get("parent_episode_id")
+                if parent and parent not in seen:
+                    omitted_ancestors += 1
+            claims = [item for item in state["claims"] if identity in {value.casefold() for value in re.findall(TASK_ID_PATTERN, item.get("text", ""))}]
+            records.extend(claims)
+            source_ids = list(dict.fromkeys(ref["source_id"] for item in records for refs in item.get("evidence", {}).values() for ref in refs))
+            sources = []
+            remaining = max_chars
+            omitted = 0
+            for source_id in source_ids:
+                row = c.execute("SELECT e.*,v.seq FROM entries e JOIN pm_events v ON v.source_id=e.id WHERE e.project=? AND e.id=? AND v.done=1 AND length(e.body)<=?", (project, source_id, remaining)).fetchone() if len(sources) < max_sources else None
+                if row is None:
+                    omitted += 1
+                    continue
+                sources.append({key: row[key] for key in ("id", "title", "source", "session_id", "turn_id", "created_at", "seq")} |
+                    {"body": row["body"], "body_offset": 0, "body_length": len(row["body"]), "source_role": _role(row["source"]), "truncated": False, "historical": True})
+                remaining -= len(row["body"])
+            if not sources:
+                continue
+            bounded = _bounded_generation_state({**state, "episodes": heads}, sources)
+            return {"job_id": job_id, "project": project, "session_id": "__pm_reconsideration__",
+                    "revision": state["revision"], "deletion_generation": state["deletion_generation"],
+                    "input_fingerprint": fingerprint, "processor_version": PROCESSOR_VERSION,
+                    "job_kind": "reconsideration", "sources": sorted(sources, key=lambda item: item["seq"]), "state": bounded,
+                    "reconsideration": {"task_id": identity, "candidate_head_ids": [item["id"] for item in heads],
+                        "candidate_window_bounded": True, "head_limit": 100, "ancestor_limit_per_head": 8,
+                        "omitted_heads": len(all_heads)-len(heads),
+                        "source_limit": max_sources, "source_char_limit": max_chars, "omitted_sources": omitted,
+                        "omitted_ancestor_chains": omitted_ancestors,
+                        "complete_history": False, **discovery}}
+        return None
+
+    def _claim_reconsideration(self, project: str, now: float, lease_seconds: int, max_sources: int, max_chars: int) -> dict[str, Any] | None:
+        snapshot = self._reconsideration(project, max_sources=min(max_sources, 32), max_chars=min(max_chars, 24000))
+        if snapshot is None:
+            return None
+        c = self.store._connection
+        prior = c.execute("SELECT attempts FROM pm_jobs WHERE id=?", (snapshot["job_id"],)).fetchone()
+        snapshot["token"] = uuid.uuid4().hex
+        c.execute("INSERT INTO pm_jobs(id,project,session_id,fingerprint,token,status,lease_until,attempts,revision,generation,input_json) VALUES (?,?,?,?,?,'running',?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,status='running',lease_until=excluded.lease_until,attempts=excluded.attempts,revision=excluded.revision,generation=excluded.generation,input_json=excluded.input_json,error=NULL",
+                  (snapshot["job_id"], project, snapshot["session_id"], snapshot["input_fingerprint"], snapshot["token"], now+max(1,min(int(lease_seconds),3600)), prior[0]+1 if prior else 1, snapshot["revision"], snapshot["deletion_generation"], _json(snapshot)))
+        return snapshot
 
     def _job(self, supplied: dict[str, Any]) -> tuple[Any, Any]:
         c = self.store._connection
@@ -460,7 +624,7 @@ class ProjectMemory:
             if not isinstance(items, list) or len(items)>64:
                 raise ValueError("too many project memory objects")
             for item in items:
-                allowed = {"key", "evidence", *fields} | ({"kind", "workflow_state", "scope"} if kind == "claim" else {"continuation_of"})
+                allowed = {"key", "evidence", *fields} | ({"kind", "workflow_state", "scope"} if kind == "claim" else {"continuation_of", "consolidation_of"})
                 if not isinstance(item, dict) or set(item)-allowed:
                     raise ValueError("unsupported object fields; verification cannot be self-assigned")
                 key = item.get("key")
@@ -469,7 +633,7 @@ class ProjectMemory:
                 if not isinstance(item.get(fields[0]), str) or not item[fields[0]].strip():
                     raise ValueError("object text is required")
                 evidence = item.get("evidence")
-                if not isinstance(evidence, dict) or set(evidence)-set(fields)-({"workflow_state"} if kind == "claim" else {"continuation_of"}):
+                if not isinstance(evidence, dict) or set(evidence)-set(fields)-({"workflow_state"} if kind == "claim" else {"continuation_of", "consolidation_of"}):
                     raise ValueError("invalid field evidence")
                 clean = {"key": key, "object_type": kind}
                 clean_evidence = {}
@@ -544,10 +708,46 @@ class ProjectMemory:
                             retained = self.store._connection.execute("SELECT body FROM entries WHERE project=? AND id=?", (snapshot["project"], source_id)).fetchone()
                             if retained is not None:
                                 continuity_contexts[source_id] = retained[0]
-                        if not refs or not _continuity_supported(refs, prior, continuity_contexts):
+                        continuity_refs = refs if snapshot.get("job_kind") == "reconsideration" else [ref for ref in refs if not sources[ref["source_id"]].get("historical")]
+                        continuity_target = prior
+                        if snapshot.get("job_kind") == "reconsideration":
+                            identity = _source_task_identity(prior, contexts)
+                            continuity_target = {**prior, "goal": identity or ""}
+                        if not continuity_refs or not _continuity_supported(continuity_refs, continuity_target, continuity_contexts):
                             omitted_continuities.append("unproved_continuity")
                         else:
                             clean.update(logical_episode_id=prior["logical_episode_id"], episode_version=prior["episode_version"]+1, parent_episode_id=prior["id"], continuity_basis="model_inference")
+                if kind == "episode" and snapshot.get("job_kind") == "reconsideration" and not item.get("consolidation_of"):
+                    raise ValueError("reconsideration episodes must reduce the number of split heads")
+                if kind == "episode" and item.get("consolidation_of"):
+                    targets = item["consolidation_of"]
+                    if snapshot.get("job_kind") != "reconsideration" or not isinstance(targets, list) or len(targets) > 3 or len(set(targets)) != len(targets):
+                        raise ValueError("consolidation needs a bounded reconsideration job")
+                    if not clean["parent_episode_id"] or clean["parent_episode_id"] in targets:
+                        raise ValueError("consolidation needs a distinct continued head")
+                    refs = spans(evidence.get("consolidation_of"))
+                    clean_evidence["consolidation_of"] = refs
+                    available = {record["id"]: record for record in snapshot["state"]["episodes"]}
+                    if snapshot["reconsideration"]["omitted_sources"] or snapshot["reconsideration"].get("omitted_ancestor_chains"):
+                        raise ValueError("consolidation cannot hide undisclosed source evidence")
+                    identity = _source_task_identity(available[clean["parent_episode_id"]], contexts)
+                    for prior_id in [clean["parent_episode_id"], *targets]:
+                        prior = available.get(prior_id)
+                        if prior is None:
+                            raise ValueError("unknown consolidation head")
+                        for field in ("goal", "rationale", "outcome", "open_work"):
+                            if prior.get(field) and not clean.get(field):
+                                raise ValueError("consolidation must retain supported task fields")
+                    for target in targets:
+                        prior = available.get(target)
+                        if prior is None:
+                            raise ValueError("unknown consolidation head")
+                        if not identity or _source_task_identity(prior, contexts) != identity or not _continuity_supported(refs, {**prior, "goal": identity}, contexts):
+                            raise ValueError("consolidation requires original task identity and explicit continuity")
+                        if prior["logical_episode_id"] in continued_roots:
+                            raise ValueError("episode is already consolidated in this job")
+                        continued_roots.add(prior["logical_episode_id"])
+                    clean["consolidated_episode_ids"] = targets
                 keys[key] = clean["id"]
                 objects.append(clean)
         relations = output.get("relations", [])
@@ -618,6 +818,42 @@ class ProjectMemory:
                 if type(conservative_transitions) is not bool:
                     raise ValueError("conservative_transitions must be a boolean trusted caller option")
                 objects, relations, reconciliation = self._validate(durable, output, conservative_transitions=conservative_transitions)
+                # Preserve superseded narrative as explicitly historical context.
+                # It cannot reopen or close independently scoped claims. This
+                # avoids turning a compound old paragraph into a new obligation.
+                for episode in objects:
+                    if episode["object_type"] != "episode":
+                        continue
+                    prior_ids = [episode.get("parent_episode_id"), *episode.get("consolidated_episode_ids", [])]
+                    priors = []
+                    for prior_id in filter(None, prior_ids):
+                        row = c.execute("SELECT data_json FROM pm_objects WHERE project=? AND id=?", (durable["project"], prior_id)).fetchone()
+                        if row:
+                            priors.append(json.loads(row[0]))
+                    omitted_context = sum(prior.get("retained_context_fields_omitted", 0) for prior in priors)
+                    for field in ("goal", "rationale", "outcome", "open_work"):
+                        historical = "prior_" + field
+                        texts, refs = [], []
+                        for prior in priors:
+                            for name in (historical, field):
+                                text = prior.get(name)
+                                evidence = prior.get("evidence", {}).get(name, [])
+                                if not text or not evidence or text == episode.get(field) or text in texts:
+                                    continue
+                                combined = list(refs)
+                                combined.extend(ref for ref in evidence if ref not in combined)
+                                if len("\n".join([*texts, text])) > 6000 or len(combined) > 32:
+                                    omitted_context += 1
+                                    continue
+                                texts.append(text)
+                                refs = combined
+                        if texts:
+                            episode[historical] = "\n".join(texts)
+                            episode["evidence"][historical] = refs
+                    if any(episode.get("prior_" + field) for field in ("goal", "rationale", "outcome", "open_work")):
+                        episode["prior_context_status"] = "historical_current_validity_unresolved"
+                        reconciliation["pending_reconciliation"] = True
+                    episode["retained_context_fields_omitted"] = omitted_context
                 derived_at = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
                 for obj in objects:
                     obj.update(created_at=derived_at, updated_at=derived_at, derived_created_at=derived_at, event_at=None, event_time_basis="source_capture_time")
@@ -636,16 +872,30 @@ class ProjectMemory:
                                 raise ValueError("episode head changed during atomic commit")
                         else:
                             c.execute("INSERT INTO pm_episode_heads VALUES (?,?,?,?)", (durable["project"], logical, obj["id"], 1))
+                for obj in objects:
+                    for target_id in obj.get("consolidated_episode_ids", []):
+                        target = next(item for item in durable["state"]["episodes"] if item["id"] == target_id)
+                        logical = target["logical_episode_id"]
+                        c.execute("INSERT OR IGNORE INTO pm_episode_heads VALUES (?,?,?,?)", (durable["project"], logical, target_id, target["episode_version"]))
+                        if c.execute("UPDATE pm_episode_heads SET head_id=? WHERE project=? AND logical_episode_id=? AND head_id=?", (obj["id"], durable["project"], logical, target_id)).rowcount != 1:
+                            raise ValueError("consolidation head changed")
+                        relation = {"type": "summarizes", "from": obj["id"], "to": target_id, "evidence": obj["evidence"]["consolidation_of"]}
+                        relation["id"] = "pmr_" + _hash([job["id"], relation])[:40]
+                        relations.append(relation)
                 for rel in relations:
                     c.execute("INSERT INTO pm_relations VALUES (?,?,?,?,?,?)", (rel["id"], durable["project"], rel["from"], rel["to"], rel["type"], _json(rel)))
                     c.executemany("INSERT INTO pm_relation_evidence VALUES (?,?)", [(rel["id"], sid) for sid in {r["source_id"] for r in rel["evidence"]}])
-                for source in durable["sources"]:
+                for source in durable["sources"] if durable.get("job_kind") != "reconsideration" else []:
+                    if source.get("historical"):
+                        continue
                     offset = source["body_offset"]+len(source["body"])
                     c.execute("UPDATE pm_events SET offset=?,done=? WHERE project=? AND source_id=?", (offset, int(offset>=source["body_length"]), durable["project"], source["id"]))
                 revision = durable["revision"]+1
                 c.execute("UPDATE pm_projects SET revision=? WHERE project=?", (revision, durable["project"]))
                 c.execute("INSERT INTO pm_revisions VALUES (?,?,?,?,?)", (durable["project"], revision, job["id"], max(s["seq"] for s in durable["sources"]), time.time()))
-                result = {"status": "committed", "job_id": job["id"], "revision": revision, "object_ids": [o["id"] for o in objects], "relation_ids": [r["id"] for r in relations], "processing": _safe_receipt(receipt), **reconciliation}
+                if durable.get("job_kind") == "reconsideration" and not any(obj.get("consolidated_episode_ids") for obj in objects):
+                    reconciliation["pending_reconciliation"] = True
+                result = {"status": "committed", "job_kind": durable.get("job_kind", "events"), "job_id": job["id"], "revision": revision, "object_ids": [o["id"] for o in objects], "relation_ids": [r["id"] for r in relations], "processing": _safe_receipt(receipt), **reconciliation}
                 c.execute("UPDATE pm_jobs SET status='completed',receipt_json=?,input_json='{}' WHERE id=?", (_json(result), job["id"]))
                 return result
             return self.store._write(commit_job)
@@ -727,7 +977,7 @@ def _explicit_transition(evidence: list[dict], relation: str, contexts: dict[str
 
 def _safe_receipt(receipt: dict[str, Any] | None) -> dict[str, Any]:
     """Persist accounting/profile fields, never arbitrary response/error text."""
-    allowed = {"processor_id", "output_schema_version", "model", "reasoning_effort", "worker_thread_id", "worker_turn_id", "duration_ms", "input_tokens", "output_tokens", "cached_input_tokens", "cost_usd", "model_calls", "omitted_fields_count", "omitted_fields_reason", "omitted_fields"}
+    allowed = {"job_kind", "historical_sources_omitted", "reconsideration_sources_omitted", "processor_id", "output_schema_version", "model", "reasoning_effort", "worker_thread_id", "worker_turn_id", "duration_ms", "input_tokens", "output_tokens", "cached_input_tokens", "cost_usd", "model_calls", "omitted_fields_count", "omitted_fields_reason", "omitted_fields"}
     return {k: v for k, v in (receipt or {}).items() if k in allowed and isinstance(v, (str, int, float, bool)) and (not isinstance(v, str) or len(v) <= 200)}
 
 
@@ -940,6 +1190,22 @@ def _episode_identity(connection: sqlite3.Connection, project: str, item: dict[s
     item.update(logical_episode_id=logical, episode_version=item.get("episode_version", 1), parent_episode_id=item.get("parent_episode_id"), continuity_basis=item.get("continuity_basis", "standalone"), is_current_head=(head[0] == item["id"]) if head else logical == item["id"])
 
 
+def _source_task_identity(item: dict, contexts: dict[str, str]) -> str | None:
+    """Require one affirmative user task identity in the original evidence."""
+    identities = set()
+    for field in ("goal", "summary"):
+        for ref in item.get("evidence", {}).get(field, []):
+            if ref.get("source_role") != "user_intent":
+                continue
+            for sentence in _evidence_sentences(ref, contexts.get(ref["source_id"], "")):
+                if "?" in sentence or re.search(r"\b(?:not|never|unrelated|different|separate|example|fixture)\b|не\s|друг(?:ая|ой|ую)|отдельн|пример", sentence, re.I):
+                    continue
+                found = {value.casefold() for value in re.findall(TASK_ID_PATTERN, sentence)}
+                if len(found) == 1 and (re.match(r"\s*" + TASK_ID_PATTERN, sentence) or re.search(r"(?:^|\b)(?:task|issue|ticket|continue|resume|correction|update|задача|задачи|задачу|продолжаем|исправление|уточнение)\b", sentence, re.I)):
+                    identities.update(found)
+    return next(iter(identities)) if len(identities) == 1 else None
+
+
 def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str]) -> bool:
     # This is a deliberately conservative identity proposal, not proof of work
     # completion. Fuzzy topic linking and same-session linking are deferred.
@@ -975,6 +1241,10 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
         return False
     goal = _normalized_phrase(prior.get("goal", ""))
     marker = r"\b(continue|continuing|continuation|resume|resuming|follow-up|follow up|same task)\b|продолжа|возвращаемся|та же задача|той же задач"
+    named_same_task = None
+    if len(task_ids) == 1:
+        named_same_task = r"same\s+" + re.escape(next(iter(task_ids))) + r"\s+(?:task|ticket|issue)\b"
+        marker += r"|\b" + named_same_task
     for ref in refs:
         if ref["source_role"] not in {"user_intent", "assistant_report", "tool_record"}:
             continue
@@ -983,8 +1253,15 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
         if not quoted_continuation and not quoted_update:
             continue
         for sentence in _evidence_sentences(ref, contexts.get(ref["source_id"], "")):
-            denied = r"\b(?:not|never)\s+(?:(?:a|an|the)\s+)?(?:continu\w*|resum\w*|same\s+task|follow[- ]up|correction|update|amendment)\b|\b(?:new|different|separate|unrelated)\s+task\b|не\s+(?:является\s+)?(?:продолж\w*|той\s+же\s+задач\w*|та\s+же\s+задач\w*)|(?:новая|другая|отдельная)\s+задача"
+            denied = r"\b(?:not|never)\s+(?:(?:a|an|the)\s+)?(?:continu\w*|resum\w*|same\s+task|follow[- ]up|correction|update|amendment)\b|\b(?:new|different|separate|unrelated|independent)\s+(?:task|ticket|issue)\b|не\s+(?:является\s+)?(?:продолж\w*|той\s+же\s+задач\w*|та\s+же\s+задач\w*)|(?:новая|другая|отдельная)\s+задача"
+            if named_same_task:
+                denied += r"|\b(?:not|never)\s+(?:(?:a|an|the)\s+)?" + named_same_task
             if "?" in sentence or re.search(denied, sentence, re.I):
+                continue
+            # A matching label or reference identifies mentioned text, not
+            # the task being continued. Leave that association unresolved.
+            if (named_same_task and re.search(named_same_task, sentence, re.I)
+                    and re.search(r"\b(?:labels?|references?|identifiers?)\b|\brefer(?:s|red|ring)?\s+to\b", sentence, re.I)):
                 continue
             continuation = quoted_continuation and bool(re.search(marker, sentence, re.I))
             update = quoted_update and bool(re.search(update_marker, sentence, re.I))

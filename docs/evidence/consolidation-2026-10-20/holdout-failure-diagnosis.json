@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "history_id": "fiction-13",
+  "diagnostic_mode": "Read-only analysis by implementation agent; no new model calls, retry, or source changes.",
+  "job_status": "failed",
+  "job_code": "invalid_response",
+  "attempts": 1,
+  "reported_tokens": {
+    "input_tokens": 18769,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 366,
+    "reasoning_output_tokens": 0,
+    "total_tokens": 19135
+  },
+  "persisted_state_unchanged": true,
+  "accepted_merge_count": 0,
+  "quote": "Reopen SH-33 as the same ticket.",
+  "diagnosis": "Output decoding and output-shape validation pass. The frozen continuity predicate does not accept reopen or an ID before the phrase same ticket. Storage rejects consolidation without a distinct supported primary continuation.",
+  "storage_error": "consolidation needs a distinct continued head",
+  "code_reference": "codex_mem/project_memory.py:727 and _continuity_supported",
+  "source_hash": "47a7c9e6863d2471635b9e904b16456775cd4ebe0486ef1f853f882b8fd25d22",
+  "evidence_files_in_export": {
+    "receipts/call-0096-request.json": "61ecd916a05137c0fca48d231e12b2ce78cbbac5b25e39b3adc18ef557be39d0",
+    "receipts/call-0096-response.json": "d40f2b73ce1ffbc346de872ce629ae981144bc681c2b52cb63c47e1d1152cca7",
+    "candidate/fiction-13/consolidation.json": "6e326ed63aa593c37c5c6278dabf9cc00faf5072ec4a4f8698188aaac9d38df6"
+  },
+  "next_iteration_hypothesis": "Evidence-bound explicit reopening of a confirmed task identity, with negative/question/reference/separate-task tests and a fresh holdout. This is not implemented in the frozen run.",
+  "primary_denominator_retained": true,
+  "private_original_evidence_file_sha256": {
+    "receipts/call-0096-request.json": "61ecd916a05137c0fca48d231e12b2ce78cbbac5b25e39b3adc18ef557be39d0",
+    "receipts/call-0096-response.json": "ed33ecaa0e3733cf8fa0bdbc2ca1860c12bd7018c8310edd8f58631729651bef",
+    "candidate/fiction-13/consolidation.json": "a41c42f49802c71fc85456fc1e34a142eb0328a2b8b58a079c360fe6ba7d7c8f"
+  },
+  "export_privacy_transformation": "Diagnostic thread/turn UUIDs were pseudonymized in the published archive. Original byte hashes above refer only to retained private /tmp originals. Questions, model output, grading and metrics were not changed."
+}

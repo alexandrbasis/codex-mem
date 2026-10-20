@@ -23,7 +23,7 @@ _OBLIGATIONS = frozenset({'obligation', 'requirement', 'task', 'open_question', 
 
 def _text(item: Mapping[str, Any]) -> str:
     return '\n'.join((key + ': ' + str(item.get(key))) for key in (
-        'text', 'summary', 'goal', 'rationale', 'outcome', 'open_work', 'key', 'scope') if item.get(key))
+        'text', 'summary', 'goal', 'rationale', 'outcome', 'open_work', 'prior_goal', 'prior_rationale', 'prior_outcome', 'prior_open_work', 'key', 'scope') if item.get(key))
 
 
 def _scope_matches(item: Mapping[str, Any], environment: str | None, version: str | None,
@@ -167,7 +167,7 @@ def _attr(value: Any) -> str:
     return quoteattr(_xml_text(value))
 
 
-def _evidence(item: Mapping[str, Any]) -> list[dict[str, Any]]:
+def _evidence(item: Mapping[str, Any], limit: int = 8) -> list[dict[str, Any]]:
     found: list[dict[str, Any]] = []
     def visit(value: Any, field: str = '') -> None:
         if isinstance(value, Mapping):
@@ -199,7 +199,7 @@ def _evidence(item: Mapping[str, Any]) -> list[dict[str, Any]]:
             unique.append(pointer)
         elif pointer.get('field') and pointer['field'] not in existing.get('field', '').split(','):
             existing['field'] = ','.join(filter(None, (existing.get('field'), pointer['field'])))
-    return unique[:8]
+    return unique[:limit]
 
 
 def _record(item: Mapping[str, Any], lane: str) -> dict[str, Any]:
@@ -211,7 +211,7 @@ def _record(item: Mapping[str, Any], lane: str) -> dict[str, Any]:
         'source_role', 'evidence_basis', 'requested_state', 'revision', 'session_id', 'seq', 'provisional',
         'source_capture_seq_min', 'source_capture_seq_max', 'capture_order_basis',
         'logical_episode_id', 'episode_version', 'parent_episode_id', 'is_current_head', 'continuity_basis',
-        'signal_kind', 'selection_basis') if key in cleaned}
+        'signal_kind', 'selection_basis', 'prior_context_status', 'retained_context_fields_omitted') if key in cleaned}
     record.update(project=cleaned.get('project'), source='project_memory',
                   created_at=cleaned.get('created_at'), updated_at=cleaned.get('updated_at'), tags=[],
                   source_ids=list(dict.fromkeys(source['source_id'] for source in _evidence(cleaned))),
@@ -219,14 +219,14 @@ def _record(item: Mapping[str, Any], lane: str) -> dict[str, Any]:
                   lane=lane, title=str(cleaned.get('key') or lane)[:160],
                   preview=_text(cleaned)[:1400], evidence=_evidence(cleaned))
     record['fields'] = []
-    for name in ('text', 'open_work', 'outcome', 'summary', 'goal', 'rationale'):
+    for name in ('text', 'open_work', 'outcome', 'summary', 'goal', 'rationale', 'prior_open_work', 'prior_rationale', 'prior_goal', 'prior_outcome'):
         value = cleaned.get(name)
         if isinstance(value, str) and value:
             refs = (cleaned.get('evidence') or {}).get(name, [])
             if lane == 'signal' and cleaned.get('source_role') == 'user_intent' and cleaned.get('source_id'):
                 refs = [{'source_id': cleaned['source_id'], 'source_role': 'user_intent'}]
             record['fields'].append({'name': name, 'text': value[:1400],
-                'evidence': _evidence({'evidence': {name: refs}})})
+                'evidence': _evidence({'evidence': {name: refs}}, limit=32 if name.startswith('prior_') else 8)})
     if lane == 'signal' and cleaned.get('signal_kind') == 'observed_execution_result':
         provenance = cleaned.get('provenance') or {}
         execution = {key: (value[:512] if isinstance(value, str) else value)
@@ -277,11 +277,18 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
     values.update({key: coverage[key] for key in (
         'coverage_gaps', 'pending_reconciliation', 'quarantined_events',
         'omitted_transitions_count', 'downgraded_states_count',
-        'partially_processed_events', 'processed_through_seq', 'pending_events') if key in coverage})
+        'partially_processed_events', 'processed_through_seq', 'pending_events', 'historical_context_heads') if key in coverage})
+    reconsideration = coverage.get('reconsideration') or {}
+    for field in ('ambiguous_heads', 'omitted_sources', 'omitted_heads', 'identity_sources_omitted', 'omitted_ancestor_chains'):
+        if reconsideration.get(field):
+            values['reconsideration_' + field] = reconsideration[field]
     for key in ('complete_transcript', 'coverage_gaps', 'pending_reconciliation', 'pending',
                 'observations_only', 'quarantined_events', 'omitted_transitions_count',
                 'downgraded_states_count', 'partially_processed_events',
-                'processed_through_seq', 'pending_events'):
+                'processed_through_seq', 'pending_events', 'historical_context_heads',
+                'reconsideration_ambiguous_heads', 'reconsideration_omitted_sources',
+                'reconsideration_omitted_heads', 'reconsideration_identity_sources_omitted',
+                'reconsideration_omitted_ancestor_chains'):
         if key not in values:
             continue
         value = values[key]
@@ -301,7 +308,7 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
                         ('id', 'lane', 'kind', 'project_memory_kind', 'workflow_state', 'requested_state', 'source_role', 'evidence_basis', 'provisional', 'inferred',
                          'revision', 'source_capture_seq_min', 'source_capture_seq_max', 'capture_order_basis',
                          'logical_episode_id', 'episode_version', 'parent_episode_id', 'is_current_head', 'continuity_basis',
-                         'signal_kind', 'selection_basis') if key in record and record[key] is not None)
+                         'signal_kind', 'selection_basis', 'prior_context_status', 'retained_context_fields_omitted') if key in record and record[key] is not None)
         if brief.get('projection') == 'continuity' and record.get('session_id'):
             attrs += ' session_id=' + _attr(record['session_id'])
         if record.get('lane') == 'signal' and record.get('source_capture_seq_min') == record.get('source_capture_seq_max'):
@@ -508,8 +515,8 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
         for record in brief['episodes']:
             selected = []
             seen_refs = set()
-            priorities = {'rationale': 0, 'goal': 1} if query_plan.projection == 'rationale' else {
-                'outcome': 0, 'open_work': 1, 'summary': 2}
+            priorities = {'rationale': 0, 'prior_rationale': 1, 'goal': 2} if query_plan.projection == 'rationale' else {
+                'outcome': 0, 'open_work': 1, 'prior_open_work': 2, 'summary': 3}
             for field in sorted(record['fields'], key=lambda field: priorities.get(field['name'], 3)):
                 for pointer in field['evidence']:
                     identity = (pointer.get('source_id'), pointer.get('start'), pointer.get('end'))

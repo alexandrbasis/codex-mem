@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-20",
+  "baseline": "f8764f6",
+  "seams": [
+    "process_project_memory with real temporary Store/ProjectMemory",
+    "Read derived state and original event evidence through public Store/ProjectMemory APIs",
+    "build_project_brief for retained historical field recall"
+  ],
+  "external_replacements": [
+    "Native generator callable",
+    "Optional Jev evaluator callable"
+  ],
+  "no_holdout_access": true,
+  "schema_changed": false,
+  "red_green": [
+    {
+      "test": "split_task_is_reconsidered_after_restart_with_original_field_evidence",
+      "red": "Expected processed, got idle after two split task heads",
+      "green": "One current immutable head; original sources retained; old heads readable; replay idle"
+    },
+    {
+      "test": "unresolved_reconsideration_is_visible_and_not_retried_forever",
+      "red": "pending_reconciliation was false for known split heads and no-op receipt",
+      "green": "Coverage and receipt expose unresolved state; completed no-op fingerprint is not re-dispatched"
+    },
+    {
+      "test": "consolidation_cannot_drop_a_retained_open_obligation",
+      "red": "Empty replacement open_work was committed over nonempty prior open_work",
+      "green": "Missing retained mandatory field is rejected atomically"
+    },
+    {
+      "test": "late_correction_without_stop_can_retain_original_goal_and_obligation",
+      "red": "Original goal event was not supplied to late-correction generator",
+      "green": "Bounded original evidence is disclosed; fresh correction alone authorizes continuation"
+    },
+    {
+      "test": "reconsideration_cannot_loop_by_only_revising_one_split_head",
+      "red": "Reconsideration accepted a continuation without consolidating another head",
+      "green": "Reject/quarantine without head churn or automatic retry loop"
+    },
+    {
+      "test": "partial_narrative_cannot_erase_an_earlier_open_obligation",
+      "red": "Shorter open_work hid an uncopied manual-approval obligation",
+      "green": "Original compound open_work remains explicitly historical prior_open_work with exact refs; no new active claims"
+    },
+    {
+      "test": "new_head_reopens_bounded_reconsideration_after_an_older_noop",
+      "red": "Fifth new task head was ignored after four-head no-op",
+      "green": "All bounded group IDs enter fingerprint; selection reserves newest head; omitted heads reported"
+    },
+    {
+      "test": "prior_reason_and_safety_constraint_remain_explicit_history_in_recall",
+      "red": "Independent reviewer reproduced loss of dry-run reason after shorter rationale",
+      "green": "Prior rationale remains historical context with source refs and is rendered in rationale recall"
+    },
+    {
+      "test": "closed_atomic_requirement_is_not_reopened_from_old_compound_context",
+      "red": "Independent reviewer reproduced reopened compound obligation under an intermediate carry implementation",
+      "green": "Automatic active-claim carry removed; historical context cannot reopen exact or atomic closed claims"
+    },
+    {
+      "test": "caller_source_budget",
+      "red": "Independent reviewer reproduced claim(max_events=1,max_chars=256) disclosing 2 sources / 1051 chars",
+      "green": "Reconsideration clamps both caller limits and hard caps; reviewer rerun returned no claim when no complete source fitted"
+    },
+    {
+      "test": "existing_transport_copy_generator",
+      "red": "Existing acceptance source-copy generator emitted invalid standalone reconsideration episode",
+      "green": "Root changed transport generator to return no proposals on reconsideration; five late-arrival tests pass"
+    },
+    {
+      "test": "retained_field_keeps_all_bounded_source_pointers_for_rendering",
+      "red": "Two five-span prior rationale records produced only eight field pointers instead of ten",
+      "green": "Historical prior fields retain up to32 exact pointers; XML renderer fits all pointers or omits field with a count"
+    },
+    {
+      "test": "native_reconsideration_contract_requires_primary_and_distinct_additional_head",
+      "red": "Public processing regression failed because native schema-v8 offered null continuation_of with nonempty consolidation_of. Saved development response matched that schema but storage rejected it.",
+      "green": "Schema-v9 reconsideration branches require a nonnull primary plus at least one distinct additional head, each with evidence; ordinary-event-only NEW-observation wording no longer contradicts historical reconsideration. Public processing passes and offline saved-response validation rejects the old invalid shape."
+    },
+    {
+      "test": "same_confirmed_task_id_ticket_task_issue_continuity",
+      "red": "Three public reconsideration tests using RIV-42, MAP-91 and QNX-67 returned invalid_response for same <confirmed ID> ticket/issue/task wording. Saved development call0037 independently failed the same conservative continuity marker.",
+      "green": "Generic exact confirmed-ID plus task-noun marker establishes continuity; same-component, separate-task and negated-same-ticket cases remain separate. Original development failure preserved."
+    },
+    {
+      "test": "same_named_task_independence_and_reference_guards",
+      "red": "Four public processing cases with an affirmative original identity prefix falsely merged: separate issue, separate ticket, same ticket label, and reference to same issue.",
+      "green": "Full-sentence independence guard applies to task/ticket/issue consistently; named-ID label/reference/identifier use remains unresolved. All four retain separate heads; legitimate same-ID ticket/task/issue positives pass."
+    }
+  ],
+  "checks": {
+    "new_public_tests": {
+      "command": "python3 -m unittest discover -s tests -p test_project_memory_consolidation.py -q",
+      "tests": 31,
+      "result": "passed",
+      "seconds": 0.919
+    },
+    "project_memory_regressions": {
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py' -q",
+      "tests": 214,
+      "seconds": 4.668,
+      "result": "passed",
+      "notes": "Includes new tests. Existing ResourceWarnings and synthetic capture-unavailable diagnostic appeared."
+    },
+    "episode_regressions": {
+      "command": "python3 -m unittest discover -s tests -p 'test_episode*.py' -q",
+      "tests": 62,
+      "seconds": 0.69,
+      "result": "passed"
+    },
+    "python_syntax": "py_compile passed for three changed product modules and new test module",
+    "diff_check": "passed",
+    "full_suite": "owned by root; pending at handoff",
+    "native_contract_regression": {
+      "artifact": "native-contract-regression.json",
+      "result": "Saved schema-v8 accepted the development response; schema-v9 rejects it; no live retry."
+    },
+    "saved_development_continuity": {
+      "artifact": "development-v9-continuity-fix.json",
+      "result": "Saved development response passes fixed storage validation on read-only SQLite; no commit or model call."
+    }
+  },
+  "limits": {
+    "identity_discovery_sources": 64,
+    "identity_discovery_chars": 24000,
+    "current_head_scan": 100,
+    "heads_per_job": 4,
+    "ancestors_per_head": 8,
+    "source_count_hard_cap": 32,
+    "source_chars_hard_cap": 24000,
+    "historical_field_chars": 6000,
+    "historical_field_refs": 32,
+    "retry_attempts": 5,
+    "timeouts": "Existing 1..600 seconds process boundary; optional Jev shared deadline unchanged"
+  },
+  "limitations": [
+    "Synthetic generator tests establish storage/control-flow behavior, not live semantic accuracy.",
+    "Task identity is conservative and requires explicit positive original user identity plus continuity; unnamed task chains remain separate.",
+    "Prior goal/reason/result/open-work fields are explicitly historical inferred context; current validity remains unresolved and visible. They do not assert current active obligations or independent execution.",
+    "Bounded candidate/source/history omissions remain visible; this is not complete history or a full historical query API.",
+    "Existing database schema is unchanged; existing Store reopening and baseline clone experiment are the migration compatibility checks."
+  ],
+  "source_hashes": {
+    "codex_mem/project_memory.py": "47a7c9e6863d2471635b9e904b16456775cd4ebe0486ef1f853f882b8fd25d22",
+    "codex_mem/episode_processor.py": "9128fe5b1e21a611a4f25a907c5f509caa90531f328dd91611cdb8606e1667df",
+    "codex_mem/project_memory_retrieval.py": "b09dd8bd0312bfc60d134a6c7adaf216031df6a4b69038ee75f3900b2909acce",
+    "tests/test_project_memory_consolidation.py": "5a94415f45636c2d3bca739c8a61589000571544f6e23e9faf9993837ef48571",
+    "tests/test_episode_processor.py": "8d06120e5a7908c9af792397848cf76024e1764f73981f23309fa04f8dd2d227"
+  },
+  "output_schema_version": "project-memory-output-v9"
+}

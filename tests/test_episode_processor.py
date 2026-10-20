@@ -325,6 +325,8 @@ class EpisodeProcessorTests(unittest.TestCase):
             del item["key"]
             ref = next(iter(ep._span_catalog(raw)[1]))
             item["continuation_of"] = "head-current"
+            item["consolidation_of"] = []
+            item["evidence"]["consolidation_of"] = []
             item["evidence"]["summary"] = [ref]
             item["evidence"]["continuation_of"] = [ref]
             wire = {"episodes": [item], "claims": [], "relations": []}
@@ -500,7 +502,7 @@ class EpisodeProcessorTests(unittest.TestCase):
             elif isinstance(value, list):
                 for item in value: inspect(item)
         inspect(schema)
-        self.assertEqual(len(selectors), 10)
+        self.assertEqual(len(selectors), 11)
         self.assertEqual(schema["$defs"]["evidence_ref"]["enum"], list(registry))
         self.assertEqual(sum(values == list(registry) for values in enums), 1)
         self.assertTrue(all(span["source_id"] in {"event-1", "event-2"} for span in registry.values()))

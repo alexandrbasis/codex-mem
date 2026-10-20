@@ -1,0 +1,963 @@
+{
+  "schema_version": 1,
+  "scope": "Publication privacy transformation of exported diagnostic identifiers only; private /tmp originals and frozen implementation/protocol/fixtures remain unchanged.",
+  "pseudonym_method": "diagnostic-{thread|turn}- plus first 20 hex characters of SHA256(original UUID), consistent across both exports. Original identifiers and the raw mapping are not published.",
+  "selected_diagnostic_fields": [
+    "jobs[].worker_thread_id",
+    "jobs[].worker_turn_id",
+    "evidence.thread_start.thread_id",
+    "evidence.turn_started.thread_id",
+    "evidence.turn_started.turn_id"
+  ],
+  "preserved": [
+    "fictional session/source/event/turn provenance",
+    "questions",
+    "answers",
+    "grades",
+    "token totals",
+    "latency totals",
+    "entire calls.jsonl byte content",
+    "accepted merge audit bundles",
+    "input fixture bytes and hashes"
+  ],
+  "private_original_archive_sha256": "ed8e1c4d90d9a51f8d8b64569c5fb516390f0c20e9b580e6fecc5490af9a1518",
+  "public_export_archive_sha256": "73afca01be04bded85a8f0e3eae7e44aaec948eeffd353e4f7939bc4b108b5a3",
+  "archive_members": 678,
+  "changed_member_count": 233,
+  "changed_members": {
+    "baseline/fiction-01/generation.json": {
+      "private_original_sha256": "33a6c64fb7039eebecac30f8431a58c6bf37fe2c306e100d3e29aa3246ff06d6",
+      "public_export_sha256": "a7a1ad8e639cc374aff27863a9a966d2d230d34d833a9e559b2b2bd2679d93c0"
+    },
+    "baseline/fiction-02/generation.json": {
+      "private_original_sha256": "9ad581e8b6cde4f52d7b528eca7246302f8750bb17537ce41427bdedc050fbbe",
+      "public_export_sha256": "6a07bd132cda39b0c034651087b4ccbf558a8b56f2a0b5eed73226880b80f0fa"
+    },
+    "baseline/fiction-03/generation.json": {
+      "private_original_sha256": "49141da92e62e7e6d8b04349c2b040eec992ee0eb8a6f6f0b4e27f1a199a48f9",
+      "public_export_sha256": "6c2e9e885ab312e30f2ab67daaefeae8ecc4138076d8176a9677a1b03265072f"
+    },
+    "baseline/fiction-04/generation.json": {
+      "private_original_sha256": "ba91d4d8ce6bef13f1f317c80bcb3562de13800f627a8a4ae15bcb55a36d5094",
+      "public_export_sha256": "968180192c7e687396057effa2e60796ea5607e9203fdc93f07bd90fe09a6dc1"
+    },
+    "baseline/fiction-05/generation.json": {
+      "private_original_sha256": "a80c528b9b176930e1aee3e914a33c8fc15488cd969ef7eedd6973fbcef1b457",
+      "public_export_sha256": "e3fb7f9988d0ca8ad2d1a0b50ce26241df3ad9210c756397eb4d7a91e35371e0"
+    },
+    "baseline/fiction-06/generation.json": {
+      "private_original_sha256": "9559c249d80695f5d06f54fba445550b82b92d619c23f680dc37b165809d8c0c",
+      "public_export_sha256": "7e32ce2b88ecaabcc307bc20f2399e1a91b25e01709f0a6f4ddac8633ab48cc9"
+    },
+    "baseline/fiction-07/generation.json": {
+      "private_original_sha256": "1b9c640a0f6610bca7d16e30bd626d965b65374c7d7d6ea1ecd5808db4bcb9ca",
+      "public_export_sha256": "ea866fe1bf7cc4913e95abe85dcefb952eab4b84746bd1e1edd24206fe6a8638"
+    },
+    "baseline/fiction-08/generation.json": {
+      "private_original_sha256": "b26cf28d85075895437d17aa6a21bd35ba48fba58d6851992fb6cdc2d1ea2756",
+      "public_export_sha256": "752b376294cab106a37ffa79e2cd01f19362c7603edf69f0bb9700d913ce95c4"
+    },
+    "baseline/fiction-09/generation.json": {
+      "private_original_sha256": "48ce0756723e63d2c926ee409230d928c754ef9e739033eace5bf902e7348d08",
+      "public_export_sha256": "754f8d50d7cc09686103d9b2b65b7bc68b0a2f7558073baecd36538bd78441d8"
+    },
+    "baseline/fiction-10/generation.json": {
+      "private_original_sha256": "00cb846300566ec5bad90eb5ea53e9c3d0509f3c03efa938cebc3660f3c176a4",
+      "public_export_sha256": "1219ef6413ccd15b9417eb9f254cf73e7d3bee5efd655df09992a3278bba81b2"
+    },
+    "baseline/fiction-11/generation.json": {
+      "private_original_sha256": "5d074788d4d5990ee889b4fc809606d573c3e9b326741b8070c89546e0744034",
+      "public_export_sha256": "6214e595058f7e9cd6e36784b6d8f01fb52a3087037e4aa571e702206b9bcaea"
+    },
+    "baseline/fiction-12/generation.json": {
+      "private_original_sha256": "97bed3471a7f12f4a4ceb269f65a85876f7f81ce34be23a9a19e4c53704917b1",
+      "public_export_sha256": "b3ddbd4add547cc05381a3f5a7a57b6b80f4bf4f9b15d64043f9c72c2cd4362a"
+    },
+    "baseline/fiction-13/generation.json": {
+      "private_original_sha256": "07e9dafe156e9dd695915c01a056e69b722bc1ea7971df3d8ef1bbaf13e70465",
+      "public_export_sha256": "6053215bfbf5778fc43df6bd9800873d9059a56c80b2fed0f2aba866bba12d02"
+    },
+    "baseline/fiction-14/generation.json": {
+      "private_original_sha256": "c14c7ca29362a3215a9bdc6095da00c360305ec77db740389b809ebd9b27e68a",
+      "public_export_sha256": "a0fab0b3849a0049508d8ccccda4dbf98e3f1f3ce813c174eb225e8f585c6809"
+    },
+    "baseline/fiction-15/generation.json": {
+      "private_original_sha256": "8db53454bd736fce63b0bf7347632481f2e0c30373c7b0c44e0449986f147cd7",
+      "public_export_sha256": "a8983ca061389445cc67829649840c4ebbfca3d83a4943c9a0be182987e3256d"
+    },
+    "baseline/fiction-16/generation.json": {
+      "private_original_sha256": "14a36a11b7a1a3d8ba91dd65ed9c8d017210a5f97ce1bf3f0fad782fb5823d4c",
+      "public_export_sha256": "be44a8d06de08bbc46656b5157547f1dd19f4caedbf374a83c59687e2057873c"
+    },
+    "baseline/fiction-17/generation.json": {
+      "private_original_sha256": "d1d55ba3bfc7c49c1400f7fb29c6f07be189351dc274ab9cc4fe122f8df6ada7",
+      "public_export_sha256": "29ac830917a46de4020f060b1c64c836f92959fd39999ff2c9ecbf143f1cbfe3"
+    },
+    "baseline/fiction-18/generation.json": {
+      "private_original_sha256": "37223aaf46b810938e9fe902450e7674da81bb9f0206022c0cfff609dff81483",
+      "public_export_sha256": "0ed3285a6c84b15762ba055da259b28d3d05da3dfc5a0609b226a06e8ee4f65b"
+    },
+    "baseline/fiction-19/generation.json": {
+      "private_original_sha256": "387d610ff92d659baf70e2bcb06cd16475e0ebe49a764f098084a8e3f4f6c376",
+      "public_export_sha256": "60695034f45f834b626362b188bdd88ee4affc1cb69c5ffc3c180129b60501e3"
+    },
+    "baseline/fiction-20/generation.json": {
+      "private_original_sha256": "37e54f3bd83c52e79431ecb04ef477093a935dc93a59fa0c356da301c071afb1",
+      "public_export_sha256": "23395d51ee048e26ea3d709433a71f35c0d42e95ac2642727657a2725c2e2154"
+    },
+    "candidate/fiction-01/generation.json": {
+      "private_original_sha256": "289298372ad738cb2550ef7c77166400cf36e8c6321e5e79f43659eb8ee479ee",
+      "public_export_sha256": "20e20016ef2eb88d52c4c7313a5db683f704c8195bc126ec523d49fff22f0b9f"
+    },
+    "candidate/fiction-02/generation.json": {
+      "private_original_sha256": "e6bfc1456049a1438012a6034a56534d7eb5299fdd71154f70b5a61648812e51",
+      "public_export_sha256": "4fc857d1301273b3c00aa83e7d21af211893187c8f72f8a8c83860fecfaeadc4"
+    },
+    "candidate/fiction-03/consolidation.json": {
+      "private_original_sha256": "9b18bc54dd0dbb130e167386753ae5b6d32acbce0690b9f7abb14e057d5a22a5",
+      "public_export_sha256": "31fc36fbe31312ada95fca18da335dd415e16e7432cfacbe66a2c099a1eb27c6"
+    },
+    "candidate/fiction-03/generation.json": {
+      "private_original_sha256": "b861b45fb3c758ac05e580efd2469bdd82a937d6ee43990e09ad55278df250f9",
+      "public_export_sha256": "2ac6955ccbf66798aa8b7b665432fdd4aafee722cd3da0978dcc4f9e6b4f9580"
+    },
+    "candidate/fiction-04/generation.json": {
+      "private_original_sha256": "bfea93889884ce1994d6eb52f61dd42838b052cecf88518540ed929cbaa468bd",
+      "public_export_sha256": "c1243a82fc894ff44bd0764a00a37cd5ca036b82da058c201e828783d0b6b354"
+    },
+    "candidate/fiction-05/generation.json": {
+      "private_original_sha256": "824b7bca439b7904f23ac160d746dcd0f59202b2ebec3632d91c5ff53db59505",
+      "public_export_sha256": "3bff0a9b3716784ea5b26eadb2f64e865eeda790d90e9d18bdfe3c539178e68e"
+    },
+    "candidate/fiction-06/generation.json": {
+      "private_original_sha256": "1711769fe7f2db2c10b46f20af56907cfea6afbf8e233def64c5379d0659c336",
+      "public_export_sha256": "7b811652310763dcdf4c8031528cfa0b00ed34078df929f156ac7e8092022b77"
+    },
+    "candidate/fiction-07/generation.json": {
+      "private_original_sha256": "edcb508949f219621cc387cc6a52f9fb36229be391307cc071760b37c3f11602",
+      "public_export_sha256": "b771cc6f7ee34657f272af0de8a102bd8059d3d0db501b902555d0e2920e0612"
+    },
+    "candidate/fiction-08/generation.json": {
+      "private_original_sha256": "4c0215b78767c6d9d0c443014a2bf0b6053367f52ccf1139f58262c3e55b1dea",
+      "public_export_sha256": "0958051bb3db3664435ee5f7123077dfd85b47070251166e16e5957e1b70812c"
+    },
+    "candidate/fiction-09/consolidation.json": {
+      "private_original_sha256": "e95718e98319dff501c042b2cad369f3dc45d6db9a2a13d7ffa7a5ec0bf2c449",
+      "public_export_sha256": "ab914a23e5f6103da25456e1713ba8f35372c64d334e08cbe35146eb74c9bcc3"
+    },
+    "candidate/fiction-09/generation.json": {
+      "private_original_sha256": "d54532def8a1e032e1c18e971637e626fb9ebc17bdcb56b42a55676186b17112",
+      "public_export_sha256": "3715e5aa4e94772b7b4e2091faf02de4e13bd4cd084435a7bc5e60e35683ca73"
+    },
+    "candidate/fiction-10/generation.json": {
+      "private_original_sha256": "f2a2258a7df0c00b483a2662ea3230d0169a072705645eede3ddc6323f950ce0",
+      "public_export_sha256": "b10cd7db74bcf2d64c7d8113d4da6862dad9fb551e65923495872f292e266d6d"
+    },
+    "candidate/fiction-11/generation.json": {
+      "private_original_sha256": "28a1781e9bee35fcc4743183c5da4c15cb32830a0d9b3ba372009aae55ff6e7e",
+      "public_export_sha256": "c1f2eccc1c6a0f93772be3c93b0f9fde45c2e58618e0b09c352c2febd8143313"
+    },
+    "candidate/fiction-12/consolidation.json": {
+      "private_original_sha256": "5a2c58ad0f2178b5834c6748f103c519c7997ddc3b473e4f292862e7cebbe859",
+      "public_export_sha256": "19dc5dccef0670b7df7084cdd01418af65caea01c4b269221b3d9c16d54d3956"
+    },
+    "candidate/fiction-12/generation.json": {
+      "private_original_sha256": "9d38797680366bd170f40836a46cda62a1a9c1b6b54d7bb6ca3456fb5705f0d9",
+      "public_export_sha256": "fbe33bed4aa136c8ea81b2ae48e3c32c0222c2f86b2d58f8bb35a9b5a6a31b64"
+    },
+    "candidate/fiction-13/consolidation.json": {
+      "private_original_sha256": "a41c42f49802c71fc85456fc1e34a142eb0328a2b8b58a079c360fe6ba7d7c8f",
+      "public_export_sha256": "6e326ed63aa593c37c5c6278dabf9cc00faf5072ec4a4f8698188aaac9d38df6"
+    },
+    "candidate/fiction-13/generation.json": {
+      "private_original_sha256": "74c61b5611b03544f829b890258844701dd204427b2d57737c2250c73f8d47d2",
+      "public_export_sha256": "8ccac79f3edbfffc827f42ddacda57b95b5742173ce82bffc66ed32458e10d57"
+    },
+    "candidate/fiction-14/generation.json": {
+      "private_original_sha256": "585c065f79932eb97a6ae544f19b424af871fb27976bb437ca49ff3b6a244315",
+      "public_export_sha256": "a2dad24089466d08638e82bd7554f749cf317d2f38514466d986d14714b80ae9"
+    },
+    "candidate/fiction-15/generation.json": {
+      "private_original_sha256": "892f95b97904c4b708e14d38d4b966dc907d092df37219c32c81d05ee046be59",
+      "public_export_sha256": "b48a83e6b1ffeea6588f596bf117308d75c2608e953875aa89d5d1ae56c3d89f"
+    },
+    "candidate/fiction-16/generation.json": {
+      "private_original_sha256": "cca2001ad43e7d357326fee3bef99d921a8f2826a9efdc6c418877c562a22eb2",
+      "public_export_sha256": "3f333fa7da3df3dea46b0238af730f57d42c06405769aed4165b91a38c1c6470"
+    },
+    "candidate/fiction-17/generation.json": {
+      "private_original_sha256": "8ab4815da1d921d66e5c881d3916aba56be739bb7668f9f1c815b6dbe4be308b",
+      "public_export_sha256": "06073d8e2b5c44bca8c9a05fb8ce0344579826b8623b7c957a7885c96362965b"
+    },
+    "candidate/fiction-18/generation.json": {
+      "private_original_sha256": "aa16a894ebb67a1a0caa4549ab7543c934c6397ff0938a42115caec8c422007b",
+      "public_export_sha256": "bf10b8044ed243e1ec03cfcba2c58436e84f63bf450cadde8c6a74b6d74b3074"
+    },
+    "candidate/fiction-19/consolidation.json": {
+      "private_original_sha256": "4634079c4f394490d3fa9eeb96ba094b769abbb4872752c2148818ad0df92591",
+      "public_export_sha256": "69a930a83ecf58693006518920961a5db2c7c7535ab2019ef43816a4d9bad371"
+    },
+    "candidate/fiction-19/generation.json": {
+      "private_original_sha256": "fbf9a2b342650817cca765f0c1df4ff399e05fbe0ac347228b2cf344a3f3cf95",
+      "public_export_sha256": "cdd931d0dff69660f706b1b29032c7434d246008c39670c4dc5f2fc41773b984"
+    },
+    "candidate/fiction-20/consolidation.json": {
+      "private_original_sha256": "aeccc538c0807d746cb55f376b2423793efc66de7f499ff5b31343cfbef326b9",
+      "public_export_sha256": "fe14af3f57cad14b4880a55543878740faf2b598059e2559a4d00e4e4579199b"
+    },
+    "candidate/fiction-20/generation.json": {
+      "private_original_sha256": "e88ac6cb1e1131be86683b05747cf929756d260950167942379e1fdf597b610d",
+      "public_export_sha256": "8e15756584e7bb0c8b9a7897368b56877fc20206c8fc851f092ae17be34280e4"
+    },
+    "receipts/call-0001-response.json": {
+      "private_original_sha256": "9e2484143f9fa6f4f9129212f2f3ad6ad5cc2f0f49469954392416318ff8167f",
+      "public_export_sha256": "e68787ffca7b985686fb399488f932e78b58f9ba89c114d12c233ce7a14935ff"
+    },
+    "receipts/call-0002-response.json": {
+      "private_original_sha256": "409c32183404504df4130adb5f962ec0e210953044149af286680be75d946c1d",
+      "public_export_sha256": "c92d64d70d42eb677790fdaaf3b9ffab59260a266ae1ff9d4410f9420535cbee"
+    },
+    "receipts/call-0003-response.json": {
+      "private_original_sha256": "c2f72c4ecc65a96692ff27cdd734ce91979f14f8f913137f5d39c5c427522f0b",
+      "public_export_sha256": "cf84300fa05e28755387198f2fd7b0362d590a74f16f59a29a0f81abc27a85c2"
+    },
+    "receipts/call-0004-response.json": {
+      "private_original_sha256": "c0ff1dc08430e52dd75393957a2fb42e39807e5eb455c5ed9a5085bc610a7001",
+      "public_export_sha256": "4778babbc502ec48f2429cb1e6313e965b0e813ab38d8abfac2369908ee319cf"
+    },
+    "receipts/call-0005-response.json": {
+      "private_original_sha256": "009bb700c9139364c25bbbded0008bb3f924ddda2c33f6712047aa546feb0b66",
+      "public_export_sha256": "fe8f1b46db9196173a286b7edf422b23cfff6127b68d0904d8faebaca10eb30a"
+    },
+    "receipts/call-0006-response.json": {
+      "private_original_sha256": "936fdca32e24738a234966cd72d64f9b0a2c6a93b3784b4e8c9c1c8a4d306d42",
+      "public_export_sha256": "ef107e09455ff9aa2e32ea95fc23bd251c93f391aeb9e40a1cd7945c89113fac"
+    },
+    "receipts/call-0007-response.json": {
+      "private_original_sha256": "aedc4cb61a9eb6d6194b679d49fb0d745b3f5e58425de1237381b93177bed8ad",
+      "public_export_sha256": "efac8a5b7e974ebe6077c0005f5718e96637d657f150128ef73f0ba8e6b7a5a3"
+    },
+    "receipts/call-0008-response.json": {
+      "private_original_sha256": "a322cebf61d85154ca618e7a142e659cd38d98dc2f5a099f35969dbfc72d6b0b",
+      "public_export_sha256": "d089aa588c097e6ba95a47e02237b1adda22003f3f0baf84dd95f97a60099691"
+    },
+    "receipts/call-0009-response.json": {
+      "private_original_sha256": "d45d7b0fdd68e85dfa5f274037979e3fcf776dabe69a4305ff0f40a8579b35e5",
+      "public_export_sha256": "bfc48f78480b701c409ee4692be6e85cc3a48ac519c3e7e2ff184340b792ccc7"
+    },
+    "receipts/call-0010-response.json": {
+      "private_original_sha256": "f08dd8a68ab546609626f955d7abf4d146d4a52e42999fdf009d053d8d819823",
+      "public_export_sha256": "7a9cb0fe64d12e826cf4b8aa258570944f1ac7b16b22d690073771d5701c9c15"
+    },
+    "receipts/call-0011-response.json": {
+      "private_original_sha256": "c30be48cd9f93cdace5a5fed7fcfc8434d716c51d209d45a8ec8a099931690c0",
+      "public_export_sha256": "ed08d99e850bc7c8b9c8b3b609d7d910aedb2ba766932e5698b132639ceb7d86"
+    },
+    "receipts/call-0012-response.json": {
+      "private_original_sha256": "3b6b5c3a51fa3186e2ac53846984b12cb689b3c4618119e52ed84243e2119a10",
+      "public_export_sha256": "2b59e1d788e57045b55c0bf89966ada028a741b2220375a8a4cbb7e01aaeb809"
+    },
+    "receipts/call-0013-response.json": {
+      "private_original_sha256": "8bc5742890ca650b8e937c72bd8ca1dfac57316ebce16545a961e16be7a60d68",
+      "public_export_sha256": "739ab2cde8748446611e9b3db81d9ce7b6c5f846b615e4ed882fe5cece4994e5"
+    },
+    "receipts/call-0014-response.json": {
+      "private_original_sha256": "1722fddff9e2c0c303dc87a74cf0901d6bcb76850af919da14d022216c05ad9a",
+      "public_export_sha256": "926e247e7987ed525223f5c8264e25db55698477c44de162fdf65e814a6b3c7b"
+    },
+    "receipts/call-0015-response.json": {
+      "private_original_sha256": "347c8697107cc1393521c0e622b0fc720e40f73247991adfdf994264fd9782d0",
+      "public_export_sha256": "9981f61032bdc080c2be0650082f673497544f3764e99ba8582db8f8bf93e0fa"
+    },
+    "receipts/call-0016-response.json": {
+      "private_original_sha256": "210385433abf890e264bdbef2a9bfb8be94e0a205dd8bc983999aeb7dc832652",
+      "public_export_sha256": "180415b65fe1ea01a72821492a33a51d956c4d8b863061a920c6f0ce1d5afcee"
+    },
+    "receipts/call-0017-response.json": {
+      "private_original_sha256": "c74263ce68fe48542400267dd86df9a78a5317627e6c94cbe291dd214e5f953b",
+      "public_export_sha256": "5ef6d3ebe1a3f030f6ce531498beee8f0b3f35d88b062c17c7cf2e6ab95bca75"
+    },
+    "receipts/call-0018-response.json": {
+      "private_original_sha256": "e0895c788de24c8b6e98edf7697f2ec4cf2e315afb6bed714e86fb8e10601ef9",
+      "public_export_sha256": "6b5a13b29ee3212b729ee733293a4c64832324a8f2f81749de45720267cdc1ce"
+    },
+    "receipts/call-0019-response.json": {
+      "private_original_sha256": "e1ca276c44fbc5c69a47791c28dfa7314ded90a384b5ca9df4d53ce1e73f0c8f",
+      "public_export_sha256": "35028f9fea2c2acaa2a718450df53f170da5fa1a907ef841afd0d237e88b74d9"
+    },
+    "receipts/call-0020-response.json": {
+      "private_original_sha256": "107a94d4665bde5525496980b3a0e8bc78e1e1e71ce4c055381a67bbc3be5c04",
+      "public_export_sha256": "bdbfbd8d725bfbd8e2e085f3e995681aa655e47fcdd3f804840d25e019c974e4"
+    },
+    "receipts/call-0021-response.json": {
+      "private_original_sha256": "a61e4ae97230d66305a315c9cd4a09485bb2e6f1675383b55d24a4c263b0c536",
+      "public_export_sha256": "2c01167fccece6d8f1877ec352dba9ac8015b828360c3548441534be7bbb714d"
+    },
+    "receipts/call-0022-response.json": {
+      "private_original_sha256": "0c8c1d3279ac1ae0458356bea2525b4bcce4680b4fbb08f4e16c8da989671eed",
+      "public_export_sha256": "0a0d4c234d7948a0fc80ba39a4777651a11c8d6cdb75cd88a3b2116a1abe4ac3"
+    },
+    "receipts/call-0023-response.json": {
+      "private_original_sha256": "79a6d7af886bf7ad4875657b682bc0308df20c839c83d2cda199626c8de1aa4e",
+      "public_export_sha256": "ec7fda5ea5e14a05fa93fd3660c6697de8372c09f0ca4817a32c821ad8685522"
+    },
+    "receipts/call-0024-response.json": {
+      "private_original_sha256": "4b0a15727610a536d8f79ab8d7fd5db005a3b7c45d633f7684ef52d3587b171b",
+      "public_export_sha256": "8cb674ff2975b32bf8db943cdb1e08ab038521bb30e7bd4a07fe31fa3ee5d5cb"
+    },
+    "receipts/call-0025-response.json": {
+      "private_original_sha256": "62141326ffc23aa7949dae06f1ddce0997131d5ba006c2a3766d4da07971e3a1",
+      "public_export_sha256": "02e325747009207a52169a0891c6d43cdd62db979620bbc86f4977ba080bb5f7"
+    },
+    "receipts/call-0026-response.json": {
+      "private_original_sha256": "25b686ad46cc1d29c57ea66f7a12d3abe297239ce935932e6b874b240805b49b",
+      "public_export_sha256": "f44c64491f9c27c38d93f9304011ed16b8d96d6139c046080ea1c7a4f2167cb9"
+    },
+    "receipts/call-0027-response.json": {
+      "private_original_sha256": "cc25f157e0cb644aa7d14d514edf88f2e36d9db2ff850180466353fc7d0aeb6c",
+      "public_export_sha256": "864cd995e654a5da73824a317b7944acc1973cc958b820bbb30201edb583e1c7"
+    },
+    "receipts/call-0028-response.json": {
+      "private_original_sha256": "26c36f8857fd92a76f4ad44aa396460f88db6bfd1f7aaf1c8481dc48222fcb96",
+      "public_export_sha256": "c20f7219df3db359a7047105b99e98c7d7092d81b413646973db2a3299412889"
+    },
+    "receipts/call-0029-response.json": {
+      "private_original_sha256": "846a94c5d7d949e4928539b42567c325b0f84a0bcb05754638b03bfbaa99236f",
+      "public_export_sha256": "f1994361aade981b43909992f01f1a8eb3585a8268dc458ef3bbf3e2514713a2"
+    },
+    "receipts/call-0030-response.json": {
+      "private_original_sha256": "0414eda6f4bd1867c159cda82f58a11ef137aa56f8f0dc6390d4c17bdb8ceda2",
+      "public_export_sha256": "17a3019546aa52e2d809627dcb54d6eb4fc36fbe5f9e95437c3119a3c1f3e636"
+    },
+    "receipts/call-0031-response.json": {
+      "private_original_sha256": "a31220bb7f4d88bb0bfa2266a32249dbed2267877282a6cf2fee903327cca98a",
+      "public_export_sha256": "d08c419697337d69a05896c338f0adc2e2b4b88a79c2afbac065c3f4f725c355"
+    },
+    "receipts/call-0032-response.json": {
+      "private_original_sha256": "5fb056764c660079c21e89c684daca3d70ef8e8cecdd6094a3f46be3c2395610",
+      "public_export_sha256": "727384e60c11ec01e25153dc68f5887eec5e0291443577889c90a1d68f4400c2"
+    },
+    "receipts/call-0033-response.json": {
+      "private_original_sha256": "b34c57c6177dfdbfb68143b79a4594285f2f3a0e566dc29b9d45b5ca87bc45a3",
+      "public_export_sha256": "f47d5936d1eff82c63fa434e878204db93a39745e7afcfb526babb5951a6d385"
+    },
+    "receipts/call-0034-response.json": {
+      "private_original_sha256": "2e34175ced16c8cdf76f20e775f9f3187b9a907a2908ca3a29e80f61e7b07a28",
+      "public_export_sha256": "1261bf086f8594898635e9264f9108562637b83ad28a5739a115d044087a36d0"
+    },
+    "receipts/call-0035-response.json": {
+      "private_original_sha256": "2a1352a110dfe4c06786fdcfb3a8f8b479bc251b87fd40e0eb3fc1cc94cab9ef",
+      "public_export_sha256": "8d776c4ebbd1a102c856ded251922c744327a55a6cd264d532026ba12be7cc58"
+    },
+    "receipts/call-0036-response.json": {
+      "private_original_sha256": "954b1bf3cef04e77f0a109d575f6d453c83117cc76a3dcad5c2e5317af92fda7",
+      "public_export_sha256": "398fe82a707319455c4a967433be392457fd66ae5651b413665b71955ceadfc4"
+    },
+    "receipts/call-0037-response.json": {
+      "private_original_sha256": "439b1ef9de788cea689154fd7bc68d73d97ae7cdb9cdf7d791a686e65c47c800",
+      "public_export_sha256": "a100e162926d285babd4782775a0c05134b418d0045367d4441fc7f2a940154e"
+    },
+    "receipts/call-0038-response.json": {
+      "private_original_sha256": "6bcc70f49bc8efc9d905f1666418c70cf6417b0f821eb5b59c09f9617291ed71",
+      "public_export_sha256": "a8d951ca2316021e463e59450be96aed716f0d3c2ee716b9f52b07813608a722"
+    },
+    "receipts/call-0039-response.json": {
+      "private_original_sha256": "b68dc3707b9dc92e29a3aa2f7b0509e50b41236ea7469792ba560a76f3e7782b",
+      "public_export_sha256": "b46ae349ee8e32280239040132c8792f92edf0f7887bd83f0537151420746e71"
+    },
+    "receipts/call-0040-response.json": {
+      "private_original_sha256": "13893a101eb46a4282b20ac7b3dbc49b71f836bfbc10a8eae88ffc423d0c4fcf",
+      "public_export_sha256": "dcf250a8ee62c02d1873f25ce0c846eb52d805512ea0a8b3f721c969378ce2c6"
+    },
+    "receipts/call-0041-response.json": {
+      "private_original_sha256": "059691b086053056b9c2a3aba94b10ebbe5dfa5d4f4cac62ed35ea5b1af2782f",
+      "public_export_sha256": "da6f869dee30507f4c7024a0b20a575cdd1c6d0369bd57535c6b829019f3d093"
+    },
+    "receipts/call-0042-response.json": {
+      "private_original_sha256": "14668ba078419572f4470a624cfa9dc96fc7d3141732bb439fcdb1b76888e2d1",
+      "public_export_sha256": "06e0716b6002134fe2c2d1000089c4e7bbede259b706236d242d3e739c4b4b26"
+    },
+    "receipts/call-0043-response.json": {
+      "private_original_sha256": "1afa8dc5e06b6568b9cb8e1debec730de0d58bb09a48d81c0b6db29d5ccbda64",
+      "public_export_sha256": "36a743ddd22ef7c636f686c93c692204aa31e7786bdbad07b50b878141f26a85"
+    },
+    "receipts/call-0044-response.json": {
+      "private_original_sha256": "2f43424976c8c69b1cb27bd887f497778d619d023186457a97e6762aefbecb35",
+      "public_export_sha256": "e5abc2f9cea25832de9dc23d2ef3346a7478644b3ed09c52685047546d93b0d0"
+    },
+    "receipts/call-0045-response.json": {
+      "private_original_sha256": "179f0ef6834304a0429124b5d8507cd8b8e0ab3cc22cc80214d0a69083063db1",
+      "public_export_sha256": "b5c0a7f4210cbc3cd4129f25da9cab89f31c571cdf4b0568e181e97513d7455d"
+    },
+    "receipts/call-0046-response.json": {
+      "private_original_sha256": "1c1413ecf35cdd0ca06411ea219781ae2b4f7c56c69665b59dac42e180694ace",
+      "public_export_sha256": "895858122a894ae2f6e7ee95a8fbec2db2d155c230e86a7c47d887e446712528"
+    },
+    "receipts/call-0047-response.json": {
+      "private_original_sha256": "e323f90cdabac43d72f0e7b93028640352f299ac71788f2f3497f63bb1ce7fe6",
+      "public_export_sha256": "24d075f8f0c9a423379fb8bda5e71a32265386148bc38b0dcc7e308a78370910"
+    },
+    "receipts/call-0048-response.json": {
+      "private_original_sha256": "fa4fe08d15e2a31a48716fec9f8838fb2798a381b606013ba39b6974b9c30fcf",
+      "public_export_sha256": "75051d784e81bb602ca0eb4dc0a904b0941aaed6cebb619fa679af51c0894c0f"
+    },
+    "receipts/call-0049-response.json": {
+      "private_original_sha256": "e8e0081d8cca6243a34199e128dd11ca4aedfb68bbc733bfc0ccec72df98e5b7",
+      "public_export_sha256": "a436f68521de7629e26b834aea6d3e26a9855acfe31909cfafe742a1f4a77779"
+    },
+    "receipts/call-0050-response.json": {
+      "private_original_sha256": "efd66329eb64f1a3d33bdb6a17413214a0a3b6009845596b752efb15d2d87f62",
+      "public_export_sha256": "d8a8d52e74fa622514913cefa2b409a880bd2b109abf78552f4d400d072c8272"
+    },
+    "receipts/call-0051-response.json": {
+      "private_original_sha256": "927442e0643ca74cde462387cb232d323fbb889ad34e93ce741acf5e85d543d5",
+      "public_export_sha256": "d2be3bf927cea81f118e024fe127447db467a508958750c5b6129828024f2067"
+    },
+    "receipts/call-0052-response.json": {
+      "private_original_sha256": "0f1bf6e75116bbb23b33fe8e405faf900e92741291aecff3f4c122a4836804bf",
+      "public_export_sha256": "e9ed75caa3dde74f6b4267368aff7dabc0ad3d4faf424135a2ec1923e07249cd"
+    },
+    "receipts/call-0053-response.json": {
+      "private_original_sha256": "136ca820f821acb625d68a2854a315c82a6dbc0ea50c49a7f2fa4c39281a60ca",
+      "public_export_sha256": "a331eeab41336f0f248320b2d68803bf85b257f2c3ab9f7e183ad9987d4ee297"
+    },
+    "receipts/call-0054-response.json": {
+      "private_original_sha256": "02dd9de6627c87f0789d4b1804fcab2914aad91f074a14b8b3004c97f27d23f1",
+      "public_export_sha256": "ada7f18564e742a103dc4078b0be11dcdb5da7bbf269375abc482793e87c9081"
+    },
+    "receipts/call-0055-response.json": {
+      "private_original_sha256": "adbe44fd7586118b79cc65f046917b736255c5a008fd3dd27eaf62dab8e72a8f",
+      "public_export_sha256": "7ec4d229702a95483cb1d7fedd88a3c86536cc26c9c0a7cf36dbba448e5d29fa"
+    },
+    "receipts/call-0056-response.json": {
+      "private_original_sha256": "2e1522ccece3e3116ee5f1727443bfbc6f88c2d71df818cce1bb523e3d66c8dd",
+      "public_export_sha256": "ff74f69b0d796dc02f0e630da732e941c967f05c9ff42210838422463d347259"
+    },
+    "receipts/call-0057-response.json": {
+      "private_original_sha256": "65ab21ef29795b3f20701f8775056931eb731a22cda94acd3536ce5188de87ee",
+      "public_export_sha256": "fc09786a376c64529636581b781367b5e59d7c71f53132597caa1a242313c360"
+    },
+    "receipts/call-0058-response.json": {
+      "private_original_sha256": "451e6fe4103e1a662a928db23742e92d3f705435813de43e66d38ec6d0553c95",
+      "public_export_sha256": "1a727b629a1195567d097acc749d9162872a3e966b5d49e53962a9ef88573632"
+    },
+    "receipts/call-0059-response.json": {
+      "private_original_sha256": "c3d8475f9bf7168dbc438f9e4592881226ceb88c6b6452a21cac764e6e65c20f",
+      "public_export_sha256": "37e4e1a94fac2882b99a242bee81c399968fa510b58bfd788ee0094f2304c93c"
+    },
+    "receipts/call-0060-response.json": {
+      "private_original_sha256": "1a4833a41958ffc96a610dd1a2164916e0da23d1a34c52db861ce8dbff53cc6c",
+      "public_export_sha256": "b180e43d0315d71b708dc75b06113116791d27409c9972c72f69dbbb0c2396a0"
+    },
+    "receipts/call-0061-response.json": {
+      "private_original_sha256": "7337ad18ac7b99c7661a90ad15eb0870d9b390f964dccae0cd64f8792788993c",
+      "public_export_sha256": "381237bfc0cb85de6f375e311f953d1079ed1328942b955767b13dde2ab82752"
+    },
+    "receipts/call-0062-response.json": {
+      "private_original_sha256": "37915fd267acd381eae227bc69f7d43557724fb936de4c56f7b35614d66bebec",
+      "public_export_sha256": "27c551a7879ecc2e6ab91804eeea1ac1f78f3a172a89d9d9db78f605f705a8f9"
+    },
+    "receipts/call-0063-response.json": {
+      "private_original_sha256": "4079df3e506670e9d6df4ddd60ef1dcf47ad6480d062336a06112969d04f2e13",
+      "public_export_sha256": "ef921a1e4a0076b3645e79dd7b67d5b07f2c910c6ad072094b7789b749a83a59"
+    },
+    "receipts/call-0064-response.json": {
+      "private_original_sha256": "fbbf8eb5f8af5c567c8901c0922c40e03234709f6c7e92ae60aedbbca077887b",
+      "public_export_sha256": "e27f0352fd32f698a7c69ea7677be5077299ca3f9217da891c95ed17d412d9b7"
+    },
+    "receipts/call-0065-response.json": {
+      "private_original_sha256": "e3c935152770d55b056ae6593b3096843622a647b538c389c15b0c4fa4a41bca",
+      "public_export_sha256": "cc38d2b669690898c02bf36020ac6ae80191e6d001629d0d88579c93428fd755"
+    },
+    "receipts/call-0066-response.json": {
+      "private_original_sha256": "c178ad2af43a99718a37a9f7d88d3677f2754fd4d31be85b1f7fd6a44228c29c",
+      "public_export_sha256": "bb26472b5896eba1354507e77d1c9c15b8274192ca68461c83b1cef8ef31170d"
+    },
+    "receipts/call-0067-response.json": {
+      "private_original_sha256": "92caa4e66e485915a4c451f0bdfe28d5b0935c81031b3cfa9268f0fab6bb9640",
+      "public_export_sha256": "80cfe6a3b8e55a3969b698f4cce42c73f93630f5f04b907f3c30b170c0f4922e"
+    },
+    "receipts/call-0068-response.json": {
+      "private_original_sha256": "13cac1a7c2fc3515081e9c6ee7c86b05b65d075f6266f341933455b415c173d1",
+      "public_export_sha256": "0ca39667446b226fa12fbe4af70e3285b236295de1df1a568ed05a209030be4d"
+    },
+    "receipts/call-0069-response.json": {
+      "private_original_sha256": "68a6e0f5c8e0fd3b52a4a899e058c1955a70682b973333e726d5e4e7bc364574",
+      "public_export_sha256": "a1630ee9fd70ebf3ee1b59ebc7fb3e88afb049ea54b8369c9ec5a750c1deab67"
+    },
+    "receipts/call-0070-response.json": {
+      "private_original_sha256": "1881beb8fc493b00e10e072c03315395cdc1f53354e73e1bf832099ff31d628b",
+      "public_export_sha256": "255a1ffc5a04b6c6f78bb6dbf972fb604bf5e0300f5b6d45ce63fde57728896b"
+    },
+    "receipts/call-0071-response.json": {
+      "private_original_sha256": "0da01fcf211bf7285563d53a78904c1324b50ba8bb0d6146a2310cefa1244fa0",
+      "public_export_sha256": "2735a3c4ebab0f077dc619c237f116ddde083e17e07bbb684822724806304517"
+    },
+    "receipts/call-0072-response.json": {
+      "private_original_sha256": "67bfd5bcf814f9becbeb9ea1e344d4254b009fdf56bf7047cf392febe6193e7b",
+      "public_export_sha256": "3a00ed704bec74c13bbc5de9c9799a0a8a2488ba95f8d1162e9f59beb34316cd"
+    },
+    "receipts/call-0073-response.json": {
+      "private_original_sha256": "42c9f1f66b63df29e59f8fcd63748b2caffecd6556d27ac36c996fc96c867f33",
+      "public_export_sha256": "f47b844821e09718ec44c78a1dc14c477165f4162e4135ae156ebf10a95e2a0e"
+    },
+    "receipts/call-0074-response.json": {
+      "private_original_sha256": "88408ef1cf91aea7f49d608917add7ec7cb419d9cab2947589e8037963e0c2d9",
+      "public_export_sha256": "b751f2ab4861b988837e87852183e22c838ac186e1bd48a52594bbbeb2c89f1d"
+    },
+    "receipts/call-0075-response.json": {
+      "private_original_sha256": "7af0e27524167486e21bb135a75557d3d45ee3f6d512010bf449c59f7b355e3e",
+      "public_export_sha256": "b82a6f3bbe63be57e0a461a3dc50e950f0d0beef7894845bca8bc0dd6f8ea083"
+    },
+    "receipts/call-0076-response.json": {
+      "private_original_sha256": "91a4a9bbf44d19ec69be37f9c61839463f883901654eafc210863974a75e3cd5",
+      "public_export_sha256": "7307c10dfbb331c5a12b0cfa3f89c452d60c8a7d89cb3772f884aee87badb9ea"
+    },
+    "receipts/call-0077-response.json": {
+      "private_original_sha256": "c2e01eec221e7307c62a13dfa66f4fefdc346cb0084769b8791ec4fd9984dc1b",
+      "public_export_sha256": "1664a1eab31b026c7e68a42ca6fbbe0ed534d4126b9925469b94c1ff5f76643a"
+    },
+    "receipts/call-0078-response.json": {
+      "private_original_sha256": "c4314d4cdfba61a51628153850918b8efffaca909fc6d389de4f6b9335e2e3f0",
+      "public_export_sha256": "d30ea1678695827dfd804dec2bf1191dd86ea9087d52cc2fa13396e555c2bb78"
+    },
+    "receipts/call-0079-response.json": {
+      "private_original_sha256": "bb8bd876f25066b7cec98c210889849ed705a238fb6038702e003cbe75c5684c",
+      "public_export_sha256": "54949af55c48527f10f8a907e553fac0d8b744867515f5aaa7e48c0f31c10cfa"
+    },
+    "receipts/call-0080-response.json": {
+      "private_original_sha256": "39b9d884f9c254930bcb0ffec92601530fe6d590beacd0f2703c845fb096e3b3",
+      "public_export_sha256": "5b2201fb63fe9fb2d1ecbc245ef5811341926f008fdad9018f9ba188eb37eb02"
+    },
+    "receipts/call-0081-response.json": {
+      "private_original_sha256": "f4bf868501cd13879160145345e00b5d7c322ec4bcaa85ac0ceac8779d98305b",
+      "public_export_sha256": "d0c6f9049a4b0d7b8ab177e5b4c253d66c9fd477636898261caf656b1541ad9e"
+    },
+    "receipts/call-0082-response.json": {
+      "private_original_sha256": "2cd064f2e8382262366c77d3046bb3ed084095f91b743e2644ba674a2fbf9ce7",
+      "public_export_sha256": "c2480ad21719814fd9aea02985af33cc7feb2e955f62c56fd0a10cd6a4b1ec91"
+    },
+    "receipts/call-0083-response.json": {
+      "private_original_sha256": "8357be8dffa96e54310c524e10b483ce8d9533ea96fb39afb147f287cdcfa439",
+      "public_export_sha256": "e1b786683287533063251ef6b125585d09f1cef8bf4f471c53072ba2a26cac8c"
+    },
+    "receipts/call-0084-response.json": {
+      "private_original_sha256": "7851cf76fcb07f7206b0920c6477042aee93e63b2303b898b484ce3ad6813b65",
+      "public_export_sha256": "90d36e882ec46d4053484f05726f54e67b44e87fd83c6044785677211c84ce63"
+    },
+    "receipts/call-0085-response.json": {
+      "private_original_sha256": "de25a96591646adf650802c3fc355d3d1f27e917a23b54cd16509071bbcf6b6e",
+      "public_export_sha256": "2e8bb67ce5308a59a4929037be2d25b3a982432940d0846d31fb951900bc1ba2"
+    },
+    "receipts/call-0086-response.json": {
+      "private_original_sha256": "65a3ed9bfa48475624dce203da5c250cfb1b340a220da04425b44f88b14b750d",
+      "public_export_sha256": "917b1e4214d3ff5c3444c738db474b77d00eb0e88ada86a4db128949a2f9abcb"
+    },
+    "receipts/call-0087-response.json": {
+      "private_original_sha256": "37ff2d588ae3c9bd6b5afa7b49b0c27a02d5d6765dc66705fe02c2fc50639acb",
+      "public_export_sha256": "caeed24b54ead9a2f37b273b5afe617ea27e8201858b36619213824201eedbbc"
+    },
+    "receipts/call-0088-response.json": {
+      "private_original_sha256": "d1074d04773ca903c5198ae1ed6f164e15e81beab3f0e0ef6fc2e9aed6d131aa",
+      "public_export_sha256": "bca1c46f6d4640b55eea81cecb512a25ca7bdb04563cdbb2ed5347d28340cd79"
+    },
+    "receipts/call-0089-response.json": {
+      "private_original_sha256": "5aa53bcc83d299e5f19264607c26d4691d5433381051df6692ad9b9776f95c26",
+      "public_export_sha256": "4f819c3b91e6bd26cfc093eed2c3c34ecd73d89e6b28846257b08773e878a041"
+    },
+    "receipts/call-0090-response.json": {
+      "private_original_sha256": "47e7cff606dfc32821da42f23ff7924d7ce0a11e99df01eaddff18997a98acaa",
+      "public_export_sha256": "b985977e68fbb5a205741185c889a617ad684f0ee7b23903b39068e58a2ae124"
+    },
+    "receipts/call-0091-response.json": {
+      "private_original_sha256": "ef847a2cbd39180aa516fac85290e753ac972b65a6844edfc08530051022ece4",
+      "public_export_sha256": "9e7d8934d9c19ed347bf1087b991c4e06a8f9c330b65436bf50bb26ab4cbc402"
+    },
+    "receipts/call-0092-response.json": {
+      "private_original_sha256": "8d5a8b7f8ede1c4685344dfd6140f67618949b12b36481a1480b0ba0c5e46ed0",
+      "public_export_sha256": "250804d6c8a43a5e48777f5aa56b3adf3482318c8b4704be7503f14002ffd1ad"
+    },
+    "receipts/call-0093-response.json": {
+      "private_original_sha256": "f212fe347244d717de8260e1a2bcc299ffad170dbbf0445a6542d353a69aa4e1",
+      "public_export_sha256": "356c8893e238277d29f2945a464d8dc18aa7200d6553ecfa2f4d1b72c9d4b535"
+    },
+    "receipts/call-0094-response.json": {
+      "private_original_sha256": "eb232732643e9e2d9c9aa672225fccd532771112433a449ddc3b2eab626999ee",
+      "public_export_sha256": "51807ad86740237af6c5badc509b0b523eaa74388e005f19aff2975a6b1fac96"
+    },
+    "receipts/call-0095-response.json": {
+      "private_original_sha256": "9ed1d05884beeadc313eebaabd76f54db5ebe5ab675b38fcf9c4ab0b38b6e7f9",
+      "public_export_sha256": "0c9e0c63647f0729c81e2853691aa003499ee20e3c1974a9163eacc5ecd156ac"
+    },
+    "receipts/call-0096-response.json": {
+      "private_original_sha256": "ed33ecaa0e3733cf8fa0bdbc2ca1860c12bd7018c8310edd8f58631729651bef",
+      "public_export_sha256": "d40f2b73ce1ffbc346de872ce629ae981144bc681c2b52cb63c47e1d1152cca7"
+    },
+    "receipts/call-0097-response.json": {
+      "private_original_sha256": "958e20baa8303e74c826ba056c4ae4d8836d86bed84e6ee36612603cedce005f",
+      "public_export_sha256": "b451326e5174134c6a9d508d350367e55e7d7a580e97eaf8c6f2465f14907e6e"
+    },
+    "receipts/call-0098-response.json": {
+      "private_original_sha256": "be0092342efcf2bc3755945e6afd67525c516951d33cda85c1e214ff6befa3c9",
+      "public_export_sha256": "8c903f5c4c07eee12275f4eb79c4d39b2dd1c62befab841ac98f81fddfff2c94"
+    },
+    "receipts/call-0099-response.json": {
+      "private_original_sha256": "a0dd5368ea48fd725b3c208450f567e7ad45445be9285281e375835a688cd570",
+      "public_export_sha256": "9e237b6153367947541539f21eca76b6d92e1f43f6bffcf55c1ac71d90bdddc5"
+    },
+    "receipts/call-0100-response.json": {
+      "private_original_sha256": "6496b11461dede830c82995256c82239e75366a69a46446cd51c7ff3a1ede8aa",
+      "public_export_sha256": "deacffa18bef3d4b25ec15e75c0d63b83be53ab5b8ae0cc6b5602fcd4fb14f43"
+    },
+    "receipts/call-0101-response.json": {
+      "private_original_sha256": "b4784835748c2af0bc9312c9bad3c1c05f457a0fe8433030e9b27e00f8edef12",
+      "public_export_sha256": "7dc5bcdb65cca851ac64b728f5a6841d20f667c397bcdf8be832710ea04af764"
+    },
+    "receipts/call-0102-response.json": {
+      "private_original_sha256": "0646b8bc000777b26dc91c12cc375db8f8d7cdb35279910d3e8c950aea892dc9",
+      "public_export_sha256": "683f8d8355d402a86a1e1bdbd3e61a2219a035d1930b8bb8febb60a73f69a9e6"
+    },
+    "receipts/call-0103-response.json": {
+      "private_original_sha256": "c77ac6620bfd6c5a8e0e235ef372ab02c10d73113931b1170ecebc1b65790c97",
+      "public_export_sha256": "40224f6ae8563e1dc446a945ed475933f61b1c1f7600829ca2cdf347e1c133b1"
+    },
+    "receipts/call-0104-response.json": {
+      "private_original_sha256": "b992871084caef20596bbfbba95df2e504961394e9ad05984b2a451bb0ff8395",
+      "public_export_sha256": "a2961cee639492bcc614b8a1f6586c09db3307019ba7b5daabf2563418f86b59"
+    },
+    "receipts/call-0105-response.json": {
+      "private_original_sha256": "f718283e5987f0adc114d2281c75d476e8543739a1b323570f0652a1233d3171",
+      "public_export_sha256": "1ce36834d07cb7b2d1da71fe7e1a341637c5dadb4ac219555c42d1c4c69aa5b7"
+    },
+    "receipts/call-0106-response.json": {
+      "private_original_sha256": "2212c5e97e3e0898e72b86a4d50b3d84082047d633b74ae308b0c05d5183468b",
+      "public_export_sha256": "c83d5bc668ec5b1a0c796d453ad914f54a0300840adfd0163a635192a3950fc6"
+    },
+    "receipts/call-0107-response.json": {
+      "private_original_sha256": "3a33551575a14e2841e385315294df8c741c6743966f87d2943bc161d2f0bab0",
+      "public_export_sha256": "4d4485698519c2f67e6218b3b00f0be4b23f63974636f7b68569af9b7c8eff18"
+    },
+    "receipts/call-0108-response.json": {
+      "private_original_sha256": "0f997b3a700a16955f6335d5184aeb2470662d2d37b9dec8035d2ec2761755dd",
+      "public_export_sha256": "68bdb72c3f7be2e53f0644f0ae9d4c1acdbe1522c457357799571e0d38ac663c"
+    },
+    "receipts/call-0109-response.json": {
+      "private_original_sha256": "6a14d8ba570f993c6e9815e68922065cc700f4693508efe1a85744a6d2e8dc92",
+      "public_export_sha256": "6891fde88a213e23be1a9fcebb3b4cd73cfa651e204038e6e263087c69afa781"
+    },
+    "receipts/call-0110-response.json": {
+      "private_original_sha256": "149e1e4b8a44edc7a59c80c6096d2c708a1006e72d1c85802abf683e7b65aefd",
+      "public_export_sha256": "83cc154ecb7e986e30ba2db91d559026bf865f6960c3875028a0069abef45385"
+    },
+    "receipts/call-0111-response.json": {
+      "private_original_sha256": "00eb6993a3c7b1eb7679c6af1fd90ea5e3db7af59a183ebb9a3f207dfab2a554",
+      "public_export_sha256": "2704039a5eea0d99fff968169be06db6397570562fe943ec1d71cbf3145a2b1c"
+    },
+    "receipts/call-0112-response.json": {
+      "private_original_sha256": "973d675715aa3836cdd9e9b224ce7b79d54f3828dba0ddd5c7f466c8c59857b7",
+      "public_export_sha256": "16b90a2bb63819a6208b85efb6a4f19e8e33f5b1a19edc7b3e397c8a173909f3"
+    },
+    "receipts/call-0113-response.json": {
+      "private_original_sha256": "2dd777bceb9f6db9dd07a8f8bc202a03faef6f8edf1e48a5b8150f9450236ffe",
+      "public_export_sha256": "c57c8f799d251da643581abdda4ff1f8c6919eaa36c179f208acc3e3fbc6d8a5"
+    },
+    "receipts/call-0114-response.json": {
+      "private_original_sha256": "6af718a4d1524f4be3394c24b78f69df9caabd8ba4637a8a90eab4a2a92e5838",
+      "public_export_sha256": "5a9117b48dbc6cfb6b0579ba2a15a836235cb8844b1a65b6b38dcdd58c0753e2"
+    },
+    "receipts/call-0115-response.json": {
+      "private_original_sha256": "9aa5b30deeca5330cbbd7c8e915a367ccbaed644a7bbd6209cf83650011defd2",
+      "public_export_sha256": "1cc8ae8f8b104c67e556477bc8752af8957a38e724f4256d4091be39699c5212"
+    },
+    "receipts/call-0116-response.json": {
+      "private_original_sha256": "ea6f525b2c8972a48744b6953b854d9963807867a23e9c62d959d6b2df5c2fa9",
+      "public_export_sha256": "455e1d8144509d8926a33d6ffab9b6f7312304b93024fed1764550d311668430"
+    },
+    "receipts/call-0117-response.json": {
+      "private_original_sha256": "223087585c349d6d6750be6beba32707b7c31bd35e4321ff5bcb6d344238cf02",
+      "public_export_sha256": "3bb32f183f6eb9f0b36bee66a416e3c5107c2cdb0cfe4ddced83229c6760e890"
+    },
+    "receipts/call-0118-response.json": {
+      "private_original_sha256": "f9fc16650f25f7aa9e03b96318c687122ea49b74cf2f6fe032e35a1c04727ed7",
+      "public_export_sha256": "3bb6978a39bcdda736d3c2ebece839d9f7cde98e240238c9ff912e864b724573"
+    },
+    "receipts/call-0119-response.json": {
+      "private_original_sha256": "63be085b769d6735cfdc8cbaca2154600fa2f751141264f2b6ce1ee0f3cd7744",
+      "public_export_sha256": "d5ee4f00c02eba8a9ffa0ed256425a054e5830d436c4647ec39a6c0f4f09514e"
+    },
+    "receipts/call-0120-response.json": {
+      "private_original_sha256": "3f0ed7c506cb954fed8b17a9c072f8365c6052aa052a428dc4cfe089c9585a38",
+      "public_export_sha256": "a41b62fbda903a01f8ede2c25ca750db2f5bf3305b754eeed4d1477dc9f446da"
+    },
+    "receipts/call-0121-response.json": {
+      "private_original_sha256": "561d7d5f2253fa50515aaf6dd02f5f6abec20923c4853b1511e05b9de8896654",
+      "public_export_sha256": "ac2faffec49fe1696e036116b5b8373cc6e4385b9b46420f9e99fda81bd6d920"
+    },
+    "receipts/call-0122-response.json": {
+      "private_original_sha256": "aa311519a74c1be1299627cf030a0e8f42ecc64203f85ff13861fb85dcf28fd7",
+      "public_export_sha256": "42ea44da6821440e1b01eb6ba18675b1bafc2f22d5d79d592d28d6fd8f66a0fb"
+    },
+    "receipts/call-0123-response.json": {
+      "private_original_sha256": "9a12c600f9f966c857c73a149a33c22bee315e942923d07838bb00e43a093f95",
+      "public_export_sha256": "f5aecdc9e4df62a4f29f8d0e78fa80fa9e552f485b3402bc983e977409e156d3"
+    },
+    "receipts/call-0124-response.json": {
+      "private_original_sha256": "a3b587c5d07dae42b83057cd8452cb846f5cafd250bda237f6a59fe8007ac7dd",
+      "public_export_sha256": "56243bd959134d3cfe67f440064dd0b34a0ca930daefcebb1785ee40c375dee3"
+    },
+    "receipts/call-0125-response.json": {
+      "private_original_sha256": "db9fd2fda66025b92c0fa9e424db618b6bfbfcc42d3865cbd70790cebc320d85",
+      "public_export_sha256": "96839bf7a0c133a40bcd6ee4aa4383e879675cda23c249493a8574e304966800"
+    },
+    "receipts/call-0126-response.json": {
+      "private_original_sha256": "5503542380ac043f120cbbeb369d2c127ca6742b14ee9e9b78c716085fea27e1",
+      "public_export_sha256": "3623087eeeffa5365fc2ca3815b10f7577f48e934465464253e189526aa07694"
+    },
+    "receipts/call-0127-response.json": {
+      "private_original_sha256": "dbe6abab23665816eda4cf806edd10425a1c5ea8dab12b4db38d7b727200be95",
+      "public_export_sha256": "c65536cf9903c1054b8b511b57befb4732e85e02271a1a204e64685b03fc14e7"
+    },
+    "receipts/call-0128-response.json": {
+      "private_original_sha256": "44187ea8ed578796c61aedd7166551bbb5e9ca7acd2c726e7fec0026a7d3db14",
+      "public_export_sha256": "5d2dcfee9398901e4c5cf8f3822cff2da76a94f5b48ba2774fee440ac3e5c5c8"
+    },
+    "receipts/call-0129-response.json": {
+      "private_original_sha256": "132dd151278622f6f65b8d7a18ca2132d7dec5ee7d8dd4c4e7053a29b7f290d1",
+      "public_export_sha256": "c0f519b1c27870e77395f23f10b2714058b97bdea45bcaad06d6ad3c9f790616"
+    },
+    "receipts/call-0130-response.json": {
+      "private_original_sha256": "3774109eee98b51c1b412f3609d15b66d746f9b0fdcd7742e7d2da4f3b440a31",
+      "public_export_sha256": "54232e3ab9c9e1a402f98d244029238b314dd6dd2e5a0c56a2cfe716a423ad0b"
+    },
+    "receipts/call-0131-response.json": {
+      "private_original_sha256": "a120f796f98ea08781010592533db02b3b5d69381b49514a75072991499e4de9",
+      "public_export_sha256": "cdd604bf9e2346aef68c202f2bc61faea535b6dbe67b6a967597a309981ee043"
+    },
+    "receipts/call-0132-response.json": {
+      "private_original_sha256": "9e9b507b98aa0dbd9d48270ec22e65bf99b99d7a65aa75ed711e46d95e37a11d",
+      "public_export_sha256": "96469d7ca681943f361d1a094b6a8df6fb7346753fad05aff9358c31759e9872"
+    },
+    "receipts/call-0133-response.json": {
+      "private_original_sha256": "146ef3b491a77210bce397fd517bb19725069dbeaa2ca75c468117bd57e8cba2",
+      "public_export_sha256": "df5a7446135cdf23e0a90b761d4a6458abc03a88287d419b76c6639c9e98edf4"
+    },
+    "receipts/call-0134-response.json": {
+      "private_original_sha256": "65c85c15f0f1875b6829b2fc86e003f04b6bbd7f0e8acf79f445bfdfb3bc4e3e",
+      "public_export_sha256": "8c4c1fac9aba0f39d9d92dfcce863b04588e19c41c59de3f419fbc9646d5c02d"
+    },
+    "receipts/call-0135-response.json": {
+      "private_original_sha256": "09e95632dbfd443a96e09feae22f56984b5a7e5eff8f71bf9ed56f10c13a5f0e",
+      "public_export_sha256": "ec3519c3cec23eed926157dcc86f10c2851e9557d3d252b5f8896732eac441cf"
+    },
+    "receipts/call-0136-response.json": {
+      "private_original_sha256": "21b06e88f52aa71213e82cd09606f02df1c102290ef6f3b3bb7dc1f2eeac1ffe",
+      "public_export_sha256": "2fa5ee8540abd7feeba624b661213b1739b4aafdbff0b6f1c2397f4ba8054355"
+    },
+    "receipts/call-0137-response.json": {
+      "private_original_sha256": "a1b3b6ec474c29e5fb55c981539a65e38b7011a0d6574c5a16e4f41f695eb4db",
+      "public_export_sha256": "d6989a3d7a8c6727bd559499a0bf0188d6a0ba6653e3053ad132e5c6df85a3ec"
+    },
+    "receipts/call-0138-response.json": {
+      "private_original_sha256": "84044a09224102664f4ec1a1c0fe0503923aa36bea6f5eb954e949976c8581ce",
+      "public_export_sha256": "b09c2214890880b2aff54a183e5e561beaeb4ae41d9b3085d6a89c991a868e73"
+    },
+    "receipts/call-0139-response.json": {
+      "private_original_sha256": "464e758d2b148367049a81022b0178e3531025f9e114cc253dac74a85746b2ab",
+      "public_export_sha256": "6408e7d6ea9eae54cc69fafe4d2e688e2246ee815fafee001751b09a8b7fb537"
+    },
+    "receipts/call-0140-response.json": {
+      "private_original_sha256": "226433e6c606f79c99493bb712d5755826b0a7a9a8f6b92f4adfeea9dddaff83",
+      "public_export_sha256": "6ed0d7764265d75a61262857c96aaea85067745bfdbdb55b1e78b75397d6d58a"
+    },
+    "receipts/call-0141-response.json": {
+      "private_original_sha256": "c65d95dbbdc7fec3380d9d870d1862c01b3a755b04d6216ab4f49ae88611f503",
+      "public_export_sha256": "f2cb188f2dbfff904c38585b97403e4a2cfbc4aeb7c9d1c037df2d8c7cb06c53"
+    },
+    "receipts/call-0142-response.json": {
+      "private_original_sha256": "55ac3db8bdef864d6ac4c14e3d98f5adbbdded5d9134a27361a010bf981ce605",
+      "public_export_sha256": "a74501b438857d654d51e76230d6b231364e3abd6a179ab21f442b8ac5248359"
+    },
+    "receipts/call-0143-response.json": {
+      "private_original_sha256": "a19fd4d27cd254ecce2ae1fd65fdff921d27ad53b8e127e175f1ec7917c6e67f",
+      "public_export_sha256": "6c55ce825795944542a47d8e9ace55aa8fb650e08c2b870943fcb3f8f7d3ed88"
+    },
+    "receipts/call-0144-response.json": {
+      "private_original_sha256": "a03fa1254eb4e6da5a73836fda979d66a58b61c59775c5d38d9d006cc5cc655a",
+      "public_export_sha256": "79cd5810168607f1522bbafd28c81aa65551d72c7d47d56aeb5cab125987c92c"
+    },
+    "receipts/call-0145-response.json": {
+      "private_original_sha256": "5ee8d9c40d568ffc3a9f67af0bf20a866de02f31854a1d25553e88cf6ba69976",
+      "public_export_sha256": "c93875be64fe2da96dca5cbfdf3c6114bb8171eadf40726f42710c8520ef7b29"
+    },
+    "receipts/call-0146-response.json": {
+      "private_original_sha256": "4b7a98e7de54499f47f33718e053706a2629bde0068b140fa19f53d1041ddfc2",
+      "public_export_sha256": "3d297f4ab445d21fe72faf6e980bde5d65679f0cf57eaf9ecd18b4f558c9a5e2"
+    },
+    "receipts/call-0147-response.json": {
+      "private_original_sha256": "3f22ad3d6f4d013be029868eeb65d44be2118df6fb76b7ae4e50016d8024a612",
+      "public_export_sha256": "4268eece0d9c6835e749b226fea1547ddcd456ca59512bf3b79f0163ba2658ee"
+    },
+    "receipts/call-0148-response.json": {
+      "private_original_sha256": "b7399393b9f866c412d51508d8fe3a3034a5ca47d234fc4bc97d25eac4460a88",
+      "public_export_sha256": "8ec0114af234cd32fe898b8380f448bf9abf2bfca91ad23545bca45f715d7e04"
+    },
+    "receipts/call-0149-response.json": {
+      "private_original_sha256": "e411411406ddc8940a39a71139340b91fd5ae1940a78f30550b98c5d874ef0d5",
+      "public_export_sha256": "38ee470e0f8899e8f57af34824fdb6f66e135a0c6bd9b1f7819c7828843042c4"
+    },
+    "receipts/call-0150-response.json": {
+      "private_original_sha256": "2d18e7f496355f5ed20d4def5b715f31ced0bce9a6af3a4fdeb09f331eb37b84",
+      "public_export_sha256": "f68e3167a0f6840e99f722a0670f1c93b685e457fbe344dfcc78fdf55a9de594"
+    },
+    "receipts/call-0151-response.json": {
+      "private_original_sha256": "4976a8180c405bf10a428f0fcd94b5ec8ddfbbb838c1ed727eb6aef97afaaee9",
+      "public_export_sha256": "ca2be7011d60e3038be1d59e6a8b52e50fc2a20eb2e88f4e2be3c9abd5c569f3"
+    },
+    "receipts/call-0152-response.json": {
+      "private_original_sha256": "0f63c85ef29ea9fd92b09371d7427bff17bb613f9b9b6ac6d03fc15e0b828d8f",
+      "public_export_sha256": "db5e08eed3a6fa60b21f1f67ef19bda422fdb77ded640741d7f8fb05de4b43e5"
+    },
+    "receipts/call-0153-response.json": {
+      "private_original_sha256": "ca70746f612522682417f640a373e5336bb6ff9c5df5588f77742e618f97c198",
+      "public_export_sha256": "ca60a2b5ac3fb5e114fc83d486c01e85775da4f78cf9c0833ac787d7a6c78a76"
+    },
+    "receipts/call-0154-response.json": {
+      "private_original_sha256": "9f259844125f8fba6887b2124968fce4cf3a13fb03db5c5e138d8dad9f19b065",
+      "public_export_sha256": "48848985249ee195c4ec8903a5ff23fba662a7f8b9c42aac61e8ab0351290233"
+    },
+    "receipts/call-0155-response.json": {
+      "private_original_sha256": "79e288640b3a390cf3557c684d609b04af749cdaaddf65695300122859f667be",
+      "public_export_sha256": "4ab8413e1be2984442b729acf10a41f0e7aa203569ab78ca4a89d8864dc9b5c5"
+    },
+    "receipts/call-0156-response.json": {
+      "private_original_sha256": "f879e99e6e2b6e31730a330ad30bc2a74977408db317d7b4be6719e07fcc2050",
+      "public_export_sha256": "01455ad4d981548e0fd279bff0bfc8a66a34f703fc2e7814cb2db5bea1ae343a"
+    },
+    "receipts/call-0157-response.json": {
+      "private_original_sha256": "2c44b8b211fc7365521989c39e4dd26710ee213f5ab2945bd64f35eedefb72fc",
+      "public_export_sha256": "0b643e39940ae6a29cf9bf2f31149ecac0d57a60f27727c9d54b58ffef5a421f"
+    },
+    "receipts/call-0158-response.json": {
+      "private_original_sha256": "46eddde9b769a64e499562134d66917fd1764b246c47bfda50a58119ef1b636f",
+      "public_export_sha256": "943059e27d89a403dfc9b84a382b408edcc6616359cd7d6b2614b04fd909bb45"
+    },
+    "receipts/call-0159-response.json": {
+      "private_original_sha256": "c1c3c72ea212e0e7db222d7199505c49c3a6c3f8e1968d368ded4bc3cdf7b9ec",
+      "public_export_sha256": "6e52fe84904584f71e9c7bd89041a05bba03008b394c7f3c5e03aaa6e7797c89"
+    },
+    "receipts/call-0160-response.json": {
+      "private_original_sha256": "45bd14f48e255d06a22e1bb24103f0cd2fd8d87e348724fe653edcd5cc2df936",
+      "public_export_sha256": "0adfddc7a986f3a632b2d1a496355d53262464f2986e77e4b4b1e4621e089c6e"
+    },
+    "receipts/call-0161-response.json": {
+      "private_original_sha256": "7ef52a997f7b1dc3fc73100dae0d4cee6c4d0ff70ab145fbe8316a7fff5139c7",
+      "public_export_sha256": "967345e2a91fbbf8f277e85faa1bd1a0c20aaf016f759feedd7fa5a4443af451"
+    },
+    "receipts/call-0162-response.json": {
+      "private_original_sha256": "0eac4e03a13211d34f7bc622e366663f2ec4c3eac07c1605a3c27cb0521717b5",
+      "public_export_sha256": "b1bb8200e9daa612df0f7b085e41e63b0acf61f390106b0034c25b5f674f41e9"
+    },
+    "receipts/call-0163-response.json": {
+      "private_original_sha256": "badbdb0d78435f0445fa942954c9c0ac3d0a3cfcd07ac0273709e8b2953e1d53",
+      "public_export_sha256": "acfa1043a8149bfb5efea54ff4640955e1dc18868f531bed12b1643a7c990a1b"
+    },
+    "receipts/call-0164-response.json": {
+      "private_original_sha256": "58362673475aba7e12b36731f1958b43b6b88672fa22132a191b1fb16f804240",
+      "public_export_sha256": "3fe98d0f07decf783e7c4ae0a6550fd1293fd37e92e2e8efbd88d82abe3b84e8"
+    },
+    "receipts/call-0165-response.json": {
+      "private_original_sha256": "3d07550c2b7684fbbad653ccf357992715e65088017195640e82ecd4880d3b3f",
+      "public_export_sha256": "fef57e1193a2d7a5e8c31c91e9137b122f5f8f8d7eb0d594a44eb863c575f61a"
+    },
+    "receipts/call-0166-response.json": {
+      "private_original_sha256": "894e65f8c3c9dff0341e565b5d442186893b0350c06991b3bc41dea5d9287e4f",
+      "public_export_sha256": "433bef2dc898598c602d6a3d195b377eefe82563a37077f4eb6ed8d67f39a9f3"
+    },
+    "receipts/call-0167-response.json": {
+      "private_original_sha256": "417dd9aa92d37ddbd151f0ff59c8f06aa7d10d9c7efc6d4485321b31f44785c8",
+      "public_export_sha256": "6e9057b9d07694b7e68c8c61af4348e713febf884d44c001138cff0f1eab61cc"
+    },
+    "receipts/call-0168-response.json": {
+      "private_original_sha256": "6aabfb774bba278d688e63a3fd38b03518bb92cf42c56d0717d417708dee8c2a",
+      "public_export_sha256": "071257cefe5b5a2ca096058fee0998e78b541eb9a1094150a8635ac54a7b2ea3"
+    },
+    "receipts/call-0169-response.json": {
+      "private_original_sha256": "5ba837577bbc9950a068c805d1120a6c543809f02247c65034f957b350911415",
+      "public_export_sha256": "4c12d18e449512167fcea1ee4aae4ebdd8d16c79ae75d4b0eec5fd54314a588b"
+    },
+    "receipts/call-0170-response.json": {
+      "private_original_sha256": "a6151876167e3d61dc0ed6297547fcc3be611fb2faf4655f9970e2f459eefd82",
+      "public_export_sha256": "d8cec02aa19dd67b9f72babf91e6ae5ad7151b608d7feb748b17b1d30ed8a225"
+    },
+    "receipts/call-0171-response.json": {
+      "private_original_sha256": "c7b3da27e508890e8c0ba28f3c87ad99ddd7483dd02900ca181d0c0bb20e512e",
+      "public_export_sha256": "e585e77845761f95f1bd8fa45213a96305a6b40bc9b190ed4703c30e106a1df0"
+    },
+    "receipts/call-0172-response.json": {
+      "private_original_sha256": "ad27f81a8bd45a44d5c70150420649aec7631eb3c5719c069cf8353af26a6975",
+      "public_export_sha256": "0cdc4ddce0d5c3848f65e293dab0f797dac7a354ce495e4c8fc62f214499c070"
+    },
+    "receipts/call-0173-response.json": {
+      "private_original_sha256": "9aab0f79df685a6b42f0df10c689bd49e221ef1b747f8ecfab5755c923f83d46",
+      "public_export_sha256": "478780e8588afe6e59a8ebd864ea5c4ee8945440ddea44da95f40107a701241a"
+    },
+    "replicates/regeneration-1/baseline/fiction-01/generation.json": {
+      "private_original_sha256": "270c1103b82bba65c8877b9a4ec5bce10984d14bb7f06e7a872a0d6987760058",
+      "public_export_sha256": "a1131cb8e097189db65cce7c2584af3d7563b6dba90e2ca42687fb7ab50c96b2"
+    },
+    "replicates/regeneration-1/baseline/fiction-05/generation.json": {
+      "private_original_sha256": "d6e5a6083fdbf0eb9df1151978792777c163b5461e41f403d27dfde2df366ced",
+      "public_export_sha256": "acf4bb0bcd517df0fcce3f34680961c43e071c9f33014b4051d72b8db2880c08"
+    },
+    "replicates/regeneration-1/candidate/fiction-01/generation.json": {
+      "private_original_sha256": "39d3c1e5ce34e984563cc1b61882a742b5c548b7a45a585958d1e5e16bc063c5",
+      "public_export_sha256": "65c14b1f6a5110f374233e4a29c0763850e6a296c0fd012c7a5377482331dc77"
+    },
+    "replicates/regeneration-1/candidate/fiction-05/generation.json": {
+      "private_original_sha256": "1904b3453f38027f8c516bb8590d7a40644643f02eaba8a2f703f1850c827569",
+      "public_export_sha256": "69b2c5f94a2a523a9d6b3c61faa8286a16f32187abef077387b79047f7ec074b"
+    },
+    "superseded-runtime-v8/candidate/fiction-01/generation.json": {
+      "private_original_sha256": "289298372ad738cb2550ef7c77166400cf36e8c6321e5e79f43659eb8ee479ee",
+      "public_export_sha256": "20e20016ef2eb88d52c4c7313a5db683f704c8195bc126ec523d49fff22f0b9f"
+    },
+    "superseded-runtime-v8/candidate/fiction-02/generation.json": {
+      "private_original_sha256": "e6bfc1456049a1438012a6034a56534d7eb5299fdd71154f70b5a61648812e51",
+      "public_export_sha256": "4fc857d1301273b3c00aa83e7d21af211893187c8f72f8a8c83860fecfaeadc4"
+    },
+    "superseded-runtime-v8/candidate/fiction-03/consolidation.json": {
+      "private_original_sha256": "8663296f8981cd0d5c9a4bb07058eceaa0b0fe6734314e652b73ef6785ca6e21",
+      "public_export_sha256": "873ee036e1d98f5a5e7f52d4b7ae32db2f62c63ad411635bd332b675df3df645"
+    },
+    "superseded-runtime-v8/candidate/fiction-03/generation.json": {
+      "private_original_sha256": "b861b45fb3c758ac05e580efd2469bdd82a937d6ee43990e09ad55278df250f9",
+      "public_export_sha256": "2ac6955ccbf66798aa8b7b665432fdd4aafee722cd3da0978dcc4f9e6b4f9580"
+    },
+    "superseded-runtime-v8/candidate/fiction-04/generation.json": {
+      "private_original_sha256": "bfea93889884ce1994d6eb52f61dd42838b052cecf88518540ed929cbaa468bd",
+      "public_export_sha256": "c1243a82fc894ff44bd0764a00a37cd5ca036b82da058c201e828783d0b6b354"
+    },
+    "superseded-runtime-v9/candidate/fiction-01/generation.json": {
+      "private_original_sha256": "289298372ad738cb2550ef7c77166400cf36e8c6321e5e79f43659eb8ee479ee",
+      "public_export_sha256": "20e20016ef2eb88d52c4c7313a5db683f704c8195bc126ec523d49fff22f0b9f"
+    },
+    "superseded-runtime-v9/candidate/fiction-02/generation.json": {
+      "private_original_sha256": "e6bfc1456049a1438012a6034a56534d7eb5299fdd71154f70b5a61648812e51",
+      "public_export_sha256": "4fc857d1301273b3c00aa83e7d21af211893187c8f72f8a8c83860fecfaeadc4"
+    },
+    "superseded-runtime-v9/candidate/fiction-03/consolidation.json": {
+      "private_original_sha256": "f365a5167fda541c10cdc76a5eca6b140290b4062b8bc71e2b2351f4098688b0",
+      "public_export_sha256": "ec92f981048a46773b129974b60acb126fe506c2c86f58e66dac15ba5fd9bc94"
+    },
+    "superseded-runtime-v9/candidate/fiction-03/generation.json": {
+      "private_original_sha256": "b861b45fb3c758ac05e580efd2469bdd82a937d6ee43990e09ad55278df250f9",
+      "public_export_sha256": "2ac6955ccbf66798aa8b7b665432fdd4aafee722cd3da0978dcc4f9e6b4f9580"
+    },
+    "superseded-runtime-v9/candidate/fiction-04/generation.json": {
+      "private_original_sha256": "bfea93889884ce1994d6eb52f61dd42838b052cecf88518540ed929cbaa468bd",
+      "public_export_sha256": "c1243a82fc894ff44bd0764a00a37cd5ca036b82da058c201e828783d0b6b354"
+    }
+  },
+  "archive_container": "Deterministic sorted tar members, uid/gid/mtime zero, mode 0644, empty owner names, gzip mtime zero.",
+  "aggregate_verification": "Exact report JSON equality after offline recomputation from sanitized exported members; no model calls."
+}

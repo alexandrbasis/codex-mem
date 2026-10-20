@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "b850fe39bb1f93329240324c3fa658ba3430e6a5",
+      "revision": "e2cb35e9518f871f60992e5476de68bd2f384ff7",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -67,7 +67,7 @@
       "id": "sources",
       "type": "database",
       "label": "Sources and queue",
-      "sublabel": "SQLite: entries + pm_events",
+      "sublabel": "SQLite: entries, events, jobs",
       "pos": [
         350,
         220
@@ -85,14 +85,14 @@
         },
         {
           "path": "codex_mem/project_memory.py",
-          "line": 71,
-          "end_line": 81,
+          "line": 73,
+          "end_line": 83,
           "label": "Queue an event"
         },
         {
           "path": "codex_mem/project_memory.py",
-          "line": 208,
-          "end_line": 245,
+          "line": 216,
+          "end_line": 253,
           "label": "Signals from pending events"
         }
       ]
@@ -101,7 +101,7 @@
       "id": "daemon",
       "type": "backend",
       "label": "Background service",
-      "sublabel": "Discovery, readiness, retries",
+      "sublabel": "Events, split heads, retries",
       "pos": [
         730,
         220
@@ -125,17 +125,17 @@
         },
         {
           "path": "codex_mem/project_memory.py",
-          "line": 267,
-          "end_line": 311,
-          "label": "Batch and lease"
+          "line": 364,
+          "end_line": 471,
+          "label": "Bounded reconsideration and lease"
         }
       ]
     },
     {
       "id": "generator",
       "type": "backend",
-      "label": "Episode generator",
-      "sublabel": "Event batch + current state",
+      "label": "Episode processing",
+      "sublabel": "New events or retained sources",
       "pos": [
         730,
         460
@@ -147,8 +147,8 @@
       "sources": [
         {
           "path": "codex_mem/episode_processor.py",
-          "line": 684,
-          "end_line": 764,
+          "line": 753,
+          "end_line": 840,
           "label": "Request, accounting, validation"
         },
         {
@@ -225,7 +225,7 @@
       "id": "commit",
       "type": "security",
       "label": "Validate and commit",
-      "sublabel": "Quotes, revision, deletion, head",
+      "sublabel": "Evidence, revision, live heads",
       "pos": [
         730,
         700
@@ -237,15 +237,15 @@
       "sources": [
         {
           "path": "codex_mem/project_memory.py",
-          "line": 589,
-          "end_line": 651,
-          "label": "Transaction and race guards"
+          "line": 789,
+          "end_line": 914,
+          "label": "Atomic version, history and dependency commit"
         },
         {
-          "path": "codex_mem/episode_processor.py",
-          "line": 748,
-          "end_line": 767,
-          "label": "Conservative state changes"
+          "path": "codex_mem/project_memory.py",
+          "line": 651,
+          "end_line": 787,
+          "label": "State, continuity and consolidation guards"
         }
       ]
     },
@@ -265,20 +265,20 @@
       "sources": [
         {
           "path": "codex_mem/project_memory.py",
-          "line": 38,
-          "end_line": 58,
+          "line": 40,
+          "end_line": 60,
           "label": "Tables and indexes"
         },
         {
           "path": "codex_mem/project_memory.py",
-          "line": 589,
-          "end_line": 651,
-          "label": "Objects and current versions"
+          "line": 789,
+          "end_line": 914,
+          "label": "Immutable versions and consolidated heads"
         },
         {
           "path": "codex_mem/project_memory.py",
-          "line": 84,
-          "end_line": 132,
+          "line": 86,
+          "end_line": 134,
           "label": "Revocation and deletion"
         }
       ]
@@ -305,9 +305,9 @@
         },
         {
           "path": "codex_mem/store.py",
-          "line": 5753,
-          "end_line": 5789,
-          "label": "Add legacy notes"
+          "line": 3153,
+          "end_line": 3195,
+          "label": "Finish the leased observation batch"
         }
       ]
     },
@@ -327,8 +327,8 @@
       "sources": [
         {
           "path": "codex_mem/project_memory_retrieval.py",
-          "line": 377,
-          "end_line": 440,
+          "line": 205,
+          "end_line": 447,
           "label": "Shared brief"
         },
         {
@@ -399,14 +399,14 @@
       "id": "sources-daemon",
       "from": "sources",
       "to": "daemon",
-      "label": "ready batch",
+      "label": "eligible work",
       "variant": "dashed"
     },
     {
       "id": "daemon-generator",
       "from": "daemon",
       "to": "generator",
-      "label": "shadow / pilot",
+      "label": "event / repair job",
       "variant": "emphasis"
     },
     {
@@ -489,39 +489,46 @@
       "dot": "emerald",
       "title": "How memory accumulates",
       "items": [
-        "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1910–1979, service.py:905–955.",
-        "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:267–311.",
-        "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:208–245,734–757,908–934, project_memory_retrieval.py:545–556.",
-        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:684–764."
+        "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1910-1979, service.py:905-955.",
+        "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:282-315,1010-1016.",
+        "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:223-253,984-1008,1158-1190, project_memory_retrieval.py:552-563.",
+        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:753-840.",
+        "After eligible event batches, discovery can schedule a bounded reconsideration job for split heads with the same positive task identity in original user evidence. It reuses pm_jobs and retained observations. It does not replay a transcript. A completed fingerprint prevents repeated no-op calls for unchanged candidates. Sources: project_memory.py:364-471,1193-1208.",
+        "Ordinary event jobs can disclose historical original sources for matching task IDs within their existing input budget. Historical sources do not advance the event queue again. Disclosure reports omitted heads, ancestor chains, and sources. Sources: project_memory.py:307-362,892-897."
       ]
     },
     {
       "dot": "rose",
       "title": "Who can change state",
       "items": [
-        "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, quotes, revision, deletion generation, and current episode version. Objects, links, the current head, and queue progress commit in one transaction. Source: project_memory.py:589–651.",
-        "Unsupported completion or acceptance becomes a proposal. Unsupported links that close records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the full conclusion follows from the text. Source: episode_processor.py:748–767.",
-        "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Sources: project_memory.py:84–132, store.py:5791–5827."
+        "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, quotes, revision, deletion generation, and current episode version. Objects, links, the current head, and queue progress commit in one transaction. Source: project_memory.py:789-901.",
+        "Unsupported completion or acceptance becomes a proposal. Unsupported links that close records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the full conclusion follows from the text. Sources: project_memory.py:651-676,752-787, episode_processor.py:840-843.",
+        "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Sources: project_memory.py:86-134, store.py:5791-5827.",
+        "A reconsideration proposal can continue one current head and consolidate other eligible heads. Exact source spans must support explicit continuity and the same task identity. Commit creates a new immutable version and summarizes dependency links. Original records stay addressable. Consolidation does not close open claims. Sources: project_memory.py:731-750,789-914,1209-1280.",
+        "Discovery inspects at most 100 heads and 64 identity sources totaling 24,000 characters. A job uses at most four heads, eight ancestors per head, 32 retained sources, and 24,000 source characters. Lower caller limits apply. A larger group uses the oldest three heads and newest head. Metadata reports omissions and incomplete history. Source: project_memory.py:364-471.",
+        "New heads retain distinct earlier goals, reasons, outcomes, and open work in prior_ fields with original exact source references. Their current validity stays unresolved. They do not create or reopen active claims. Each historical field is bounded to 6,000 characters and 32 references. Omitted fields are counted. Source: project_memory.py:821-856.",
+        "Native output v9 selects its episode contract by job kind. Reconsideration requires a current primary head and at least one distinct additional head. A null primary cannot consolidate heads. Historical original observations can support both links. An unresolved reconsideration returns no episodes and records a completed no-op. Ordinary continuation requires new non-historical evidence. Sources: episode_processor.py:44-116,295-314,349-356."
       ]
     },
     {
       "dot": "violet",
       "title": "What the agent receives",
       "items": [
-        "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. It includes history when requested. Sources: project_memory_retrieval.py:377–440, integration.py:70–132.",
-        "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:220–243.",
-        "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5753–5789, hooks.py:872–909."
+        "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. It includes history when requested. Sources: project_memory_retrieval.py:384-447, integration.py:70-132.",
+        "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:220-243.",
+        "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5753-5789, hooks.py:872-909.",
+        "The brief renders prior_goal, prior_rationale, prior_outcome, and prior_open_work as historical fields. It includes their original source pointers and unresolved-current-validity status. Source: project_memory_retrieval.py:205-326."
       ]
     },
     {
       "dot": "amber",
       "title": "Boundaries and optional features",
       "items": [
-        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:733–788,1381–1408.",
-        "The legacy note processor runs alongside project memory. It also uses NativeProcessorRunner. It operates independently of episode generation. Sources: service.py:695–706,791–820, processor.py:227–248,403–422.",
-        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35–45,532–608, store.py:5717–5725, episode_processor.py:757–760.",
-        "When enabled, the Jev quality gate checks each project memory field against its own exact source spans. Full source context can clarify or contradict a quote; it cannot replace missing support. Record identities remain reference context. Continuation and relation checks retain their resolved targets. Sources: episode_processor.py:546–656, jev_quality.py:348–463.",
-        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove correctness. Sources: episode_processor.py:639–656,757–795, jev_quality.py:16–23."
+        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:733-788,1381-1408.",
+        "The legacy note processor runs alongside project memory. It also uses NativeProcessorRunner. It operates independently of episode generation. Sources: service.py:695-706,791-820, processor.py:227-248,403-422.",
+        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35-45,532-608, store.py:5717-5725, episode_processor.py:833-836.",
+        "When enabled, the Jev quality gate checks each project memory field against its own exact source spans. Full source context can clarify or contradict a quote; it cannot replace missing support. Record identities remain reference context. Continuation and relation checks retain their resolved targets. Sources: episode_processor.py:604-725, jev_quality.py:348-463.",
+        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove correctness. Sources: episode_processor.py:708-725,833-871, jev_quality.py:16-23."
       ]
     },
     {
@@ -530,7 +537,7 @@
       "items": [
         "When capture, processing, storage, retrieval, or provider boundaries change, review the diagram and source links. Update candidate.json and rebuild the HTML with Archify. AGENTS.md requires this work in the same task.",
         "maintain.py check compares source files and hashes with the snapshot. It also compares the specification and HTML with their saved hashes. Code changes require a review of the architecture descriptions. Matching hashes alone do not prove that the diagram is complete.",
-        "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage."
+        "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Bounded reconsideration does not repair every historical split or prove answer quality. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage."
       ]
     }
   ]

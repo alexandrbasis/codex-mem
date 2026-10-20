@@ -154,7 +154,11 @@ def receipt(output: dict, model: str, effort: str) -> dict:
 def copy_generator(request: dict) -> dict:
     """A source-copy test double, deliberately incapable of semantic extraction."""
     from codex_mem.episode_processor import MODEL, REASONING_EFFORT
-    sources = json.loads(request['prompt'].split('\n', 1)[1])['events']
+    supplied = json.loads(request['prompt'].split('\n', 1)[1])
+    if supplied.get('job_kind') == 'reconsideration':
+        # Transport tests cannot decide whether separate task histories merge.
+        return receipt({'episodes': [], 'claims': [], 'relations': []}, MODEL, REASONING_EFFORT)
+    sources = supplied['events']
     episodes = []
     for source in sources:
         body = source['body'] if 'body' in source else ''.join(span['text'] for span in source['spans'])

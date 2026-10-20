@@ -1,0 +1,3127 @@
+{
+  "schema_version": 1,
+  "source_ledger": "holdout-run/fictional-run-evidence.tar.gz:calls.jsonl",
+  "source_ledger_sha256": "6a986ffcaf89522db4b9c8dcdfe7adee53846e9097390f55862c0e055150f004",
+  "methodology": {
+    "percentiles": "Nearest rank: sorted values[ceil(p*n)-1]. All completed native attempts count, including calls whose downstream processor rejected their proposal. This is not a measure of idle no-call processing latency.",
+    "wall_ms": "Capture elapsed wall time for each native call.",
+    "runner_duration_ms": "Native runner reported duration_ms.",
+    "classification": "superseded: explicit runtime superseded_call_ids or superseded reader/judge prompt version; repeats: remaining nonprimary run_id or repeat>0; primary: remaining calls. Groups are disjoint. Primary includes development and holdout unless scoped.",
+    "retrieval_latency": "unknown: contexts.json did not record retrieval timings; not inferred from native-call timing."
+  },
+  "native_run_elapsed_ms": 5429745,
+  "latency_by_scope_class_phase": {
+    "entire_pilot": {
+      "all_attempts": {
+        "generation": {
+          "wall_ms": {
+            "count": 58,
+            "unknown_count": 0,
+            "p50_ms": 8502,
+            "p95_ms": 32265,
+            "min_ms": 5230,
+            "max_ms": 37732,
+            "sum_ms": 678480
+          },
+          "runner_duration_ms": {
+            "count": 58,
+            "unknown_count": 0,
+            "p50_ms": 8479,
+            "p95_ms": 32223,
+            "min_ms": 5209,
+            "max_ms": 37711,
+            "sum_ms": 677037
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 7568,
+            "p95_ms": 12662,
+            "min_ms": 4906,
+            "max_ms": 12662,
+            "sum_ms": 66095
+          },
+          "runner_duration_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 7557,
+            "p95_ms": 12641,
+            "min_ms": 4895,
+            "max_ms": 12641,
+            "sum_ms": 65927
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 53,
+            "unknown_count": 0,
+            "p50_ms": 10749,
+            "p95_ms": 32066,
+            "min_ms": 7063,
+            "max_ms": 33245,
+            "sum_ms": 691048
+          },
+          "runner_duration_ms": {
+            "count": 53,
+            "unknown_count": 0,
+            "p50_ms": 10728,
+            "p95_ms": 32024,
+            "min_ms": 7021,
+            "max_ms": 33204,
+            "sum_ms": 689639
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 54,
+            "unknown_count": 0,
+            "p50_ms": 14106,
+            "p95_ms": 29257,
+            "min_ms": 8167,
+            "max_ms": 36807,
+            "sum_ms": 827535
+          },
+          "runner_duration_ms": {
+            "count": 54,
+            "unknown_count": 0,
+            "p50_ms": 14085,
+            "p95_ms": 29218,
+            "min_ms": 8146,
+            "max_ms": 36784,
+            "sum_ms": 826061
+          }
+        }
+      },
+      "primary": {
+        "generation": {
+          "wall_ms": {
+            "count": 52,
+            "unknown_count": 0,
+            "p50_ms": 8502,
+            "p95_ms": 32265,
+            "min_ms": 5230,
+            "max_ms": 37732,
+            "sum_ms": 626808
+          },
+          "runner_duration_ms": {
+            "count": 52,
+            "unknown_count": 0,
+            "p50_ms": 8479,
+            "p95_ms": 32223,
+            "min_ms": 5209,
+            "max_ms": 37711,
+            "sum_ms": 625503
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 5486,
+            "p95_ms": 11469,
+            "min_ms": 4906,
+            "max_ms": 11469,
+            "sum_ms": 43606
+          },
+          "runner_duration_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 5465,
+            "p95_ms": 11427,
+            "min_ms": 4895,
+            "max_ms": 11427,
+            "sum_ms": 43480
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 40,
+            "unknown_count": 0,
+            "p50_ms": 10071,
+            "p95_ms": 32066,
+            "min_ms": 7063,
+            "max_ms": 33245,
+            "sum_ms": 535281
+          },
+          "runner_duration_ms": {
+            "count": 40,
+            "unknown_count": 0,
+            "p50_ms": 10050,
+            "p95_ms": 32024,
+            "min_ms": 7021,
+            "max_ms": 33204,
+            "sum_ms": 534205
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 40,
+            "unknown_count": 0,
+            "p50_ms": 13173,
+            "p95_ms": 29257,
+            "min_ms": 8167,
+            "max_ms": 36807,
+            "sum_ms": 614429
+          },
+          "runner_duration_ms": {
+            "count": 40,
+            "unknown_count": 0,
+            "p50_ms": 13153,
+            "p95_ms": 29218,
+            "min_ms": 8146,
+            "max_ms": 36784,
+            "sum_ms": 613377
+          }
+        }
+      },
+      "repeats": {
+        "generation": {
+          "wall_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 7937,
+            "p95_ms": 11391,
+            "min_ms": 5934,
+            "max_ms": 11391,
+            "sum_ms": 51672
+          },
+          "runner_duration_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 7916,
+            "p95_ms": 11349,
+            "min_ms": 5913,
+            "max_ms": 11349,
+            "sum_ms": 51534
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 12079,
+            "p95_ms": 16952,
+            "min_ms": 10574,
+            "max_ms": 16952,
+            "sum_ms": 98269
+          },
+          "runner_duration_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 12058,
+            "p95_ms": 16910,
+            "min_ms": 10555,
+            "max_ms": 16910,
+            "sum_ms": 98079
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 14190,
+            "p95_ms": 17396,
+            "min_ms": 11261,
+            "max_ms": 17396,
+            "sum_ms": 117516
+          },
+          "runner_duration_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 14178,
+            "p95_ms": 17352,
+            "min_ms": 11219,
+            "max_ms": 17352,
+            "sum_ms": 117271
+          }
+        }
+      },
+      "superseded": {
+        "generation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 2,
+            "unknown_count": 0,
+            "p50_ms": 9827,
+            "p95_ms": 12662,
+            "min_ms": 9827,
+            "max_ms": 12662,
+            "sum_ms": 22489
+          },
+          "runner_duration_ms": {
+            "count": 2,
+            "unknown_count": 0,
+            "p50_ms": 9806,
+            "p95_ms": 12641,
+            "min_ms": 9806,
+            "max_ms": 12641,
+            "sum_ms": 22447
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 11127,
+            "p95_ms": 16434,
+            "min_ms": 8956,
+            "max_ms": 16434,
+            "sum_ms": 57498
+          },
+          "runner_duration_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 11086,
+            "p95_ms": 16413,
+            "min_ms": 8935,
+            "max_ms": 16413,
+            "sum_ms": 57355
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 14997,
+            "p95_ms": 17697,
+            "min_ms": 14106,
+            "max_ms": 17697,
+            "sum_ms": 95590
+          },
+          "runner_duration_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 14978,
+            "p95_ms": 17676,
+            "min_ms": 14085,
+            "max_ms": 17676,
+            "sum_ms": 95413
+          }
+        }
+      }
+    },
+    "development": {
+      "all_attempts": {
+        "generation": {
+          "wall_ms": {
+            "count": 13,
+            "unknown_count": 0,
+            "p50_ms": 7802,
+            "p95_ms": 20929,
+            "min_ms": 5851,
+            "max_ms": 20929,
+            "sum_ms": 121990
+          },
+          "runner_duration_ms": {
+            "count": 13,
+            "unknown_count": 0,
+            "p50_ms": 7792,
+            "p95_ms": 20909,
+            "min_ms": 5831,
+            "max_ms": 20909,
+            "sum_ms": 121716
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 3,
+            "unknown_count": 0,
+            "p50_ms": 9827,
+            "p95_ms": 12662,
+            "min_ms": 5486,
+            "max_ms": 12662,
+            "sum_ms": 27975
+          },
+          "runner_duration_ms": {
+            "count": 3,
+            "unknown_count": 0,
+            "p50_ms": 9806,
+            "p95_ms": 12641,
+            "min_ms": 5465,
+            "max_ms": 12641,
+            "sum_ms": 27912
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 17,
+            "unknown_count": 0,
+            "p50_ms": 11156,
+            "p95_ms": 16952,
+            "min_ms": 8284,
+            "max_ms": 16952,
+            "sum_ms": 197561
+          },
+          "runner_duration_ms": {
+            "count": 17,
+            "unknown_count": 0,
+            "p50_ms": 11111,
+            "p95_ms": 16910,
+            "min_ms": 8263,
+            "max_ms": 16910,
+            "sum_ms": 197088
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 18,
+            "unknown_count": 0,
+            "p50_ms": 14997,
+            "p95_ms": 29257,
+            "min_ms": 12577,
+            "max_ms": 29257,
+            "sum_ms": 300624
+          },
+          "runner_duration_ms": {
+            "count": 18,
+            "unknown_count": 0,
+            "p50_ms": 14978,
+            "p95_ms": 29218,
+            "min_ms": 12535,
+            "max_ms": 29218,
+            "sum_ms": 300116
+          }
+        }
+      },
+      "primary": {
+        "generation": {
+          "wall_ms": {
+            "count": 10,
+            "unknown_count": 0,
+            "p50_ms": 7753,
+            "p95_ms": 20929,
+            "min_ms": 5851,
+            "max_ms": 20929,
+            "sum_ms": 93770
+          },
+          "runner_duration_ms": {
+            "count": 10,
+            "unknown_count": 0,
+            "p50_ms": 7716,
+            "p95_ms": 20909,
+            "min_ms": 5831,
+            "max_ms": 20909,
+            "sum_ms": 93570
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 1,
+            "unknown_count": 0,
+            "p50_ms": 5486,
+            "p95_ms": 5486,
+            "min_ms": 5486,
+            "max_ms": 5486,
+            "sum_ms": 5486
+          },
+          "runner_duration_ms": {
+            "count": 1,
+            "unknown_count": 0,
+            "p50_ms": 5465,
+            "p95_ms": 5465,
+            "min_ms": 5465,
+            "max_ms": 5465,
+            "sum_ms": 5465
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 11156,
+            "p95_ms": 12841,
+            "min_ms": 8284,
+            "max_ms": 12841,
+            "sum_ms": 88940
+          },
+          "runner_duration_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 11111,
+            "p95_ms": 12800,
+            "min_ms": 8263,
+            "max_ms": 12800,
+            "sum_ms": 88714
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 14930,
+            "p95_ms": 29257,
+            "min_ms": 12577,
+            "max_ms": 29257,
+            "sum_ms": 143253
+          },
+          "runner_duration_ms": {
+            "count": 8,
+            "unknown_count": 0,
+            "p50_ms": 14890,
+            "p95_ms": 29218,
+            "min_ms": 12535,
+            "max_ms": 29218,
+            "sum_ms": 143027
+          }
+        }
+      },
+      "repeats": {
+        "generation": {
+          "wall_ms": {
+            "count": 3,
+            "unknown_count": 0,
+            "p50_ms": 10653,
+            "p95_ms": 11391,
+            "min_ms": 6176,
+            "max_ms": 11391,
+            "sum_ms": 28220
+          },
+          "runner_duration_ms": {
+            "count": 3,
+            "unknown_count": 0,
+            "p50_ms": 10632,
+            "p95_ms": 11349,
+            "min_ms": 6165,
+            "max_ms": 11349,
+            "sum_ms": 28146
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 11111,
+            "p95_ms": 16952,
+            "min_ms": 10574,
+            "max_ms": 16952,
+            "sum_ms": 51123
+          },
+          "runner_duration_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 11090,
+            "p95_ms": 16910,
+            "min_ms": 10555,
+            "max_ms": 16910,
+            "sum_ms": 51019
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 14410,
+            "p95_ms": 17168,
+            "min_ms": 13467,
+            "max_ms": 17168,
+            "sum_ms": 61781
+          },
+          "runner_duration_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 14389,
+            "p95_ms": 17146,
+            "min_ms": 13448,
+            "max_ms": 17146,
+            "sum_ms": 61676
+          }
+        }
+      },
+      "superseded": {
+        "generation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 2,
+            "unknown_count": 0,
+            "p50_ms": 9827,
+            "p95_ms": 12662,
+            "min_ms": 9827,
+            "max_ms": 12662,
+            "sum_ms": 22489
+          },
+          "runner_duration_ms": {
+            "count": 2,
+            "unknown_count": 0,
+            "p50_ms": 9806,
+            "p95_ms": 12641,
+            "min_ms": 9806,
+            "max_ms": 12641,
+            "sum_ms": 22447
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 11127,
+            "p95_ms": 16434,
+            "min_ms": 8956,
+            "max_ms": 16434,
+            "sum_ms": 57498
+          },
+          "runner_duration_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 11086,
+            "p95_ms": 16413,
+            "min_ms": 8935,
+            "max_ms": 16413,
+            "sum_ms": 57355
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 14997,
+            "p95_ms": 17697,
+            "min_ms": 14106,
+            "max_ms": 17697,
+            "sum_ms": 95590
+          },
+          "runner_duration_ms": {
+            "count": 6,
+            "unknown_count": 0,
+            "p50_ms": 14978,
+            "p95_ms": 17676,
+            "min_ms": 14085,
+            "max_ms": 17676,
+            "sum_ms": 95413
+          }
+        }
+      }
+    },
+    "holdout": {
+      "all_attempts": {
+        "generation": {
+          "wall_ms": {
+            "count": 45,
+            "unknown_count": 0,
+            "p50_ms": 8790,
+            "p95_ms": 32265,
+            "min_ms": 5230,
+            "max_ms": 37732,
+            "sum_ms": 556490
+          },
+          "runner_duration_ms": {
+            "count": 45,
+            "unknown_count": 0,
+            "p50_ms": 8770,
+            "p95_ms": 32223,
+            "min_ms": 5209,
+            "max_ms": 37711,
+            "sum_ms": 555321
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 7568,
+            "p95_ms": 11469,
+            "min_ms": 4906,
+            "max_ms": 11469,
+            "sum_ms": 38120
+          },
+          "runner_duration_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 7557,
+            "p95_ms": 11427,
+            "min_ms": 4895,
+            "max_ms": 11427,
+            "sum_ms": 38015
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 36,
+            "unknown_count": 0,
+            "p50_ms": 10071,
+            "p95_ms": 33032,
+            "min_ms": 7063,
+            "max_ms": 33245,
+            "sum_ms": 493487
+          },
+          "runner_duration_ms": {
+            "count": 36,
+            "unknown_count": 0,
+            "p50_ms": 10050,
+            "p95_ms": 33012,
+            "min_ms": 7021,
+            "max_ms": 33204,
+            "sum_ms": 492551
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 36,
+            "unknown_count": 0,
+            "p50_ms": 12911,
+            "p95_ms": 33444,
+            "min_ms": 8167,
+            "max_ms": 36807,
+            "sum_ms": 526911
+          },
+          "runner_duration_ms": {
+            "count": 36,
+            "unknown_count": 0,
+            "p50_ms": 12900,
+            "p95_ms": 33403,
+            "min_ms": 8146,
+            "max_ms": 36784,
+            "sum_ms": 525945
+          }
+        }
+      },
+      "primary": {
+        "generation": {
+          "wall_ms": {
+            "count": 42,
+            "unknown_count": 0,
+            "p50_ms": 8790,
+            "p95_ms": 32265,
+            "min_ms": 5230,
+            "max_ms": 37732,
+            "sum_ms": 533038
+          },
+          "runner_duration_ms": {
+            "count": 42,
+            "unknown_count": 0,
+            "p50_ms": 8770,
+            "p95_ms": 32223,
+            "min_ms": 5209,
+            "max_ms": 37711,
+            "sum_ms": 531933
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 7568,
+            "p95_ms": 11469,
+            "min_ms": 4906,
+            "max_ms": 11469,
+            "sum_ms": 38120
+          },
+          "runner_duration_ms": {
+            "count": 5,
+            "unknown_count": 0,
+            "p50_ms": 7557,
+            "p95_ms": 11427,
+            "min_ms": 4895,
+            "max_ms": 11427,
+            "sum_ms": 38015
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 32,
+            "unknown_count": 0,
+            "p50_ms": 9812,
+            "p95_ms": 33032,
+            "min_ms": 7063,
+            "max_ms": 33245,
+            "sum_ms": 446341
+          },
+          "runner_duration_ms": {
+            "count": 32,
+            "unknown_count": 0,
+            "p50_ms": 9792,
+            "p95_ms": 33012,
+            "min_ms": 7021,
+            "max_ms": 33204,
+            "sum_ms": 445491
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 32,
+            "unknown_count": 0,
+            "p50_ms": 12911,
+            "p95_ms": 33444,
+            "min_ms": 8167,
+            "max_ms": 36807,
+            "sum_ms": 471176
+          },
+          "runner_duration_ms": {
+            "count": 32,
+            "unknown_count": 0,
+            "p50_ms": 12900,
+            "p95_ms": 33403,
+            "min_ms": 8146,
+            "max_ms": 36784,
+            "sum_ms": 470350
+          }
+        }
+      },
+      "repeats": {
+        "generation": {
+          "wall_ms": {
+            "count": 3,
+            "unknown_count": 0,
+            "p50_ms": 7937,
+            "p95_ms": 9581,
+            "min_ms": 5934,
+            "max_ms": 9581,
+            "sum_ms": 23452
+          },
+          "runner_duration_ms": {
+            "count": 3,
+            "unknown_count": 0,
+            "p50_ms": 7916,
+            "p95_ms": 9559,
+            "min_ms": 5913,
+            "max_ms": 9559,
+            "sum_ms": 23388
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 12079,
+            "p95_ms": 12124,
+            "min_ms": 10831,
+            "max_ms": 12124,
+            "sum_ms": 47146
+          },
+          "runner_duration_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 12058,
+            "p95_ms": 12103,
+            "min_ms": 10807,
+            "max_ms": 12103,
+            "sum_ms": 47060
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 12888,
+            "p95_ms": 17396,
+            "min_ms": 11261,
+            "max_ms": 17396,
+            "sum_ms": 55735
+          },
+          "runner_duration_ms": {
+            "count": 4,
+            "unknown_count": 0,
+            "p50_ms": 12846,
+            "p95_ms": 17352,
+            "min_ms": 11219,
+            "max_ms": 17352,
+            "sum_ms": 55595
+          }
+        }
+      },
+      "superseded": {
+        "generation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "consolidation": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "reader": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        },
+        "judge": {
+          "wall_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          },
+          "runner_duration_ms": {
+            "count": 0,
+            "unknown_count": 0,
+            "p50_ms": null,
+            "p95_ms": null,
+            "min_ms": null,
+            "max_ms": null,
+            "sum_ms": 0
+          }
+        }
+      }
+    }
+  },
+  "holdout_memory_merge_strata": {
+    "no_accepted_merge": {
+      "histories": 12,
+      "question_pairs": 72,
+      "visible_source_quote_sets_equal": 72,
+      "exact_query_memory_equal": 5,
+      "fully_supported": {
+        "baseline": 41,
+        "candidate": 41
+      },
+      "answer_changed_pairs": 71,
+      "history_ids": [
+        "fiction-05",
+        "fiction-06",
+        "fiction-07",
+        "fiction-08",
+        "fiction-10",
+        "fiction-11",
+        "fiction-13",
+        "fiction-14",
+        "fiction-15",
+        "fiction-16",
+        "fiction-17",
+        "fiction-18"
+      ]
+    },
+    "accepted_merge": {
+      "histories": 4,
+      "question_pairs": 24,
+      "visible_source_quote_sets_equal": 7,
+      "exact_query_memory_equal": 2,
+      "fully_supported": {
+        "baseline": 11,
+        "candidate": 12
+      },
+      "answer_changed_pairs": 22,
+      "history_ids": [
+        "fiction-09",
+        "fiction-12",
+        "fiction-19",
+        "fiction-20"
+      ]
+    }
+  },
+  "call_latencies": [
+    {
+      "call_id": "call-0001",
+      "phase": "generation",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6671,
+      "runner_duration_ms": 6650
+    },
+    {
+      "call_id": "call-0002",
+      "phase": "generation",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8033,
+      "runner_duration_ms": 8013
+    },
+    {
+      "call_id": "call-0003",
+      "phase": "generation",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10704,
+      "runner_duration_ms": 10684
+    },
+    {
+      "call_id": "call-0004",
+      "phase": "reader",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 9099,
+      "runner_duration_ms": 9079
+    },
+    {
+      "call_id": "call-0005",
+      "phase": "generation",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12593,
+      "runner_duration_ms": 12572
+    },
+    {
+      "call_id": "call-0006",
+      "phase": "generation",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7753,
+      "runner_duration_ms": 7716
+    },
+    {
+      "call_id": "call-0007",
+      "phase": "generation",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7802,
+      "runner_duration_ms": 7792
+    },
+    {
+      "call_id": "call-0008",
+      "phase": "generation",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6852,
+      "runner_duration_ms": 6842
+    },
+    {
+      "call_id": "call-0009",
+      "phase": "generation",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6582,
+      "runner_duration_ms": 6561
+    },
+    {
+      "call_id": "call-0010",
+      "phase": "generation",
+      "history_id": "fiction-04",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 20929,
+      "runner_duration_ms": 20909
+    },
+    {
+      "call_id": "call-0011",
+      "phase": "generation",
+      "history_id": "fiction-04",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 5851,
+      "runner_duration_ms": 5831
+    },
+    {
+      "call_id": "call-0012",
+      "phase": "reader",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 11127,
+      "runner_duration_ms": 11086
+    },
+    {
+      "call_id": "call-0013",
+      "phase": "reader",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 11882,
+      "runner_duration_ms": 11842
+    },
+    {
+      "call_id": "call-0014",
+      "phase": "reader",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 16434,
+      "runner_duration_ms": 16413
+    },
+    {
+      "call_id": "call-0015",
+      "phase": "reader",
+      "history_id": "fiction-04",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 8956,
+      "runner_duration_ms": 8935
+    },
+    {
+      "call_id": "call-0016",
+      "phase": "judge",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 14909,
+      "runner_duration_ms": 14835
+    },
+    {
+      "call_id": "call-0017",
+      "phase": "reader",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11156,
+      "runner_duration_ms": 11111
+    },
+    {
+      "call_id": "call-0018",
+      "phase": "reader",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12841,
+      "runner_duration_ms": 12800
+    },
+    {
+      "call_id": "call-0019",
+      "phase": "reader",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 16952,
+      "runner_duration_ms": 16910
+    },
+    {
+      "call_id": "call-0020",
+      "phase": "reader",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8284,
+      "runner_duration_ms": 8263
+    },
+    {
+      "call_id": "call-0021",
+      "phase": "reader",
+      "history_id": "fiction-04",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12348,
+      "runner_duration_ms": 12328
+    },
+    {
+      "call_id": "call-0022",
+      "phase": "judge",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 17697,
+      "runner_duration_ms": 17676
+    },
+    {
+      "call_id": "call-0023",
+      "phase": "judge",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 17629,
+      "runner_duration_ms": 17608
+    },
+    {
+      "call_id": "call-0024",
+      "phase": "judge",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 14997,
+      "runner_duration_ms": 14978
+    },
+    {
+      "call_id": "call-0025",
+      "phase": "judge",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 14106,
+      "runner_duration_ms": 14085
+    },
+    {
+      "call_id": "call-0026",
+      "phase": "judge",
+      "history_id": "fiction-04",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 16252,
+      "runner_duration_ms": 16231
+    },
+    {
+      "call_id": "call-0027",
+      "phase": "generation",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 6176,
+      "runner_duration_ms": 6165
+    },
+    {
+      "call_id": "call-0028",
+      "phase": "generation",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 11391,
+      "runner_duration_ms": 11349
+    },
+    {
+      "call_id": "call-0029",
+      "phase": "generation",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 10653,
+      "runner_duration_ms": 10632
+    },
+    {
+      "call_id": "call-0030",
+      "phase": "reader",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 12486,
+      "runner_duration_ms": 12464
+    },
+    {
+      "call_id": "call-0031",
+      "phase": "consolidation",
+      "history_id": "fiction-03",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 9827,
+      "runner_duration_ms": 9806
+    },
+    {
+      "call_id": "call-0032",
+      "phase": "judge",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 13144,
+      "runner_duration_ms": 13122
+    },
+    {
+      "call_id": "call-0033",
+      "phase": "judge",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 13173,
+      "runner_duration_ms": 13155
+    },
+    {
+      "call_id": "call-0034",
+      "phase": "judge",
+      "history_id": "fiction-02",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 16736,
+      "runner_duration_ms": 16693
+    },
+    {
+      "call_id": "call-0035",
+      "phase": "judge",
+      "history_id": "fiction-03",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12577,
+      "runner_duration_ms": 12535
+    },
+    {
+      "call_id": "call-0036",
+      "phase": "judge",
+      "history_id": "fiction-04",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 22372,
+      "runner_duration_ms": 22351
+    },
+    {
+      "call_id": "call-0037",
+      "phase": "consolidation",
+      "history_id": "fiction-03",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "superseded",
+      "status": "completed",
+      "wall_ms": 12662,
+      "runner_duration_ms": 12641
+    },
+    {
+      "call_id": "call-0038",
+      "phase": "consolidation",
+      "history_id": "fiction-03",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 5486,
+      "runner_duration_ms": 5465
+    },
+    {
+      "call_id": "call-0039",
+      "phase": "reader",
+      "history_id": "fiction-01",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9481,
+      "runner_duration_ms": 9461
+    },
+    {
+      "call_id": "call-0040",
+      "phase": "reader",
+      "history_id": "fiction-02",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12816,
+      "runner_duration_ms": 12778
+    },
+    {
+      "call_id": "call-0041",
+      "phase": "reader",
+      "history_id": "fiction-02",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 10574,
+      "runner_duration_ms": 10555
+    },
+    {
+      "call_id": "call-0042",
+      "phase": "reader",
+      "history_id": "fiction-03",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11661,
+      "runner_duration_ms": 11641
+    },
+    {
+      "call_id": "call-0043",
+      "phase": "reader",
+      "history_id": "fiction-04",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10353,
+      "runner_duration_ms": 10332
+    },
+    {
+      "call_id": "call-0044",
+      "phase": "judge",
+      "history_id": "fiction-01",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 15586,
+      "runner_duration_ms": 15564
+    },
+    {
+      "call_id": "call-0045",
+      "phase": "judge",
+      "history_id": "fiction-02",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 29257,
+      "runner_duration_ms": 29218
+    },
+    {
+      "call_id": "call-0046",
+      "phase": "judge",
+      "history_id": "fiction-02",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 17168,
+      "runner_duration_ms": 17146
+    },
+    {
+      "call_id": "call-0047",
+      "phase": "judge",
+      "history_id": "fiction-03",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 14930,
+      "runner_duration_ms": 14890
+    },
+    {
+      "call_id": "call-0048",
+      "phase": "judge",
+      "history_id": "fiction-04",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 22214,
+      "runner_duration_ms": 22192
+    },
+    {
+      "call_id": "call-0049",
+      "phase": "judge",
+      "history_id": "fiction-01",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 13467,
+      "runner_duration_ms": 13448
+    },
+    {
+      "call_id": "call-0050",
+      "phase": "reader",
+      "history_id": "fiction-01",
+      "variant": "candidate",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 11111,
+      "runner_duration_ms": 11090
+    },
+    {
+      "call_id": "call-0051",
+      "phase": "judge",
+      "history_id": "fiction-01",
+      "variant": "candidate",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 14410,
+      "runner_duration_ms": 14389
+    },
+    {
+      "call_id": "call-0052",
+      "phase": "generation",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7218,
+      "runner_duration_ms": 7175
+    },
+    {
+      "call_id": "call-0053",
+      "phase": "generation",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11754,
+      "runner_duration_ms": 11734
+    },
+    {
+      "call_id": "call-0054",
+      "phase": "generation",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6193,
+      "runner_duration_ms": 6172
+    },
+    {
+      "call_id": "call-0055",
+      "phase": "generation",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7676,
+      "runner_duration_ms": 7655
+    },
+    {
+      "call_id": "call-0056",
+      "phase": "generation",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6257,
+      "runner_duration_ms": 6237
+    },
+    {
+      "call_id": "call-0057",
+      "phase": "generation",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6931,
+      "runner_duration_ms": 6921
+    },
+    {
+      "call_id": "call-0058",
+      "phase": "generation",
+      "history_id": "fiction-07",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6908,
+      "runner_duration_ms": 6888
+    },
+    {
+      "call_id": "call-0059",
+      "phase": "generation",
+      "history_id": "fiction-07",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7952,
+      "runner_duration_ms": 7930
+    },
+    {
+      "call_id": "call-0060",
+      "phase": "generation",
+      "history_id": "fiction-07",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 29366,
+      "runner_duration_ms": 29345
+    },
+    {
+      "call_id": "call-0061",
+      "phase": "generation",
+      "history_id": "fiction-08",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10817,
+      "runner_duration_ms": 10796
+    },
+    {
+      "call_id": "call-0062",
+      "phase": "generation",
+      "history_id": "fiction-08",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6595,
+      "runner_duration_ms": 6584
+    },
+    {
+      "call_id": "call-0063",
+      "phase": "generation",
+      "history_id": "fiction-09",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10589,
+      "runner_duration_ms": 10570
+    },
+    {
+      "call_id": "call-0064",
+      "phase": "generation",
+      "history_id": "fiction-09",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 32050,
+      "runner_duration_ms": 32028
+    },
+    {
+      "call_id": "call-0065",
+      "phase": "generation",
+      "history_id": "fiction-10",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8502,
+      "runner_duration_ms": 8479
+    },
+    {
+      "call_id": "call-0066",
+      "phase": "generation",
+      "history_id": "fiction-10",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 13595,
+      "runner_duration_ms": 13574
+    },
+    {
+      "call_id": "call-0067",
+      "phase": "generation",
+      "history_id": "fiction-11",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11346,
+      "runner_duration_ms": 11304
+    },
+    {
+      "call_id": "call-0068",
+      "phase": "generation",
+      "history_id": "fiction-11",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 29116,
+      "runner_duration_ms": 29076
+    },
+    {
+      "call_id": "call-0069",
+      "phase": "generation",
+      "history_id": "fiction-12",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7863,
+      "runner_duration_ms": 7842
+    },
+    {
+      "call_id": "call-0070",
+      "phase": "generation",
+      "history_id": "fiction-12",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10351,
+      "runner_duration_ms": 10329
+    },
+    {
+      "call_id": "call-0071",
+      "phase": "generation",
+      "history_id": "fiction-12",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6765,
+      "runner_duration_ms": 6755
+    },
+    {
+      "call_id": "call-0072",
+      "phase": "generation",
+      "history_id": "fiction-13",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 32265,
+      "runner_duration_ms": 32223
+    },
+    {
+      "call_id": "call-0073",
+      "phase": "generation",
+      "history_id": "fiction-13",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9322,
+      "runner_duration_ms": 9301
+    },
+    {
+      "call_id": "call-0074",
+      "phase": "generation",
+      "history_id": "fiction-14",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8174,
+      "runner_duration_ms": 8154
+    },
+    {
+      "call_id": "call-0075",
+      "phase": "generation",
+      "history_id": "fiction-14",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6616,
+      "runner_duration_ms": 6606
+    },
+    {
+      "call_id": "call-0076",
+      "phase": "generation",
+      "history_id": "fiction-15",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 37732,
+      "runner_duration_ms": 37711
+    },
+    {
+      "call_id": "call-0077",
+      "phase": "generation",
+      "history_id": "fiction-15",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9835,
+      "runner_duration_ms": 9825
+    },
+    {
+      "call_id": "call-0078",
+      "phase": "generation",
+      "history_id": "fiction-15",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8790,
+      "runner_duration_ms": 8770
+    },
+    {
+      "call_id": "call-0079",
+      "phase": "generation",
+      "history_id": "fiction-16",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11556,
+      "runner_duration_ms": 11546
+    },
+    {
+      "call_id": "call-0080",
+      "phase": "generation",
+      "history_id": "fiction-16",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8788,
+      "runner_duration_ms": 8747
+    },
+    {
+      "call_id": "call-0081",
+      "phase": "generation",
+      "history_id": "fiction-16",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 20430,
+      "runner_duration_ms": 20408
+    },
+    {
+      "call_id": "call-0082",
+      "phase": "generation",
+      "history_id": "fiction-17",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6503,
+      "runner_duration_ms": 6461
+    },
+    {
+      "call_id": "call-0083",
+      "phase": "generation",
+      "history_id": "fiction-17",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10014,
+      "runner_duration_ms": 9971
+    },
+    {
+      "call_id": "call-0084",
+      "phase": "generation",
+      "history_id": "fiction-17",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 5349,
+      "runner_duration_ms": 5327
+    },
+    {
+      "call_id": "call-0085",
+      "phase": "generation",
+      "history_id": "fiction-18",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10375,
+      "runner_duration_ms": 10354
+    },
+    {
+      "call_id": "call-0086",
+      "phase": "generation",
+      "history_id": "fiction-18",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 27860,
+      "runner_duration_ms": 27817
+    },
+    {
+      "call_id": "call-0087",
+      "phase": "generation",
+      "history_id": "fiction-19",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10830,
+      "runner_duration_ms": 10748
+    },
+    {
+      "call_id": "call-0088",
+      "phase": "generation",
+      "history_id": "fiction-19",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7166,
+      "runner_duration_ms": 7146
+    },
+    {
+      "call_id": "call-0089",
+      "phase": "generation",
+      "history_id": "fiction-19",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7702,
+      "runner_duration_ms": 7661
+    },
+    {
+      "call_id": "call-0090",
+      "phase": "generation",
+      "history_id": "fiction-19",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 6641,
+      "runner_duration_ms": 6599
+    },
+    {
+      "call_id": "call-0091",
+      "phase": "generation",
+      "history_id": "fiction-20",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 33216,
+      "runner_duration_ms": 33176
+    },
+    {
+      "call_id": "call-0092",
+      "phase": "generation",
+      "history_id": "fiction-20",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10800,
+      "runner_duration_ms": 10779
+    },
+    {
+      "call_id": "call-0093",
+      "phase": "generation",
+      "history_id": "fiction-20",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 5230,
+      "runner_duration_ms": 5209
+    },
+    {
+      "call_id": "call-0094",
+      "phase": "consolidation",
+      "history_id": "fiction-09",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7568,
+      "runner_duration_ms": 7557
+    },
+    {
+      "call_id": "call-0095",
+      "phase": "consolidation",
+      "history_id": "fiction-12",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9001,
+      "runner_duration_ms": 8981
+    },
+    {
+      "call_id": "call-0096",
+      "phase": "consolidation",
+      "history_id": "fiction-13",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 5176,
+      "runner_duration_ms": 5155
+    },
+    {
+      "call_id": "call-0097",
+      "phase": "consolidation",
+      "history_id": "fiction-19",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11469,
+      "runner_duration_ms": 11427
+    },
+    {
+      "call_id": "call-0098",
+      "phase": "consolidation",
+      "history_id": "fiction-20",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 4906,
+      "runner_duration_ms": 4895
+    },
+    {
+      "call_id": "call-0099",
+      "phase": "reader",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 31320,
+      "runner_duration_ms": 31296
+    },
+    {
+      "call_id": "call-0100",
+      "phase": "reader",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10144,
+      "runner_duration_ms": 10122
+    },
+    {
+      "call_id": "call-0101",
+      "phase": "reader",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 12112,
+      "runner_duration_ms": 12092
+    },
+    {
+      "call_id": "call-0102",
+      "phase": "reader",
+      "history_id": "fiction-07",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9332,
+      "runner_duration_ms": 9310
+    },
+    {
+      "call_id": "call-0103",
+      "phase": "reader",
+      "history_id": "fiction-08",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 23147,
+      "runner_duration_ms": 23105
+    },
+    {
+      "call_id": "call-0104",
+      "phase": "reader",
+      "history_id": "fiction-09",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8811,
+      "runner_duration_ms": 8788
+    },
+    {
+      "call_id": "call-0105",
+      "phase": "reader",
+      "history_id": "fiction-10",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8764,
+      "runner_duration_ms": 8744
+    },
+    {
+      "call_id": "call-0106",
+      "phase": "reader",
+      "history_id": "fiction-11",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7063,
+      "runner_duration_ms": 7021
+    },
+    {
+      "call_id": "call-0107",
+      "phase": "reader",
+      "history_id": "fiction-12",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9386,
+      "runner_duration_ms": 9375
+    },
+    {
+      "call_id": "call-0108",
+      "phase": "reader",
+      "history_id": "fiction-13",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 24533,
+      "runner_duration_ms": 24491
+    },
+    {
+      "call_id": "call-0109",
+      "phase": "reader",
+      "history_id": "fiction-14",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8266,
+      "runner_duration_ms": 8245
+    },
+    {
+      "call_id": "call-0110",
+      "phase": "reader",
+      "history_id": "fiction-15",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7192,
+      "runner_duration_ms": 7171
+    },
+    {
+      "call_id": "call-0111",
+      "phase": "reader",
+      "history_id": "fiction-16",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11502,
+      "runner_duration_ms": 11480
+    },
+    {
+      "call_id": "call-0112",
+      "phase": "reader",
+      "history_id": "fiction-17",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 33245,
+      "runner_duration_ms": 33204
+    },
+    {
+      "call_id": "call-0113",
+      "phase": "reader",
+      "history_id": "fiction-18",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7695,
+      "runner_duration_ms": 7653
+    },
+    {
+      "call_id": "call-0114",
+      "phase": "reader",
+      "history_id": "fiction-19",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10001,
+      "runner_duration_ms": 9960
+    },
+    {
+      "call_id": "call-0115",
+      "phase": "reader",
+      "history_id": "fiction-20",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8230,
+      "runner_duration_ms": 8190
+    },
+    {
+      "call_id": "call-0116",
+      "phase": "reader",
+      "history_id": "fiction-05",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11746,
+      "runner_duration_ms": 11724
+    },
+    {
+      "call_id": "call-0117",
+      "phase": "reader",
+      "history_id": "fiction-06",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 22428,
+      "runner_duration_ms": 22386
+    },
+    {
+      "call_id": "call-0118",
+      "phase": "reader",
+      "history_id": "fiction-06",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 12124,
+      "runner_duration_ms": 12103
+    },
+    {
+      "call_id": "call-0119",
+      "phase": "reader",
+      "history_id": "fiction-07",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10577,
+      "runner_duration_ms": 10537
+    },
+    {
+      "call_id": "call-0120",
+      "phase": "reader",
+      "history_id": "fiction-08",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10749,
+      "runner_duration_ms": 10728
+    },
+    {
+      "call_id": "call-0121",
+      "phase": "reader",
+      "history_id": "fiction-09",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 25096,
+      "runner_duration_ms": 25075
+    },
+    {
+      "call_id": "call-0122",
+      "phase": "reader",
+      "history_id": "fiction-10",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11379,
+      "runner_duration_ms": 11358
+    },
+    {
+      "call_id": "call-0123",
+      "phase": "reader",
+      "history_id": "fiction-11",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9491,
+      "runner_duration_ms": 9470
+    },
+    {
+      "call_id": "call-0124",
+      "phase": "reader",
+      "history_id": "fiction-12",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7706,
+      "runner_duration_ms": 7696
+    },
+    {
+      "call_id": "call-0125",
+      "phase": "reader",
+      "history_id": "fiction-13",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 33032,
+      "runner_duration_ms": 33012
+    },
+    {
+      "call_id": "call-0126",
+      "phase": "reader",
+      "history_id": "fiction-14",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7592,
+      "runner_duration_ms": 7582
+    },
+    {
+      "call_id": "call-0127",
+      "phase": "reader",
+      "history_id": "fiction-15",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9812,
+      "runner_duration_ms": 9792
+    },
+    {
+      "call_id": "call-0128",
+      "phase": "reader",
+      "history_id": "fiction-16",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9038,
+      "runner_duration_ms": 9017
+    },
+    {
+      "call_id": "call-0129",
+      "phase": "reader",
+      "history_id": "fiction-17",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 32066,
+      "runner_duration_ms": 32024
+    },
+    {
+      "call_id": "call-0130",
+      "phase": "reader",
+      "history_id": "fiction-18",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 7492,
+      "runner_duration_ms": 7471
+    },
+    {
+      "call_id": "call-0131",
+      "phase": "reader",
+      "history_id": "fiction-19",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10071,
+      "runner_duration_ms": 10050
+    },
+    {
+      "call_id": "call-0132",
+      "phase": "reader",
+      "history_id": "fiction-20",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9435,
+      "runner_duration_ms": 9414
+    },
+    {
+      "call_id": "call-0133",
+      "phase": "judge",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 36807,
+      "runner_duration_ms": 36784
+    },
+    {
+      "call_id": "call-0134",
+      "phase": "judge",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10789,
+      "runner_duration_ms": 10748
+    },
+    {
+      "call_id": "call-0135",
+      "phase": "judge",
+      "history_id": "fiction-06",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 12888,
+      "runner_duration_ms": 12846
+    },
+    {
+      "call_id": "call-0136",
+      "phase": "judge",
+      "history_id": "fiction-07",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 14222,
+      "runner_duration_ms": 14212
+    },
+    {
+      "call_id": "call-0137",
+      "phase": "judge",
+      "history_id": "fiction-08",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 21803,
+      "runner_duration_ms": 21783
+    },
+    {
+      "call_id": "call-0138",
+      "phase": "judge",
+      "history_id": "fiction-09",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8657,
+      "runner_duration_ms": 8636
+    },
+    {
+      "call_id": "call-0139",
+      "phase": "judge",
+      "history_id": "fiction-10",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 16612,
+      "runner_duration_ms": 16588
+    },
+    {
+      "call_id": "call-0140",
+      "phase": "judge",
+      "history_id": "fiction-11",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8167,
+      "runner_duration_ms": 8146
+    },
+    {
+      "call_id": "call-0141",
+      "phase": "judge",
+      "history_id": "fiction-12",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 23515,
+      "runner_duration_ms": 23472
+    },
+    {
+      "call_id": "call-0142",
+      "phase": "judge",
+      "history_id": "fiction-13",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9794,
+      "runner_duration_ms": 9774
+    },
+    {
+      "call_id": "call-0143",
+      "phase": "judge",
+      "history_id": "fiction-14",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11340,
+      "runner_duration_ms": 11319
+    },
+    {
+      "call_id": "call-0144",
+      "phase": "judge",
+      "history_id": "fiction-15",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12624,
+      "runner_duration_ms": 12584
+    },
+    {
+      "call_id": "call-0145",
+      "phase": "judge",
+      "history_id": "fiction-16",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 26382,
+      "runner_duration_ms": 26342
+    },
+    {
+      "call_id": "call-0146",
+      "phase": "judge",
+      "history_id": "fiction-17",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 13468,
+      "runner_duration_ms": 13447
+    },
+    {
+      "call_id": "call-0147",
+      "phase": "judge",
+      "history_id": "fiction-18",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 13272,
+      "runner_duration_ms": 13251
+    },
+    {
+      "call_id": "call-0148",
+      "phase": "judge",
+      "history_id": "fiction-19",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 33444,
+      "runner_duration_ms": 33403
+    },
+    {
+      "call_id": "call-0149",
+      "phase": "judge",
+      "history_id": "fiction-20",
+      "variant": "baseline",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 15517,
+      "runner_duration_ms": 15495
+    },
+    {
+      "call_id": "call-0150",
+      "phase": "judge",
+      "history_id": "fiction-05",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 14314,
+      "runner_duration_ms": 14293
+    },
+    {
+      "call_id": "call-0151",
+      "phase": "judge",
+      "history_id": "fiction-06",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 14274,
+      "runner_duration_ms": 14251
+    },
+    {
+      "call_id": "call-0152",
+      "phase": "judge",
+      "history_id": "fiction-06",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 1,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 17396,
+      "runner_duration_ms": 17352
+    },
+    {
+      "call_id": "call-0153",
+      "phase": "judge",
+      "history_id": "fiction-07",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11092,
+      "runner_duration_ms": 11070
+    },
+    {
+      "call_id": "call-0154",
+      "phase": "judge",
+      "history_id": "fiction-08",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11813,
+      "runner_duration_ms": 11777
+    },
+    {
+      "call_id": "call-0155",
+      "phase": "judge",
+      "history_id": "fiction-09",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 8195,
+      "runner_duration_ms": 8174
+    },
+    {
+      "call_id": "call-0156",
+      "phase": "judge",
+      "history_id": "fiction-10",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10245,
+      "runner_duration_ms": 10225
+    },
+    {
+      "call_id": "call-0157",
+      "phase": "judge",
+      "history_id": "fiction-11",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11145,
+      "runner_duration_ms": 11103
+    },
+    {
+      "call_id": "call-0158",
+      "phase": "judge",
+      "history_id": "fiction-12",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 14304,
+      "runner_duration_ms": 14283
+    },
+    {
+      "call_id": "call-0159",
+      "phase": "judge",
+      "history_id": "fiction-13",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12911,
+      "runner_duration_ms": 12900
+    },
+    {
+      "call_id": "call-0160",
+      "phase": "judge",
+      "history_id": "fiction-14",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 12920,
+      "runner_duration_ms": 12908
+    },
+    {
+      "call_id": "call-0161",
+      "phase": "judge",
+      "history_id": "fiction-15",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 17061,
+      "runner_duration_ms": 17039
+    },
+    {
+      "call_id": "call-0162",
+      "phase": "judge",
+      "history_id": "fiction-16",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11998,
+      "runner_duration_ms": 11957
+    },
+    {
+      "call_id": "call-0163",
+      "phase": "judge",
+      "history_id": "fiction-17",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 11045,
+      "runner_duration_ms": 11023
+    },
+    {
+      "call_id": "call-0164",
+      "phase": "judge",
+      "history_id": "fiction-18",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 9784,
+      "runner_duration_ms": 9763
+    },
+    {
+      "call_id": "call-0165",
+      "phase": "judge",
+      "history_id": "fiction-19",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 10467,
+      "runner_duration_ms": 10447
+    },
+    {
+      "call_id": "call-0166",
+      "phase": "judge",
+      "history_id": "fiction-20",
+      "variant": "candidate",
+      "run_id": "primary",
+      "repeat": 0,
+      "classification": "primary",
+      "status": "completed",
+      "wall_ms": 13195,
+      "runner_duration_ms": 13153
+    },
+    {
+      "call_id": "call-0167",
+      "phase": "generation",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 9581,
+      "runner_duration_ms": 9559
+    },
+    {
+      "call_id": "call-0168",
+      "phase": "generation",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 7937,
+      "runner_duration_ms": 7916
+    },
+    {
+      "call_id": "call-0169",
+      "phase": "generation",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 5934,
+      "runner_duration_ms": 5913
+    },
+    {
+      "call_id": "call-0170",
+      "phase": "reader",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 12079,
+      "runner_duration_ms": 12058
+    },
+    {
+      "call_id": "call-0171",
+      "phase": "reader",
+      "history_id": "fiction-05",
+      "variant": "candidate",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 10831,
+      "runner_duration_ms": 10807
+    },
+    {
+      "call_id": "call-0172",
+      "phase": "judge",
+      "history_id": "fiction-05",
+      "variant": "baseline",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 11261,
+      "runner_duration_ms": 11219
+    },
+    {
+      "call_id": "call-0173",
+      "phase": "judge",
+      "history_id": "fiction-05",
+      "variant": "candidate",
+      "run_id": "replicates/regeneration-1",
+      "repeat": 0,
+      "classification": "repeats",
+      "status": "completed",
+      "wall_ms": 14190,
+      "runner_duration_ms": 14178
+    }
+  ]
+}
