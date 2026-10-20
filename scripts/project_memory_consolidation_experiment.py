@@ -11,6 +11,8 @@ import argparse
 from contextlib import closing
 import hashlib
 import fcntl
+import gzip
+import io
 import json
 import os
 import random
@@ -26,7 +28,7 @@ import time
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PROTOCOL = ROOT / 'docs/evidence/consolidation-2026-10-20/protocol.json'
+DEFAULT_PROTOCOL = ROOT / 'docs/evidence/consolidation-repair-2026-10-20/protocol.json'
 PROMPT_VERSION='role-attribution-v1'
 JUDGE_PROMPT_VERSION='shared-visibility-v2'
 CRITICAL = ('false_merge', 'false_closure', 'project_mixing', 'deleted_resurrection')
@@ -56,6 +58,24 @@ def identifier(value: Any) -> str:
     if not isinstance(value, str) or not value or len(value) > 100 or any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-' for c in value):
         raise ValueError('fixture identifiers require 1..100 ASCII letters, digits, underscores or hyphens')
     return value
+
+
+def validate_tool_capture(event: dict) -> None:
+    capture=event.get('tool_capture')
+    if capture is None:
+        return
+    if event['type']!='tool' or not isinstance(capture,dict) or set(capture)!={'tool_name','tool_input','tool_response'}:
+        raise ValueError('tool_capture requires a tool event and no scope overrides')
+    if not isinstance(capture['tool_name'],str) or not 1<=len(capture['tool_name'])<=160:
+        raise ValueError('tool_capture requires a bounded tool name')
+    command=capture['tool_input']
+    response=capture['tool_response']
+    if not isinstance(command,dict) or not isinstance(command.get('command'),str) or not command['command']:
+        raise ValueError('tool_capture requires an explicit inert command')
+    if not isinstance(response,dict) or type(response.get('exit_code')) is not int or not isinstance(response.get('output'),str):
+        raise ValueError('tool_capture requires an integer exit code and exact output')
+    if len(json.dumps(capture,ensure_ascii=False).encode())>60000:
+        raise ValueError('tool_capture exceeds the complete raw capture bound')
 
 
 def fixture(path: Path) -> dict:
@@ -92,6 +112,7 @@ def fixture(path: Path) -> dict:
                 events.add(event['id'])
                 if not isinstance(event.get('text', ''), str) or len(event.get('text', '')) > 60000:
                     raise ValueError('event text exceeds bound')
+                validate_tool_capture(event)
             for checkpoint in session.get('checkpoints', []):
                 if checkpoint['after_event_id'] not in events:
                     raise ValueError('checkpoint refers to unknown event')
@@ -118,6 +139,35 @@ def append(path: Path, value: Any) -> None:
 
 def calls(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+
+def validate_ledger(rows: list[dict]) -> None:
+    """One durable start and at most one matching finish per native attempt."""
+    starts={}
+    finished=set()
+    identity=('phase','variant','history_id','run_id','repeat','prompt_version','protocol_sha256','helper_sha256')
+    for row in rows:
+        call_id=row.get('call_id')
+        if not isinstance(call_id,str) or not call_id:
+            raise ValueError('ledger receipt requires a call ID')
+        if row.get('status')=='started':
+            if call_id in starts:
+                raise ValueError('duplicate ledger attempt start')
+            starts[call_id]=row
+        elif row.get('status') in ('completed','failed'):
+            if call_id not in starts or call_id in finished:
+                raise ValueError('ledger finish is missing its unique start')
+            if any(row.get(key)!=starts[call_id].get(key) for key in identity):
+                raise ValueError('ledger start and finish identities differ')
+            finished.add(call_id)
+        else:
+            raise ValueError('unknown ledger receipt status')
+
+
+def ledger_calls(path: Path) -> list[dict]:
+    rows=calls(path)
+    validate_ledger(rows)
+    return rows
 
 
 def usage(rows: list[dict]) -> dict:
@@ -147,12 +197,37 @@ def usage(rows: list[dict]) -> dict:
             'token_accounting_complete': len(known) == len(starts), 'cost_usd': None}
 
 
+def historical_accounting(protocol: dict, current: dict) -> dict:
+    """Report previous pilot spend without consuming this iteration's cap."""
+    pointer=protocol.get('historical_spend')
+    if not pointer:
+        return {}
+    path=ROOT/pointer['report']
+    if hashlib.sha256(path.read_bytes()).hexdigest()!=pointer['sha256']:
+        raise ValueError('historical spend report changed')
+    prior=read(path)['usage']
+    complete=prior['token_accounting_complete'] and current['token_accounting_complete']
+    combined={key:prior[key]+current[key] for key in ('attempted_calls','finished_calls','failed_calls','unresolved_calls','calls_with_reported_tokens','calls_with_unknown_or_partial_tokens')}
+    combined['tokens']={key:prior['tokens'][key]+current['tokens'][key] if complete else None for key in ('input_tokens','cached_input_tokens','output_tokens','total_tokens')}
+    from decimal import Decimal
+    monetary={}
+    for tier in ('standard','fast'):
+        amounts=[v['hypothetical_api_equivalent_usd'][tier] if v['attempted_calls'] else '0' for v in (prior,current)]
+        monetary[tier]=str(sum((Decimal(v) for v in amounts),Decimal(0))) if all(v is not None for v in amounts) else None
+    combined.update(token_accounting_complete=complete,hypothetical_api_equivalent_usd=monetary,
+        cost_usd=None,scope='Previous completed pilot plus every native attempt in this iteration. Current iteration limits apply only to its own ledger.')
+    return {'historical_spend':pointer,'historical_usage':prior,'cumulative_pilot_usage':combined,
+        'coding_research_overhead_tokens':None,'coding_research_overhead_cost_usd':None,
+        'coding_research_overhead_status':'Unknown. Coding, research and orchestration model overhead is outside the measured native experiment ledgers.'}
+
+
 class Capture:
     def __init__(self, run: Path, protocol: dict, phase: str, variant: str, history: str):
         self.home, self.protocol = Path(read(run / 'run.json').get('budget_run', run)), protocol
         self.identity = {'phase': phase, 'variant': variant, 'history_id': history,
                          'run_id':str(run.relative_to(self.home)) if run!=self.home else 'primary', 'repeat':0,
-                         'prompt_version':JUDGE_PROMPT_VERSION if phase=='judge' else PROMPT_VERSION,'protocol_sha256':digest(protocol)}
+                         'prompt_version':JUDGE_PROMPT_VERSION if phase=='judge' else PROMPT_VERSION,'protocol_sha256':digest(protocol),
+                         'helper_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
 
     def __call__(self, request: dict) -> dict:
         # Serialize native calls and reservations across separate phase processes.
@@ -168,7 +243,7 @@ class Capture:
         if (MODEL, REASONING_EFFORT) != (self.protocol['model'], self.protocol['reasoning_effort']):
             raise ValueError('runtime model profile differs from frozen protocol')
         ledger = self.home / 'calls.jsonl'
-        rows = calls(ledger)
+        rows = ledger_calls(ledger)
         counters = usage(rows)
         if not counters['token_accounting_complete']:
             raise RuntimeError('experiment_usage_unknown_stop_for_review')
@@ -240,6 +315,24 @@ def persisted_state(data: Path) -> dict:
         return {'heads':heads,'episodes':episodes,'event_coverage':events}
 
 
+def capture_event(store: Any, project: Path, session_id: str, event: dict) -> dict:
+    """Capture inert fictional evidence through the same public Store seam."""
+    source={'user':'hook:UserPromptSubmit','assistant':'hook:Stop','tool':'hook:PostToolUse'}[event['type']]
+    validate_tool_capture(event)
+    options={}
+    if event['type']=='tool':
+        options['kind']='tool'
+        if event.get('tool_capture') is not None:
+            from codex_mem.tool_io import normalize_capture
+            capture=normalize_capture({**event['tool_capture'],'session_id':session_id,
+                'turn_id':event['id'],'tool_use_id':event['id']},project=str(project))
+            if capture is None:
+                raise ValueError('fictional tool capture was excluded by the runtime')
+            options['tool_capture']=capture
+    return store.remember(project,event.get('title',event['id']),event['text'],
+        source=source,session_id=session_id,turn_id=event['id'],**options)
+
+
 def generate(args: argparse.Namespace, value: dict, protocol: dict) -> None:
     from codex_mem.store import Store
     for history in selected(value, args.history):
@@ -263,9 +356,7 @@ def generate(args: argparse.Namespace, value: dict, protocol: dict) -> None:
                         target = source_map[event['observation_event_id']]
                         store.forget(project, [target])
                     else:
-                        source = {'user': 'hook:UserPromptSubmit', 'assistant': 'hook:Stop', 'tool': 'hook:PostToolUse'}[event['type']]
-                        result = store.remember(project, event.get('title', event['id']), event['text'],
-                                                source=source, session_id=session['id'], turn_id=event['id'])
+                        result = capture_event(store,project,session['id'],event)
                         source_map[event['id']] = result['id']
                 if event['id'] in checkpoints:
                     outcomes.extend(process(data, [project], capture, protocol['limits']['jobs_per_checkpoint']))
@@ -359,9 +450,39 @@ def reader_pipeline_status(variant: str, consolidation: dict | None = None) -> s
     return status
 
 
-def readers(args: argparse.Namespace, value: dict, protocol: dict) -> None:
+def retrieve_question(data: Path, projects: dict, question: dict, budget: int, timing_path: Path) -> dict:
+    """Keep local retrieval timings outside every model-visible payload."""
     from codex_mem.store import Store
     from codex_mem.project_memory_retrieval import build_project_brief, render_project_brief
+    keys=question.get('project_keys',[question['project_key']] if 'project_key' in question else list(projects))
+    started=time.monotonic()
+    timing={'question_id':question['id'],'at':time.time(),'projects':[],'status':'failed'}
+    parts=[]
+    per_project=max(1000,budget//len(keys)-100)
+    try:
+        for key in keys:
+            project_started=time.monotonic()
+            project_timing={'project_key':key,'status':'failed'}
+            try:
+                with Store(data) as store:
+                    brief=build_project_brief(store,projects[key],query=question['question'],budget=per_project,include_shadow=True)
+                    parts.append('PROJECT '+key+'\n'+render_project_brief(brief,budget=per_project))
+                project_timing['status']='completed'
+            finally:
+                project_timing['wall_ms']=round((time.monotonic()-project_started)*1000,3)
+                timing['projects'].append(project_timing)
+        context='\n\n'.join(parts)
+        if len(context)>budget:
+            raise ValueError('combined project context exceeds the identical question budget')
+        timing.update(status='completed',context_chars=len(context),context_sha256=hashlib.sha256(context.encode()).hexdigest())
+        return {'id':question['id'],'question':question['question'],'memory':context,
+            'context_chars':len(context),'context_sha256':timing['context_sha256']}
+    finally:
+        timing['wall_ms']=round((time.monotonic()-started)*1000,3)
+        append(timing_path,timing)
+
+
+def readers(args: argparse.Namespace, value: dict, protocol: dict) -> None:
     for history in selected(value, args.history):
         destination = args.run / args.variant / history['id']
         meta = read(destination / 'generation.json')
@@ -379,20 +500,7 @@ def readers(args: argparse.Namespace, value: dict, protocol: dict) -> None:
         pipeline_status=reader_pipeline_status(args.variant,read(destination/'consolidation.json') if args.variant=='candidate' else None)
         before = state_hash(destination / 'data')
         for question in history['questions']:
-            keys=question.get('project_keys',[question['project_key']] if 'project_key' in question else history['project_keys'])
-            parts=[]
-            per_project=max(1000,protocol['context_chars']//len(keys)-100)
-            for key in keys:
-                project=meta['projects'][key]
-                with Store(destination / 'data') as store:
-                    brief = build_project_brief(store, project, query=question['question'],
-                              budget=per_project, include_shadow=True)
-                    parts.append('PROJECT '+key+'\n'+render_project_brief(brief, budget=per_project))
-            context='\n\n'.join(parts)
-            if len(context)>protocol['context_chars']:
-                raise ValueError('combined project context exceeds the identical question budget')
-            contexts.append({'id':question['id'], 'question':question['question'], 'memory':context,
-                             'context_chars':len(context), 'context_sha256':hashlib.sha256(context.encode()).hexdigest()})
+            contexts.append(retrieve_question(destination/'data',meta['projects'],question,protocol['context_chars'],destination/'retrieval-timings.jsonl'))
         write(destination / 'contexts.json', contexts)
         for repeat in range(repeats):
             output = destination / f'reader-{repeat}.json'
@@ -665,7 +773,7 @@ def aggregate(args: argparse.Namespace, value: dict, protocol: dict) -> dict:
               and constraints_preserved and (baseline['full_supported_rate']>=.9 or gain>=.1-1e-9))
     quality_improved=gain>0 and candidate['critical_errors']<=baseline['critical_errors']
     root_run=Path(read(args.run/'run.json').get('budget_run',args.run))
-    ledger=calls(root_run/'calls.jsonl')
+    ledger=ledger_calls(root_run/'calls.jsonl')
     revisions=calls(root_run/'runtime-revisions.jsonl')
     superseded_calls={identifier for revision in revisions for identifier in revision.get('superseded_call_ids',[])}
     arm_tokens={}
@@ -733,8 +841,92 @@ def aggregate(args: argparse.Namespace, value: dict, protocol: dict) -> dict:
                        'Token cap is checked before each call; one final call can exceed it. Unreported usage remains unknown.',
                        'Primary arms share one live generated prefix. Two prescribed histories also regenerate the prefix independently; reader-only repeats are reported separately.',
                        'Fictional histories do not establish performance on private production histories.']}
+    report.update(historical_accounting(protocol,report['usage']))
     write(args.run / f'{value["split"]}-report.json',report)
     return report
+
+
+def sanitize_export_members(members: dict[str,bytes]) -> tuple[dict[str,bytes],dict]:
+    """Replace only UUIDs identified as native diagnostic thread/turn IDs."""
+    uuid=re.compile(r'[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}')
+    mapping={}
+    def diagnostic_kind(name: str, path: tuple) -> str | None:
+        worker=name in ('workerthreadid','workerturnid')
+        native=('evidence' in path and any(p in path for p in ('threadstart','turnstarted'))
+            and (name in ('threadid','turnid') or name=='id' and path[-1:] in (('thread',),('turn',))))
+        if not (worker or native):
+            return None
+        return 'thread' if 'thread' in name or name=='id' and path[-1]=='thread' else 'turn'
+    def collect(value: Any, path: tuple=()) -> None:
+        if isinstance(value,dict):
+            for key,item in value.items():
+                name=re.sub('[^a-z]','',key.lower())
+                here=path+(name,)
+                kind=diagnostic_kind(name,path)
+                if isinstance(item,str) and uuid.fullmatch(item) and kind:
+                    pseudonym='diagnostic-'+kind+'-'+hashlib.sha256(item.encode()).hexdigest()[:20]
+                    if item in mapping and mapping[item]!=pseudonym:
+                        raise ValueError('diagnostic identifier has conflicting roles')
+                    mapping[item]=pseudonym
+                collect(item,here)
+        elif isinstance(value,list):
+            for item in value:
+                collect(item,path)
+    def transform(value: Any, path: tuple=()) -> Any:
+        if isinstance(value,dict):
+            result={}
+            for key,item in value.items():
+                name=re.sub('[^a-z]','',key.lower())
+                result[key]=mapping[item] if isinstance(item,str) and item in mapping and diagnostic_kind(name,path) else transform(item,path+(name,))
+            return result
+        if isinstance(value,list):
+            return [transform(item,path) for item in value]
+        return value
+    for data in members.values():
+        try:
+            value=json.loads(data)
+        except (ValueError,UnicodeError):
+            continue
+        collect(value)
+    cleaned={}
+    changed={}
+    for name,data in members.items():
+        public=data
+        try:
+            value=json.loads(data)
+        except (ValueError,UnicodeError):
+            value=None
+        if value is not None:
+            transformed=transform(value)
+            if transformed!=value:
+                public=(json.dumps(transformed,ensure_ascii=False,indent=2)+'\n').encode()
+        if any(original.encode() in public for original in mapping):
+            raise ValueError('diagnostic identifier occurs outside approved metadata; export stopped without changing model content')
+        cleaned[name]=public
+        if public!=data:
+            changed[name]={'private_original_sha256':hashlib.sha256(data).hexdigest(),
+                'public_export_sha256':hashlib.sha256(public).hexdigest()}
+    return cleaned,{'schema_version':1,'scope':'Publication privacy transformation only. Private run originals remain unchanged.',
+        'pseudonym_method':'diagnostic-{thread|turn}- plus first 20 hex characters of SHA256(original UUID), consistent across exports. No raw identifier mapping is published.',
+        'selected_diagnostic_fields':['worker_thread_id','worker_turn_id','native evidence thread_start/turn_started thread_id/turn_id and equivalent camelCase/nested spellings'],
+        'preserved':['fictional session/source/event/turn IDs','questions and answers','grades','token and latency totals','calls.jsonl byte content','accepted merge audit bundles','input fixtures'],
+        'changed_member_count':len(changed),'changed_members':changed}
+
+
+def export_archive_bytes(members: dict[str,bytes]) -> bytes:
+    """Make reproducible public archive containers independent of host metadata."""
+    stream=io.BytesIO()
+    with gzip.GzipFile(fileobj=stream,mode='wb',filename='',mtime=0) as compressed:
+        with tarfile.open(fileobj=compressed,mode='w',format=tarfile.PAX_FORMAT) as archive:
+            for name,data in sorted(members.items()):
+                info=tarfile.TarInfo(name)
+                info.size=len(data)
+                info.mode=0o644
+                info.uid=info.gid=0
+                info.uname=info.gname=''
+                info.mtime=0
+                archive.addfile(info,io.BytesIO(data))
+    return stream.getvalue()
 
 
 def export_evidence(args: argparse.Namespace, value: dict, protocol: dict) -> dict:
@@ -750,6 +942,9 @@ def export_evidence(args: argparse.Namespace, value: dict, protocol: dict) -> di
     write(target/'fixture.json',value)
     write(target/'gold.json',gold)
     write(target/'protocol.json',protocol)
+    if protocol.get('historical_spend'):
+        historical_accounting(protocol,usage([]))
+        (target/'historical-report.json').write_bytes((ROOT/protocol['historical_spend']['report']).read_bytes())
     report=aggregate(args,value,protocol)
     write(target/'report.json',report)
     runs=[('primary',root_run),('regeneration-1',root_run/'replicates/regeneration-1')]+[(p.name,p) for p in sorted(root_run.glob('superseded-runtime-*')) if p.is_dir()]
@@ -818,9 +1013,16 @@ def export_evidence(args: argparse.Namespace, value: dict, protocol: dict) -> di
         elif (relative.parts[0] in ('baseline','candidate','replicates') or relative.parts[0].startswith('superseded-runtime-')) and path.suffix in ('.json','.jsonl'):
             paths.append(path)
     archive_path=target/'fictional-run-evidence.tar.gz'
-    with tarfile.open(archive_path,'w:gz') as archive:
-        for path in sorted(paths):
-            archive.add(path,arcname=str(path.relative_to(root_run)),recursive=False)
+    private_members={str(path.relative_to(root_run)):path.read_bytes() for path in paths}
+    public_members,sanitization=sanitize_export_members(private_members)
+    private_archive=export_archive_bytes(private_members)
+    public_archive=export_archive_bytes(public_members)
+    archive_path.write_bytes(public_archive)
+    sanitization.update(private_original_archive_sha256=hashlib.sha256(private_archive).hexdigest(),
+        public_export_archive_sha256=hashlib.sha256(public_archive).hexdigest(),
+        archive_container='Sorted tar members, uid/gid/mtime zero, mode 0644, empty owner names, gzip mtime zero.',
+        private_archive_policy='Original digest is reproducible from retained private run files. Unsanitized archive bytes are not published.')
+    write(target/'sanitization.json',sanitization)
     # Save the exact runner and offline verification source with its frozen hash.
     (target/'experiment.py').write_bytes(Path(__file__).read_bytes())
     test_path=ROOT/'scripts/consolidation_experiment/test_protocol.py'
@@ -841,6 +1043,7 @@ def export_evidence(args: argparse.Namespace, value: dict, protocol: dict) -> di
         'files':{str(p.relative_to(target)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(files)},
         'pinned_inputs_copied':copied_inputs,
         'exclusions':['SQLite stores','data configuration','authentication/cache files','native diagnostics'],
+        'publication_sanitization':'sanitization.json',
         'cost_usd':None,'actual_pilot_usage':report['usage']}
     write(target/'export-manifest.json',manifest)
     return {'destination':str(target),'question_records':len(questions),'archived_files':len(paths),

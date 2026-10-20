@@ -81,7 +81,7 @@ class FieldEvidenceTests(unittest.TestCase):
         result = ep.process_project_memory(self.project, self.data, runner=self.runner(1),
                                            jev_quality_evaluator=self.evaluate)
         self.assertEqual(result["status"], "processed", result)
-        self.assertEqual(self.state()["episodes"][0]["outcome"], "Importer remains open.")
+        self.assertEqual(self.state()["episodes"][0]["outcome"], "User intent: Importer remains open.")
         self.assertEqual(result["quality"][0]["usage"], {"input_tokens": 7, "output_tokens": 3})
         items = self.requests[0]["state"]["items"]
         outcome = next(item for item in items if json.loads(item["candidate"]["body"])["field"] == "outcome")

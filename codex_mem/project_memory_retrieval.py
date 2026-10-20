@@ -167,7 +167,7 @@ def _attr(value: Any) -> str:
     return quoteattr(_xml_text(value))
 
 
-def _evidence(item: Mapping[str, Any], limit: int = 8) -> list[dict[str, Any]]:
+def _evidence(item: Mapping[str, Any], limit: int = 8, *, quote_limit: int = 240) -> list[dict[str, Any]]:
     found: list[dict[str, Any]] = []
     def visit(value: Any, field: str = '') -> None:
         if isinstance(value, Mapping):
@@ -176,8 +176,8 @@ def _evidence(item: Mapping[str, Any], limit: int = 8) -> list[dict[str, Any]]:
                 if field:
                     pointer['field'] = field
                 if isinstance(value.get('quote'), str):
-                    pointer['quote_excerpt'] = value['quote'][:240]
-                    pointer['quote_truncated'] = len(value['quote']) > 240
+                    pointer['quote_excerpt'] = value['quote'][:quote_limit]
+                    pointer['quote_truncated'] = len(value['quote']) > quote_limit
                 if pointer not in found:
                     found.append(pointer)
             else:
@@ -225,8 +225,16 @@ def _record(item: Mapping[str, Any], lane: str) -> dict[str, Any]:
             refs = (cleaned.get('evidence') or {}).get(name, [])
             if lane == 'signal' and cleaned.get('source_role') == 'user_intent' and cleaned.get('source_id'):
                 refs = [{'source_id': cleaned['source_id'], 'source_role': 'user_intent'}]
-            record['fields'].append({'name': name, 'text': value[:1400],
-                'evidence': _evidence({'evidence': {name: refs}}, limit=32 if name.startswith('prior_') else 8)})
+            provenance = (cleaned.get('field_provenance') or {}).get(name, {})
+            grounded = provenance.get('basis') == 'attributed_source_excerpts'
+            record['fields'].append({'name': name, 'text': value if grounded else value[:1400],
+                **({key: provenance[key] for key in ('basis', 'field_association', 'partial_context')
+                    if key in provenance} if grounded else {}),
+                'evidence': _evidence({'evidence': {name: refs}},
+                    limit=32 if grounded or name.startswith('prior_') else 8,
+                    quote_limit=6000 if grounded else 240)})
+    if cleaned.get('field_provenance') and lane == 'episode':
+        record['preview'] = 'Attributed source excerpts; field association remains inferred.'
     if lane == 'signal' and cleaned.get('signal_kind') == 'observed_execution_result':
         provenance = cleaned.get('provenance') or {}
         execution = {key: (value[:512] if isinstance(value, str) else value)
@@ -325,9 +333,9 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
         # still explicit, with omissions counted, and state/scope never sliced.
         item_budget = min(remaining, max((2200 if brief.get('anchored_natural') and brief.get('projection') != 'continuity' else 1400) if record.get('lane') == 'episode' else 1100 if record.get('execution') else 900, remaining // min(6, len(records) - index)))
         text = str(record.get('preview') or '')[:700]
-        def source_xml(source: Mapping[str, Any]) -> str:
+        def source_xml(source: Mapping[str, Any], *, complete: bool = False) -> str:
             source = dict(source)
-            if isinstance(source.get('quote_excerpt'), str):
+            if not complete and isinstance(source.get('quote_excerpt'), str):
                 source['quote_truncated'] = bool(source.get('quote_truncated') or len(source['quote_excerpt']) > 160)
                 source['quote_excerpt'] = source['quote_excerpt'][:160]
             excerpt = source.pop('quote_excerpt', None)
@@ -344,22 +352,36 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
         fields = record.get('fields') or [{'name': 'preview', 'text': text,
                                            'evidence': record.get('evidence', [])}]
         omitted_fields = 0
+        grounded_omissions = 0
         for field in fields:
             refs = field.get('evidence') or []
+            grounded = field.get('basis') == 'attributed_source_excerpts'
             # Each prose field keeps ALL its source pointers. If they do not
             # fit together, omit that field instead of pairing its prose with
             # an unrelated subset of an episode's evidence.
-            evidence = ''.join(source_xml(ref) for ref in refs)
+            evidence = ''.join(source_xml(ref, complete=grounded) for ref in refs)
             if field['name'] != 'preview' and not refs:
                 omitted_fields += 1
                 continue
-            value = str(field.get('text') or '')[:700]
+            value = str(field.get('text') or '')
+            if not grounded:
+                value = value[:700]
             def field_node(length: int) -> str:
                 excerpt = value[:length] + ('…' if length < len(value) else '')
-                prose = '<derived_text>' + escape(_xml_text(excerpt)) + '</derived_text>' if value else ''
-                return '<field name=' + _attr(field['name']) + '>' + prose + evidence + '</field>'
+                prose = '<derived_text>' + escape(_xml_text(excerpt)) + '</derived_text>' if value and not grounded else ''
+                metadata = ''.join(' ' + key + '=' + _attr(field[key]) for key in
+                                   ('basis', 'field_association', 'partial_context') if key in field)
+                return '<field name=' + _attr(field['name']) + metadata + '>' + prose + evidence + '</field>'
             omission_reserve = ' fields_omitted="99"' if len(fields) > 1 else ''
             remaining_item = item_budget - len('<item' + attrs + omission_reserve + '>' + content + '</item>')
+            if grounded:
+                whole = field_node(len(value))
+                if len(whole) <= remaining_item:
+                    content += whole
+                else:
+                    omitted_fields += 1
+                    grounded_omissions += 1
+                continue
             if len(field_node(min(80, len(value)))) > remaining_item:
                 omitted_fields += 1
                 continue
@@ -371,7 +393,7 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
                 else:
                     high = middle - 1
             content += field_node(low)
-        if not content:
+        if not content and not grounded_omissions:
             continue
         if omitted_fields:
             attrs += ' fields_omitted=' + _attr(omitted_fields)
@@ -517,7 +539,12 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
             seen_refs = set()
             priorities = {'rationale': 0, 'prior_rationale': 1, 'goal': 2} if query_plan.projection == 'rationale' else {
                 'outcome': 0, 'open_work': 1, 'prior_open_work': 2, 'summary': 3}
+            if query_plan.projection == 'environments':
+                # Prefer the complete cross-environment field before narrower
+                # outcome/obligation groups repeat its sources and use its room.
+                priorities = {'summary': 0, 'outcome': 1, 'open_work': 2, 'prior_open_work': 3}
             for field in sorted(record['fields'], key=lambda field: priorities.get(field['name'], 3)):
+                selected_pointers = []
                 for pointer in field['evidence']:
                     identity = (pointer.get('source_id'), pointer.get('start'), pointer.get('end'))
                     if identity in seen_refs or not pointer.get('quote_excerpt'):
@@ -531,7 +558,13 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
                         if query_plan.environments and not observed.intersection(query_plan.environments):
                             continue
                     seen_refs.add(identity)
-                    selected.append({'name': field['name'] + '_source_excerpt', 'text': '', 'evidence': [pointer]})
+                    selected_pointers.append(pointer)
+                    if field.get('basis') != 'attributed_source_excerpts':
+                        selected.append({'name': field['name'] + '_source_excerpt', 'text': '', 'evidence': [pointer]})
+                if selected_pointers and field.get('basis') == 'attributed_source_excerpts':
+                    # A grounded field is one bounded evidence group. Projection
+                    # may select it, but cannot discard its qualifiers or refs.
+                    selected.append({**field, 'name': field['name'] + '_source_excerpt', 'text': ''})
             # These are quoted evidence units, not regenerated state claims.
             # Each source remains physically attached to its own excerpt.
             record['fields'] = selected[:8] or record['fields']

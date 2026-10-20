@@ -1,0 +1,42 @@
+======================================================================
+ERROR: test_generator_cross_chat_continuation_and_named_correction_preserve_task_identity (test_episode_processor.EpisodeStorageIntegrationTests.test_generator_cross_chat_continuation_and_named_correction_preserve_task_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_episode_processor.py", line 824, in test_generator_cross_chat_continuation_and_named_correction_preserve_task_identity
+    _, root, _ = ingest("TASK-123: Implement scheduled importer. Keep diagnostic redaction open.",
+                 ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                          "chat-one", "TASK-123 importer", keep_requirement=True)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_episode_processor.py", line 822, in ingest
+    current = next(episode for episode in state["episodes"] if episode["summary"] == text)
+StopIteration
+
+======================================================================
+FAIL: test_supported_fields_commit_with_exact_spans_and_reference_only_source_context (test_episode_field_evidence.FieldEvidenceTests.test_supported_fields_commit_with_exact_spans_and_reference_only_source_context)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_episode_field_evidence.py", line 84, in test_supported_fields_commit_with_exact_spans_and_reference_only_source_context
+    self.assertEqual(self.state()["episodes"][0]["outcome"], "Importer remains open.")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'User intent: Importer remains open.' != 'Importer remains open.'
+- User intent: Importer remains open.
+? -------------
++ Importer remains open.
+
+
+======================================================================
+FAIL: test_temp_store_roundtrip_and_invalid_output_do_not_lose_events (test_episode_processor.EpisodeStorageIntegrationTests.test_temp_store_roundtrip_and_invalid_output_do_not_lose_events)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_episode_processor.py", line 775, in test_temp_store_roundtrip_and_invalid_output_do_not_lose_events
+    self.assertEqual(state["episodes"][0]["summary"], "Use local import.")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'User intent: Use local import.' != 'Use local import.'
+- User intent: Use local import.
++ Use local import.
+
+
+----------------------------------------------------------------------
+Ran 62 tests in 0.726s
+
+FAILED (failures=2, errors=1)

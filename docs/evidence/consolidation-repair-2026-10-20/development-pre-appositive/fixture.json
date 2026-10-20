@@ -1,0 +1,578 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "histories": [
+    {
+      "id": "fiction-01",
+      "split": "development",
+      "project_keys": [
+        "meridian-subtitles"
+      ],
+      "scenario_categories": [
+        "assistant_report_attribution",
+        "tool_failure",
+        "positive_reopening",
+        "late_correction"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-01-s1",
+          "project_key": "meridian-subtitles",
+          "events": [
+            {
+              "id": "fiction-01-s1-e001",
+              "type": "user",
+              "text": "MS-81 is the subtitle timing repair. Check a pause across the scene boundary before sending a review copy."
+            },
+            {
+              "id": "fiction-01-s1-e002",
+              "type": "assistant",
+              "text": "I ran the timing suite locally and all eleven checks passed. The patch is ready for a review copy."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-01-s1-e002",
+              "kind": "stop"
+            }
+          ]
+        },
+        {
+          "id": "fiction-01-s2",
+          "project_key": "meridian-subtitles",
+          "events": [
+            {
+              "id": "fiction-01-s2-e001",
+              "type": "tool",
+              "text": "Command: subtitle-check fixtures/scene-boundary.srt\nExit code: 1\nFAIL pause_after_cut: expected gap >= 120 ms, got 40 ms.\nNo review copy was written.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "subtitle-check fixtures/scene-boundary.srt"
+                },
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "FAIL pause_after_cut: expected gap >= 120 ms, got 40 ms.\nNo review copy was written."
+                }
+              }
+            },
+            {
+              "id": "fiction-01-s2-e002",
+              "type": "user",
+              "text": "Reopen MS-81, the same timing repair. Correct that short pause and rerun the scene-boundary check."
+            },
+            {
+              "id": "fiction-01-s2-e003",
+              "type": "user",
+              "text": "One correction: the gap is 150 ms for this project, not 120. Use 150 in the rerun; leave the review copy unsent."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-01-s2-e002",
+              "kind": "periodic"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What should the next MS-81 edit and rerun use?",
+          "project_keys": [
+            "meridian-subtitles"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "What is the strongest recorded result for the scene-boundary check?",
+          "project_keys": [
+            "meridian-subtitles"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should the eleven-check statement be attributed?",
+          "project_keys": [
+            "meridian-subtitles"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Is the review copy ready to send?",
+          "project_keys": [
+            "meridian-subtitles"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Which task owns the boundary failure?",
+          "project_keys": [
+            "meridian-subtitles"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What belongs in the next progress note?",
+          "project_keys": [
+            "meridian-subtitles"
+          ],
+          "category": "continuation"
+        }
+      ]
+    },
+    {
+      "id": "fiction-02",
+      "split": "development",
+      "project_keys": [
+        "granite-posters"
+      ],
+      "scenario_categories": [
+        "own_field_support",
+        "cli_help",
+        "tool_success",
+        "assistant_report_attribution",
+        "cancellation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-02-s1",
+          "project_key": "granite-posters",
+          "events": [
+            {
+              "id": "fiction-02-s1-e001",
+              "type": "user",
+              "text": "GP-24 is the poster PDF export. Keep crop marks outside the artwork. A browser screenshot is a different artifact and cannot establish print dimensions."
+            },
+            {
+              "id": "fiction-02-s1-e002",
+              "type": "assistant",
+              "text": "The browser preview looks right. I also checked the printed dimensions and they match the print brief."
+            },
+            {
+              "id": "fiction-02-s1-e003",
+              "type": "tool",
+              "text": "Command: pdf-inspect out/poster-proof.pdf\nExit code: 0\nPage size: 420 x 594 mm. Crop marks: present. Artwork bounds do not intersect crop marks. This command does not inspect color profiles.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "pdf-inspect out/poster-proof.pdf"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Page size: 420 x 594 mm. Crop marks: present. Artwork bounds do not intersect crop marks. This command does not inspect color profiles."
+                }
+              }
+            },
+            {
+              "id": "fiction-02-s1-e004",
+              "type": "assistant",
+              "text": "CLI help excerpt: \"poster publish --replace replaces the public download immediately\". This is a command description."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-02-s1-e004",
+              "kind": "stop"
+            }
+          ]
+        },
+        {
+          "id": "fiction-02-s2",
+          "project_key": "granite-posters",
+          "events": [
+            {
+              "id": "fiction-02-s2-e001",
+              "type": "user",
+              "text": "Cancel the public-download replacement for GP-24. Keep the PDF proof work open until a color-profile check is recorded. The help excerpt does not authorize publishing."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-02-s2-e001",
+              "kind": "stop"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What work survives the GP-24 cancellation?",
+          "project_keys": [
+            "granite-posters"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Which dimensions are directly supported, and for which artifact?",
+          "project_keys": [
+            "granite-posters"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should the assistant dimension claim be described?",
+          "project_keys": [
+            "granite-posters"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Can the next assistant publish using the help excerpt?",
+          "project_keys": [
+            "granite-posters"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What does the successful PDF command leave unverified?",
+          "project_keys": [
+            "granite-posters"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What should be run before calling the proof finished?",
+          "project_keys": [
+            "granite-posters"
+          ],
+          "category": "continuation"
+        }
+      ]
+    },
+    {
+      "id": "fiction-03",
+      "split": "development",
+      "project_keys": [
+        "silver-timetables"
+      ],
+      "scenario_categories": [
+        "question_reopening",
+        "negative_reopening",
+        "quoted_reopening",
+        "assistant_report_attribution"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-03-s1",
+          "project_key": "silver-timetables",
+          "events": [
+            {
+              "id": "fiction-03-s1-e001",
+              "type": "user",
+              "text": "ST-17 timetable spacing is complete after the approved local proof. ST-29 route-icon work is separate and remains open for contrast review."
+            },
+            {
+              "id": "fiction-03-s1-e002",
+              "type": "assistant",
+              "text": "I checked all route-icon contrast ratios and they pass. I have not saved the contrast report."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-03-s1-e002",
+              "kind": "stop"
+            }
+          ]
+        },
+        {
+          "id": "fiction-03-s2",
+          "project_key": "silver-timetables",
+          "events": [
+            {
+              "id": "fiction-03-s2-e001",
+              "type": "user",
+              "text": "Would reopening ST-17 help if we later add a weekend page? I am asking about the option, not asking you to reopen it."
+            },
+            {
+              "id": "fiction-03-s2-e002",
+              "type": "user",
+              "text": "Draft release-note quote: \"Reopen ST-17 immediately.\" That is a quotation for the editorial sample. Keep ST-17 closed. Do not reopen the spacing work."
+            },
+            {
+              "id": "fiction-03-s2-e003",
+              "type": "tool",
+              "text": "Command: icon-contrast route-icons.json\nExit code: 1\nFAIL night_bus: ratio 2.4 against required 3.0. Other 7 icons passed.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "icon-contrast route-icons.json"
+                },
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "FAIL night_bus: ratio 2.4 against required 3.0. Other 7 icons passed."
+                }
+              }
+            },
+            {
+              "id": "fiction-03-s2-e004",
+              "type": "user",
+              "text": "Fix the night-bus contrast under ST-29. The weekend-page question does not change ST-17."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-03-s2-e003",
+              "kind": "periodic"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which task should the next icon fix continue?",
+          "project_keys": [
+            "silver-timetables"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Did the weekend question reopen the spacing work?",
+          "project_keys": [
+            "silver-timetables"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "What does the release-note quote authorize?",
+          "project_keys": [
+            "silver-timetables"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What is the recorded contrast result?",
+          "project_keys": [
+            "silver-timetables"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "How should the earlier contrast pass be carried forward?",
+          "project_keys": [
+            "silver-timetables"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Give the current next action without reopening finished work.",
+          "project_keys": [
+            "silver-timetables"
+          ],
+          "category": "continuation"
+        }
+      ]
+    },
+    {
+      "id": "fiction-04",
+      "split": "development",
+      "project_keys": [
+        "cobalt-fonts",
+        "cobalt-folders"
+      ],
+      "scenario_categories": [
+        "two_projects",
+        "deletion",
+        "tool_success",
+        "assistant_report_attribution"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-04-s1",
+          "project_key": "cobalt-fonts",
+          "events": [
+            {
+              "id": "fiction-04-s1-e001",
+              "type": "user",
+              "text": "Scratch font preset alias is LINNET-DISCARD-28. It is temporary."
+            },
+            {
+              "id": "fiction-04-s1-e002",
+              "type": "user",
+              "text": "CF-42 is a font fallback proof. Check right-to-left punctuation as well as missing glyph substitution. Folder import belongs to a separate project."
+            },
+            {
+              "id": "fiction-04-s1-e003",
+              "type": "assistant",
+              "text": "I verified right-to-left punctuation locally; it is correct."
+            },
+            {
+              "id": "fiction-04-s1-e004",
+              "type": "tool",
+              "text": "Command: font-proof-check fixtures/rtl-punctuation.json\nExit code: 1\nFallback glyphs render. Opening and closing quotation marks face the wrong directions in the right-to-left sample.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "font-proof-check fixtures/rtl-punctuation.json"
+                },
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Fallback glyphs render. Opening and closing quotation marks face the wrong directions in the right-to-left sample."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-04-s1-e004",
+              "kind": "stop"
+            }
+          ]
+        },
+        {
+          "id": "fiction-04-s2",
+          "project_key": "cobalt-folders",
+          "events": [
+            {
+              "id": "fiction-04-s2-e001",
+              "type": "user",
+              "text": "CD-16 folder import needs a depth limit of seven and a test for importing the same directory twice."
+            },
+            {
+              "id": "fiction-04-s2-e002",
+              "type": "tool",
+              "text": "Command: folder-check depth-limit\nExit code: 0\nDepth seven accepted. Depth eight rejected. Repeat-directory import test not selected.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "folder-check depth-limit"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Depth seven accepted. Depth eight rejected. Repeat-directory import test not selected."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-04-s2-e002",
+              "kind": "stop"
+            }
+          ]
+        },
+        {
+          "id": "fiction-04-s3",
+          "project_key": "cobalt-fonts",
+          "events": [
+            {
+              "id": "fiction-04-s3-e001",
+              "type": "user",
+              "text": "Forget the scratch font preset alias and remove its observation. Keep CF-42 open for the reversed quotation marks."
+            },
+            {
+              "id": "fiction-04-s3-e002",
+              "type": "delete_observation",
+              "observation_event_id": "fiction-04-s1-e001",
+              "text": "Remove the stored observation from the referenced source event."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-04-s3-e002",
+              "kind": "stop"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What should the font-proof continuation fix?",
+          "project_keys": [
+            "cobalt-fonts",
+            "cobalt-folders"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "What is directly established for folder import?",
+          "project_keys": [
+            "cobalt-fonts",
+            "cobalt-folders"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Should a handoff restore the scratch preset alias?",
+          "project_keys": [
+            "cobalt-fonts",
+            "cobalt-folders"
+          ],
+          "category": "deletion"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Do folder-import results settle font punctuation?",
+          "project_keys": [
+            "cobalt-fonts",
+            "cobalt-folders"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "How do the assistant and tool punctuation records differ?",
+          "project_keys": [
+            "cobalt-fonts",
+            "cobalt-folders"
+          ],
+          "category": "continuation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Give each project a useful next action.",
+          "project_keys": [
+            "cobalt-fonts",
+            "cobalt-folders"
+          ],
+          "category": "continuation"
+        }
+      ]
+    }
+  ]
+}

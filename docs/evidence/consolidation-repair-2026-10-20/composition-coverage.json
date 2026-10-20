@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "authoring": "Entirely new fictional tasks, domains, histories and wording. No product implementation read. No models called. Gold authored before evaluation.",
+  "counts": {
+    "development": {
+      "histories": 4,
+      "questions": 24,
+      "sessions": 9,
+      "events": 24,
+      "scenario_categories": [
+        "assistant_report_attribution",
+        "cancellation",
+        "cli_help",
+        "deletion",
+        "late_correction",
+        "negative_reopening",
+        "own_field_support",
+        "positive_reopening",
+        "question_reopening",
+        "quoted_reopening",
+        "tool_failure",
+        "tool_success",
+        "two_projects"
+      ]
+    },
+    "holdout": {
+      "histories": 16,
+      "questions": 96,
+      "sessions": 28,
+      "events": 179,
+      "scenario_categories": [
+        "ambiguous_identity",
+        "assistant_report_attribution",
+        "cancellation",
+        "cli_help",
+        "decision_reversal",
+        "deletion",
+        "deployment_result",
+        "early_obligation",
+        "late_correction",
+        "late_without_stop",
+        "local_vs_production",
+        "long_session",
+        "negative_identity",
+        "negative_reopening",
+        "own_field_support",
+        "positive_reopening",
+        "production_unknown",
+        "question_reopening",
+        "quoted_instructions",
+        "quoted_reopening",
+        "same_task",
+        "similar_independent_tasks",
+        "similar_tasks",
+        "tool_failure",
+        "tool_success",
+        "two_projects"
+      ]
+    }
+  },
+  "source_role_counts": {
+    "user": 54,
+    "assistant": 71,
+    "tool": 75,
+    "delete_observation": 3
+  },
+  "long_session_composition": [
+    {
+      "id": "fiction-05",
+      "events": 44,
+      "characters": 33405,
+      "words": 3391
+    },
+    {
+      "id": "fiction-06",
+      "events": 38,
+      "characters": 10195,
+      "words": 1491
+    },
+    {
+      "id": "fiction-07",
+      "events": 27,
+      "characters": 12398,
+      "words": 1545
+    }
+  ],
+  "target_defect_coverage": {
+    "assistant_report_attribution": "Every history juxtaposes an assistant report with separately attributed actual tool-result evidence or explicit evidence gaps. Gold never promotes an assistant report into direct execution evidence.",
+    "own_field_support_spans": "Every required fact cites exact event.text spans with session/event index and ID. Multi-sentence command outputs distinguish tested facts, omitted tests, execution scope, and unsupported claims. No gold span is drawn from event metadata or another field.",
+    "reopening": "Includes explicit positive reopening, explicit do-not-reopen, a question about reopening, rejected or sample quoted reopening, unchanged closed tasks beside continuing work, and cancellation distinct from unfinished active work."
+  },
+  "validation": {
+    "all_exact_spans": true,
+    "all_support_indices": true,
+    "no_required_fact_uses_deleted_source": true,
+    "tool_capture_matches_readable_result": true,
+    "same_histories_questions_budgets_for_both_arms": true
+  },
+  "unchanged_evaluation_criteria": {
+    "critical_errors": 0,
+    "minimum_fully_supported_percent": 90,
+    "improvement_percentage_points_if_baseline_below_threshold": 10,
+    "paired_constraint_losses": 0,
+    "empty_answers": "fail"
+  },
+  "files": {
+    "development.json": "6c6d6a4037a132eb3db4828b1de88a70efe94904e6147aa4ccfd81f89f8d497f",
+    "development.gold.json": "5c22739e2e4fbe26cde232cb35db0d043f1963a61c6f15670d6ae2bee6839040",
+    "holdout.json": "2551e14f7fa0b1667aa45594cda60d0de7bc74b8426e4975f0b13f92dfff8afc",
+    "holdout.gold.json": "9778fb6a892879cc255d5007967cec087faf210eec65e62430a21eaefc7d2284"
+  },
+  "holdout_contents_disclosed": false
+}

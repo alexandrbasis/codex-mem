@@ -1,0 +1,667 @@
+{
+  "schema_version": 1,
+  "scope": "development-only offline opportunity diagnostic",
+  "holdout_access": false,
+  "model_calls": 0,
+  "product_or_helper_changes": false,
+  "method": "Read saved baseline/candidate receipts and original databases in SQLite read-only mode. Call public ProjectMemory.snapshot only on disposable SQLite backup copies. Explain discovery with the same source identity predicate used by current code. No claim/commit/process calls.",
+  "fixture_path": "tests/fixtures/consolidation_repair_dev.json",
+  "fixture_sha256": "6c6d6a4037a132eb3db4828b1de88a70efe94904e6147aa4ccfd81f89f8d497f",
+  "histories": [
+    {
+      "history_id": "fiction-01",
+      "receipt_paths": [
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-01/generation.json",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-01/consolidation.json"
+      ],
+      "receipt_sha256": {
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-01/generation.json": "b1ab43742f3f4176b73b4e2a106bf298d494acffa46fba7af0429f4d046cb25d",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-01/consolidation.json": "d2065f90d7d608291165a97b33f635682798a8b3a33d1eecd1ee40f764c1129b"
+      },
+      "processing_statuses": [
+        "idle"
+      ],
+      "accepted_merge_count": 0,
+      "before_after_heads_equal": true,
+      "before_after_event_coverage_equal": true,
+      "reason": [
+        "Initial head has confirmed ms-81 identity.",
+        "Positive reopening has a same-description suffix outside the bounded command grammar; it is not accepted as affirmative task identity.",
+        "Late correction has no task ID in its own goal/summary source evidence."
+      ],
+      "projects": [
+        {
+          "arm": "baseline",
+          "project_key": "meridian-subtitles",
+          "current_head_count": 3,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 0
+            },
+            "omitted_continuities_count": 0,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": false,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": false,
+            "captured_events": 5,
+            "processed_events": 5,
+            "pending_events": 0,
+            "latest_event_seq": 5,
+            "processed_through_seq": 5,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        },
+        {
+          "arm": "candidate",
+          "project_key": "meridian-subtitles",
+          "current_head_count": 3,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 0
+            },
+            "omitted_continuities_count": 0,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": false,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": false,
+            "captured_events": 5,
+            "processed_events": 5,
+            "pending_events": 0,
+            "latest_event_seq": 5,
+            "processed_through_seq": 5,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        }
+      ],
+      "heads": [
+        {
+          "id": "pm_e828242b5de86c9f54b21b0d5de630cf6cb6a36a",
+          "session_id": "fiction-01-s1",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": "ms-81",
+          "user_identity_evidence_source_ids": [
+            "ad72c5109bc440c2b3dc3b9aaaa5d73b"
+          ],
+          "fixture_event_ids": [
+            "fiction-01-s1-e001"
+          ]
+        },
+        {
+          "id": "pm_a198b26979b7cb43d23a7fa74491ffa4dec15f73",
+          "session_id": "fiction-01-s2",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": null,
+          "user_identity_evidence_source_ids": [
+            "54e5940189ea4e57bb149f90a66a97cc"
+          ],
+          "fixture_event_ids": [
+            "fiction-01-s2-e002"
+          ]
+        },
+        {
+          "id": "pm_42e116ae9d6029a964689ecd414bbfe56fa83f74",
+          "session_id": "fiction-01-s2",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": null,
+          "user_identity_evidence_source_ids": [
+            "a46f5037c2b14888bcf63304adfb176c"
+          ],
+          "fixture_event_ids": [
+            "fiction-01-s2-e003"
+          ]
+        }
+      ],
+      "deleted_fixture_source_ids": []
+    },
+    {
+      "history_id": "fiction-02",
+      "receipt_paths": [
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-02/generation.json",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-02/consolidation.json"
+      ],
+      "receipt_sha256": {
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-02/generation.json": "f79a6443d73523609bb50aa53b4f98f2ca47268e6e636bcc1be8e4ed2a604252",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-02/consolidation.json": "6059f033f0f27550ab151182d3bd258ab450cdb7b7a2a86fcda8c19d84140085"
+      },
+      "processing_statuses": [
+        "idle"
+      ],
+      "accepted_merge_count": 0,
+      "before_after_heads_equal": true,
+      "before_after_event_coverage_equal": true,
+      "reason": [
+        "Initial head has confirmed gp-24 identity.",
+        "Later cancellation names GP-24 after a for-phrase, but lacks an accepted affirmative identity marker. Cancellation is not treated as generic identity authorization."
+      ],
+      "projects": [
+        {
+          "arm": "baseline",
+          "project_key": "granite-posters",
+          "current_head_count": 2,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 0
+            },
+            "omitted_continuities_count": 1,
+            "omitted_transitions_count": 1,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": true,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": true,
+            "captured_events": 5,
+            "processed_events": 5,
+            "pending_events": 0,
+            "latest_event_seq": 5,
+            "processed_through_seq": 5,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        },
+        {
+          "arm": "candidate",
+          "project_key": "granite-posters",
+          "current_head_count": 2,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 0
+            },
+            "omitted_continuities_count": 1,
+            "omitted_transitions_count": 1,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": true,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": true,
+            "captured_events": 5,
+            "processed_events": 5,
+            "pending_events": 0,
+            "latest_event_seq": 5,
+            "processed_through_seq": 5,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        }
+      ],
+      "heads": [
+        {
+          "id": "pm_1efc61f0cde48ac088f17d94c5ad7bec20aee1d7",
+          "session_id": "fiction-02-s1",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": "gp-24",
+          "user_identity_evidence_source_ids": [
+            "58aa9c8c69f14ced8954d668fd721ba8"
+          ],
+          "fixture_event_ids": [
+            "fiction-02-s1-e001"
+          ]
+        },
+        {
+          "id": "pm_95903e01b7f08fbae6ca4b4ce1a93a27191d7d35",
+          "session_id": "fiction-02-s2",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": null,
+          "user_identity_evidence_source_ids": [
+            "44ca4c1ad589421badcbb5f60b4332a6"
+          ],
+          "fixture_event_ids": [
+            "fiction-02-s2-e001"
+          ]
+        }
+      ],
+      "deleted_fixture_source_ids": []
+    },
+    {
+      "history_id": "fiction-03",
+      "receipt_paths": [
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-03/generation.json",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-03/consolidation.json"
+      ],
+      "receipt_sha256": {
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-03/generation.json": "ab06eae6fa1e23f253e8b80a1d2bb514f9580edc1382ae70e688f0a8d5049692",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-03/consolidation.json": "57f258e7b31c383d86df65f92fdf75fdb9983c48b919c0c836f7c33ee25bd53e"
+      },
+      "processing_statuses": [
+        "idle"
+      ],
+      "accepted_merge_count": 0,
+      "before_after_heads_equal": true,
+      "before_after_event_coverage_equal": true,
+      "reason": [
+        "Initial head has confirmed st-17 identity; the separate ST-29 sentence is excluded by the independence guard.",
+        "Closed-task and quoted/question/negative reopening evidence does not establish affirmative identity for the second head.",
+        "Later fix-under-ST-29 wording does not satisfy the bounded identity grammar; no second confirmed ST-29 head exists."
+      ],
+      "projects": [
+        {
+          "arm": "baseline",
+          "project_key": "silver-timetables",
+          "current_head_count": 3,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 2
+            },
+            "omitted_continuities_count": 1,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": true,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": true,
+            "captured_events": 6,
+            "processed_events": 6,
+            "pending_events": 0,
+            "latest_event_seq": 6,
+            "processed_through_seq": 6,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        },
+        {
+          "arm": "candidate",
+          "project_key": "silver-timetables",
+          "current_head_count": 3,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 2
+            },
+            "omitted_continuities_count": 1,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": true,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": true,
+            "captured_events": 6,
+            "processed_events": 6,
+            "pending_events": 0,
+            "latest_event_seq": 6,
+            "processed_through_seq": 6,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        }
+      ],
+      "heads": [
+        {
+          "id": "pm_830d658e16216f4da60471c25d84371bf7a97744",
+          "session_id": "fiction-03-s1",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": "st-17",
+          "user_identity_evidence_source_ids": [
+            "d99f96a13cc842488730cf3c4c20b4f6"
+          ],
+          "fixture_event_ids": [
+            "fiction-03-s1-e001"
+          ]
+        },
+        {
+          "id": "pm_83bc1f865d144b3f957bfc5a2e5de7f7bcc02d1a",
+          "session_id": "fiction-03-s2",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": null,
+          "user_identity_evidence_source_ids": [
+            "a37fe6fbb399437db83e6bcdfd277dc8"
+          ],
+          "fixture_event_ids": [
+            "fiction-03-s2-e002"
+          ]
+        },
+        {
+          "id": "pm_a6e5706eee5cec4ff594ee72d3153fe23cb46da4",
+          "session_id": "fiction-03-s2",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": null,
+          "user_identity_evidence_source_ids": [
+            "33492852856d490f9ea5fa57937b36da"
+          ],
+          "fixture_event_ids": [
+            "fiction-03-s2-e004"
+          ]
+        }
+      ],
+      "deleted_fixture_source_ids": []
+    },
+    {
+      "history_id": "fiction-04",
+      "receipt_paths": [
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-04/generation.json",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-04/consolidation.json"
+      ],
+      "receipt_sha256": {
+        "/tmp/codex-mem-consolidation-repair-experiment/baseline/fiction-04/generation.json": "fe3db3e5330f25b67651e54adbc6e3f63c617b7902fe3c79fd6c8b30e6b8f1b0",
+        "/tmp/codex-mem-consolidation-repair-experiment/candidate/fiction-04/consolidation.json": "8f43cb3bf8502e7761287212ab2b2212fcbff9faf9ac8fae8503f1a962aa529b"
+      },
+      "processing_statuses": [
+        "idle",
+        "idle"
+      ],
+      "accepted_merge_count": 0,
+      "before_after_heads_equal": true,
+      "before_after_event_coverage_equal": true,
+      "reason": [
+        "Font project initial head has confirmed cf-42 identity; keep-ID-open wording in the later head has no accepted identity marker.",
+        "Folder project has one confirmed cd-16 head, isolated by project.",
+        "Deleted scratch-alias source is absent; deletion is not the reason the surviving font heads fail to form a recognized pair."
+      ],
+      "projects": [
+        {
+          "arm": "baseline",
+          "project_key": "cobalt-fonts",
+          "current_head_count": 2,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 1
+            },
+            "omitted_continuities_count": 1,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": true,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": true,
+            "captured_events": 4,
+            "processed_events": 4,
+            "pending_events": 0,
+            "latest_event_seq": 7,
+            "processed_through_seq": 7,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        },
+        {
+          "arm": "baseline",
+          "project_key": "cobalt-folders",
+          "current_head_count": 1,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 0
+            },
+            "omitted_continuities_count": 0,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": false,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": false,
+            "captured_events": 2,
+            "processed_events": 2,
+            "pending_events": 0,
+            "latest_event_seq": 6,
+            "processed_through_seq": 6,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        },
+        {
+          "arm": "candidate",
+          "project_key": "cobalt-fonts",
+          "current_head_count": 2,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 1
+            },
+            "omitted_continuities_count": 1,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": true,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": true,
+            "captured_events": 4,
+            "processed_events": 4,
+            "pending_events": 0,
+            "latest_event_seq": 7,
+            "processed_through_seq": 7,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        },
+        {
+          "arm": "candidate",
+          "project_key": "cobalt-folders",
+          "current_head_count": 1,
+          "coverage": {
+            "historical_context_heads": 0,
+            "reconsideration": {
+              "candidate_window_bounded": true,
+              "head_limit": 100,
+              "complete_history": false,
+              "candidate_head_ids": [],
+              "omitted_sources": 0,
+              "identity_source_limit": 64,
+              "identity_char_limit": 24000,
+              "identity_sources_omitted": 0,
+              "ambiguous_heads": 0
+            },
+            "omitted_continuities_count": 0,
+            "omitted_transitions_count": 0,
+            "downgraded_states_count": 0,
+            "pending_reconciliation": false,
+            "complete_transcript": false,
+            "observations_only": true,
+            "event_time_basis": "source_capture_time",
+            "partially_processed_events": 0,
+            "quarantined_events": 0,
+            "coverage_gaps": false,
+            "captured_events": 2,
+            "processed_events": 2,
+            "pending_events": 0,
+            "latest_event_seq": 6,
+            "processed_through_seq": 6,
+            "running_jobs": 0,
+            "failed_jobs": 0,
+            "quarantined_jobs": 0
+          }
+        }
+      ],
+      "heads": [
+        {
+          "id": "pm_d04619f74a20777f6e178ed748224d38c3279a60",
+          "session_id": "fiction-04-s1",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": "cf-42",
+          "user_identity_evidence_source_ids": [
+            "4f9bc5139bae49d195722df86246e5c3"
+          ],
+          "fixture_event_ids": [
+            "fiction-04-s1-e002"
+          ]
+        },
+        {
+          "id": "pm_c7c71128581b75fca26028279a3d924b235fc521",
+          "session_id": "fiction-04-s2",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": "cd-16",
+          "user_identity_evidence_source_ids": [
+            "e62dfe45771a446b858fa9d91fcfa938"
+          ],
+          "fixture_event_ids": [
+            "fiction-04-s2-e001"
+          ]
+        },
+        {
+          "id": "pm_e2ff243a852be3c7462aa9e5a6ea1e32d66177be",
+          "session_id": "fiction-04-s3",
+          "episode_version": 1,
+          "parent_episode_id": null,
+          "continuity_basis": "standalone",
+          "recognized_identity": null,
+          "user_identity_evidence_source_ids": [
+            "56376f4ebd564767967da471c12b3b7e"
+          ],
+          "fixture_event_ids": [
+            "fiction-04-s3-e001"
+          ]
+        }
+      ],
+      "deleted_fixture_source_ids": [
+        {
+          "fixture_event_id": "fiction-04-s1-e001",
+          "source_id": "4e21c34e830a46d79c1d20e14a9f1457"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "histories": 4,
+    "project_runs": 5,
+    "baseline_retained_heads": 11,
+    "already_linked_heads": 0,
+    "accepted_merges": 0,
+    "pending_raw_events": 0,
+    "cause": "No project has two retained heads with the same recognized affirmative source identity. All retained heads are standalone; idle does not mean baseline already consolidated them. No source budget omission or completed reconsideration no-op is needed to explain these results.",
+    "positive_reopening_gap": "Dev01 uses an explicit human reopening with a descriptive same timing repair suffix. This was intentionally left outside the conservative grammar before live development. Its source exists and is cited, but the identity predicate rejects it, so consolidation never reaches a generator or new source-grounding validation.",
+    "effectiveness_limit": "These development candidates do not exercise repaired generation, source-grounded material field assembly or accepted merging. Retrieval changes can still affect existing legacy records; generator/merge effectiveness cannot be inferred from idle jobs.",
+    "coverage_visibility_limit": "Unrecognized identity increments ambiguous_heads only when the stored goal itself contains a task ID. Dev01/dev02 goals omit the ID, so their unresolved linkage is not surfaced by this ambiguity counter; dev03 exposes2 and dev04 font project exposes1."
+  },
+  "code_anchors": {
+    "discovery": "codex_mem/project_memory.py:362",
+    "source_identity": "codex_mem/project_memory.py:1260",
+    "affirmative_reopening": "codex_mem/project_memory.py:1277"
+  },
+  "public_snapshot_runtime": "Current repaired code on disposable copies of each saved arm database; this is a diagnostic coverage calculation, not a rerun of baseline processing or live generation."
+}

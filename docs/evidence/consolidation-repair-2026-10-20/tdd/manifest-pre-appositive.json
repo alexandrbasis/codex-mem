@@ -1,0 +1,310 @@
+{
+  "baseline": "9ccdac5",
+  "seams": [
+    "process_project_memory + real temporary Store/ProjectMemory",
+    "public ProjectMemory claim/commit/read",
+    "build_project_brief/render_project_brief"
+  ],
+  "old_database_setup": "Two tests seed old serialized episode/job rows only for migration fixtures; all behavior assertions use public APIs.",
+  "external_replacements": [
+    "generator",
+    "existing optional Jev evaluator"
+  ],
+  "new_holdout_access": false,
+  "live_model_calls": 0,
+  "service_changed": false,
+  "checks": {
+    "consolidation_tests": 58,
+    "project_memory_tests": 241,
+    "project_memory_seconds": 5.257,
+    "episode_tests": 62,
+    "episode_seconds": 0.731,
+    "syntax": "passed",
+    "diff_check": "passed",
+    "fullsuite": "root-owned pending final prefreeze run"
+  },
+  "versions": {
+    "processor": "project-memory-v3",
+    "reconsideration": "task-consolidation-v2",
+    "output": "project-memory-output-v10"
+  },
+  "source_hashes": {
+    "codex_mem/project_memory.py": "850d1db9563b88f7b13ad4991dec7dad39473648e8f8e07acc1c15ada836c3e7",
+    "codex_mem/episode_processor.py": "d549c2c0d0d695ca56e16ff1728891aa80586e2494193e3118d07bd4b4f3651f",
+    "codex_mem/project_memory_retrieval.py": "6ec440f8a99d49a9e4e496672a46c6c057094595713b3de3b02bb5e362f1e996",
+    "tests/test_project_memory_consolidation.py": "cd177613617cabdb13f93f3d0759516903cb466b6a550f558d002a73d52bd7d4",
+    "tests/test_project_memory_store.py": "749a315006c29900aa73ca4442c705cb2bb3a1e58c09265d445f3d57bef70cb3",
+    "tests/test_episode_processor.py": "115d6f5609f3e32a166260c1c17f13f618d03a585ca7bcd06666f9d3d77b95d7",
+    "tests/test_episode_field_evidence.py": "67f824a02da236d2130ea15cc99ee03ffdef309ddbbd18223d78a49477f95715"
+  },
+  "logs": [
+    {
+      "path": "01-reopen-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_names_the_same_ticket_before_identity_phrase -v",
+      "sha256": "d193369cc85a5aedc6237fd849c264d08df19a1afa67abbc56c9ee4948a25377",
+      "passed": true
+    },
+    {
+      "path": "01-reopen-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_names_the_same_ticket_before_identity_phrase -v",
+      "sha256": "69d0f34c488e1c0d83e7d23954e66e7ef6b33fcc4c40d01bba3417ca3574520e",
+      "passed": false
+    },
+    {
+      "path": "02-attribution-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_material_episode_fields_are_attributed_to_their_own_sources -v",
+      "sha256": "9525c31e26ba982122bf5cb39f2bdf60b1f1ed4684a01175962f9cd2eb7d9823",
+      "passed": true
+    },
+    {
+      "path": "02-attribution-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_material_episode_fields_are_attributed_to_their_own_sources -v",
+      "sha256": "eee20bd2845fc19594b8805387b494ef0c4ea00446f8215d53968e73fbcbc931",
+      "passed": false
+    },
+    {
+      "path": "03-own-fields-direct-write.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_wrong_field_citations_cannot_borrow_support_from_other_fields test_project_memory_consolidation.ConsolidationTests.test_direct_commit_expands_sliced_evidence_with_original_negation -v",
+      "sha256": "8e2c57214306534d6a1f39afd89de1600df4fa1cf90295bd190ea29be02a769d",
+      "passed": true
+    },
+    {
+      "path": "04-legacy-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_legacy_prior_prose_is_rebuilt_from_its_own_disclosed_evidence -v",
+      "sha256": "f1010ca52856dcad67ae68037e3cc3d7872301f3157d36c17573a7b50e24f24a",
+      "passed": true
+    },
+    {
+      "path": "04-legacy-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_legacy_prior_prose_is_rebuilt_from_its_own_disclosed_evidence -v",
+      "sha256": "df1c5e944b19406530ba33adf3f481e514df1a00e821ddde7eda186a4c6590c4",
+      "passed": false
+    },
+    {
+      "path": "05-retrieval-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_retrieval_keeps_complete_attributed_fields_or_reports_omission -v",
+      "sha256": "01c1e6e51942cc1358a8a82db6c98bdfb1213d578ed381ab6b3fd7697e14e809",
+      "passed": true
+    },
+    {
+      "path": "05-retrieval-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_retrieval_keeps_complete_attributed_fields_or_reports_omission -v",
+      "sha256": "5315687a4af3b8a5f1e3d3ff3e9e5919d4076b308dd4f520d267655764ea82cb",
+      "passed": false
+    },
+    {
+      "path": "06-reopen-negatives-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_negated_reopen_cannot_bypass_through_same_task_marker test_project_memory_consolidation.ConsolidationTests.test_quoted_reopen_is_not_user_authorization test_project_memory_consolidation.ConsolidationTests.test_cli_help_backtick_reopen_is_not_user_authorization test_project_memory_consolidation.ConsolidationTests.test_reopen_question_is_not_user_authorization test_project_memory_consolidation.ConsolidationTests.test_reopen_reference_and_distinct_ticket_stay_separate test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_names_the_same_ticket_before_identity_phrase -v",
+      "sha256": "16557d70b5350252796a4ce6b8eaaa48ea47be1a78d8c3426bf7457cbfc226b7",
+      "passed": true
+    },
+    {
+      "path": "06-reopen-negatives-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_negated_reopen_cannot_bypass_through_same_task_marker test_project_memory_consolidation.ConsolidationTests.test_quoted_reopen_is_not_user_authorization test_project_memory_consolidation.ConsolidationTests.test_cli_help_backtick_reopen_is_not_user_authorization test_project_memory_consolidation.ConsolidationTests.test_reopen_question_is_not_user_authorization test_project_memory_consolidation.ConsolidationTests.test_reopen_reference_and_distinct_ticket_stay_separate -v",
+      "sha256": "758c2ef6dc2ac2acdae65e7cf59ace98c2bc6d3fb31fbe79874ab303a5d37f84",
+      "passed": false
+    },
+    {
+      "path": "06a-reopen-negation-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_negated_reopen_cannot_bypass_through_same_task_marker -v",
+      "sha256": "f134d86a218ea04eb71682ec9e7e9cd327a485323d0946318bf69b7b6db5de3b",
+      "passed": false
+    },
+    {
+      "path": "07-pm-regressions.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py' -q",
+      "sha256": "0012eb27ece169c5ba47680056d683e8b8a2de781f5fe671b948ace7c82960dd",
+      "passed": false
+    },
+    {
+      "path": "08-expanded-regressions.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation -q",
+      "sha256": "5ddfbd3b70921d1449e88e6aafb91e5b2ceb8b0a393d7aaa867f862009fad843",
+      "passed": true
+    },
+    {
+      "path": "09-consolidation-final.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation -q",
+      "sha256": "a9559a52fb9c8d6ca1cbd6c3b14cd8419767a01b31a9bbc0de9fe0e054224772",
+      "passed": false
+    },
+    {
+      "path": "10-project-memory-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py' -q",
+      "sha256": "2450caaa7ec38e57a12da1e34effbece4cf2e2b9d978838939cd2278789a0e40",
+      "passed": true
+    },
+    {
+      "path": "11-episode-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_episode*.py' -q",
+      "sha256": "4411eedefd08308f826bb6297eaeba62fe91e96ba2042ec2df259f7387b8fdaa",
+      "passed": false
+    },
+    {
+      "path": "12-episode-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_episode*.py' -q",
+      "sha256": "849cc7d7d8dc74566378259ab20ef9a718f75800556f3c5c84361245b60008d7",
+      "passed": false
+    },
+    {
+      "path": "13-episode-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_episode*.py' -q",
+      "sha256": "75c75459da15c4ae1c422acc8f1ac257ac1075790c0816348545402608c4976c",
+      "passed": true
+    },
+    {
+      "path": "current-regressions.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py' -q",
+      "sha256": "228c345751df8711a7e602e6849ec8046041fd46481718c300d6938c8cd4b644",
+      "passed": false
+    },
+    {
+      "path": "14-russian-reopening-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_russian_explicit_reopening_names_the_original_task test_project_memory_consolidation.ConsolidationTests.test_russian_negative_reopening_cannot_use_same_task_fallback test_project_memory_consolidation.ConsolidationTests.test_russian_reopening_question_keeps_task_separate test_project_memory_consolidation.ConsolidationTests.test_russian_quoted_reopening_keeps_task_separate -v",
+      "sha256": "24cb70541dd02b8ad21933037a30dd7f22685c01404ac939c8658dcdb97e875e",
+      "passed": true
+    },
+    {
+      "path": "14-russian-reopening-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_russian_explicit_reopening_names_the_original_task test_project_memory_consolidation.ConsolidationTests.test_russian_negative_reopening_cannot_use_same_task_fallback test_project_memory_consolidation.ConsolidationTests.test_russian_reopening_question_keeps_task_separate test_project_memory_consolidation.ConsolidationTests.test_russian_quoted_reopening_keeps_task_separate -v",
+      "sha256": "270c462fef3f2d09e5c3aa6db688d42a7960e16956b5877fb24670707dcecc75",
+      "passed": false
+    },
+    {
+      "path": "15-project-memory-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py' -q",
+      "sha256": "8b9c542dd687090febebb86acb5ac60e5d59615855663e3077f5ae7e5122df13",
+      "passed": true
+    },
+    {
+      "path": "16-output-bound-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_source_assembly_preserves_total_output_bound_atomically -v",
+      "sha256": "57664005c7286e9cd1a9e6c1f4540712f01b6fde952c73750e3572c145a22ed3",
+      "passed": true
+    },
+    {
+      "path": "16-output-bound-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_source_assembly_preserves_total_output_bound_atomically -v",
+      "sha256": "5afe4545e37a5de75b48552d3a7163ebe1821fb72dc2abbdc445398accbef7f4",
+      "passed": false
+    },
+    {
+      "path": "17-project-memory-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py' -q",
+      "sha256": "c2b0779ee62eb80e0f2f81aa99f8bd1cc4a478289303835ec6b73650106e8d4c",
+      "passed": true
+    },
+    {
+      "path": "18-episode-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_episode*.py' -q",
+      "sha256": "e7f85a9643c1546dd7ef0478416c384c66cfc6f47550f00cf69b671b448f57e0",
+      "passed": true
+    },
+    {
+      "path": "19-reopening-authority-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command -v",
+      "sha256": "6743257ecf3ab473db6bdec76513c45969f8a6edfb99886efe89f9c9f1f85269",
+      "passed": false
+    },
+    {
+      "path": "19-reopening-authority-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command test_project_memory_consolidation.ConsolidationTests.test_affirmative_reopening_commands_keep_common_identity_word_orders -v",
+      "sha256": "5c3125bae5a3ca07d98c8b809db4289d47eaaf7153ada004e38f590fbd65899a",
+      "passed": true
+    },
+    {
+      "path": "20-fenced-reopening-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command -v",
+      "sha256": "252ebab616cfabb5ffafd9345fe18657b6b190eb3d8877387877f0303f41a236",
+      "passed": false
+    },
+    {
+      "path": "20-fenced-reopening-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command test_project_memory_consolidation.ConsolidationTests.test_affirmative_reopening_commands_keep_common_identity_word_orders -v",
+      "sha256": "6e9fb4b8e771546e1bf4d1b6112bb0d572ed7e6c5c69f86c7dc40fc604f62c67",
+      "passed": true
+    },
+    {
+      "path": "21-project-memory-review.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py'",
+      "sha256": "5d18beaecff2c6761955d75ff7ca70bd351b0b9c8c59baea99103488cd0cdb71",
+      "passed": true
+    },
+    {
+      "path": "22-complete-source-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_retrieval_keeps_complete_attributed_fields_or_reports_omission -v",
+      "sha256": "e567ca03bd4523b1948d5c66f3f43126b4c545e23d91f9ad02e150c12d6ad70c",
+      "passed": false
+    },
+    {
+      "path": "22-complete-source-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_retrieval_keeps_complete_attributed_fields_or_reports_omission -v",
+      "sha256": "8be4057a4af57dfd71e4d1f0364238b9797da6399eefcf165e76f2ea3e4530eb",
+      "passed": true
+    },
+    {
+      "path": "23-complete-source-group-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_retrieval_keeps_complete_attributed_fields_or_reports_omission test_project_memory_consolidation.ConsolidationTests.test_grounded_field_keeps_all_exact_sources_together_in_projection_and_budget -v",
+      "sha256": "20adad762069e191f5863ad20aebbad710296735a3e403546615bc4502245202",
+      "passed": true
+    },
+    {
+      "path": "24-episode-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_episode*.py'",
+      "sha256": "425dfeaa41a47c0699caa3cc37c5aed95a932a3a4dc4c3b4b849be611cadfbc3",
+      "passed": true
+    },
+    {
+      "path": "24-project-memory-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py'",
+      "sha256": "d8900245d66ef1c176c882ac438ec94340f5f85185c6390c6d2bd4b60d3f6546",
+      "passed": false
+    },
+    {
+      "path": "25-quote-whitespace-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_grounded_field_bound_counts_complete_quote_whitespace -v",
+      "sha256": "4b905df74932107243414cdba8a4398eaaeeadee822c8ab78280295f98cb83b9",
+      "passed": false
+    },
+    {
+      "path": "25a-quote-whitespace-red.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_grounded_field_bound_counts_complete_quote_whitespace -v",
+      "sha256": "3dd81642447ad8e72e2dcef10a03a59e52e7f8b82430c8543e7453a31f15fbd5",
+      "passed": false
+    },
+    {
+      "path": "25-quote-whitespace-green.log",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_consolidation.ConsolidationTests.test_grounded_field_bound_counts_complete_quote_whitespace -v",
+      "sha256": "7c9c1ec6517a70b7545021952532027fdcba677bde520c8d6e433aa28757f537",
+      "passed": true
+    },
+    {
+      "path": "26-project-memory-final.log",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py'",
+      "sha256": "917c1353fdea967228e6b0d86b421fb273f8d81f41ff9aac381dd6b62cfe034a",
+      "passed": true
+    }
+  ],
+  "limitations": [
+    "Field association and reference selection remain model inferences; exact excerpts do not prove complete recall or semantic relevance.",
+    "All episode material fields and claim rationale use attributed excerpts; claim text and state transitions retain their existing contract.",
+    "Jev, when enabled, evaluates proposed model fields before deterministic source assembly.",
+    "Current complete field exceeding6000chars/32refs rejects candidate. Prior unavailable/oversize field is omitted with retained_context_fields_omitted.",
+    "Partial disclosed source boundaries remain explicit partial-context excerpts; no undisclosed source expansion.",
+    "Older unmodified rows remain legacy model prose until processed; carried prior fields are rebuilt only from disclosed original evidence.",
+    "Reopening accepts bounded affirmative English/Russian command forms for a confirmed task ID. Conditions, prohibitions, quoted/fenced references remain unresolved. Arbitrary suffix such as same timing repair remains unresolved.",
+    "Grounded rendering uses complete source quote nodes only, with all own references together or visible field omission; legacy/non-grounded excerpts retain existing clipping."
+  ],
+  "limits": {
+    "material_field_chars": 6000,
+    "material_field_refs": 32,
+    "assembled_output_chars": 180000,
+    "over_limit": "reject atomically; prior field missing sources or field overflow counted as omitted",
+    "material_field_chars_includes": "Both assembled text and sum of complete raw quoted spans, including whitespace; prior combined groups use the same bounds."
+  },
+  "notes": [
+    "25-quote-whitespace-red.log was a fixture-key error; corrected fixture25a reproduces the actual missing full-quote bound before fix.",
+    "24-project-memory-final.log preserves the environment projection budget regression;26-project-memory-final.log passes with whole summary group prioritized before duplicate narrower fields."
+  ],
+  "status": "stable prefreeze checkpoint; root owns formal experiment freeze"
+}

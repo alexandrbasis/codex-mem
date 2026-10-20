@@ -1,0 +1,17 @@
+======================================================================
+FAIL: test_generator_cross_chat_continuation_and_named_correction_preserve_task_identity (test_episode_processor.EpisodeStorageIntegrationTests.test_generator_cross_chat_continuation_and_named_correction_preserve_task_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_episode_processor.py", line 850, in test_generator_cross_chat_continuation_and_named_correction_preserve_task_identity
+    self.assertEqual(old["summary"], "TASK-123: Implement scheduled importer. Keep diagnostic redaction open.")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'User intent: TASK-123: Implement schedule[53 chars]pen.' != 'TASK-123: Implement scheduled importer. K[26 chars]pen.'
++ TASK-123: Implement scheduled importer. Keep diagnostic redaction open.
+- User intent: TASK-123: Implement scheduled importer.
+- User intent: Keep diagnostic redaction open.
+
+
+----------------------------------------------------------------------
+Ran 62 tests in 0.676s
+
+FAILED (failures=1)

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "full_tests": {
+    "count": 1597,
+    "passed": true,
+    "receipt": "full-tests.json",
+    "log": "full-tests.log",
+    "code_unchanged_during_run": true
+  },
+  "experiment_protocol_tests": {
+    "count": 15,
+    "passed": true,
+    "command": "python3 -m unittest discover -s scripts/consolidation_experiment -p test_protocol.py -q",
+    "includes": "Actual Store/process/render plus paired source citation visibility, wrong-source rejection and arbitrary derived prose rejection"
+  },
+  "acceptance": {
+    "passed": true,
+    "receipt": "acceptance.json",
+    "output": "acceptance.stdout.json",
+    "duration_seconds": 4.775
+  },
+  "architecture": {
+    "passed": true,
+    "receipt": "architecture-review.json",
+    "maintenance_check": "hashes_match"
+  },
+  "package": {
+    "passed": true,
+    "receipt": "package.json",
+    "installed": false
+  },
+  "human_review": {
+    "technical_documents_and_architecture": "completed_by_user",
+    "experiment_report": "completed_by_user",
+    "report_url": "http://review.rd/consolidation-repair-2026-10-20/review",
+    "report_sha256": "9eef9fdef46d3793013b4b72d1292f497224fdf1b1be2acc69b48357dbb05327",
+    "source_requirement": "AGENTS.md: Run roughdraft open attached until the user finishes, then reread and address CriticMarkup.",
+    "receipt": "architecture-review.json",
+    "report_receipt": "human-report-review.json"
+  },
+  "final_code_reviews": {
+    "completed": true,
+    "same_full_scope": true,
+    "receipt": "review-final-results.json",
+    "standards": "clear",
+    "spec": "mechanics and truthful negative result clear; reopening and constraint retrieval remain partial"
+  },
+  "service_updated": false,
+  "unrelated_files_preserved": {
+    "AGENTS.md": "9557a80a4a08936a65671effc367c2dc652761584410fd9f36b8cbbe6791c8a0",
+    "docs/agents/installation-checks.json": "0cb9455eec4f87d3eb8c0c0882c987b6cb70a51b42a0212b36153e2621eb053a"
+  },
+  "offline_reproduction": {
+    "passed": true,
+    "receipt": "holdout-offline-audit.json",
+    "model_calls": 0
+  },
+  "experiment": {
+    "status": "incomplete",
+    "primary_graded_each": 90,
+    "primary_planned_each": 96,
+    "fully_supported_baseline": 32,
+    "fully_supported_candidate": 33,
+    "pilot_ready": false,
+    "all_attempts_accounted": true,
+    "service_updated": false
+  },
+  "local_commit": {
+    "status": "ready_for_local_commit",
+    "base_commit": "9ccdac5d6055079047deefc2297a3fa20ef6b1ef",
+    "scope": "Reviewed snapshot plus permitted administrative completion receipts; unrelated files excluded",
+    "commit_identity": "Resolve the snapshot commit with git log -- docs/evidence/consolidation-repair-2026-10-20/human-report-review.json"
+  }
+}

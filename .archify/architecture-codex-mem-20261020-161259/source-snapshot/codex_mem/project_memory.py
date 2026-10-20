@@ -17,8 +17,8 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from .store import Store
 
-PROCESSOR_VERSION = "project-memory-v2"
-RECONSIDERATION_VERSION = "task-consolidation-v1"
+PROCESSOR_VERSION = "project-memory-v3"
+RECONSIDERATION_VERSION = "task-consolidation-v3"
 TASK_ID_PATTERN = r"(?<![\w-])[A-Za-z][A-Za-z0-9]{1,15}-[0-9]{1,10}(?![\w-])"
 RELATIONS = {"supports", "contradicts", "replaces", "closes", "summarizes"}
 STATES = {"proposed", "accepted", "open", "blocked", "completed"}
@@ -748,6 +748,12 @@ class ProjectMemory:
                             raise ValueError("episode is already consolidated in this job")
                         continued_roots.add(prior["logical_episode_id"])
                     clean["consolidated_episode_ids"] = targets
+                for field in fields if kind == "episode" else ("rationale",):
+                    if clean.get(field):
+                        text, field_refs, provenance = _grounded_field(clean_evidence[field], sources)
+                        clean[field] = text
+                        clean_evidence[field] = field_refs
+                        clean.setdefault("field_provenance", {})[field] = provenance
                 keys[key] = clean["id"]
                 objects.append(clean)
         relations = output.get("relations", [])
@@ -831,29 +837,46 @@ class ProjectMemory:
                         if row:
                             priors.append(json.loads(row[0]))
                     omitted_context = sum(prior.get("retained_context_fields_omitted", 0) for prior in priors)
+                    disclosed = {source["id"]: source for source in durable["sources"]}
                     for field in ("goal", "rationale", "outcome", "open_work"):
                         historical = "prior_" + field
                         texts, refs = [], []
+                        partial_context = False
                         for prior in priors:
                             for name in (historical, field):
                                 text = prior.get(name)
                                 evidence = prior.get("evidence", {}).get(name, [])
-                                if not text or not evidence or text == episode.get(field) or text in texts:
+                                if not text or not evidence:
+                                    continue
+                                try:
+                                    text, evidence, provenance = _grounded_field(evidence, disclosed)
+                                except ValueError:
+                                    omitted_context += 1
+                                    continue
+                                if text == episode.get(field) or text in texts:
                                     continue
                                 combined = list(refs)
                                 combined.extend(ref for ref in evidence if ref not in combined)
-                                if len("\n".join([*texts, text])) > 6000 or len(combined) > 32:
+                                if (len("\n".join([*texts, text])) > 6000 or len(combined) > 32
+                                        or sum(len(ref["quote"]) for ref in combined) > 6000):
                                     omitted_context += 1
                                     continue
                                 texts.append(text)
                                 refs = combined
+                                partial_context = partial_context or provenance["partial_context"]
                         if texts:
                             episode[historical] = "\n".join(texts)
                             episode["evidence"][historical] = refs
+                            episode.setdefault("field_provenance", {})[historical] = {
+                                "basis": "attributed_source_excerpts", "field_association": "model_inference",
+                                "source_roles": list(dict.fromkeys(ref["source_role"] for ref in refs)),
+                                "partial_context": partial_context}
                     if any(episode.get("prior_" + field) for field in ("goal", "rationale", "outcome", "open_work")):
                         episode["prior_context_status"] = "historical_current_validity_unresolved"
                         reconciliation["pending_reconciliation"] = True
                     episode["retained_context_fields_omitted"] = omitted_context
+                if len(_json({"objects": objects, "relations": relations})) > 180000:
+                    raise ValueError("assembled project memory output exceeds limit")
                 derived_at = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
                 for obj in objects:
                     obj.update(created_at=derived_at, updated_at=derived_at, derived_created_at=derived_at, event_at=None, event_time_basis="source_capture_time")
@@ -954,6 +977,50 @@ def forget_objects(connection: sqlite3.Connection, project: str, ids: list[str])
 
 def _normalized_phrase(value: str) -> str:
     return " ".join(re.findall(r"[\w-]+", value.casefold()))
+
+
+def _grounded_field(refs: list[dict], sources: dict[str, dict]) -> tuple[str, list[dict], dict]:
+    """Assemble a field from its own disclosed source sentences, never paraphrase."""
+    labels = {"user_intent": "User intent", "assistant_report": "Assistant report",
+              "tool_record": "Tool record", "lifecycle_marker": "Lifecycle marker",
+              "derived_note": "Derived note", "imported_memory": "Imported memory",
+              "unclassified": "Unclassified source"}
+    lines, evidence, seen = [], [], set()
+    partial = False
+    for ref in refs:
+        source = sources.get(ref["source_id"])
+        if source is None:
+            raise ValueError("grounded fields require disclosed original sources")
+        body, offset = source["body"], source["body_offset"]
+        start, end = ref["start"] - offset, ref["end"] - offset
+        if not 0 <= start < end <= len(body) or body[start:end] != ref["quote"]:
+            raise ValueError("grounded fields require exact disclosed source spans")
+        sentences = [sentence for sentence in re.finditer(r".+?(?:[.!?](?=\s|$)|\n|$)", body, re.S)
+                     if sentence.end() > start and sentence.start() < end and sentence.group().strip()]
+        if not sentences:
+            continue
+        left, right = sentences[0].start(), sentences[-1].end()
+        key = (ref["source_id"], offset + left, offset + right)
+        if key in seen:
+            continue
+        seen.add(key)
+        incomplete = (left == 0 and offset > 0 or
+                      right == len(body) and offset + len(body) < source.get("body_length", offset + len(body)))
+        partial = partial or incomplete
+        role = source["source_role"]
+        label = labels.get(role, "Unclassified source")
+        if incomplete:
+            label += " (partial context)"
+        lines.append(label + ": " + body[left:right].strip())
+        evidence.append({**ref, "start": key[1], "end": key[2], "quote": body[left:right],
+                         "source_role": role})
+    text = "\n".join(lines)
+    if not text or len(text) > 6000 or sum(len(ref["quote"]) for ref in evidence) > 6000 or len(evidence) > 32:
+        raise ValueError("grounded field exceeds complete excerpt bounds")
+    return text, evidence, {"basis": "attributed_source_excerpts",
+                            "field_association": "model_inference",
+                            "source_roles": list(dict.fromkeys(ref["source_role"] for ref in evidence)),
+                            "partial_context": partial}
 
 
 def _explicit_transition(evidence: list[dict], relation: str, contexts: dict[str, str] | None = None, *, subject: str | None = None) -> bool:
@@ -1201,15 +1268,38 @@ def _source_task_identity(item: dict, contexts: dict[str, str]) -> str | None:
                 if "?" in sentence or re.search(r"\b(?:not|never|unrelated|different|separate|example|fixture)\b|не\s|друг(?:ая|ой|ую)|отдельн|пример", sentence, re.I):
                     continue
                 found = {value.casefold() for value in re.findall(TASK_ID_PATTERN, sentence)}
-                if len(found) == 1 and (re.match(r"\s*" + TASK_ID_PATTERN, sentence) or re.search(r"(?:^|\b)(?:task|issue|ticket|continue|resume|correction|update|задача|задачи|задачу|продолжаем|исправление|уточнение)\b", sentence, re.I)):
+                if len(found) == 1 and (re.match(r"\s*" + TASK_ID_PATTERN, sentence) or re.search(r"(?:^|\b)(?:task|issue|ticket|continue|resume|correction|update|задача|задачи|задачу|продолжаем|исправление|уточнение)\b", sentence, re.I)
+                                       or _positive_reopening(sentence, next(iter(found)))):
                     identities.update(found)
     return next(iter(identities)) if len(identities) == 1 else None
+
+
+def _positive_reopening(sentence: str, task_id: str) -> bool:
+    """Recognize complete affirmative commands, not mentions or conditions."""
+    identity = re.escape(task_id)
+    modifier = r"(?!(?:only|if|after|before|when|unless|until|without|is|are|was|were|must|should|would|could|can|will|not|no|never)\b)[A-Za-z][A-Za-z0-9-]*"
+    description = r"same(?:\s+" + modifier + r"){0,4}\s+(?:task|ticket|issue|work)"
+    # The ID supplies identity; the comma appositive only describes it. Keep
+    # it short and exclude qualifiers, clauses and references to commands.
+    appositive_word = (r"(?!(?:only|if|after|before|when|unless|until|without|is|are|was|were|must|should|would|could|might|may|can|will|not|no|never|"
+                       r"once|provided|assuming|pending|awaiting|and|or|but|quote|example|reference|label|instruction|command|help|"
+                       r"maybe|possibly|perhaps|that|which|whose|where)\b)[A-Za-z]+(?:-[A-Za-z]+)*")
+    appositive = r",\s*(?:the\s+)?same(?:\s+" + appositive_word + r"){1,4}"
+    english = (r"(?:please,?\s+)?reopen\s+(?:the\s+)?(?:(?:" + description +
+               r"|task|ticket|issue)\s+)?" + identity +
+               r"(?:\s*(?:(?:,\s*|\s+as\s+)(?:the\s+)?" + description + r"|" + appositive + r"))?")
+    russian = (r"(?:пожалуйста,?\s+)?(?:переоткрой(?:те)?|повторно\s+открой(?:те)?)\s+"
+               r"(?:(?:ту\s+же\s+|эту\s+же\s+)?задачу\s+)?" + identity +
+               r"(?:\s*,\s*(?:ту|эту)\s+же\s+задачу)?")
+    return bool(re.fullmatch(r"\s*(?:" + english + "|" + russian + r")\s*[.!]?\s*", sentence, re.I))
 
 
 def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str]) -> bool:
     # This is a deliberately conservative identity proposal, not proof of work
     # completion. Fuzzy topic linking and same-session linking are deferred.
     task_pattern = r"(?<![\w-])[A-Za-z][A-Za-z0-9]{1,15}-[0-9]{1,10}(?![\w-])"
+    reopen_marker = r"\breopen(?:ed|ing)?\b|\bпереоткрой(?:те)?\b|\bповторно\s+открой(?:те)?\b"
+    reopening_mention = r"\breopen(?:ed|ing)?\b|\bпереоткр[а-яё]*\b|\bповторно\s+откр[а-яё]*\b"
     update_marker = r"^\s*(?:correction|update|amendment)\s+(?:(?:for|to|on)\s+)?(?:task\s+)?|^\s*(?:исправление|поправка|уточнение|обновление)\s+(?:(?:для|по)\s+)?(?:задач[еиу]\s+)?"
     # A named goal is authoritative. Incidental identifiers in a summary or
     # its evidence must never expand the identity of that goal.
@@ -1239,7 +1329,10 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
                     task_ids.add(identities[0].casefold())
     if len(task_ids) > 1:
         return False
-    goal = _normalized_phrase(prior.get("goal", ""))
+    goal_text = prior.get("goal", "")
+    if prior.get("field_provenance", {}).get("goal", {}).get("basis") == "attributed_source_excerpts":
+        goal_text = " ".join(ref["quote"] for ref in prior.get("evidence", {}).get("goal", []))
+    goal = _normalized_phrase(goal_text)
     marker = r"\b(continue|continuing|continuation|resume|resuming|follow-up|follow up|same task)\b|продолжа|возвращаемся|та же задача|той же задач"
     named_same_task = None
     if len(task_ids) == 1:
@@ -1250,9 +1343,18 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
             continue
         quoted_continuation = bool(re.search(marker, ref["quote"], re.I))
         quoted_update = ref["source_role"] == "user_intent" and bool(re.search(update_marker, ref["quote"], re.I))
-        if not quoted_continuation and not quoted_update:
+        quoted_reopen = (ref["source_role"] == "user_intent" and len(task_ids) == 1
+                         and bool(re.search(reopen_marker, ref["quote"], re.I)))
+        if not quoted_continuation and not quoted_update and not quoted_reopen:
             continue
         for sentence in _evidence_sentences(ref, contexts.get(ref["source_id"], "")):
+            if re.search(reopening_mention, sentence, re.I):
+                # Reopening is user authority, not a reported command or a
+                # quoted example. Apply this before every continuity branch.
+                if (ref["source_role"] != "user_intent" or len(task_ids) != 1
+                        or re.search(r"```|~~~", contexts.get(ref["source_id"], ""))
+                        or not _positive_reopening(sentence, next(iter(task_ids)))):
+                    continue
             denied = r"\b(?:not|never)\s+(?:(?:a|an|the)\s+)?(?:continu\w*|resum\w*|same\s+task|follow[- ]up|correction|update|amendment)\b|\b(?:new|different|separate|unrelated|independent)\s+(?:task|ticket|issue)\b|не\s+(?:является\s+)?(?:продолж\w*|той\s+же\s+задач\w*|та\s+же\s+задач\w*)|(?:новая|другая|отдельная)\s+задача"
             if named_same_task:
                 denied += r"|\b(?:not|never)\s+(?:(?:a|an|the)\s+)?" + named_same_task
@@ -1260,12 +1362,14 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
                 continue
             # A matching label or reference identifies mentioned text, not
             # the task being continued. Leave that association unresolved.
-            if (named_same_task and re.search(named_same_task, sentence, re.I)
-                    and re.search(r"\b(?:labels?|references?|identifiers?)\b|\brefer(?:s|red|ring)?\s+to\b", sentence, re.I)):
+            if ((quoted_reopen or named_same_task and re.search(named_same_task, sentence, re.I))
+                    and re.search(r"\b(?:labels?|references?|identifiers?)\b|\brefer(?:s|red|ring)?\s+to\b|\b(?:ссылк|метк|идентификатор)[а-яё]*\b", sentence, re.I)):
                 continue
             continuation = quoted_continuation and bool(re.search(marker, sentence, re.I))
             update = quoted_update and bool(re.search(update_marker, sentence, re.I))
-            if not continuation and not update:
+            reopen = (quoted_reopen and bool(re.search(reopen_marker, sentence, re.I))
+                      and not _nonassertive_context(sentence))
+            if not continuation and not update and not reopen:
                 continue
             quoted_ids = {value.casefold() for value in re.findall(task_pattern, ref["quote"])}
             sentence_ids = {value.casefold() for value in re.findall(task_pattern, sentence)}

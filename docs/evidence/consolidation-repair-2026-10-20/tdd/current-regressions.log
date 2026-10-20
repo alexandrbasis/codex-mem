@@ -1,0 +1,121 @@
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c81e40>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c82110>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c823e0>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c825c0>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c827a0>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c82890>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/decoder.py:345: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x106c82980>
+  obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+codex-mem hook: capture unavailable
+======================================================================
+ERROR: test_generation_budget_retains_head_and_old_independent_requirement (test_project_memory_store.ProjectMemoryTests.test_generation_budget_retains_head_and_old_independent_requirement)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_store.py", line 233, in test_generation_budget_retains_head_and_old_independent_requirement
+    _, episode = self.episode("TASK-123: Investigate scheduled importer. " + "Implementation context. "*70)
+                 ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_store.py", line 58, in episode
+    receipt = self.memory.commit(job, self.episode_output(job, parent))
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py", line 921, in commit
+    return self.store._write(commit_job)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/store.py", line 1019, in _write
+    result = operation()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py", line 826, in commit_job
+    objects, relations, reconciliation = self._validate(durable, output, conservative_transitions=conservative_transitions)
+                                         ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py", line 753, in _validate
+    text, field_refs, provenance = _grounded_field(clean_evidence[field], sources)
+                                   ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py", line 1014, in _grounded_field
+    raise ValueError("grounded field exceeds complete excerpt bounds")
+ValueError: grounded field exceeds complete excerpt bounds
+
+======================================================================
+FAIL: test_consolidation_cannot_drop_a_retained_open_obligation (test_project_memory_consolidation.ConsolidationTests.test_consolidation_cannot_drop_a_retained_open_obligation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 113, in test_consolidation_cannot_drop_a_retained_open_obligation
+    self.assertIn('Keep deployment pending.', [item.get('open_work') for item in self.state()['episodes']])
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Keep deployment pending.' not found in ['', 'User intent: Keep deployment pending.']
+
+======================================================================
+FAIL: test_late_correction_without_stop_can_retain_original_goal_and_obligation (test_project_memory_consolidation.ConsolidationTests.test_late_correction_without_stop_can_retain_original_goal_and_obligation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 136, in test_late_correction_without_stop_can_retain_original_goal_and_obligation
+    self.assertEqual(head['outcome'], 'Local tests actually failed; production is unchecked.')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'User intent: Local tests actually failed; production is unchecked.' != 'Local tests actually failed; production is unchecked.'
+- User intent: Local tests actually failed; production is unchecked.
+? -------------
++ Local tests actually failed; production is unchecked.
+
+
+======================================================================
+FAIL: test_partial_narrative_cannot_erase_an_earlier_open_obligation (test_project_memory_consolidation.ConsolidationTests.test_partial_narrative_cannot_erase_an_earlier_open_obligation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 298, in test_partial_narrative_cannot_erase_an_earlier_open_obligation
+    self.assertEqual(episode['prior_open_work'], 'Keep deployment pending. Preserve manual approval.')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'User intent: Keep deployment pending.\nUser intent: Preserve manual approval.' != 'Keep deployment pending. Preserve manual approval.'
++ Keep deployment pending. Preserve manual approval.
+- User intent: Keep deployment pending.
+- User intent: Preserve manual approval.
+
+
+======================================================================
+FAIL: test_split_task_is_reconsidered_after_restart_with_original_field_evidence (test_project_memory_consolidation.ConsolidationTests.test_split_task_is_reconsidered_after_restart_with_original_field_evidence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 75, in test_split_task_is_reconsidered_after_restart_with_original_field_evidence
+    self.assertEqual(current[0]['open_work'], 'Keep deployment pending.')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'User intent: Keep deployment pending.' != 'Keep deployment pending.'
+- User intent: Keep deployment pending.
+? -------------
++ Keep deployment pending.
+
+
+======================================================================
+FAIL: test_explicit_cross_chat_continuation_creates_immutable_versions (test_project_memory_store.ProjectMemoryTests.test_explicit_cross_chat_continuation_creates_immutable_versions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_store.py", line 71, in test_explicit_cross_chat_continuation_creates_immutable_versions
+    self.assertEqual("TASK-123: Implement scheduled importer.", old["summary"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'TASK-123: Implement scheduled importer.' != 'User intent: TASK-123: Implement scheduled importer.'
+- TASK-123: Implement scheduled importer.
++ User intent: TASK-123: Implement scheduled importer.
+? +++++++++++++
+
+
+======================================================================
+FAIL: test_explicit_whole_goal_continuation_without_task_id (test_project_memory_store.ProjectMemoryTests.test_explicit_whole_goal_continuation_without_task_id)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_store.py", line 151, in test_explicit_whole_goal_continuation_without_task_id
+    self.assertEqual(root, self.memory.get(self.project, [child])[0]["parent_episode_id"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'pm_faa75d5334906713ce2b4464630101ea36771eb5' != None
+
+----------------------------------------------------------------------
+Ran 219 tests in 4.599s
+
+FAILED (failures=6, errors=1)
+{"measurement": "deterministic_transport_only", "context_cases": 1, "model_answers": 0, "skipped_readers": 0, "effectiveness_comparison": null, "output": "/var/folders/xb/f6nzfjps1977ts7qybykjtlh0000gn/T/tmp91ook9co/result.json"}

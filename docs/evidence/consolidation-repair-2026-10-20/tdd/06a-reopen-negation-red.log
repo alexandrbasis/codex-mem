@@ -1,0 +1,15 @@
+test_negated_reopen_cannot_bypass_through_same_task_marker (test_project_memory_consolidation.ConsolidationTests.test_negated_reopen_cannot_bypass_through_same_task_marker) ... FAIL
+
+======================================================================
+FAIL: test_negated_reopen_cannot_bypass_through_same_task_marker (test_project_memory_consolidation.ConsolidationTests.test_negated_reopen_cannot_bypass_through_same_task_marker)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 666, in test_negated_reopen_cannot_bypass_through_same_task_marker
+    self.assertNotEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'processed' == 'processed' : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v9', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_279d30504081ebd30cb76dd12a93474c50880fb3', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'lux-54', 'candidate_head_ids': ['pm_a60725556f590bcacbe126fd2014a0879a2e3414', 'pm_d02c2f43526fb3c00091ae54bd82b66fa2f53eb6'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_1f1f599e61ee422f9d8b5fac7f48d4e1', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'omitted_transitions_count': 0, 'omitted_transitions_reason': '', 'downgraded_states_count': 0, 'downgraded_states_reason': '', 'omitted_continuities_count': 0, 'omitted_continuities_reason': '', 'pending_reconciliation': True, 'commit_status': 'committed', 'status': 'processed', 'usage_recording_status': 'recorded', 'duration_ms': 5}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.042s
+
+FAILED (failures=1)

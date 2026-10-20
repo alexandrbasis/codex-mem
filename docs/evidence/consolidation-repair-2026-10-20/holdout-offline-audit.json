@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-10-20T18:29:56.849180+00:00",
+  "manifest_hashes_checked": 14,
+  "all_hashes_match": true,
+  "archive_members": 736,
+  "expected_archive_members": 736,
+  "report_byte_exact": true,
+  "replayed_report_sha256": "9b19c9f0e5d6e3277d48786b89d8c15b25eaace7f1df854407a7db2e87c83474",
+  "ledger_byte_exact": true,
+  "ledger_records": 336,
+  "model_calls_for_audit": 0,
+  "replay_directory": "/private/tmp/consolidation-repair-offline-holdout-xq4i8yym",
+  "relocation": "Only extracted root run.json budget_run rebound to extracted directory. Exported pinned inputs retain original holdout basenames for the seal check. Ledger, grades, sources, answers and protocol unchanged.",
+  "candidate_frozen_files_checked": 46,
+  "candidate_hashes_match": true,
+  "helper_hash_matches": true,
+  "exclusive_usage_groups": {
+    "development_primary": {
+      "calls": 28,
+      "input_tokens": 452416,
+      "cached_input_tokens": 33280,
+      "output_tokens": 23120,
+      "total_tokens": 475536,
+      "native_wall_ms": 277714
+    },
+    "development_superseded": {
+      "calls": 16,
+      "input_tokens": 239075,
+      "cached_input_tokens": 24960,
+      "output_tokens": 11835,
+      "total_tokens": 250910,
+      "native_wall_ms": 183629
+    },
+    "development_repeat": {
+      "calls": 12,
+      "input_tokens": 207175,
+      "cached_input_tokens": 16640,
+      "output_tokens": 9485,
+      "total_tokens": 216660,
+      "native_wall_ms": 148450
+    },
+    "holdout_primary": {
+      "calls": 100,
+      "input_tokens": 1719481,
+      "cached_input_tokens": 334592,
+      "output_tokens": 76856,
+      "total_tokens": 1796337,
+      "native_wall_ms": 1132485
+    },
+    "holdout_repeat": {
+      "calls": 12,
+      "input_tokens": 292149,
+      "cached_input_tokens": 58240,
+      "output_tokens": 10381,
+      "total_tokens": 302530,
+      "native_wall_ms": 135864
+    }
+  },
+  "exclusive_group_rule": "Superseded attempt first; then development/holdout split by fixture IDs; then prescribed repeats or primary. Groups are disjoint and sum to the actual ledger. Cached input is a subset of input, not an additional total.",
+  "holdout_primary_native_latency": {
+    "generation_baseline": {
+      "samples": 39,
+      "median_ms": 7450,
+      "mean_ms": 11141.051,
+      "p95_ms": 32486,
+      "total_ms": 434501,
+      "max_ms": 38966
+    },
+    "consolidation_candidate": {
+      "samples": 1,
+      "median_ms": 10055,
+      "mean_ms": 10055,
+      "p95_ms": 10055,
+      "total_ms": 10055,
+      "max_ms": 10055
+    },
+    "reader_baseline": {
+      "samples": 15,
+      "median_ms": 8849,
+      "mean_ms": 9457.067,
+      "p95_ms": 19288,
+      "total_ms": 141856,
+      "max_ms": 19288
+    },
+    "reader_candidate": {
+      "samples": 15,
+      "median_ms": 9078,
+      "mean_ms": 13555.2,
+      "p95_ms": 40586,
+      "total_ms": 203328,
+      "max_ms": 40586
+    },
+    "judge_baseline": {
+      "samples": 15,
+      "median_ms": 10948,
+      "mean_ms": 10696.133,
+      "p95_ms": 12854,
+      "total_ms": 160442,
+      "max_ms": 12854
+    },
+    "judge_candidate": {
+      "samples": 15,
+      "median_ms": 11454,
+      "mean_ms": 12153.533,
+      "p95_ms": 17920,
+      "total_ms": 182303,
+      "max_ms": 17920
+    }
+  },
+  "holdout_primary_retrieval_latency": {
+    "baseline": {
+      "samples": 90,
+      "median_ms": 6.938,
+      "mean_ms": 8.314,
+      "p95_ms": 17.452,
+      "total_ms": 748.241,
+      "max_ms": 24.925
+    },
+    "candidate": {
+      "samples": 90,
+      "median_ms": 7.535,
+      "mean_ms": 10.245,
+      "p95_ms": 22.939,
+      "total_ms": 922.032,
+      "max_ms": 42.011
+    }
+  },
+  "latency_method": "Native wall_ms per call from ledger. Retrieval uses latest successful timing matching each retained question context hash, excludes repeats and superseded/audit directories. p95 is nearest rank. Generation is shared by both arms; it was billed once.",
+  "actual_billed_cost_usd": null,
+  "coding_review_orchestration_and_background_service_cost": "unknown, outside native experiment ledger"
+}

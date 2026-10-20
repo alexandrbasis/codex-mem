@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "source": "Worker mapped existing tests; root verified each named test exists.",
+  "full_suite_receipt": "full-tests.json",
+  "schema_migration": "No new SQL schema in this repair. Existing legacy adoption and policy-version restart compatibility are covered.",
+  "public_seams": "process_project_memory and ProjectMemory over actual temporary Store; external generator/checker substituted.",
+  "quality_claim": "These tests establish implementation mechanics, not measured live answer quality.",
+  "tests": [
+    {
+      "requirement": "cross_session_restart_replay",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_split_task_is_reconsidered_after_restart_with_original_field_evidence",
+      "line": 68
+    },
+    {
+      "requirement": "same_chat_independent_tasks",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_independent_tasks_in_same_chat_are_not_joined_by_generated_title",
+      "line": 152
+    },
+    {
+      "requirement": "late_correction_without_stop",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_late_correction_without_stop_can_retain_original_goal_and_obligation",
+      "line": 115
+    },
+    {
+      "requirement": "failed_retry_costs",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_failed_attempt_can_retry_after_restart_without_overwriting_costs",
+      "line": 227
+    },
+    {
+      "requirement": "concurrent_write",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_concurrent_committed_event_rejects_reconsideration_then_retries_current_state",
+      "line": 214
+    },
+    {
+      "requirement": "deletion_during_processing",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_deletion_during_reconsideration_fences_old_result_and_keeps_accounting",
+      "line": 187
+    },
+    {
+      "requirement": "two_projects",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_two_projects_do_not_disclose_sources_or_current_heads",
+      "line": 172
+    },
+    {
+      "requirement": "legacy_database",
+      "path": "tests/test_project_memory_store.py",
+      "test": "test_legacy_episode_is_read_as_root_and_lazily_adopted",
+      "line": 325
+    },
+    {
+      "requirement": "policy_upgrade",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_previous_policy_noop_does_not_suppress_new_reconsideration",
+      "line": 805
+    },
+    {
+      "requirement": "source_attribution",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_material_episode_fields_are_attributed_to_their_own_sources",
+      "line": 550
+    },
+    {
+      "requirement": "local_vs_production",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_tool_excerpt_keeps_local_command_scope_without_production_promotion",
+      "line": 779
+    },
+    {
+      "requirement": "own_field_evidence",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_wrong_field_citations_cannot_borrow_support_from_other_fields",
+      "line": 574
+    },
+    {
+      "requirement": "complete_quotes",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_grounded_field_keeps_all_exact_sources_together_in_projection_and_budget",
+      "line": 683
+    },
+    {
+      "requirement": "positive_reopening",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_explicit_reopening_accepts_bounded_same_description_appositive",
+      "line": 914
+    },
+    {
+      "requirement": "negative_reopening",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_same_description_reopening_rejects_qualified_or_reference_commands",
+      "line": 929
+    },
+    {
+      "requirement": "sliced_evidence",
+      "path": "tests/test_project_memory_consolidation.py",
+      "test": "test_sliced_appositive_cannot_hide_original_prohibition_or_condition",
+      "line": 959
+    }
+  ]
+}

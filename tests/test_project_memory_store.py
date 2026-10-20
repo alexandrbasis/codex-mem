@@ -68,7 +68,7 @@ class ProjectMemoryTests(unittest.TestCase):
             current["logical_episode_id"], current["episode_version"], current["parent_episode_id"],
             current["is_current_head"], current["continuity_basis"]))
         old = self.memory.get(self.project, [root])[0]
-        self.assertEqual("TASK-123: Implement scheduled importer.", old["summary"])
+        self.assertEqual("User intent: TASK-123: Implement scheduled importer.", old["summary"])
         self.assertEqual(1, old["episode_version"])
         self.assertFalse(old["is_current_head"])
         history = self.memory.snapshot(self.project, include_episode_history=True)["episodes"]

@@ -1,0 +1,33 @@
+test_explicit_reopening_accepts_bounded_same_description_appositive (test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_accepts_bounded_same_description_appositive) ... 
+  test_explicit_reopening_accepts_bounded_same_description_appositive (test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_accepts_bounded_same_description_appositive) (sentence='Reopen MS-81, the same timing repair.') ... FAIL
+  test_explicit_reopening_accepts_bounded_same_description_appositive (test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_accepts_bounded_same_description_appositive) (sentence='Please reopen RIV-42, same invoice layout correction.') ... FAIL
+test_same_description_reopening_rejects_qualified_or_reference_commands (test_project_memory_consolidation.ConsolidationTests.test_same_description_reopening_rejects_qualified_or_reference_commands) ... ok
+
+======================================================================
+FAIL: test_explicit_reopening_accepts_bounded_same_description_appositive (test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_accepts_bounded_same_description_appositive) (sentence='Reopen MS-81, the same timing repair.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 926, in test_explicit_reopening_accepts_bounded_same_description_appositive
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'idle' != 'processed'
+- idle
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'status': 'idle'}
+
+======================================================================
+FAIL: test_explicit_reopening_accepts_bounded_same_description_appositive (test_project_memory_consolidation.ConsolidationTests.test_explicit_reopening_accepts_bounded_same_description_appositive) (sentence='Please reopen RIV-42, same invoice layout correction.')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 926, in test_explicit_reopening_accepts_bounded_same_description_appositive
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_e9a4a21e4ba7f3005c3e0973648618147c637c98', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'riv-42', 'candidate_head_ids': ['pm_d51c527ec2df13b39e0078b63751e5fe988506a7', 'pm_38d0f9726e0ad64fdd2b36775ad092a9839cf789'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_4fdb30ba1acb4301a483151af9a679a1', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792518264.292629, 'usage_recording_status': 'recorded', 'duration_ms': 9}
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.648s
+
+FAILED (failures=2)

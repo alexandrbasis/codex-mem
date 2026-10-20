@@ -772,7 +772,7 @@ class EpisodeStorageIntegrationTests(unittest.TestCase):
             self.assertEqual(result["status"], "processed", result)
             with Store(data) as store:
                 state = ProjectMemory(store).snapshot(project)
-                self.assertEqual(state["episodes"][0]["summary"], "Use local import.")
+                self.assertEqual(state["episodes"][0]["summary"], "User intent: Use local import.")
                 self.assertEqual(state["episodes"][0]["goal"], "")
                 self.assertNotIn("Invented investigation", json.dumps(state))
                 saved = json.loads(store._connection.execute("SELECT receipt_json FROM pm_jobs").fetchone()[0])
@@ -819,7 +819,7 @@ class EpisodeStorageIntegrationTests(unittest.TestCase):
                 self.assertEqual(result["status"], "processed", result)
                 with Store(data) as store:
                     state = ProjectMemory(store).snapshot(project)
-                current = next(episode for episode in state["episodes"] if episode["summary"] == text)
+                current = next(episode for episode in state["episodes"] if episode["session_id"] == session)
                 return result, current, state
             _, root, _ = ingest("TASK-123: Implement scheduled importer. Keep diagnostic redaction open.",
                                   "chat-one", "TASK-123 importer", keep_requirement=True)
@@ -847,7 +847,7 @@ class EpisodeStorageIntegrationTests(unittest.TestCase):
             self.assertEqual(standalone["episode_version"], 1)
             with Store(data) as store:
                 old = ProjectMemory(store).get(project, [root["id"]])[0]
-                self.assertEqual(old["summary"], "TASK-123: Implement scheduled importer. Keep diagnostic redaction open.")
+                self.assertEqual(old["summary"], "User intent: TASK-123: Implement scheduled importer.\nUser intent: Keep diagnostic redaction open.")
                 self.assertFalse(old["is_current_head"])
                 history = ProjectMemory(store).snapshot(project, include_episode_history=True)["episodes"]
                 self.assertEqual(len(history), 5)

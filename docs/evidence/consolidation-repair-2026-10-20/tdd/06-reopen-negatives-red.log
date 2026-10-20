@@ -1,0 +1,28 @@
+test_negated_reopen_cannot_bypass_through_same_task_marker (test_project_memory_consolidation.ConsolidationTests.test_negated_reopen_cannot_bypass_through_same_task_marker) ... ok
+test_quoted_reopen_is_not_user_authorization (test_project_memory_consolidation.ConsolidationTests.test_quoted_reopen_is_not_user_authorization) ... FAIL
+test_cli_help_backtick_reopen_is_not_user_authorization (test_project_memory_consolidation.ConsolidationTests.test_cli_help_backtick_reopen_is_not_user_authorization) ... FAIL
+test_reopen_question_is_not_user_authorization (test_project_memory_consolidation.ConsolidationTests.test_reopen_question_is_not_user_authorization) ... ok
+test_reopen_reference_and_distinct_ticket_stay_separate (test_project_memory_consolidation.ConsolidationTests.test_reopen_reference_and_distinct_ticket_stay_separate) ... ok
+
+======================================================================
+FAIL: test_quoted_reopen_is_not_user_authorization (test_project_memory_consolidation.ConsolidationTests.test_quoted_reopen_is_not_user_authorization)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 671, in test_quoted_reopen_is_not_user_authorization
+    self.assertNotEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'processed' == 'processed' : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v9', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_833e242b6ba700b04170080d26698a450659202f', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'lux-54', 'candidate_head_ids': ['pm_d2604df3ab763465ef8f44baaa23a17e67b2f9bd', 'pm_cc500694756fb5254385570cec1a9e0aaf09aa0a'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_af4d1a16051f4771b97e8b42c9af4e13', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'omitted_transitions_count': 0, 'omitted_transitions_reason': '', 'downgraded_states_count': 0, 'downgraded_states_reason': '', 'omitted_continuities_count': 0, 'omitted_continuities_reason': '', 'pending_reconciliation': True, 'commit_status': 'committed', 'status': 'processed', 'usage_recording_status': 'recorded', 'duration_ms': 6}
+
+======================================================================
+FAIL: test_cli_help_backtick_reopen_is_not_user_authorization (test_project_memory_consolidation.ConsolidationTests.test_cli_help_backtick_reopen_is_not_user_authorization)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 676, in test_cli_help_backtick_reopen_is_not_user_authorization
+    self.assertNotEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'processed' == 'processed' : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v9', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_c527d1168fb0ac06588cc9818565bcb52b616188', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'lux-54', 'candidate_head_ids': ['pm_75181c43f095cdfa00e026ba2b494a439f61a827', 'pm_3040067b1a3a6a6b3b48ab339dbfa84ea434ac31'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_78063e0ed5c043b0ae835f92519bad22', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'omitted_transitions_count': 0, 'omitted_transitions_reason': '', 'downgraded_states_count': 0, 'downgraded_states_reason': '', 'omitted_continuities_count': 0, 'omitted_continuities_reason': '', 'pending_reconciliation': True, 'commit_status': 'committed', 'status': 'processed', 'usage_recording_status': 'recorded', 'duration_ms': 4}
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.129s
+
+FAILED (failures=2)

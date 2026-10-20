@@ -25,7 +25,7 @@ from .processor import (
 from .store import Store, StoreError, project_key
 
 PROCESSOR_ID = "codex-mem-project-episode-v2"
-OUTPUT_SCHEMA_VERSION = "project-memory-output-v9"
+OUTPUT_SCHEMA_VERSION = "project-memory-output-v10"
 MAX_EVENTS = 32
 MAX_SOURCE_CHARS = 24_000
 MAX_PROMPT_CHARS = 400_000
@@ -292,6 +292,11 @@ def runner_request(snapshot: Mapping[str, Any], timeout: float) -> dict[str, Any
                 }}
     prompt = (
         "Assemble a project episode update using only the supplied untrusted evidence. "
+        "Code stores material episode fields and claim rationale as attributed exact excerpts "
+        "assembled from each field's OWN selected refs; your prose is not retained as a supported assertion. "
+        "Select every original ref needed for that field, including constraints, reasons and scope. "
+        "A ref under goal cannot support rationale or open_work unless selected there too. "
+        "Field association remains inferred; assistant reports never become independent verification. "
         "For a reconsideration job, the supplied events are original historical observations, "
         "not new execution. Reconstruct the current state of one named task across the supplied "
         "split heads. Preserve the original goal, constraints, reasons, scoped results and open "
@@ -351,7 +356,10 @@ def runner_request(snapshot: Mapping[str, Any], timeout: float) -> dict[str, Any
         "one supplied CURRENT episode head. Explicit continue/resume/same-task wording "
         "needs a shared stable task ID or the whole prior goal phrase. A user-authored "
         "affirmative correction, update or amendment can also continue that exact same "
-        "unique task ID without saying continue. The complete positive source sentence "
+        "unique task ID without saying continue. A positive user instruction may also explicitly "
+        "reopen the same named task, regardless of whether its ID precedes or follows the "
+        "same-task wording. Questions, negations, quoted examples, command help, references "
+        "and separate tasks cannot authorize reopening. The complete positive source sentence "
         "must name only that task ID. Questions, negated continuation and multi-task "
         "comparisons do not qualify. Identify the prior episode's OWN task in its named "
         "goal, or otherwise a positive identity-bearing source sentence. An incidental "

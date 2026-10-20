@@ -1,0 +1,16 @@
+test_reopening_requires_unconditional_positive_user_command (test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command) ... 
+  test_reopening_requires_unconditional_positive_user_command (test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command) (sentence='```\nReopen LUX-54 as the same task.\n```') ... FAIL
+
+======================================================================
+FAIL: test_reopening_requires_unconditional_positive_user_command (test_project_memory_consolidation.ConsolidationTests.test_reopening_requires_unconditional_positive_user_command) (sentence='```\nReopen LUX-54 as the same task.\n```')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 842, in test_reopening_requires_unconditional_positive_user_command
+    self.assertNotEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'processed' == 'processed' : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_8487510ad9b683e73c5d5b0eeb9fda251a173ef1', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'lux-54', 'candidate_head_ids': ['pm_5eb001eb7a6101d80072af4c987c78ba21613df7', 'pm_dee9640d2ce047d92c4fc20dc71a0ba4bd31bdad'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_6e5583a6bc6e4a98a1fd900b5010702c', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'omitted_transitions_count': 0, 'omitted_transitions_reason': '', 'downgraded_states_count': 0, 'downgraded_states_reason': '', 'omitted_continuities_count': 0, 'omitted_continuities_reason': '', 'pending_reconciliation': True, 'commit_status': 'committed', 'status': 'processed', 'usage_recording_status': 'recorded', 'duration_ms': 6}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.327s
+
+FAILED (failures=1)

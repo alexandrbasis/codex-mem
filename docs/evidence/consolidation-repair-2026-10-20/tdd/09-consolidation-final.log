@@ -1,0 +1,15 @@
+======================================================================
+ERROR: test_previous_policy_noop_does_not_suppress_new_reconsideration (test_project_memory_consolidation.ConsolidationTests.test_previous_policy_noop_does_not_suppress_new_reconsideration)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 763, in test_previous_policy_noop_does_not_suppress_new_reconsideration
+    store._connection.execute('UPDATE pm_jobs SET id=?,input_fingerprint=? WHERE id=?',
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              ('pmj_' + fingerprint[:40], fingerprint, job['job_id']))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.OperationalError: no such column: input_fingerprint
+
+----------------------------------------------------------------------
+Ran 49 tests in 1.349s
+
+FAILED (errors=1)

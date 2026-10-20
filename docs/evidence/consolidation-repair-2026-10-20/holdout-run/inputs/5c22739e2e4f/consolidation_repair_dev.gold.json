@@ -1,0 +1,721 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "questions": {
+    "fiction-01/q1": {
+      "required_facts": [
+        {
+          "text": "Fix the scene-boundary pause and rerun using a 150 ms gap; the review copy remains unsent.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 1,
+              "event_id": "fiction-01-s2-e002",
+              "fragment": "Reopen MS-81, the same timing repair. Correct that short pause and rerun the scene-boundary check."
+            },
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 2,
+              "event_id": "fiction-01-s2-e003",
+              "fragment": "One correction: the gap is 150 ms for this project, not 120. Use 150 in the rerun; leave the review copy unsent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "A 120 ms gap is the current requirement.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix the scene-boundary pause and rerun using a 150 ms gap; the review copy remains unsent."
+    },
+    "fiction-01/q2": {
+      "required_facts": [
+        {
+          "text": "The direct tool result failed with a 40 ms gap and wrote no review copy.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 0,
+              "event_id": "fiction-01-s2-e001",
+              "fragment": "Command: subtitle-check fixtures/scene-boundary.srt\nExit code: 1\nFAIL pause_after_cut: expected gap >= 120 ms, got 40 ms.\nNo review copy was written."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The scene-boundary check passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The direct tool result failed with a 40 ms gap and wrote no review copy."
+    },
+    "fiction-01/q3": {
+      "required_facts": [
+        {
+          "text": "The assistant reported eleven local checks passing; this is an assistant report, while the captured boundary-tool result failed.",
+          "support": [
+            {
+              "session_id": "fiction-01-s1",
+              "event_index": 1,
+              "event_id": "fiction-01-s1-e002",
+              "fragment": "I ran the timing suite locally and all eleven checks passed. The patch is ready for a review copy."
+            },
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 0,
+              "event_id": "fiction-01-s2-e001",
+              "fragment": "Command: subtitle-check fixtures/scene-boundary.srt\nExit code: 1\nFAIL pause_after_cut: expected gap >= 120 ms, got 40 ms.\nNo review copy was written."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Eleven passing checks are independently confirmed by tool output.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported eleven local checks passing; this is an assistant report, while the captured boundary-tool result failed."
+    },
+    "fiction-01/q4": {
+      "required_facts": [
+        {
+          "text": "No. The user reopened the same task and explicitly left the review copy unsent pending correction and rerun.",
+          "support": [
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 1,
+              "event_id": "fiction-01-s2-e002",
+              "fragment": "Reopen MS-81, the same timing repair. Correct that short pause and rerun the scene-boundary check."
+            },
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 2,
+              "event_id": "fiction-01-s2-e003",
+              "fragment": "One correction: the gap is 150 ms for this project, not 120. Use 150 in the rerun; leave the review copy unsent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The review copy is approved for sending.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user reopened the same task and explicitly left the review copy unsent pending correction and rerun."
+    },
+    "fiction-01/q5": {
+      "required_facts": [
+        {
+          "text": "The failure continues the same MS-81 timing repair, explicitly reopened by the user.",
+          "support": [
+            {
+              "session_id": "fiction-01-s1",
+              "event_index": 0,
+              "event_id": "fiction-01-s1-e001",
+              "fragment": "MS-81 is the subtitle timing repair. Check a pause across the scene boundary before sending a review copy."
+            },
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 1,
+              "event_id": "fiction-01-s2-e002",
+              "fragment": "Reopen MS-81, the same timing repair. Correct that short pause and rerun the scene-boundary check."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Create an unrelated timing task and close MS-81.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The failure continues the same MS-81 timing repair, explicitly reopened by the user."
+    },
+    "fiction-01/q6": {
+      "required_facts": [
+        {
+          "text": "An assistant claimed a local pass, the recorded tool check failed, and a corrected 150 ms rerun is still required.",
+          "support": [
+            {
+              "session_id": "fiction-01-s1",
+              "event_index": 1,
+              "event_id": "fiction-01-s1-e002",
+              "fragment": "I ran the timing suite locally and all eleven checks passed. The patch is ready for a review copy."
+            },
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 0,
+              "event_id": "fiction-01-s2-e001",
+              "fragment": "Command: subtitle-check fixtures/scene-boundary.srt\nExit code: 1\nFAIL pause_after_cut: expected gap >= 120 ms, got 40 ms.\nNo review copy was written."
+            },
+            {
+              "session_id": "fiction-01-s2",
+              "event_index": 2,
+              "event_id": "fiction-01-s2-e003",
+              "fragment": "One correction: the gap is 150 ms for this project, not 120. Use 150 in the rerun; leave the review copy unsent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "MS-81 is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "An assistant claimed a local pass, the recorded tool check failed, and a corrected 150 ms rerun is still required."
+    },
+    "fiction-02/q1": {
+      "required_facts": [
+        {
+          "text": "The PDF proof remains open for a recorded color-profile check; public-download replacement is cancelled.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "Cancel the public-download replacement for GP-24. Keep the PDF proof work open until a color-profile check is recorded. The help excerpt does not authorize publishing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The cancellation closes all GP-24 work.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The PDF proof remains open for a recorded color-profile check; public-download replacement is cancelled."
+    },
+    "fiction-02/q2": {
+      "required_facts": [
+        {
+          "text": "The inspected PDF is 420 by 594 mm. A browser screenshot does not establish PDF print dimensions.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 0,
+              "event_id": "fiction-02-s1-e001",
+              "fragment": "GP-24 is the poster PDF export. Keep crop marks outside the artwork. A browser screenshot is a different artifact and cannot establish print dimensions."
+            },
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 2,
+              "event_id": "fiction-02-s1-e003",
+              "fragment": "Command: pdf-inspect out/poster-proof.pdf\nExit code: 0\nPage size: 420 x 594 mm. Crop marks: present. Artwork bounds do not intersect crop marks. This command does not inspect color profiles."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The browser screenshot proves printed dimensions.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The inspected PDF is 420 by 594 mm. A browser screenshot does not establish PDF print dimensions."
+    },
+    "fiction-02/q3": {
+      "required_facts": [
+        {
+          "text": "The assistant reported a dimension check. Separate pdf-inspect output directly records the PDF dimensions and crop bounds.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 1,
+              "event_id": "fiction-02-s1-e002",
+              "fragment": "The browser preview looks right. I also checked the printed dimensions and they match the print brief."
+            },
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 2,
+              "event_id": "fiction-02-s1-e003",
+              "fragment": "Command: pdf-inspect out/poster-proof.pdf\nExit code: 0\nPage size: 420 x 594 mm. Crop marks: present. Artwork bounds do not intersect crop marks. This command does not inspect color profiles."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant report itself is tool evidence.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported a dimension check. Separate pdf-inspect output directly records the PDF dimensions and crop bounds."
+    },
+    "fiction-02/q4": {
+      "required_facts": [
+        {
+          "text": "No. Replacement is cancelled and the user said the help excerpt does not authorize publishing.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 3,
+              "event_id": "fiction-02-s1-e004",
+              "fragment": "CLI help excerpt: \"poster publish --replace replaces the public download immediately\". This is a command description."
+            },
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "Cancel the public-download replacement for GP-24. Keep the PDF proof work open until a color-profile check is recorded. The help excerpt does not authorize publishing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "poster publish --replace is an approved next step.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. Replacement is cancelled and the user said the help excerpt does not authorize publishing."
+    },
+    "fiction-02/q5": {
+      "required_facts": [
+        {
+          "text": "It confirms PDF dimensions and nonintersecting crop marks, but explicitly does not inspect color profiles.",
+          "support": [
+            {
+              "session_id": "fiction-02-s1",
+              "event_index": 2,
+              "event_id": "fiction-02-s1-e003",
+              "fragment": "Command: pdf-inspect out/poster-proof.pdf\nExit code: 0\nPage size: 420 x 594 mm. Crop marks: present. Artwork bounds do not intersect crop marks. This command does not inspect color profiles."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Color-profile validation passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It confirms PDF dimensions and nonintersecting crop marks, but explicitly does not inspect color profiles."
+    },
+    "fiction-02/q6": {
+      "required_facts": [
+        {
+          "text": "Record the required color-profile check for GP-24 before closing the proof work.",
+          "support": [
+            {
+              "session_id": "fiction-02-s2",
+              "event_index": 0,
+              "event_id": "fiction-02-s2-e001",
+              "fragment": "Cancel the public-download replacement for GP-24. Keep the PDF proof work open until a color-profile check is recorded. The help excerpt does not authorize publishing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "GP-24 proof is finished.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Record the required color-profile check for GP-24 before closing the proof work."
+    },
+    "fiction-03/q1": {
+      "required_facts": [
+        {
+          "text": "Continue ST-29 with the night-bus contrast fix; ST-17 remains closed.",
+          "support": [
+            {
+              "session_id": "fiction-03-s1",
+              "event_index": 0,
+              "event_id": "fiction-03-s1-e001",
+              "fragment": "ST-17 timetable spacing is complete after the approved local proof. ST-29 route-icon work is separate and remains open for contrast review."
+            },
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 3,
+              "event_id": "fiction-03-s2-e004",
+              "fragment": "Fix the night-bus contrast under ST-29. The weekend-page question does not change ST-17."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "ST-17 was reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue ST-29 with the night-bus contrast fix; ST-17 remains closed."
+    },
+    "fiction-03/q2": {
+      "required_facts": [
+        {
+          "text": "No. The user expressly described it as a question about an option and later said it did not change ST-17.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 0,
+              "event_id": "fiction-03-s2-e001",
+              "fragment": "Would reopening ST-17 help if we later add a weekend page? I am asking about the option, not asking you to reopen it."
+            },
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 3,
+              "event_id": "fiction-03-s2-e004",
+              "fragment": "Fix the night-bus contrast under ST-29. The weekend-page question does not change ST-17."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "A question is a reopening instruction.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user expressly described it as a question about an option and later said it did not change ST-17."
+    },
+    "fiction-03/q3": {
+      "required_facts": [
+        {
+          "text": "Nothing about task state. It is an editorial quotation, followed by an explicit instruction to keep ST-17 closed.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 1,
+              "event_id": "fiction-03-s2-e002",
+              "fragment": "Draft release-note quote: \"Reopen ST-17 immediately.\" That is a quotation for the editorial sample. Keep ST-17 closed. Do not reopen the spacing work."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The quoted reopen sentence reopens ST-17.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Nothing about task state. It is an editorial quotation, followed by an explicit instruction to keep ST-17 closed."
+    },
+    "fiction-03/q4": {
+      "required_facts": [
+        {
+          "text": "The direct tool check failed the night-bus icon at 2.4 against 3.0; seven other icons passed.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "Command: icon-contrast route-icons.json\nExit code: 1\nFAIL night_bus: ratio 2.4 against required 3.0. Other 7 icons passed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Every route icon passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The direct tool check failed the night-bus icon at 2.4 against 3.0; seven other icons passed."
+    },
+    "fiction-03/q5": {
+      "required_facts": [
+        {
+          "text": "The assistant reported all ratios passing without a saved report. The captured tool check instead records one failure.",
+          "support": [
+            {
+              "session_id": "fiction-03-s1",
+              "event_index": 1,
+              "event_id": "fiction-03-s1-e002",
+              "fragment": "I checked all route-icon contrast ratios and they pass. I have not saved the contrast report."
+            },
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "Command: icon-contrast route-icons.json\nExit code: 1\nFAIL night_bus: ratio 2.4 against required 3.0. Other 7 icons passed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant claim confirms all contrast ratios.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported all ratios passing without a saved report. The captured tool check instead records one failure."
+    },
+    "fiction-03/q6": {
+      "required_facts": [
+        {
+          "text": "Fix and recheck the ST-29 night-bus contrast while preserving ST-17 as closed.",
+          "support": [
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 1,
+              "event_id": "fiction-03-s2-e002",
+              "fragment": "Draft release-note quote: \"Reopen ST-17 immediately.\" That is a quotation for the editorial sample. Keep ST-17 closed. Do not reopen the spacing work."
+            },
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 2,
+              "event_id": "fiction-03-s2-e003",
+              "fragment": "Command: icon-contrast route-icons.json\nExit code: 1\nFAIL night_bus: ratio 2.4 against required 3.0. Other 7 icons passed."
+            },
+            {
+              "session_id": "fiction-03-s2",
+              "event_index": 3,
+              "event_id": "fiction-03-s2-e004",
+              "fragment": "Fix the night-bus contrast under ST-29. The weekend-page question does not change ST-17."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Reopen both timetable tasks.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix and recheck the ST-29 night-bus contrast while preserving ST-17 as closed."
+    },
+    "fiction-04/q1": {
+      "required_facts": [
+        {
+          "text": "CF-42 remains open because right-to-left quotation marks face the wrong directions, despite the assistant report of success.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 2,
+              "event_id": "fiction-04-s1-e003",
+              "fragment": "I verified right-to-left punctuation locally; it is correct."
+            },
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 3,
+              "event_id": "fiction-04-s1-e004",
+              "fragment": "Command: font-proof-check fixtures/rtl-punctuation.json\nExit code: 1\nFallback glyphs render. Opening and closing quotation marks face the wrong directions in the right-to-left sample."
+            },
+            {
+              "session_id": "fiction-04-s3",
+              "event_index": 0,
+              "event_id": "fiction-04-s3-e001",
+              "fragment": "Forget the scratch font preset alias and remove its observation. Keep CF-42 open for the reversed quotation marks."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Right-to-left punctuation is confirmed correct.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "CF-42 remains open because right-to-left quotation marks face the wrong directions, despite the assistant report of success."
+    },
+    "fiction-04/q2": {
+      "required_facts": [
+        {
+          "text": "The depth-limit check accepts seven and rejects eight; the repeat-directory check was not selected.",
+          "support": [
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 0,
+              "event_id": "fiction-04-s2-e001",
+              "fragment": "CD-16 folder import needs a depth limit of seven and a test for importing the same directory twice."
+            },
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 1,
+              "event_id": "fiction-04-s2-e002",
+              "fragment": "Command: folder-check depth-limit\nExit code: 0\nDepth seven accepted. Depth eight rejected. Repeat-directory import test not selected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The repeat-directory check passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The depth-limit check accepts seven and rejects eight; the repeat-directory check was not selected."
+    },
+    "fiction-04/q3": {
+      "required_facts": [
+        {
+          "text": "No. The user requested its observation be removed; continue using CF-42.",
+          "support": [
+            {
+              "session_id": "fiction-04-s3",
+              "event_index": 0,
+              "event_id": "fiction-04-s3-e001",
+              "fragment": "Forget the scratch font preset alias and remove its observation. Keep CF-42 open for the reversed quotation marks."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "LINNET-DISCARD-28",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "No. The user requested its observation be removed; continue using CF-42."
+    },
+    "fiction-04/q4": {
+      "required_facts": [
+        {
+          "text": "No. They are separate projects; the font proof still records reversed quotation marks.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 1,
+              "event_id": "fiction-04-s1-e002",
+              "fragment": "CF-42 is a font fallback proof. Check right-to-left punctuation as well as missing glyph substitution. Folder import belongs to a separate project."
+            },
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 3,
+              "event_id": "fiction-04-s1-e004",
+              "fragment": "Command: font-proof-check fixtures/rtl-punctuation.json\nExit code: 1\nFallback glyphs render. Opening and closing quotation marks face the wrong directions in the right-to-left sample."
+            },
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 1,
+              "event_id": "fiction-04-s2-e002",
+              "fragment": "Command: folder-check depth-limit\nExit code: 0\nDepth seven accepted. Depth eight rejected. Repeat-directory import test not selected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The folder pass validates font punctuation.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. They are separate projects; the font proof still records reversed quotation marks."
+    },
+    "fiction-04/q5": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed local punctuation was correct, while direct font-proof output records quotation marks facing the wrong directions.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 2,
+              "event_id": "fiction-04-s1-e003",
+              "fragment": "I verified right-to-left punctuation locally; it is correct."
+            },
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 3,
+              "event_id": "fiction-04-s1-e004",
+              "fragment": "Command: font-proof-check fixtures/rtl-punctuation.json\nExit code: 1\nFallback glyphs render. Opening and closing quotation marks face the wrong directions in the right-to-left sample."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant punctuation statement is direct test output.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant claimed local punctuation was correct, while direct font-proof output records quotation marks facing the wrong directions."
+    },
+    "fiction-04/q6": {
+      "required_facts": [
+        {
+          "text": "Fix the CF-42 right-to-left quotation marks; test CD-16 repeat-directory import. Omit the deleted alias.",
+          "support": [
+            {
+              "session_id": "fiction-04-s1",
+              "event_index": 3,
+              "event_id": "fiction-04-s1-e004",
+              "fragment": "Command: font-proof-check fixtures/rtl-punctuation.json\nExit code: 1\nFallback glyphs render. Opening and closing quotation marks face the wrong directions in the right-to-left sample."
+            },
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 0,
+              "event_id": "fiction-04-s2-e001",
+              "fragment": "CD-16 folder import needs a depth limit of seven and a test for importing the same directory twice."
+            },
+            {
+              "session_id": "fiction-04-s2",
+              "event_index": 1,
+              "event_id": "fiction-04-s2-e002",
+              "fragment": "Command: folder-check depth-limit\nExit code: 0\nDepth seven accepted. Depth eight rejected. Repeat-directory import test not selected."
+            },
+            {
+              "session_id": "fiction-04-s3",
+              "event_index": 0,
+              "event_id": "fiction-04-s3-e001",
+              "fragment": "Forget the scratch font preset alias and remove its observation. Keep CF-42 open for the reversed quotation marks."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "LINNET-DISCARD-28",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix the CF-42 right-to-left quotation marks; test CD-16 repeat-directory import. Omit the deleted alias."
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "user_request": "Исправь атрибуцию результатов, основания полей и распознавание повторного открытия задачи. Затем повтори сравнение с f8764f6 на новом закрытом наборе с прежними критериями и учётом всех расходов. Сервис пока не обновляй.",
+  "implementation_base_commit": "9ccdac5d6055079047deefc2297a3fa20ef6b1ef",
+  "experiment_baseline_commit": "f8764f6b5a29438494143ff64b56578b572f1ae0",
+  "prior_requirements": "docs/evidence/consolidation-2026-10-20/requirements.json",
+  "prior_protocol": "docs/evidence/consolidation-2026-10-20/protocol.json",
+  "defects": [
+    {
+      "id": "result-attribution",
+      "required": "Every material episode field preserves original source role. Assistant narration is not independent execution evidence. User intent, actual tool result, local verification, deployment and production remain distinct. Include carried history."
+    },
+    {
+      "id": "field-support",
+      "required": "Every material field uses its own exact source evidence. Other fields or broader context cannot replace its support. Preserve useful constraints, obligations and reasons. Bound source disclosure and expose omissions."
+    },
+    {
+      "id": "explicit-reopening",
+      "required": "Accept affirmative user reopening of the same confirmed task, including varied word order. Reject negative, question, quoted instruction, reference-only, ambiguous or distinct-task cases."
+    }
+  ],
+  "accepted_test_seams": {
+    "entry": "process_project_memory",
+    "read": "ProjectMemory over a real temporary Store",
+    "substitutions": [
+      "external generator",
+      "external checking model"
+    ]
+  },
+  "experiment": {
+    "new_histories": 20,
+    "development_histories": 4,
+    "sealed_holdout_histories": 16,
+    "questions_per_history": 6,
+    "comparison": "Shared-prefix paired baseline f8764f6 versus repaired candidate; identical models, Jev settings, context budgets, questions and observation watermark.",
+    "freeze_before_release": [
+      "product code",
+      "experiment helper",
+      "protocol",
+      "evaluation criteria",
+      "gold and fixture hashes"
+    ],
+    "previous_quality_criteria_unchanged": true,
+    "tool_evidence": "New fictional histories include actual tool-role capture records, in addition to assistant-only reports.",
+    "repeats": "Preserve previous preassigned regeneration and reader/judge repeat plan.",
+    "accounting": "All started, failed, superseded, repeated and completed experiment calls belong to one durable ledger. Prior iteration spend stays separate and contributes to cumulative totals. Unknown usage or money is explicitly unknown.",
+    "per_iteration_limits": {
+      "max_calls": 220,
+      "max_observed_tokens": 3600000,
+      "wall_seconds": 7200,
+      "call_seconds": 180,
+      "per_call_token_reservation": 100000
+    }
+  },
+  "completion": [
+    "Focused TDD regressions",
+    "Required full tests, acceptance and package",
+    "Architecture snapshot, full finalize, seal, check",
+    "Independent Standards and Spec review using one complete manifest",
+    "Human document review",
+    "Local commit"
+  ],
+  "authorization_limits": {
+    "installed_service": "Do not update, restart or reconfigure for this task.",
+    "global_settings": "Do not change.",
+    "publish_or_push": false
+  },
+  "unrelated_files_sha256": {
+    "AGENTS.md": "9557a80a4a08936a65671effc367c2dc652761584410fd9f36b8cbbe6791c8a0",
+    "docs/agents/installation-checks.json": "0cb9455eec4f87d3eb8c0c0882c987b6cb70a51b42a0212b36153e2621eb053a"
+  }
+}

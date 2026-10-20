@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "observed_current_calls": 56,
+  "observed_current_tokens": 943106,
+  "observed_valid_phase_profiles": {
+    "generation": {
+      "calls": 14,
+      "tokens": 211274,
+      "mean_tokens": 15091.0,
+      "mean_wall_seconds": 9.325714285714286
+    },
+    "consolidation": {
+      "calls": 2,
+      "tokens": 41883,
+      "mean_tokens": 20941.5,
+      "mean_wall_seconds": 6.959
+    },
+    "reader": {
+      "calls": 12,
+      "tokens": 201616,
+      "mean_tokens": 16801.333333333332,
+      "mean_wall_seconds": 10.654916666666667
+    },
+    "judge": {
+      "calls": 12,
+      "tokens": 237423,
+      "mean_tokens": 19785.25,
+      "mean_wall_seconds": 12.818916666666667
+    }
+  },
+  "planning_calls": {
+    "generation": 41,
+    "consolidation": 25,
+    "reader": 36,
+    "judge": 36
+  },
+  "planning_assumptions": [
+    "38 main baseline checkpoints/tail calls inferred from sealed aggregate metadata plus3 repeated generation calls.",
+    "Allowance25 additional consolidation calls, including repeat; this is a planning allowance, not an absolute bound on eligible groups.",
+    "32 primary plus2 reader-only repeat plus2 regeneration reader calls, and the same36 judge calls.",
+    "Actual source selection/model latency varies. The existing hard ledger caps stop incomplete work; no cap reset or silent increase."
+  ],
+  "projected_additional_calls": 138,
+  "projected_total_calls": 194,
+  "projected_additional_tokens": 2459386,
+  "projected_total_tokens": 3402492,
+  "reservation": 100000,
+  "remaining_buffer_after_projection_and_reservation": 97508,
+  "projected_native_call_minutes": 23.4,
+  "current_wall_minutes": 47.36,
+  "wall_minutes_remaining": 72.64,
+  "projected_wall_with_1_5x_native_latency_minutes": 82.4,
+  "cap_change": false,
+  "computed_at_utc": "2026-10-20T17:57:46.111795+00:00",
+  "formal_freeze_at_utc": "2026-10-20T17:57:44.962460+00:00",
+  "chronology_note": "The retained filename predates final scheduling. This descriptive forecast was computed after formal freeze and before holdout release. No criteria, code, model, input or limit changed."
+}

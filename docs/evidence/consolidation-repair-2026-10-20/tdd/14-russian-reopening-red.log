@@ -1,0 +1,30 @@
+test_russian_explicit_reopening_names_the_original_task (test_project_memory_consolidation.ConsolidationTests.test_russian_explicit_reopening_names_the_original_task) ... FAIL
+test_russian_negative_reopening_cannot_use_same_task_fallback (test_project_memory_consolidation.ConsolidationTests.test_russian_negative_reopening_cannot_use_same_task_fallback) ... FAIL
+test_russian_reopening_question_keeps_task_separate (test_project_memory_consolidation.ConsolidationTests.test_russian_reopening_question_keeps_task_separate) ... ok
+test_russian_quoted_reopening_keeps_task_separate (test_project_memory_consolidation.ConsolidationTests.test_russian_quoted_reopening_keeps_task_separate) ... ok
+
+======================================================================
+FAIL: test_russian_explicit_reopening_names_the_original_task (test_project_memory_consolidation.ConsolidationTests.test_russian_explicit_reopening_names_the_original_task)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 787, in test_russian_explicit_reopening_names_the_original_task
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_9840ccccb993d2932d940906f457e39e1582534d', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'lux-54', 'candidate_head_ids': ['pm_a05e9586787ca93878f55fb8db6774517c0c86c4', 'pm_02d9196424b21faf1e17d40ffcbab12e5f0a0b16'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_11270897cdd24779914d108ac254f548', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792516348.903764, 'usage_recording_status': 'recorded', 'duration_ms': 5}
+
+======================================================================
+FAIL: test_russian_negative_reopening_cannot_use_same_task_fallback (test_project_memory_consolidation.ConsolidationTests.test_russian_negative_reopening_cannot_use_same_task_fallback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_consolidation.py", line 792, in test_russian_negative_reopening_cannot_use_same_task_fallback
+    self.assertNotEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'processed' == 'processed' : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_55bcb7f33873163d407249a4d4c7f846fb7fd566', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'lux-54', 'candidate_head_ids': ['pm_43f64c78393164211259f5cce960e81ece8ba428', 'pm_2ac56c796f1c1c892f6e4376d3514bc685de3aef'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_591301a233054674ba5e30b20bf9b803', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'omitted_transitions_count': 0, 'omitted_transitions_reason': '', 'downgraded_states_count': 0, 'downgraded_states_reason': '', 'omitted_continuities_count': 0, 'omitted_continuities_reason': '', 'pending_reconciliation': True, 'commit_status': 'committed', 'status': 'processed', 'usage_recording_status': 'recorded', 'duration_ms': 5}
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.102s
+
+FAILED (failures=2)

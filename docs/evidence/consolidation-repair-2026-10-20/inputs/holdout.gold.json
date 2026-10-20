@@ -1,0 +1,2833 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "questions": {
+    "fiction-05/q1": {
+      "required_facts": [
+        {
+          "text": "Verify historical footpath labels survive an import and an identical repeat import under AM-203.",
+          "support": [
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 0,
+              "event_id": "fiction-05-s1-e001",
+              "fragment": "AM-203 migrates the footpath map tiles. Before completion, prove historical footpath labels survive an import followed by an identical second import. Keep that acceptance check even if geometry inspection passes."
+            },
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 43,
+              "event_id": "fiction-05-s1-e044",
+              "fragment": "Continue AM-203 with the historical-label acceptance check. This is still the migration task; do not open a second ticket for its missing evidence."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Geometry success completes AM-203.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Verify historical footpath labels survive an import and an identical repeat import under AM-203."
+    },
+    "fiction-05/q2": {
+      "required_facts": [
+        {
+          "text": "The tool inspected 60 local fixture tiles without invalid geometry, selected no label comparison, and performed no deployment.",
+          "support": [
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 42,
+              "event_id": "fiction-05-s1-e043",
+              "fragment": "Command: tile-check fixtures/geometry --summary\nExit code: 0\n60 fixture tiles inspected; no invalid geometry found. No historical-label comparison selected. No deployment performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Historical label persistence passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The tool inspected 60 local fixture tiles without invalid geometry, selected no label comparison, and performed no deployment."
+    },
+    "fiction-05/q3": {
+      "required_facts": [
+        {
+          "text": "The still-required historical-label check covers an initial import followed by an identical second import.",
+          "support": [
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 0,
+              "event_id": "fiction-05-s1-e001",
+              "fragment": "AM-203 migrates the footpath map tiles. Before completion, prove historical footpath labels survive an import followed by an identical second import. Keep that acceptance check even if geometry inspection passes."
+            },
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 43,
+              "event_id": "fiction-05-s1-e044",
+              "fragment": "Continue AM-203 with the historical-label acceptance check. This is still the migration task; do not open a second ticket for its missing evidence."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The label requirement was dropped.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The still-required historical-label check covers an initial import followed by an identical second import."
+    },
+    "fiction-05/q4": {
+      "required_facts": [
+        {
+          "text": "No. The user explicitly kept missing label evidence within the same AM-203 migration task.",
+          "support": [
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 43,
+              "event_id": "fiction-05-s1-e044",
+              "fragment": "Continue AM-203 with the historical-label acceptance check. This is still the migration task; do not open a second ticket for its missing evidence."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "AM-203 is complete and label testing is unrelated.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user explicitly kept missing label evidence within the same AM-203 migration task."
+    },
+    "fiction-05/q5": {
+      "required_facts": [
+        {
+          "text": "There are distinct captured local geometry tool records; the assistant boundary commentary is its own reported inspection, not a historical-label test.",
+          "support": [
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 2,
+              "event_id": "fiction-05-s1-e003",
+              "fragment": "Command: tile-inspect fixtures/sector-01 --geometry\nExit code: 0\n{\n  \"sector\": \"north ridge\",\n  \"records\": [\n    {\n      \"tile\": \"local/tiles/sector-01/tile-001.geojson\",\n      \"feature_id\": \"path-01-001\",\n      \"display_area\": \"north ridge\",\n      \"geometry\": \"LineString\",\n      \"vertex_count\": 11,\n      \"bounds_check\": \"inside selected fixture envelope\",\n      \"topology_note\": \"joins adjacent tile at a shared endpoint\",\n      \"inspection_scope\": \"local fixture geometry only; this row is not a historical-label comparison\"\n    },\n    {\n      \"tile\": \"local/tiles/sector-01/tile-002.geojson\",\n      \"feature_id\": \"path-01-002\",\n      \"display_area\": \"north ridge\",\n      \"geometry\": \"LineString\",\n      \"vertex_count\": 24,\n      \"bounds_check\": \"inside selected fixture envelope\",\n      \"topology_note\": \"short spur ends at a marked access gate\",\n      \"inspection_scope\": \"local fixture geometry only; this row is not a historical-label comparison\"\n    },\n    {\n      \"tile\": \"local/tiles/sector-01/tile-003.geojson\",\n      \"feature_id\": \"path-01-003\",\n      \"display_area\": \"north ridge\",\n      \"geometry\": \"LineString\",\n      \"vertex_count\": 37,\n      \"bounds_check\": \"inside selected fixture envelope\",\n      \"topology_note\": \"bridge segment has two distinct endpoints\",\n      \"inspection_scope\": \"local fixture geometry only; this row is not a historical-label comparison\"\n    }\n  ],\n  \"geometry_errors\": 0\n}"
+            },
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 3,
+              "event_id": "fiction-05-s1-e004",
+              "fragment": "The north ridge inventory is readable. I checked the local boundary shapes shown in this batch and kept its three sampled tile identifiers in the inspection notes. This observation concerns the selected geometry fixture."
+            },
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 42,
+              "event_id": "fiction-05-s1-e043",
+              "fragment": "Command: tile-check fixtures/geometry --summary\nExit code: 0\n60 fixture tiles inspected; no invalid geometry found. No historical-label comparison selected. No deployment performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Assistant commentary proves historical label retention.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "There are distinct captured local geometry tool records; the assistant boundary commentary is its own reported inspection, not a historical-label test."
+    },
+    "fiction-05/q6": {
+      "required_facts": [
+        {
+          "text": "Local geometry passed, historical-label acceptance remains required, and no deployment was performed.",
+          "support": [
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 0,
+              "event_id": "fiction-05-s1-e001",
+              "fragment": "AM-203 migrates the footpath map tiles. Before completion, prove historical footpath labels survive an import followed by an identical second import. Keep that acceptance check even if geometry inspection passes."
+            },
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 42,
+              "event_id": "fiction-05-s1-e043",
+              "fragment": "Command: tile-check fixtures/geometry --summary\nExit code: 0\n60 fixture tiles inspected; no invalid geometry found. No historical-label comparison selected. No deployment performed."
+            },
+            {
+              "session_id": "fiction-05-s1",
+              "event_index": 43,
+              "event_id": "fiction-05-s1-e044",
+              "fragment": "Continue AM-203 with the historical-label acceptance check. This is still the migration task; do not open a second ticket for its missing evidence."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The production map migration is verified.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Local geometry passed, historical-label acceptance remains required, and no deployment was performed."
+    },
+    "fiction-06/q1": {
+      "required_facts": [
+        {
+          "text": "Record the staging caption-track check for IA-88; production promotion remains on hold.",
+          "support": [
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 0,
+              "event_id": "fiction-06-s1-e001",
+              "fragment": "IA-88 player rollout needs a caption-track check in staging after deployment. Keep production promotion on hold until that check is recorded. IA-73 equalizer tuning is finished; do not reopen it for player assets."
+            },
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 36,
+              "event_id": "fiction-06-s1-e037",
+              "fragment": "Command: player-release deploy --target staging --build ia88-c3\nExit code: 0\nBuild ia88-c3 deployed to staging. Health endpoint returned 200. Caption playback was not exercised. Production target was not contacted."
+            },
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 37,
+              "event_id": "fiction-06-s1-e038",
+              "fragment": "Keep IA-88 open for the recorded staging caption check. Leave IA-73 closed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Deployment health proves caption playback.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Record the staging caption-track check for IA-88; production promotion remains on hold."
+    },
+    "fiction-06/q2": {
+      "required_facts": [
+        {
+          "text": "Build ia88-c3 deployed to staging and health returned 200; captions were unexercised and production uncontacted.",
+          "support": [
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 36,
+              "event_id": "fiction-06-s1-e037",
+              "fragment": "Command: player-release deploy --target staging --build ia88-c3\nExit code: 0\nBuild ia88-c3 deployed to staging. Health endpoint returned 200. Caption playback was not exercised. Production target was not contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The build is verified in production.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Build ia88-c3 deployed to staging and health returned 200; captions were unexercised and production uncontacted."
+    },
+    "fiction-06/q3": {
+      "required_facts": [
+        {
+          "text": "The assistant reported staging captions looked correct without attaching a report; the deployment tool did not exercise captions.",
+          "support": [
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 35,
+              "event_id": "fiction-06-s1-e036",
+              "fragment": "The full player tests passed and the caption track looked correct in staging. I have not attached a staging caption report."
+            },
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 36,
+              "event_id": "fiction-06-s1-e037",
+              "fragment": "Command: player-release deploy --target staging --build ia88-c3\nExit code: 0\nBuild ia88-c3 deployed to staging. Health endpoint returned 200. Caption playback was not exercised. Production target was not contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The staging caption pass is direct tool evidence.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported staging captions looked correct without attaching a report; the deployment tool did not exercise captions."
+    },
+    "fiction-06/q4": {
+      "required_facts": [
+        {
+          "text": "No. The user explicitly left IA-73 closed while keeping IA-88 open.",
+          "support": [
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 0,
+              "event_id": "fiction-06-s1-e001",
+              "fragment": "IA-88 player rollout needs a caption-track check in staging after deployment. Keep production promotion on hold until that check is recorded. IA-73 equalizer tuning is finished; do not reopen it for player assets."
+            },
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 37,
+              "event_id": "fiction-06-s1-e038",
+              "fragment": "Keep IA-88 open for the recorded staging caption check. Leave IA-73 closed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "IA-73 is reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user explicitly left IA-73 closed while keeping IA-88 open."
+    },
+    "fiction-06/q5": {
+      "required_facts": [
+        {
+          "text": "They inspected local audio headers and expressly did not check captions or remote playback.",
+          "support": [
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 1,
+              "event_id": "fiction-06-s1-e002",
+              "fragment": "Command: audio-assets inspect fixtures/asset-01.json\nExit code: 0\nAsset description: spoken introduction. Duration: 61 seconds. Channels: 1. Local sample rate: 48000 Hz. Header readable. This inspection checks the local audio header, not captions or remote playback."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Local header success validates production caption playback.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "They inspected local audio headers and expressly did not check captions or remote playback."
+    },
+    "fiction-06/q6": {
+      "required_facts": [
+        {
+          "text": "Staging deployment succeeded, caption verification is still required, and production promotion is on hold.",
+          "support": [
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 0,
+              "event_id": "fiction-06-s1-e001",
+              "fragment": "IA-88 player rollout needs a caption-track check in staging after deployment. Keep production promotion on hold until that check is recorded. IA-73 equalizer tuning is finished; do not reopen it for player assets."
+            },
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 36,
+              "event_id": "fiction-06-s1-e037",
+              "fragment": "Command: player-release deploy --target staging --build ia88-c3\nExit code: 0\nBuild ia88-c3 deployed to staging. Health endpoint returned 200. Caption playback was not exercised. Production target was not contacted."
+            },
+            {
+              "session_id": "fiction-06-s1",
+              "event_index": 37,
+              "event_id": "fiction-06-s1-e038",
+              "fragment": "Keep IA-88 open for the recorded staging caption check. Leave IA-73 closed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "IA-88 is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Staging deployment succeeded, caption verification is still required, and production promotion is on hold."
+    },
+    "fiction-07/q1": {
+      "required_facts": [
+        {
+          "text": "The foldout crop omits parts 17 and 18; preserve all numbered parts before review.",
+          "support": [
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 0,
+              "event_id": "fiction-07-s1-e001",
+              "fragment": "TS-52 scans the workshop manuals. Before review, verify the foldout diagram has all its numbered parts. Cancel the idea of uploading scans to the public site; local archive work continues."
+            },
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 26,
+              "event_id": "fiction-07-s1-e027",
+              "fragment": "Command: foldout-check local/foldout.tif --parts 1-18\nExit code: 1\nParts 1 through 16 located. Parts 17 and 18 are outside the cropped image. No upload attempted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Every diagram part is confirmed present.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The foldout crop omits parts 17 and 18; preserve all numbered parts before review."
+    },
+    "fiction-07/q2": {
+      "required_facts": [
+        {
+          "text": "Local archive work continues, while public-site upload is cancelled.",
+          "support": [
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 0,
+              "event_id": "fiction-07-s1-e001",
+              "fragment": "TS-52 scans the workshop manuals. Before review, verify the foldout diagram has all its numbered parts. Cancel the idea of uploading scans to the public site; local archive work continues."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire scanning task was cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Local archive work continues, while public-site upload is cancelled."
+    },
+    "fiction-07/q3": {
+      "required_facts": [
+        {
+          "text": "A direct foldout-check result finds parts 17 and 18 outside the crop; the assistant separately claimed a complete visual check.",
+          "support": [
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 25,
+              "event_id": "fiction-07-s1-e026",
+              "fragment": "The scans are complete and every diagram part is present. I checked the foldout visually."
+            },
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 26,
+              "event_id": "fiction-07-s1-e027",
+              "fragment": "Command: foldout-check local/foldout.tif --parts 1-18\nExit code: 1\nParts 1 through 16 located. Parts 17 and 18 are outside the cropped image. No upload attempted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant visual claim overrides the captured failure.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "A direct foldout-check result finds parts 17 and 18 outside the crop; the assistant separately claimed a complete visual check."
+    },
+    "fiction-07/q4": {
+      "required_facts": [
+        {
+          "text": "No. The explicit foldout check failed on two missing parts despite readable local scan inventories.",
+          "support": [
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 1,
+              "event_id": "fiction-07-s1-e002",
+              "fragment": "Command: scan-inventory fixtures/booklet-01\nExit code: 0\n[\n  {\n    \"page\": 1,\n    \"fixture\": \"local/booklet-01/page-01.tif\",\n    \"inspection\": \"binding\",\n    \"resolution_dpi\": 300,\n    \"rotation_degrees\": 90,\n    \"crop_status\": \"all visible page edges inside image\",\n    \"operator_note\": \"corner shadow visible but text unobscured\"\n  },\n  {\n    \"page\": 2,\n    \"fixture\": \"local/booklet-01/page-02.tif\",\n    \"inspection\": \"binding\",\n    \"resolution_dpi\": 300,\n    \"rotation_degrees\": 0,\n    \"crop_status\": \"all visible page edges inside image\",\n    \"operator_note\": \"faint margin pencil mark retained\"\n  }\n]"
+            },
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 26,
+              "event_id": "fiction-07-s1-e027",
+              "fragment": "Command: foldout-check local/foldout.tif --parts 1-18\nExit code: 1\nParts 1 through 16 located. Parts 17 and 18 are outside the cropped image. No upload attempted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Successful scan inventories prove the foldout complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The explicit foldout check failed on two missing parts despite readable local scan inventories."
+    },
+    "fiction-07/q5": {
+      "required_facts": [
+        {
+          "text": "No. Public upload was cancelled and the foldout still fails its required check.",
+          "support": [
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 0,
+              "event_id": "fiction-07-s1-e001",
+              "fragment": "TS-52 scans the workshop manuals. Before review, verify the foldout diagram has all its numbered parts. Cancel the idea of uploading scans to the public site; local archive work continues."
+            },
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 26,
+              "event_id": "fiction-07-s1-e027",
+              "fragment": "Command: foldout-check local/foldout.tif --parts 1-18\nExit code: 1\nParts 1 through 16 located. Parts 17 and 18 are outside the cropped image. No upload attempted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Public upload is approved.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. Public upload was cancelled and the foldout still fails its required check."
+    },
+    "fiction-07/q6": {
+      "required_facts": [
+        {
+          "text": "Recover the crop containing parts 17 and 18, rerun the foldout check, and retain local-only scope.",
+          "support": [
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 0,
+              "event_id": "fiction-07-s1-e001",
+              "fragment": "TS-52 scans the workshop manuals. Before review, verify the foldout diagram has all its numbered parts. Cancel the idea of uploading scans to the public site; local archive work continues."
+            },
+            {
+              "session_id": "fiction-07-s1",
+              "event_index": 26,
+              "event_id": "fiction-07-s1-e027",
+              "fragment": "Command: foldout-check local/foldout.tif --parts 1-18\nExit code: 1\nParts 1 through 16 located. Parts 17 and 18 are outside the cropped image. No upload attempted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "TS-52 can close now.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Recover the crop containing parts 17 and 18, rerun the foldout check, and retain local-only scope."
+    },
+    "fiction-08/q1": {
+      "required_facts": [
+        {
+          "text": "VP-61 was reopened for narrow-stock rotation; the approved wide-stock layout was explicitly excluded.",
+          "support": [
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 0,
+              "event_id": "fiction-08-s2-e001",
+              "fragment": "Reopen VP-61 to fix the rotated label on narrow stock. This is a real continuation of VP-61. Do not reopen the approved wide-stock layout."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All parcel-label layouts were reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "VP-61 was reopened for narrow-stock rotation; the approved wide-stock layout was explicitly excluded."
+    },
+    "fiction-08/q2": {
+      "required_facts": [
+        {
+          "text": "Save the customs-description report; the user explicitly kept VP-62 open.",
+          "support": [
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 3,
+              "event_id": "fiction-08-s2-e004",
+              "fragment": "Keep VP-62 open until the customs-description report is saved."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "VP-62 is closed because the assistant said descriptions were present.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Save the customs-description report; the user explicitly kept VP-62 open."
+    },
+    "fiction-08/q3": {
+      "required_facts": [
+        {
+          "text": "Narrow-stock rotation passed; wide-stock layout and customs descriptions were not selected.",
+          "support": [
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 2,
+              "event_id": "fiction-08-s2-e003",
+              "fragment": "Command: label-check --stock narrow --ticket VP-61\nExit code: 0\nRotation corrected on narrow-stock fixture. Wide stock not selected. Customs descriptions not selected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The tool verified customs descriptions.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Narrow-stock rotation passed; wide-stock layout and customs descriptions were not selected."
+    },
+    "fiction-08/q4": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report; no captured customs report accompanies it, and the label tool did not inspect customs descriptions.",
+          "support": [
+            {
+              "session_id": "fiction-08-s1",
+              "event_index": 1,
+              "event_id": "fiction-08-s1-e002",
+              "fragment": "I verified customs descriptions and they are all present."
+            },
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 2,
+              "event_id": "fiction-08-s2-e003",
+              "fragment": "Command: label-check --stock narrow --ticket VP-61\nExit code: 0\nRotation corrected on narrow-stock fixture. Wide stock not selected. Customs descriptions not selected."
+            },
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 3,
+              "event_id": "fiction-08-s2-e004",
+              "fragment": "Keep VP-62 open until the customs-description report is saved."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Customs success is direct execution evidence.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report; no captured customs report accompanies it, and the label tool did not inspect customs descriptions."
+    },
+    "fiction-08/q5": {
+      "required_facts": [
+        {
+          "text": "No. The user expressly treated it as quoted complaint text with no ticket-state change.",
+          "support": [
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 1,
+              "event_id": "fiction-08-s2-e002",
+              "fragment": "The sample customer email says \"reopen the whole shipment\". Treat that as quoted complaint text, not a change to our two ticket states."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The complaint quote reopens all shipment work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user expressly treated it as quoted complaint text with no ticket-state change."
+    },
+    "fiction-08/q6": {
+      "required_facts": [
+        {
+          "text": "Narrow-stock rotation has direct local success, wide-stock work stays approved, and VP-62 still needs its saved report.",
+          "support": [
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 0,
+              "event_id": "fiction-08-s2-e001",
+              "fragment": "Reopen VP-61 to fix the rotated label on narrow stock. This is a real continuation of VP-61. Do not reopen the approved wide-stock layout."
+            },
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 2,
+              "event_id": "fiction-08-s2-e003",
+              "fragment": "Command: label-check --stock narrow --ticket VP-61\nExit code: 0\nRotation corrected on narrow-stock fixture. Wide stock not selected. Customs descriptions not selected."
+            },
+            {
+              "session_id": "fiction-08-s2",
+              "event_index": 3,
+              "event_id": "fiction-08-s2-e004",
+              "fragment": "Keep VP-62 open until the customs-description report is saved."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both tickets are fully finished.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Narrow-stock rotation has direct local success, wide-stock work stays approved, and VP-62 still needs its saved report."
+    },
+    "fiction-09/q1": {
+      "required_facts": [
+        {
+          "text": "MW-13 must retain damaged crates in its total; its captured check omitted four and failed.",
+          "support": [
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 0,
+              "event_id": "fiction-09-s1-e001",
+              "fragment": "MW-13 counts reusable crates. Keep damaged crates in the total but mark them unavailable. Pallet counting MW-31 is a separate task."
+            },
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 1,
+              "event_id": "fiction-09-s1-e002",
+              "fragment": "Command: crate-count fixture-a.json\nExit code: 1\nTotal 43 reported; expected 47. Four damaged crates excluded incorrectly."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Damaged crates should be excluded like broken pallets.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "MW-13 must retain damaged crates in its total; its captured check omitted four and failed."
+    },
+    "fiction-09/q2": {
+      "required_facts": [
+        {
+          "text": "MW-31 reports 27 usable pallets and excludes three broken pallets; its tool check passed.",
+          "support": [
+            {
+              "session_id": "fiction-09-s2",
+              "event_index": 0,
+              "event_id": "fiction-09-s2-e001",
+              "fragment": "For MW-31 pallets, exclude broken pallets entirely. Do not copy the damaged-crate rule."
+            },
+            {
+              "session_id": "fiction-09-s2",
+              "event_index": 2,
+              "event_id": "fiction-09-s2-e003",
+              "fragment": "Command: pallet-count fixture-b.json\nExit code: 0\n27 usable pallets reported; 3 broken pallets excluded. Crate fixtures were not run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pallet pass fixes the crate count.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "MW-31 reports 27 usable pallets and excludes three broken pallets; its tool check passed."
+    },
+    "fiction-09/q3": {
+      "required_facts": [
+        {
+          "text": "No. The user explicitly separated MW-13 crates and MW-31 pallets, with different damaged-item rules.",
+          "support": [
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 0,
+              "event_id": "fiction-09-s1-e001",
+              "fragment": "MW-13 counts reusable crates. Keep damaged crates in the total but mark them unavailable. Pallet counting MW-31 is a separate task."
+            },
+            {
+              "session_id": "fiction-09-s2",
+              "event_index": 0,
+              "event_id": "fiction-09-s2-e001",
+              "fragment": "For MW-31 pallets, exclude broken pallets entirely. Do not copy the damaged-crate rule."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Merge the counting rules.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user explicitly separated MW-13 crates and MW-31 pallets, with different damaged-item rules."
+    },
+    "fiction-09/q4": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed both fixes ready, but direct crate output failed while pallet output passed.",
+          "support": [
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 1,
+              "event_id": "fiction-09-s1-e002",
+              "fragment": "Command: crate-count fixture-a.json\nExit code: 1\nTotal 43 reported; expected 47. Four damaged crates excluded incorrectly."
+            },
+            {
+              "session_id": "fiction-09-s2",
+              "event_index": 1,
+              "event_id": "fiction-09-s2-e002",
+              "fragment": "Both counting fixes are checked and ready."
+            },
+            {
+              "session_id": "fiction-09-s2",
+              "event_index": 2,
+              "event_id": "fiction-09-s2-e003",
+              "fragment": "Command: pallet-count fixture-b.json\nExit code: 0\n27 usable pallets reported; 3 broken pallets excluded. Crate fixtures were not run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both checks are directly confirmed passing.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant claimed both fixes ready, but direct crate output failed while pallet output passed."
+    },
+    "fiction-09/q5": {
+      "required_facts": [
+        {
+          "text": "Fix MW-13 so damaged crates remain in the total and rerun its crate fixture.",
+          "support": [
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 0,
+              "event_id": "fiction-09-s1-e001",
+              "fragment": "MW-13 counts reusable crates. Keep damaged crates in the total but mark them unavailable. Pallet counting MW-31 is a separate task."
+            },
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 1,
+              "event_id": "fiction-09-s1-e002",
+              "fragment": "Command: crate-count fixture-a.json\nExit code: 1\nTotal 43 reported; expected 47. Four damaged crates excluded incorrectly."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Apply pallet exclusion to crates.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix MW-13 so damaged crates remain in the total and rerun its crate fixture."
+    },
+    "fiction-09/q6": {
+      "required_facts": [
+        {
+          "text": "Pallet output passed only its pallet fixture; crate output still fails by four damaged crates.",
+          "support": [
+            {
+              "session_id": "fiction-09-s1",
+              "event_index": 1,
+              "event_id": "fiction-09-s1-e002",
+              "fragment": "Command: crate-count fixture-a.json\nExit code: 1\nTotal 43 reported; expected 47. Four damaged crates excluded incorrectly."
+            },
+            {
+              "session_id": "fiction-09-s2",
+              "event_index": 2,
+              "event_id": "fiction-09-s2-e003",
+              "fragment": "Command: pallet-count fixture-b.json\nExit code: 0\n27 usable pallets reported; 3 broken pallets excluded. Crate fixtures were not run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The shared count topic implies shared acceptance.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Pallet output passed only its pallet fixture; crate output still fails by four damaged crates."
+    },
+    "fiction-10/q1": {
+      "required_facts": [
+        {
+          "text": "RT-109 needs right-turn text; colored arrows remain discarded.",
+          "support": [
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 1,
+              "event_id": "fiction-10-s2-e002",
+              "fragment": "Command: guidance-check fixtures/balcony.html\nExit code: 1\nDirection text says turn left. Fixture route requires turn right. No seat-label check selected."
+            },
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 2,
+              "event_id": "fiction-10-s2-e003",
+              "fragment": "For RT-109, use the right-turn text. Leave RT-107 closed and keep the colored-arrow proposal discarded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Use a left-turn arrow.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "RT-109 needs right-turn text; colored arrows remain discarded."
+    },
+    "fiction-10/q2": {
+      "required_facts": [
+        {
+          "text": "No. It was a planning question, and the user explicitly left RT-107 closed.",
+          "support": [
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 0,
+              "event_id": "fiction-10-s2-e001",
+              "fragment": "Could we reopen RT-107 if the hall is renumbered next season? This is a planning question only."
+            },
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 2,
+              "event_id": "fiction-10-s2-e003",
+              "fragment": "For RT-109, use the right-turn text. Leave RT-107 closed and keep the colored-arrow proposal discarded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "RT-107 is reopened.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. It was a planning question, and the user explicitly left RT-107 closed."
+    },
+    "fiction-10/q3": {
+      "required_facts": [
+        {
+          "text": "The captured guidance check finds left-turn text where the fixture requires right-turn text.",
+          "support": [
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 1,
+              "event_id": "fiction-10-s2-e002",
+              "fragment": "Command: guidance-check fixtures/balcony.html\nExit code: 1\nDirection text says turn left. Fixture route requires turn right. No seat-label check selected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The guidance is verified correct.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The captured guidance check finds left-turn text where the fixture requires right-turn text."
+    },
+    "fiction-10/q4": {
+      "required_facts": [
+        {
+          "text": "The assistant reported a correct app check; the captured guidance command instead failed.",
+          "support": [
+            {
+              "session_id": "fiction-10-s1",
+              "event_index": 1,
+              "event_id": "fiction-10-s1-e002",
+              "fragment": "I checked the guidance in the app and it is correct."
+            },
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 1,
+              "event_id": "fiction-10-s2-e002",
+              "fragment": "Command: guidance-check fixtures/balcony.html\nExit code: 1\nDirection text says turn left. Fixture route requires turn right. No seat-label check selected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant app-check claim is direct tool success.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported a correct app check; the captured guidance command instead failed."
+    },
+    "fiction-10/q5": {
+      "required_facts": [
+        {
+          "text": "No. The command selected guidance, not seat-label checks, and RT-107 remains closed.",
+          "support": [
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 1,
+              "event_id": "fiction-10-s2-e002",
+              "fragment": "Command: guidance-check fixtures/balcony.html\nExit code: 1\nDirection text says turn left. Fixture route requires turn right. No seat-label check selected."
+            },
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 2,
+              "event_id": "fiction-10-s2-e003",
+              "fragment": "For RT-109, use the right-turn text. Leave RT-107 closed and keep the colored-arrow proposal discarded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "A guidance failure reopens seat-label acceptance.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The command selected guidance, not seat-label checks, and RT-107 remains closed."
+    },
+    "fiction-10/q6": {
+      "required_facts": [
+        {
+          "text": "Correct the direction to right-turn text and rerun the guidance check.",
+          "support": [
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 1,
+              "event_id": "fiction-10-s2-e002",
+              "fragment": "Command: guidance-check fixtures/balcony.html\nExit code: 1\nDirection text says turn left. Fixture route requires turn right. No seat-label check selected."
+            },
+            {
+              "session_id": "fiction-10-s2",
+              "event_index": 2,
+              "event_id": "fiction-10-s2-e003",
+              "fragment": "For RT-109, use the right-turn text. Leave RT-107 closed and keep the colored-arrow proposal discarded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "RT-109 is already complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Correct the direction to right-turn text and rerun the guidance check."
+    },
+    "fiction-11/q1": {
+      "required_facts": [
+        {
+          "text": "The local fixture counted one unit over 9999 to 0000; the command contacted no production meter.",
+          "support": [
+            {
+              "session_id": "fiction-11-s1",
+              "event_index": 2,
+              "event_id": "fiction-11-s1-e003",
+              "fragment": "Command: meter-test fixtures/rollover.json\nExit code: 0\nLocal rollover from 9999 to 0000 counted one unit. Production meters were not contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Production meter rollover is verified.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The local fixture counted one unit over 9999 to 0000; the command contacted no production meter."
+    },
+    "fiction-11/q2": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report of an earlier production check; no captured production observation supports it. The captured test is local.",
+          "support": [
+            {
+              "session_id": "fiction-11-s1",
+              "event_index": 1,
+              "event_id": "fiction-11-s1-e002",
+              "fragment": "The rollover works on production meters; I checked it earlier."
+            },
+            {
+              "session_id": "fiction-11-s1",
+              "event_index": 2,
+              "event_id": "fiction-11-s1-e003",
+              "fragment": "Command: meter-test fixtures/rollover.json\nExit code: 0\nLocal rollover from 9999 to 0000 counted one unit. Production meters were not contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The local test is proof of production behavior.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report of an earlier production check; no captured production observation supports it. The captured test is local."
+    },
+    "fiction-11/q3": {
+      "required_facts": [
+        {
+          "text": "Record a real meter rollover observation while keeping billing-preview evidence separate.",
+          "support": [
+            {
+              "session_id": "fiction-11-s1",
+              "event_index": 0,
+              "event_id": "fiction-11-s1-e001",
+              "fragment": "SM-44 sensor totals need a rollover check. A billing statement preview is a different project and supplies no meter evidence."
+            },
+            {
+              "session_id": "fiction-11-s2",
+              "event_index": 2,
+              "event_id": "fiction-11-s2-e003",
+              "fragment": "Keep both tasks open: record a real meter rollover observation and inspect the rendered preview totals."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Billing deployment completes sensor rollover.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Record a real meter rollover observation while keeping billing-preview evidence separate."
+    },
+    "fiction-11/q4": {
+      "required_facts": [
+        {
+          "text": "The preview build deployed and health returned 200; no rendered-total assertions ran.",
+          "support": [
+            {
+              "session_id": "fiction-11-s2",
+              "event_index": 1,
+              "event_id": "fiction-11-s2-e002",
+              "fragment": "Command: billing-release deploy --target preview --build sb12-d8\nExit code: 0\nPreview build sb12-d8 deployed. Page health 200. No rendered-total assertions run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Adjusted totals are verified correctly rendered.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The preview build deployed and health returned 200; no rendered-total assertions ran."
+    },
+    "fiction-11/q5": {
+      "required_facts": [
+        {
+          "text": "Inspect that the adjusted total appears beside the original total in the rendered preview.",
+          "support": [
+            {
+              "session_id": "fiction-11-s2",
+              "event_index": 0,
+              "event_id": "fiction-11-s2-e001",
+              "fragment": "SB-12 billing preview needs the adjusted total shown beside the original total."
+            },
+            {
+              "session_id": "fiction-11-s2",
+              "event_index": 2,
+              "event_id": "fiction-11-s2-e003",
+              "fragment": "Keep both tasks open: record a real meter rollover observation and inspect the rendered preview totals."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The health response closes SB-12.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Inspect that the adjusted total appears beside the original total in the rendered preview."
+    },
+    "fiction-11/q6": {
+      "required_facts": [
+        {
+          "text": "Meter local rollover passed but real observation remains; billing preview deployed but rendered totals still need inspection.",
+          "support": [
+            {
+              "session_id": "fiction-11-s1",
+              "event_index": 2,
+              "event_id": "fiction-11-s1-e003",
+              "fragment": "Command: meter-test fixtures/rollover.json\nExit code: 0\nLocal rollover from 9999 to 0000 counted one unit. Production meters were not contacted."
+            },
+            {
+              "session_id": "fiction-11-s2",
+              "event_index": 1,
+              "event_id": "fiction-11-s2-e002",
+              "fragment": "Command: billing-release deploy --target preview --build sb12-d8\nExit code: 0\nPreview build sb12-d8 deployed. Page health 200. No rendered-total assertions run."
+            },
+            {
+              "session_id": "fiction-11-s2",
+              "event_index": 2,
+              "event_id": "fiction-11-s2-e003",
+              "fragment": "Keep both tasks open: record a real meter rollover observation and inspect the rendered preview totals."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both production behaviors are verified.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Meter local rollover passed but real observation remains; billing preview deployed but rendered totals still need inspection."
+    },
+    "fiction-12/q1": {
+      "required_facts": [
+        {
+          "text": "UC-8 chart export was reopened for a missing degree symbol; UC-9 remains cancelled.",
+          "support": [
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 0,
+              "event_id": "fiction-12-s2-e001",
+              "fragment": "Reopen UC-8 because the degree symbol disappears on the second page. UC-9 stays cancelled. Forget the old kiln nickname and remove its observation."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The automatic kiln-start task was reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "UC-8 chart export was reopened for a missing degree symbol; UC-9 remains cancelled."
+    },
+    "fiction-12/q2": {
+      "required_facts": [
+        {
+          "text": "The PDF glyph check finds the degree sign absent after 860 on page two; page-one signs are present.",
+          "support": [
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 2,
+              "event_id": "fiction-12-s2-e003",
+              "fragment": "Command: pdf-glyph-check out/firing-chart.pdf\nExit code: 1\nPage 2: degree sign absent after 860. Page 1 degree signs present. No kiln commands executed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All chart symbols passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The PDF glyph check finds the degree sign absent after 860 on page two; page-one signs are present."
+    },
+    "fiction-12/q3": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report contradicted by a direct page-two glyph failure.",
+          "support": [
+            {
+              "session_id": "fiction-12-s1",
+              "event_index": 2,
+              "event_id": "fiction-12-s1-e003",
+              "fragment": "The chart PDF embeds all temperature symbols correctly."
+            },
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 2,
+              "event_id": "fiction-12-s2-e003",
+              "fragment": "Command: pdf-glyph-check out/firing-chart.pdf\nExit code: 1\nPage 2: degree sign absent after 860. Page 1 degree signs present. No kiln commands executed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant embedding claim is confirmed tool evidence.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report contradicted by a direct page-two glyph failure."
+    },
+    "fiction-12/q4": {
+      "required_facts": [
+        {
+          "text": "No. Its observation was explicitly removed; continue by UC-8 and the PDF defect.",
+          "support": [
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 0,
+              "event_id": "fiction-12-s2-e001",
+              "fragment": "Reopen UC-8 because the degree symbol disappears on the second page. UC-9 stays cancelled. Forget the old kiln nickname and remove its observation."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "WREN-PURGE-95",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "No. Its observation was explicitly removed; continue by UC-8 and the PDF defect."
+    },
+    "fiction-12/q5": {
+      "required_facts": [
+        {
+          "text": "No. UC-9 remains cancelled, and the recorded command executed no kiln commands.",
+          "support": [
+            {
+              "session_id": "fiction-12-s1",
+              "event_index": 1,
+              "event_id": "fiction-12-s1-e002",
+              "fragment": "UC-8 firing chart export is finished. Cancel the experimental automatic kiln-start task UC-9."
+            },
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 0,
+              "event_id": "fiction-12-s2-e001",
+              "fragment": "Reopen UC-8 because the degree symbol disappears on the second page. UC-9 stays cancelled. Forget the old kiln nickname and remove its observation."
+            },
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 2,
+              "event_id": "fiction-12-s2-e003",
+              "fragment": "Command: pdf-glyph-check out/firing-chart.pdf\nExit code: 1\nPage 2: degree sign absent after 860. Page 1 degree signs present. No kiln commands executed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Automatic kiln start is authorized.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. UC-9 remains cancelled, and the recorded command executed no kiln commands."
+    },
+    "fiction-12/q6": {
+      "required_facts": [
+        {
+          "text": "Repair the UC-8 second-page degree symbol and rerun its PDF check; preserve the UC-9 cancellation and omit the scratch nickname.",
+          "support": [
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 0,
+              "event_id": "fiction-12-s2-e001",
+              "fragment": "Reopen UC-8 because the degree symbol disappears on the second page. UC-9 stays cancelled. Forget the old kiln nickname and remove its observation."
+            },
+            {
+              "session_id": "fiction-12-s2",
+              "event_index": 2,
+              "event_id": "fiction-12-s2-e003",
+              "fragment": "Command: pdf-glyph-check out/firing-chart.pdf\nExit code: 1\nPage 2: degree sign absent after 860. Page 1 degree signs present. No kiln commands executed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "WREN-PURGE-95",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Repair the UC-8 second-page degree symbol and rerun its PDF check; preserve the UC-9 cancellation and omit the scratch nickname."
+    },
+    "fiction-13/q1": {
+      "required_facts": [
+        {
+          "text": "Fix the synthetic opt-out case so the opted-out record is not queued for its next reminder.",
+          "support": [
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 0,
+              "event_id": "fiction-13-s1-e001",
+              "fragment": "HC-208 is a fictional appointment reminder demo. Use synthetic appointments only. Before review, check that opting out suppresses the next reminder."
+            },
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 2,
+              "event_id": "fiction-13-s1-e003",
+              "fragment": "Command: reminder-demo check --synthetic fixture-optout.json\nExit code: 1\nOpted-out synthetic record demo-14 still queued for its next reminder. No real recipients or services contacted."
+            },
+            {
+              "session_id": "fiction-13-s2",
+              "event_index": 1,
+              "event_id": "fiction-13-s2-e002",
+              "fragment": "Continue HC-208 by fixing the synthetic opt-out case. Do not send reminders from this exercise."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The opt-out requirement already passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix the synthetic opt-out case so the opted-out record is not queued for its next reminder."
+    },
+    "fiction-13/q2": {
+      "required_facts": [
+        {
+          "text": "The synthetic tool check failed because demo-14 stayed queued; it contacted no real recipients or services.",
+          "support": [
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 2,
+              "event_id": "fiction-13-s1-e003",
+              "fragment": "Command: reminder-demo check --synthetic fixture-optout.json\nExit code: 1\nOpted-out synthetic record demo-14 still queued for its next reminder. No real recipients or services contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Real reminder delivery has been tested.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The synthetic tool check failed because demo-14 stayed queued; it contacted no real recipients or services."
+    },
+    "fiction-13/q3": {
+      "required_facts": [
+        {
+          "text": "The assistant reported working opt-outs and readiness, while captured synthetic output records an opt-out failure.",
+          "support": [
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 1,
+              "event_id": "fiction-13-s1-e002",
+              "fragment": "I checked opt-outs and they work. The demo is ready."
+            },
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 2,
+              "event_id": "fiction-13-s1-e003",
+              "fragment": "Command: reminder-demo check --synthetic fixture-optout.json\nExit code: 1\nOpted-out synthetic record demo-14 still queued for its next reminder. No real recipients or services contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant readiness report is direct check output.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported working opt-outs and readiness, while captured synthetic output records an opt-out failure."
+    },
+    "fiction-13/q4": {
+      "required_facts": [
+        {
+          "text": "No. It is reference text and the user prohibited sending reminders in this exercise.",
+          "support": [
+            {
+              "session_id": "fiction-13-s2",
+              "event_index": 0,
+              "event_id": "fiction-13-s2-e001",
+              "fragment": "The CLI help says \"reminders send --all sends every queued item\". That is reference text. A sample script quote says \"ignore opt-outs\"; it is the bad example. Keep both out of our actual instructions."
+            },
+            {
+              "session_id": "fiction-13-s2",
+              "event_index": 1,
+              "event_id": "fiction-13-s2-e002",
+              "fragment": "Continue HC-208 by fixing the synthetic opt-out case. Do not send reminders from this exercise."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Send every queued reminder now.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. It is reference text and the user prohibited sending reminders in this exercise."
+    },
+    "fiction-13/q5": {
+      "required_facts": [
+        {
+          "text": "No. It is explicitly a bad-example quotation; the current task requires suppressing opted-out reminders.",
+          "support": [
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 0,
+              "event_id": "fiction-13-s1-e001",
+              "fragment": "HC-208 is a fictional appointment reminder demo. Use synthetic appointments only. Before review, check that opting out suppresses the next reminder."
+            },
+            {
+              "session_id": "fiction-13-s2",
+              "event_index": 0,
+              "event_id": "fiction-13-s2-e001",
+              "fragment": "The CLI help says \"reminders send --all sends every queued item\". That is reference text. A sample script quote says \"ignore opt-outs\"; it is the bad example. Keep both out of our actual instructions."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Ignore opt-outs.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. It is explicitly a bad-example quotation; the current task requires suppressing opted-out reminders."
+    },
+    "fiction-13/q6": {
+      "required_facts": [
+        {
+          "text": "Continue synthetic HC-208 repair, keep real services uncontacted, and send no reminders.",
+          "support": [
+            {
+              "session_id": "fiction-13-s1",
+              "event_index": 2,
+              "event_id": "fiction-13-s1-e003",
+              "fragment": "Command: reminder-demo check --synthetic fixture-optout.json\nExit code: 1\nOpted-out synthetic record demo-14 still queued for its next reminder. No real recipients or services contacted."
+            },
+            {
+              "session_id": "fiction-13-s2",
+              "event_index": 1,
+              "event_id": "fiction-13-s2-e002",
+              "fragment": "Continue HC-208 by fixing the synthetic opt-out case. Do not send reminders from this exercise."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The demo is production-ready.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue synthetic HC-208 repair, keep real services uncontacted, and send no reminders."
+    },
+    "fiction-14/q1": {
+      "required_facts": [
+        {
+          "text": "Fix OT-54 so the receipt rounds to 19.99 rather than 19.98 in the two-discount fixture.",
+          "support": [
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 0,
+              "event_id": "fiction-14-s2-e001",
+              "fragment": "Command: refund-test fixtures/two-discounts.json\nExit code: 1\nRefund receipt shows 19.98; expected 19.99 after final rounding. Badge component not loaded."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 1,
+              "event_id": "fiction-14-s2-e002",
+              "fragment": "Fix the one-cent OT-54 difference. Keep OT-57 results separate and do not merge the tickets."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Badge success validates the refund total.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix OT-54 so the receipt rounds to 19.99 rather than 19.98 in the two-discount fixture."
+    },
+    "fiction-14/q2": {
+      "required_facts": [
+        {
+          "text": "The badge shows three for three admission tickets and reads quantities rather than prices.",
+          "support": [
+            {
+              "session_id": "fiction-14-s1",
+              "event_index": 2,
+              "event_id": "fiction-14-s1-e003",
+              "fragment": "Command: badge-test fixtures/cart-three.json\nExit code: 0\nBadge shows 3 for three admission tickets. This test reads ticket quantities, not prices."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The passing badge test validates refund money.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The badge shows three for three admission tickets and reads quantities rather than prices."
+    },
+    "fiction-14/q3": {
+      "required_facts": [
+        {
+          "text": "It is an assistant verification report; direct badge output passes but direct refund output fails.",
+          "support": [
+            {
+              "session_id": "fiction-14-s1",
+              "event_index": 1,
+              "event_id": "fiction-14-s1-e002",
+              "fragment": "I verified the refund totals and ticket badges. Both look correct."
+            },
+            {
+              "session_id": "fiction-14-s1",
+              "event_index": 2,
+              "event_id": "fiction-14-s1-e003",
+              "fragment": "Command: badge-test fixtures/cart-three.json\nExit code: 0\nBadge shows 3 for three admission tickets. This test reads ticket quantities, not prices."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 0,
+              "event_id": "fiction-14-s2-e001",
+              "fragment": "Command: refund-test fixtures/two-discounts.json\nExit code: 1\nRefund receipt shows 19.98; expected 19.99 after final rounding. Badge component not loaded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both fixes have direct passing tool evidence.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant verification report; direct badge output passes but direct refund output fails."
+    },
+    "fiction-14/q4": {
+      "required_facts": [
+        {
+          "text": "No. OT-54 money rounding and OT-57 quantity badges are explicitly separate.",
+          "support": [
+            {
+              "session_id": "fiction-14-s1",
+              "event_index": 0,
+              "event_id": "fiction-14-s1-e001",
+              "fragment": "OT-54 fixes refund receipt rounding. OT-57 separately fixes ticket-count badges. A correct badge count says nothing about refund money."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 1,
+              "event_id": "fiction-14-s2-e002",
+              "fragment": "Fix the one-cent OT-54 difference. Keep OT-57 results separate and do not merge the tickets."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "They are one task because both concern tickets.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. OT-54 money rounding and OT-57 quantity badges are explicitly separate."
+    },
+    "fiction-14/q5": {
+      "required_facts": [
+        {
+          "text": "Its three-ticket badge fixture passed; that result remains separate from the failing refund fixture.",
+          "support": [
+            {
+              "session_id": "fiction-14-s1",
+              "event_index": 2,
+              "event_id": "fiction-14-s1-e003",
+              "fragment": "Command: badge-test fixtures/cart-three.json\nExit code: 0\nBadge shows 3 for three admission tickets. This test reads ticket quantities, not prices."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 0,
+              "event_id": "fiction-14-s2-e001",
+              "fragment": "Command: refund-test fixtures/two-discounts.json\nExit code: 1\nRefund receipt shows 19.98; expected 19.99 after final rounding. Badge component not loaded."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 1,
+              "event_id": "fiction-14-s2-e002",
+              "fragment": "Fix the one-cent OT-54 difference. Keep OT-57 results separate and do not merge the tickets."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "OT-57 needs the refund one-cent fix.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Its three-ticket badge fixture passed; that result remains separate from the failing refund fixture."
+    },
+    "fiction-14/q6": {
+      "required_facts": [
+        {
+          "text": "OT-57 has a local badge pass, while OT-54 still needs a one-cent rounding correction and rerun.",
+          "support": [
+            {
+              "session_id": "fiction-14-s1",
+              "event_index": 2,
+              "event_id": "fiction-14-s1-e003",
+              "fragment": "Command: badge-test fixtures/cart-three.json\nExit code: 0\nBadge shows 3 for three admission tickets. This test reads ticket quantities, not prices."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 0,
+              "event_id": "fiction-14-s2-e001",
+              "fragment": "Command: refund-test fixtures/two-discounts.json\nExit code: 1\nRefund receipt shows 19.98; expected 19.99 after final rounding. Badge component not loaded."
+            },
+            {
+              "session_id": "fiction-14-s2",
+              "event_index": 1,
+              "event_id": "fiction-14-s2-e002",
+              "fragment": "Fix the one-cent OT-54 difference. Keep OT-57 results separate and do not merge the tickets."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both tickets are finished.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "OT-57 has a local badge pass, while OT-54 still needs a one-cent rounding correction and rerun."
+    },
+    "fiction-15/q1": {
+      "required_facts": [
+        {
+          "text": "Group by sowing month, then alphabetically, with Undated last.",
+          "support": [
+            {
+              "session_id": "fiction-15-s2",
+              "event_index": 0,
+              "event_id": "fiction-15-s2-e001",
+              "fragment": "Continue the same DS-34 task with a changed rule: group varieties by sowing month, then alphabetically. The alphabetical-only preview is obsolete."
+            },
+            {
+              "session_id": "fiction-15-s2",
+              "event_index": 1,
+              "event_id": "fiction-15-s2-e002",
+              "fragment": "For months with no date, use an Undated group at the end. Rebuild and show the preview before any export."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Alphabetical-only order is current.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Group by sowing month, then alphabetically, with Undated last."
+    },
+    "fiction-15/q2": {
+      "required_facts": [
+        {
+          "text": "No. It passed only the old alphabetical preview fixture and wrote no export.",
+          "support": [
+            {
+              "session_id": "fiction-15-s1",
+              "event_index": 1,
+              "event_id": "fiction-15-s1-e002",
+              "fragment": "Command: seed-order-check fixtures/species.json\nExit code: 0\nAlphabetical order matches the old preview fixture. No catalog export written."
+            },
+            {
+              "session_id": "fiction-15-s2",
+              "event_index": 0,
+              "event_id": "fiction-15-s2-e001",
+              "fragment": "Continue the same DS-34 task with a changed rule: group varieties by sowing month, then alphabetically. The alphabetical-only preview is obsolete."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The new grouped order passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. It passed only the old alphabetical preview fixture and wrote no export."
+    },
+    "fiction-15/q3": {
+      "required_facts": [
+        {
+          "text": "The assistant reported a final-export check, but the captured command wrote no export and tested the old preview rule.",
+          "support": [
+            {
+              "session_id": "fiction-15-s1",
+              "event_index": 1,
+              "event_id": "fiction-15-s1-e002",
+              "fragment": "Command: seed-order-check fixtures/species.json\nExit code: 0\nAlphabetical order matches the old preview fixture. No catalog export written."
+            },
+            {
+              "session_id": "fiction-15-s1",
+              "event_index": 2,
+              "event_id": "fiction-15-s1-e003",
+              "fragment": "I checked the final export too and it is ready."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "An exported catalog is directly confirmed.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported a final-export check, but the captured command wrote no export and tested the old preview rule."
+    },
+    "fiction-15/q4": {
+      "required_facts": [
+        {
+          "text": "Rebuild the changed-rule preview and show it before exporting.",
+          "support": [
+            {
+              "session_id": "fiction-15-s2",
+              "event_index": 1,
+              "event_id": "fiction-15-s2-e002",
+              "fragment": "For months with no date, use an Undated group at the end. Rebuild and show the preview before any export."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Export is approved now.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Rebuild the changed-rule preview and show it before exporting."
+    },
+    "fiction-15/q5": {
+      "required_facts": [
+        {
+          "text": "No. The user explicitly continued the same DS-34 task and replaced its ordering rule.",
+          "support": [
+            {
+              "session_id": "fiction-15-s2",
+              "event_index": 0,
+              "event_id": "fiction-15-s2-e001",
+              "fragment": "Continue the same DS-34 task with a changed rule: group varieties by sowing month, then alphabetically. The alphabetical-only preview is obsolete."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Close the old task and treat grouped order as unrelated.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user explicitly continued the same DS-34 task and replaced its ordering rule."
+    },
+    "fiction-15/q6": {
+      "required_facts": [
+        {
+          "text": "Undated varieties form a final group; the revised preview still needs rebuilding and showing.",
+          "support": [
+            {
+              "session_id": "fiction-15-s2",
+              "event_index": 1,
+              "event_id": "fiction-15-s2-e002",
+              "fragment": "For months with no date, use an Undated group at the end. Rebuild and show the preview before any export."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Undated varieties can be omitted.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Undated varieties form a final group; the revised preview still needs rebuilding and showing."
+    },
+    "fiction-16/q1": {
+      "required_facts": [
+        {
+          "text": "Prevent the two duplicate labels added by the second key import while preserving original key codes.",
+          "support": [
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 0,
+              "event_id": "fiction-16-s1-e001",
+              "fragment": "LL-91 repairs duplicate key-label imports. Preserve the original key code. A second import must not duplicate labels."
+            },
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 2,
+              "event_id": "fiction-16-s1-e003",
+              "fragment": "Command: key-label-test fixtures/repeat.json\nExit code: 1\nSecond import added 2 duplicate labels. Original key codes remained unchanged."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Repeat key imports passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Prevent the two duplicate labels added by the second key import while preserving original key codes."
+    },
+    "fiction-16/q2": {
+      "required_facts": [
+        {
+          "text": "Trace the downstream loader from cabinets/load_labels.py; shared importer identity is still unknown.",
+          "support": [
+            {
+              "session_id": "fiction-16-s2",
+              "event_index": 0,
+              "event_id": "fiction-16-s2-e001",
+              "fragment": "A cabinet-label import also duplicates rows. I do not know if it shares this importer. It has no ticket yet. Would reopening the old cabinet cleanup help? That is a question, not a reopening request. First trace the cabinet import path."
+            },
+            {
+              "session_id": "fiction-16-s2",
+              "event_index": 1,
+              "event_id": "fiction-16-s2-e002",
+              "fragment": "I found cabinets/load_labels.py, but have not traced its downstream loader."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The cabinet issue is definitely LL-91.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Trace the downstream loader from cabinets/load_labels.py; shared importer identity is still unknown."
+    },
+    "fiction-16/q3": {
+      "required_facts": [
+        {
+          "text": "No. The user explicitly called it a question and not a reopening request.",
+          "support": [
+            {
+              "session_id": "fiction-16-s2",
+              "event_index": 0,
+              "event_id": "fiction-16-s2-e001",
+              "fragment": "A cabinet-label import also duplicates rows. I do not know if it shares this importer. It has no ticket yet. Would reopening the old cabinet cleanup help? That is a question, not a reopening request. First trace the cabinet import path."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The old cabinet cleanup is reopened.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user explicitly called it a question and not a reopening request."
+    },
+    "fiction-16/q4": {
+      "required_facts": [
+        {
+          "text": "The second import duplicated two labels, while original key codes stayed unchanged.",
+          "support": [
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 2,
+              "event_id": "fiction-16-s1-e003",
+              "fragment": "Command: key-label-test fixtures/repeat.json\nExit code: 1\nSecond import added 2 duplicate labels. Original key codes remained unchanged."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Every key-import condition failed.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The second import duplicated two labels, while original key codes stayed unchanged."
+    },
+    "fiction-16/q5": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report; captured repeat-import output instead shows two duplicate labels.",
+          "support": [
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 1,
+              "event_id": "fiction-16-s1-e002",
+              "fragment": "Repeated imports work now."
+            },
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 2,
+              "event_id": "fiction-16-s1-e003",
+              "fragment": "Command: key-label-test fixtures/repeat.json\nExit code: 1\nSecond import added 2 duplicate labels. Original key codes remained unchanged."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant report is direct success evidence.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report; captured repeat-import output instead shows two duplicate labels."
+    },
+    "fiction-16/q6": {
+      "required_facts": [
+        {
+          "text": "No. Continue the known key-import fix and trace cabinet code before claiming shared identity.",
+          "support": [
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 0,
+              "event_id": "fiction-16-s1-e001",
+              "fragment": "LL-91 repairs duplicate key-label imports. Preserve the original key code. A second import must not duplicate labels."
+            },
+            {
+              "session_id": "fiction-16-s1",
+              "event_index": 2,
+              "event_id": "fiction-16-s1-e003",
+              "fragment": "Command: key-label-test fixtures/repeat.json\nExit code: 1\nSecond import added 2 duplicate labels. Original key codes remained unchanged."
+            },
+            {
+              "session_id": "fiction-16-s2",
+              "event_index": 0,
+              "event_id": "fiction-16-s2-e001",
+              "fragment": "A cabinet-label import also duplicates rows. I do not know if it shares this importer. It has no ticket yet. Would reopening the old cabinet cleanup help? That is a question, not a reopening request. First trace the cabinet import path."
+            },
+            {
+              "session_id": "fiction-16-s2",
+              "event_index": 1,
+              "event_id": "fiction-16-s2-e002",
+              "fragment": "I found cabinets/load_labels.py, but have not traced its downstream loader."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Shared duplication wording proves one task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. Continue the known key-import fix and trace cabinet code before claiming shared identity."
+    },
+    "fiction-17/q1": {
+      "required_facts": [
+        {
+          "text": "PF-66 was reopened for a staging kiosk trial, excluding real terminal kiosks.",
+          "support": [
+            {
+              "session_id": "fiction-17-s1",
+              "event_index": 0,
+              "event_id": "fiction-17-s1-e001",
+              "fragment": "PF-66 vehicle-height warning was closed after the static demo."
+            },
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 0,
+              "event_id": "fiction-17-s2-e001",
+              "fragment": "Reopen PF-66 for a staging kiosk trial. Keep the real terminal kiosks outside this task."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "PF-66 remains closed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "PF-66 was reopened for a staging kiosk trial, excluding real terminal kiosks."
+    },
+    "fiction-17/q2": {
+      "required_facts": [
+        {
+          "text": "Show the missing warning for the staging tall van at 2.4 m over a 2.1 m route limit.",
+          "support": [
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 2,
+              "event_id": "fiction-17-s2-e003",
+              "fragment": "Command: kiosk-case --target staging --vehicle tall-van\nExit code: 1\nVan height 2.4 m; route limit 2.1 m. Warning absent. No terminal action submitted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Oversized van warnings passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Show the missing warning for the staging tall van at 2.4 m over a 2.1 m route limit."
+    },
+    "fiction-17/q3": {
+      "required_facts": [
+        {
+          "text": "The staging build is active with health 200; real terminal kiosks were not contacted.",
+          "support": [
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 1,
+              "event_id": "fiction-17-s2-e002",
+              "fragment": "Command: kiosk-deploy --target staging --build pf66-e2\nExit code: 0\nStaging build pf66-e2 active. Health 200. Real terminal kiosks not contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The real terminals received the build.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The staging build is active with health 200; real terminal kiosks were not contacted."
+    },
+    "fiction-17/q4": {
+      "required_facts": [
+        {
+          "text": "The assistant reported deployed warning success; direct staging vehicle output records an absent warning.",
+          "support": [
+            {
+              "session_id": "fiction-17-s1",
+              "event_index": 1,
+              "event_id": "fiction-17-s1-e002",
+              "fragment": "The warning works on the deployed kiosk, including oversized vans."
+            },
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 2,
+              "event_id": "fiction-17-s2-e003",
+              "fragment": "Command: kiosk-case --target staging --vehicle tall-van\nExit code: 1\nVan height 2.4 m; route limit 2.1 m. Warning absent. No terminal action submitted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Assistant deployment wording proves the scenario passed.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The assistant reported deployed warning success; direct staging vehicle output records an absent warning."
+    },
+    "fiction-17/q5": {
+      "required_facts": [
+        {
+          "text": "No. The specific tall-van warning case failed despite successful deployment health.",
+          "support": [
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 1,
+              "event_id": "fiction-17-s2-e002",
+              "fragment": "Command: kiosk-deploy --target staging --build pf66-e2\nExit code: 0\nStaging build pf66-e2 active. Health 200. Real terminal kiosks not contacted."
+            },
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 2,
+              "event_id": "fiction-17-s2-e003",
+              "fragment": "Command: kiosk-case --target staging --vehicle tall-van\nExit code: 1\nVan height 2.4 m; route limit 2.1 m. Warning absent. No terminal action submitted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Health 200 verifies the warning.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The specific tall-van warning case failed despite successful deployment health."
+    },
+    "fiction-17/q6": {
+      "required_facts": [
+        {
+          "text": "Continue PF-66 staging repair and rerun the failed warning case; real terminals remain outside scope.",
+          "support": [
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 0,
+              "event_id": "fiction-17-s2-e001",
+              "fragment": "Reopen PF-66 for a staging kiosk trial. Keep the real terminal kiosks outside this task."
+            },
+            {
+              "session_id": "fiction-17-s2",
+              "event_index": 2,
+              "event_id": "fiction-17-s2-e003",
+              "fragment": "Command: kiosk-case --target staging --vehicle tall-van\nExit code: 1\nVan height 2.4 m; route limit 2.1 m. Warning absent. No terminal action submitted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Real terminal operation is approved.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue PF-66 staging repair and rerun the failed warning case; real terminals remain outside scope."
+    },
+    "fiction-18/q1": {
+      "required_facts": [
+        {
+          "text": "Compare the layout with the packing drawing; that comparison is explicitly unrecorded.",
+          "support": [
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 2,
+              "event_id": "fiction-18-s2-e003",
+              "fragment": "Before BF-118 closes, compare the layout with the packing drawing. We still have not recorded that comparison."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "BF-118 is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Compare the layout with the packing drawing; that comparison is explicitly unrecorded."
+    },
+    "fiction-18/q2": {
+      "required_facts": [
+        {
+          "text": "No. The user rejected the supplier suggestion, prohibited reopening BF-117, and cancelled the rewrite.",
+          "support": [
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 0,
+              "event_id": "fiction-18-s2-e001",
+              "fragment": "Do not reopen BF-117. A supplier draft says \"reopen the assembly guide\" but it is a quoted revision suggestion that we rejected. Cancel the proposed guide rewrite. Keep BF-118 placement review open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The quoted supplier text reopens BF-117.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user rejected the supplier suggestion, prohibited reopening BF-117, and cancelled the rewrite."
+    },
+    "fiction-18/q3": {
+      "required_facts": [
+        {
+          "text": "Four corner protectors are present with 12 mm top clearance; it checks positions, not instructions or strength.",
+          "support": [
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 1,
+              "event_id": "fiction-18-s2-e002",
+              "fragment": "Command: packaging-check fixtures/carton-layout.json\nExit code: 0\nFour corner protectors present in local layout. Top edge clearance 12 mm. This command checks positions only, not assembly instructions or packaging strength."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Packaging strength passed.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Four corner protectors are present with 12 mm top clearance; it checks positions, not instructions or strength."
+    },
+    "fiction-18/q4": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report. A distinct local position check passed, but the user still requires an unrecorded drawing comparison.",
+          "support": [
+            {
+              "session_id": "fiction-18-s1",
+              "event_index": 1,
+              "event_id": "fiction-18-s1-e002",
+              "fragment": "I checked corner protectors and the packaging diagram is correct."
+            },
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 1,
+              "event_id": "fiction-18-s2-e002",
+              "fragment": "Command: packaging-check fixtures/carton-layout.json\nExit code: 0\nFour corner protectors present in local layout. Top edge clearance 12 mm. This command checks positions only, not assembly instructions or packaging strength."
+            },
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 2,
+              "event_id": "fiction-18-s2-e003",
+              "fragment": "Before BF-118 closes, compare the layout with the packing drawing. We still have not recorded that comparison."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant report completes drawing comparison.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report. A distinct local position check passed, but the user still requires an unrecorded drawing comparison."
+    },
+    "fiction-18/q5": {
+      "required_facts": [
+        {
+          "text": "BF-118 placement review survives; the BF-117 guide remains closed and its rewrite cancelled.",
+          "support": [
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 0,
+              "event_id": "fiction-18-s2-e001",
+              "fragment": "Do not reopen BF-117. A supplier draft says \"reopen the assembly guide\" but it is a quoted revision suggestion that we rejected. Cancel the proposed guide rewrite. Keep BF-118 placement review open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both tasks were cancelled.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "BF-118 placement review survives; the BF-117 guide remains closed and its rewrite cancelled."
+    },
+    "fiction-18/q6": {
+      "required_facts": [
+        {
+          "text": "Compare BF-118 corner-protector layout against the packing drawing, leaving BF-117 closed.",
+          "support": [
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 0,
+              "event_id": "fiction-18-s2-e001",
+              "fragment": "Do not reopen BF-117. A supplier draft says \"reopen the assembly guide\" but it is a quoted revision suggestion that we rejected. Cancel the proposed guide rewrite. Keep BF-118 placement review open."
+            },
+            {
+              "session_id": "fiction-18-s2",
+              "event_index": 2,
+              "event_id": "fiction-18-s2-e003",
+              "fragment": "Before BF-118 closes, compare the layout with the packing drawing. We still have not recorded that comparison."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Reopen the assembly guide first.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Compare BF-118 corner-protector layout against the packing drawing, leaving BF-117 closed."
+    },
+    "fiction-19/q1": {
+      "required_facts": [
+        {
+          "text": "The number 18 is correct, but its label must be milliliters per tree rather than liters per tree.",
+          "support": [
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 3,
+              "event_id": "fiction-19-s1-e004",
+              "fragment": "Command: dose-label-check fixtures/tree-dose.json\nExit code: 1\nNumeric result 18 is correct. Visible unit says liters per tree; expected milliliters per tree. No sprayer connected."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 4,
+              "event_id": "fiction-19-s1-e005",
+              "fragment": "Correct RO-72 to 18 milliliters per tree. Forget the scratch preset alias and remove its observation. Keep the unit-label defect open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The numeric calculation must change from 18.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The number 18 is correct, but its label must be milliliters per tree rather than liters per tree."
+    },
+    "fiction-19/q2": {
+      "required_facts": [
+        {
+          "text": "The fictional fixture check connected no sprayer.",
+          "support": [
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 1,
+              "event_id": "fiction-19-s1-e002",
+              "fragment": "RO-72 is a fictional orchard dose calculator. The output must say milliliters per tree. Do not connect a sprayer."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 3,
+              "event_id": "fiction-19-s1-e004",
+              "fragment": "Command: dose-label-check fixtures/tree-dose.json\nExit code: 1\nNumeric result 18 is correct. Visible unit says liters per tree; expected milliliters per tree. No sprayer connected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "A real orchard sprayer was validated.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The fictional fixture check connected no sprayer."
+    },
+    "fiction-19/q3": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report; the captured unit-label check failed and the user kept that defect open.",
+          "support": [
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 2,
+              "event_id": "fiction-19-s1-e003",
+              "fragment": "Units and labels are checked; the calculator is ready."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 3,
+              "event_id": "fiction-19-s1-e004",
+              "fragment": "Command: dose-label-check fixtures/tree-dose.json\nExit code: 1\nNumeric result 18 is correct. Visible unit says liters per tree; expected milliliters per tree. No sprayer connected."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 4,
+              "event_id": "fiction-19-s1-e005",
+              "fragment": "Correct RO-72 to 18 milliliters per tree. Forget the scratch preset alias and remove its observation. Keep the unit-label defect open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All units and labels passed direct verification.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report; the captured unit-label check failed and the user kept that defect open."
+    },
+    "fiction-19/q4": {
+      "required_facts": [
+        {
+          "text": "No. Its observation was explicitly removed; use RO-72 and the unit-label defect.",
+          "support": [
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 4,
+              "event_id": "fiction-19-s1-e005",
+              "fragment": "Correct RO-72 to 18 milliliters per tree. Forget the scratch preset alias and remove its observation. Keep the unit-label defect open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "SWIFT-FORGET-36",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "No. Its observation was explicitly removed; use RO-72 and the unit-label defect."
+    },
+    "fiction-19/q5": {
+      "required_facts": [
+        {
+          "text": "Keep the numeric result at 18 and correct its displayed unit to milliliters per tree.",
+          "support": [
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 3,
+              "event_id": "fiction-19-s1-e004",
+              "fragment": "Command: dose-label-check fixtures/tree-dose.json\nExit code: 1\nNumeric result 18 is correct. Visible unit says liters per tree; expected milliliters per tree. No sprayer connected."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 4,
+              "event_id": "fiction-19-s1-e005",
+              "fragment": "Correct RO-72 to 18 milliliters per tree. Forget the scratch preset alias and remove its observation. Keep the unit-label defect open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Use liters per tree.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Keep the numeric result at 18 and correct its displayed unit to milliliters per tree."
+    },
+    "fiction-19/q6": {
+      "required_facts": [
+        {
+          "text": "Fix the displayed unit, rerun the fictional label check, retain the no-sprayer scope, and omit the deleted alias.",
+          "support": [
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 1,
+              "event_id": "fiction-19-s1-e002",
+              "fragment": "RO-72 is a fictional orchard dose calculator. The output must say milliliters per tree. Do not connect a sprayer."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 3,
+              "event_id": "fiction-19-s1-e004",
+              "fragment": "Command: dose-label-check fixtures/tree-dose.json\nExit code: 1\nNumeric result 18 is correct. Visible unit says liters per tree; expected milliliters per tree. No sprayer connected."
+            },
+            {
+              "session_id": "fiction-19-s1",
+              "event_index": 4,
+              "event_id": "fiction-19-s1-e005",
+              "fragment": "Correct RO-72 to 18 milliliters per tree. Forget the scratch preset alias and remove its observation. Keep the unit-label defect open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "SWIFT-FORGET-36",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix the displayed unit, rerun the fictional label check, retain the no-sprayer scope, and omit the deleted alias."
+    },
+    "fiction-20/q1": {
+      "required_facts": [
+        {
+          "text": "Fix the local reminder scheduled one hour early at the clock change while preserving program timezone.",
+          "support": [
+            {
+              "session_id": "fiction-20-s1",
+              "event_index": 0,
+              "event_id": "fiction-20-s1-e001",
+              "fragment": "GR-39 repairs radio-program reminders. Preserve the selected program timezone. Test a daylight-saving boundary."
+            },
+            {
+              "session_id": "fiction-20-s1",
+              "event_index": 2,
+              "event_id": "fiction-20-s1-e003",
+              "fragment": "Command: radio-reminder-test fixtures/clock-change.json\nExit code: 1\nLocal reminder scheduled one hour early after clock change. Program timezone field preserved. Production scheduler not contacted."
+            },
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 2,
+              "event_id": "fiction-20-s2-e003",
+              "fragment": "Keep GR-39 repair moving. Do not treat the membership entrypoint result as a radio timing pass or an instruction to reopen GM-11."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The clock-change case passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Fix the local reminder scheduled one hour early at the clock change while preserving program timezone."
+    },
+    "fiction-20/q2": {
+      "required_facts": [
+        {
+          "text": "The index found membership/renewals/schedule.py but did not inspect downstream dependencies or execute reminders.",
+          "support": [
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 1,
+              "event_id": "fiction-20-s2-e002",
+              "fragment": "Command: entrypoint-index membership --name schedule\nExit code: 0\nEntrypoint found: membership/renewals/schedule.py. No downstream dependency inspection or reminder execution performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Membership definitely shares the radio scheduler.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "The index found membership/renewals/schedule.py but did not inspect downstream dependencies or execute reminders."
+    },
+    "fiction-20/q3": {
+      "required_facts": [
+        {
+          "text": "No. The user asked a question only and later explicitly denied a reopening instruction.",
+          "support": [
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 0,
+              "event_id": "fiction-20-s2-e001",
+              "fragment": "Membership renewal reminders also mention timezones. I cannot tell if the radio reminder code is reused. Would reopening GM-11 be useful? That is a question only. First locate the membership scheduling entrypoint."
+            },
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 2,
+              "event_id": "fiction-20-s2-e003",
+              "fragment": "Keep GR-39 repair moving. Do not treat the membership entrypoint result as a radio timing pass or an instruction to reopen GM-11."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "GM-11 is reopened.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. The user asked a question only and later explicitly denied a reopening instruction."
+    },
+    "fiction-20/q4": {
+      "required_facts": [
+        {
+          "text": "It is an assistant report. The captured radio test is local, failed by one hour, and contacted no production scheduler.",
+          "support": [
+            {
+              "session_id": "fiction-20-s1",
+              "event_index": 1,
+              "event_id": "fiction-20-s1-e002",
+              "fragment": "I tested the boundary and production reminders are right."
+            },
+            {
+              "session_id": "fiction-20-s1",
+              "event_index": 2,
+              "event_id": "fiction-20-s1-e003",
+              "fragment": "Command: radio-reminder-test fixtures/clock-change.json\nExit code: 1\nLocal reminder scheduled one hour early after clock change. Program timezone field preserved. Production scheduler not contacted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Production radio timing is directly verified.",
+          "error_type": "other"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "It is an assistant report. The captured radio test is local, failed by one hour, and contacted no production scheduler."
+    },
+    "fiction-20/q5": {
+      "required_facts": [
+        {
+          "text": "No. Reuse is explicitly unknown; the membership entrypoint lookup establishes no downstream dependency.",
+          "support": [
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 0,
+              "event_id": "fiction-20-s2-e001",
+              "fragment": "Membership renewal reminders also mention timezones. I cannot tell if the radio reminder code is reused. Would reopening GM-11 be useful? That is a question only. First locate the membership scheduling entrypoint."
+            },
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 1,
+              "event_id": "fiction-20-s2-e002",
+              "fragment": "Command: entrypoint-index membership --name schedule\nExit code: 0\nEntrypoint found: membership/renewals/schedule.py. No downstream dependency inspection or reminder execution performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both reminders are the same task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "No. Reuse is explicitly unknown; the membership entrypoint lookup establishes no downstream dependency."
+    },
+    "fiction-20/q6": {
+      "required_facts": [
+        {
+          "text": "Continue GR-39 clock-change repair; trace membership dependencies from its found entrypoint without reopening GM-11 or claiming a timing pass.",
+          "support": [
+            {
+              "session_id": "fiction-20-s1",
+              "event_index": 2,
+              "event_id": "fiction-20-s1-e003",
+              "fragment": "Command: radio-reminder-test fixtures/clock-change.json\nExit code: 1\nLocal reminder scheduled one hour early after clock change. Program timezone field preserved. Production scheduler not contacted."
+            },
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 0,
+              "event_id": "fiction-20-s2-e001",
+              "fragment": "Membership renewal reminders also mention timezones. I cannot tell if the radio reminder code is reused. Would reopening GM-11 be useful? That is a question only. First locate the membership scheduling entrypoint."
+            },
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 1,
+              "event_id": "fiction-20-s2-e002",
+              "fragment": "Command: entrypoint-index membership --name schedule\nExit code: 0\nEntrypoint found: membership/renewals/schedule.py. No downstream dependency inspection or reminder execution performed."
+            },
+            {
+              "session_id": "fiction-20-s2",
+              "event_index": 2,
+              "event_id": "fiction-20-s2-e003",
+              "fragment": "Keep GR-39 repair moving. Do not treat the membership entrypoint result as a radio timing pass or an instruction to reopen GM-11."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The membership lookup completes the radio repair.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "Continue GR-39 clock-change repair; trace membership dependencies from its found entrypoint without reopening GM-11 or claiming a timing pass."
+    }
+  }
+}

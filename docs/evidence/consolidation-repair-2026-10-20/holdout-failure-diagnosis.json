@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "at_utc": "2026-10-20T18:28:17.726981+00:00",
+  "history_id": "fiction-10",
+  "stage": "baseline_generation",
+  "call_id": "call-0070",
+  "native_api_status": "completed",
+  "usage_status": "reported",
+  "observed_tokens": 15477,
+  "processing_status": "failed",
+  "processing_code": "invalid_response",
+  "exact_validation_error": "claim worktree must match project",
+  "origin": "f8764f6 codex_mem/project_memory.py:492 ProjectMemory._validate",
+  "offending_fields": [
+    {
+      "path": "claims[1].scope.worktree",
+      "value": "fixtures/balcony.html"
+    },
+    {
+      "path": "claims[2].scope.worktree",
+      "value": "fixtures/balcony.html"
+    }
+  ],
+  "explanation": "The returned claim scopes use a fictional artifact path where the exact project path is required. Decoder, object/evidence references, source quotes, optional cleanup, and processor _validate_output pass; project scope validation rejects the response before commit.",
+  "diagnosis_method": "Pure offline validation against exact saved request spans and quarantined job metadata. SQLite opened mode=ro. No process/commit/retry/model calls or original Store mutation.",
+  "diagnostic_identifiers_published": false,
+  "frozen_outcome_preserved": true,
+  "both_arms_missing_questions": 6,
+  "private_original_receipt_hashes": {
+    "call-0070-request.json": "f915bb9f604bb6b3f3d8cd41561038ad3df5a62ccb0c5f464088177258b715fb",
+    "call-0070-response.json": "bdd2427a1b6c3769461a3dc6f831cbd162ea6fe9f2d02079697a29fdce2eaced"
+  },
+  "hash_note": "These checksums identify retained private original receipts. Published response metadata is diagnostic-ID sanitized; sanitized member hashes are authoritative in holdout-run/sanitization.json. Request is unchanged if absent there."
+}
