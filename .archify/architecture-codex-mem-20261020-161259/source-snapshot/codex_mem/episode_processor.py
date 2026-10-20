@@ -578,20 +578,40 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
             raw = record.get("evidence", {})
             spans = raw if isinstance(raw, list) else [span for values in raw.values() for span in values]
             ids = list(dict.fromkeys(span["source_id"] for span in spans))
+            if kind in {"episodes", "claims"}:
+                fields = (("summary", "goal", "rationale", "outcome", "open_work")
+                          if kind == "episodes" else ("text", "workflow_state", "rationale"))
+                identity = {"id": record["key"], "record_kind": kind, "project": snapshot["project"],
+                            **{field: record[field] for field in ("text", "summary", "goal", "scope")
+                               if field in record}}
+                for field in fields:
+                    if not record.get(field):
+                        continue
+                    field_spans = raw[field]
+                    assertion = {"field": field, "value": record[field]}
+                    if kind == "claims":
+                        assertion.update(scope=record["scope"], kind=record["kind"])
+                    notes.append({"title": "Project memory " + kind,
+                                  "body": json.dumps(assertion, ensure_ascii=False),
+                                  "source_ids": list(dict.fromkeys(span["source_id"] for span in field_spans)),
+                                  "field_evidence": field_spans, "reference_only_record": identity})
+                if kind == "episodes" and record.get("continuation_of") is not None:
+                    target = endpoint(record["continuation_of"])
+                    continuity_spans = raw["continuation_of"]
+                    notes.append({"title": "Project memory continuation",
+                        "body": json.dumps({"continuation_of": record["continuation_of"],
+                            "assertion_to_check": (
+                                "The cited NEW observations explicitly continue the prior episode's own named "
+                                "task, or a user-authored affirmative correction/update names that exact "
+                                "same unique task ID. Ignore incidental other IDs in comparisons or negative "
+                                "text; questions, negated continuity and multi-task comparisons do not qualify. "
+                                "Same chat, lexical similarity or a related topic does not establish continuity. "
+                                "Continuity never closes a claim.")}, ensure_ascii=False),
+                        "source_ids": list(dict.fromkeys(span["source_id"] for span in continuity_spans)),
+                        "field_evidence": continuity_spans,
+                        "reference_only_record": {**identity, "prior_episode": target}})
+                continue
             candidate: Mapping[str, Any] = record
-            if kind == "episodes" and record.get("continuation_of") is not None:
-                target = endpoint(record["continuation_of"])
-                candidate = {
-                    "episode_update": record, "reference_only_prior_episode": target,
-                    "continuation_assertion_to_check": (
-                        "The cited NEW observations explicitly continue the prior episode's own named "
-                        "task, or a user-authored affirmative correction/update names that exact "
-                        "same unique task ID. Ignore incidental other IDs in comparisons or negative "
-                        "text; questions, negated continuity and multi-task comparisons do not qualify. "
-                        "Same chat, lexical similarity or a related topic does not establish continuity. The prior episode is reference context, "
-                        "not evidence of a fresh result; continuity never closes a claim."
-                    ),
-                }
             if kind == "relations":
                 origin, target = endpoint(record["from"]), endpoint(record["to"])
                 candidate = {
@@ -607,7 +627,8 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
                 }
             if ids:
                 notes.append({"title": "Project memory " + kind,
-                              "body": json.dumps(candidate, ensure_ascii=False), "source_ids": ids})
+                              "body": json.dumps(candidate, ensure_ascii=False), "source_ids": ids,
+                              "field_evidence": spans})
     if len(json.dumps(list(references.values()), ensure_ascii=True)) > MAX_STATE_CHARS:
         raise ValueError("relation reference context exceeds bound")
     checked_snapshot = dict(snapshot, context=list(references.values()), project_context=(
@@ -615,6 +636,15 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
         "Only the cited new source evidence can support a new completion or replacement. "
         "Compare every transition with its named target and environment, version and worktree."
     ))
+    # Preflight all fields before the first remote call, including later chunks.
+    from .jev_quality import _items, _requests
+    from .jev_client import JevError
+    try:
+        for offset in range(0, len(notes), MAX_ITEMS):
+            _requests(_items(notes[offset:offset + MAX_ITEMS], None, checked_snapshot),
+                      checked_snapshot["project_context"])
+    except JevError as exc:
+        raise ValueError("project memory quality input exceeds bound") from exc
     deadline = time.monotonic() + MAX_GATE_SECONDS
     audits = []
     for offset in range(0, len(notes), MAX_ITEMS):

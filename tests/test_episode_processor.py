@@ -399,11 +399,13 @@ class EpisodeProcessorTests(unittest.TestCase):
         with mock.patch("codex_mem.jev_quality.quality_gate", return_value={"route": "accept"}) as gate:
             ep._quality(output, raw, self.settings, None)
         notes, _, provided = gate.call_args.args
-        candidate = json.loads(notes[0]["body"])
-        self.assertEqual(candidate["reference_only_prior_episode"]["goal"], "Repair ORCH-218 importer")
-        self.assertEqual(candidate["reference_only_prior_episode"]["logical_episode_id"], "root")
-        self.assertEqual(candidate["episode_update"]["evidence"]["continuation_of"][0]["source_id"], "event-1")
-        self.assertIn("Same chat, lexical similarity", candidate["continuation_assertion_to_check"])
+        continuation = next(note for note in notes if note["title"] == "Project memory continuation")
+        candidate = json.loads(continuation["body"])
+        prior = continuation["reference_only_record"]["prior_episode"]
+        self.assertEqual(prior["goal"], "Repair ORCH-218 importer")
+        self.assertEqual(prior["logical_episode_id"], "root")
+        self.assertEqual(continuation["field_evidence"][0]["source_id"], "event-1")
+        self.assertIn("Same chat, lexical similarity", candidate["assertion_to_check"])
         self.assertEqual(provided["context"][0]["source"], "processor:project-memory-reference")
         self.assertIn("Finish repair", provided["context"][0]["body"])
 

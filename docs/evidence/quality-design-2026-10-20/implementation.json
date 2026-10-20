@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-20",
+  "base_commit": "fc03aeec4ce80df2defba04de96d0c287921b7e6",
+  "scope": "Research, architecture proposal and first local implementation. No deployment, installed-runtime validation or live-model quality experiment.",
+  "implementation": {
+    "entrypoint": "process_project_memory",
+    "policy_version": "memory-quality-v12",
+    "optional_setting": "jev_quality_enabled",
+    "defaults_changed": false,
+    "schema_changed": false,
+    "source_hashes": {
+      "codex_mem/episode_processor.py": "75e44e60b0a2b3cabfbc80bcf734421a2bc1fc185334df4bd50aa65673b54b10",
+      "codex_mem/jev_quality.py": "d951a92225b968067d3ddf10057365d89c8e6baa548b03b73aa39988c6e381ce",
+      "tests/test_episode_processor.py": "d0734a66c3e5624a9746e7c3c050eb0f0c4d5c110ced9c455c3a5af6241bf529",
+      "tests/test_episode_field_evidence.py": "e389a86efd57134c124d62e7010f8496b0f5e435c98a2791ca860d0919279309"
+    },
+    "behavior": [
+      "Each populated episode/claim field carries its own exact source spans.",
+      "Continuation and relation support retain resolved target identity.",
+      "Full source context can qualify or negate support; uncited passages cannot substitute for field evidence.",
+      "All fields undergo payload preflight before evaluator dispatch; batches share the existing 20-second evaluation deadline.",
+      "Rejection prevents partial commit and leaves original events available for retry."
+    ]
+  },
+  "validation": {
+    "tdd": {
+      "initial_regression": "AssertionError: 1 != 2; one aggregate record was sent instead of two field checks.",
+      "new_public_tests": 12,
+      "result": "passed",
+      "seams": "Public processing API plus real temporary Store/ProjectMemory; external generator and evaluator are injected."
+    },
+    "focused_existing": {
+      "episode_processor": 50,
+      "jev_quality": 89,
+      "result": "passed"
+    },
+    "full_suite": {
+      "command": "python3 -m unittest discover -s tests -v",
+      "tests": 1536,
+      "elapsed_seconds": 128.503,
+      "result": "passed",
+      "loopback_access_required": true
+    },
+    "earlier_full_run": {
+      "tests": 1536,
+      "result": "one_timing_failure",
+      "test": "test_hook_runner.HookRunnerTests.test_delayed_exit_notification_cannot_hold_host_past_deadline",
+      "observed_seconds": 3.9623568749811966,
+      "threshold_seconds": 3.5,
+      "followup": "All 14 hook-runner tests passed independently in 17.781 seconds; full suite then passed without parallel packaging/browser checks. No hook code or threshold changed."
+    },
+    "acceptance": {
+      "command": "python3 scripts/acceptance.py",
+      "result": "passed",
+      "checks": [
+        "official hook payloads",
+        "capture",
+        "dedupe",
+        "redaction",
+        "private-turn gate",
+        "project isolation",
+        "MCP subprocess",
+        "consolidation provenance",
+        "repeated compaction recall",
+        "bounded injection",
+        "backup",
+        "forget"
+      ],
+      "official_schema_validation": false
+    },
+    "package": {
+      "command": "python3 scripts/package.py",
+      "result": "passed",
+      "release_published": false
+    },
+    "python_syntax": "py_compile passed for changed product modules and new test file; repository config has no required global typechecker.",
+    "diff_check": "passed"
+  },
+  "architecture": {
+    "candidate": ".archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "artifact": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "finalize_gates": {
+      "validate": "pass",
+      "deliver": "pass",
+      "check": "pass",
+      "browser-check": "pass"
+    },
+    "finalize_receipt": ".archify/architecture-codex-mem-20261020-161259/review-field-evidence-2/codex-mem.finalize-summary.json",
+    "artifact_sha256": "d4914d4d493bc865f4bdc4dd8ab829caf319de10daf513edcc8f39d79a781950",
+    "source_snapshot_revision": "b850fe39bb1f93329240324c3fa658ba3430e6a5",
+    "maintenance": "snapshot, full finalize, seal, check completed; hashes_match",
+    "semantic_review": "Descriptions and changed source line references reviewed centrally and by two reviewers. Hash equality alone is not semantic proof.",
+    "earlier_browser_check": "Sandbox Chrome DevTools pipe failed. Full finalization passed with browser access; both receipts retained."
+  },
+  "reviews": {
+    "standards": "No actionable findings.",
+    "spec": "No actionable findings for agreed first slice. Independent reviewer reran all 12 public tests successfully.",
+    "markdown": {
+      "tool": "Roughdraft",
+      "editing_state": "completed",
+      "review_summary": {
+        "comments": 0,
+        "replies": 0,
+        "suggestions": 0,
+        "unresolved": 0
+      },
+      "reviewed_sha256": "72ba8c9e23a2579961f4f40e87bb3f844b2dd502388ad1808d3968b99d1390b9",
+      "disk_matches_review": true
+    },
+    "html": {
+      "tool": "human-review",
+      "status": "closed_without_feedback",
+      "review_open": false,
+      "feedback_waiting": false,
+      "unsent_comments": 0,
+      "unsent_edits": 0,
+      "approval_claimed": false
+    }
+  },
+  "cost_and_limits": {
+    "max_candidate_records_before": 24,
+    "max_field_items_now": 80,
+    "derivation": "8 episodes * (5 narrative fields + 1 continuation) + 8 claims * 3 fields + 8 relations",
+    "aggregate_batches_if_each_five_item_chunk_fits": 16,
+    "deadline_seconds": 20,
+    "behavior_on_oversize": "Reject before any evaluator call; original events remain available. Full source context increases payloads and may reject inputs that previously fitted.",
+    "behavior_on_deadline": "Do not dispatch further batches or commit partial derived memory.",
+    "measured_live_latency_or_cost": false,
+    "max_aggregate_requests_with_one_item_per_request": 80,
+    "max_refinement_requests_per_item": 2,
+    "request_upper_bound_excluding_transport_retries": 240,
+    "request_bound_reason": "Each item has title/body assertions. One refinement pass can split their two question pairs into two requests. 80 aggregate + 80 * 2 refinement requests is a conservative bound before the shared deadline."
+  },
+  "limitations": [
+    "Injected evaluators verify contract and processing behavior, not semantic model accuracy.",
+    "No measured improvement in production answer quality or cost.",
+    "The optional gate is not enabled globally by this change.",
+    "No installed service or MCP connection was changed or validated.",
+    "Cross-episode reconciliation, salient-signal outcome tracking and the 120-question comparative experiment remain proposals."
+  ]
+}

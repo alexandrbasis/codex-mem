@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-20",
+  "base_commit": "fc03aeec4ce80df2defba04de96d0c287921b7e6",
+  "version": "1.12.0",
+  "scope": "Local source review and isolated offline checks; no installed runtime assessment.",
+  "focused_tests": {
+    "command": "python3 -m unittest tests.test_project_memory_query tests.test_project_memory_retrieval tests.test_project_memory_store tests.test_project_memory_lifecycle tests.test_project_memory_integration",
+    "tests": 129,
+    "result": "passed",
+    "elapsed_seconds_reported_by_unittest": 2.138
+  },
+  "architecture_check": {
+    "command": "python3 .archify/architecture-codex-mem-20261020-161259/maintain.py check",
+    "status": "hashes_match",
+    "issues": [],
+    "semantic_freshness": "not_checked"
+  },
+  "full_baseline_tests": {
+    "command": "python3 -m unittest discover -s tests -v",
+    "tests": 1524,
+    "result": "failed_under_sandbox",
+    "errors": 14,
+    "cause": "All 14 errors originate in loopback socket binding denied by the sandbox: PermissionError errno 1, Operation not permitted.",
+    "elapsed_seconds_reported_by_unittest": 121.060,
+    "scope": "Run before implementation. Final suite needs loopback access."
+  },
+  "storage_probe": {
+    "method": "Temporary ProjectMemoryTests fixture. Add a hook:PostToolUse source, claim the captured event, construct an open task through the fixture output helper, commit, then read the resulting object. The helper supplies exact text and workflow_state evidence covering the source body.",
+    "source": "Usage: review --open FILE. Opens a document for optional review.",
+    "candidate": "A human documentation review remains open.",
+    "stored_state": "open",
+    "source_role": "model_inference",
+    "evidence_basis": "model_inference",
+    "native_model_used": false,
+    "personal_database_used": false,
+    "interpretation": "Exact-span validation does not establish semantic support. The inferred candidate is accepted at the storage boundary.",
+    "limitations": [
+      "Injected candidate, not output produced by the native generator.",
+      "The optional semantic gate was not invoked.",
+      "This does not measure production error frequency or establish a new runtime incident."
+    ]
+  },
+  "external_research": {
+    "basis": "Official documentation and pinned public source inspected on 2026-10-20; citations are in the proposal.",
+    "hermes_commit": "bd3cbe91a90097f9804f16ea5c1768f5cbaaf0b7",
+    "service_benchmark_run": false
+  }
+}

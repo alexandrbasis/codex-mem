@@ -16,7 +16,7 @@ from . import jev_client
 
 
 MODEL = jev_client.MODEL
-POLICY_VERSION = "memory-quality-v11"
+POLICY_VERSION = "memory-quality-v12"
 MAX_GATE_SECONDS = 20
 MAX_ITEMS = 5
 MAX_QUESTIONS = 64
@@ -376,6 +376,35 @@ def _items(
                 "cited_sources": [by_id[source_id] for source_id in ids],
                 "session_history": session_history,
                 "history_use": "reference_resolution_only" if kind == "note" else "session_summary_evidence"}
+        if "field_evidence" in candidate:
+            spans = candidate["field_evidence"]
+            if not isinstance(spans, list) or not spans:
+                raise ValueError("missing field evidence")
+            cited = []
+            for span in spans:
+                if not isinstance(span, Mapping) or set(span) != {"source_id", "start", "end", "quote"}:
+                    raise ValueError("invalid field evidence")
+                source = by_id.get(span["source_id"])
+                if (source is None or span["source_id"] not in ids
+                        or type(span["start"]) is not int or type(span["end"]) is not int
+                        or not 0 <= span["start"] < span["end"] <= len(source["body"])
+                        or source["body"][span["start"]:span["end"]] != span["quote"]):
+                    raise ValueError("invalid field evidence")
+                # Offsets address the retained source body. Keep its absolute
+                # position explicit when the project event is a later fragment.
+                offset = source.get("body_offset", 0)
+                if type(offset) is not int or offset < 0:
+                    raise ValueError("invalid source offset")
+                cited.append(dict(source, body=span["quote"], body_offset=offset + span["start"],
+                                  evidence_span=dict(span)))
+            if set(ids) != {span["source_id"] for span in spans}:
+                raise ValueError("field source mismatch")
+            item.update(cited_sources=cited, field_evidence=[dict(span) for span in spans],
+                        source_context=[by_id[source_id] for source_id in ids],
+                        source_context_use="qualify_or_negate_only",
+                        reference_only_record=candidate.get("reference_only_record", {}))
+            item["candidate_claims"] = {key: value for key, value in item["candidate_claims"].items()
+                                         if key not in {"field_evidence", "reference_only_record"}}
         items.append(item)
     return items
 
@@ -408,6 +437,15 @@ def _request(items: list[dict[str, Any]], reference: str) -> tuple[dict[str, Any
             "reference_resolution": history_rule,
             "source_role_rules": {role: _SOURCE_ROLE_RULES[role] for role in sorted(present_roles)},
         }
+        if "field_evidence" in item:
+            shared_instructions["field_evidence_binding"] = (
+                "Only this item's exact field_evidence spans, exposed in cited_sources, may support "
+                "its assertion. source_context contains the original source for interpretation only. "
+                "Context may qualify or negate the cited support, but an uncited passage cannot "
+                "replace missing support, even within the same source. reference_only_record and "
+                "session_history identify records and scopes; they do not prove new results. "
+                "Evaluate the assertion's scope and kind too. Other items cannot supply evidence."
+            )
         questions[f"item_{index}_grounded"] = {
             "type": "noul", "instructions": {
                 "question": f"Are the assertions in `{target}.candidate_claims` supported by {source_context}?",
