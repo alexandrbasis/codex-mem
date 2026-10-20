@@ -1,0 +1,535 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Codex Mem 1.12.0 project memory",
+    "output": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/alexandrbasis/codex-mem.git",
+      "revision": "4db2e742f9ccffcea8db6dc2620280d8603b6d9c",
+      "link_mode": "local-only"
+    },
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "host",
+      "type": "external",
+      "label": "Codex session",
+      "sublabel": "Messages and tool calls",
+      "pos": [
+        20,
+        30
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "hooks/hooks.json",
+          "line": 1,
+          "end_line": 74,
+          "label": "Lifecycle events"
+        }
+      ]
+    },
+    {
+      "id": "capture",
+      "type": "security",
+      "label": "Capture observations",
+      "sublabel": "Selection, cleanup, limits",
+      "pos": [
+        20,
+        220
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/hooks.py",
+          "line": 926,
+          "end_line": 979,
+          "label": "Clean and save"
+        },
+        {
+          "path": "codex_mem/config.py",
+          "line": 220,
+          "end_line": 243,
+          "label": "Selected project access"
+        }
+      ]
+    },
+    {
+      "id": "sources",
+      "type": "database",
+      "label": "Sources and queue",
+      "sublabel": "SQLite: entries + pm_events",
+      "pos": [
+        350,
+        220
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/store.py",
+          "line": 1910,
+          "end_line": 1979,
+          "label": "Atomic write"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 71,
+          "end_line": 81,
+          "label": "Queue an event"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 208,
+          "end_line": 245,
+          "label": "Signals from pending events"
+        }
+      ]
+    },
+    {
+      "id": "daemon",
+      "type": "backend",
+      "label": "Background service",
+      "sublabel": "Discovery, readiness, retries",
+      "pos": [
+        730,
+        220
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/service.py",
+          "line": 695,
+          "end_line": 706,
+          "label": "Two processing paths"
+        },
+        {
+          "path": "codex_mem/service.py",
+          "line": 905,
+          "end_line": 955,
+          "label": "Discover pending PM work"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 267,
+          "end_line": 311,
+          "label": "Batch and lease"
+        }
+      ]
+    },
+    {
+      "id": "generator",
+      "type": "backend",
+      "label": "Episode generator",
+      "sublabel": "Event batch + current state",
+      "pos": [
+        730,
+        460
+      ],
+      "size": [
+        220,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/episode_processor.py",
+          "line": 653,
+          "end_line": 734,
+          "label": "Request, accounting, validation"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 733,
+          "end_line": 788,
+          "label": "Isolated worker"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 1381,
+          "end_line": 1408,
+          "label": "Disabled tools"
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "OpenAI model",
+      "sublabel": "Through Codex app-server",
+      "pos": [
+        350,
+        460
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/processor.py",
+          "line": 733,
+          "end_line": 788,
+          "label": "Provider call"
+        }
+      ]
+    },
+    {
+      "id": "legacy",
+      "type": "backend",
+      "label": "Note processor",
+      "sublabel": "Independent legacy path",
+      "pos": [
+        1000,
+        460
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/service.py",
+          "line": 791,
+          "end_line": 820,
+          "label": "Start the note processor"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 227,
+          "end_line": 248,
+          "label": "Lease observations"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 403,
+          "end_line": 422,
+          "label": "Save notes"
+        }
+      ]
+    },
+    {
+      "id": "commit",
+      "type": "security",
+      "label": "Validate and commit",
+      "sublabel": "Quotes, revision, deletion, head",
+      "pos": [
+        730,
+        700
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 589,
+          "end_line": 651,
+          "label": "Transaction and race guards"
+        },
+        {
+          "path": "codex_mem/episode_processor.py",
+          "line": 711,
+          "end_line": 734,
+          "label": "Conservative state changes"
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "type": "database",
+      "label": "Project state",
+      "sublabel": "Episodes, claims, links, versions",
+      "pos": [
+        350,
+        700
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 38,
+          "end_line": 58,
+          "label": "Tables and indexes"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 589,
+          "end_line": 651,
+          "label": "Objects and current versions"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 84,
+          "end_line": 132,
+          "label": "Revocation and deletion"
+        }
+      ]
+    },
+    {
+      "id": "notes",
+      "type": "database",
+      "label": "Stored notes",
+      "sublabel": "The same SQLite and Store",
+      "pos": [
+        1000,
+        700
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/processor.py",
+          "line": 403,
+          "end_line": 422,
+          "label": "Save the result"
+        },
+        {
+          "path": "codex_mem/store.py",
+          "line": 5753,
+          "end_line": 5789,
+          "label": "Add legacy notes"
+        }
+      ]
+    },
+    {
+      "id": "recall",
+      "type": "backend",
+      "label": "Select context",
+      "sublabel": "Query, scope, budget, sources",
+      "pos": [
+        350,
+        940
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/project_memory_retrieval.py",
+          "line": 377,
+          "end_line": 440,
+          "label": "Shared brief"
+        },
+        {
+          "path": "codex_mem/store.py",
+          "line": 5753,
+          "end_line": 5789,
+          "label": "PM and note budgets"
+        },
+        {
+          "path": "codex_mem/integration.py",
+          "line": 70,
+          "end_line": 132,
+          "label": "Search and resume"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "frontend",
+      "label": "Context and API",
+      "sublabel": "SessionStart · MCP · CLI",
+      "pos": [
+        20,
+        940
+      ],
+      "size": [
+        220,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/hooks.py",
+          "line": 872,
+          "end_line": 909,
+          "label": "Untrusted context"
+        },
+        {
+          "path": "codex_mem/mcp.py",
+          "line": 809,
+          "end_line": 819,
+          "label": "memory_project_state"
+        },
+        {
+          "path": "codex_mem/cli.py",
+          "line": 764,
+          "end_line": 788,
+          "label": "State commands"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "host-capture",
+      "from": "host",
+      "to": "capture",
+      "label": "hooks",
+      "variant": "default"
+    },
+    {
+      "id": "capture-sources",
+      "from": "capture",
+      "to": "sources",
+      "label": "if permitted",
+      "variant": "security"
+    },
+    {
+      "id": "sources-daemon",
+      "from": "sources",
+      "to": "daemon",
+      "label": "ready batch",
+      "variant": "dashed"
+    },
+    {
+      "id": "daemon-generator",
+      "from": "daemon",
+      "to": "generator",
+      "label": "shadow / pilot",
+      "variant": "emphasis"
+    },
+    {
+      "id": "generator-provider",
+      "from": "generator",
+      "to": "provider",
+      "label": "model call",
+      "variant": "default"
+    },
+    {
+      "id": "generator-commit",
+      "from": "generator",
+      "to": "commit",
+      "label": "proposal",
+      "variant": "default"
+    },
+    {
+      "id": "commit-ledger",
+      "from": "commit",
+      "to": "ledger",
+      "label": "if checks pass",
+      "variant": "security"
+    },
+    {
+      "id": "daemon-legacy",
+      "from": "daemon",
+      "to": "legacy",
+      "label": "legacy queue",
+      "variant": "dashed"
+    },
+    {
+      "id": "legacy-notes",
+      "from": "legacy",
+      "to": "notes",
+      "label": "notes",
+      "variant": "default"
+    },
+    {
+      "id": "ledger-recall",
+      "from": "ledger",
+      "to": "recall",
+      "label": "pilot / explicit shadow",
+      "variant": "default"
+    },
+    {
+      "id": "notes-recall",
+      "from": "notes",
+      "to": "recall",
+      "label": "note search",
+      "variant": "default"
+    },
+    {
+      "id": "recall-delivery",
+      "from": "recall",
+      "to": "delivery",
+      "label": "records + XML",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sources-fast-recall",
+      "from": "sources",
+      "to": "recall",
+      "label": "pending signals",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Document scope",
+      "items": [
+        "This document describes the 1.12.0 code in the working directory on October 20, 2026. It records the current implementation.",
+        "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
+        "The diagram, supporting text, Archify controls, and HTML language attribute use English."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How memory accumulates",
+      "items": [
+        "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1910–1979, service.py:905–955.",
+        "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:267–311.",
+        "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:208–245,734–757,908–934, project_memory_retrieval.py:545–556.",
+        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:653–734."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Who can change state",
+      "items": [
+        "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, quotes, revision, deletion generation, and current episode version. Objects, links, the current head, and queue progress commit in one transaction. Source: project_memory.py:589–651.",
+        "Unsupported completion or acceptance becomes a proposal. Unsupported links that close records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the full conclusion follows from the text. Source: episode_processor.py:711–734.",
+        "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Sources: project_memory.py:84–132, store.py:5791–5827."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "What the agent receives",
+      "items": [
+        "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. It includes history when requested. Sources: project_memory_retrieval.py:377–440, integration.py:70–132.",
+        "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:220–243.",
+        "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5753–5789, hooks.py:872–909."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Boundaries and optional features",
+      "items": [
+        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:733–788,1381–1408.",
+        "The legacy note processor runs alongside project memory. It also uses NativeProcessorRunner. It operates independently of episode generation. Sources: service.py:695–706,791–820, processor.py:227–248,403–422.",
+        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35–45,532–608, store.py:5717–5725, episode_processor.py:727–734."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Maintenance and limits",
+      "items": [
+        "When capture, processing, storage, retrieval, or provider boundaries change, review the diagram and source links. Update candidate.json and rebuild the HTML with Archify. AGENTS.md requires this work in the same task.",
+        "maintain.py check compares source files and hashes with the snapshot. It also compares the specification and HTML with their saved hashes. Code changes require a review of the architecture descriptions. Matching hashes alone do not prove that the diagram is complete.",
+        "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3858 @@
+{
+  "schema_version": "project-memory-jev-off-on-v2",
+  "status": "completed",
+  "authorization": {
+    "explicit_human_approval": true,
+    "scope": "fictional project history and derived records only",
+    "maximum_http_requests": 9,
+    "total_http_window_seconds": 20
+  },
+  "fixture_id": "project-memory-frozen-v1",
+  "fixture_sha256": "d20b5d016447543b6ee8b8af4e0625855ca893dbf38393523d55f9182f212b3c",
+  "fictional_source_validation": {
+    "passed": true,
+    "provided_source_count": 2,
+    "prior_source_count": 6,
+    "no_real_project_sources": true
+  },
+  "generation_report": "/tmp/project-memory-clean-v3.json",
+  "generation_output_sha256": "f273d31150613f4c55e87b818bc27586347eb5bfb88dfd6a8fc0891f1749e7bc",
+  "generation_reused": true,
+  "new_native_generation_calls": 0,
+  "new_native_generation_tokens": 0,
+  "processor_id": "codex-mem-project-episode-v2",
+  "output_schema_version": "project-memory-output-v6",
+  "jev_model": "jev-1.13.0",
+  "jev_policy_version": "memory-quality-v11",
+  "production_order": [
+    "object_reference_resolution",
+    "span_ref_resolution",
+    "strict_quote_validation",
+    "unsupported_optional_prose_omission",
+    "strict_shape_and_span_validation",
+    "optional_jev_gate",
+    "conservative_state_commit"
+  ],
+  "global_quality_enabled_before": false,
+  "global_config_hash_before": "5cdeb2b7e2e2592c3195a1793abc26dfbe0889f04170f09521139ff73ce1fa87",
+  "code_hashes_before": {
+    "<repo-root>/codex_mem/episode_processor.py": "d713f5aeb45241857ca1305ff60dcc9b782fa15c2d80e3e94e6db3b65653697b",
+    "<repo-root>/codex_mem/jev_client.py": "55db20ace755f34ee42c249f2f24dc558e8b57f735b088b89f2c08c90f1be6e5",
+    "<repo-root>/codex_mem/jev_quality.py": "0e1aa6c93662f5f00da78fbd3090dfa405713fd517ef01a837d95a1f71c258e4",
+    "codex_mem/project_memory.py": "d6fe5d8725c188fca53b042416ac8f1781f254fe47cd180356e5cad96de97ec0"
+  },
+  "cost_usd": null,
+  "remote_calls": [
+    {
+      "number": 1,
+      "model": "jev-1.13.0",
+      "question_count": 10,
+      "payload_sha256": "2044a2686d765c2976c31f222d8ab50150390a6dbbf10dafa0a37a2fa085cb5d",
+      "payload_bytes": 44238,
+      "cost_usd": null,
+      "status": "success",
+      "answers": {
+        "item_0_grounded": {
+          "type": "noul",
+          "noul": 0.95
+        },
+        "item_0_overclaim": {
+          "type": "noul",
+          "noul": 0.11
+        },
+        "item_1_grounded": {
+          "type": "noul",
+          "noul": 0.94
+        },
+        "item_1_overclaim": {
+          "type": "noul",
+          "noul": 0.27
+        },
+        "item_2_grounded": {
+          "type": "noul",
+          "noul": 0.94
+        },
+        "item_2_overclaim": {
+          "type": "noul",
+          "noul": 0.12
+        },
+        "item_3_grounded": {
+          "type": "noul",
+          "noul": 0.97
+        },
+        "item_3_overclaim": {
+          "type": "noul",
+          "noul": 0.09
+        },
+        "item_4_grounded": {
+          "type": "noul",
+          "noul": 0.96
+        },
+        "item_4_overclaim": {
+          "type": "noul",
+          "noul": 0.09
+        }
+      },
+      "usage": {
+        "input_tokens": 11325,
+        "output_tokens": 224
+      },
+      "duration_ms": 331
+    },
+    {
+      "number": 2,
+      "model": "jev-1.13.0",
+      "question_count": 4,
+      "payload_sha256": "062e1ae84089dd94533915e78734491158c63aab1e6d8379e18936d5fe0294e2",
+      "payload_bytes": 14848,
+      "cost_usd": null,
+      "status": "success",
+      "answers": {
+        "item_1_field_0_grounded": {
+          "type": "noul",
+          "noul": 0.93
+        },
+        "item_1_field_0_overclaim": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "item_1_field_1_grounded": {
+          "type": "noul",
+          "noul": 0.94
+        },
+        "item_1_field_1_overclaim": {
+          "type": "noul",
+          "noul": 0.1
+        }
+      },
+      "usage": {
+        "input_tokens": 3478,
+        "output_tokens": 104
+      },
+      "duration_ms": 247
+    },
+    {
+      "number": 3,
+      "model": "jev-1.13.0",
+      "question_count": 2,
+      "payload_sha256": "069b2355c623fcf83acf03bd8c06e7a9af813a99b84b287137da2e952514772d",
+      "payload_bytes": 8390,
+      "cost_usd": null,
+      "status": "success",
+      "answers": {
+        "item_0_grounded": {
+          "type": "noul",
+          "noul": 0.98
+        },
+        "item_0_overclaim": {
+          "type": "noul",
+          "noul": 0.06
+        }
+      },
+      "usage": {
+        "input_tokens": 2257,
+        "output_tokens": 48
+      },
+      "duration_ms": 323
+    }
+  ],
+  "arms": {
+    "off": {
+      "quality_enabled": false,
+      "receipt": {
+        "processor_id": "codex-mem-project-episode-v2",
+        "output_schema_version": "project-memory-output-v6",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "medium",
+        "mode": "shadow",
+        "job_id": "pmj_e53c51fd8e2b84aba1fa43339de330863ffd0ef4",
+        "usage_attempt_id": "pma_5fa5fa5e9882429a9546f7a29567c687",
+        "usage_status": "unavailable",
+        "runner_duration_ms": 0,
+        "usage_source": "injected_runner",
+        "worker_thread_id": "01a1587a-4168-7133-b854-5034d3bb3bc4",
+        "worker_turn_id": "01a1587a-41db-7241-b31a-346ac2abfa48",
+        "omitted_transitions_count": 0,
+        "omitted_transitions_reason": "",
+        "downgraded_states_count": 1,
+        "downgraded_states_reason": "unproved_completion",
+        "pending_reconciliation": true,
+        "commit_status": "committed",
+        "status": "processed",
+        "usage_recording_status": "recorded",
+        "duration_ms": 6
+      },
+      "wall_duration_ms": 7,
+      "before": {
+        "revision": 2,
+        "objects": {
+          "claims": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_387e66aac3279bfe4502d23251901be2191bf3a0",
+              "key": "claim_2",
+              "kind": "requirement",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Redact personal contact details before exporting diagnostic reports.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 3,
+              "source_capture_seq_max": 3,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_b4cd16df831cf379d7d7a016eb35aeebd92605b1",
+              "key": "claim_1",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "text": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 122,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This decision is accepted.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 95
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_ce8379e36a90f826f201926bd21ec1f3ca1117ae",
+              "key": "claim_0",
+              "kind": "decision",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "user_intent",
+              "text": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+              "workflow_state": "accepted",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "accepted"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_33cc828ea13f663a8fa9495599e0ef92dae4e2c5",
+              "key": "claim_1",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Importer duplicate checkout regression failed.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_46e5e7d48a8438183a8969be0c73ffb9f25e69e4",
+              "key": "claim_3",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "local",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "tool_record",
+              "text": "The settings UI color check passed locally.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 11,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_53e9c879c488cbd33314100e3a543099d111d605",
+              "key": "claim_0",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "requested_state": "completed",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Investigated the duplicate insertion bug.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 9,
+              "source_capture_seq_max": 9,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_7dbfb75683e1cf8961ce7fffc14a1661b9354450",
+              "key": "claim_2",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Deployment has not run.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            }
+          ],
+          "episodes": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 62,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No verified fix yet.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 41
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  },
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 85,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This is unrelated to importer deployment.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ]
+              },
+              "goal": "Investigate the importer duplicate insertion bug.",
+              "id": "pm_0520aa09070e76ea9bf2da36c76a4ff3a38a7e97",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "No verified fix yet. The importer duplicate checkout regression failed, and deployment has not run.",
+              "outcome": "",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "session_id": "s2",
+              "summary": "Investigated the duplicate insertion bug. Importer duplicate checkout regression failed; deployment has not run. A settings UI color check passed locally and is unrelated to importer deployment.",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "outcome": [
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "goal": "Use SQLite for the local scheduled importer.",
+              "id": "pm_a96ff9531468869f9fb12ddd35f1d5a58b0abe4a",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "Redact personal contact details before exporting diagnostic reports. Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "outcome": "The user selected SQLite for the local installation.",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "session_id": "s1",
+              "summary": "SQLite was selected for the local scheduled importer; personal contact details must be redacted before diagnostic report exports.",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 5,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            }
+          ],
+          "relations": []
+        },
+        "coverage": {
+          "omitted_transitions_count": 0,
+          "downgraded_states_count": 0,
+          "pending_reconciliation": false,
+          "complete_transcript": false,
+          "observations_only": true,
+          "event_time_basis": "source_capture_time",
+          "partially_processed_events": 0,
+          "quarantined_events": 0,
+          "coverage_gaps": false,
+          "captured_events": 8,
+          "processed_events": 6,
+          "pending_events": 2,
+          "latest_event_seq": 15,
+          "processed_through_seq": 11,
+          "running_jobs": 0,
+          "failed_jobs": 0,
+          "quarantined_jobs": 0
+        },
+        "semantic_state_sha256": "6a91db77eeb744437492c1c03f43b4d62378ce1d430c73010363138a4ae45996"
+      },
+      "after": {
+        "revision": 3,
+        "objects": {
+          "claims": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_387e66aac3279bfe4502d23251901be2191bf3a0",
+              "key": "claim_2",
+              "kind": "requirement",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Redact personal contact details before exporting diagnostic reports.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 3,
+              "source_capture_seq_max": 3,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_b4cd16df831cf379d7d7a016eb35aeebd92605b1",
+              "key": "claim_1",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "text": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 122,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This decision is accepted.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 95
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_ce8379e36a90f826f201926bd21ec1f3ca1117ae",
+              "key": "claim_0",
+              "kind": "decision",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "user_intent",
+              "text": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+              "workflow_state": "accepted",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "accepted"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_0dbafca8bfcc397f93fc6827de8efcb85b8c77d7",
+              "key": "claim_3",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "production",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "Production version has not been checked.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 15,
+              "source_capture_seq_max": 15,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 119,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Version 2.1 is checked locally.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 87
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 119,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Version 2.1 is checked locally.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 87
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_17c1ab0f7283d97186ad324c53c9feeb5d96b45d",
+              "key": "claim_1",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "local",
+                "version": "2.1",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "Version 2.1 is checked locally.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 13,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_3de9313c69331b508b7e779419afc4050eeb47bd",
+              "key": "claim_2",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "staging",
+                "version": "2.0",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "tool_record",
+              "text": "Staging still reports importer version 2.0.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 15,
+              "source_capture_seq_max": 15,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_4c07aa2286116641442fa0179de2795beaaa0bc5",
+              "key": "claim_4",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "No deployment was performed.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 13,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_610c14368fd7b15cbb5c85af99fce81db4cd5823",
+              "key": "claim_0",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "requested_state": "completed",
+              "revision": 3,
+              "scope": {
+                "environment": "local",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "The importer duplicate checkout regression passed locally after adding a UNIQUE constraint.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 13,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_33cc828ea13f663a8fa9495599e0ef92dae4e2c5",
+              "key": "claim_1",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Importer duplicate checkout regression failed.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_46e5e7d48a8438183a8969be0c73ffb9f25e69e4",
+              "key": "claim_3",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "local",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "tool_record",
+              "text": "The settings UI color check passed locally.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 11,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_53e9c879c488cbd33314100e3a543099d111d605",
+              "key": "claim_0",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "requested_state": "completed",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Investigated the duplicate insertion bug.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 9,
+              "source_capture_seq_max": 9,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_7dbfb75683e1cf8961ce7fffc14a1661b9354450",
+              "key": "claim_2",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Deployment has not run.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            }
+          ],
+          "episodes": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "open_work": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  },
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ],
+                "outcome": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 119,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Version 2.1 is checked locally.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 87
+                  },
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  },
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ]
+              },
+              "goal": "",
+              "id": "pm_8ed79f79d7b39b6bb55134a28de5b9c5a69cb6cd",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "Production version has not been checked. No deployment was performed. Staging still reports importer version 2.0.",
+              "outcome": "The importer duplicate checkout regression passed locally after adding a UNIQUE constraint.",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "session_id": "s3",
+              "summary": "The importer duplicate checkout regression passed locally after adding a UNIQUE constraint. Version 2.1 is checked locally; staging still reports importer version 2.0. Production version has not been checked, and no deployment was performed.",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 15,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 62,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No verified fix yet.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 41
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  },
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 85,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This is unrelated to importer deployment.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ]
+              },
+              "goal": "Investigate the importer duplicate insertion bug.",
+              "id": "pm_0520aa09070e76ea9bf2da36c76a4ff3a38a7e97",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "No verified fix yet. The importer duplicate checkout regression failed, and deployment has not run.",
+              "outcome": "",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "session_id": "s2",
+              "summary": "Investigated the duplicate insertion bug. Importer duplicate checkout regression failed; deployment has not run. A settings UI color check passed locally and is unrelated to importer deployment.",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "outcome": [
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "goal": "Use SQLite for the local scheduled importer.",
+              "id": "pm_a96ff9531468869f9fb12ddd35f1d5a58b0abe4a",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "Redact personal contact details before exporting diagnostic reports. Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "outcome": "The user selected SQLite for the local installation.",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "session_id": "s1",
+              "summary": "SQLite was selected for the local scheduled importer; personal contact details must be redacted before diagnostic report exports.",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 5,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            }
+          ],
+          "relations": []
+        },
+        "coverage": {
+          "omitted_transitions_count": 0,
+          "downgraded_states_count": 1,
+          "pending_reconciliation": true,
+          "complete_transcript": false,
+          "observations_only": true,
+          "event_time_basis": "source_capture_time",
+          "partially_processed_events": 0,
+          "quarantined_events": 0,
+          "coverage_gaps": true,
+          "captured_events": 8,
+          "processed_events": 8,
+          "pending_events": 0,
+          "latest_event_seq": 15,
+          "processed_through_seq": 15,
+          "running_jobs": 0,
+          "failed_jobs": 0,
+          "quarantined_jobs": 0
+        },
+        "semantic_state_sha256": "4422e42766ff6122085ed78ab44f760a12acde806b89a772de3c31ceab5e2635"
+      },
+      "job_outcomes": [
+        {
+          "status": "completed",
+          "error": null,
+          "attempts": 1,
+          "retry_after": 0.0
+        }
+      ],
+      "quality_audits": [],
+      "frozen_output_replay_count": 1,
+      "new_native_generation_calls": 0,
+      "native_generation_tokens_charged": 0,
+      "cost_usd": null
+    },
+    "on": {
+      "quality_enabled": true,
+      "receipt": {
+        "processor_id": "codex-mem-project-episode-v2",
+        "output_schema_version": "project-memory-output-v6",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "medium",
+        "mode": "shadow",
+        "job_id": "pmj_e53c51fd8e2b84aba1fa43339de330863ffd0ef4",
+        "usage_attempt_id": "pma_655dd90487ee4661a707f2dc32229b19",
+        "usage_status": "unavailable",
+        "runner_duration_ms": 0,
+        "usage_source": "injected_runner",
+        "worker_thread_id": "01a1587a-4168-7133-b854-5034d3bb3bc4",
+        "worker_turn_id": "01a1587a-41db-7241-b31a-346ac2abfa48",
+        "quality": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v11",
+            "route": "accept",
+            "duration_ms": 605,
+            "usage": {
+              "input_tokens": 14803,
+              "output_tokens": 328
+            },
+            "usage_status": "reported"
+          },
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v11",
+            "route": "accept",
+            "duration_ms": 328,
+            "usage": {
+              "input_tokens": 2257,
+              "output_tokens": 48
+            },
+            "usage_status": "reported"
+          }
+        ],
+        "omitted_transitions_count": 0,
+        "omitted_transitions_reason": "",
+        "downgraded_states_count": 1,
+        "downgraded_states_reason": "unproved_completion",
+        "pending_reconciliation": true,
+        "commit_status": "committed",
+        "status": "processed",
+        "usage_recording_status": "recorded",
+        "duration_ms": 940
+      },
+      "wall_duration_ms": 940,
+      "before": {
+        "revision": 2,
+        "objects": {
+          "claims": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_387e66aac3279bfe4502d23251901be2191bf3a0",
+              "key": "claim_2",
+              "kind": "requirement",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Redact personal contact details before exporting diagnostic reports.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 3,
+              "source_capture_seq_max": 3,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_b4cd16df831cf379d7d7a016eb35aeebd92605b1",
+              "key": "claim_1",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "text": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 122,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This decision is accepted.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 95
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_ce8379e36a90f826f201926bd21ec1f3ca1117ae",
+              "key": "claim_0",
+              "kind": "decision",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "user_intent",
+              "text": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+              "workflow_state": "accepted",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "accepted"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_33cc828ea13f663a8fa9495599e0ef92dae4e2c5",
+              "key": "claim_1",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Importer duplicate checkout regression failed.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_46e5e7d48a8438183a8969be0c73ffb9f25e69e4",
+              "key": "claim_3",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "local",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "tool_record",
+              "text": "The settings UI color check passed locally.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 11,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_53e9c879c488cbd33314100e3a543099d111d605",
+              "key": "claim_0",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "requested_state": "completed",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Investigated the duplicate insertion bug.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 9,
+              "source_capture_seq_max": 9,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_7dbfb75683e1cf8961ce7fffc14a1661b9354450",
+              "key": "claim_2",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Deployment has not run.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            }
+          ],
+          "episodes": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 62,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No verified fix yet.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 41
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  },
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 85,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This is unrelated to importer deployment.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ]
+              },
+              "goal": "Investigate the importer duplicate insertion bug.",
+              "id": "pm_0520aa09070e76ea9bf2da36c76a4ff3a38a7e97",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "No verified fix yet. The importer duplicate checkout regression failed, and deployment has not run.",
+              "outcome": "",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "session_id": "s2",
+              "summary": "Investigated the duplicate insertion bug. Importer duplicate checkout regression failed; deployment has not run. A settings UI color check passed locally and is unrelated to importer deployment.",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "outcome": [
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "goal": "Use SQLite for the local scheduled importer.",
+              "id": "pm_a96ff9531468869f9fb12ddd35f1d5a58b0abe4a",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "Redact personal contact details before exporting diagnostic reports. Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "outcome": "The user selected SQLite for the local installation.",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "session_id": "s1",
+              "summary": "SQLite was selected for the local scheduled importer; personal contact details must be redacted before diagnostic report exports.",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 5,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            }
+          ],
+          "relations": []
+        },
+        "coverage": {
+          "omitted_transitions_count": 0,
+          "downgraded_states_count": 0,
+          "pending_reconciliation": false,
+          "complete_transcript": false,
+          "observations_only": true,
+          "event_time_basis": "source_capture_time",
+          "partially_processed_events": 0,
+          "quarantined_events": 0,
+          "coverage_gaps": false,
+          "captured_events": 8,
+          "processed_events": 6,
+          "pending_events": 2,
+          "latest_event_seq": 15,
+          "processed_through_seq": 11,
+          "running_jobs": 0,
+          "failed_jobs": 0,
+          "quarantined_jobs": 0
+        },
+        "semantic_state_sha256": "6a91db77eeb744437492c1c03f43b4d62378ce1d430c73010363138a4ae45996"
+      },
+      "after": {
+        "revision": 3,
+        "objects": {
+          "claims": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_387e66aac3279bfe4502d23251901be2191bf3a0",
+              "key": "claim_2",
+              "kind": "requirement",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Redact personal contact details before exporting diagnostic reports.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 3,
+              "source_capture_seq_max": 3,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_b4cd16df831cf379d7d7a016eb35aeebd92605b1",
+              "key": "claim_1",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "model_inference",
+              "text": "Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "workflow_state": "open",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "open"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "text": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 122,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This decision is accepted.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 95
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_ce8379e36a90f826f201926bd21ec1f3ca1117ae",
+              "key": "claim_0",
+              "kind": "decision",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "scope": {
+                "environment": "local installation",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s1",
+              "source_role": "user_intent",
+              "text": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+              "workflow_state": "accepted",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 1,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "accepted"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_0dbafca8bfcc397f93fc6827de8efcb85b8c77d7",
+              "key": "claim_3",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "production",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "Production version has not been checked.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 15,
+              "source_capture_seq_max": 15,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 119,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Version 2.1 is checked locally.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 87
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 119,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Version 2.1 is checked locally.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 87
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_17c1ab0f7283d97186ad324c53c9feeb5d96b45d",
+              "key": "claim_1",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "local",
+                "version": "2.1",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "Version 2.1 is checked locally.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 13,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_3de9313c69331b508b7e779419afc4050eeb47bd",
+              "key": "claim_2",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "staging",
+                "version": "2.0",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "tool_record",
+              "text": "Staging still reports importer version 2.0.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 15,
+              "source_capture_seq_max": 15,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_4c07aa2286116641442fa0179de2795beaaa0bc5",
+              "key": "claim_4",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "No deployment was performed.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 13,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_610c14368fd7b15cbb5c85af99fce81db4cd5823",
+              "key": "claim_0",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "requested_state": "completed",
+              "revision": 3,
+              "scope": {
+                "environment": "local",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s3",
+              "source_role": "model_inference",
+              "text": "The importer duplicate checkout regression passed locally after adding a UNIQUE constraint.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 13,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_33cc828ea13f663a8fa9495599e0ef92dae4e2c5",
+              "key": "claim_1",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Importer duplicate checkout regression failed.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "exact_quote",
+              "id": "pm_46e5e7d48a8438183a8969be0c73ffb9f25e69e4",
+              "key": "claim_3",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "local",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "tool_record",
+              "text": "The settings UI color check passed locally.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 11,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_53e9c879c488cbd33314100e3a543099d111d605",
+              "key": "claim_0",
+              "kind": "task",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "requested_state": "completed",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Investigated the duplicate insertion bug.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 9,
+              "source_capture_seq_max": 9,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "text": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "workflow_state": [
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ]
+              },
+              "evidence_basis": "model_inference",
+              "id": "pm_7dbfb75683e1cf8961ce7fffc14a1661b9354450",
+              "key": "claim_2",
+              "kind": "fact",
+              "object_type": "claim",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "scope": {
+                "environment": "",
+                "version": "",
+                "worktree": ""
+              },
+              "session_id": "s2",
+              "source_role": "model_inference",
+              "text": "Deployment has not run.",
+              "workflow_state": "proposed",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 7,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": "proposed"
+            }
+          ],
+          "episodes": [
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "open_work": [
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  },
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ],
+                "outcome": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 87,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 119,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Version 2.1 is checked locally.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 87
+                  },
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Staging still reports importer version 2.0.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 84,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Production version has not been checked.",
+                    "session_id": "s3",
+                    "source_id": "2708cc6b83424aab8d132df53356ae4b",
+                    "source_recorded_at": "2026-10-20T08:42:33.664619Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  },
+                  {
+                    "end": 148,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No deployment was performed.",
+                    "session_id": "s3",
+                    "source_id": "73598cdf5adb4bb0a3bb97a0eadccbb4",
+                    "source_recorded_at": "2026-10-20T08:42:33.664102Z",
+                    "source_role": "tool_record",
+                    "start": 119
+                  }
+                ]
+              },
+              "goal": "",
+              "id": "pm_8ed79f79d7b39b6bb55134a28de5b9c5a69cb6cd",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "Production version has not been checked. No deployment was performed. Staging still reports importer version 2.0.",
+              "outcome": "The importer duplicate checkout regression passed locally after adding a UNIQUE constraint.",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 3,
+              "session_id": "s3",
+              "summary": "The importer duplicate checkout regression passed locally after adding a UNIQUE constraint. Version 2.1 is checked locally; staging still reports importer version 2.0. Production version has not been checked, and no deployment was performed.",
+              "source_capture_seq_min": 13,
+              "source_capture_seq_max": 15,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 62,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " No verified fix yet.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 41
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 41,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Investigated the duplicate insertion bug.",
+                    "session_id": "s2",
+                    "source_id": "923c9c777d2e4e9d97b4952826ee8289",
+                    "source_recorded_at": "2026-10-20T08:42:33.663034Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  },
+                  {
+                    "end": 46,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Importer duplicate checkout regression FAILED.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 70,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Deployment has not run.",
+                    "session_id": "s2",
+                    "source_id": "0655083547474966bb2234d70fe88411",
+                    "source_recorded_at": "2026-10-20T08:42:33.662527Z",
+                    "source_role": "tool_record",
+                    "start": 46
+                  },
+                  {
+                    "end": 43,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "The settings UI color check passed locally.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 0
+                  },
+                  {
+                    "end": 85,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " This is unrelated to importer deployment.",
+                    "session_id": "s2",
+                    "source_id": "bdcbb9be17cb41ab99868d9fa4c84b0b",
+                    "source_recorded_at": "2026-10-20T08:42:33.663592Z",
+                    "source_role": "tool_record",
+                    "start": 43
+                  }
+                ]
+              },
+              "goal": "Investigate the importer duplicate insertion bug.",
+              "id": "pm_0520aa09070e76ea9bf2da36c76a4ff3a38a7e97",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "No verified fix yet. The importer duplicate checkout regression failed, and deployment has not run.",
+              "outcome": "",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "",
+              "revision": 2,
+              "session_id": "s2",
+              "summary": "Investigated the duplicate insertion bug. Importer duplicate checkout regression failed; deployment has not run. A settings UI color check passed locally and is unrelated to importer deployment.",
+              "source_capture_seq_min": 7,
+              "source_capture_seq_max": 11,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            },
+            {
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 180,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Revisit it if shared multi-user storage becomes required.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 122
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "outcome": [
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ],
+                "rationale": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 95,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Use SQLite for the local scheduled importer because this installation needs no separate server.",
+                    "session_id": "s1",
+                    "source_id": "e03188c72a9d43b0bd6d866bed4fb9b4",
+                    "source_recorded_at": "2026-10-20T08:42:33.660180Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 109,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+                    "session_id": "s1",
+                    "source_id": "9a07eb90c9d14390a758e60750183cb7",
+                    "source_recorded_at": "2026-10-20T08:42:33.661434Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  },
+                  {
+                    "end": 91,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+                    "session_id": "s1",
+                    "source_id": "089a3b77f1254d6c8cf7efa4efd92d1c",
+                    "source_recorded_at": "2026-10-20T08:42:33.662013Z",
+                    "source_role": "assistant_report",
+                    "start": 0
+                  }
+                ]
+              },
+              "goal": "Use SQLite for the local scheduled importer.",
+              "id": "pm_a96ff9531468869f9fb12ddd35f1d5a58b0abe4a",
+              "key": "episode_0",
+              "object_type": "episode",
+              "open_work": "Redact personal contact details before exporting diagnostic reports. Revisit the SQLite decision if shared multi-user storage becomes required.",
+              "outcome": "The user selected SQLite for the local installation.",
+              "project": "/private/tmp/project-memory-clean-v1/orchid",
+              "rationale": "This installation needs no separate server.",
+              "revision": 1,
+              "session_id": "s1",
+              "summary": "SQLite was selected for the local scheduled importer; personal contact details must be redacted before diagnostic report exports.",
+              "source_capture_seq_min": 1,
+              "source_capture_seq_max": 5,
+              "capture_order_basis": "local_capture_sequence_not_event_time",
+              "base_workflow_state": null
+            }
+          ],
+          "relations": []
+        },
+        "coverage": {
+          "omitted_transitions_count": 0,
+          "downgraded_states_count": 1,
+          "pending_reconciliation": true,
+          "complete_transcript": false,
+          "observations_only": true,
+          "event_time_basis": "source_capture_time",
+          "partially_processed_events": 0,
+          "quarantined_events": 0,
+          "coverage_gaps": true,
+          "captured_events": 8,
+          "processed_events": 8,
+          "pending_events": 0,
+          "latest_event_seq": 15,
+          "processed_through_seq": 15,
+          "running_jobs": 0,
+          "failed_jobs": 0,
+          "quarantined_jobs": 0
+        },
+        "semantic_state_sha256": "4422e42766ff6122085ed78ab44f760a12acde806b89a772de3c31ceab5e2635"
+      },
+      "job_outcomes": [
+        {
+          "status": "completed",
+          "error": null,
+          "attempts": 1,
+          "retry_after": 0.0
+        }
+      ],
+      "quality_audits": [
+        {
+          "answers": {
+            "item_0_grounded": {
+              "noul": 0.95,
+              "type": "noul"
+            },
+            "item_0_overclaim": {
+              "noul": 0.11,
+              "type": "noul"
+            },
+            "item_1_grounded": {
+              "noul": 0.94,
+              "type": "noul"
+            },
+            "item_1_overclaim": {
+              "noul": 0.27,
+              "type": "noul"
+            },
+            "item_2_grounded": {
+              "noul": 0.94,
+              "type": "noul"
+            },
+            "item_2_overclaim": {
+              "noul": 0.12,
+              "type": "noul"
+            },
+            "item_3_grounded": {
+              "noul": 0.97,
+              "type": "noul"
+            },
+            "item_3_overclaim": {
+              "noul": 0.09,
+              "type": "noul"
+            },
+            "item_4_grounded": {
+              "noul": 0.96,
+              "type": "noul"
+            },
+            "item_4_overclaim": {
+              "noul": 0.09,
+              "type": "noul"
+            }
+          },
+          "cache_key": "eb089d1d90c4ec5d1572c4cf129ab827a35369bdcaf0bbafac8b033daafaf52d",
+          "counts": {
+            "cache_hits": 0,
+            "requests": 1
+          },
+          "duration_ms": 337,
+          "evaluation_source": "live",
+          "model": "jev-1.13.0",
+          "policy_version": "memory-quality-v11",
+          "route": "quality_uncertain",
+          "status": "success",
+          "usage": {
+            "input_tokens": 11325,
+            "output_tokens": 224
+          },
+          "usage_status": "reported"
+        },
+        {
+          "answers": {
+            "item_1_field_0_grounded": {
+              "noul": 0.93,
+              "type": "noul"
+            },
+            "item_1_field_0_overclaim": {
+              "noul": 0.1,
+              "type": "noul"
+            },
+            "item_1_field_1_grounded": {
+              "noul": 0.94,
+              "type": "noul"
+            },
+            "item_1_field_1_overclaim": {
+              "noul": 0.1,
+              "type": "noul"
+            }
+          },
+          "cache_key": "98cd9e5af96bada44ee275a11c3c6714b7b3d55ea50ba1318aeb63de032d0e42",
+          "counts": {
+            "cache_hits": 0,
+            "requests": 1
+          },
+          "duration_ms": 250,
+          "evaluation_source": "live",
+          "model": "jev-1.13.0",
+          "policy_version": "memory-quality-v11",
+          "route": "quality_refinement_accept",
+          "status": "success",
+          "usage": {
+            "input_tokens": 3478,
+            "output_tokens": 104
+          },
+          "usage_status": "reported"
+        },
+        {
+          "answers": {
+            "item_0_grounded": {
+              "noul": 0.98,
+              "type": "noul"
+            },
+            "item_0_overclaim": {
+              "noul": 0.06,
+              "type": "noul"
+            }
+          },
+          "cache_key": "a781856c9970dc1aba469e3b9b19f4c5f8316cd46f6c211455f7bce710a8fa90",
+          "counts": {
+            "cache_hits": 0,
+            "requests": 1
+          },
+          "duration_ms": 326,
+          "evaluation_source": "live",
+          "model": "jev-1.13.0",
+          "policy_version": "memory-quality-v11",
+          "route": "quality_accept",
+          "status": "success",
+          "usage": {
+            "input_tokens": 2257,
+            "output_tokens": 48
+          },
+          "usage_status": "reported"
+        }
+      ],
+      "frozen_output_replay_count": 1,
+      "new_native_generation_calls": 0,
+      "native_generation_tokens_charged": 0,
+      "cost_usd": null
+    }
+  },
+  "comparison": {
+    "same_initial_semantic_state": true,
+    "same_final_semantic_state": true,
+    "actual_http_requests": 3,
+    "successful_http_requests": 3,
+    "jev_usage": {
+      "input_tokens": 17060,
+      "output_tokens": 376
+    },
+    "cost_usd": null,
+    "source_support_not_external_truth": true,
+    "gate_precedes_conservative_pruning": true,
+    "quality_axes_not_measured": [
+      "reader_answer_accuracy",
+      "external_truth",
+      "corpus_wide_false_positive_rate",
+      "production_effectiveness"
+    ],
+    "native_generation_tokens_double_counted": false
+  },
+  "global_config_unchanged": true,
+  "global_quality_enabled_after": false,
+  "code_unchanged": true,
+  "actual_http_requests": 3,
+  "total_http_window_ms": 922,
+  "quality_axes": {
+    "observed_commit_outcomes": {
+      "off": "committed",
+      "on": "committed"
+    },
+    "same_final_semantic_state": true,
+    "same_conservative_downgrade_count": true,
+    "jev_gate_routes": [
+      "accept",
+      "accept"
+    ],
+    "incremental_wall_latency_ms": 933,
+    "reader_answer_accuracy": null,
+    "external_truth": null,
+    "false_positive_rate": null,
+    "false_negative_rate": null,
+    "interpretation": "One fictional job produced the same committed state with and without the gate. No quality improvement was established. The gate accepted after one refinement; the conservative reducer still downgraded one requested completed state in both arms. Source-support probabilities do not authorize workflow-state changes or verify external truth.",
+    "pre_pruning_limit": "The production gate checks model proposals before conservative pruning. Another job may be rejected by the gate even when conservative commit would omit an unproved edge or downgrade a state. This comparison does not change that ordering."
+  }
+}

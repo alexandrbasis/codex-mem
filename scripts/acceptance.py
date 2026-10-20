@@ -124,7 +124,7 @@ def run(schema_dir: Path | None = None) -> dict:
         expected_tools = {
             "memory_search", "memory_get_tool_uses", "memory_get", "memory_timeline",
             "memory_remember", "memory_consolidate", "memory_forget", "memory_status",
-            "memory_usage_report", "memory_usage_refresh",
+            "memory_usage_report", "memory_usage_refresh", "memory_project_state",
         }
         actual_tools = [tool["name"] for tool in replies[1]["result"]["tools"]]
         assert sorted(actual_tools) == sorted(expected_tools), "Unexpected tool catalog"

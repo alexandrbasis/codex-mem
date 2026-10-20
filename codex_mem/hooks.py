@@ -56,12 +56,16 @@ try:  # A partially upgraded plugin must still let Codex continue.
         load_config,
         mark_context_injected,
         mark_private_prompt_gate,
+        project_memory_enabled,
         )
 except Exception as exc:  # pragma: no cover - defensive bootstrap path
     trace_error("config_import_failed", exc)
     MAX_CONTEXT_CHARS = 6_000
 
     def automatic_capture_enabled(*_args: Any, **_kwargs: Any) -> bool:
+        return False
+
+    def project_memory_enabled(*_args: Any, **_kwargs: Any) -> bool:
         return False
 
     def context_was_injected(*_args: Any, **_kwargs: Any) -> bool:
@@ -98,7 +102,7 @@ except Exception as exc:  # pragma: no cover - exercised only by incomplete inst
 
 try:  # The raw side index is optional during an in-place plugin upgrade.
     from .config import private_prompt_gate_active, private_prompt_gate_enabled
-    from .tool_io import ToolCapture, is_private_prompt, normalize_capture
+    from .tool_io import ToolCapture, is_private_prompt, normalize_capture, strip_injected_memory
 except Exception as exc:  # pragma: no cover - exercised only by incomplete installs
     trace_error("tool_io_import_failed", exc)
     ToolCapture = Any  # type: ignore[assignment,misc]
@@ -114,6 +118,9 @@ except Exception as exc:  # pragma: no cover - exercised only by incomplete inst
 
     def normalize_capture(*_args: Any, **_kwargs: Any) -> Any:
         return None
+
+    def strip_injected_memory(value: str) -> tuple[str, int]:
+        return value, 0
 
 
 MAX_STDIN_BYTES = 1_048_576
@@ -916,6 +923,7 @@ def _remember_safely(
     provenance_id: str | None = None,
     tool_capture: ToolCapture | Mapping[str, Any] | None = None,
 ) -> None:
+    body = _without_injected_memory(body)
     session_id = _optional_id(payload.get("session_id"))
     turn_id = _optional_id(payload.get("turn_id"))
     fingerprint = "|".join(
@@ -946,8 +954,14 @@ def _remember_safely(
     # Commit evidence first. A long or interrupted turn must not depend on a
     # later Stop event to wake the durable queue. Scope/configuration gates and
     # detached startup remain owned by integration; never run the model here.
-    if source in {"hook:Stop", "hook:PreCompact"} or source.startswith("hook:PostToolUse"):
-        data_dir = _store_data_dir(store)
+    data_dir = _store_data_dir(store)
+    prompt_wake = False
+    if source == "hook:UserPromptSubmit" and data_dir is not None:
+        try:
+            prompt_wake = project_memory_enabled(project, load_config(data_dir))
+        except Exception:
+            pass
+    if prompt_wake or source in {"hook:Stop", "hook:PreCompact"} or source.startswith("hook:PostToolUse"):
         if data_dir is not None:
             _wake_capture_queue(project, data_dir,
                                 coalesce_seconds=5 if source.startswith("hook:PostToolUse") else 0)
@@ -1080,10 +1094,17 @@ def _safe_text(value: Any, *, maximum: int) -> str:
     return _truncate(redact_text(value), maximum).strip()
 
 
+def _without_injected_memory(value: str) -> str:
+    clean, omitted = strip_injected_memory(value)
+    if omitted:
+        trace_event("memory_context_omitted", wrapper_count=omitted)
+    return clean
+
+
 def _safe_prompt(value: Any) -> str:
     if not isinstance(value, str):
         return ""
-    prompt = redact_text(value).strip()
+    prompt = redact_text(_without_injected_memory(value)).strip()
     prompt = _IN_APP_BROWSER_CONTEXT.sub("\n", prompt)
     prompt = _RESPONSE_ANNOTATIONS.sub(_format_response_annotations, prompt)
     prompt = _MY_REQUEST_HEADER.sub("", prompt)
@@ -1190,7 +1211,7 @@ def _tool_output(
 ) -> str:
     if sensitive_input or (command and _contains_sensitive_command(command)):
         return ""
-    output = _extract_tool_output(tool_response)
+    output = _without_injected_memory(_extract_tool_output(tool_response))
     if not output:
         return ""
     # Redact the complete response before keeping a bounded head/tail excerpt;

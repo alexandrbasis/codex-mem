@@ -1,0 +1,50 @@
+{
+  "status": "failed_recall_gate_before_repairs",
+  "usage_measured_tokens": true,
+  "cost_usd": null,
+  "per_mode": {
+    "episodes": {
+      "shared_generation_tokens": 52277,
+      "fresh_reader_tokens": 100554,
+      "amortized_tokens_for_ten_queries": 152831,
+      "sufficient_answers": 1,
+      "amortized_tokens_per_sufficient_answer": 152831.0
+    },
+    "current": {
+      "shared_generation_tokens": 231286,
+      "fresh_reader_tokens": 100401,
+      "amortized_tokens_for_ten_queries": 331687,
+      "sufficient_answers": 2,
+      "amortized_tokens_per_sufficient_answer": 165843.5
+    },
+    "episodes_state": {
+      "shared_generation_tokens": 52277,
+      "fresh_reader_tokens": 100562,
+      "amortized_tokens_for_ten_queries": 152839,
+      "sufficient_answers": 1,
+      "amortized_tokens_per_sufficient_answer": 152839.0
+    },
+    "production_startup": {
+      "shared_generation_tokens": 283563,
+      "fresh_reader_tokens": 101130,
+      "amortized_tokens_for_ten_queries": 384693,
+      "sufficient_answers": 4,
+      "amortized_tokens_per_sufficient_answer": 96173.25
+    },
+    "hybrid_signals": {
+      "shared_generation_tokens": 52277,
+      "fresh_reader_tokens": 101064,
+      "amortized_tokens_for_ten_queries": 153341,
+      "sufficient_answers": 3,
+      "amortized_tokens_per_sufficient_answer": 51113.67
+    }
+  },
+  "limitations": [
+    "One generation corpus amortized over ten different queries; not recurring production cost.",
+    "Generation shared among episode ablations, not billed again for each row.",
+    "Startup intentionally includes both existing and project-memory generation.",
+    "Reader calls use native evaluation harness overhead and are not normal task cost.",
+    "Failed recall gate means these ratios do not justify reducing existing observation processing."
+  ],
+  "source_report": "holdout-v7-before-identity-guard.json"
+}

@@ -1,0 +1,772 @@
+{
+  "schema_version": 1,
+  "input_path": "/tmp/project-memory-clean-v3-blind25.json",
+  "fixture_id": "project-memory-frozen-v1",
+  "blindness": {
+    "mode_map_inspected": false,
+    "reports_inspected": false,
+    "visible_context_structure": true,
+    "prior_fixture_seen": true
+  },
+  "rubric": {
+    "overall": "2 = sufficient correct task answer with exact relevant citation support; 1 = materially useful but incomplete, citation-defective or epistemically distorted; 0 = fails task recall or materially wrong. Safe abstention is separate from usefulness.",
+    "axis_scale": "0 absent/wrong; 1 partial; 2 sufficient/correct; null not applicable/unmeasured. false_closures=2 means no false closure.",
+    "applicability": "Question-relevant axes only, plus false closure assessed on all answers. Resume requires local outcome plus explicit remaining deployment/production work. Unsupported exact attribution reduces citation support even if the fact is true elsewhere in supplied context.",
+    "not_measured": [
+      "Operational cost or latency",
+      "Actual importer implementation correctness",
+      "Unseen new code behavior",
+      "Generalization beyond repeated synthetic fixture"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "R066bad7c6bde",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 1,
+        "rationale_retention": null,
+        "open_requirement_recall": 1,
+        "false_closures": 2,
+        "citation_support": 1,
+        "correction_recall": null
+      },
+      "rationale": "Recovers local pass and deployment/production gap, but turns the earlier failed/no-fix stage into an unresolved conflict. Local version 2.1 and no deployment are attached to e8, which supports neither; redaction and accepted retry constraint are omitted.",
+      "evidence": {
+        "fixture_events": [
+          "e4",
+          "e5",
+          "e7",
+          "e8",
+          "e9",
+          "e10",
+          "e2"
+        ],
+        "cited_source_ids": [
+          "73598cdf5adb4bb0a3bb97a0eadccbb4",
+          "2708cc6b83424aab8d132df53356ae4b",
+          "0655083547474966bb2234d70fe88411",
+          "923c9c777d2e4e9d97b4952826ee8289"
+        ]
+      },
+      "flags": [
+        "chronology_not_reconciled",
+        "partial_resume",
+        "claim_citation_mismatch"
+      ],
+      "critical_flags": [
+        "Local version 2.1 and no-deployment claim cite 2708cc6b83424aab8d132df53356ae4b (e8). Their source is e7; e8 states only staging 2.0 and production unchecked."
+      ],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R0ec70263097e",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 1,
+        "correction_recall": null
+      },
+      "rationale": "Correct unknown production version and environment separation, but cites only e8 for the additional local 2.1 claim. The supplied context exposes the correct e7 quotation.",
+      "evidence": {
+        "fixture_events": [
+          "e7",
+          "e8"
+        ],
+        "cited_source_ids": [
+          "2708cc6b83424aab8d132df53356ae4b"
+        ]
+      },
+      "flags": [
+        "claim_citation_mismatch"
+      ],
+      "critical_flags": [
+        "The sentence reporting local version 2.1 cites e8, which contains no local version. Correct supporting ID is 73598cdf5adb4bb0a3bb97a0eadccbb4 / e7."
+      ],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Ra96845f7b059",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": 2,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct no-separate-server rationale, local scope, and conditional reconsideration, all supported by the cited accepted-decision observation.",
+      "evidence": {
+        "fixture_events": [
+          "e1"
+        ],
+        "cited_source_ids": [
+          "637c1bcfbf3744a1824f7848f2d0e7cf"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rb184d376ff1f",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correctly reports unknown production while separating staging 2.0 from local 2.1; both relevant source IDs support the combined sentence.",
+      "evidence": {
+        "fixture_events": [
+          "e7",
+          "e8"
+        ],
+        "cited_source_ids": [
+          "2708cc6b83424aab8d132df53356ae4b",
+          "73598cdf5adb4bb0a3bb97a0eadccbb4"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rb55c001dd66a",
+      "score": 0,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": null,
+        "open_requirement_recall": 0,
+        "false_closures": 2,
+        "citation_support": 0,
+        "correction_recall": null
+      },
+      "rationale": "Safe abstention from metadata-only context fails to recover the explicit open redaction requirement. project-memory is a container label, not an evidence-record citation.",
+      "evidence": {
+        "fixture_events": [
+          "e2"
+        ],
+        "cited_source_ids": [
+          "project-memory"
+        ]
+      },
+      "flags": [
+        "retrieval_omission",
+        "safe_abstention",
+        "container_label_cited_as_source"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R1bc2e0146d0b",
+      "score": 0,
+      "axes": {
+        "state_accuracy": 0,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 0,
+        "correction_recall": 0
+      },
+      "rationale": "Safe abstention from metadata-only context misses accepted limit 11 and local-only verification. Coverage counters do not answer the task; container label is not a source record.",
+      "evidence": {
+        "fixture_events": [
+          "e9",
+          "e10",
+          "e12"
+        ],
+        "cited_source_ids": [
+          "project-memory"
+        ]
+      },
+      "flags": [
+        "retrieval_omission",
+        "safe_abstention",
+        "container_label_cited_as_source"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R73b01869803e",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct unknown production version, directly supported by the quoted e8 source; no environment or version conflation.",
+      "evidence": {
+        "fixture_events": [
+          "e8"
+        ],
+        "cited_source_ids": [
+          "2708cc6b83424aab8d132df53356ae4b"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R1ac12991b376",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 1,
+        "rationale_retention": null,
+        "open_requirement_recall": 1,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Accurately reports local 2.1 pass, staging 2.0, no deployment and unchecked production with supporting episode/observation citations. Does not reconcile the earlier failed stage with the later pass; missing chronology in supplied context explains but does not cure the incomplete current-state reconstruction. No explicit redaction or retry correction.",
+      "evidence": {
+        "fixture_events": [
+          "e4",
+          "e5",
+          "e7",
+          "e8",
+          "e9",
+          "e10",
+          "e2"
+        ],
+        "cited_source_ids": [
+          "pm_8ed79f79d7b39b6bb55134a28de5b9c5a69cb6cd",
+          "ff550ff5991846bca75720fd392f40cf",
+          "pm_0520aa09070e76ea9bf2da36c76a4ff3a38a7e97",
+          "pm_33cc828ea13f663a8fa9495599e0ef92dae4e2c5"
+        ]
+      },
+      "flags": [
+        "chronology_not_reconciled",
+        "partial_resume"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rfef1af05346b",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": 2
+      },
+      "rationale": "Correctly follows the explicit Russian correction: 11, local-only verification, production unchecked. Signal citation supports all claims.",
+      "evidence": {
+        "fixture_events": [
+          "e9",
+          "e10",
+          "e12"
+        ],
+        "cited_source_ids": [
+          "d206a7168ab645c7866d9cb869bf9459"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rc6e0cf080686",
+      "score": 0,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": null,
+        "open_requirement_recall": 0,
+        "false_closures": 2,
+        "citation_support": 0,
+        "correction_recall": null
+      },
+      "rationale": "Safe abstention because context has only coverage metadata; fails to recall e2 redaction requirement and cites a container label.",
+      "evidence": {
+        "fixture_events": [
+          "e2"
+        ],
+        "cited_source_ids": [
+          "project-memory"
+        ]
+      },
+      "flags": [
+        "retrieval_omission",
+        "safe_abstention",
+        "container_label_cited_as_source"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rd436e80a869e",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": 2,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct accepted rationale and conditional reconsideration with exact user-source support. Duplicate inline citation is cosmetic, not a support defect.",
+      "evidence": {
+        "fixture_events": [
+          "e1"
+        ],
+        "cited_source_ids": [
+          "e03188c72a9d43b0bd6d866bed4fb9b4"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rb1b91f2c4a25",
+      "score": 0,
+      "axes": {
+        "state_accuracy": 0,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 0,
+        "correction_recall": 0
+      },
+      "rationale": "Safe abstention from a metadata marker misses accepted limit and verification scope that exist at the frozen cutoff. Container label does not support substantive source attribution.",
+      "evidence": {
+        "fixture_events": [
+          "e9",
+          "e10",
+          "e12"
+        ],
+        "cited_source_ids": [
+          "project-memory"
+        ]
+      },
+      "flags": [
+        "retrieval_omission",
+        "safe_abstention",
+        "container_label_cited_as_source"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R088c77a041e0",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": null,
+        "open_requirement_recall": 2,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correctly recalls contact redaction as prerequisite and cites a supplied derived account that explicitly keeps it open. Does not imply implementation.",
+      "evidence": {
+        "fixture_events": [
+          "e2"
+        ],
+        "cited_source_ids": [
+          "329ccc5a1cf84614ab6495c1a0b13d48"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Ref29b59c4c16",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": 2,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct no-server rationale and user selection; e1 supports reason and decision, and e3 also supports selection. Omitting optional future reconsideration does not defeat the why-question.",
+      "evidence": {
+        "fixture_events": [
+          "e1",
+          "e3"
+        ],
+        "cited_source_ids": [
+          "e03188c72a9d43b0bd6d866bed4fb9b4",
+          "089a3b77f1254d6c8cf7efa4efd92d1c"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rb160c17a291a",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 1,
+        "rationale_retention": null,
+        "open_requirement_recall": 1,
+        "false_closures": 2,
+        "citation_support": 1,
+        "correction_recall": null
+      },
+      "rationale": "Recovers local pass, staging 2.0, unchecked production, no deployment, and independent redaction requirement. However no-deployment is attributed to e8 rather than e7, and determine whether deployment is needed weakens the explicit deployment-open state. Retry correction is absent.",
+      "evidence": {
+        "fixture_events": [
+          "e2",
+          "e7",
+          "e8",
+          "e9",
+          "e10"
+        ],
+        "cited_source_ids": [
+          "73598cdf5adb4bb0a3bb97a0eadccbb4",
+          "2708cc6b83424aab8d132df53356ae4b",
+          "9a07eb90c9d14390a758e60750183cb7"
+        ]
+      },
+      "flags": [
+        "claim_citation_mismatch",
+        "partial_resume"
+      ],
+      "critical_flags": [
+        "No deployment was performed is cited to 2708cc6b83424aab8d132df53356ae4b (e8), which has no deployment statement; e7 is the correct source."
+      ],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R35d03eff22ac",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": 2,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct concise no-server rationale with exact supporting user decision source. Does not invent implementation or deployment.",
+      "evidence": {
+        "fixture_events": [
+          "e1"
+        ],
+        "cited_source_ids": [
+          "e03188c72a9d43b0bd6d866bed4fb9b4"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R90d96d37f09d",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correctly keeps production unknown, staging 2.0 and local 2.1 separate. Both cited observations support the relevant claims.",
+      "evidence": {
+        "fixture_events": [
+          "e7",
+          "e8"
+        ],
+        "cited_source_ids": [
+          "e18cc38c70e249d0b7ccd1818815c85b",
+          "8cd1752b771a429c8b9ebaed4985aa69"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R546b38c02343",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 1,
+        "rationale_retention": null,
+        "open_requirement_recall": 1,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct local 2.1 pass after UNIQUE, no deployment and deployed behavior unverified, with exact observation support. Partial resume answer: production verification gap, staging state, accepted retry constraint and independent requirement are not recovered.",
+      "evidence": {
+        "fixture_events": [
+          "e2",
+          "e7",
+          "e8",
+          "e9",
+          "e10"
+        ],
+        "cited_source_ids": [
+          "8cd1752b771a429c8b9ebaed4985aa69"
+        ]
+      },
+      "flags": [
+        "partial_resume",
+        "retrieval_omission"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rf56696952549",
+      "score": 0,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": null,
+        "open_requirement_recall": 0,
+        "false_closures": 2,
+        "citation_support": 0,
+        "correction_recall": null
+      },
+      "rationale": "Safe abstention from metadata-only context fails to recover contact-redaction prerequisite. Container label is not an exact source-record citation.",
+      "evidence": {
+        "fixture_events": [
+          "e2"
+        ],
+        "cited_source_ids": [
+          "project-memory"
+        ]
+      },
+      "flags": [
+        "retrieval_omission",
+        "safe_abstention",
+        "container_label_cited_as_source"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R78212d2f770f",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": null,
+        "open_requirement_recall": 2,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct contact-redaction prerequisite, supported by the cited supplied session account. No false completion claim.",
+      "evidence": {
+        "fixture_events": [
+          "e2"
+        ],
+        "cited_source_ids": [
+          "8ce163cdb2ef43908d24f4fa8541f52f"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R6a60386eeed0",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": 2,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correct no-separate-server rationale with exact e1 support. General coverage uncertainty does not incorrectly reclassify the accepted decision.",
+      "evidence": {
+        "fixture_events": [
+          "e1"
+        ],
+        "cited_source_ids": [
+          "e03188c72a9d43b0bd6d866bed4fb9b4"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R62169eeb5f76",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 1,
+        "rationale_retention": null,
+        "open_requirement_recall": 1,
+        "false_closures": 2,
+        "citation_support": 1,
+        "correction_recall": null
+      },
+      "rationale": "Recovers local 2.1 pass and deployment/production gap, but labels the sequential earlier failure and later pass an unresolved conflict rather than the known progression. Open redaction is visible in context but omitted; immediate retry correction is absent. Sources support individual outcomes, not the asserted contradiction.",
+      "evidence": {
+        "fixture_events": [
+          "e2",
+          "e4",
+          "e5",
+          "e7",
+          "e8",
+          "e9",
+          "e10"
+        ],
+        "cited_source_ids": [
+          "73598cdf5adb4bb0a3bb97a0eadccbb4",
+          "0655083547474966bb2234d70fe88411",
+          "923c9c777d2e4e9d97b4952826ee8289",
+          "2708cc6b83424aab8d132df53356ae4b"
+        ]
+      },
+      "flags": [
+        "chronology_not_reconciled",
+        "partial_resume",
+        "unsupported_conflict_inference"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R082bf6cfe63c",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null
+      },
+      "rationale": "Correctly reports unknown production version, local 2.1 and staging 2.0 with both proper raw sources; no scope mixing.",
+      "evidence": {
+        "fixture_events": [
+          "e7",
+          "e8"
+        ],
+        "cited_source_ids": [
+          "2708cc6b83424aab8d132df53356ae4b",
+          "73598cdf5adb4bb0a3bb97a0eadccbb4"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "Rd9ebd3055fb3",
+      "score": 0,
+      "axes": {
+        "state_accuracy": 0,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": null,
+        "correction_recall": 0
+      },
+      "rationale": "Safe refusal given empty retrieved context, but task recall fails: history explicitly accepts 11 and restricts verification to local environment.",
+      "evidence": {
+        "fixture_events": [
+          "e9",
+          "e10",
+          "e12"
+        ],
+        "cited_source_ids": []
+      },
+      "flags": [
+        "retrieval_omission",
+        "safe_abstention"
+      ],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    },
+    {
+      "case_id": "R5fd4cb9d34f1",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": 2
+      },
+      "rationale": "Correct current retry limit 11 and local-only verification, with directly supporting user signal. Preliminary freshness caveat does not override the correction.",
+      "evidence": {
+        "fixture_events": [
+          "e9",
+          "e10",
+          "e12"
+        ],
+        "cited_source_ids": [
+          "d206a7168ab645c7866d9cb869bf9459"
+        ]
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "scope_or_version_mixing": false
+    }
+  ],
+  "aggregate": {
+    "case_count": 25,
+    "score_counts": {
+      "0": 6,
+      "1": 6,
+      "2": 13
+    },
+    "score_total": 32,
+    "score_possible": 50,
+    "mean_score": 1.28,
+    "critical_case_ids": [
+      "R066bad7c6bde",
+      "R0ec70263097e",
+      "Rb160c17a291a"
+    ],
+    "false_task_closures": 0,
+    "scope_or_version_mixing": 0,
+    "safe_abstention_count": 6,
+    "summary": "13 sufficient answers, 6 partial/defective answers, 6 safe unsuccessful abstentions. All five resume answers remain partial. Three answers misattribute local version or no deployment to staging/production-only raw source. Several resume answers interpret sequential failed then passed evidence as unresolved contradiction. No answer claims deployment or production verification occurred, or that redaction was completed.",
+    "limits": "Mode-label blinding only: context format remains visible. This is a repeated developmental regression fixture that informed earlier code repairs, not an untouched holdout. One frozen synthetic history and five repeated question families do not establish real-project generalization or superiority of a condition."
+  }
+}

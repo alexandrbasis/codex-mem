@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-20T09:58:22.011122+00:00",
+  "change": "Conservative episode identity guard",
+  "reason": "An independent public fixture demonstrated a false merge: goal Review WAY-222 map and an unrelated PKG-111 mention allowed Continue PKG-111 to become map version 2.",
+  "implementation": [
+    "A unique task ID in the prior goal is authoritative; incidental summary or evidence IDs cannot expand it.",
+    "Multiple goal IDs reject the optional continuation as ambiguous.",
+    "Without goal IDs, fallback uses unambiguous positive identity references in full retained goal/summary source sentences; negative/unrelated mentions and sliced negative context cannot provide identity.",
+    "Whole prior-goal phrase continuation and existing exact-source fallback remain supported.",
+    "Unproved continuity is omitted and saved as a separate episode with reconciliation metadata; no claims are merged or closed."
+  ],
+  "regressions": [
+    "test_named_goal_identity_excludes_incidental_unrelated_task",
+    "test_multiple_goal_or_fallback_task_ids_are_ambiguous",
+    "test_negative_source_mention_cannot_supply_fallback_identity"
+  ],
+  "baseline": {
+    "mode": "baseline",
+    "tests": 3,
+    "failures": 4,
+    "errors": 0,
+    "success": false
+  },
+  "validation": {
+    "command": "python3 -m unittest tests.test_project_memory_store -q",
+    "tests": 62,
+    "failures": 0,
+    "errors": 0,
+    "scope_changed_files": [
+      "codex_mem/project_memory.py",
+      "tests/test_project_memory_store.py"
+    ],
+    "exact_prepared_patch_applied": true,
+    "reverse_patch_check": "passed",
+    "git_diff_check": "passed"
+  },
+  "before_sha256": {
+    "codex_mem/project_memory.py": "d654b94dc744934abb3e08bb8eaa5034a29dfb476d0987a8a1b8f77cfe8da9fe",
+    "tests/test_project_memory_store.py": "4c62e997be5186d8312226c8f70668ea996ab8ff84b66c596594947be2bf3561",
+    "docs/evidence/project-memory-2026-10-20/holdout-v7-before-identity-guard.json": "2c49b168a567d1cd4dd6095c4e459bd30c8159e5f54a6ee132c2244263e4eda3",
+    "docs/evidence/project-memory-2026-10-20/native-v7-lineage-check.json": "be44e1bebe7eac880300701791ccd075ef0563218abcf69f6188624186cc3b3d",
+    "codex_mem/episode_processor.py": "ce45751ae5a55038dce9d08ed69e59852a88cae6dd151dbc46b5ab15b6ca06d3",
+    "tests/fixtures/project_memory_scenarios.json": "a80bc722acb6eebf65adca47842b2fe488779a959ee49a29453da876deddc46d"
+  },
+  "after_sha256": {
+    "codex_mem/project_memory.py": "639ef94cf3e9fd0a1c8cf5f1d6d58b601487a91d8463248c8d836ca1690cfc4b",
+    "tests/test_project_memory_store.py": "b3d6c410fd2dade18e8c8a9f242204060f47fe339271f58c89bc4a96bf579ea2",
+    "docs/evidence/project-memory-2026-10-20/holdout-v7-before-identity-guard.json": "2c49b168a567d1cd4dd6095c4e459bd30c8159e5f54a6ee132c2244263e4eda3",
+    "docs/evidence/project-memory-2026-10-20/native-v7-lineage-check.json": "be44e1bebe7eac880300701791ccd075ef0563218abcf69f6188624186cc3b3d",
+    "codex_mem/episode_processor.py": "ce45751ae5a55038dce9d08ed69e59852a88cae6dd151dbc46b5ab15b6ca06d3",
+    "tests/fixtures/project_memory_scenarios.json": "a80bc722acb6eebf65adca47842b2fe488779a959ee49a29453da876deddc46d"
+  },
+  "preserved_evidence": [
+    "docs/evidence/project-memory-2026-10-20/holdout-v7-before-identity-guard.json",
+    "docs/evidence/project-memory-2026-10-20/native-v7-lineage-check.json"
+  ],
+  "limits": [
+    "No native calls, fixture edits, or model-prompt changes.",
+    "The first unseen native quality results remain pre-fix evidence; this deterministic guard fix does not improve or replace those scores.",
+    "Conservative identity matching is not semantic proof of task identity, completion, or deployment.",
+    "Fallback intentionally omits ambiguous identities rather than inferring a task from shared topic or session."
+  ],
+  "saved_native_predicate_replay": {
+    "method": "Read-only replay of the old and new continuity predicates against saved native requested targets and exact source refs; not native generation or full job replay.",
+    "database": "/tmp/project-memory-holdout-run-v1/next/memory.sqlite3",
+    "outcomes": [
+      {
+        "session_id": "atelier-b",
+        "requested_prior_id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+        "requested_prior_goal": "Use ZIP bundles rather than TAR for the museum kiosk audio guides.",
+        "native_ref_ids": [
+          "r5f65a4b1a1"
+        ],
+        "stored_episode_id": "pm_8832ba28d05bf35389e04d395f7c757a4c526cc4",
+        "exact_source_refs": [
+          {
+            "source_id": "91714ae2aed2465e86d606826de93689",
+            "start": 0,
+            "end": 46,
+            "quote": "Continue the same task PKG-614 from atelier-a."
+          }
+        ],
+        "old_guard": true,
+        "new_guard": true,
+        "unchanged": true
+      },
+      {
+        "session_id": "atelier-c",
+        "requested_prior_id": "pm_7436ac0d33510348a952c0a2294e12d6373160a6",
+        "requested_prior_goal": "Check the map legend contrast for WAY-983.",
+        "native_ref_ids": [
+          "rab969680f8"
+        ],
+        "stored_episode_id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+        "exact_source_refs": [
+          {
+            "source_id": "9644de68a6144bb584e5f24e9772de19",
+            "start": 0,
+            "end": 84,
+            "quote": "Continue task PKG-614 from atelier-b, the same museum kiosk audio-guide bundle work."
+          }
+        ],
+        "old_guard": false,
+        "new_guard": false,
+        "unchanged": true
+      }
+    ],
+    "all_outcomes_unchanged": true,
+    "interpretation": "Valid atelier-b link remains supported; the atelier-c proposal to the wrong WAY-983 target remains omitted. Existing pre-fix native lineage quality is unchanged by this predicate replay."
+  }
+}

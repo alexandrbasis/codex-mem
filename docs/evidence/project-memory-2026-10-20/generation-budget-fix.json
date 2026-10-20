@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-20T10:22:57.812863+00:00",
+  "method": "Read-only deterministic old-vs-proposed selection replay; temporary patched module only. Not native generation.",
+  "database": "/tmp/project-memory-holdout-run-v1/next/memory.sqlite3",
+  "source_session": "atelier-d pending correction inputs",
+  "old": {
+    "record_counts": {
+      "claims": 14,
+      "episodes": 0,
+      "relations": 0
+    },
+    "episode_heads": [],
+    "open_project_obligation_ids": [
+      "pm_1c0cbf65339d0c2e8767d55b8a2e4c90bdb66b68",
+      "pm_bad7dd56046a9f20b73001201cc1888ab81f131e",
+      "pm_b8d178348547082d64269876ac478bda726d2208"
+    ],
+    "serialized_ascii_chars": 24142
+  },
+  "new": {
+    "record_counts": {
+      "claims": 7,
+      "episodes": 2,
+      "relations": 0
+    },
+    "episode_heads": [
+      {
+        "id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+        "session_id": "atelier-c",
+        "logical_episode_id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+        "episode_version": 1,
+        "goal": "Continue task PKG-614 from atelier-b: test the manifest lockfile change against the earlier duplicate-chapter failure."
+      },
+      {
+        "id": "pm_8832ba28d05bf35389e04d395f7c757a4c526cc4",
+        "session_id": "atelier-b",
+        "logical_episode_id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+        "episode_version": 2,
+        "goal": "Investigate duplicated audio chapters in kiosk bundles."
+      }
+    ],
+    "open_project_obligation_ids": [
+      "pm_1c0cbf65339d0c2e8767d55b8a2e4c90bdb66b68",
+      "pm_b8d178348547082d64269876ac478bda726d2208",
+      "pm_bad7dd56046a9f20b73001201cc1888ab81f131e"
+    ],
+    "serialized_ascii_chars": 23675
+  },
+  "new_context_selection": {
+    "method": "reserved_heads_and_open_obligations",
+    "budget_ascii_chars": 24000,
+    "serialized_ascii_chars": 23675,
+    "candidate_window_bounded": true,
+    "considered_records": {
+      "claims": 14,
+      "episodes": 5,
+      "relations": 0
+    },
+    "omitted_records": {
+      "claims": 7,
+      "episodes": 3,
+      "relations": 0
+    }
+  },
+  "exact_field_refs_checked": 44,
+  "source_slice_mismatches": 0,
+  "baseline_tests": {
+    "mode": "baseline",
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "success": false
+  },
+  "patched_tests": {
+    "mode": "patched",
+    "tests": 68,
+    "failures": 0,
+    "errors": 0,
+    "success": true
+  },
+  "production_unchanged": true,
+  "production_sha256": {
+    "codex_mem/project_memory.py": "0cf618dba6e136f5f7f80c44fa19e33c8d9bdae4bb6a7945e7948dbef8fa03ae",
+    "tests/test_project_memory_store.py": "e94c065b22e3cfe73fe49eaad7828ea6ef5220b09158ffc32ff1c558e1f131ff"
+  },
+  "limits": [
+    "Bounded candidates: up to100 current heads,100 claims,32 independent open requirement/constraint candidates; omitted counts refer to considered candidates, not unlimited history.",
+    "Individually oversized records are omitted rather than truncated; omission metadata remains explicit.",
+    "Topic and task identifiers rank candidate context only; continuation/closure evidence guards remain authoritative.",
+    "The initial reserve is12k heads/6k obligations/6k other claims, sharing unused room under a24k serialized ASCII state cap including metadata.",
+    "No production files, saved fixtures, original native results, or databases changed; no model calls."
+  ],
+  "application": {
+    "applied_at": "2026-10-20T10:26:39.766248+00:00",
+    "freeze_released_by_parent": true,
+    "changed_production_and_test_files": [
+      "codex_mem/project_memory.py",
+      "tests/test_project_memory_store.py"
+    ],
+    "post_apply_sha256": {
+      "codex_mem/project_memory.py": "5659c80d7465ea8d50c03a695f3d7f03a92ca81152d426ae295ac83831bf33b0",
+      "tests/test_project_memory_store.py": "c3530d6024f38f8c0962cb590b3b7a73cb142686c9e8bbbd57bfe3fa8cc44ceb"
+    },
+    "command": "python3 -m unittest tests.test_project_memory_store -q",
+    "tests": 68,
+    "failures": 0,
+    "errors": 0,
+    "exact_prepared_patch_applied": true,
+    "reverse_patch_scope_check": "passed",
+    "git_diff_check": "passed",
+    "native_calls": 0,
+    "retrieval_or_hook_edits": false
+  }
+}

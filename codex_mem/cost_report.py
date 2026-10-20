@@ -96,6 +96,7 @@ class _Accumulator:
             "observer_session_unmapped_attempts",
         )})
         self.models = Counter()
+        self.source_kinds = Counter()
         self.observer_source_sessions = Counter()
         self.observer_session_bases = Counter()
         self.money = {name: {"confirmed_tier_subtotal": Decimal(0), "requested_tier_subtotal": Decimal(0), "standard_scenario_subtotal": Decimal(0), "fast_scenario_subtotal": Decimal(0)} for name in METRICS}
@@ -103,6 +104,7 @@ class _Accumulator:
 
     def add(self, row: Mapping[str, Any], priced: Mapping[str, Any], moment: datetime) -> None:
         self.events += 1
+        self.source_kinds[row.get("source_kind") or ("observation_processor" if row.get("_observer_attempt") else "unknown")] += 1
         self.first_at = min(self.first_at, moment) if self.first_at else moment
         self.last_at = max(self.last_at, moment) if self.last_at else moment
         if priced["tokens"] is None:
@@ -148,6 +150,7 @@ class _Accumulator:
     def result(self) -> dict[str, Any]:
         unknown_models = sorted(self.models.items(), key=lambda item: (-item[1], item[0]))
         result: dict[str, Any] = {"event_count": self.events, "observed_from": _utc_text(self.first_at) if self.first_at else None, "observed_through": _utc_text(self.last_at) if self.last_at else None, **self.tokens, "completeness": dict(self.gaps), "unknown_models": dict(unknown_models[:20]), "unknown_models_omitted_count": max(0, len(unknown_models) - 20)}
+        result["source_kind_counts"] = dict(self.source_kinds)
         for name in METRICS:
             money, counts = self.money[name], self.metric_counts[name]
             selected = money["confirmed_tier_subtotal"] + money["requested_tier_subtotal"]
@@ -182,7 +185,11 @@ def _dedupe(rows: Iterable[Mapping[str, Any]], observer: bool = False) -> tuple[
     duplicates = 0
     for index, value in enumerate(rows):
         row = dict(value)
-        if observer and row.get("job_id") is not None and row.get("attempt_count") is not None:
+        if observer and row.get("attempt_id") is not None:
+            # PM manual retry resets its job counter. The durable claim token
+            # identifies the actual model attempt across that reset.
+            key = ("project_memory_processor", row["attempt_id"])
+        elif observer and row.get("job_id") is not None and row.get("attempt_count") is not None:
             key = (row["job_id"], row["attempt_count"])
         elif not observer and row.get("response_id") and row.get("thread_id"):
             key = (row["thread_id"], row["response_id"])
@@ -285,6 +292,52 @@ def _columns(connection: sqlite3.Connection, table: str) -> set[str]:
     return {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
 
 
+def _project_memory_attempts(connection: sqlite3.Connection, tables: set[str],
+                             period: Mapping[str, Any], project: str | None,
+                             session_id: str | None) -> tuple[list[dict[str, Any]], list[str], dict[str, Any]]:
+    """Read independent PM attempts without joining mutable or deleted jobs."""
+    if "pm_usage_attempts" not in tables:
+        return [], [], {"project_memory_ledger_available": False}
+    mapped = "usage_sessions" in tables and {"thread_id", "project", "session_id"} <= _columns(connection, "usage_sessions")
+    join = " LEFT JOIN usage_sessions s ON s.thread_id=a.session_id AND s.project=a.project" if mapped else ""
+    session = "COALESCE(s.session_id,a.session_id)" if mapped else "a.session_id"
+    basis = "CASE WHEN s.thread_id IS NOT NULL THEN 'usage_session_mapping' ELSE 'unmapped_source_session' END" if mapped else "'unmapped_source_session'"
+    predicate = ["julianday(a.started_at)>=julianday(?)", "julianday(a.started_at)<julianday(?)"]
+    params: list[Any] = [_utc_text(_timestamp(period["from"]) - timedelta(seconds=1)),
+                         _utc_text(_timestamp(period["to"]) + timedelta(seconds=1))]
+    scoped, scope_args = [], []
+    if project is not None:
+        scoped.append("a.project=?")
+        scope_args.append(project)
+    if session_id is not None:
+        scoped.append(f"{session}=?")
+        scope_args.append(session_id)
+    predicate.extend(scoped)
+    params.extend(scope_args)
+    query = (f"SELECT a.*,{session} AS resolved_session_id,a.session_id AS source_session_id,"
+             f"{basis} AS session_attribution_basis FROM pm_usage_attempts a{join} WHERE " + " AND ".join(predicate))
+    attempts = []
+    for row in connection.execute(query, params):
+        item = dict(row)
+        item.update(session_id=item.pop("resolved_session_id"), source_kind="project_memory_processor",
+                    cache_write_input_tokens=item.pop("cache_write_tokens"),
+                    reasoning_output_tokens=item.pop("reasoning_tokens"))
+        attempts.append(item)
+    # A worker can emit a response after this report's period or source session.
+    # Exclude that overlap even when its own attempt falls outside the report.
+    workers = [row[0] for row in connection.execute(
+        "SELECT DISTINCT worker_thread_id FROM pm_usage_attempts WHERE worker_thread_id IS NOT NULL")]
+    scoped_where = " WHERE " + " AND ".join(scoped) if scoped else ""
+    unknown_where = " WHERE " + " AND ".join(["julianday(a.started_at) IS NULL", *scoped])
+    coverage = {"project_memory_ledger_available": True,
+                "project_memory_first_receipt_at": connection.execute("SELECT MIN(started_at) FROM pm_usage_attempts").fetchone()[0],
+                "project_memory_attempts_in_scope_all_dates": connection.execute(
+                    f"SELECT COUNT(*) FROM pm_usage_attempts a{join}{scoped_where}", scope_args).fetchone()[0],
+                "project_memory_unknown_timestamp_rows_in_scope": connection.execute(
+                    f"SELECT COUNT(*) FROM pm_usage_attempts a{join}{unknown_where}", scope_args).fetchone()[0]}
+    return attempts, workers, coverage
+
+
 def build_cost_report(data_dir: str | Path | None = None, *, from_date: str | None = None, to_date: str | None = None, timezone: str = "UTC", now: datetime | str | None = None, project: str | Path | None = None, session_id: str | None = None, group_by: Iterable[str] = DIMENSIONS, max_groups: int = 100, codex_home: str | Path | None = None) -> dict[str, Any]:
     """Read a consistent SQLite snapshot. Does not initialize or migrate it."""
     period = resolve_period(from_date, to_date, timezone, now)
@@ -355,6 +408,15 @@ def build_cost_report(data_dir: str | Path | None = None, *, from_date: str | No
                     job_args.append(session_id)
                 gap_query = "SELECT COALESCE(SUM(MAX(0,j.attempt_count-COALESCE(a.receipts,0))),0) FROM observation_jobs j LEFT JOIN (SELECT job_id,COUNT(*) receipts FROM observer_usage_attempts GROUP BY job_id) a ON a.job_id=j.id" + session_join + " WHERE " + " AND ".join(job_predicate)
                 coverage["historical_attempts_without_receipts_in_scope_all_dates"] = connection.execute(gap_query, job_args).fetchone()[0]
+            pm_attempts, pm_workers, pm_coverage = _project_memory_attempts(
+                connection, tables, period, workspace, session_id)
+            attempts.extend(pm_attempts)
+            workers.extend(pm_workers)
+            coverage.update(pm_coverage)
+            # An empty new PM table must not turn a legacy missing observer
+            # ledger into an assertion of zero historical observer spending.
+            coverage["observer_stream_available"] = bool(coverage.get("observer_ledger_available") or
+                coverage.get("project_memory_attempts_in_scope_all_dates"))
             connection.rollback()
         # Optional metadata-only helper provided by the collection module.
         from . import usage
@@ -363,7 +425,7 @@ def build_cost_report(data_dir: str | Path | None = None, *, from_date: str | No
     report = build_report(rows, attempts, from_date=period["from"], to_date=period["to"], timezone=timezone, project=workspace, session_id=session_id, group_by=group_by, max_groups=max_groups, observer_thread_ids=workers, coverage=coverage)
     report["period"] = period
     # A missing ledger means no observations are available, not zero spending.
-    for stream, available in (("main", coverage.get("usage_ledger_available", False)), ("observer", coverage.get("observer_ledger_available", False))):
+    for stream, available in (("main", coverage.get("usage_ledger_available", False)), ("observer", coverage.get("observer_stream_available", coverage.get("observer_ledger_available", False)))):
         if not available:
             for metric in METRICS:
                 report[stream][metric]["total"] = None

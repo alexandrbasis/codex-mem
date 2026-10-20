@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "input_path": "/tmp/project-memory-v3-final-startup-blind.json",
+  "fixture_id": "project-memory-holdout-v3",
+  "blindness": {
+    "mode_map_inspected": false,
+    "report_inspected": false,
+    "code_inspected": false,
+    "earlier_v3_grades_inspected": false,
+    "visible_context_structure": true,
+    "fixture_author_is_grader": true,
+    "mode_inferred_from_task_name": false
+  },
+  "rubric": {
+    "overall": "2 = sufficient correct useful answer with exact relevant citations; 1 = useful partial answer or epistemic/citation defect; 0 = fails or materially misleads. Safe abstention is separate from useful success.",
+    "axis_scale": "0 absent/wrong;1 partial;2 sufficient/correct;null not applicable/unmeasured. false_closures=2 means none.",
+    "applicability": "Same prior semantic rubric and question-specific manual criteria. Correct facts with a wrong exact supporting source are citation-defective even when the right source exists elsewhere in supplied context. Qualified uncertainty about external freshness is not an error. Exact user task continuity is not rejected merely because generated episode relation is inferred.",
+    "method": "Read only supplied blind bundle, including all six histories/contexts/answers, manual rubrics and citation map. No lexical token grading, native calls or external files.",
+    "not_measured": [
+      "New generation robustness across repeated runs",
+      "Mode identity",
+      "Operational latency/cost",
+      "Actual deployment or production behavior",
+      "Independent real-project generalization"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "R1c71754eb1cc",
+      "score": 1,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": 2,
+        "false_closures": 2,
+        "citation_support": 1,
+        "correction_recall": 2,
+        "scope_separation": 2,
+        "practical_continuation": 2,
+        "continuity_accuracy": null,
+        "chronology_accuracy": null
+      },
+      "rationale": "Substantively useful complete resume: local 8.4.3 clipping pass, no deployment/publication, old Latin-name obligation, unchecked production and accepted nineteen retained. But the production-version-unchecked sentence cites only original decision/requirement g01 and local result g04, neither of which states that production was unchecked. The actual g05 source is visible but not cited.",
+      "evidence": {
+        "fixture_events": [
+          "g01",
+          "g04",
+          "g05",
+          "g07"
+        ],
+        "cited_source_ids": [
+          "fdd8f7bcba044dd9b12b3ae58a95ae51",
+          "7c5776ea5d4e492d93e9553aa3a321df",
+          "bccf0cd761604508b149946e04e25b90"
+        ],
+        "unsupported_reference_ids": []
+      },
+      "flags": [
+        "claim_citation_mismatch"
+      ],
+      "critical_flags": [
+        "Production version has not been checked is attached to 7c5776ea5d4e492d93e9553aa3a321df (g01) and fdd8f7bcba044dd9b12b3ae58a95ae51 (g04). Exact support is 73be47068c2f4b12a6a983f8998791bd (g05), absent from answer source_ids."
+      ],
+      "false_task_closure": false,
+      "false_merge": false,
+      "scope_or_version_mixing": false,
+      "lost_requirements": false,
+      "asserted_requirement_closed": false
+    },
+    {
+      "case_id": "Rd978f4d37531",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null,
+        "scope_separation": 2,
+        "practical_continuation": null,
+        "continuity_accuracy": 2,
+        "chronology_accuracy": null
+      },
+      "rationale": "Correct user-stated bench-west continuation of bench-east for the same LBL-286. Correct explicit CAT-741 independence and inability to close the label task. g03 supports the links/boundary; g01 provides relevant original-task context. No inferred world state is promoted.",
+      "evidence": {
+        "fixture_events": [
+          "g01",
+          "g03"
+        ],
+        "cited_source_ids": [
+          "f6c3f253798e4968a672312c8cc1f4ed",
+          "7c5776ea5d4e492d93e9553aa3a321df"
+        ],
+        "unsupported_reference_ids": []
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "false_merge": false,
+      "scope_or_version_mixing": false,
+      "lost_requirements": false,
+      "asserted_requirement_closed": false
+    },
+    {
+      "case_id": "R9eb5350c7052",
+      "score": 2,
+      "axes": {
+        "state_accuracy": null,
+        "rationale_retention": 2,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null,
+        "scope_separation": null,
+        "practical_continuation": null,
+        "continuity_accuracy": null,
+        "chronology_accuracy": null
+      },
+      "rationale": "Correct accepted SVG reasons: sharp resizing and editable text. Preserves the exact reconsideration condition, print vendor ceasing SVG acceptance, supported by original user source g01.",
+      "evidence": {
+        "fixture_events": [
+          "g01"
+        ],
+        "cited_source_ids": [
+          "7c5776ea5d4e492d93e9553aa3a321df"
+        ],
+        "unsupported_reference_ids": []
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "false_merge": false,
+      "scope_or_version_mixing": false,
+      "lost_requirements": false,
+      "asserted_requirement_closed": false
+    },
+    {
+      "case_id": "R2ce721a4db27",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": null,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null,
+        "scope_separation": 2,
+        "practical_continuation": null,
+        "continuity_accuracy": null,
+        "chronology_accuracy": null
+      },
+      "rationale": "Correct Russian summary: local clipping pass with 8.4.3, staging 8.3.6, production unchecked/unknown. Both exact user-visible tool source IDs support the respective states; no local/staging version is promoted to production. Qualified memory freshness uncertainty is appropriate.",
+      "evidence": {
+        "fixture_events": [
+          "g04",
+          "g05"
+        ],
+        "cited_source_ids": [
+          "fdd8f7bcba044dd9b12b3ae58a95ae51",
+          "73be47068c2f4b12a6a983f8998791bd"
+        ],
+        "unsupported_reference_ids": []
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "false_merge": false,
+      "scope_or_version_mixing": false,
+      "lost_requirements": false,
+      "asserted_requirement_closed": false
+    },
+    {
+      "case_id": "R541f363f4c15",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": 2,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": null,
+        "scope_separation": 2,
+        "practical_continuation": null,
+        "continuity_accuracy": null,
+        "chronology_accuracy": null
+      },
+      "rationale": "Correct Latin plant names remain prerequisite before publication and local clipping success does not close it. Fresh g08 restates the open requirement and production gap; cited episode supports the local test result. No false task completion.",
+      "evidence": {
+        "fixture_events": [
+          "g01",
+          "g04",
+          "g05",
+          "g08"
+        ],
+        "cited_source_ids": [
+          "e231e0dff18d460e985788801bb6ad2b",
+          "pm_37911f27226bd3b9790325b3b74684db7d49cc91"
+        ],
+        "unsupported_reference_ids": []
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "false_merge": false,
+      "scope_or_version_mixing": false,
+      "lost_requirements": false,
+      "asserted_requirement_closed": false
+    },
+    {
+      "case_id": "R7f40345e9180",
+      "score": 2,
+      "axes": {
+        "state_accuracy": 2,
+        "rationale_retention": null,
+        "open_requirement_recall": 2,
+        "false_closures": 2,
+        "citation_support": 2,
+        "correction_recall": 2,
+        "scope_separation": 2,
+        "practical_continuation": null,
+        "continuity_accuracy": null,
+        "chronology_accuracy": null
+      },
+      "rationale": "Correct approved nineteen replacing earlier suggestion, local-only preview/pass with renderer 8.4.3, no deployment/publication, unchecked production and still-open Latin-name obligation. User corrections plus cited episode support all statements; uncertainty does not negate the correction.",
+      "evidence": {
+        "fixture_events": [
+          "g04",
+          "g05",
+          "g07",
+          "g08"
+        ],
+        "cited_source_ids": [
+          "bccf0cd761604508b149946e04e25b90",
+          "e231e0dff18d460e985788801bb6ad2b",
+          "pm_37911f27226bd3b9790325b3b74684db7d49cc91"
+        ],
+        "unsupported_reference_ids": []
+      },
+      "flags": [],
+      "critical_flags": [],
+      "false_task_closure": false,
+      "false_merge": false,
+      "scope_or_version_mixing": false,
+      "lost_requirements": false,
+      "asserted_requirement_closed": false
+    }
+  ],
+  "aggregate": {
+    "case_count": 6,
+    "score_counts": {
+      "0": 0,
+      "1": 1,
+      "2": 5
+    },
+    "score_total": 11,
+    "score_possible": 12,
+    "mean_score": 1.8333333333333333,
+    "critical_case_ids": [
+      "R1c71754eb1cc"
+    ],
+    "false_task_closures": 0,
+    "false_merges": 0,
+    "scope_or_version_mixing": 0,
+    "safe_abstention_count": 0,
+    "unsupported_reference_case_count": 0,
+    "summary": "Five sufficient answers and one substantively useful but citation-defective resume answer:11/12. All six recover the substantive requested state/decision/obligation/constraint or task boundary. The resume production-unchecked claim lacks its actual g05 citation and is attached to g01/g04 instead. No fabricated IDs, false closures, false task merge or environment/version contamination.",
+    "limits": "Six fresh reader cases over fictional v3 history, first grading of v3 by this evaluator. Not preregistered; authored after prior developmental feedback. Fixture author is grader; mode labels hidden but context format visible. Do not infer mode from task name, broad production acceptance, or repeat-generation reliability from this small subset."
+  }
+}

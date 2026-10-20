@@ -1,0 +1,772 @@
+{
+  "schema_version": 1,
+  "audit": "project-memory-completion-evaluation",
+  "mode": "read_only_source_and_saved_evidence_audit",
+  "overall_status": "incomplete",
+  "limited_pilot_status": "bounded_local_pilot_supported_by_saved_evidence",
+  "status_definitions": {
+    "proven": "Observed within the stated bounded test scope; not a universal guarantee.",
+    "incomplete": "Partially evidenced or instrumented, with a material unmeasured requirement.",
+    "conditional": "A bounded proof or future gate exists but the broader condition is not discharged.",
+    "missing": "The required comparison or independent dataset was not executed."
+  },
+  "summary": "Implementation, bounded lifecycle safety, native v6 processing, fresh-reader regression checks, one authorized bounded Jev off/on comparison and limited local pilot evidence exist. The full original evaluation scope remains incomplete: no untouched project/time holdout yet audited, no demonstrated production cost per useful result or savings, and no full event-time/late-native-revision evaluation. Jev quality benefit is not established.",
+  "status_counts": {
+    "proven": 12,
+    "missing": 1,
+    "conditional": 3,
+    "incomplete": 3
+  },
+  "requirements": [
+    {
+      "id": "four_memory_variants",
+      "status": "proven",
+      "requirement_quote": "Предлагаю начать с проверки четырёх вариантов на одинаковых историях и одинаковых вопросах:",
+      "finding": "The native v6 and paired reader reports each contain five questions for current, episodes, episodes_state and hybrid_signals, plus five separate production_startup cases. The PM arms are ablations of the same selected brief, not separately optimized independent generation systems.",
+      "scope": "Four-arm comparison is proven for this repeated synthetic history and recorded code version.",
+      "gaps": [
+        "The final startup repair was retested with five startup readers only; all four arms were not rerun on that final code."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 178,
+          "line_end": 185,
+          "quote": "Предлагаю начать с проверки четырёх вариантов на одинаковых историях и одинаковых вопросах:"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-comparison.json",
+          "json_pointer": "/results"
+        },
+        {
+          "path": "<repo-root>/scripts/project_memory_acceptance.py",
+          "line_start": 30,
+          "line_end": 30
+        },
+        {
+          "path": "<repo-root>/scripts/project_memory_acceptance.py",
+          "line_start": 408,
+          "line_end": 421
+        }
+      ]
+    },
+    {
+      "id": "same_history_questions_and_context_budget",
+      "status": "proven",
+      "requirement_quote": "Улучшение полезных ответов сравнивается с текущей системой при одинаковом бюджете контекста.",
+      "finding": "The reports use the same fixture/history, five question IDs, 6000-character upper bound, arrival cutoff 12 and processing cutoff 8. All recorded contexts comply with the bound. Production startup uses the actual combined Store.context path and mapped native legacy notes. Equal character caps do not imply equal token usage or equal generation cost.",
+      "scope": "Recorded synthetic/local evidence only.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 193,
+          "line_end": 193,
+          "quote": "Улучшение полезных ответов сравнивается с текущей системой при одинаковом бюджете контекста."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-comparison.json",
+          "json_pointer": "/budgets"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-comparison.json",
+          "json_pointer": "/frozen_input_events"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/startup_merge"
+        },
+        {
+          "path": "<repo-root>/scripts/project_memory_acceptance.py",
+          "line_start": 396,
+          "line_end": 421
+        }
+      ]
+    },
+    {
+      "id": "genuine_existing_memory_baseline",
+      "status": "proven",
+      "requirement_quote": "Текущий Codex Mem | Исходное качество",
+      "finding": "The baseline was generated through the existing native processor, not canned reader answers. Eight recorded native baseline invocations were reused and attributed explicitly. The baseline processor source hash still matches the current processor module. New PM data was generated independently in the v6 run.",
+      "scope": "Baseline reuse is explicit; it is not a new independent baseline generation on every renderer revision.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 180,
+          "line_end": 185,
+          "quote": "Текущий Codex Mem | Исходное качество"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-comparison-before-recall-fix.json",
+          "json_pointer": "/reused_baseline_native_generations"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-comparison-before-recall-fix.json",
+          "json_pointer": "/reused_baseline_versions"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-comparison-before-recall-fix.json",
+          "json_pointer": "/project_jobs"
+        }
+      ]
+    },
+    {
+      "id": "fresh_reader_without_full_history",
+      "status": "proven",
+      "requirement_quote": "Проверяется ответ нового агента, который не видел историю.",
+      "finding": "The native and paired runs verify 25 unique completed no-tool reader threads. The final five startup readers also have five unique threads disjoint from the preceding paired readers. Captured reader requests contain bounded context and the question, not gold labels or the full source history.",
+      "scope": "Fresh model threads are proven; mode-label blinding is limited because context structure remains visible.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 189,
+          "line_end": 189,
+          "quote": "Проверяется ответ нового агента, который не видел историю."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-reader-freshness-check.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-verification.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/results"
+        },
+        {
+          "path": "<repo-root>/scripts/project_memory_acceptance.py",
+          "line_start": 151,
+          "line_end": 167
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_acceptance.py",
+          "line_start": 50,
+          "line_end": 58
+        }
+      ]
+    },
+    {
+      "id": "untouched_project_and_temporal_holdout",
+      "status": "missing",
+      "requirement_quote": "Проверочные проекты и временные участки отделяются от настройки.",
+      "finding": "There is one authored Orchid development history reused to guide repairs. The historical tuning/holdout query labels do not create an untouched project or temporal evaluation split. The final reports and blind graders explicitly acknowledge this reuse.",
+      "scope": "No unseen-project or untouched temporal quality evaluation is evidenced.",
+      "gaps": [
+        "A new permissible anonymized history/project or genuinely held-out time block is still needed for generalization claims."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 191,
+          "line_end": 191,
+          "quote": "Проверочные проекты и временные участки отделяются от настройки."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-comparison.json",
+          "json_pointer": "/split_status"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-blind-grades.json",
+          "json_pointer": "/aggregate/limits"
+        },
+        {
+          "path": "<repo-root>/tests/fixtures/project_memory_scenarios.json",
+          "json_pointer": "/queries"
+        }
+      ]
+    },
+    {
+      "id": "future_event_exclusion",
+      "status": "conditional",
+      "requirement_quote": "Будущие события не должны попадать в ответ на вопрос о прошлом.",
+      "finding": "The fixture excludes arrival sequences after cutoff 12 before ingestion; the future production-deployment event therefore cannot enter these reader contexts. This proves the fixture input boundary. It does not prove general historical as-of reconstruction after future events have already been ingested.",
+      "scope": "Arrival-sequence fixture exclusion and suppression of current-ledger augmentation for historical queries.",
+      "gaps": [
+        "True event-time and a general historical ledger API are not established by this run."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 191,
+          "line_end": 191,
+          "quote": "Будущие события не должны попадать в ответ на вопрос о прошлом."
+        },
+        {
+          "path": "<repo-root>/scripts/project_memory_acceptance.py",
+          "line_start": 96,
+          "line_end": 99
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_acceptance.py",
+          "line_start": 19,
+          "line_end": 31
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/cutoff_arrival_sequence"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_retrieval.py",
+          "line_start": 146,
+          "line_end": 151
+        }
+      ]
+    },
+    {
+      "id": "multi_session_decision_failure_pass_and_open_obligation",
+      "status": "proven",
+      "requirement_quote": "Нужны истории из нескольких сессий. В них предложение становится решением, проверка проваливается, позже проходит, а развёртывание остаётся непроверенным.",
+      "finding": "Three fresh native PM jobs processed the multi-session prefix; fresh corrections and a delayed observation remain pending. Final startup grading recovered the accepted storage rationale, local regression pass, staging/production distinction, open deployment, and independent redaction requirement.",
+      "scope": "Five repeated synthetic question families, not a broad real-project outcome sample.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 187,
+          "line_end": 189,
+          "quote": "Нужны истории из нескольких сессий."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-comparison-before-recall-fix.json",
+          "json_pointer": "/project_jobs"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-blind-grades.json",
+          "json_pointer": "/cases"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-blind-grades.json",
+          "json_pointer": "/aggregate"
+        }
+      ]
+    },
+    {
+      "id": "long_history_early_requirement_preservation",
+      "status": "conditional",
+      "requirement_quote": "и важное условие в начале длинного чата.",
+      "finding": "Deterministic tests cover old requirements surviving many newer episodes/prompts, and the final small native fixture retains its early redaction obligation. No native semantic-quality stress test over a large real or long synthetic transcript is evidenced.",
+      "scope": "Deterministic retention plus one small native fixture.",
+      "gaps": [
+        "Long-history semantic recall remains unmeasured."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 187,
+          "line_end": 187,
+          "quote": "и важное условие в начале длинного чата."
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 57,
+          "line_end": 66
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 544,
+          "line_end": 555
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_retrieval.py",
+          "line_start": 367,
+          "line_end": 411
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-blind-grades.json",
+          "json_pointer": "/cases/1"
+        }
+      ]
+    },
+    {
+      "id": "missing_stop_and_lost_notification_recovery",
+      "status": "proven",
+      "requirement_quote": "Добавляем смену версии, противоречие окружений, отсутствие `Stop`, поздние события, удаление во время обработки, сбой между сохранением события и уведомлением очереди и важное условие в начале длинного чата.",
+      "finding": "Atomic capture and durable discovery are covered by tests. The installed daemon processed a temporary synthetic project without Stop or explicit enqueue. Its record explicitly separates packaged synthetic-shaped hook capture from actual host-hook trust; separate actual-host metadata and pilot-cycle receipts show current host capture and completed work.",
+      "scope": "Bounded local runtime and mechanical recovery, not general real-project answer quality.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 124,
+          "line_end": 128,
+          "quote": "Уведомление ускоряет обработку, но не служит единственным способом её запустить."
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "line_start": 68,
+          "line_end": 73
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "line_start": 72,
+          "line_end": 81
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "line_start": 109,
+          "line_end": 119
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/installed-runtime.json",
+          "json_pointer": "/checks"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/installed-runtime.json",
+          "json_pointer": "/capture_boundary"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/actual-host-hooks.json",
+          "json_pointer": "/status"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/pilot-first-cycle.json",
+          "json_pointer": ""
+        }
+      ]
+    },
+    {
+      "id": "late_events_and_event_time_semantics",
+      "status": "incomplete",
+      "requirement_quote": "Поздние события создают новую версию эпизода.",
+      "finding": "The fixture has an observation arriving at sequence 12 with occurred_at 4, but occurred_at is only fixture annotation. That event is intentionally left unprocessed in the fresh-signal tail. Out-of-order worker fencing is tested; the artifacts do not show a separate native revision processing this late event or event-time reconciliation.",
+      "scope": "Capture order is explicit and distinct from event time.",
+      "gaps": [
+        "A late-arrival native reprocessing/revision comparison is not evidenced; true event-time remains unknown."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 128,
+          "line_end": 128,
+          "quote": "Поздние события создают новую версию эпизода."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/pending_event_ids"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/source_completeness/delayed_occurred_at"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 266,
+          "line_end": 278
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 443,
+          "line_end": 452
+        }
+      ]
+    },
+    {
+      "id": "deletion_during_worker_and_derivation_revocation",
+      "status": "proven",
+      "requirement_quote": "Старое фоновое задание не должно восстановить его.",
+      "finding": "Deterministic tests delete a source while a snapshot is leased, require stale commit rejection, remove dependent derived records and legacy indexes, and preserve independent records. They test concrete interleavings; they are not a native concurrent deletion load test.",
+      "scope": "Required mechanical safety scenarios under deterministic interleavings.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 162,
+          "line_end": 162,
+          "quote": "Старое фоновое задание не должно восстановить его."
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_acceptance.py",
+          "line_start": 85,
+          "line_end": 109
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "line_start": 86,
+          "line_end": 114
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 454,
+          "line_end": 483
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "line_start": 696,
+          "line_end": 717
+        }
+      ]
+    },
+    {
+      "id": "project_isolation_and_false_closure_safety",
+      "status": "proven",
+      "requirement_quote": "обязательные сценарии должны пройти без смешения проектов, восстановления удалённых данных и ложного закрытия задач.",
+      "finding": "Foreign-source/projection isolation, unrelated passing-test rejection, scope mismatch and future/intended completion are covered by targeted tests. Installed runtime reports exact project scope. Blind grades recorded no false task closures or environment/version mixing in the final five cases; earlier citation failures remain archived.",
+      "scope": "Observed tests/cases only; zero errors in these cases is not a general safety guarantee.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 193,
+          "line_end": 193,
+          "quote": "обязательные сценарии должны пройти без смешения проектов, восстановления удалённых данных и ложного закрытия задач."
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 254,
+          "line_end": 264
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 385,
+          "line_end": 431
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/installed-runtime.json",
+          "json_pointer": "/checks/exact_project_scope"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-blind-grades.json",
+          "json_pointer": "/aggregate"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-blind-grades.json",
+          "json_pointer": "/aggregate/critical_case_ids"
+        }
+      ]
+    },
+    {
+      "id": "quality_axes_and_source_attribution_measurement",
+      "status": "proven",
+      "requirement_quote": "Измеряем точность действующего состояния, сохранение причины решения, полноту открытых требований и поддержку утверждений источниками.",
+      "finding": "Independent mode-label-blind grading uses question-applicable state, rationale, obligation, correction, citation and false-closure axes. The paired four arms scored current 6/10, episodes 7/10, episodes_state 7/10 and hybrid 10/10. Production startup first scored 9/10, then five fresh readers on revised startup rendering scored 10/10. Earlier omissions and bad citations were explicitly recorded rather than replaced by green transport tests.",
+      "scope": "Measured descriptive regression scores, not statistical superiority or unseen-project acceptance.",
+      "gaps": [
+        "The final startup score is five questions on reused generated state, not new generation robustness."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 189,
+          "line_end": 189,
+          "quote": "Измеряем точность действующего состояния, сохранение причины решения, полноту открытых требований и поддержку утверждений источниками."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-blind-grades.json",
+          "json_pointer": "/rubric"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-blind-grades.json",
+          "json_pointer": "/cases"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/paired-reader-mode-map.json",
+          "json_pointer": "/mapping"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-blind-grades.json",
+          "json_pointer": "/aggregate"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-result-before-recall-fix.json",
+          "json_pointer": "/status"
+        }
+      ]
+    },
+    {
+      "id": "observed_latency_and_production_latency",
+      "status": "incomplete",
+      "requirement_quote": "Отдельно измеряются ошибочные закрытия задач, пропуски важных исправлений, задержка и полная стоимость обработки с повторными попытками.",
+      "finding": "Per-reader native durations, whole evaluation wall time and an installed-runtime processing duration are recorded. The reports keep production pipeline_latency_ms null. They do not provide a repeated production latency distribution, service-level acceptance threshold or cost/latency per useful real-project continuation.",
+      "scope": "Observed test-run timing only.",
+      "gaps": [
+        "Production end-to-end latency and its acceptance threshold remain unmeasured."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 189,
+          "line_end": 189,
+          "quote": "Отдельно измеряются ошибочные закрытия задач, пропуски важных исправлений, задержка и полная стоимость обработки с повторными попытками."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-comparison-before-recall-fix.json",
+          "json_pointer": "/results"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/evaluation_wall_clock_ms"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/pipeline_latency_ms"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/installed-runtime.json",
+          "json_pointer": "/processing_seconds"
+        }
+      ]
+    },
+    {
+      "id": "durable_per_attempt_token_accounting",
+      "status": "proven",
+      "requirement_quote": "полная стоимость обработки с повторными попытками.",
+      "finding": "Three actual native PM attempt rows have unique attempts/workers and exactly match native, stored and returned receipts, totaling 42881 tokens. Targeted tests preserve failed partial and retried attempts, monotonic checkpoints and content-free accounting after source deletion. Cost-report tests retain unknown totals and avoid double-counting worker records.",
+      "scope": "Accounting mechanism and observed token receipts, not actual billed charges.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 189,
+          "line_end": 189,
+          "quote": "полная стоимость обработки с повторными попытками."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/native-v6-ledger-check.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "line_start": 590,
+          "line_end": 633
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "line_start": 158,
+          "line_end": 240
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_cost_report.py",
+          "line_start": 64,
+          "line_end": 141
+        },
+        {
+          "path": "<repo-root>/docs/PROJECT_MEMORY.md",
+          "line_start": 102,
+          "line_end": 108
+        }
+      ]
+    },
+    {
+      "id": "full_cost_per_useful_result_and_savings",
+      "status": "incomplete",
+      "requirement_quote": "Стоимость нужно считать на полезный результат",
+      "finding": "Current, baseline-reused and linked-attempt token counts are separated. Failed clean attempts are archived. Dollar cost is null, historical pre-ledger usage cannot always be reconstructed, and the ordinary observer remains enabled. No measured reduction in cost or model calls, or production cost per useful answer, is established.",
+      "scope": "Token-accounting evidence exists; financial/per-useful-result optimization does not.",
+      "gaps": [
+        "Full dollar charges, all historical unrecorded attempts, and measured savings remain unknown."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 166,
+          "line_end": 168,
+          "quote": "Стоимость нужно считать на полезный результат"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/current_run_observed_usage"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-startup-comparison.json",
+          "json_pointer": "/all_linked_attempts_observed_usage"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/clean-attempt-1.json",
+          "json_pointer": "/current_run_observed_usage"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/clean-attempt-2.json",
+          "json_pointer": "/current_run_observed_usage"
+        },
+        {
+          "path": "<repo-root>/docs/PROJECT_MEMORY.md",
+          "line_start": 104,
+          "line_end": 110
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/pilot-decision.json",
+          "json_pointer": "/unmeasured"
+        }
+      ]
+    },
+    {
+      "id": "jev_on_off_comparison",
+      "status": "proven",
+      "requirement_quote": "Отдельные сравнения с включённым и выключенным Jev покажут его вклад.",
+      "finding": "An explicitly human-authorized bounded off/on comparison reused one fictional native job with identical initial state. Both arms committed identical final semantic state and the same conservative downgrade. Three successful Jev HTTP requests took 922 ms within the approved 9-call/20-second limit; global configuration and code remained unchanged.",
+      "scope": "Bounded arm execution is proven for one fictional job. Incremental quality benefit is not proven.",
+      "gaps": [
+        "No reader-quality, external-truth, false-positive or false-negative improvement was measured.",
+        "Identical outcomes on one job do not establish general Jev benefit.",
+        "USD cost is unknown; incremental arm wall latency was 933 ms."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 193,
+          "line_end": 193,
+          "quote": "Отдельные сравнения с включённым и выключенным Jev покажут его вклад."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/jev-comparison.json",
+          "json_pointer": "/status"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/jev-comparison.json",
+          "json_pointer": "/actual_remote_call_count"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/jev-comparison.json",
+          "json_pointer": "/arms/on"
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/jev-comparison.json",
+          "json_pointer": "/interpretation"
+        },
+        {
+          "path": "<repo-root>/docs/PROJECT_MEMORY.md",
+          "line_start": 147,
+          "line_end": 147
+        },
+        {
+          "path": "/tmp/project-memory-jev-authorized-comparison.json",
+          "json_pointer": "/comparison",
+          "supports": "Same initial/final semantic state, three successful requests, reported Jev input/output tokens 17060/376 and unknown USD cost."
+        },
+        {
+          "path": "/tmp/project-memory-jev-authorized-comparison.json",
+          "json_pointer": "/quality_axes",
+          "supports": "Identical committed outcomes and conservative downgrade; reader accuracy, external truth and false-positive/negative rates remain null."
+        }
+      ],
+      "supersedes": "Earlier blocked Jev receipt is historical; the later explicitly authorized comparison discharged the bounded arm-execution gap."
+    },
+    {
+      "id": "quality_and_cost_gate_before_legacy_reduction",
+      "status": "conditional",
+      "requirement_quote": "После проверки качества и стоимости уменьшить избыточную генерацию отдельных заметок.",
+      "finding": "Ordinary observation processing is still retained in service scheduling and documented as enabled alongside PM. Therefore the reduction stage has not been taken without evidence. The later quality/cost gate remains open; the current limited pilot is not evidence that cost-based legacy reduction has passed.",
+      "scope": "The safety condition is respected by deferring reduction.",
+      "gaps": [
+        "Unseen quality and useful-result cost evidence are needed before claiming or enabling a reduction."
+      ],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 200,
+          "line_end": 200,
+          "quote": "После проверки качества и стоимости уменьшить избыточную генерацию отдельных заметок."
+        },
+        {
+          "path": "<repo-root>/docs/PROJECT_MEMORY.md",
+          "line_start": 108,
+          "line_end": 110
+        },
+        {
+          "path": "<repo-root>/codex_mem/service.py",
+          "line_start": 695,
+          "line_end": 706
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "line_start": 97,
+          "line_end": 107
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/pilot-decision.json",
+          "json_pointer": "/unmeasured"
+        }
+      ]
+    },
+    {
+      "id": "limited_pilot_and_implementation_evidence",
+      "status": "proven",
+      "requirement_quote": "Включить пилот на выбранном проекте.",
+      "finding": "Saved activation/release receipts select only this exact repository, retain other configuration, verify installed 1.12.0 modules against the tested archive/source, and record real host capture plus one completed local pilot cycle. The recorded full suite passed 1453 tests; current hashes match all ten tested production modules. This audit did not rerun tests or inspect a live remote deployment.",
+      "scope": "Authorized limited local pilot only; no commit, push, broad deployment or general answer-quality acceptance is evidenced.",
+      "gaps": [],
+      "citations": [
+        {
+          "path": "<repo-root>/docs/project-memory-architecture-2026-10-20.md",
+          "line_start": 200,
+          "line_end": 202,
+          "quote": "Включить пилот на выбранном проекте."
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/pilot-decision.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/pilot-activation.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/pilot-first-cycle.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/release-verification.json",
+          "json_pointer": ""
+        },
+        {
+          "path": "<repo-root>/docs/evidence/project-memory-2026-10-20/final-tests.json",
+          "json_pointer": ""
+        }
+      ]
+    }
+  ],
+  "read_only_cross_checks": {
+    "current_hashes_match_test_receipt": {
+      "codex_mem/project_memory.py": true,
+      "codex_mem/project_memory_retrieval.py": true,
+      "codex_mem/episode_processor.py": true,
+      "codex_mem/store.py": true,
+      "codex_mem/integration.py": true,
+      "codex_mem/retrieval.py": true,
+      "codex_mem/mcp.py": true,
+      "codex_mem/cost_report.py": true,
+      "codex_mem/service.py": true,
+      "codex_mem/hooks.py": true
+    },
+    "final_reader_threads": 5,
+    "unique_final_reader_threads": 5,
+    "final_threads_disjoint_from_prior_25": true,
+    "final_readers_all_no_tools": true,
+    "final_readers_all_completed": true,
+    "paired_and_final_history_identical": true,
+    "paired_and_final_question_ids_identical": true,
+    "context_budget_compliance": {
+      "native_v6": true,
+      "paired25": true,
+      "final5": true
+    },
+    "baseline_processor_hash_matches_current": true,
+    "all_reported_code_freeze_checks_pass": true,
+    "final_generation_calls": 0,
+    "final_frozen_state_unchanged": true,
+    "final_dollar_cost": null,
+    "final_production_pipeline_latency_ms": null
+  },
+  "interpretation_limits": [
+    "The final 10/10 is five new startup-reader answers over the same previously used synthetic history and generated state, not five unseen projects or new memory generations.",
+    "Mode labels were withheld, but context format remained visible and the fixture had been seen previously.",
+    "The final startup repair has only five actual-route reader cases; the earlier four-arm comparison is a separate earlier renderer snapshot.",
+    "Token totals describe recorded and linked attempts; dollar charges and unrecorded pre-ledger usage remain unknown.",
+    "1453 passing tests and installed/runtime receipts do not prove broad semantic recall quality, production latency, lower cost, or universal deletion safety.",
+    "The ordinary observer was retained, so the quality-and-cost condition for reducing legacy generation remains deferred rather than silently waived."
+  ],
+  "actions_performed": [
+    "Read current plan, guide, saved evidence, harness and relevant test/source files.",
+    "Computed source-hash, freshness, history/budget and provenance cross-checks from saved records.",
+    "Wrote this requested audit JSON under /tmp."
+  ],
+  "actions_not_performed": [
+    "No model or external API calls.",
+    "No tests rerun.",
+    "No repository, configuration, pilot or production code edits."
+  ]
+}

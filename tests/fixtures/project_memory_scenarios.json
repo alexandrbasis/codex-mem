@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "fixture_id": "project-memory-frozen-v1",
+  "history_provenance": "Authored synthetic multi-session observations; not a full native transcript.",
+  "temporal_policy": "Filter by arrival sequence <= cutoff. occurred_at preserves delayed event time. Reader never receives future events or answer labels.",
+  "default_cutoff": 12,
+  "budget_chars": 6000,
+  "events": [
+    {
+      "id": "e1",
+      "sequence": 1,
+      "session_id": "s1",
+      "topic": "import",
+      "role": "user",
+      "text": "Use SQLite for the local scheduled importer because this installation needs no separate server. This decision is accepted. Revisit it if shared multi-user storage becomes required.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 1
+    },
+    {
+      "id": "e2",
+      "sequence": 2,
+      "session_id": "s1",
+      "topic": "security",
+      "role": "user",
+      "text": "An independent requirement remains open: redact personal contact details before exporting diagnostic reports.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 2
+    },
+    {
+      "id": "e3",
+      "sequence": 3,
+      "session_id": "s1",
+      "topic": "import",
+      "role": "assistant",
+      "text": "Proposed PostgreSQL as an alternative; the user selected SQLite for the local installation.",
+      "project": "orchid",
+      "stop": true,
+      "occurred_at": 3
+    },
+    {
+      "id": "e4",
+      "sequence": 4,
+      "session_id": "s2",
+      "topic": "import",
+      "role": "tool",
+      "text": "Importer duplicate checkout regression FAILED. Deployment has not run.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 4
+    },
+    {
+      "id": "e5",
+      "sequence": 5,
+      "session_id": "s2",
+      "topic": "import",
+      "role": "assistant",
+      "text": "Investigated the duplicate insertion bug. No verified fix yet.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 5
+    },
+    {
+      "id": "e6",
+      "sequence": 6,
+      "session_id": "s2",
+      "topic": "ui",
+      "role": "tool",
+      "text": "The settings UI color check passed locally. This is unrelated to importer deployment.",
+      "project": "orchid",
+      "stop": true,
+      "occurred_at": 6
+    },
+    {
+      "id": "e7",
+      "sequence": 7,
+      "session_id": "s3",
+      "topic": "import",
+      "role": "tool",
+      "text": "Importer duplicate checkout regression PASSED locally after adding a UNIQUE constraint. Version 2.1 is checked locally. No deployment was performed.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 7
+    },
+    {
+      "id": "e8",
+      "sequence": 8,
+      "session_id": "s3",
+      "topic": "import",
+      "role": "tool",
+      "text": "Staging still reports importer version 2.0. Production version has not been checked.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 8
+    },
+    {
+      "id": "e9",
+      "sequence": 9,
+      "session_id": "s3",
+      "topic": "import",
+      "role": "user",
+      "text": "Correction: the accepted retry limit is 11, replacing the earlier proposed 25. Deployment and production verification remain open.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 9
+    },
+    {
+      "id": "e10",
+      "sequence": 10,
+      "session_id": "s3",
+      "topic": "import",
+      "role": "user",
+      "text": "Исправление: лимит повторов 11. Проверена только локальная среда. Продакшен не проверяли.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 10
+    },
+    {
+      "id": "e12",
+      "sequence": 12,
+      "session_id": "s4",
+      "topic": "import",
+      "role": "tool",
+      "text": "A delayed tool result from session s2 arrived now: retry limit 25 was only a proposal, not an accepted setting.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 4
+    },
+    {
+      "id": "e13",
+      "sequence": 13,
+      "session_id": "s4",
+      "topic": "private",
+      "role": "user",
+      "text": "DELETE_SENTINEL: delete this diagnostic source and every derived claim while its worker is running.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 13
+    },
+    {
+      "id": "e14",
+      "sequence": 14,
+      "session_id": "s4",
+      "topic": "import",
+      "role": "tool",
+      "text": "Future event: production deployment verified on version 2.2. This event must not appear before cutoff 12.",
+      "project": "orchid",
+      "stop": false,
+      "occurred_at": 14
+    },
+    {
+      "id": "foreign",
+      "sequence": 11,
+      "session_id": "foreign",
+      "topic": "import",
+      "role": "user",
+      "text": "FOREIGN_SENTINEL: use retry limit 99 and deploy immediately.",
+      "project": "other",
+      "stop": true,
+      "occurred_at": 11
+    }
+  ],
+  "queries": [
+    {
+      "id": "rationale",
+      "split": "tuning",
+      "language": "en",
+      "query": "Why did we accept SQLite for the local importer?",
+      "required": [
+        "SQLite",
+        "no separate server"
+      ],
+      "forbidden": [
+        "PostgreSQL was accepted"
+      ]
+    },
+    {
+      "id": "resume",
+      "split": "holdout",
+      "language": "en",
+      "query": "Resume importer work. What passed and what remains open?",
+      "required": [
+        "locally",
+        "Deployment",
+        "redact"
+      ],
+      "forbidden": [
+        "production verified",
+        "all work completed"
+      ]
+    },
+    {
+      "id": "correction",
+      "split": "holdout",
+      "language": "ru",
+      "query": "Какой лимит повторов принят и что проверено?",
+      "required": [
+        "11"
+      ],
+      "forbidden": [
+        "25 is accepted",
+        "99"
+      ]
+    },
+    {
+      "id": "environment",
+      "split": "holdout",
+      "language": "en",
+      "query": "Which importer version is deployed to production?",
+      "required": [],
+      "forbidden": [
+        "production runs version 2.1",
+        "production runs version 2.2"
+      ]
+    },
+    {
+      "id": "old_requirement",
+      "split": "holdout",
+      "language": "en",
+      "query": "What independent requirement remains before diagnostic export?",
+      "required": [
+        "redact",
+        "contact"
+      ],
+      "forbidden": [
+        "no remaining requirements"
+      ]
+    }
+  ],
+  "coverage": [
+    "accepted_rationale",
+    "failed_then_local_pass_not_deployed",
+    "old_independent_open_requirement",
+    "explicit_correction",
+    "ambiguous_conflicting_environment_version",
+    "multi_topic_multi_session",
+    "missing_stop",
+    "delete_while_worker_runs",
+    "foreign_project_exclusion",
+    "deleted_source_exclusion",
+    "delayed_events",
+    "ru_en_queries"
+  ]
+}

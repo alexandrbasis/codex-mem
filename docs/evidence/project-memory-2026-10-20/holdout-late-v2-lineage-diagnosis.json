@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-20T10:18:32.841745+00:00",
+  "report": "/tmp/project-memory-holdout-late-v2.json",
+  "report_sha256": "0e7e5b4832cac2a832f18b808d696b7b4b8e3df6af0d8e6e967c368f4e7e218d",
+  "diagnosis": "No episode heads reached the model; schema required null continuation. No target was submitted to the continuity floor.",
+  "native_proposal": {
+    "continuation_of": null,
+    "continuation_evidence": [],
+    "stored_episode_id": "pm_595f4d793ae7c86fc38342a46b347965d2e470cc",
+    "stored_parent_episode_id": null,
+    "stored_episode_version": 1,
+    "omitted_continuities_count": 0
+  },
+  "request_contract": {
+    "current_state_episode_count": 0,
+    "current_state_claim_count": 14,
+    "context_selection": {
+      "omitted_records": {
+        "claims": 0,
+        "episodes": 0
+      },
+      "method": "bounded_local_term_overlap_and_session"
+    },
+    "continuation_schema": {
+      "type": "null"
+    },
+    "continuation_evidence_schema": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence_ref"
+      },
+      "maxItems": 0
+    }
+  },
+  "prior_same_named_task_heads": [
+    {
+      "id": "pm_8832ba28d05bf35389e04d395f7c757a4c526cc4",
+      "logical_episode_id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+      "episode_version": 2,
+      "session_id": "atelier-b",
+      "goal": "Investigate duplicated audio chapters in kiosk bundles.",
+      "summary": "PKG-614 continued from atelier-a. Duplicate chapters were investigated; the local regression failed and no fix is verified. Bundle assembly was not released to a kiosk environment."
+    },
+    {
+      "id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+      "logical_episode_id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+      "episode_version": 1,
+      "session_id": "atelier-c",
+      "goal": "Continue task PKG-614 from atelier-b: test the manifest lockfile change against the earlier duplicate-chapter failure.",
+      "summary": "PKG-614’s duplicate-chapter regression passed locally after the manifest lockfile change. Staging reports version 4.7.9, and production version is unchecked."
+    }
+  ],
+  "read_only_budget_reproduction": {
+    "database": "/tmp/project-memory-holdout-run-v1/next/memory.sqlite3",
+    "initial_object_budget_chars": 24000,
+    "order": [
+      "claims",
+      "episodes",
+      "relations"
+    ],
+    "groups": [
+      {
+        "group": "claims",
+        "available_records": 14,
+        "kept_records": 14,
+        "starting_chars": 24000,
+        "remaining_chars": 544,
+        "smallest_record_chars": 1389
+      },
+      {
+        "group": "episodes",
+        "available_records": 5,
+        "kept_records": 0,
+        "starting_chars": 544,
+        "remaining_chars": 544,
+        "smallest_record_chars": 2738
+      },
+      {
+        "group": "relations",
+        "available_records": 0,
+        "kept_records": 0,
+        "starting_chars": 544,
+        "remaining_chars": 544,
+        "smallest_record_chars": null
+      }
+    ],
+    "claimed_episode_ids": [],
+    "claim_ids_match_saved_request": true
+  },
+  "correction_source_evidence": [
+    {
+      "end": 117,
+      "event_at": null,
+      "event_time_basis": "source_capture_time",
+      "quote": "Correction for PKG-614: I accept a maximum of 7 chapters per bundle, replacing the earlier unaccepted proposal of 13.",
+      "session_id": "atelier-d",
+      "source_id": "e3540044e1a8481886a026fc1c7e432f",
+      "source_recorded_at": "2026-10-20T09:48:35.611681Z",
+      "source_role": "user_intent",
+      "start": 0
+    }
+  ],
+  "ambiguity_boundary": "Two prior current heads describe PKG-614 because the earlier atelier-c link was omitted. Choosing between those roots would require an explicit model proposal and supported reconciliation. In late-v2 neither head was supplied, so that ambiguity was not tested.",
+  "limits": [
+    "Read-only inspection and reproduction of deterministic selection against preserved original state; no models, database writes, production edits, or v3 reads.",
+    "This diagnoses context starvation before generation, not a semantic guard rejection or proof that an alternative model choice would be correct.",
+    "The saved native-v2 result is preserved unchanged."
+  ]
+}

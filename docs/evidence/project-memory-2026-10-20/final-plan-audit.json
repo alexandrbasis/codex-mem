@@ -1,0 +1,445 @@
+{
+  "schema_version": 1,
+  "audit": "final architecture-plan completion audit",
+  "status": "implementation_and_limited_pilot_evidenced_latest_human_reviews_completed",
+  "review_method": "Read actual architecture proposal, current guide, owning modules/test definitions and archived receipts. No tests/models/native jobs rerun; only this audit file written.",
+  "plan": "docs/project-memory-architecture-2026-10-20.md",
+  "guide": "docs/PROJECT_MEMORY.md",
+  "binding_scope": {
+    "first_version_quote": "В первую версию рекомендую включить эпизоды с проверяемыми основаниями, явные открытые задачи и действующие решения.",
+    "plan_line": 206,
+    "binding_version_steps": [
+      120,
+      122
+    ],
+    "binding_immediate_signal_line": 110,
+    "evaluation_gate_lines": [
+      185,
+      187,
+      189,
+      191,
+      193
+    ]
+  },
+  "requirements": [
+    {
+      "id": "R01",
+      "requirement": "Source-backed bounded episodes, structured open work and current decisions",
+      "plan_lines": "81-106,206",
+      "status": "satisfied_with_quality_limits",
+      "owning_files": [
+        "codex_mem/project_memory.py:38-69,429-587",
+        "codex_mem/episode_processor.py:output_schema,runner_request"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py",
+        "tests/test_episode_processor.py",
+        "final-runtime.json"
+      ],
+      "assessment": "SQLite stores immutable episode/claim objects and exact field evidence with separate workflow state, role and scope. Valid quotes prove source existence; model interpretation is not deterministically entailed."
+    },
+    {
+      "id": "R02",
+      "requirement": "Explicit task continuity across chats; immutable episode versions; do not merge by session or similarity",
+      "plan_lines": "86,120-122,128-130",
+      "status": "satisfied_with_quality_limits",
+      "owning_files": [
+        "codex_mem/project_memory.py:49,522-550,589-651,943-1005",
+        "codex_mem/episode_processor.py:output_schema and current-head catalog"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py:61-316",
+        "tests/test_episode_processor.py:286-418,787",
+        "late-arrival-final-check.json"
+      ],
+      "assessment": "Stable logical episode IDs, exact parent IDs/current heads, evidence-backed named-task/explicit-goal continuity and atomic head compare-and-swap exist. Weak proposals stay separate. Native final probe confirms one correct next revision; earlier separate chains remain separate rather than being retrospectively repaired."
+    },
+    {
+      "id": "R03",
+      "requirement": "Immediate role-correct provisional remember/correction/acceptance/important/execution signals",
+      "plan_lines": "110-114,119,142",
+      "status": "satisfied_with_explicit_detection_limits",
+      "owning_files": [
+        "codex_mem/project_memory.py:215-241,734-759,908-936",
+        "codex_mem/hooks.py:_remember_safely"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py:370,575-634",
+        "tests/test_project_memory_retrieval.py:451"
+      ],
+      "assessment": "User marker priorities and a separate allowlisted captured execution-result lane are implemented. Tool outcomes retain tool role/exit/source fields and are not user authorization or verified project completion. Capture omissions exclude misleading execution signals."
+    },
+    {
+      "id": "R04",
+      "requirement": "Capture policy, exact project/worktree isolation and untrusted-data treatment",
+      "plan_lines": "112-114,164",
+      "status": "satisfied",
+      "owning_files": [
+        "codex_mem/config.py:project_memory_enabled",
+        "codex_mem/store.py:remember",
+        "codex_mem/project_memory.py:429-587",
+        "codex_mem/episode_processor.py:runner_request"
+      ],
+      "evidence": [
+        "tests/test_project_memory_lifecycle.py",
+        "tests/test_project_memory_store.py:635,766",
+        "tests/test_episode_processor.py:87-93,957",
+        "final-config-invariants.json",
+        "final-runtime.json"
+      ],
+      "assessment": "Exact canonical roots, capture exclusions and invalid-config gates apply through capture/dispatch/commit/read. Foreign worktrees/sources/targets are rejected. Remembered text does not confer external-action permission."
+    },
+    {
+      "id": "R05",
+      "requirement": "Atomic durable pending capture; startup/periodic recovery without Stop or enqueue notification",
+      "plan_lines": "118,124,128",
+      "status": "satisfied",
+      "owning_files": [
+        "codex_mem/store.py:remember",
+        "codex_mem/project_memory.py:capture_event,pending_projects,claim",
+        "codex_mem/service.py:_run_project_memory_cycle"
+      ],
+      "evidence": [
+        "tests/test_project_memory_integration.py:68",
+        "tests/test_project_memory_lifecycle.py:72-120",
+        "final-runtime.json"
+      ],
+      "assessment": "Entry plus pending event commit atomically. Daemon discovery is independent of notification. Runtime proves prompt+executed-tool no-Stop/no-enqueue path; literal prompt-only path is tested offline, not claimed as that exact runtime case."
+    },
+    {
+      "id": "R06",
+      "requirement": "Bounded coalesced background deltas, missing-Stop recovery and no hook model call",
+      "plan_lines": "118-128,158,168",
+      "status": "satisfied",
+      "owning_files": [
+        "codex_mem/project_memory.py:247-301,760-765,1006-1070",
+        "codex_mem/service.py:_run_project_memory_cycle",
+        "codex_mem/episode_processor.py:process_project_memory"
+      ],
+      "evidence": [
+        "tests/test_project_memory_lifecycle.py:129-176",
+        "tests/test_project_memory_store.py:background readiness and long-source tests",
+        "tests/test_episode_processor.py:510-554,896"
+      ],
+      "assessment": "Shared durable readiness gates quiet/checkpoint/maximum age/count/size. Explicit processing remains immediate. Sources advance through exact offsets; generation reserves bounded space for episode heads and independent obligations and reports omissions."
+    },
+    {
+      "id": "R07",
+      "requirement": "Atomic object/link/watermark commit; idempotency; stale revision/deletion fencing",
+      "plan_lines": "122,128-130",
+      "status": "satisfied",
+      "owning_files": [
+        "codex_mem/project_memory.py:267-312,589-651"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py:269-304,stale/idempotency tests",
+        "tests/test_episode_processor.py:156,957",
+        "late-arrival-final-check.json"
+      ],
+      "assessment": "Durable tokens/fingerprints/revision/deletion generation and current-head compare-and-swap prevent stale overwrite. Replays are idempotent; stale inputs remain pending for another claim."
+    },
+    {
+      "id": "R08",
+      "requirement": "Evidence-backed state transitions preserve old independent requirements and environment/version scope",
+      "plan_lines": "95-104,121,134",
+      "status": "satisfied_with_semantic_limits",
+      "owning_files": [
+        "codex_mem/project_memory.py:_validate,_explicit_transition,_apply_transitions,_project_obligations",
+        "codex_mem/episode_processor.py:quality adapter and conservative commit"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py:682-810",
+        "tests/test_project_memory_retrieval.py:416,497",
+        "late-arrival-final-check.json",
+        "final-startup-v3-blind-grades.json"
+      ],
+      "assessment": "Unproved acceptance/completion becomes proposed state and unsupported close/replace edges are omitted with reconciliation gaps. Same-subject asserted-source checks prevent known false closures. Exact scope and source validity are code-enforced; general entailment still depends on generation/source inspection."
+    },
+    {
+      "id": "R09",
+      "requirement": "Source deletion erases dependent representations/indexes and cannot be undone by old jobs; retention protects active evidence",
+      "plan_lines": "160-162",
+      "status": "satisfied",
+      "owning_files": [
+        "codex_mem/project_memory.py:84-143,683-703",
+        "codex_mem/store.py:forget,prune"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py:305-326,845",
+        "tests/test_project_memory_integration.py:75-115",
+        "tests/test_episode_processor.py:957"
+      ],
+      "assessment": "Dependency closure precedes edge deletion; episode descendants and heads revoke without resurrecting old versions; jobs containing source snapshots are removed and deletion generation advances. Content-free accounting survives intentionally. Age retention is conservative, not fine-grained lifecycle expiration."
+    },
+    {
+      "id": "R10",
+      "requirement": "Shared startup/resume state selection, bounded rendered context and source readback",
+      "plan_lines": "138-144,199",
+      "status": "satisfied_with_observed_reader_limit",
+      "owning_files": [
+        "codex_mem/project_memory_query.py",
+        "codex_mem/project_memory_retrieval.py",
+        "codex_mem/store.py:5753-5761",
+        "codex_mem/retrieval.py",
+        "codex_mem/mcp.py:memory_project_state"
+      ],
+      "evidence": [
+        "tests/test_project_memory_query.py",
+        "tests/test_project_memory_retrieval.py:497-688",
+        "tests/test_project_memory_search.py",
+        "final-startup-v3-comparison.json",
+        "retrieval-latency-local.json",
+        "final-runtime.json"
+      ],
+      "assessment": "Startup and resume consume the common local query/brief path with exact IDs, exclusions, natural-language purpose and provenance. Final six-reader reused-v3 regression scores 11/12; one answer attaches production-unchecked to wrong existing sources. This is a documented answer-quality limitation, not missing retrieval integration."
+    },
+    {
+      "id": "R11",
+      "requirement": "Processing completeness must not masquerade as factual verification freshness",
+      "plan_lines": "98,104,132,142",
+      "status": "satisfied_with_unknown_dates",
+      "owning_files": [
+        "codex_mem/project_memory.py:_coverage,_capture_order",
+        "codex_mem/project_memory_retrieval.py",
+        "docs/PROJECT_MEMORY.md:Understand evidence and coverage"
+      ],
+      "evidence": [
+        "tests/test_project_memory_store.py:capture-time separation tests",
+        "tests/test_project_memory_retrieval.py",
+        "final-startup-v3-blind-grades.json"
+      ],
+      "assessment": "Capture order, derivation time, pending reconciliation and retained-observation coverage are explicit. Unknown verification time/validity remains unknown. Plan says known validity period; it does not require automatic temporal extraction or new independent external checks."
+    },
+    {
+      "id": "R12",
+      "requirement": "Meaningful synthetic histories, fresh reader comparison, safety scenarios and held-out evaluation evidence",
+      "plan_lines": "176-193,197",
+      "status": "satisfied_for_limited_pilot_not_general_acceptance",
+      "owning_files": [
+        "scripts/project_memory_acceptance.py",
+        "scripts/project_memory_late_arrival_acceptance.py",
+        "tests/fixtures/project_memory_scenarios.json"
+      ],
+      "evidence": [
+        "final-tests.json",
+        "holdout-v3-before-final-retrieval-repair-manifest.json",
+        "holdout-v3-before-final-retrieval-repair-comparison.json",
+        "final-startup-v3-comparison.json",
+        "late-arrival-final-check.json"
+      ],
+      "assessment": "Original withheld v3 was evaluated before its failures drove repair. Final repair result on reused stored state is explicitly development regression, not new untouched confirmation. Safety scenarios and final full suite pass; no large independent benchmark or human quality validation is claimed."
+    },
+    {
+      "id": "R13",
+      "requirement": "Measure full processing attempts/usage and evaluate optional Jev contribution without asserting unmeasured savings",
+      "plan_lines": "166-170,187,191",
+      "status": "satisfied_with_measurement_limits",
+      "owning_files": [
+        "codex_mem/project_memory.py:begin_attempt,checkpoint_attempt,finalize_attempt",
+        "codex_mem/cost_report.py",
+        "codex_mem/episode_processor.py:process_project_memory"
+      ],
+      "evidence": [
+        "tests/test_project_memory_cost_report.py",
+        "tests/test_episode_processor.py:225-285,851",
+        "jev-authorized-comparison.json",
+        "final-startup-v3-result.json"
+      ],
+      "assessment": "Independent attempts retain failed/interrupted/retry usage and unknown costs. Authorized off/on comparison used identical fictional v6 output and three Jev HTTP requests; same final state, no observed gain. It is not a v7 generation-quality benchmark. Dollar savings and fewer model calls are unproven; ordinary observer remains enabled."
+    },
+    {
+      "id": "R14",
+      "requirement": "Additive schema/IDs, shadow phase and exact selected local pilot",
+      "plan_lines": "195-202",
+      "status": "satisfied",
+      "owning_files": [
+        "codex_mem/project_memory.py:install_schema",
+        "codex_mem/config.py:project_memory_enabled",
+        "docs/PROJECT_MEMORY.md"
+      ],
+      "evidence": [
+        "pilot-activation.json",
+        "final-config-invariants.json",
+        "final-installed-code-hashes.json",
+        "final-operational-result.json",
+        "release-verification.json"
+      ],
+      "assessment": "New tables/indexes preserve legacy entries; no mass history backfill. Shadow/off/pilot paths exist and only this exact repository is selected. Installed 1.12.0 source hashes match final freeze and runtime receipts; no commit/push/public release is claimed."
+    },
+    {
+      "id": "R15",
+      "requirement": "Latest guide/README human review required by the global AGENTS workflow",
+      "plan_lines": "~/.codex/AGENTS.md:25-29",
+      "status": "satisfied",
+      "owning_files": [
+        "README.md",
+        "docs/PROJECT_MEMORY.md"
+      ],
+      "evidence": [
+        "final-documentation-review.json"
+      ],
+      "assessment": "Both latest Roughdraft reviews completed with unchanged prose and zero comments/CriticMarkup. Completed review versions and content independently match saved guide/README hashes. Both receipt acknowledgments succeeded. Earlier pending wording in release-verification.json is historical and superseded by final-documentation-review.json."
+    }
+  ],
+  "genuinely_unfulfilled_implementation_requirements_found": [],
+  "pending_completion_items": [],
+  "known_quality_limits_not_missing_features": [
+    "Bounded native generation may split earlier same-task chains; final late probe appends one correct immutable version but does not repair every historical split.",
+    "Final six-reader development regression has one claim-to-citation attribution defect, despite recovering the requested state.",
+    "Exact quotations and role/scope checks do not prove semantic entailment of arbitrary generated prose; prior CLI-help/fixture overinterpretations are documented.",
+    "No independent untouched post-repair holdout, large real-project quality study, dollar-cost saving or production-latency guarantee."
+  ],
+  "not_mandatory_immediate_features": [
+    {
+      "item": "Successful-source historical replay API",
+      "plan_quote": "Ранее малозначимый эпизод можно пересмотреть, если новая задача сделала его важным.",
+      "line": 134,
+      "interpretation": "Conditional capability, not a required first-pilot API."
+    },
+    {
+      "item": "Full verification/validity-time extraction",
+      "plan_quote": "последняя проверка, известный период действия",
+      "line": 98,
+      "interpretation": "Known dates must remain accurate; unknown dates can remain explicitly unknown."
+    },
+    {
+      "item": "Reduce ordinary observation model calls",
+      "plan_quote": "После проверки качества и стоимости уменьшить избыточную генерацию отдельных заметок.",
+      "line": 200,
+      "interpretation": "Conditional later optimization. Both pipelines may remain active while costs are measured."
+    },
+    {
+      "item": "Automatic generalization, graph database or external server replacement",
+      "line": 206,
+      "interpretation": "Explicitly deferred without demonstrated benefit."
+    }
+  ],
+  "receipt_checks": {
+    "final_suite": {
+      "status": "passed",
+      "tests": 1524,
+      "duration_seconds": 114.819,
+      "log_hash_verified": true,
+      "current_tested_source_hash_mismatches": [],
+      "tested_source_vs_final_freeze_mismatches": [],
+      "tests_not_rerun": true
+    },
+    "late_native_probe": {
+      "report_hash_verified": true,
+      "attempt_count": 1,
+      "checks": {
+        "heads_supplied_to_model": 2,
+        "selected_parent_was_supplied": true,
+        "selected_parent_was_current_head": true,
+        "selected_parent_same_named_task": true,
+        "logical_root_preserved": true,
+        "version_increment_exactly_one": true,
+        "new_head_committed": true,
+        "prior_payload_immutable": true,
+        "new_episode_field_refs_checked": 9,
+        "all_new_episode_refs_match_exact_retained_source_slices": true,
+        "independent_old_release_requirement_still_open": true,
+        "original_parent_state_unchanged_independently_rechecked": true,
+        "original_parent_state_fingerprint": {
+          "sha256": "e09f0208ebfb2eca1788cfd2e46c36cc3748931b37a7bb7da0649b8d49e79b79",
+          "row_counts": {
+            "entries": 20,
+            "pm_projects": 1,
+            "pm_events": 20,
+            "pm_jobs": 3,
+            "pm_objects": 20,
+            "pm_episode_heads": 5,
+            "pm_relations": 0,
+            "pm_revisions": 3,
+            "pm_usage_attempts": 3,
+            "pm_evidence": 33,
+            "pm_relation_evidence": 0
+          }
+        },
+        "code_start_end_equal": true,
+        "current_code_matches_report_end": true
+      },
+      "scope_limit": "Successful source-backed immutable revision storage in one native attempt; not a complete semantic or historical-as-of verdict."
+    },
+    "runtime": {
+      "status": "passed",
+      "version": "1.12.0",
+      "native_schema": "project-memory-output-v7",
+      "checks": {
+        "capture_committed": true,
+        "primary_no_stop": true,
+        "no_explicit_enqueue": true,
+        "synthetic_tool_executed": true,
+        "durable_no_stop_discovery": true,
+        "native_generation": true,
+        "installed_mcp_version": true,
+        "state_tool": true,
+        "source_readback": true,
+        "derived_readback": true,
+        "exact_project_scope": true,
+        "episode_provenance": true
+      },
+      "capture_boundary": "packaged_hook_with_synthetic_native_shaped_payloads",
+      "native_host_hook_trust": "not_tested",
+      "answer_quality": "not_measured",
+      "temporary_service_stopped": true
+    },
+    "selected_pilot": {
+      "exact_repo_only": true,
+      "config_unchanged": true,
+      "global_jev_flags": {
+        "jev_filter_enabled": false,
+        "jev_quality_enabled": false,
+        "jev_retrieval_enabled": false
+      },
+      "installed_hash_receipt_status": "passed"
+    },
+    "final_reader_score": {
+      "score": 11,
+      "maximum": 12,
+      "classification": "reused_v3_developer_regression_after_original_independent_failure",
+      "full_answers": 5,
+      "partial_answers": 1,
+      "false_task_closures": 0,
+      "false_merges": 0,
+      "scope_or_version_mixing": 0
+    },
+    "jev": {
+      "status": "completed",
+      "actual_http_requests": 3,
+      "same_final_state": true,
+      "output_schema": "project-memory-output-v6",
+      "not_final_v7_generation_comparison": true
+    },
+    "latest_human_document_reviews": {
+      "status": "completed",
+      "reviews": [
+        {
+          "document": "docs/PROJECT_MEMORY.md",
+          "receipt": "/tmp/project-memory-guide-review-final-completed.json",
+          "editing_state": "completed",
+          "reviewed_version_sha256": "cce1985c028664d16b62131fbfda9e730fca8df99f5a2b246e522a26e2c36fb6",
+          "current_saved_hash_matches": true,
+          "saved_content_matches_completed_review": true,
+          "comments_and_criticmarkup": "zero, confirmed by completed-review outputs and parent acknowledgment",
+          "acknowledged_consumer": "roughdraft-a12f11c5-69af-413b-87f1-5df5725593a7",
+          "acknowledged_receipt_number": 157,
+          "acknowledgment_source": "parent confirmed success"
+        },
+        {
+          "document": "README.md",
+          "receipt": "/tmp/project-memory-readme-review-final-completed.json",
+          "editing_state": "completed",
+          "reviewed_version_sha256": "5fe9b9c39f5b21d7adc80ae78036ebad380c2b90c6f7574bf53a5d50caeb0b27",
+          "current_saved_hash_matches": true,
+          "saved_content_matches_completed_review": true,
+          "comments_and_criticmarkup": "zero, confirmed by completed-review outputs and parent acknowledgment",
+          "acknowledged_consumer": "roughdraft-fd98389d-8ac0-4e33-b87a-cbf7497d4394",
+          "acknowledged_receipt_number": 158,
+          "acknowledgment_source": "parent confirmed success"
+        }
+      ],
+      "artifact_sync_and_package_refresh": "root-owned follow-up, not performed by this audit update"
+    }
+  }
+}

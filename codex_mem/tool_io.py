@@ -233,6 +233,53 @@ def _skip_tool(tool_name: str, config: Mapping[str, Any] | None) -> bool:
     return any(item and item.casefold() == lowered for item in configured)
 
 
+# Match only wrappers emitted by memory injection, including escaped copies in
+# quoted tool output. Do not decode or otherwise rewrite surrounding new text.
+_MEMORY_WRAPPER = re.compile(
+    r'(?:<|&lt;|&#0*60;|&#x0*3c;|\\u003c|\\x3c)\s*'
+    r'(?P<closing>[\\/]+)?\s*'
+    r'(?P<name>project[-_]memory|codex[-_]mem[-_]context|codex[-_]mem[-_]untrusted[-_]context)(?![\w:.-])'
+    r'(?P<attrs>[^<>]*?)(?:>|&gt;|&#0*62;|&#x0*3e;|\\u003e|\\x3e)',
+    re.IGNORECASE,
+)
+
+
+def strip_injected_memory(value: str) -> tuple[str, int]:
+    """Omit known injected-memory blocks while preserving surrounding text.
+
+    Nested wrappers share one omitted range. An unfinished opening wrapper
+    excludes its remaining tail because that tail is still prior memory.
+    """
+    chunks: list[str] = []
+    stack: list[str] = []
+    cursor = start = omitted = 0
+    for match in _MEMORY_WRAPPER.finditer(value):
+        name = match['name'].casefold().replace('_', '-')
+        if match['closing']:
+            if stack and name == stack[-1]:
+                stack.pop()
+                if not stack:
+                    chunks.extend((value[cursor:start], '\n'))
+                    cursor = match.end()
+            continue
+        omitted += 1
+        if not stack:
+            start = match.start()
+        if match['attrs'].rstrip().endswith('/'):
+            if not stack:
+                chunks.extend((value[cursor:start], '\n'))
+                cursor = match.end()
+        else:
+            stack.append(name)
+    if stack:
+        chunks.extend((value[cursor:start], '\n'))
+        cursor = len(value)
+    if not omitted:
+        return value, 0
+    chunks.append(value[cursor:])
+    return ''.join(chunks), omitted
+
+
 def _contains_session_memory(value: Any, *, depth: int = 0) -> bool:
     if depth > 12:
         return False
@@ -325,6 +372,7 @@ def _sanitize_text(value: str, *, is_path: bool) -> Any:
         return _OPAQUE
     if _looks_like_media_text(value):
         return _OPAQUE
+    value, _ = strip_injected_memory(value)
     redacted = _redact_sensitive_path_tokens(redact_text(value))
     if is_path and _is_sensitive_path(redacted):
         return REDACTED
@@ -438,6 +486,7 @@ def _canonical_json(value: Any) -> tuple[str | None, dict[str, Any], str | None]
         stored = text
     stored_bytes = len(stored.encode("utf-8"))
     unredacted = _json_without_redaction(value)
+    _, memory_context_omitted = strip_injected_memory(unredacted or "")
     metadata: dict[str, Any] = {
         "present": value is not None,
         "excluded": False,
@@ -449,6 +498,7 @@ def _canonical_json(value: Any) -> tuple[str | None, dict[str, Any], str | None]
         # Compare before applying the size cap.  Truncation is represented by
         # its own explicit flag and must not be reported as redaction.
         "redacted": unredacted is not None and text != unredacted,
+        "memory_context_omitted": bool(memory_context_omitted),
     }
     # A small useful-text excerpt is independent from the bounded JSON row.
     excerpt = _extract_text(clean)
@@ -892,6 +942,12 @@ def insert_capture(
     assert input_result is not None and response_result is not None
     tool_input, input_meta, input_excerpt = input_result
     tool_response, response_meta, response_excerpt = response_result
+    # Re-parsing sanitized canonical JSON cannot recover an earlier omission.
+    # Preserve this conservative flag when a prepared capture crosses Store.
+    for name, metadata in (("input_metadata", input_meta), ("response_metadata", response_meta)):
+        prior = _capture_value(capture, name, {})
+        if isinstance(prior, Mapping) and prior.get("memory_context_omitted") is True:
+            metadata["memory_context_omitted"] = True
     if _contains_session_memory(tool_input) or _contains_session_memory(tool_response):
         return None
     input_excerpt = input_excerpt[:MAX_TOOL_EXCERPT_CHARS] if input_excerpt else None

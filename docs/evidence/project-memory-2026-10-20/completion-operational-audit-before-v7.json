@@ -1,0 +1,659 @@
+{
+  "audit": "project-memory completion operational invariants",
+  "mode": "read-only source/test inspection; no tests, production processing or model calls run",
+  "date": "2026-10-20",
+  "repository": "<repo-root>",
+  "reported_parent_evidence_not_independently_rerun": {
+    "version": "1.12 local pilot",
+    "full_tests": 1453,
+    "final_startup": "5 cases, 10/10",
+    "actual_pm_jobs_completed": 3,
+    "jev_approval": "approved/done, reported by parent; outside this operational audit scope"
+  },
+  "status_meaning": {
+    "proven": "owning code and meaningful regression evidence cover the bounded stated behavior",
+    "conditional": "implemented with explicit scope/evidence limits or remaining semantic dependence",
+    "incomplete": "partially implemented relative to explicit plan wording",
+    "missing": "no owning implementation path found in inspected modules"
+  },
+  "requirements": [
+    {
+      "requirement": "Capture permitted observations with durable event sequence and source identity",
+      "status": "proven",
+      "plan_lines": "118",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "42-43,70-80"
+        },
+        {
+          "path": "<repo-root>/codex_mem/store.py",
+          "lines": "1842-1843,1974-1975"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "lines": "68-74"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "254-265"
+        }
+      ],
+      "reason": "Source entry and pm_events insert share Store write transaction; AUTOINCREMENT seq and unique source ID persist scheduling independently of notifications."
+    },
+    {
+      "requirement": "Preserve actual capture completeness and source-fragment boundaries",
+      "status": "conditional",
+      "plan_lines": "118,132",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "257-261"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "116-184,200-213"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "485-499"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "313-337,635-665"
+        }
+      ],
+      "reason": "Incremental retained-body offsets and lossless span catalog are tested. They describe retained observations only; an already abbreviated hook body does not become a complete transcript. Unknown omissions remain unknown."
+    },
+    {
+      "requirement": "Immediate provisional visibility for explicit remember, correction, accepted decision, important constraint and observed test result",
+      "status": "incomplete",
+      "plan_lines": "110,119,142",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "77-78,200-201,649-655"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "57-67,500-504"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "lines": "129-150"
+        }
+      ],
+      "reason": "Only pending user prompts become provisional signals. Lexical priority covers important/correction/must/negative markers; it does not explicitly prioritize remember/accepted decisions, and observed tool test results are excluded from this fast evidence layer. Excluding tool text from user directives is correct but does not supply the planned separate immediate test-result signal."
+    },
+    {
+      "requirement": "Preserve source authorship and treat stored content as untrusted data",
+      "status": "proven",
+      "plan_lines": "112-114",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "70-78,412-423"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "200-219"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "88-96,500-504,536-543"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "183-192"
+        }
+      ],
+      "reason": "User/tool/assistant evidence roles remain distinct; tool text is not promoted into a provisional user directive; native worker remains tool isolated."
+    },
+    {
+      "requirement": "Memory capture and processing obey explicit project selection and privacy exclusions",
+      "status": "proven",
+      "plan_lines": "114,164",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/config.py",
+          "lines": "220-243"
+        },
+        {
+          "path": "<repo-root>/codex_mem/store.py",
+          "lines": "1842-1843,1974-1975"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "process_project_memory configuration checks"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "lines": "28-50,121-128"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "87-93,161-174"
+        }
+      ],
+      "reason": "Exact selected roots and existing automatic-capture exclusions gate capture, dispatch and commit; invalid settings fail closed. This audits code guarantees, not all installed project configurations."
+    },
+    {
+      "requirement": "Durable pending marking is atomic with capture and survives lost queue wake or missing Stop",
+      "status": "proven",
+      "plan_lines": "124",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/store.py",
+          "lines": "1974-1975"
+        },
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "70-80,210-228"
+        },
+        {
+          "path": "<repo-root>/codex_mem/service.py",
+          "lines": "934-955"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "lines": "68-74"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "lines": "72-82,109-120"
+        }
+      ],
+      "reason": "pm_events is the durable pending marker. Background discovery scans indexed permitted work rather than depending solely on queue notification."
+    },
+    {
+      "requirement": "Coalesce background work at quiet/checkpoint/size boundaries without requiring Stop",
+      "status": "proven",
+      "plan_lines": "120,126-128,168",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "210-246,658-662"
+        },
+        {
+          "path": "<repo-root>/codex_mem/service.py",
+          "lines": "934-955"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "113-134"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "lines": "129-176"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "94-101"
+        }
+      ],
+      "reason": "Discovery and background lease share readiness SQL: 30-second quiet, 120-second oldest event, 32 events, 24k remaining chars or checkpoint plus 5-second quiet. Explicit process uses immediate claims."
+    },
+    {
+      "requirement": "Assemble bounded new observations using prior relevant state and exact original fragments",
+      "status": "proven",
+      "plan_lines": "120,132-134",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "240-267"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "94-111,116-184,188-247"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "175-182,313-357,635-665"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "485-499"
+        }
+      ],
+      "reason": "Model request contains bounded state plus new retained spans; source offsets resolve to exact persisted evidence. It does not replay a complete transcript."
+    },
+    {
+      "requirement": "Stable episodes represent one task across chats and successive episode updates form versions",
+      "status": "incomplete",
+      "plan_lines": "86,120,128,130",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "45-47,263-267,488-490,551-553"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "224-228"
+        }
+      ],
+      "test_evidence": [],
+      "reason": "Current episode identity derives from job ID and array key; revision is project-wide. There is no stable task/topic episode key, episode-version parent or cross-chat episode membership. Native reconciliation relations connect new claims to existing claims, not successive episode versions. Session grouping and a prior summary provide context but do not satisfy stable episode identity."
+    },
+    {
+      "requirement": "Persist structured goal, rationale, outcome and open work without inventing unsupported fields",
+      "status": "proven",
+      "plan_lines": "82,88,120",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "54-56,200-219"
+        },
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "428-456"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "442-468,487-507"
+        }
+      ],
+      "reason": "Every nonempty field requires exact spans; unsupported optional fields can be omitted with diagnostics while keeping the grounded summary."
+    },
+    {
+      "requirement": "Reconcile new claims against known project claims and preserve uncertainty",
+      "status": "conditional",
+      "plan_lines": "121,168-172",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "466-527"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "224-244 and optional quality adapter"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "301-432"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "469-507,508-550,666-695"
+        }
+      ],
+      "reason": "Scope/identity/span/lexical guards and conservative downgrades are enforced. Semantic source support is model-dependent and optional; reconciliation is bounded to supplied prior claims, not exhaustive over all project knowledge."
+    },
+    {
+      "requirement": "Atomically commit objects, relations, project revision and processed offsets",
+      "status": "proven",
+      "plan_lines": "122",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "529-568"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "280-289,385-395"
+        }
+      ],
+      "reason": "Objects, exact evidence links, relations, source offsets, revision and job receipt commit inside Store._write; invalid cross-scope transition rejects atomically."
+    },
+    {
+      "requirement": "Stale workers and expired leases cannot overwrite newer state; rerun is idempotent",
+      "status": "proven",
+      "plan_lines": "128-130",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "263-283,529-546,559-566"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "280-289,443-472"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "156-160,246-272"
+        }
+      ],
+      "reason": "Durable job token, fingerprint, revision and deletion generation fence stale output. Current state change causes deferred re-claim, rather than stale overwrite. Exact completed job replay returns duplicate."
+    },
+    {
+      "requirement": "Job identity includes project, episode/event range and processor version",
+      "status": "conditional",
+      "plan_lines": "130",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "263-267"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "280-289,443-463"
+        }
+      ],
+      "reason": "Identity includes project, session lane, sources with offsets, revision/generation and processor version. It is stable for a fixed input snapshot, but uses session rather than the stable task episode required elsewhere in the plan."
+    },
+    {
+      "requirement": "Late observations append knowledge without treating silence as task completion",
+      "status": "proven",
+      "plan_lines": "128",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "70-80,263-267,466-527"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "237-241"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "47-56,290-311,405-432,443-453"
+        }
+      ],
+      "reason": "Late events create new jobs/project revisions; quiet periods trigger processing only. Completion requires specifically grounded affirmative evidence, not lifecycle or timestamp."
+    },
+    {
+      "requirement": "Previously low-salience processed episodes can be revisited when a later task makes them important",
+      "status": "conditional",
+      "plan_lines": "134",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "210-228,257,393-399"
+        }
+      ],
+      "test_evidence": [],
+      "reason": "Plan134 says «Ранее малозначимый эпизод можно пересмотреть, если новая задача сделала его важным». This describes a useful conditional capability, not a mandatory successful-source replay API for the first pilot. The current API reopens failed/quarantined work only; saved episodes remain retrievable. Explicit replay of successfully processed evidence may be deferred and must not be claimed as delivered."
+    },
+    {
+      "requirement": "Open requirements survive newer activity and are closed only on scoped evidence",
+      "status": "proven",
+      "plan_lines": "100-104,134",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "156-203,466-527,710-724"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "301-432,433-442,544"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_retrieval.py",
+          "lines": "367"
+        }
+      ],
+      "reason": "Immutable base claims and computed transitions preserve open work. Topic/environment checks and bounded obligation lane prevent simple chronological overwrite; finite context still has capacity limits."
+    },
+    {
+      "requirement": "Processing coverage and factual verification freshness remain distinct",
+      "status": "conditional",
+      "plan_lines": "98,142",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "146-154,423,550-552"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "266-279"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "469-486"
+        }
+      ],
+      "reason": "Binding plan142 requires distinguishing processing progress from when a claim was verified: «нужно различать, до какого события выполнена обработка и когда проверяли само утверждение». Source-capture/derivation timestamps and watermark are separate, and none proves claim freshness. Plan98 says «последняя проверка, известный период действия»; unknown check/validity dates may remain explicitly unknown. Full validity-time extraction and automatic verification are not mandatory first-pilot features. Current code does not provide dedicated last_verified_at or validity interval fields, so do not advertise those as implemented; preserve unknown/unverified interpretation rather than deriving them from processing dates."
+    },
+    {
+      "requirement": "Model failure retains observations, signals incomplete state and does not freeze newer same-chat work",
+      "status": "proven",
+      "plan_lines": "168",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "372-399,146-154,210-228"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "97-112,516-528"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "108-141,551-589"
+        }
+      ],
+      "reason": "Backoff and exact-event quarantine preserve pending observations; fresh events remain eligible. Quarantined and omitted/downgraded reconciliation gaps are visible in coverage."
+    },
+    {
+      "requirement": "Age retention protects durable knowledge evidence while explicit forget remains authoritative",
+      "status": "proven",
+      "plan_lines": "160",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "129-136"
+        },
+        {
+          "path": "<repo-root>/codex_mem/store.py",
+          "lines": "6015-6030"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "lines": "75-85"
+        }
+      ],
+      "reason": "Prune protects live PM evidence and pending event sources; explicit forget uses separate revocation. Policy is conservative and can retain historical claim evidence longer than a finer state-specific policy."
+    },
+    {
+      "requirement": "Source deletion removes dependent content/index entries and fences in-flight regeneration",
+      "status": "proven",
+      "plan_lines": "162",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "83-126,51"
+        },
+        {
+          "path": "<repo-root>/codex_mem/store.py",
+          "lines": "5802-5827"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "464-484"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "lines": "86-115"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "696"
+        }
+      ],
+      "reason": "Dependency closure is collected before relations disappear; jobs containing source snapshots are erased; revision/deletion generation changes fence workers. FTS deletion triggers and legacy derivation revocation are covered; source-free accounting is intentionally retained."
+    },
+    {
+      "requirement": "Projects/worktrees remain isolated by exact canonical root and claim transitions respect environment/version",
+      "status": "proven",
+      "plan_lines": "97,164",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/config.py",
+          "lines": "237-241"
+        },
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "143-144,459-466,507-523"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_lifecycle.py",
+          "lines": "28-50"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "254-265,385-395"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "413-441"
+        }
+      ],
+      "reason": "No Git-remote merge is performed; claims cannot assign another worktree, and state-changing relations require identical claim scope. Unknown scope remains unknown rather than proving production applicability."
+    },
+    {
+      "requirement": "Schema migration is additive and avoids mass historical processing",
+      "status": "proven",
+      "plan_lines": "202",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "38-67"
+        },
+        {
+          "path": "<repo-root>/codex_mem/store.py",
+          "lines": "1094-1095"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_acceptance.py",
+          "lines": "213-216"
+        },
+        {
+          "path": "<repo-root>/tests/test_project_memory_integration.py",
+          "lines": "42-67,102-115"
+        }
+      ],
+      "reason": "New tables/indexes/triggers and additive PM columns preserve existing entries/IDs. No historical event backfill is installed; legacy lineage remains accessible. This is code plus compatibility evidence, not a rerun of migrations in this audit."
+    },
+    {
+      "requirement": "Use observed-only source limits and bound model/readback cost",
+      "status": "proven",
+      "plan_lines": "132,158,166-168",
+      "file_evidence": [
+        {
+          "path": "<repo-root>/codex_mem/project_memory.py",
+          "lines": "230-267,694-724"
+        },
+        {
+          "path": "<repo-root>/codex_mem/episode_processor.py",
+          "lines": "MAX_SOURCE_CHARS/MAX_PROMPT_CHARS constants and runner_request"
+        }
+      ],
+      "test_evidence": [
+        {
+          "path": "<repo-root>/tests/test_project_memory_store.py",
+          "lines": "135-157,485-499"
+        },
+        {
+          "path": "<repo-root>/tests/test_episode_processor.py",
+          "lines": "175-182,313-357"
+        }
+      ],
+      "reason": "Model processing uses incremental source bodies and bounded state/span catalogs; transition readback has bounded evidence. Meaningful per-attempt usage exists, but useful-answer cost/benefit comparison belongs to the separate acceptance audit."
+    }
+  ],
+  "counts": {
+    "proven": 17,
+    "incomplete": 2,
+    "conditional": 5,
+    "missing": 0
+  },
+  "minimal_safe_contract_recommendations": [
+    {
+      "area": "episode continuity",
+      "required_for_current_plan": "The plan explicitly requires a task episode to differ from session identity and successive/late updates to create versions. Stable explicit continuation belongs to current completion, rather than being implied by unrelated per-job episode records. Automatic semantic topic clustering can remain future work.",
+      "contract": [
+        "Keep immutable episode_revision_id per output and add logical_episode_id. A first revision creates a new logical episode; continuation_of names an exact existing episode revision.",
+        "Continuation proposal includes exact source spans and an observed task identity or explicit continuation statement. Validate target existence, exact project/worktree scope, relevant explicit task identity, and the evidence. Treat text similarity and same-session membership only as search aids; neither authorizes continuation.",
+        "For uncertain references or distinct topics create a separate logical episode. One session can contain several logical episodes; an explicitly linked task can continue across sessions within the same exact authorized project scope.",
+        "Append revisions with expected predecessor/current-head compare-and-swap in the same transaction as objects, evidence and source watermark. A stale proposed continuation must rebase/reconcile against the current head or remain a separate proposal.",
+        "Episode continuation never closes or replaces a project claim. Those state changes retain their separate exact-target evidence validation. Source deletion revokes dependent episode revisions and head projections without restoring old content."
+      ],
+      "evidence_gap_to_close": "Add meaningful tests for two topics in one session, explicit same-task continuation across sessions, rejection of same-session/similarity-only joins, stale parallel continuation, deleted predecessor evidence, and unchanged open claims."
+    },
+    {
+      "area": "immediate signals",
+      "required_for_current_plan": "Explicit remember/accepted user intent and observed test results are named in plan line 110. They require a provisional path or an explicit documented narrowing of delivered scope.",
+      "contract": [
+        "Keep raw role as authoritative. Prioritize explicit user remember/correction/acceptance/important markers without treating salience as truth or an accepted/completed claim.",
+        "Add a separate provisional_evidence signal category for observed tool test outcomes. Preserve role=tool_record, exact source ID/span, command/exit metadata when captured, verification environment and truncation flags. It is evidence to inspect, never a user instruction, authorization or automatic claim closure.",
+        "Use actual trusted capture metadata plus bounded deterministic allowlisted outcome detection for the first pilot. Arbitrary text saying remember/important inside tool output must never enter the user-intent priority lane. If outcome meaning is uncertain, retain a generic provisional tool observation instead of asserting a test passed.",
+        "Expose both lanes immediately under a shared bounded budget with clear unprocessed/provisional status. Background processing later reconciles them; source deletion removes signals through the source/event dependency path."
+      ],
+      "evidence_gap_to_close": "Test explicit remember and accepted-decision intent surviving prompt noise, actual local passing/failing result freshness before background processing, output containing forged user instructions, and source deletion before signal readback."
+    }
+  ],
+  "scope_interpretation": {
+    "binding_first_version_quote": {
+      "plan_lines": "206",
+      "text": "В первую версию рекомендую включить эпизоды с проверяемыми основаниями, явные открытые задачи и действующие решения."
+    },
+    "binding_continuity_quotes": [
+      {
+        "plan_lines": "120",
+        "text": "После содержательного этапа собрать новую версию эпизода из новых событий, прежнего состояния и нужных исходных фрагментов."
+      },
+      {
+        "plan_lines": "122",
+        "text": "В одной транзакции записать новую версию, связи и границу обработанных событий."
+      }
+    ],
+    "binding_fast_priority_quote": {
+      "plan_lines": "110",
+      "text": "Приоритет получают явное «запомни», исправление прежнего утверждения, принятое решение, важное ограничение и наблюдаемый результат проверки."
+    },
+    "conditional_reconsideration_quote": {
+      "plan_lines": "134",
+      "text": "Ранее малозначимый эпизод можно пересмотреть, если новая задача сделала его важным.",
+      "interpretation": "May be deferred as conditional future capability. Do not require a new successful-source replay API solely to close first-pilot scope."
+    },
+    "time_requirement": {
+      "plan_lines": "98,142",
+      "quotes": [
+        "последняя проверка, известный период действия",
+        "В ответе памяти нужно различать, до какого события выполнена обработка и когда проверяли само утверждение."
+      ],
+      "interpretation": "Do not substitute processed_at/capture time for verification freshness. Unknown dates remain unknown; extracting full validity intervals or performing new checks is not required unless evidence contains a relevant known interval."
+    }
+  }
+}

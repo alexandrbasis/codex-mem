@@ -212,6 +212,40 @@ def resume_subject_plan(query: str, project: str | Path | None = None) -> dict[s
             "versions": plan["versions"]}
 
 
+def resume_topic_plan(query: str) -> dict[str, Any] | None:
+    """Separate continuation wording from a literal task subject.
+
+    Requested answer facets such as passed/open are ranking hints, not words
+    that every relevant claim must repeat. Exact anchors remain mandatory.
+    """
+    if historical_query(query) or not re.search(
+        r"\b(?:resume|continue|continuing|continuation|requirements?|obligations?)\b|pick\s+up|продолж[а-яё]*|требован[а-яё]*", query, re.I):
+        return None
+    plan = prompt_query_plan("How " + query)
+    if plan is None:
+        return None
+    framing = _PROJECT_STATE_WORDS | {"resume", "continue", "continuing", "continuation",
+                                     "passed", "passing", "failed", "completed", "complete",
+                                     "requirement", "requirements", "obligation", "obligations", "independent", "remain"}
+    terms = [(term, stem) for term, stem in plan["terms"]
+             if term not in framing and not _PROJECT_STATE_RUSSIAN.fullmatch(term)
+             and not re.fullmatch(r"(?:продолж|требован|обязательств|независим|отдельн)[а-яё]*", term)]
+    return dict(plan, terms=terms, minimum=len(terms))
+
+
+def project_lexical_text(text: str) -> str:
+    """Small English inflection variants for task-topic recall, never anchors."""
+    words = re.findall(r"[A-Za-z]{5,}", text)
+    variants = []
+    for word in words:
+        word = word.casefold()
+        if word.endswith("ing") and len(word) > 6:
+            variants.extend((word[:-3], word[:-3] + "e"))
+        elif word.endswith("s") and not word.endswith("ss"):
+            variants.append(word[:-1])
+    return text + "\n" + " ".join(variants)
+
+
 def resume_evidence_text(record: Mapping[str, Any]) -> str:
     """Search evidence fields, excluding source IDs and chronology notices."""
     parts = [str(record.get(key) or "") for key in ("title", "body", "preview")]
@@ -927,6 +961,56 @@ def preview_records(
     result = []
     for record in records:
         preview = {key: record[key] for key in _PREVIEW_FIELDS if key in record}
+        if record.get("source") == "project_memory":
+            # Status, scope and provisional provenance are part of the meaning
+            # of a project-memory hit, including in the default compact mode.
+            for key in ("workflow_state", "requested_state", "source_role", "evidence_basis", "lane",
+                        "project_memory_kind", "capture_order_basis", "logical_episode_id", "parent_episode_id",
+                        "continuity_basis", "signal_kind", "selection_basis"):
+                if isinstance(record.get(key), str):
+                    preview[key] = record[key][:100]
+            for key in ("provisional", "inferred", "is_current_head"):
+                if isinstance(record.get(key), bool):
+                    preview[key] = record[key]
+            for key in ("revision", "source_capture_seq_min", "source_capture_seq_max", "episode_version"):
+                if type(record.get(key)) is int:
+                    preview[key] = record[key]
+            scope = record.get("scope")
+            if isinstance(scope, Mapping):
+                preview["scope"] = {key: value[:512] for key, value in scope.items()
+                                    if key in {"environment", "version", "worktree"}
+                                    and isinstance(value, str)}
+            evidence = record.get("evidence")
+            if isinstance(evidence, list):
+                preview["evidence"] = [{key: value[:512] if isinstance(value, str) else value
+                    for key, value in item.items() if key in {"source_id", "start", "end", "source_role", "field", "quote_excerpt", "quote_truncated", "tool_use_id", "source_field", "context_basis"}
+                    and (isinstance(value, (str, bool)) or type(value) is int)}
+                    for item in evidence[:8] if isinstance(item, Mapping)]
+            execution = record.get("execution")
+            if isinstance(execution, Mapping):
+                preview["execution"] = {key: value[:512] if isinstance(value, str) else value
+                    for key, value in execution.items() if key in {
+                        "tool_use_id", "tool_name", "command", "exit_code", "result_field", "capture_recorded_at"}
+                    and (isinstance(value, str) or type(value) is int)}
+            fields = record.get("fields")
+            if isinstance(fields, list):
+                preview["fields"] = []
+                for field in fields[:6]:
+                    if not isinstance(field, Mapping) or not isinstance(field.get("name"), str):
+                        continue
+                    evidence = field.get("evidence")
+                    if not isinstance(evidence, list) or not evidence:
+                        continue
+                    bounded = {"name": field["name"][:32], "text": str(field.get("text") or "")[:700],
+                               "evidence": [{key: value[:512] if isinstance(value, str) else value
+                                    for key, value in pointer.items()
+                                    if key in {"source_id", "start", "end", "source_role", "field", "quote_excerpt", "quote_truncated", "tool_use_id", "source_field", "context_basis"}
+                                    and (isinstance(value, (str, bool)) or type(value) is int)}
+                                    for pointer in evidence[:8] if isinstance(pointer, Mapping)]}
+                    preview["fields"].append(bounded)
+            source_ids = record.get("source_ids")
+            if isinstance(source_ids, list):
+                preview["source_ids"] = [value[:512] for value in source_ids[:8] if isinstance(value, str)]
         observation = record.get("observation")
         if isinstance(observation, Mapping) and observation.get("type"):
             preview["observation"] = {"type": observation["type"]}

@@ -32,6 +32,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "service_enabled": True,
     "semantic_enabled": True,
     "usage_enabled": True,
+    "project_memory_mode": "off",
+    # Explicit exact project roots; an empty list never selects all projects.
+    "project_memory_projects": [],
     # External semantic screening is opt-in; persist only a credential path.
     "jev_filter_enabled": False,
     "jev_filter_key_file": "",
@@ -212,6 +215,32 @@ def automatic_capture_enabled(
     if scope == "selected":
         return is_included_project(project, settings)
     return False
+
+
+def project_memory_enabled(
+    project: str | os.PathLike[str] | None,
+    config: Mapping[str, Any] | None = None,
+    *,
+    pilot_only: bool = False,
+) -> bool:
+    """Allow opt-in processing, or pilot retrieval, for one exact project root."""
+
+    settings = config if config is not None else load_config()
+    if hooks_disabled() or not isinstance(settings, Mapping):
+        return False
+    if not getattr(settings, "valid", True) or not _has_valid_present_fields(settings):
+        return False
+    mode = settings.get("project_memory_mode", "off")
+    if mode not in (("pilot",) if pilot_only else ("shadow", "pilot")):
+        return False
+    try:
+        paths = _validate_project_memory_projects(settings.get("project_memory_projects", []), True)
+        if not project or str(Path(project).expanduser().resolve(strict=False)) not in paths:
+            return False
+        # A manually selected PM root does not override automatic-capture privacy.
+        return settings.get("capture_enabled") is True and automatic_capture_enabled(project, settings)
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return False
 
 
 def configured_tool_skip_list(config: Mapping[str, Any] | None = None) -> list[str]:
@@ -429,6 +458,8 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
         "service_enabled": _validate_bool(raw.get("service_enabled", True), "service_enabled", strict),
         "semantic_enabled": _validate_bool(raw.get("semantic_enabled", True), "semantic_enabled", strict),
         "usage_enabled": _validate_bool(raw.get("usage_enabled", True), "usage_enabled", strict),
+        "project_memory_mode": _validate_project_memory_mode(raw.get("project_memory_mode", "off"), strict),
+        "project_memory_projects": _validate_project_memory_projects(raw.get("project_memory_projects", []), strict),
         "jev_filter_enabled": _validate_bool(
             raw.get("jev_filter_enabled", False), "jev_filter_enabled", strict
         ),
@@ -487,6 +518,7 @@ def _disabled_config() -> LoadedConfig:
     value["service_enabled"] = False
     value["semantic_enabled"] = False
     value["usage_enabled"] = False
+    value["project_memory_mode"] = "off"
     return LoadedConfig(value, valid=False)
 
 
@@ -494,6 +526,10 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
     """Validate every present field so invalid exclusions never disappear."""
 
     try:
+        if "project_memory_mode" in raw:
+            _validate_project_memory_mode(raw["project_memory_mode"], True)
+        if "project_memory_projects" in raw:
+            _validate_project_memory_projects(raw["project_memory_projects"], True)
         if "capture_enabled" in raw:
             _validate_bool(raw["capture_enabled"], "capture_enabled", True)
         if "capture_tools" in raw:
@@ -531,6 +567,26 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _validate_project_memory_mode(value: Any, strict: bool) -> str:
+    if isinstance(value, str) and value in {"off", "shadow", "pilot"}:
+        return value
+    if strict:
+        raise ValueError("project_memory_mode must be off, shadow, or pilot")
+    return "off"
+
+
+def _validate_project_memory_projects(value: Any, strict: bool) -> list[str]:
+    try:
+        paths = _validate_jev_projects(value, True)
+        if len(paths) > 256:
+            raise ValueError
+        return paths
+    except ValueError:
+        if strict:
+            raise ValueError("project_memory_projects must contain at most 256 absolute project paths") from None
+        return []
 
 
 def _validate_processor_workers(value: Any, strict: bool) -> int:

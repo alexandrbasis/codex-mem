@@ -3,7 +3,8 @@
 The service deliberately stores only project scheduling metadata.  Observation
 text remains in :mod:`codex_mem.store`, where the processor leases it just
 before a worker runs.  Hooks (or a future CLI) explicitly enqueue an approved
-project; this module never discovers projects or starts itself at login.
+project. Opt-in project memory also discovers bounded durable pending work;
+this module never scans the filesystem or starts itself at login.
 
 ``run_service`` is the foreground worker used by the packaged CLI.  The
 ``start_service`` helper starts one detached ``service run`` child, guarded by
@@ -36,7 +37,7 @@ try:  # The supported host platforms provide flock; retain a stdlib fallback.
 except ImportError:  # pragma: no cover - Windows does not provide flock
     fcntl = None  # type: ignore[assignment]
 
-from .config import automatic_capture_enabled, data_dir_path, hooks_disabled, load_config
+from .config import automatic_capture_enabled, data_dir_path, hooks_disabled, load_config, project_memory_enabled
 from . import __version__
 from .processor import (
     DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending,
@@ -608,6 +609,7 @@ def run_service(
     max_cycles: int | None = None,
     usage_collector: Callable[..., Mapping[str, Any]] | None = None,
     processor_workers: int | None = None,
+    project_memory_processor: Callable[..., Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Run one local worker until stopped.
 
@@ -616,6 +618,8 @@ def run_service(
     ``runner`` is a backwards-friendly test seam alias for ``processor``;
     only one may be supplied.  With ``max_cycles=None`` this is a persistent
     foreground service.  Tests can supply a finite cycle count and fake clock.
+    ``project_memory_processor`` replaces only the opt-in episode worker in
+    tests; durable pending discovery and current privacy gates still apply.
     """
 
     active_processor = _choose_processor(processor, runner)
@@ -657,6 +661,8 @@ def run_service(
         next_usage_reconcile_at = 0.0
         checked_legacy_runner_blocks = False
         recovery_turns: set[str] = set()
+        project_memory_retry_at: dict[str, float] = {}
+        project_memory_previous: str | None = None
         while True:
             if _event_is_set(stop_event):
                 return _service_receipt("stopped", jobs=jobs, code=last_code)
@@ -686,6 +692,17 @@ def run_service(
                     # Accounting failure must never block memory extraction.
                     # The collector's atomic cursor permits a later retry.
                     pass
+            # This path reads only indexed durable event metadata. Notification
+            # loss and prompt-only turns cannot strand committed PM events.
+            # One bounded job per cycle leaves ordinary work a turn every time.
+            if not _event_is_set(stop_event) and not _load_state_readonly(base)["stop_requested"]:
+                project_memory_previous = _run_project_memory_cycle(
+                    data_dir, config_loader, now, project_memory_retry_at,
+                    previous=project_memory_previous, processor=project_memory_processor,
+                )
+            # A bounded model call can consume most of its timeout. Lease the
+            # ordinary queue against current time, not the prior cycle start.
+            now = _checked_now(clock)
             choice = _claim_due_project(base, now, checked_timeout)
             if choice["kind"] == "stop":
                 _consume_stop_request(base)
@@ -883,6 +900,65 @@ def run_service(
         except ServiceError:
             pass
         pid_lock.release()
+
+
+def _run_project_memory_cycle(
+    data_dir: str | os.PathLike[str] | None,
+    config_loader: Callable[..., Mapping[str, Any]],
+    now: float,
+    retry_at: dict[str, float],
+    *,
+    previous: str | None = None,
+    processor: Callable[..., Mapping[str, Any]] | None = None,
+) -> str | None:
+    """Discover one ready durable batch without depending on hook delivery.
+
+    Core applies persisted session quiet/checkpoint/size thresholds before a
+    background claim. Fresh captures remain available as provisional signals.
+    """
+    try:
+        settings = config_loader(data_dir)
+        if settings.get("service_enabled") is not True or settings.get("processor_enabled") is not True:
+            return previous
+        projects = settings.get("project_memory_projects", [])
+        if not isinstance(projects, list) or len(projects) > MAX_QUEUED_PROJECTS:
+            return previous
+        selected = [project for project in projects if project_memory_enabled(project, settings)]
+        for project in list(retry_at):
+            if project not in selected:
+                del retry_at[project]
+        if not selected:
+            return previous
+        from .store import Store
+        from .project_memory import ProjectMemory
+        with Store(data_dir=data_dir) as store:
+            pending = ProjectMemory(store).pending_projects(
+                limit=MAX_QUEUED_PROJECTS, projects=selected, ready_only=True)
+        eligible = [project for project in pending if project in selected and now >= retry_at.get(project, 0)]
+        if not eligible:
+            return previous
+        # Rotation prevents a long-running first project from starving others.
+        if previous in eligible:
+            offset = eligible.index(previous) + 1
+            eligible = eligible[offset:] + eligible[:offset]
+        project = eligible[0]
+        current = config_loader(data_dir)
+        if (current.get("service_enabled") is not True or current.get("processor_enabled") is not True
+                or not project_memory_enabled(project, current)):
+            return previous
+        if processor is None:
+            from .episode_processor import process_project_memory
+            processor = process_project_memory
+        # Core persists job-specific backoff. This additional guard also covers
+        # failures before a claim, such as an unavailable processor module.
+        retry_at[project] = now + DEFAULT_BACKOFF_SECONDS
+        result = processor(project, data_dir=data_dir, background=True)
+        if isinstance(result, Mapping) and result.get("status") == "processed":
+            retry_at.pop(project, None)
+        return project
+    except Exception:
+        # PM must never take observation processing, indexing, or usage offline.
+        return previous
 
 
 def start_service(

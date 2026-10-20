@@ -189,7 +189,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
             updates[key] = _positive(value, field=key, maximum=4)
         elif key in {"excluded_projects", "included_projects"}:
             updates[key] = _parse_excluded_projects(value)
-        elif key in {"jev_filter_projects", "jev_quality_projects", "jev_retrieval_projects", "jev_excluded_projects"}:
+        elif key in {"jev_filter_projects", "jev_quality_projects", "jev_retrieval_projects", "jev_excluded_projects", "project_memory_projects"}:
             updates[key] = _parse_string_array(value, field=key)
         elif key in {"skip_tools", "tool_skip_list"}:
             updates[key] = _parse_string_array(value, field=key)
@@ -210,7 +210,7 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
         updates["processor_enabled"] = namespace.processor_enabled
     if getattr(namespace, "processor_workers", None) is not None:
         updates["processor_workers"] = namespace.processor_workers
-    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects", "jev_quality_enabled", "jev_quality_projects", "jev_retrieval_enabled", "jev_retrieval_projects", "jev_excluded_projects"):
+    for name in ("service_enabled", "semantic_enabled", "usage_enabled", "jev_filter_enabled", "jev_filter_key_file", "jev_filter_projects", "jev_quality_enabled", "jev_quality_projects", "jev_retrieval_enabled", "jev_retrieval_projects", "jev_excluded_projects", "project_memory_mode", "project_memory_projects"):
         if getattr(namespace, name, None) is not None:
             updates[name] = getattr(namespace, name)
     if namespace.context_chars is not None:
@@ -367,6 +367,20 @@ def _build_parser() -> _ArgumentParser:
     semantic_index.add_argument("--project", required=True)
     semantic_index.add_argument("--retry-failed", action="store_true")
 
+    project_memory = commands.add_parser("project-memory", help="Inspect or process opt-in project state")
+    project_memory_commands = project_memory.add_subparsers(dest="project_memory_command", required=True)
+    for action in ("status", "brief", "process", "retry"):
+        item = project_memory_commands.add_parser(action)
+        item.add_argument("--project", required=True, type=_absolute_project)
+        if action == "brief":
+            item.add_argument("--query", default="")
+            item.add_argument("--budget", type=lambda value: _positive(value, field="budget", minimum=128, maximum=60_000), default=6000)
+        if action == "process":
+            item.add_argument("--timeout", type=lambda value: _positive(value, field="timeout", maximum=600), default=240)
+        if action == "retry":
+            item.add_argument("--include-quarantined", action="store_true",
+                              help="Explicitly release quarantined jobs as well as failed jobs")
+
     service = commands.add_parser("service", help="Manage the local background queue worker")
     service_commands = service.add_subparsers(dest="service_command", required=True)
     for action in ("start", "run", "status"):
@@ -496,6 +510,9 @@ def _build_parser() -> _ArgumentParser:
     config.add_argument("--service-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--semantic-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--usage-enabled", action=argparse.BooleanOptionalAction, default=None)
+    config.add_argument("--project-memory-mode", choices=("off", "shadow", "pilot"))
+    config.add_argument("--project-memory-project", dest="project_memory_projects", action="append",
+                        help="Exact absolute project root; repeat for more roots; empty list selects none")
     config.add_argument("--jev-filter-enabled", action=argparse.BooleanOptionalAction, default=None)
     config.add_argument("--jev-filter-key-file", help="Absolute path to the TypeSafe API key file")
     config.add_argument("--jev-filter-project", dest="jev_filter_projects", action="append",
@@ -744,6 +761,32 @@ def main(args: Sequence[str] | None = None) -> int:
             )
             _emit(value)
             return 0 if value.get("status") in {"processed", "skipped"} else 2
+        if namespace.command == "project-memory":
+            if namespace.project_memory_command == "retry":
+                from .config import load_config, project_memory_enabled
+                if not project_memory_enabled(namespace.project, load_config(namespace.data_dir)):
+                    value = {"status": "disabled", "project": namespace.project, "eligible": 0}
+                else:
+                    from .project_memory import ProjectMemory
+                    with Store(namespace.data_dir) as store:
+                        count = ProjectMemory(store).retry_failed(namespace.project,
+                            include_quarantined=namespace.include_quarantined)
+                    value = {"status": "eligible", "project": namespace.project, "eligible": count,
+                             "include_quarantined": namespace.include_quarantined}
+            elif namespace.project_memory_command == "process":
+                from .episode_processor import process_project_memory
+                value = process_project_memory(namespace.project, namespace.data_dir, timeout=namespace.timeout)
+            else:
+                from .project_memory_retrieval import build_project_brief
+                with Store(namespace.data_dir) as store:
+                    value = build_project_brief(store, namespace.project,
+                        query=getattr(namespace, "query", ""), budget=getattr(namespace, "budget", 6000),
+                        include_shadow=True)
+                if namespace.project_memory_command == "status":
+                    value = {key: value[key] for key in ("project", "mode", "enabled", "coverage", "pending",
+                             "revision", "deletion_generation") if key in value}
+            _emit(value)
+            return 2 if value.get("status") in {"failed", "error", "unavailable"} else 0
         if namespace.command == "service":
             from .service import (
                 recover_expired, recover_runner_failure, recover_storage_failure,

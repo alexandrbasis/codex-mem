@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "fixture_id": "project-memory-holdout-v2",
+  "history_provenance": "Independently authored fictional multi-session observations for developmental evaluation expansion; no actual project data or model-generated observations. Exact payload withheld from implementers until code freeze.",
+  "temporal_policy": "Filter by arrival sequence <= default_cutoff, and isolate the requested project. occurred_at preserves delayed event time. Process main-project atelier-a, atelier-b and atelier-c through background_cutoff; atelier-d contains fresh pending events. Local capture sequence metadata may differ from fictional event sequence. Reader never receives future events or query labels.",
+  "project": "marigold-audio",
+  "default_cutoff": 21,
+  "background_cutoff": 17,
+  "default_background_cutoff": 17,
+  "budget_chars": 6000,
+  "events": [
+    {
+      "id": "m01",
+      "sequence": 1,
+      "session_id": "atelier-a",
+      "topic": "packaging",
+      "role": "user",
+      "text": "Task PKG-614: use ZIP bundles rather than TAR for the museum kiosk audio guides. I accept ZIP because the installed kiosk firmware reads ZIP directly and curators can inspect the archive without build tools. Revisit this format only if kiosk firmware support changes.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 1
+    },
+    {
+      "id": "m02",
+      "sequence": 2,
+      "session_id": "atelier-a",
+      "topic": "release-compliance",
+      "role": "user",
+      "text": "Keep this independent release requirement open: every public audio-guide bundle must include the source recording credits and license notices before distribution. Choosing ZIP does not complete that work.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 2
+    },
+    {
+      "id": "m03",
+      "sequence": 3,
+      "session_id": "atelier-a",
+      "topic": "packaging",
+      "role": "assistant",
+      "text": "PKG-614 storage-format decision recorded: ZIP was accepted; TAR was an alternative. No packaging implementation or public release has been verified.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 3
+    },
+    {
+      "id": "m04",
+      "sequence": 4,
+      "session_id": "atelier-a",
+      "topic": "wayfinding",
+      "role": "user",
+      "text": "Separate task WAY-983: improve the floor-map legend contrast. This is a different topic from audio packaging PKG-614. Its keyboard navigation review remains open.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 4
+    },
+    {
+      "id": "m05",
+      "sequence": 5,
+      "session_id": "atelier-a",
+      "topic": "packaging",
+      "role": "assistant",
+      "text": "Stopping this chat after recording PKG-614 and the independent bundle-credit prerequisite. WAY-983 remains a separate floor-map task.",
+      "project": "marigold-audio",
+      "stop": true,
+      "occurred_at": 5
+    },
+    {
+      "id": "m06",
+      "sequence": 6,
+      "session_id": "atelier-b",
+      "topic": "packaging",
+      "role": "user",
+      "text": "Continue the same task PKG-614 from atelier-a. Today investigate duplicated audio chapters in kiosk bundles. A maximum of 13 chapters per bundle is only a proposal; I have not accepted it.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 6
+    },
+    {
+      "id": "m07",
+      "sequence": 7,
+      "session_id": "atelier-b",
+      "topic": "packaging",
+      "role": "tool",
+      "text": "PKG-614 duplicate-chapter regression FAILED in the local rehearsal. Bundle assembly was not released to any kiosk environment.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 7
+    },
+    {
+      "id": "m08",
+      "sequence": 8,
+      "session_id": "atelier-b",
+      "topic": "packaging",
+      "role": "assistant",
+      "text": "For PKG-614 I investigated duplicate chapters, but there is no verified fix yet. A manifest lockfile is an untested proposal at this point.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 8
+    },
+    {
+      "id": "m09",
+      "sequence": 9,
+      "session_id": "atelier-b",
+      "topic": "wayfinding",
+      "role": "user",
+      "text": "Return separately to WAY-983 in this same chat: check the map legend contrast. This does not continue or close PKG-614, and the map keyboard navigation review is still open.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 9
+    },
+    {
+      "id": "m10",
+      "sequence": 10,
+      "session_id": "atelier-b",
+      "topic": "wayfinding",
+      "role": "tool",
+      "text": "WAY-983 map legend contrast check PASSED locally. Keyboard navigation was not tested. This result is unrelated to kiosk audio bundle assembly or release.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 10
+    },
+    {
+      "id": "m11",
+      "sequence": 11,
+      "session_id": "atelier-b",
+      "topic": "packaging",
+      "role": "assistant",
+      "text": "End of atelier-b: PKG-614 is the same packaging task continued from atelier-a; duplicate chapters are unresolved at this point. WAY-983 contrast passed locally, while its keyboard review remains open.",
+      "project": "marigold-audio",
+      "stop": true,
+      "occurred_at": 11
+    },
+    {
+      "id": "m12",
+      "sequence": 12,
+      "session_id": "atelier-c",
+      "topic": "packaging",
+      "role": "user",
+      "text": "Continue task PKG-614 from atelier-b, the same museum kiosk audio-guide bundle work. Test the manifest lockfile change against the earlier duplicate-chapter failure; do not create a new task for this continuation.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 12
+    },
+    {
+      "id": "m13",
+      "sequence": 13,
+      "session_id": "atelier-c",
+      "topic": "packaging",
+      "role": "tool",
+      "text": "PKG-614 duplicate-chapter regression PASSED locally after the manifest lockfile change. Packager version 4.8.6 was checked in the local rehearsal only. No kiosk deployment or public distribution was performed.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 13
+    },
+    {
+      "id": "m14",
+      "sequence": 14,
+      "session_id": "atelier-c",
+      "topic": "packaging",
+      "role": "tool",
+      "text": "PKG-614 staging kiosk still reports packager version 4.7.9. Production kiosk version has not been checked.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 14
+    },
+    {
+      "id": "m15",
+      "sequence": 15,
+      "session_id": "atelier-c",
+      "topic": "packaging",
+      "role": "user",
+      "text": "New independent task PKG-902, not a continuation of PKG-614: assemble the staff training audio pack. It uses the same packaging tools but has its own acceptance. A pass for PKG-902 cannot close the public kiosk task PKG-614.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 15
+    },
+    {
+      "id": "m16",
+      "sequence": 16,
+      "session_id": "atelier-c",
+      "topic": "packaging",
+      "role": "tool",
+      "text": "PKG-902 staff training pack rehearsal PASSED with training builder version 6.3.0. This is a separate task and is not evidence of any PKG-614 kiosk deployment.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 16
+    },
+    {
+      "id": "m17",
+      "sequence": 17,
+      "session_id": "atelier-c",
+      "topic": "packaging",
+      "role": "assistant",
+      "text": "End of atelier-c: PKG-614 now has a reported local duplicate-chapter pass following the lockfile change, but staging remains older and production is unchecked. Deployment, public distribution, and the independent recording-credit/license-notice requirement remain open. PKG-902 is separate.",
+      "project": "marigold-audio",
+      "stop": true,
+      "occurred_at": 17
+    },
+    {
+      "id": "m18",
+      "sequence": 18,
+      "session_id": "atelier-d",
+      "topic": "packaging",
+      "role": "user",
+      "text": "Correction for PKG-614: I accept a maximum of 7 chapters per bundle, replacing the earlier unaccepted proposal of 13. This changes the approved limit only; kiosk deployment and production verification remain open.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 18
+    },
+    {
+      "id": "m19",
+      "sequence": 19,
+      "session_id": "atelier-d",
+      "topic": "packaging",
+      "role": "user",
+      "text": "Corrección para PKG-614: el máximo aceptado es de 7 capítulos por paquete. Solo se comprobó el entorno local; producción sigue sin comprobarse. Los créditos y avisos de licencia siguen pendientes antes de distribuir.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 19
+    },
+    {
+      "id": "m20",
+      "sequence": 20,
+      "session_id": "atelier-d",
+      "topic": "packaging",
+      "role": "tool",
+      "text": "Delayed result originating in atelier-b for PKG-614, before the manifest lockfile change: that rehearsal failed and 13 chapters was only an unaccepted proposal. This old result arrived now; it does not describe a new failure after atelier-c.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 7
+    },
+    {
+      "id": "other-m01",
+      "sequence": 21,
+      "session_id": "other-atelier",
+      "topic": "packaging",
+      "role": "user",
+      "text": "FOREIGN_SENTINEL: in the separate cedar-tour project PKG-614 uses 31 chapters and production is approved. These facts belong only to cedar-tour.",
+      "project": "cedar-tour",
+      "stop": true,
+      "occurred_at": 21
+    },
+    {
+      "id": "m22",
+      "sequence": 22,
+      "session_id": "atelier-e",
+      "topic": "packaging",
+      "role": "tool",
+      "text": "FUTURE_SENTINEL: a later PKG-614 production kiosk deployment was verified on packager version 4.9.2. This observation is after the frozen cutoff and must not support earlier answers.",
+      "project": "marigold-audio",
+      "stop": false,
+      "occurred_at": 22
+    }
+  ],
+  "queries": [
+    {
+      "id": "archive_rationale",
+      "split": "holdout",
+      "language": "en",
+      "query": "Why was ZIP accepted for PKG-614, and what would justify reconsidering it?",
+      "required": [
+        "ZIP",
+        "firmware"
+      ],
+      "forbidden": [
+        "TAR was accepted"
+      ]
+    },
+    {
+      "id": "explicit_continuation",
+      "split": "holdout",
+      "language": "en",
+      "query": "Which chats explicitly continue the same task PKG-614? Explain the link using user statements, without treating all packaging work as one task.",
+      "required": [
+        "PKG-614",
+        "atelier-a",
+        "atelier-b",
+        "atelier-c"
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "distinct_task_boundary",
+      "split": "holdout",
+      "language": "en",
+      "query": "Does the successful PKG-902 staff training rehearsal complete PKG-614? Explain why these packaging results belong to the same or different tasks.",
+      "required": [
+        "PKG-902",
+        "PKG-614"
+      ],
+      "forbidden": [
+        "PKG-614 completed"
+      ]
+    },
+    {
+      "id": "same_chat_two_topics",
+      "split": "holdout",
+      "language": "en",
+      "query": "What happened to WAY-983 in atelier-b, and can that result settle the duplicate-chapter problem or the kiosk release for PKG-614?",
+      "required": [
+        "WAY-983",
+        "keyboard",
+        "PKG-614"
+      ],
+      "forbidden": [
+        "map check verifies kiosk deployment"
+      ]
+    },
+    {
+      "id": "practical_resume",
+      "split": "holdout",
+      "language": "en",
+      "query": "Resume PKG-614 at the frozen cutoff. What passed, what remains open, and what current approved constraint must the next change respect?",
+      "required": [
+        "local",
+        "7",
+        "credits"
+      ],
+      "forbidden": [
+        "all work completed",
+        "production verified"
+      ]
+    },
+    {
+      "id": "fresh_constraint",
+      "split": "holdout",
+      "language": "es",
+      "query": "¿Cuál es el máximo de capítulos aceptado para PKG-614 y en qué entorno se comprobó el empaquetador?",
+      "required": [
+        "7"
+      ],
+      "forbidden": [
+        "13 aceptado",
+        "31"
+      ]
+    },
+    {
+      "id": "production_version",
+      "split": "holdout",
+      "language": "en",
+      "query": "Which packager version is verified on the production kiosks for PKG-614 at this cutoff?",
+      "required": [],
+      "forbidden": [
+        "production runs 4.8.6",
+        "production runs 4.9.2",
+        "production runs 6.3.0"
+      ]
+    },
+    {
+      "id": "old_release_obligation",
+      "split": "holdout",
+      "language": "es",
+      "query": "¿Qué requisito antiguo e independiente sigue pendiente antes de distribuir públicamente los paquetes de audio?",
+      "required": [
+        "créditos",
+        "licencia"
+      ],
+      "forbidden": [
+        "no quedan requisitos"
+      ]
+    },
+    {
+      "id": "delayed_evidence",
+      "split": "holdout",
+      "language": "en",
+      "query": "Does the delayed atelier-b result mean PKG-614 has newly failed after the local lockfile pass, or that the old chapter proposal overrides the fresh correction? Explain event time versus arrival.",
+      "required": [
+        "7",
+        "13"
+      ],
+      "forbidden": [
+        "13 is accepted",
+        "new regression failure after atelier-c"
+      ]
+    },
+    {
+      "id": "environment_separation",
+      "split": "holdout",
+      "language": "en",
+      "query": "Summarize the observed local, staging, and production states for PKG-614. Keep the staff-training result separate and identify any verification gap.",
+      "required": [
+        "4.8.6",
+        "4.7.9"
+      ],
+      "forbidden": [
+        "PKG-614 production verified",
+        "6.3.0 deployed to public kiosks"
+      ]
+    }
+  ],
+  "coverage": [
+    "accepted_decision_and_concrete_rationale",
+    "explicit_user_same_task_continuation_across_three_sessions",
+    "different_task_id_negative_same_topic",
+    "two_distinct_topics_in_one_chat_not_merged",
+    "old_independent_open_release_requirement",
+    "historical_failure_then_local_pass",
+    "local_staging_production_scope_and_version_separation",
+    "fresh_pending_explicit_correction",
+    "delayed_arrival_does_not_override_newer_event",
+    "foreign_project_exclusion",
+    "future_event_cutoff_exclusion",
+    "english_spanish_queries",
+    "three_processed_sessions_plus_pending_session"
+  ],
+  "target_project": "marigold-audio"
+}

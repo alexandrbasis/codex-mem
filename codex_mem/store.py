@@ -1091,6 +1091,8 @@ class Store:
         def migrate_and_install_indexes() -> None:
             migrate()
             self._create_dashboard_indexes(connection)
+            from .project_memory import install_schema
+            install_schema(connection)
             connection.execute(
                 "CREATE TABLE IF NOT EXISTS observation_job_recoveries ("
                 "parent_job_id TEXT PRIMARY KEY REFERENCES observation_jobs(id) ON DELETE CASCADE,"
@@ -1837,6 +1839,8 @@ class Store:
         if tool_capture is not None and not isinstance(tool_capture, Mapping):
             raise ValueError("tool_capture must be an object")
         assert clean_title is not None and clean_body is not None
+        from .config import load_config, project_memory_enabled
+        capture_project_memory = project_memory_enabled(workspace, load_config(self.data_dir))
 
         with self._lock:
             self._require_open()
@@ -1898,6 +1902,9 @@ class Store:
                                 project=workspace,
                                 capture=tool_capture,
                             )
+                        if capture_project_memory:
+                            from .project_memory import capture_event
+                            capture_event(connection, existing_id)
                         return existing_id, True
 
                 entry_id = uuid.uuid4().hex
@@ -1964,6 +1971,9 @@ class Store:
                         f"WHERE project = ? AND id IN ({placeholders})",
                         (entry_id, timestamp, timestamp, workspace, *clean_source_ids),
                     )
+                if capture_project_memory:
+                    from .project_memory import capture_event
+                    capture_event(connection, entry_id)
                 return entry_id, False
 
             entry_id, deduplicated = self._write(insert)
@@ -4866,6 +4876,12 @@ class Store:
             )
             records = self._records_from_rows(rows)
             by_id = {record["id"]: record for record in records}
+            missing = [entry_id for entry_id in checked_ids if entry_id not in by_id]
+            if missing:
+                from .project_memory import ProjectMemory
+                from .privacy import redact_search_value
+                by_id.update({record["id"]: redact_search_value(record)
+                              for record in ProjectMemory(self).get(workspace, missing)})
             return [by_id[entry_id] for entry_id in checked_ids if entry_id in by_id]
 
     def retrieval_session_peers(
@@ -5734,6 +5750,22 @@ class Store:
         header += telemetry
         remaining -= len(telemetry)
 
+        # The same local ledger candidates serve startup and explicit resume.
+        # Shadow mode keeps the original context unchanged. Explicit metadata
+        # filters retain their original record semantics until ledger fields
+        # support those filters as well.
+        chunks: list[str] = []
+        if (not routing_only and not any((checked_kinds, checked_types, checked_files, checked_concepts))
+                and remaining >= 256):
+            from .project_memory_retrieval import build_project_brief
+            brief = build_project_brief(
+                self, workspace, query=query, budget=max(128, remaining * 3 // 5),
+                exclude_session_id=checked_exclude,
+            )
+            if brief["enabled"] and brief["records"]:
+                chunks.append(brief["xml"])
+                remaining -= len(brief["xml"])
+
         # A small set of readable excerpts is more useful than many records
         # whose labels and provenance consume most of the injection budget.
         if state_scope:
@@ -5744,7 +5776,6 @@ class Store:
         # Preserve the existing coverage window. Related later evidence is
         # not a reason to displace an unresolved independent requirement.
         candidates = prefer_topic_followups(candidates)
-        chunks: list[str] = []
         for index, record in enumerate(candidates):
             later = candidates[index + 1:]
             # Give the latest handoff room for decisions, evidence, and open
@@ -5767,15 +5798,33 @@ class Store:
             self._require_open()
             connection = self._connection
 
-            def delete() -> list[str]:
+            def delete() -> tuple[list[str], list[str]]:
+                from .project_memory import forget_objects
+                derived = forget_objects(connection, workspace, checked_ids)
                 found_rows = connection.execute(
                     f"SELECT id FROM entries WHERE project = ? AND id IN ({placeholders})",
                     (workspace, *checked_ids),
                 ).fetchall()
                 found = {row["id"] for row in found_rows}
                 deleted_ids = [entry_id for entry_id in checked_ids if entry_id in found]
+                dependents: list[str] = []
                 if deleted_ids:
+                    # Existing observation notes and consolidated summaries may
+                    # also contain the source's text. Follow their explicit
+                    # lineage before foreign-key deletion removes those links.
+                    dependents = [row[0] for row in connection.execute(
+                        "WITH RECURSIVE affected(id) AS ("
+                        f"SELECT id FROM entries WHERE project=? AND id IN ({placeholders}) "
+                        "UNION SELECT links.summary_id FROM entry_sources links "
+                        "JOIN affected a ON links.source_id=a.id "
+                        "JOIN entries child ON child.id=links.summary_id WHERE child.project=?) "
+                        "SELECT id FROM affected",
+                        (workspace, *checked_ids, workspace),
+                    ) if row[0] not in found]
+                    deleted_ids.extend(dependents)
                     selected = ", ".join("?" for _ in deleted_ids)
+                    from .project_memory import revoke_sources
+                    revoke_sources(connection, workspace, deleted_ids)
                     self._revoke_observation_jobs(
                         connection, project=workspace, source_ids=deleted_ids
                     )
@@ -5799,10 +5848,14 @@ class Store:
                         f"DELETE FROM entries WHERE project = ? AND id IN ({selected})",
                         (workspace, *deleted_ids),
                     )
-                return deleted_ids
+                removed = set(deleted_ids) | set(derived["ids"])
+                return [entry_id for entry_id in checked_ids if entry_id in removed], dependents
 
-            deleted_ids = self._write(delete)
-            return {"deleted": len(deleted_ids), "ids": deleted_ids}
+            deleted_ids, dependent_ids = self._write(delete)
+            result = {"deleted": len(deleted_ids), "ids": deleted_ids}
+            if dependent_ids:
+                result["dependent_entry_ids"] = dependent_ids
+            return result
 
     def status(self, project: str | Path | None = None) -> dict[str, Any]:
         """Return safe counts and storage metadata without exposing entry bodies."""
@@ -5953,17 +6006,30 @@ class Store:
             connection = self._connection
 
             def delete_old() -> int:
-                self._revoke_observation_jobs(connection, cutoff=cutoff)
-                self._revoke_embedding_jobs(connection, cutoff=cutoff)
                 old_rows = connection.execute(
                     "SELECT id, project FROM entries WHERE created_at < ?", (cutoff,)
                 ).fetchall()
+                # Active decisions and open work retain their evidence. A user's
+                # explicit forget remains authoritative and follows a separate
+                # dependency-revocation path above.
+                from .project_memory import protected_source_ids, revoke_sources
+                protected: dict[str, set[str]] = {}
+                for row in old_rows:
+                    project = str(row["project"])
+                    if project not in protected:
+                        protected[project] = protected_source_ids(connection, project)
+                old_rows = [row for row in old_rows
+                            if str(row["id"]) not in protected[str(row["project"])]]
                 if old_rows:
                     # See forget(): this table is deliberately decoupled from
                     # entries, so retention must explicitly remove raw rows.
                     by_project: dict[str, list[str]] = {}
                     for row in old_rows:
                         by_project.setdefault(str(row["project"]), []).append(str(row["id"]))
+                    for project, entry_ids in by_project.items():
+                        revoke_sources(connection, project, entry_ids)
+                        self._revoke_observation_jobs(connection, project=project, source_ids=entry_ids)
+                        self._revoke_embedding_jobs(connection, project=project, source_ids=entry_ids)
                     try:
                         for project, entry_ids in by_project.items():
                             placeholders = ", ".join("?" for _ in entry_ids)
@@ -5974,8 +6040,9 @@ class Store:
                     except sqlite3.OperationalError as error:
                         if "no such table" not in str(error).lower():
                             raise
-                cursor = connection.execute("DELETE FROM entries WHERE created_at < ?", (cutoff,))
-                return max(0, int(cursor.rowcount))
+                    connection.executemany("DELETE FROM entries WHERE project = ? AND id = ?",
+                                           [(row["project"], row["id"]) for row in old_rows])
+                return len(old_rows)
 
             deleted = self._write(delete_old)
             return {"deleted": deleted, "cutoff": cutoff}

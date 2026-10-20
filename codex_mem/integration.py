@@ -90,6 +90,44 @@ def search_memory(
     result = search(store, project, query, **search_kwargs)
     if not enabled and mode == "auto":
         result.update(requested_mode="auto", fallback_reason="semantic_disabled")
+    # The established search runs first: its query/limit/filter validation and
+    # lexical fallback remain authoritative. Project state only augments resume.
+    from .retrieval import historical_query
+    historical = historical_query(query)
+    if historical:
+        from .project_memory_query import plan_query
+        try:
+            historical = plan_query(query, project).historical
+        except ValueError:
+            historical = True
+    if (intent == "resume" and not historical and
+            all(value is None for value in (kinds, types, concepts, files))):
+        from .project_memory_retrieval import build_project_brief
+        brief = build_project_brief(store, project, query)
+        if brief["enabled"]:
+            baseline = result["results"]
+            project_records = brief["records"]
+            merged = []
+            seen = set()
+            # Keep both established search evidence and ledger state available.
+            # An old open requirement can lead even when many new notes exist.
+            for index in range(max(len(project_records), len(baseline))):
+                for lane in (project_records, baseline):
+                    if index < len(lane) and lane[index]["id"] not in seen:
+                        merged.append(lane[index])
+                        seen.add(lane[index]["id"])
+                    if len(merged) >= limit:
+                        break
+                if len(merged) >= limit:
+                    break
+            result["results"] = merged
+            result["project_memory"] = {
+                "mode": brief["mode"], "coverage": brief["coverage"],
+                "pending": brief["pending"], "revision": brief.get("revision"),
+                "candidate_count": len(project_records),
+                "included_count": sum(row.get("source") == "project_memory" for row in merged),
+                "freshness": "not_verified",
+            }
     from .freshness import freshness_snapshot
     result["freshness"] = freshness_snapshot(store, project)
     from . import __version__

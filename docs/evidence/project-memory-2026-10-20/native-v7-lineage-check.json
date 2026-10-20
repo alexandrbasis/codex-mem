@@ -1,0 +1,365 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-20T09:51:56.795355+00:00",
+  "access": "sqlite mode=ro and PRAGMA query_only; no Store initialization, writes, native calls, or code changes",
+  "database": "/private/tmp/project-memory-holdout-run-v1/next/memory.sqlite3",
+  "project": "/private/tmp/project-memory-holdout-run-v1/project",
+  "outcome": "partial_lineage_with_safe_rejection",
+  "findings": {
+    "explicit_chain_applied": "PKG-614 atelier-a v1 -> atelier-b v2",
+    "full_three_session_chain_applied": false,
+    "atelier_c_link": "Rejected because native selected the WAY-983 head instead of PKG-614; saved as standalone episode.",
+    "unrelated_tasks": "WAY-983 and PKG-902 have distinct logical_episode_id values from PKG-614. WAY-983 a/b also remain separate roots.",
+    "old_independent_requirement_open": true,
+    "all_three_jobs_single_attempt_completed": true,
+    "all_three_attempts_reported_processed": true
+  },
+  "episodes": [
+    {
+      "id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+      "revision": 1,
+      "session_id": "atelier-a",
+      "logical_episode_id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+      "episode_version": 1,
+      "parent_episode_id": null,
+      "continuity_basis": "standalone",
+      "goal": "Use ZIP bundles rather than TAR for the museum kiosk audio guides.",
+      "is_current_head": false,
+      "goal_evidence": [
+        {
+          "source_id": "5f4318ea87ac41ccbd54388907c4b463",
+          "session_id": "atelier-a",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 80,
+          "quote": "Task PKG-614: use ZIP bundles rather than TAR for the museum kiosk audio guides."
+        }
+      ],
+      "continuation_evidence": []
+    },
+    {
+      "id": "pm_316a9a050e4e1ec0ea451197564487b045975e46",
+      "revision": 1,
+      "session_id": "atelier-a",
+      "logical_episode_id": "pm_316a9a050e4e1ec0ea451197564487b045975e46",
+      "episode_version": 1,
+      "parent_episode_id": null,
+      "continuity_basis": "standalone",
+      "goal": "Improve the floor-map legend contrast.",
+      "is_current_head": true,
+      "goal_evidence": [
+        {
+          "source_id": "10b4128c4f9843dd80cc4cbd9526ae24",
+          "session_id": "atelier-a",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 61,
+          "quote": "Separate task WAY-983: improve the floor-map legend contrast."
+        }
+      ],
+      "continuation_evidence": []
+    },
+    {
+      "id": "pm_7436ac0d33510348a952c0a2294e12d6373160a6",
+      "revision": 2,
+      "session_id": "atelier-b",
+      "logical_episode_id": "pm_7436ac0d33510348a952c0a2294e12d6373160a6",
+      "episode_version": 1,
+      "parent_episode_id": null,
+      "continuity_basis": "standalone",
+      "goal": "Check the map legend contrast for WAY-983.",
+      "is_current_head": true,
+      "goal_evidence": [
+        {
+          "source_id": "f0bdc29907524726985bb5f8620d5242",
+          "session_id": "atelier-b",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 78,
+          "quote": "Return separately to WAY-983 in this same chat: check the map legend contrast."
+        }
+      ],
+      "continuation_evidence": []
+    },
+    {
+      "id": "pm_8832ba28d05bf35389e04d395f7c757a4c526cc4",
+      "revision": 2,
+      "session_id": "atelier-b",
+      "logical_episode_id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+      "episode_version": 2,
+      "parent_episode_id": "pm_0c28992d3f75deb2aea4452030408f7d9705a8f2",
+      "continuity_basis": "model_inference",
+      "goal": "Investigate duplicated audio chapters in kiosk bundles.",
+      "is_current_head": true,
+      "goal_evidence": [
+        {
+          "source_id": "91714ae2aed2465e86d606826de93689",
+          "session_id": "atelier-b",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 46,
+          "quote": "Continue the same task PKG-614 from atelier-a."
+        },
+        {
+          "source_id": "91714ae2aed2465e86d606826de93689",
+          "session_id": "atelier-b",
+          "source_role": "user_intent",
+          "start": 46,
+          "end": 108,
+          "quote": " Today investigate duplicated audio chapters in kiosk bundles."
+        }
+      ],
+      "continuation_evidence": [
+        {
+          "source_id": "91714ae2aed2465e86d606826de93689",
+          "session_id": "atelier-b",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 46,
+          "quote": "Continue the same task PKG-614 from atelier-a."
+        }
+      ]
+    },
+    {
+      "id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+      "revision": 3,
+      "session_id": "atelier-c",
+      "logical_episode_id": "pm_2c8de699fd0db2da6d422f79a95d60e7b80c1fab",
+      "episode_version": 1,
+      "parent_episode_id": null,
+      "continuity_basis": "standalone",
+      "goal": "Continue task PKG-614 from atelier-b: test the manifest lockfile change against the earlier duplicate-chapter failure.",
+      "is_current_head": true,
+      "goal_evidence": [
+        {
+          "source_id": "9644de68a6144bb584e5f24e9772de19",
+          "session_id": "atelier-c",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 84,
+          "quote": "Continue task PKG-614 from atelier-b, the same museum kiosk audio-guide bundle work."
+        },
+        {
+          "source_id": "9644de68a6144bb584e5f24e9772de19",
+          "session_id": "atelier-c",
+          "source_role": "user_intent",
+          "start": 84,
+          "end": 213,
+          "quote": " Test the manifest lockfile change against the earlier duplicate-chapter failure; do not create a new task for this continuation."
+        }
+      ],
+      "continuation_evidence": [
+        {
+          "source_id": "9644de68a6144bb584e5f24e9772de19",
+          "session_id": "atelier-c",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 84,
+          "quote": "Continue task PKG-614 from atelier-b, the same museum kiosk audio-guide bundle work."
+        }
+      ]
+    },
+    {
+      "id": "pm_d3b173aa98ce05ef88d0128395766a76048d1348",
+      "revision": 3,
+      "session_id": "atelier-c",
+      "logical_episode_id": "pm_d3b173aa98ce05ef88d0128395766a76048d1348",
+      "episode_version": 1,
+      "parent_episode_id": null,
+      "continuity_basis": "standalone",
+      "goal": "Assemble the staff training audio pack for PKG-902.",
+      "is_current_head": true,
+      "goal_evidence": [
+        {
+          "source_id": "2f128db2bd9841ea81a1b7f5e788322e",
+          "session_id": "atelier-c",
+          "source_role": "user_intent",
+          "start": 0,
+          "end": 100,
+          "quote": "New independent task PKG-902, not a continuation of PKG-614: assemble the staff training audio pack."
+        }
+      ],
+      "continuation_evidence": []
+    }
+  ],
+  "omitted_continuation_diagnosis": {
+    "session_id": "atelier-c",
+    "native_target_id": "pm_7436ac0d33510348a952c0a2294e12d6373160a6",
+    "native_target_goal": "Check the map legend contrast for WAY-983.",
+    "native_target_session": "atelier-b",
+    "native_evidence_refs": [
+      "rab969680f8"
+    ],
+    "correct_available_pkg614_head": "pm_8832ba28d05bf35389e04d395f7c757a4c526cc4",
+    "assessment": "model_target_selection_error; conservative guard rejected wrong task target",
+    "receipt_reason": "unproved_continuity"
+  },
+  "old_independent_requirement": {
+    "id": "pm_1c0cbf65339d0c2e8767d55b8a2e4c90bdb66b68",
+    "session_id": "atelier-a",
+    "kind": "requirement",
+    "workflow_state": "open",
+    "scope": {
+      "environment": "public distribution",
+      "version": "",
+      "worktree": ""
+    },
+    "text": "Every public audio-guide bundle must include the source recording credits and license notices before distribution.",
+    "source_role": "model_inference",
+    "evidence_basis": "model_inference",
+    "text_evidence": [
+      {
+        "source_id": "c4f4b46ddb044dceaaa5c184db27a354",
+        "session_id": "atelier-a",
+        "source_role": "user_intent",
+        "start": 0,
+        "end": 162,
+        "quote": "Keep this independent release requirement open: every public audio-guide bundle must include the source recording credits and license notices before distribution."
+      }
+    ],
+    "workflow_evidence": [
+      {
+        "source_id": "c4f4b46ddb044dceaaa5c184db27a354",
+        "session_id": "atelier-a",
+        "source_role": "user_intent",
+        "start": 0,
+        "end": 162,
+        "quote": "Keep this independent release requirement open: every public audio-guide bundle must include the source recording credits and license notices before distribution."
+      },
+      {
+        "source_id": "c4f4b46ddb044dceaaa5c184db27a354",
+        "session_id": "atelier-a",
+        "source_role": "user_intent",
+        "start": 162,
+        "end": 204,
+        "quote": " Choosing ZIP does not complete that work."
+      }
+    ],
+    "in_project_obligations": true,
+    "closing_or_replacing_relations": 0
+  },
+  "jobs": [
+    {
+      "id": "pmj_c36a6e946062cc9f41f33c09a8a7695653430d03",
+      "session_id": "atelier-a",
+      "status": "completed",
+      "attempts": 1,
+      "error": null,
+      "revision": 1,
+      "omitted_continuities_count": 0,
+      "omitted_continuities_reason": "",
+      "omitted_transitions_count": 0,
+      "omitted_transitions_reason": "",
+      "downgraded_states_count": 0,
+      "pending_reconciliation": false
+    },
+    {
+      "id": "pmj_c5bdf93b56ac95bd56fc1801ddd2f7851c91900d",
+      "session_id": "atelier-b",
+      "status": "completed",
+      "attempts": 1,
+      "error": null,
+      "revision": 2,
+      "omitted_continuities_count": 0,
+      "omitted_continuities_reason": "",
+      "omitted_transitions_count": 0,
+      "omitted_transitions_reason": "",
+      "downgraded_states_count": 0,
+      "pending_reconciliation": false
+    },
+    {
+      "id": "pmj_4e078db54146724d6582959d4d30fd59ea30781e",
+      "session_id": "atelier-c",
+      "status": "completed",
+      "attempts": 1,
+      "error": null,
+      "revision": 3,
+      "omitted_continuities_count": 1,
+      "omitted_continuities_reason": "unproved_continuity",
+      "omitted_transitions_count": 1,
+      "omitted_transitions_reason": "unproved_transition",
+      "downgraded_states_count": 0,
+      "pending_reconciliation": true
+    }
+  ],
+  "attempts": [
+    {
+      "attempt_id": "pma_474959b63d33494ab6483efc3e487de3",
+      "job_id": "pmj_c36a6e946062cc9f41f33c09a8a7695653430d03",
+      "session_id": "atelier-a",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "worker_thread_id": "01a158b5-8e0f-7e12-a3d7-4caf2a93d70e",
+      "worker_turn_id": "01a158b5-8e81-7213-9997-63bdd6ce84c6",
+      "outcome": "processed",
+      "error_code": null,
+      "usage_status": "reported",
+      "input_tokens": 11992,
+      "output_tokens": 836,
+      "total_tokens": 12828
+    },
+    {
+      "attempt_id": "pma_cd8a8da1f09c4da69a7df0940c00bce8",
+      "job_id": "pmj_c5bdf93b56ac95bd56fc1801ddd2f7851c91900d",
+      "session_id": "atelier-b",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "worker_thread_id": "01a158b5-ae84-7aa3-9bb7-e22c4a553be1",
+      "worker_turn_id": "01a158b5-af0b-7e50-af65-8fdc2a464f62",
+      "outcome": "processed",
+      "error_code": null,
+      "usage_status": "reported",
+      "input_tokens": 17529,
+      "output_tokens": 1212,
+      "total_tokens": 18741
+    },
+    {
+      "attempt_id": "pma_cdf57a2a8c7b4861ab6136ed7cc20fc4",
+      "job_id": "pmj_4e078db54146724d6582959d4d30fd59ea30781e",
+      "session_id": "atelier-c",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "worker_thread_id": "01a158b5-dea9-78e2-9bc9-0eaaaa6f5110",
+      "worker_turn_id": "01a158b5-df2f-77d1-956b-9a548d311031",
+      "outcome": "processed",
+      "error_code": null,
+      "usage_status": "reported",
+      "input_tokens": 19545,
+      "output_tokens": 1163,
+      "total_tokens": 20708
+    }
+  ],
+  "total_reported_tokens": 52277,
+  "coverage": {
+    "omitted_continuities_count": 1,
+    "omitted_transitions_count": 1,
+    "downgraded_states_count": 0,
+    "pending_reconciliation": true,
+    "complete_transcript": false,
+    "observations_only": true,
+    "event_time_basis": "source_capture_time",
+    "partially_processed_events": 0,
+    "quarantined_events": 0,
+    "coverage_gaps": true,
+    "captured_events": 20,
+    "processed_events": 17,
+    "pending_events": 3,
+    "latest_event_seq": 39,
+    "processed_through_seq": 33,
+    "running_jobs": 0,
+    "failed_jobs": 0,
+    "quarantined_jobs": 0
+  },
+  "exact_source_validation": {
+    "checked_field_refs": 89,
+    "failures": [],
+    "all_match_retained_project_source_slices": true
+  },
+  "limits": [
+    "Structural lineage and retained-source span check only; no independent semantic quality judgment or reader-score claim.",
+    "Current heads and pending coverage are read at the stated timestamp while separate fresh reader evaluation runs.",
+    "Only atelier-a to atelier-b continuity applied; atelier-c did not join the chain.",
+    "Three atelier-d events are unprocessed; pending reconciliation includes one omitted continuity and one omitted transition.",
+    "Stored exact source quotations establish what the captured fixture says, not independently verified external execution or deployment."
+  ]
+}

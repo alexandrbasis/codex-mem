@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "fixture_id": "project-memory-holdout-v3",
+  "history_provenance": "New independently authored fictional observations after earlier evaluation feedback; exact payload withheld from implementers before code freeze. No model-generated history or actual project facts.",
+  "temporal_policy": "Use target_project. Filter arrival sequence <= default_cutoff. Process the six settled target-project events through background_cutoff across two sessions; two later target-project user messages remain pending. Exclude foreign project even when within arrival cutoff, and exclude the future source. Reader receives neither manual rubric nor future/foreign content.",
+  "target_project": "fern-labels",
+  "project": "fern-labels",
+  "default_cutoff": 9,
+  "background_cutoff": 6,
+  "default_background_cutoff": 6,
+  "budget_chars": 6000,
+  "events": [
+    {
+      "id": "g01",
+      "sequence": 1,
+      "session_id": "bench-east",
+      "topic": "label-rendering",
+      "role": "user",
+      "text": "Task LBL-286: adopt SVG for the botanical label renderer instead of PNG. This is the accepted choice because labels must stay sharp when resized and curators need to edit the text. Consider changing the format only if the print vendor stops accepting SVG. Independent unfinished prerequisite: include the Latin plant names on every public label sheet before publishing a batch.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 1
+    },
+    {
+      "id": "g02",
+      "sequence": 2,
+      "session_id": "bench-east",
+      "topic": "label-rendering",
+      "role": "assistant",
+      "text": "The LBL-286 format decision and its reasons are recorded. The Latin-name prerequisite is still open; recording the decision did not implement or verify the renderer.",
+      "project": "fern-labels",
+      "stop": true,
+      "occurred_at": 2
+    },
+    {
+      "id": "g03",
+      "sequence": 3,
+      "session_id": "bench-west",
+      "topic": "label-rendering",
+      "role": "user",
+      "text": "Resume the same LBL-286 task from bench-east: test the fix for clipped label text. A sheet maximum of 42 labels is only a suggestion, not approved. In this same chat, start a distinct task CAT-741 for catalog-cover thumbnails; CAT-741 is not a continuation of LBL-286 and its results cannot close the label task.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 3
+    },
+    {
+      "id": "g04",
+      "sequence": 4,
+      "session_id": "bench-west",
+      "topic": "label-rendering",
+      "role": "tool",
+      "text": "LBL-286 clipped-text regression passed in the local preview with renderer 8.4.3 after adding font metrics to layout. No label-service deployment or public batch publication was performed. Separately, CAT-741 thumbnail crop check passed locally; this is not a label-renderer result.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 4
+    },
+    {
+      "id": "g05",
+      "sequence": 5,
+      "session_id": "bench-west",
+      "topic": "label-rendering",
+      "role": "tool",
+      "text": "LBL-286 staging label service reports renderer 8.3.6. The production label-service version has not been checked.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 5
+    },
+    {
+      "id": "g06",
+      "sequence": 6,
+      "session_id": "bench-west",
+      "topic": "label-rendering",
+      "role": "assistant",
+      "text": "The continued LBL-286 work has a reported local clipping-regression pass, while staging is older and production unchecked. Deployment, publication, and Latin plant names remain unfinished. CAT-741 is a separate catalog task.",
+      "project": "fern-labels",
+      "stop": true,
+      "occurred_at": 6
+    },
+    {
+      "id": "g07",
+      "sequence": 7,
+      "session_id": "bench-late",
+      "topic": "label-rendering",
+      "role": "user",
+      "text": "Approved correction for LBL-286: the maximum is 19 labels per sheet. This replaces the unapproved suggestion of 42. Approval of this limit does not mean the service was deployed or a public batch was published.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 7
+    },
+    {
+      "id": "g08",
+      "sequence": 8,
+      "session_id": "bench-late",
+      "topic": "label-rendering",
+      "role": "user",
+      "text": "Уточнение по LBL-286: принят максимум 19 этикеток на лист. Проверен только локальный предпросмотр. Продакшен не проверяли; латинские названия растений всё ещё нужно добавить перед публикацией.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 8
+    },
+    {
+      "id": "external-g01",
+      "sequence": 9,
+      "session_id": "other-bench",
+      "topic": "foreign",
+      "role": "user",
+      "text": "FOREIGN_SENTINEL: only for the moss-posters project, LBL-286 permits 64 labels and production is approved. Do not treat this other project as fern-labels.",
+      "project": "moss-posters",
+      "stop": true,
+      "occurred_at": 9
+    },
+    {
+      "id": "g10",
+      "sequence": 10,
+      "session_id": "bench-future",
+      "topic": "label-rendering",
+      "role": "tool",
+      "text": "FUTURE_SENTINEL: a later LBL-286 production deployment was verified with renderer 8.5.1. This is after the frozen arrival cutoff.",
+      "project": "fern-labels",
+      "stop": false,
+      "occurred_at": 10
+    }
+  ],
+  "queries": [
+    {
+      "id": "format_reason",
+      "split": "holdout",
+      "language": "en",
+      "query": "Why did we settle on SVG for the botanical labels, and when should that decision be reconsidered?",
+      "required": [],
+      "forbidden": [],
+      "manual_rubric": "2: retrieves accepted SVG, sharp resizing and editable text reasons, with vendor-support reconsideration and exact supporting references. 1: correct useful subset or source defect. 0: cannot recover or changes accepted format."
+    },
+    {
+      "id": "natural_resume",
+      "split": "holdout",
+      "language": "en",
+      "query": "Pick up the botanical label work. What can we build on, what is still unfinished, and what approved limit should the next change follow?",
+      "required": [],
+      "forbidden": [],
+      "manual_rubric": "2: reported local clipping pass is retained; deployment/publication/production verification gaps and old Latin-name obligation remain open; current limit nineteen is recovered; task/environment scope and exact sources are correct. 1: useful partial state or citation defect. 0: cannot resume or materially misleads."
+    },
+    {
+      "id": "approved_limit",
+      "split": "holdout",
+      "language": "ru",
+      "query": "Какое ограничение для листа этикеток принято сейчас? Что на самом деле проверили?",
+      "required": [],
+      "forbidden": [],
+      "manual_rubric": "2: approved nineteen labels per sheet, local preview only, production unchecked, with exact correction support. 1: useful incomplete answer or source defect. 0: misses correction, promotes forty-two/foreign value, or invents production verification."
+    },
+    {
+      "id": "continuation_and_separation",
+      "split": "holdout",
+      "language": "en",
+      "query": "Which chats explicitly continue the same botanical label task, and does the catalog-thumbnail check belong to that task too? Base the distinction on the user statements.",
+      "required": [],
+      "forbidden": [],
+      "manual_rubric": "2: bench-west explicitly resumes LBL-286 from bench-east, supported by user statement; CAT-741 is explicitly distinct despite same chat and does not close LBL-286. 1: correct useful portion or source defect. 0: no continuity evidence recovered or falsely merges catalog task."
+    },
+    {
+      "id": "environment_status",
+      "split": "holdout",
+      "language": "ru",
+      "query": "Раздели известное состояние рендерера этикеток по локальной среде, стейджингу и продакшену. Можно ли назвать версию в продакшене?",
+      "required": [],
+      "forbidden": [],
+      "manual_rubric": "2: reported local preview pass with 8.4.3, staging 8.3.6, production unchecked/unknown and no deployment proof, with exact sources. 1: useful incomplete environment summary. 0: no state recovery or local/staging/future versions claimed as production."
+    },
+    {
+      "id": "independent_publication_gate",
+      "split": "holdout",
+      "language": "ru",
+      "query": "Какое давнее самостоятельное требование остаётся перед публикацией листов этикеток? Закрыл ли его успешный тест обрезки текста?",
+      "required": [],
+      "forbidden": [],
+      "manual_rubric": "2: Latin plant names on public sheets remain required before publication; clipping pass does not close that independent obligation, supported by references. 1: useful subset or source defect. 0: no requirement recall or false closure."
+    }
+  ],
+  "coverage": [
+    "accepted_decision_concrete_rationale_reconsideration",
+    "natural_resume_old_independent_requirement",
+    "fresh_accepted_correction",
+    "explicit_shared_task_continuation",
+    "different_task_same_chat_negative",
+    "local_staging_production_distinction",
+    "foreign_project_exclusion",
+    "future_event_exclusion",
+    "english_russian_queries"
+  ],
+  "grading_policy": "Manual semantic grading only: overall 0/1/2 with exact citation support, no keyword-token scoring. required and forbidden arrays are intentionally empty; per-query manual_rubric is evaluator-only gold."
+}

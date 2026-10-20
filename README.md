@@ -24,6 +24,8 @@ Verify plugin registration, MCP tools, hook discovery and trust, and the backgro
 
 ## Current release
 
+Version `1.12.0` adds opt-in project episodes with explicit version links, decisions and open work, source-backed transitions, and provisional signals for important user updates and captured execution results. The feature defaults to `off`; selected projects can use `shadow` processing before enabling `pilot` retrieval. See the [project-memory guide](docs/PROJECT_MEMORY.md) for operation and current verification limits.
+
 Version `1.9.2` moves the observer to `gpt-6-luna` with `medium` reasoning. Expired jobs from the previous model can recover without reopening historical quarantine or losing attempt receipts. Natural-language search handles Russian and English hook/timeout terms while preserving exact versions and identifiers. TypeSafe quality policy `memory-quality-v8` checks supported assertions and applicable qualifiers, with separate checks for list members; acceptance thresholds are unchanged.
 
 Version `1.9.0` exposes memory freshness in search and session context: capture and processing timestamps, pending events, blockers, and separate index coverage. It adds exact recovery for inspected runner/storage failures without retrying content quarantine, and shortens observation-claim transactions.
@@ -35,7 +37,7 @@ Version `1.8.0` adds period-based usage reports with separate API-equivalent cos
 ## What it does
 
 - Captures bounded evidence from approved projects through native Codex lifecycle hooks. Raw hook records remain available for explicit audit, but are excluded from search, automatic context, and semantic indexing.
-- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, `memory_status`, `memory_get_tool_uses`, `memory_usage_report`, and `memory_usage_refresh` through a local MCP server.
+- Exposes `memory_search`, `memory_get`, `memory_timeline`, `memory_remember`, `memory_consolidate`, `memory_forget`, `memory_status`, `memory_get_tool_uses`, `memory_usage_report`, `memory_usage_refresh`, and `memory_project_state` through a local MCP server.
 - Uses SQLite FTS5 for lexical search. Optional local multilingual semantic search uses `intfloat/multilingual-e5-base` with FastEmbed and ONNX Runtime.
 - Keeps project and session provenance, source links for consolidated notes, and bounded execution receipts.
 - Runs a durable local queue. A worker processes small observation batches in fresh `gpt-6-luna` sessions with `medium` reasoning, then updates the local semantic index.
@@ -43,6 +45,12 @@ Version `1.8.0` adds period-based usage reports with separate API-equivalent cos
 - Writes observations with type, facts, narrative, concepts, and read/modified files. Substantive Stop events produce a separate session summary with the request, investigation, learning, completion, and next steps.
 
 Automatic capture is privacy-preserving by default: the `selected` scope starts with an empty project list. Add a project explicitly before hooks can capture it. Lexical search and explicit memory tools do not require the optional semantic runtime.
+
+## Opt-in project memory
+
+Project memory derives source-backed episodes, decisions, and open work from newly captured observations. It defaults to `off`. Select exact project roots for `shadow` processing, then use `pilot` to include the new state in automatic retrieval. Existing history is not automatically reprocessed.
+
+See [Use opt-in project memory](docs/PROJECT_MEMORY.md) for configuration, explicit CLI/MCP reads, coverage, deletion, and rollback. The guide records 1,524 passing tests, native generation, initial independent scenarios, reused regression histories, and installed daemon/MCP checks. A limited pilot is enabled for this repository. The final six-answer regression scored 11/12, including one citation defect. These small tests do not establish general recall quality or cost savings; existing derived records are not automatically repaired.
 
 ## Requirements
 
