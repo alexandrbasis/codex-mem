@@ -25,7 +25,7 @@ from .processor import (
 from .store import Store, StoreError, project_key
 
 PROCESSOR_ID = "codex-mem-project-episode-v2"
-OUTPUT_SCHEMA_VERSION = "project-memory-output-v10"
+OUTPUT_SCHEMA_VERSION = "project-memory-output-v11"
 MAX_EVENTS = 32
 MAX_SOURCE_CHARS = 24_000
 MAX_PROMPT_CHARS = 400_000
@@ -47,7 +47,7 @@ def output_schema(*, canonical: bool = False, source_ids: list[str] | None = Non
                   reconsideration: bool = False) -> dict[str, Any]:
     """Pinned generative contract; the storage validator remains authoritative."""
     text = {"type": "string", "maxLength": 3000}
-    key = {"type": "string", "minLength": 1, "maxLength": 100}
+    key = {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9_.:-]{1,100}$"}
     source_id = dict(key, enum=list(source_ids)) if source_ids is not None else dict(key)
     span = _object({"source_id": source_id, "quote": {"type": "string", "minLength": 1, "maxLength": 3000}})
     if canonical:
@@ -73,6 +73,9 @@ def output_schema(*, canonical: bool = False, source_ids: list[str] | None = Non
                             "from": key, "to": key, "evidence": dict(spans, minItems=1)})
         relation_list = {"type": "array", "items": relation, "maxItems": MAX_RECORDS}
     else:
+        # Project membership comes from the claimed snapshot, never generation.
+        del claim["properties"]["scope"]["properties"]["worktree"]
+        claim["properties"]["scope"]["required"].remove("worktree")
         # Native objects use array position for identity. Raw source IDs belong
         # only in field evidence; reconciliation targets must already exist.
         for spec in (episode, claim):
@@ -344,7 +347,8 @@ def runner_request(snapshot: Mapping[str, Any], timeout: float) -> dict[str, Any
         "record supports only its actual command and returned output. Proposed, accepted, "
         "attempted and executed actions are distinct. A source support score is not verified truth. "
         "Keep local tests distinct from production deployment. Preserve environment, version "
-        "and worktree scope; unknown scope is an empty string. Preserve open requirements. "
+        "scope; unknown environment or version is an empty string. Code binds worktree "
+        "to this project's canonical path; do not author a worktree field. Preserve open requirements. "
         "Source support belongs only in the evidence fields, never a relation. Native objects "
         "have no key field; code assigns their identity by zero-based array position. "
         "Reconciliation relations may only contradict, replace or close an existing claim "
@@ -416,6 +420,10 @@ def _resolve_object_references(output: Mapping[str, Any], snapshot: Mapping[str,
                 raise ValueError("invalid object")
             if "key" not in record:
                 record["key"] = f"{prefix}_{index}"
+            if kind == "claims" and isinstance(record.get("scope"), dict):
+                # Bind only an omitted trusted field. Explicit canonical runner
+                # values remain intact and foreign values fail validation.
+                record["scope"].setdefault("worktree", snapshot["project"])
     allowed = {claim["id"] for claim in _bounded_state(snapshot)["claims"]}
     relations = resolved.get("relations")
     if not isinstance(relations, list) or len(relations) > MAX_RECORDS:
@@ -556,12 +564,19 @@ def _validate_output(output: Mapping[str, Any], snapshot: Mapping[str, Any]) -> 
         elif kind == "string":
             if (not isinstance(value, str) or "\x00" in value
                     or not schema.get("minLength", 0) <= len(value) <= schema.get("maxLength", len(value))
-                    or ("enum" in schema and value not in schema["enum"])):
+                    or ("enum" in schema and value not in schema["enum"])
+                    or ("pattern" in schema and not re.fullmatch(schema["pattern"], value))):
                 raise ValueError("invalid string")
         elif kind == "integer":
             if type(value) is not int or value < schema["minimum"]:
                 raise ValueError("invalid offset")
     validate(output, output_schema(canonical=True))
+    keys = [record["key"] for kind in ("episodes", "claims") for record in output[kind]]
+    if len(keys) != len(set(keys)):
+        raise ValueError("object keys must be unique bounded identifiers")
+    for record in output["claims"]:
+        if record["scope"]["worktree"] and record["scope"]["worktree"] != snapshot["project"]:
+            raise ValueError("claim worktree must match project")
     sources = {source["id"]: source["body"] for source in snapshot["sources"]}
     heads = {episode["id"] for episode in _bounded_state(snapshot)["episodes"]}
     for record in output["episodes"]:
@@ -609,8 +624,31 @@ def _metrics(value: object) -> dict[str, Any]:
     return result
 
 
+def _prepared_quality_output(prepared: Mapping[str, Any], snapshot: Mapping[str, Any]) -> dict[str, Any]:
+    """Expose final stored fields using the quality gate's source-local offsets."""
+    output = {"episodes": [], "claims": [], "relations": deepcopy(prepared["relations"])}
+    for record in prepared["objects"]:
+        item = deepcopy(record)
+        if item["object_type"] == "episode":
+            item["continuation_of"] = item.get("parent_episode_id")
+            item["consolidation_of"] = item.get("consolidated_episode_ids", [])
+        output["episodes" if item["object_type"] == "episode" else "claims"].append(item)
+    sources = {source["id"]: source for source in snapshot["sources"]}
+    for records in output.values():
+        for record in records:
+            evidence = record["evidence"]
+            groups = [evidence] if isinstance(evidence, list) else evidence.values()
+            for group in groups:
+                for index, ref in enumerate(group):
+                    offset = sources[ref["source_id"]].get("body_offset", 0)
+                    group[index] = {"source_id": ref["source_id"], "start": ref["start"] - offset,
+                                    "end": ref["end"] - offset, "quote": ref["quote"]}
+    return output
+
+
 def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: Mapping[str, Any],
-             evaluator: Callable | None, source_guard: Callable[[], bool] | None = None, store: Any = None) -> list[dict[str, Any]]:
+             evaluator: Callable | None, source_guard: Callable[[], bool] | None = None, store: Any = None,
+             proposed_output: Mapping[str, Any] | None = None) -> list[dict[str, Any]]:
     """Reuse the optional source support gate without treating it as execution proof."""
     from .jev_quality import MAX_GATE_SECONDS, MAX_ITEMS, quality_gate
     # Resolve identities from the claimed project snapshot, not from source prose.
@@ -618,6 +656,10 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
     known = {record["id"]: record for kind in ("claims", "episodes")
              for record in snapshot.get("state", {}).get(kind, [])}
     known.update({record["key"]: record for kind in ("claims", "episodes") for record in output[kind]})
+    known.update({record["id"]: record for kind in ("claims", "episodes") for record in output[kind]
+                  if "id" in record})
+    proposals = {record["key"]: record for kind in ("claims", "episodes")
+                 for record in (proposed_output or {}).get(kind, [])}
     references: dict[str, dict[str, Any]] = {}
 
     def endpoint(identifier: str) -> dict[str, Any]:
@@ -645,7 +687,8 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
             spans = raw if isinstance(raw, list) else [span for values in raw.values() for span in values]
             ids = list(dict.fromkeys(span["source_id"] for span in spans))
             if kind in {"episodes", "claims"}:
-                fields = (("summary", "goal", "rationale", "outcome", "open_work")
+                fields = (("summary", "goal", "rationale", "outcome", "open_work",
+                           "prior_goal", "prior_rationale", "prior_outcome", "prior_open_work")
                           if kind == "episodes" else ("text", "workflow_state", "rationale"))
                 identity = {"id": record["key"], "record_kind": kind, "project": snapshot["project"],
                             **{field: record[field] for field in ("text", "summary", "goal", "scope")
@@ -655,6 +698,11 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
                         continue
                     field_spans = raw[field]
                     assertion = {"field": field, "value": record[field]}
+                    proposal = proposals.get(record["key"], {})
+                    if proposal.get(field) and proposal[field] != record[field]:
+                        assertion["proposed_value"] = proposal[field]
+                    if field.startswith("prior_"):
+                        assertion["current_validity"] = "historical_current_validity_unresolved"
                     if kind == "claims":
                         assertion.update(scope=record["scope"], kind=record["kind"])
                     notes.append({"title": "Project memory " + kind,
@@ -710,6 +758,9 @@ def _quality(output: Mapping[str, Any], snapshot: Mapping[str, Any], settings: M
         raise ValueError("relation reference context exceeds bound")
     checked_snapshot = dict(snapshot, context=list(references.values()), project_context=(
         "Resolved origin and target records are reference-only identities and scopes. "
+        "A field's value is its final stored assembly. Its proposed_value, when present, is "
+        "the original model interpretation and also requires its own cited support. Exact "
+        "assembly does not validate that interpretation. "
         "Only the cited new source evidence can support a new completion or replacement. "
         "Compare every transition with its named target and environment, version and worktree."
     ))
@@ -838,14 +889,20 @@ def process_project_memory(
                 if not memory.snapshot_current(snapshot):
                     memory.fail(snapshot, "source_changed", receipt=accounting())
                     return outcome("deferred", "source_changed")
+                prepared_digest = None
                 if enabled(settings, "jev_quality_enabled", workspace):
+                    prepared = memory.prepare(snapshot, output, conservative_transitions=True)
+                    prepared_digest = prepared["digest"]
                     receipt["quality"] = _quality(
-                        output, snapshot, settings, jev_quality_evaluator,
-                        source_guard=lambda: memory.snapshot_current(snapshot) and project_memory_enabled(workspace, load_config(data_dir)), store=store)
+                        _prepared_quality_output(prepared, snapshot), snapshot, settings, jev_quality_evaluator,
+                        source_guard=lambda: memory.snapshot_current(snapshot) and project_memory_enabled(workspace, load_config(data_dir)),
+                        store=store, proposed_output=output)
                 if not project_memory_enabled(workspace, load_config(data_dir)):
                     memory.fail(snapshot, "configuration_changed", receipt=accounting())
                     return outcome("disabled", "configuration_changed")
-                committed = memory.commit(snapshot, output, receipt=accounting(), conservative_transitions=True)
+                commit_options = {"expected_prepared_digest": prepared_digest} if prepared_digest is not None else {}
+                committed = memory.commit(snapshot, output, receipt=accounting(), conservative_transitions=True,
+                                          **commit_options)
                 if isinstance(committed, Mapping):
                     receipt.update({key: committed[key] for key in (
                         "omitted_transitions_count", "omitted_transitions_reason", "downgraded_states_count", "downgraded_states_reason", "omitted_continuities_count", "omitted_continuities_reason", "pending_reconciliation") if key in committed})

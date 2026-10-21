@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import tarfile
 import types
 import unittest
 from unittest.mock import patch
@@ -30,6 +31,116 @@ def model_call(call_id, phase, variant, total=100, run_id='primary', repeat=0):
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_saved_missing_fact_rejects_whole_batch_without_changing_receipt(self):
+        evidence = SCRIPT.parents[1] / 'docs/evidence/consolidation-retention-2026-10-20'
+        with tarfile.open(evidence / 'holdout-run/fictional-run-evidence.tar.gz') as archive:
+            response = json.load(archive.extractfile('receipts/call-0059-response.json'))
+            request = json.load(archive.extractfile('receipts/call-0059-request.json'))
+        cases = json.loads(request['prompt'].split('\n', 1)[1])['cases']
+        original = json.dumps(response, sort_keys=True)
+        with self.assertRaisesRegex(ValueError, 'judge fact coverage does not match frozen gold: answer-04'):
+            experiment.validate_judge_grades(response['output']['grades'], cases)
+        self.assertEqual(json.dumps(response, sort_keys=True), original)
+
+    def test_judge_schema_and_runtime_require_each_question_and_fact(self):
+        cases = [{'id': 'answer-00', 'gold': {'required_facts': [{}, {}]}},
+                 {'id': 'answer-01', 'gold': {'required_facts': [{}]}}]
+        schema = experiment.judge_schema(cases)
+        self.assertEqual(schema['properties']['grades']['required'], ['answer-00', 'answer-01'])
+        self.assertEqual(schema['properties']['grades']['properties']['answer-00']
+                         ['properties']['fact_recall']['required'], ['0', '1'])
+        grade = dict(full_supported_answer=True, current_state_actionable=True,
+                     constraints_obligations_reasons_recalled=True, citations_supported=True,
+                     empty_or_evasive=False, critical_errors=[], rationale='Fictional test.')
+        valid = {'grades': {'answer-00': {**grade, 'fact_recall': {'0': True, '1': False}},
+                            'answer-01': {**grade, 'fact_recall': {'0': True}}}}
+        accepted = experiment.decode_judge_output(valid, cases)
+        self.assertEqual(accepted[0]['fact_recall'], [{'fact_index': 0, 'recalled': True},
+                                                     {'fact_index': 1, 'recalled': False}])
+        for mutate in (lambda v: v['grades'].pop('answer-01'),
+                       lambda v: v['grades'].update(extra=v['grades']['answer-01']),
+                       lambda v: v['grades']['answer-00']['fact_recall'].pop('1'),
+                       lambda v: v['grades']['answer-00']['fact_recall'].update({'2': True}),
+                       lambda v: v['grades']['answer-00']['fact_recall'].update({'0': 1}),
+                       lambda v: v['grades']['answer-00'].update(required_facts_total=2)):
+            invalid = json.loads(json.dumps(valid))
+            mutate(invalid)
+            with self.assertRaises(ValueError):
+                experiment.decode_judge_output(invalid, cases)
+
+    def test_judge_public_path_records_rejection_and_never_retries_or_salvages(self):
+        evidence = SCRIPT.parents[1] / 'docs/evidence/consolidation-retention-2026-10-20'
+        protocol = experiment.read(evidence / 'protocol.json')
+        fixture = experiment.read(evidence / 'inputs/holdout.json')
+        history = next(h for h in fixture['histories'] if h['id'] == 'fiction-20')
+        with tempfile.TemporaryDirectory() as temporary, tarfile.open(
+                evidence / 'holdout-run/fictional-run-evidence.tar.gz') as archive:
+            run = Path(temporary)
+            experiment.write(run / 'run.json', {'started_at': experiment.time.time(), 'budget_run': str(run)})
+            directory = run / 'baseline/fiction-20'
+            for name in ('reader-0.json', 'contexts.json', 'generation.json'):
+                experiment.write(directory / name, json.load(archive.extractfile('baseline/fiction-20/' + name)))
+            archived = json.load(archive.extractfile('receipts/call-0059-response.json'))
+            # Translate the saved response representation only. The missing fact stays absent.
+            output = {'grades': {g['id']: {**{k: v for k, v in g.items()
+                if k not in ('id', 'required_facts_total', 'required_facts_recalled', 'fact_recall')},
+                'fact_recall': {str(f['fact_index']): f['recalled'] for f in g['fact_recall']}}
+                for g in archived['output']['grades']}}
+            args = types.SimpleNamespace(run=run, gold=evidence / 'inputs/holdout.gold.json',
+                                         history=None, variant='baseline')
+            with patch('codex_mem.processor.NativeProcessorRunner') as runner:
+                runner.return_value.return_value = {**archived, 'output': output}
+                with self.assertRaisesRegex(ValueError, 'fact_recall'):
+                    experiment.judges(args, {'histories': [history]}, protocol)
+                self.assertFalse((directory / 'judge-0.json').exists())
+                rejected = experiment.read(directory / 'judge-0.rejected.json')
+                self.assertEqual(rejected['questions_accepted'], 0)
+                self.assertEqual(len(rejected['planned_question_ids']), 6)
+                with self.assertRaisesRegex(ValueError, 'no automatic retry'):
+                    experiment.judges(args, {'histories': [history]}, protocol)
+                runner.assert_called_once()
+            usage = experiment.usage(experiment.ledger_calls(run / 'calls.jsonl'))
+            self.assertEqual(usage['attempted_calls'], 1)
+            self.assertEqual(usage['finished_calls'], 1)
+            report = experiment.aggregate(types.SimpleNamespace(run=run), {'split': 'holdout', 'histories': [history]},
+                                          {'regeneration_repeat_history_ids': []})
+            self.assertEqual(report['variants']['baseline']['questions_planned'], 6)
+            self.assertEqual(report['variants']['baseline']['questions_graded'], 0)
+            self.assertEqual(len(report['variants']['baseline']['rejected_judge_batches']), 1)
+            self.assertEqual(report['decision'], 'incomplete')
+
+    def test_complete_judge_output_is_saved_through_public_phase(self):
+        evidence = SCRIPT.parents[1] / 'docs/evidence/consolidation-retention-2026-10-20'
+        protocol = experiment.read(evidence / 'protocol.json')
+        questions = [{'id': f'q{i}', 'question': 'What remains open?'} for i in range(6)]
+        history = {'id': 'fiction-test', 'sessions': [], 'questions': questions}
+        gold = {'questions': {'fiction-test/' + q['id']: {'required_facts': [{'support': []}], 'category': 'constraint'}
+                              for q in questions}}
+        grade = dict(full_supported_answer=False, current_state_actionable=False,
+                     constraints_obligations_reasons_recalled=False, citations_supported=False,
+                     empty_or_evasive=True, critical_errors=[], rationale='Synthetic abstention.',
+                     fact_recall={'0': False})
+        output = {'grades': {f'answer-{i:02d}': grade for i in range(6)}}
+        with tempfile.TemporaryDirectory() as temporary:
+            run = Path(temporary)
+            experiment.write(run / 'run.json', {'started_at': experiment.time.time(), 'budget_run': str(run)})
+            experiment.write(run / 'gold.json', gold)
+            directory = run / 'baseline/fiction-test'
+            experiment.write(directory / 'generation.json', {'source_map': {}})
+            experiment.write(directory / 'contexts.json', [{'id': q['id'], 'memory': '', 'context_chars': 0}
+                                                          for q in questions])
+            experiment.write(directory / 'reader-0.json', {'output': {'answers': []}, 'latency_ms': 1, 'metrics': {}})
+            args = types.SimpleNamespace(run=run, gold=run / 'gold.json', history=None, variant='baseline')
+            with patch('codex_mem.processor.NativeProcessorRunner') as runner:
+                runner.return_value.return_value = {'output': output, 'metrics': receipt()}
+                experiment.judges(args, {'histories': [history]}, protocol)
+            persisted = experiment.read(directory / 'judge-0.json')['grades']
+            self.assertEqual({g['id'] for g in persisted}, {q['id'] for q in questions})
+            self.assertEqual(len(persisted), 6)
+            self.assertTrue(all(g['required_facts_total'] == 1 and g['required_facts_recalled'] == 0
+                                and g['fact_recall'] == [{'fact_index': 0, 'recalled': False}] for g in persisted))
+            self.assertFalse((directory / 'judge-0.rejected.json').exists())
+
     def test_every_native_dispatch_reserves_its_full_wall_allowance(self):
         protocol = experiment.read(Path(__file__).resolve().parents[2] /
                                    'docs/evidence/consolidation-retention-2026-10-20/protocol.json')
@@ -218,6 +329,97 @@ class ProtocolTests(unittest.TestCase):
             self.assertEqual(report['decision'],'fail')
             self.assertEqual(report['pipeline_failures'][0]['status'],'failed')
             self.assertEqual(report['variants']['candidate']['questions_graded'],6)
+
+    def independent_protocol(self):
+        protocol = experiment.read(SCRIPT.parents[1] /
+            'docs/evidence/consolidation-retention-2026-10-20/protocol.json')
+        return {**protocol, 'comparison_mode':'independent-generation',
+                'regeneration_repeat_history_ids':[], 'reader_repeat_history_ids':[]}
+
+    def test_independent_generation_captures_both_arms_without_clone(self):
+        from codex_mem.store import Store
+        from codex_mem import episode_processor
+        protocol = self.independent_protocol()
+        history = {'id':'fiction-01','project_keys':['fictional'], 'sessions':[
+            {'id':'fictional-session','events':[
+                {'id':'request','type':'user','text':'Keep the fictional deployment open.'}]}],
+            'questions':[]}
+        with tempfile.TemporaryDirectory() as temporary:
+            run = Path(temporary)
+            experiment.write(run/'run.json', {'started_at':experiment.time.time(),'budget_run':str(run)})
+            args = types.SimpleNamespace(run=run, runtime_root=SCRIPT.parents[1], history=None)
+            native = {'output':{'episodes':[], 'claims':[], 'relations':[]},
+                'evidence':{'thread_start':{'thread_id':'fictional-worker','model':episode_processor.MODEL,
+                    'reasoning_effort':episode_processor.REASONING_EFFORT,'model_provider':'openai'},
+                    'turn_started':{'thread_id':'fictional-worker','turn_id':'fictional-turn'},
+                    'turn_completed':True,'no_tools':True,'rerouted':False}, 'metrics':receipt()}
+            with patch('codex_mem.processor.NativeProcessorRunner') as runner:
+                runner.return_value.return_value = native
+                for arm in ('candidate','baseline'):
+                    args.variant = arm
+                    experiment.generate(args, {'histories':[history]}, protocol)
+                    meta = experiment.read(run/arm/'fiction-01/generation.json')
+                    self.assertEqual(meta['status'],'complete')
+                    self.assertNotIn('cloned_baseline_state_sha256',meta)
+                    self.assertEqual(meta['captured_history_sha256'],experiment.digest(history['sessions']))
+                    with Store(run/arm/'fiction-01/data') as store:
+                        source = store.get(Path(meta['projects']['fictional']),[meta['source_map']['request']])[0]
+                        self.assertEqual(source['body'],history['sessions'][0]['events'][0]['text'])
+                    self.assertEqual(meta['persisted_state']['event_coverage'][0]['captured_events'],1)
+                    self.assertEqual(meta['persisted_state']['event_coverage'][0]['pending_events'],0)
+                self.assertEqual(runner.call_count,2)
+                experiment.generate(args, {'histories':[history]}, protocol)
+                self.assertEqual(runner.call_count,2)
+            rows = [r for r in experiment.ledger_calls(run/'calls.jsonl') if r['status']=='completed']
+            self.assertEqual([r['variant'] for r in rows],['candidate','baseline'])
+            self.assertTrue(all(r['phase']=='generation' for r in rows))
+            with self.assertRaisesRegex(ValueError,'clone is forbidden'):
+                experiment.clone(args, {'histories':[history]}, protocol)
+
+    def test_failed_independent_candidate_generation_keeps_denominator_and_never_retries(self):
+        protocol = self.independent_protocol()
+        history = {'id':'fiction-01','project_keys':['fictional'], 'sessions':[
+            {'id':'fictional-session','events':[
+                {'id':'request','type':'user','text':'Keep this fictional task open.'}]}]}
+        with tempfile.TemporaryDirectory() as temporary:
+            run = Path(temporary)
+            experiment.write(run/'run.json', {'started_at':experiment.time.time(),'budget_run':str(run)})
+            experiment.write(run/'baseline/fiction-01/generation.json',{'status':'complete'})
+            args = types.SimpleNamespace(run=run, runtime_root=SCRIPT.parents[1], history=None,variant='candidate')
+            with patch('codex_mem.processor.NativeProcessorRunner') as runner:
+                runner.return_value.side_effect = RuntimeError('fictional failure')
+                experiment.generate(args, {'histories':[history]}, protocol)
+                meta = experiment.read(run/'candidate/fiction-01/generation.json')
+                self.assertEqual(meta['status'],'failed')
+                experiment.generate(args, {'histories':[history]}, protocol)
+                self.assertEqual(runner.call_count,1)
+            # Even stale perfect grades cannot hide the failed generation receipt.
+            self.report(run)
+            report = experiment.aggregate(args, {'split':'holdout','histories':[history]}, protocol)
+            self.assertEqual(report['variants']['candidate']['questions_planned'],6)
+            self.assertEqual(report['variants']['candidate']['questions_graded'],0)
+            self.assertEqual(report['variants']['candidate']['full_supported_rate'],0)
+            self.assertEqual(report['variants']['candidate']['missing_histories'],['fiction-01'])
+            self.assertEqual(report['pilot_gate'],'incomplete')
+            self.assertTrue(any(p.get('stage')=='generation' and p['status']=='failed'
+                                for p in report['pipeline_failures']))
+            with self.assertRaisesRegex(ValueError,'generation must succeed'):
+                experiment.consolidate(args, {'histories':[history]}, protocol)
+
+    def test_independent_cost_uses_each_arms_generation_only(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            run = Path(temporary)
+            self.report(run)
+            for arm in ('baseline','candidate'):
+                experiment.write(run/arm/'fiction-01/generation.json',{'status':'complete'})
+            for row in model_call('candidate-generation','generation','candidate',400):
+                experiment.append(run/'calls.jsonl',row)
+            report = experiment.aggregate(types.SimpleNamespace(run=run),
+                {'split':'holdout','histories':[{'id':'fiction-01'}]}, self.independent_protocol())
+            self.assertEqual(report['equivalent_complete_arm_tokens'],{'baseline':200,'candidate':600})
+            self.assertEqual(report['incremental_processing_and_reader_tokens'],{'baseline':200,'candidate':600})
+            self.assertEqual(report['comparison_mode'],'independent-generation')
+            self.assertIn('stochastic extraction', ' '.join(report['limitations']))
 
     def test_holdout_cannot_shrink_denominator(self):
         with tempfile.TemporaryDirectory() as temporary:

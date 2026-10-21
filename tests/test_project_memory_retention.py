@@ -131,6 +131,90 @@ class ProjectMemoryRetentionTests(unittest.TestCase):
                 if budget == 1800:
                     self.assertGreater(int(tree.find('item').get('fields_omitted', '0')), 0)
 
+    def test_large_early_outcome_keeps_later_independent_constraint_and_reason(self):
+        constraint = 'RET-17 keep the signed approval pending until the owner reviews it.'
+        reason = 'RET-17 needs the original approval because it records the audit decision.'
+        _, earlier = self.process_fields({'summary': 'Task RET-17 tracks invoice approval.',
+            'open_work': constraint, 'rationale': reason}, session='approval')
+        self.process_fields({'summary': 'Task RET-17 formatting is separate.',
+            'goal': 'RET-17 format the local invoice.',
+            'open_work': 'RET-17 formatting review remains pending.',
+            'outcome': 'RET-17 formatted the invoice: ' + 'the original line spacing remains unchanged ' * 65 + '.'},
+            session='formatting')
+        tree = self.brief()
+        text = ''.join(tree.itertext())
+        self.assertIn(constraint, text, ElementTree.tostring(tree, encoding='unicode'))
+        self.assertIn(reason, text, ElementTree.tostring(tree, encoding='unicode'))
+        retained = tree.find("./item[@id='" + earlier['id'] + "']")
+        self.assertIsNotNone(retained)
+        self.assertIsNone(retained.get('prior_context_status'))
+        for source in retained.findall('./field/source'):
+            self.assertEqual(source.get('source_role'), 'user_intent')
+            self.assertEqual(source.get('quote_truncated'), 'False')
+
+    def test_consumed_omitted_user_source_is_visible_without_becoming_active_requirement(self):
+        body = 'Do not deploy RET-17 before the owner approves the signed invoice.'
+        with Store(self.data) as store:
+            source = store.remember(self.project, 'Approval source', body,
+                                    source='hook:UserPromptSubmit', session_id='approval')
+        result = process_project_memory(self.project, self.data, runner=lambda request: receipt())
+        self.assertEqual(result['status'], 'processed', result)
+        with Store(self.data) as store:
+            brief = build_project_brief(store, self.project, query='Continue RET-17')
+        self.assertEqual(brief['claims'], [])
+        tree = ElementTree.fromstring(brief['xml'])
+        custody = tree.find("./item[@lane='intent_custody']")
+        self.assertIsNotNone(custody, brief['xml'])
+        self.assertEqual(custody.get('disposition'), 'unresolved')
+        self.assertEqual(custody.get('is_requirement_claim'), 'False')
+        self.assertIsNone(custody.get('active_requirement'))
+        self.assertEqual(custody.get('meaning'), 'original_user_source_with_unreconciled_representation')
+        self.assertEqual(custody.get('uncertainty'), 'extracted_representation_completeness_unresolved')
+        pointer = custody.find('./field/source')
+        self.assertEqual(pointer.get('source_id'), source['id'])
+        self.assertEqual(pointer.get('source_role'), 'user_intent')
+        self.assertEqual(pointer.findtext('quote_excerpt'), body)
+        self.assertIsNone(custody.find('./field/derived_text'))
+        self.assertEqual(tree.find('coverage').get('unresolved_user_sources'), '1')
+        self.assertEqual(tree.find('coverage').get('pending_reconciliation'), 'true')
+        with Store(self.data) as store:
+            hidden = build_project_brief(store, self.project, query='Continue RET-17', exclude_session_id='approval')
+            unrelated = build_project_brief(store, self.project, query='Continue RET-99')
+        self.assertNotIn(body, hidden['xml'])
+        self.assertNotIn(body, unrelated['xml'])
+        self.assertLessEqual(len(brief['xml']), 6000)
+        with Store(self.data) as store:
+            startup = store.context(self.project, query='Continue RET-17', budget=6000,
+                                    allow_remote=False, include_health=False)
+        self.assertLessEqual(len(startup), 6000)
+        startup_tree = ElementTree.fromstring(startup)
+        self.assertIn(body, ''.join(startup_tree.itertext()))
+        self.assertIsNotNone(startup_tree.find(".//item[@lane='intent_custody']"))
+
+    def test_global_budget_counts_fields_and_records_without_partial_source_groups(self):
+        self.process_fields({'summary': 'Task RET-17 continues.',
+            'goal': 'RET-17 preserves the signed invoice.',
+            'open_work': 'RET-17 must preserve all approval qualifiers: ' + 'invoice audit approval detail ' * 75 + '.'},
+            incidental=4)
+        for budget in (128, 1800, 6000):
+            with self.subTest(budget=budget), Store(self.data) as store:
+                brief = build_project_brief(store, self.project, query='Continue RET-17', budget=budget)
+                tree = ElementTree.fromstring(brief['xml'])
+                self.assertLessEqual(len(brief['xml']), budget)
+                counts = brief['render_omissions']
+                self.assertGreater(counts['fields'], 0)
+                if budget == 128:
+                    self.assertGreater(counts['records'], 0)
+                else:
+                    marker = tree.find('omitted')
+                    self.assertIsNotNone(marker, brief['xml'])
+                    self.assertEqual(int(marker.get('records')), counts['records'])
+                    self.assertEqual(int(marker.get('fields')), counts['fields'])
+                for pointer in tree.findall('./item/field/source'):
+                    quote = pointer.findtext('quote_excerpt')
+                    if quote is not None and pointer.get('quote_truncated') == 'False':
+                        self.assertEqual(int(pointer.get('end')) - int(pointer.get('start')), len(quote))
+
     def test_same_task_id_in_foreign_project_never_supplies_retained_context(self):
         foreign = self.project.parent / 'foreign'
         foreign.mkdir()

@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "scope": "Completed development-v2 comparison and disclosed development source-role omissions only. No holdout inspection.",
+  "result": {
+    "decision": "fail",
+    "pilot_gate": "fail",
+    "primary_complete": true,
+    "repeats_complete": true,
+    "variants": {
+      "baseline": {
+        "questions_planned": 24,
+        "questions_graded": 24,
+        "full_supported_count": 17,
+        "full_supported_rate": 0.7083333333333334,
+        "critical_errors": 0
+      },
+      "candidate": {
+        "questions_planned": 24,
+        "questions_graded": 24,
+        "full_supported_count": 19,
+        "full_supported_rate": 0.7916666666666666,
+        "critical_errors": 0
+      }
+    },
+    "gain_percentage_points": 8.333333333333325,
+    "pipeline_failures": [],
+    "paired_fact_losses": [
+      {
+        "history_id": "dev_01",
+        "question_id": "q4",
+        "fact_index": 0,
+        "category": "constraint"
+      },
+      {
+        "history_id": "dev_04",
+        "question_id": "q2",
+        "fact_index": 0,
+        "category": "evidence"
+      }
+    ],
+    "interpretation": "Negative result. Candidate 19/24 remains below 90%, the 8.3333 percentage-point gain is below the required 10 points when baseline is below 90%, and two individual fact losses remain. Zero observed critical errors and zero pipeline failures do not satisfy those unmet quality criteria."
+  },
+  "source_role_omissions": [
+    {
+      "history_id": "dev_01",
+      "variant": "candidate",
+      "source_id": "d2a9b6edd6724e92802ce39a42ca2de3",
+      "event_id": "dev_01_e2",
+      "captured_source": "hook:Stop",
+      "source_role": "assistant_report",
+      "fictional_source_text": "I prepared a schedule and believe the missing-measurement list is finished.",
+      "archive_source_member": "candidate/dev_01/consolidation-audit.json",
+      "archive_context_member": "candidate/dev_01/contexts.json",
+      "archived_generation_member": "candidate/dev_01/generation.json",
+      "captured_entry_verified_in_runtime": true,
+      "runtime_database": "/private/tmp/codex-mem-quality-20261021-experiment/candidate/dev_01/data/memory.sqlite3",
+      "runtime_pm_evidence_rows": 0,
+      "runtime_pm_objects_containing_source_id": 0,
+      "archived_contexts_checked": 6,
+      "contexts_containing_source_id": [],
+      "contexts_containing_exact_source_text": [],
+      "archived_persisted_state_contains_source_id": false,
+      "conclusion": "Captured assistant report has no durable object evidence and is absent from every primary reader context. This is a source-to-representation omission, not proof that its reported outcome was true."
+    },
+    {
+      "history_id": "dev_03",
+      "variant": "candidate",
+      "source_id": "cdb4ec85faea47059c1d86fe28382116",
+      "event_id": "dev_03_e7",
+      "captured_source": "hook:Stop",
+      "source_role": "assistant_report",
+      "fictional_source_text": "I expect the Opal print sample to pass.",
+      "archive_source_member": "candidate/dev_03/consolidation-audit.json",
+      "archive_context_member": "candidate/dev_03/contexts.json",
+      "archived_generation_member": "candidate/dev_03/generation.json",
+      "captured_entry_verified_in_runtime": true,
+      "runtime_database": "/private/tmp/codex-mem-quality-20261021-experiment/candidate/dev_03/data/memory.sqlite3",
+      "runtime_pm_evidence_rows": 0,
+      "runtime_pm_objects_containing_source_id": 0,
+      "archived_contexts_checked": 6,
+      "contexts_containing_source_id": [],
+      "contexts_containing_exact_source_text": [],
+      "archived_persisted_state_contains_source_id": false,
+      "conclusion": "Captured assistant report has no durable object evidence and is absent from every primary reader context. This is a source-to-representation omission, not proof that its reported outcome was true."
+    },
+    {
+      "history_id": "dev_04",
+      "variant": "candidate",
+      "source_id": "3656d79939694777afc80f6d68ced3d6",
+      "event_id": "dev_04_e4",
+      "captured_source": "hook:Stop",
+      "source_role": "assistant_report",
+      "fictional_source_text": "The cooldown duration is 12 minutes according to my estimate.",
+      "archive_source_member": "candidate/dev_04/consolidation-audit.json",
+      "archive_context_member": "candidate/dev_04/contexts.json",
+      "archived_generation_member": "candidate/dev_04/generation.json",
+      "captured_entry_verified_in_runtime": true,
+      "runtime_database": "/private/tmp/codex-mem-quality-20261021-experiment/candidate/dev_04/data/memory.sqlite3",
+      "runtime_pm_evidence_rows": 0,
+      "runtime_pm_objects_containing_source_id": 0,
+      "archived_contexts_checked": 6,
+      "contexts_containing_source_id": [],
+      "contexts_containing_exact_source_text": [],
+      "archived_persisted_state_contains_source_id": false,
+      "conclusion": "Captured assistant report has no durable object evidence and is absent from every primary reader context. This is a source-to-representation omission, not proof that its reported outcome was true."
+    }
+  ],
+  "dev_01_contrasting_tool_source": {
+    "source_id": "4b59a88fcc964fb6bb5ef297066d74f7",
+    "event_id": "dev_01_e3",
+    "source_role": "tool_record",
+    "visible_in_candidate_shared_reader_memory": true,
+    "archive_context_member": "candidate/dev_01/contexts.json",
+    "distinction": "The visible tool result reports the missing-measurement file absent. The omitted assistant source reports a belief that the list is finished. Preserve both attributions; the assistant report must not become verified completion."
+  },
+  "separate_reader_and_grade_issue": {
+    "history_id": "dev_01",
+    "question_id": "q4",
+    "category": "constraint",
+    "bench_unit_source_id": "59029efa9d23441fafb60aa8a93ac7d2",
+    "bench_unit_quote": "Change the reporting unit to milliliters for the bench test.",
+    "visible_in_q4_context": true,
+    "archive_context_member": "candidate/dev_01/contexts.json",
+    "archive_reader_member": "candidate/dev_01/reader-0.json",
+    "archive_grade_member": "candidate/dev_01/judge-0.json",
+    "original_reader_answer": "For the bench test, the user changed the reporting unit to milliliters. A separate instruction says to use liters for the bed A measurement list. The memory does not clarify whether liters or milliliters is current outside the bench test context.",
+    "original_judge_rationale": "Correctly reports milliliters for the bench test and cites both unit instructions, but describes liters as a separate instruction and leaves the current unit unsettled outside that context. It does not state the required replacement of liters by milliliters for the bench test.",
+    "original_fact_recall": [
+      {
+        "fact_index": 0,
+        "recalled": false
+      }
+    ],
+    "interpretation": "The bench-unit instruction is already visible and cited. The reader qualifies its scope instead of explicitly stating the required replacement, and the composite grade rejects it. This paired loss is not evidence that the bench-unit source was dropped. Adding assistant-report context does not by itself establish a repair for q4."
+  },
+  "judge_rationale_inaccuracy": {
+    "history_id": "dev_03",
+    "question_id": "q6",
+    "archive_grade_member": "candidate/dev_03/judge-0.json",
+    "original_rationale": "The shared memory includes the assistant’s expectation and the tool-reported clipped result. The answer incorrectly says neither is present and abstains.",
+    "inaccurate_claim": "The shared memory includes the assistant’s expectation",
+    "observation": "All six archived candidate contexts omit the assistant expectation source ID and its exact source text. The runtime has zero pm_evidence rows for that source. The clipped tool result is visible. The rationale confuses full reference history with reader-visible memory.",
+    "original_full_supported_answer": false,
+    "original_fact_recall": [
+      {
+        "fact_index": 0,
+        "recalled": false
+      }
+    ],
+    "rescored": false,
+    "interpretation": "The expected attribution fact remains unrecalled under the original grade. The rationale is inaccurate about visibility; this diagnosis does not change that grade or claim the reader should infer an unseen report."
+  },
+  "dev_04_attribution_loss": {
+    "history_id": "dev_04",
+    "question_id": "q2",
+    "archive_grade_member": "candidate/dev_04/judge-0.json",
+    "original_rationale": "It gives 18 minutes and distinguishes the user’s instruction from the tool’s report, but does not say this corrects the assistant’s earlier estimate.",
+    "original_fact_recall": [
+      {
+        "fact_index": 0,
+        "recalled": false
+      }
+    ],
+    "interpretation": "The answer retains 18 minutes and attributes the tool/user sources, but omits correction of the earlier assistant estimate. That estimate is absent from all candidate contexts. This supports a source-role availability gap without proving that restoring it will improve the reader answer."
+  },
+  "causal_limits": [
+    "Source capture, durable representation, reader-visible evidence, reader interpretation, and judge rationale are distinct checks.",
+    "These are disclosed development regressions. No independent holdout improvement is established.",
+    "A proposed role-balanced source-evidence lane is not measured by this v2 result. No claim is made that a fix has already improved answers.",
+    "Runtime pm_evidence counts come from read-only queries to the remaining v2 temporary databases; archived source/context checks are independently reproducible from the pinned export."
+  ],
+  "inputs": {
+    "docs/evidence/project-memory-quality-2026-10-21/development-v2/fictional-run-evidence.tar.gz": {
+      "sha256": "9d6b7120ddc845683e8060b310974b215ca4233c7eba2400d8cf7052ef5bec65"
+    },
+    "docs/evidence/project-memory-quality-2026-10-21/development-v2/report.json": {
+      "sha256": "70c97cd93492000710d69af45486b3aceb51088552a9d0bb9d2668d7ff30eacd"
+    },
+    "docs/evidence/project-memory-quality-2026-10-21/development-v2/per-question.json": {
+      "sha256": "e03448e098e3abfd6ae3d2da5e1940f1ee96ee31a01ce8a4c7839c044de987e1"
+    }
+  },
+  "changes": "Only development-v2-diagnosis.json written. Original grades, readers, contexts, logs, protocol, product code and exports unchanged.",
+  "new_calls": {
+    "native_model": 0,
+    "jev": 0,
+    "external_api": 0
+  },
+  "holdout_accessed": false
+}

@@ -84,6 +84,49 @@ class ProjectMemoryQueryTests(unittest.TestCase):
         self.assertEqual(('staging',), negative.excluded_environments)
         self.assertFalse(negative.matches({'text': 'NEX-418 version 2.7.1', 'scope': {'environment': 'staging'}}))
 
+    def test_subject_free_outcome_questions_use_explicit_bounded_project_scope(self):
+        for query in ('What delivery is supported?', 'Which results are confirmed?',
+                      'What has been delivered?', 'What work is complete?'):
+            with self.subTest(query=query):
+                plan = plan_query(query, self.project)
+                self.assertTrue(plan.generic_project_state)
+                self.assertEqual(('',), plan.candidate_queries)
+                self.assertFalse(plan.topic_query)
+        for query in ('What delivery schedule is supported?', 'Which cobalt results are confirmed?',
+                      'What has been delivered for the telescope?', 'How does telescope coating behave?'):
+            with self.subTest(query=query):
+                plan = plan_query(query, self.project)
+                self.assertFalse(plan.generic_project_state)
+                self.assertNotEqual(('',), plan.candidate_queries)
+        scoped = plan_query('Which results are confirmed for NEX-418 version 2.8.4?', self.project)
+        self.assertFalse(scoped.matches({'text': 'NEX-418 version 2.8.40'}))
+
+    def test_latest_request_relation_is_generic_continuity_without_a_topical_subject(self):
+        for query in ('How does the last request relate to prior work?',
+                      'How is the latest instruction connected to earlier tasks?',
+                      'How does the latest request compare with earlier work?',
+                      'Is the most recent task a continuation of existing work or a separate task?'):
+            with self.subTest(query=query):
+                plan = plan_query(query, self.project)
+                self.assertTrue(plan.generic_project_state)
+                self.assertTrue(plan.continuation)
+                self.assertEqual('continuity', plan.projection)
+                self.assertEqual(('',), plan.candidate_queries)
+                self.assertFalse(plan.topic_query)
+        topical = plan_query('How does the last telescope request relate to prior work?', self.project)
+        self.assertFalse(topical.generic_project_state)
+        self.assertNotEqual(('',), topical.candidate_queries)
+
+    def test_complete_role_attribution_frames_keep_residual_subjects_strict(self):
+        for query in ('What is the standing of the assistant prediction?',
+                      "What was the support for the assistant's assessment?"):
+            self.assertTrue(plan_query(query, self.project).generic_project_state)
+        for query in ('What is the status of the assistant report about telescope coating?',
+                      'What is the status of the assistant estimate for QA-42 version 2.8.4?'):
+            self.assertFalse(plan_query(query, self.project).generic_project_state)
+        exact = plan_query('What is the status of the assistant estimate for QA-42 version 2.8.4?', self.project)
+        self.assertFalse(exact.matches({'text': 'QA-42 version 2.8.40'}))
+
     def test_rationale_and_inflected_russian_environment_queries_select_fields_not_domain_words(self):
         rationale = plan_query('Why was the editable vector format chosen and when should it be reconsidered?', self.project)
         self.assertEqual('rationale', rationale.projection)

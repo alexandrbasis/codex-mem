@@ -1,0 +1,95 @@
+{
+  "status": "frozen_before_live_dispatch",
+  "stage": "stage2 development probe only",
+  "authorization": "Parent authorized bounded synthetic-only Jev run after passing offline tests and freezing hashes.",
+  "scope": "Compare existing source-grounding/overclaim workflow to one narrow final-field-purpose Noul. All fields are deterministic exact attributed assemblies. This does not measure external truth, end-to-end answer quality or production service behavior.",
+  "dataset": {
+    "cases": 24,
+    "useful": 12,
+    "irrelevant": 12,
+    "author": "same implementation agent, disclosed development examples, not independent holdout",
+    "coverage": [
+      "CLI help",
+      "examples",
+      "user quotations",
+      "assistant reports",
+      "explicit user obligations",
+      "scoped tool execution",
+      "task identity mismatch",
+      "rationale",
+      "prior_* unresolved current validity",
+      "cancelled historical obligations",
+      "compound partial cancellation",
+      "adversarial quoted instructions",
+      "local scope"
+    ],
+    "labels_hidden": "Only public_case allowlist reaches models. Labels and reasons remain fixture-side. Code maps exact ordinal answer IDs to original cases."
+  },
+  "variants": {
+    "baseline": "Existing jev_quality.quality_gate per final field, using _quality-style assertion, exact evidence spans and reference-only identity. Same .8 grounding/.2 overclaim policy and existing uncertain-field refinement. Production final-field assembly is tested elsewhere.",
+    "purpose": "One field-association Noul per final field. Four records per request, independent indexed questions. No grounding or external-truth claim.",
+    "combined": "Reject if either check rejects; accept only when baseline and purpose accept; otherwise unresolved."
+  },
+  "metrics": {
+    "false_accept": "Irrelevant gold-label fields accepted, denominator all12 irrelevant cases.",
+    "useful_loss": "Useful gold-label fields not accepted, including rejection, uncertainty, failure and unattempted cases; denominator all12 useful cases.",
+    "unresolved": "Uncertain, failed and unattempted decisions; denominator all24 planned cases.",
+    "correct_all_planned": "Useful accepted plus irrelevant rejected divided by24; missing decisions remain in denominator.",
+    "complete": "Every planned baseline and purpose decision returned a classification, including uncertain. Completeness does not imply quality success."
+  },
+  "policy": {
+    "accept_probability": 0.8,
+    "reject_probability": 0.2,
+    "post_output_tuning": "forbidden in this run",
+    "screening_readiness": "No blocker recommendation unless false_accept=0,useful_loss=0,unresolved=0 on this development probe; even that result requires later independent evaluation before integration."
+  },
+  "budget": {
+    "max_requests": 40,
+    "max_reported_input_tokens": 150000,
+    "narrow_initial_requests": 6,
+    "baseline_initial_requests": 24,
+    "refinements": "Existing gate refinements consume the remaining shared cap. No SDK retries and no manual continuation.",
+    "admission": "Payload UTF8 byte count plus1024 is a conservative local reservation, not a provider tokenization guarantee. Stop on missing paid usage or reported cap breach. Record any breach as protocol failure.",
+    "ledger": "Persist dispatch-start before HTTP. Keep raw normalized returned probabilities, usage, model, input hash, question IDs, latency and failures. Existing ledger refuses replay. No cache or service database.",
+    "fresh_run": "field-ledger.json must not exist; failures cannot be erased or retried under this protocol."
+  },
+  "commands": {
+    "offline": "python3 -m unittest discover -s tests -p \"test_project_memory_field_eval.py\" -q",
+    "prepare": "python3 scripts/project_memory_field_eval.py --output-dir docs/evidence/project-memory-quality-2026-10-21",
+    "live": "python3 scripts/project_memory_field_eval.py --output-dir docs/evidence/project-memory-quality-2026-10-21 --live-authorized"
+  },
+  "primary_sources": [
+    {
+      "url": "https://docs.typesafe.ai/primitives/noul.md",
+      "quote": "The yes/no question the model answers, or a statement for it to judge.",
+      "status": "verified",
+      "application": "Independent purpose Noul, uncertainty remains visible."
+    },
+    {
+      "url": "https://docs.typesafe.ai/cookbooks/citation_check.md",
+      "quote": "the quote can be accurate and the claim built on top of it still wrong.",
+      "status": "verified",
+      "application": "Code validates exact quotes, then semantic field association remains a separate question. Cookbook is illustrative; its measurements and thresholds are not ours."
+    },
+    {
+      "url": "https://docs.typesafe.ai/model-jaggedness/jev-1.13.md",
+      "quote": "State is data, and `jev-1.13` does not treat it as hostile by default.",
+      "status": "verified",
+      "application": "Include adversarial quotations and keep screening separate from authorization."
+    },
+    {
+      "url": "https://docs.typesafe.ai/sdk/python/usage.md",
+      "quote": "Pass a custom [`RetryPolicy`](https://docs.typesafe.ai/sdk/python/api/retries) as `retry` on the client or per call.",
+      "status": "verified",
+      "application": "Reuse existing bounded raw transport, whose _post contains one opener.open and no retry loop."
+    }
+  ],
+  "gaps": [
+    "No independent hidden acceptance cases.",
+    "Batch-versus-single purpose alignment is tested with a deterministic evaluator only, not an additional live comparison.",
+    "All fixtures are English.",
+    "The purpose check preserves attributed reports without proving execution.",
+    "Source selection before assembly and reader-context retention are outside this probe.",
+    "No service change or production gating integration is authorized by these results."
+  ]
+}

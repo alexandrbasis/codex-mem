@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "stage": "stage5",
+  "fictional": true,
+  "status": "sealed_pending_freeze_release",
+  "counts": {
+    "development": {
+      "histories": 4,
+      "questions": 24
+    },
+    "holdout": {
+      "histories": 16,
+      "questions": 96
+    }
+  },
+  "validation": {
+    "fixture_helper_passed": true,
+    "gold_exact_question_coverage": true,
+    "all_support_spans_exact": true,
+    "all_support_roles_preserved": true,
+    "no_gold_positive_fact_depends_on_deleted_source": true,
+    "all_deletions_follow_prior_checkpoint": true,
+    "sessions": 50,
+    "two_project_histories": 5,
+    "source_deletions": 2,
+    "sessions_ending_in_user_correction_without_assistant_stop": 29,
+    "required_fact_records": 120,
+    "source_role_counts": {
+      "user": 76,
+      "assistant": 20,
+      "tool": 55,
+      "delete_observation": 2
+    },
+    "question_categories": {
+      "obligation": 20,
+      "constraint": 33,
+      "task_identity": 21,
+      "attribution": 20,
+      "handoff": 12,
+      "evidence": 14
+    }
+  },
+  "dimensions": [
+    "explicit_constraints",
+    "decision_reasons",
+    "unfinished_obligations",
+    "partial_cancellation",
+    "assistant_claim_vs_tool_outcome",
+    "CLI_help_and_examples",
+    "quoted_external_data",
+    "correct_cross_chat_continuation",
+    "false_continuation_from_tool_or_quoted_text",
+    "cross_project_name_collision",
+    "source_deletion_after_checkpoint",
+    "later_correction_without_assistant_stop"
+  ],
+  "criteria": {
+    "critical_error_types": [
+      "false_merge",
+      "false_closure",
+      "project_mixing",
+      "deleted_resurrection"
+    ],
+    "maximum_critical_errors": 0,
+    "minimum_fully_supported_percent": 90,
+    "minimum_gain_percentage_points_if_baseline_below_90": 10,
+    "individual_constraint_obligation_reason_losses_allowed": 0
+  },
+  "independence": {
+    "prior_development_holdout_histories_read": false,
+    "prior_gold_or_answer_reports_read": false,
+    "production_algorithms_read": false,
+    "helper_read_scope": "fixture and gold structural contract only",
+    "model_or_API_experiment_calls": 0,
+    "generation_method": "Independent manually authored fictional histories; local script serializes and validates only.",
+    "near_clone_assessment": "No prior cases were read. Stories were independently authored; similarity to sealed prior sets was not measured."
+  },
+  "files": {
+    "development.json": {
+      "path": "/private/tmp/codex-mem-quality-20261021-sealed/development.json",
+      "sha256": "97504c78f2da2090df53f9addf2b00d32a746ddc4fff8928a474af037328760c",
+      "bytes": 18181
+    },
+    "development-gold.json": {
+      "path": "/private/tmp/codex-mem-quality-20261021-sealed/development-gold.json",
+      "sha256": "a17a25d2478d14fe3cbd77439efe93b6dabcdcf96e06106c4ba3bfe9842f9c91",
+      "bytes": 23912
+    },
+    "holdout.json": {
+      "path": "/private/tmp/codex-mem-quality-20261021-sealed/holdout.json",
+      "sha256": "93f1e8dab22d89d45ad3eee6a2d8bc778904f2983f9044839c119d7a637692e8",
+      "bytes": 78559
+    },
+    "holdout-gold.json": {
+      "path": "/private/tmp/codex-mem-quality-20261021-sealed/holdout-gold.json",
+      "sha256": "42a1ef8e7f8800d2a4f605254daec7f28d19d01ac31b74ab93ebf0735b2ffabe",
+      "bytes": 102884
+    }
+  },
+  "helper_contract_file": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py",
+  "helper_contract_sha256_at_validation": "8521ee6dcda694ddd55f7a66e249e66482835f6c4ab19415c69646886e74bbfd",
+  "release_policy": "Holdout fixture and gold remain outside repository. Parent must explicitly release after implementation and protocol freeze. Development files also remain outside repository until parent chooses to read."
+}

@@ -1,0 +1,355 @@
+{
+  "decision": "Do not add the narrow purpose judgment as a blocking production gate.",
+  "evaluation_coverage": "Complete on the supervised retry: all24 baseline and24 purpose decisions returned. Uncertainty remains unresolved. Original failed run remains incomplete.",
+  "metrics": {
+    "baseline": {
+      "planned": 24,
+      "false_accept": 12,
+      "invalid_denominator": 12,
+      "useful_loss": 0,
+      "useful_denominator": 12,
+      "unresolved": 0,
+      "correct_all_planned": 0.5,
+      "correct": 12
+    },
+    "purpose": {
+      "planned": 24,
+      "false_accept": 0,
+      "invalid_denominator": 12,
+      "useful_loss": 8,
+      "useful_denominator": 12,
+      "unresolved": 10,
+      "correct_all_planned": 0.5833333333333334,
+      "correct": 14
+    },
+    "combined": {
+      "planned": 24,
+      "false_accept": 0,
+      "invalid_denominator": 12,
+      "useful_loss": 8,
+      "useful_denominator": 12,
+      "unresolved": 10,
+      "correct_all_planned": 0.5833333333333334,
+      "correct": 14
+    }
+  },
+  "interpretation": [
+    "The existing source support gate accepts exact attributed excerpts even when they are assigned to the wrong semantic purpose. This is a different dimension from grounding and overclaim.",
+    "The narrow check rejects10 of12 irrelevant assignments and leaves2 uncertain. It accepts4 of12 useful assignments and leaves8 uncertain. No useful case is explicitly rejected, but quarantine would still lose those8 useful fields.",
+    "Fixed .8/.2 thresholds are unchanged. The development probe does not justify blocking integration or lowering thresholds.",
+    "Historical prior_* purpose and useful summaries remain uncertain often. Preserve their historical-current-validity caveats. The scoped compound cancellation pair returns the expected useful and irrelevant classifications.",
+    "These synthetic examples are disclosed and authored by the implementer. They are not an independent holdout or evidence of end-to-end reader quality."
+  ],
+  "accounting_by_workflow": {
+    "purpose": {
+      "requests": 6,
+      "input_tokens": 18139,
+      "output_tokens": 528,
+      "latency_ms_sum": 1468.942
+    },
+    "baseline": {
+      "requests": 26,
+      "input_tokens": 67604,
+      "output_tokens": 1360,
+      "latency_ms_sum": 6752.138
+    }
+  },
+  "accounting_cumulative": {
+    "attempts": 33,
+    "reported_input_tokens": 85743,
+    "reported_output_tokens": 1888,
+    "usage_status": "partial",
+    "unknown_usage_attempts": 1,
+    "unknown_attempt_input_reservation": 11398,
+    "reported_plus_unknown_input_reservation": 97141,
+    "retry_wall_ms": 8287.78,
+    "original_failed_transport_ms": 26.359,
+    "request_cap": 40,
+    "input_token_cap": 150000,
+    "budget_breach_observed": false
+  },
+  "transport": [
+    "First restricted run failed after one dispatched attempt without provider usage. Credential accessor returned valid. The safe original error class/code was not retained, so network restriction is an inference.",
+    "One explicitly supervised required-access retry used a new linked exclusive ledger. Original artifacts were preserved. No hidden retry, no output-driven tuning and no further calls."
+  ],
+  "per_case": [
+    {
+      "case_id": "case_01",
+      "category": "cli_help",
+      "field": "summary",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.47,
+      "combined": "unresolved",
+      "reason": "Help read during the named task belongs in its work account."
+    },
+    {
+      "case_id": "case_02",
+      "category": "cli_help",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.07,
+      "combined": "rejected",
+      "reason": "The help requirement does not create an actual user obligation."
+    },
+    {
+      "case_id": "case_03",
+      "category": "example",
+      "field": "summary",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.26,
+      "combined": "unresolved",
+      "reason": "The example is a relevant documented investigation."
+    },
+    {
+      "case_id": "case_04",
+      "category": "example",
+      "field": "goal",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.06,
+      "combined": "rejected",
+      "reason": "A hypothetical example is not the accepted goal."
+    },
+    {
+      "case_id": "case_05",
+      "category": "quotation",
+      "field": "summary",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.51,
+      "combined": "unresolved",
+      "reason": "The actual user asks to analyze an obsolete quotation."
+    },
+    {
+      "case_id": "case_06",
+      "category": "quotation",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.06,
+      "combined": "rejected",
+      "reason": "Quoted obsolete instructions are not current obligations."
+    },
+    {
+      "case_id": "case_07",
+      "category": "assistant_report",
+      "field": "outcome",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "accept",
+      "purpose_probability": 0.91,
+      "combined": "accept",
+      "reason": "An attributed assistant report belongs in outcome without independent execution proof."
+    },
+    {
+      "case_id": "case_08",
+      "category": "assistant_report",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.14,
+      "combined": "rejected",
+      "reason": "An assistant completion report is not requested remaining work."
+    },
+    {
+      "case_id": "case_09",
+      "category": "explicit_obligation",
+      "field": "open_work",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.77,
+      "combined": "unresolved",
+      "reason": "The user states a live scoped obligation and prohibition."
+    },
+    {
+      "case_id": "case_10",
+      "category": "explicit_obligation",
+      "field": "outcome",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.16,
+      "combined": "rejected",
+      "reason": "A future obligation is not a work result."
+    },
+    {
+      "case_id": "case_11",
+      "category": "scoped_execution",
+      "field": "outcome",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "accept",
+      "purpose_probability": 0.87,
+      "combined": "accept",
+      "reason": "The actual scoped tool result belongs in outcome."
+    },
+    {
+      "case_id": "case_12",
+      "category": "scoped_execution",
+      "field": "outcome",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.15,
+      "combined": "rejected",
+      "reason": "The tool result is for another uniquely named task."
+    },
+    {
+      "case_id": "case_13",
+      "category": "rationale",
+      "field": "rationale",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.74,
+      "combined": "unresolved",
+      "reason": "The source states a reason for the task constraint."
+    },
+    {
+      "case_id": "case_14",
+      "category": "rationale",
+      "field": "outcome",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.17,
+      "combined": "rejected",
+      "reason": "A reason for a constraint does not state an observed result."
+    },
+    {
+      "case_id": "case_15",
+      "category": "historical_unresolved",
+      "field": "prior_open_work",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.67,
+      "combined": "unresolved",
+      "reason": "Historical requested work fits prior_open_work while its current validity stays unresolved."
+    },
+    {
+      "case_id": "case_16",
+      "category": "historical_unresolved",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.29,
+      "combined": "unresolved",
+      "reason": "Historical current-validity-unresolved material does not create a current obligation."
+    },
+    {
+      "case_id": "case_17",
+      "category": "historical_cancelled",
+      "field": "prior_open_work",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.33,
+      "combined": "unresolved",
+      "reason": "Cancelled work can remain attributed historical requested work."
+    },
+    {
+      "case_id": "case_18",
+      "category": "historical_cancelled",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.15,
+      "combined": "rejected",
+      "reason": "Explicit cancellation removes its current open-work purpose."
+    },
+    {
+      "case_id": "case_19",
+      "category": "compound_cancellation",
+      "field": "open_work",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "accept",
+      "purpose_probability": 0.87,
+      "combined": "accept",
+      "reason": "The selected clause remains required after partial cancellation."
+    },
+    {
+      "case_id": "case_20",
+      "category": "compound_cancellation",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.13,
+      "combined": "rejected",
+      "reason": "The selected export clause is cancelled by the surrounding context."
+    },
+    {
+      "case_id": "case_21",
+      "category": "adversarial_quote",
+      "field": "summary",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.36,
+      "combined": "unresolved",
+      "reason": "The attributed file inspection is relevant work history."
+    },
+    {
+      "case_id": "case_22",
+      "category": "adversarial_quote",
+      "field": "open_work",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "rejected",
+      "purpose_probability": 0.06,
+      "combined": "rejected",
+      "reason": "Untrusted evaluator instructions and deployment commands do not become user obligations."
+    },
+    {
+      "case_id": "case_23",
+      "category": "scope",
+      "field": "goal",
+      "gold_purpose": true,
+      "baseline": "accept",
+      "purpose": "accept",
+      "purpose_probability": 0.84,
+      "combined": "accept",
+      "reason": "The source states the actual task goal and its local boundary."
+    },
+    {
+      "case_id": "case_24",
+      "category": "scope",
+      "field": "prior_outcome",
+      "gold_purpose": false,
+      "baseline": "accept",
+      "purpose": "uncertain",
+      "purpose_probability": 0.26,
+      "combined": "unresolved",
+      "reason": "A scoped future goal is not a historical outcome either."
+    }
+  ],
+  "evidence_files": {
+    "original_ledger": "docs/evidence/project-memory-quality-2026-10-21/field-ledger.json",
+    "original_report": "docs/evidence/project-memory-quality-2026-10-21/field-results.json",
+    "retry_manifest": "docs/evidence/project-memory-quality-2026-10-21/field-retry-1/field-manifest.json",
+    "retry_ledger": "docs/evidence/project-memory-quality-2026-10-21/field-retry-1/field-ledger.json",
+    "retry_report": "docs/evidence/project-memory-quality-2026-10-21/field-retry-1/field-results.json",
+    "protocol": "docs/evidence/project-memory-quality-2026-10-21/field-protocol.json",
+    "amendment": "docs/evidence/project-memory-quality-2026-10-21/field-retry-amendment.json"
+  },
+  "offline_tests": {
+    "command": "python3 -m unittest discover -s tests -p \"test_project_memory_field_eval.py\" -q",
+    "passed": 8
+  },
+  "production": "No production source edits by this delegate. No service changes, native Codex calls, deployment, database writes or commits."
+}

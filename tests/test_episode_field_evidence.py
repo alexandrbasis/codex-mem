@@ -51,7 +51,10 @@ class FieldEvidenceTests(unittest.TestCase):
         answers = {}
         for item in payload["state"]["items"]:
             assertion = json.loads(item["candidate"]["body"])
-            supported = assertion["value"] in [span["quote"].strip() for span in item["field_evidence"]]
+            quotes = [span["quote"].strip() for span in item["field_evidence"]]
+            supported = (assertion.get("proposed_value", assertion["value"]) in quotes
+                         and assertion["value"] in quotes + ["User intent: " + quote for quote in quotes]
+                         + ["User intent (partial context): " + quote for quote in quotes])
             for suffix in ("grounded", "overclaim"):
                 answers[f"item_{item['item_index']}_{suffix}"] = {
                     "type": "noul", "noul": .99 if supported == (suffix == "grounded") else .01}
@@ -85,6 +88,9 @@ class FieldEvidenceTests(unittest.TestCase):
         self.assertEqual(result["quality"][0]["usage"], {"input_tokens": 7, "output_tokens": 3})
         items = self.requests[0]["state"]["items"]
         outcome = next(item for item in items if json.loads(item["candidate"]["body"])["field"] == "outcome")
+        assertion = json.loads(outcome["candidate"]["body"])
+        self.assertEqual(assertion["value"], "User intent: Importer remains open.")
+        self.assertEqual(assertion["proposed_value"], "Importer remains open.")
         self.assertEqual(outcome["cited_sources"][0]["body"], " Importer remains open.")
         self.assertEqual(outcome["field_evidence"][0]["start"], 14)
         self.assertEqual(outcome["cited_sources"][0]["body_offset"], 14)
@@ -179,12 +185,16 @@ class FieldEvidenceTests(unittest.TestCase):
         self.assertEqual(len(self.requests[0]["state"]["items"]), 2)
 
     def test_continuation_checks_only_its_refs_against_actual_prior_head(self):
-        self.remember("Plan importer. Importer remains open.")
-        first = ep.process_project_memory(self.project, self.data, runner=self.runner(1),
+        self.remember("FEV-17: plan importer. Importer remains open.")
+        def initial(request):
+            result = self.runner(1)(request)
+            result["output"]["episodes"][0]["summary"] = "FEV-17: plan importer."
+            return result
+        first = ep.process_project_memory(self.project, self.data, runner=initial,
                                           jev_quality_evaluator=self.evaluate)
         self.assertEqual(first["status"], "processed", first)
         prior = self.state()["episodes"][0]
-        self.remember("Plan importer. Continue importer.")
+        self.remember("Plan importer. Continue task FEV-17.")
         self.requests.clear()
         def run(request):
             supplied = json.loads(request["prompt"].split("\n", 1)[1])
@@ -198,8 +208,8 @@ class FieldEvidenceTests(unittest.TestCase):
             continuation = next(item for item in payload["state"]["items"]
                                 if item["candidate"]["title"] == "Project memory continuation")
             self.assertEqual(continuation["reference_only_record"]["prior_episode"]["id"], prior["id"])
-            self.assertEqual(continuation["reference_only_record"]["summary"], "Plan importer.")
-            self.assertEqual(continuation["cited_sources"][0]["body"], " Continue importer.")
+            self.assertEqual(continuation["reference_only_record"]["summary"], "User intent: Plan importer.")
+            self.assertEqual(continuation["cited_sources"][0]["body"], " Continue task FEV-17.")
             self.assertEqual(len(continuation["field_evidence"]), 1)
             return {"model": MODEL, "answers": {key: {"type": "noul", "noul": .99 if key.endswith("_grounded") else .01}
                                                    for key in payload["questions"]}, "usage": {"input_tokens": 7, "output_tokens": 3}}

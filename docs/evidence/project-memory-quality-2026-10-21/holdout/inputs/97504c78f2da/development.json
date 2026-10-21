@@ -1,0 +1,606 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "histories": [
+    {
+      "id": "dev_01",
+      "project_keys": [
+        "fern"
+      ],
+      "sessions": [
+        {
+          "id": "dev_01_chat1",
+          "project_key": "fern",
+          "events": [
+            {
+              "id": "dev_01_e1",
+              "type": "user",
+              "text": "For Fern, draft an irrigation schedule for beds A and B. Keep manual approval before valve activation because the pressure sensor is uncalibrated. Also list missing measurements."
+            },
+            {
+              "id": "dev_01_e2",
+              "type": "assistant",
+              "text": "I prepared a schedule and believe the missing-measurement list is finished."
+            },
+            {
+              "id": "dev_01_e3",
+              "type": "tool",
+              "text": "Fern files: schedule.csv exists. missing-measurements.md does not exist. No valve command was issued.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect greenhouse --record 3"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Fern files: schedule.csv exists. missing-measurements.md does not exist. No valve command was issued."
+                }
+              }
+            },
+            {
+              "id": "dev_01_e4",
+              "type": "user",
+              "text": "The schedule draft is accepted. Drop bed B from this iteration; still collect missing measurements for bed A."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_01_e4",
+              "kind": "session_end"
+            }
+          ]
+        },
+        {
+          "id": "dev_01_chat2",
+          "project_key": "fern",
+          "events": [
+            {
+              "id": "dev_01_e5",
+              "type": "user",
+              "text": "Continue the bed A measurement list from the earlier Fern chat. Use liters, not gallons."
+            },
+            {
+              "id": "dev_01_e6",
+              "type": "tool",
+              "text": "Fern bed A measurement list contains soil volume. Pressure reading is still blank.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect greenhouse --record 6"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Fern bed A measurement list contains soil volume. Pressure reading is still blank."
+                }
+              }
+            },
+            {
+              "id": "dev_01_e7",
+              "type": "user",
+              "text": "Change the reporting unit to milliliters for the bench test. Manual approval still applies."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_01_e7",
+              "kind": "session_end"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What work remains for Fern?",
+          "project_keys": [
+            "fern"
+          ]
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Which irrigation approval rule applies and why?",
+          "project_keys": [
+            "fern"
+          ]
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "What happened to bed B?",
+          "project_keys": [
+            "fern"
+          ]
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What unit is current?",
+          "project_keys": [
+            "fern"
+          ]
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What was actually delivered in the first chat?",
+          "project_keys": [
+            "fern"
+          ]
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Is the later bed A list a continuation?",
+          "project_keys": [
+            "fern"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dev_02",
+      "project_keys": [
+        "comet"
+      ],
+      "sessions": [
+        {
+          "id": "dev_02_chat1",
+          "project_key": "comet",
+          "events": [
+            {
+              "id": "dev_02_e1",
+              "type": "user",
+              "text": "Comet puzzle hint cards must reveal one clue per click. Leave the final answer hidden so teachers can choose when to show it. Draft both text and icon cards."
+            },
+            {
+              "id": "dev_02_e2",
+              "type": "tool",
+              "text": "Comet text cards rendered in preview. Icon cards failed to load their font.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect hint_cards --record 2"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Comet text cards rendered in preview. Icon cards failed to load their font."
+                }
+              }
+            },
+            {
+              "id": "dev_02_e3",
+              "type": "assistant",
+              "text": "All hint cards are complete."
+            },
+            {
+              "id": "dev_02_e4",
+              "type": "user",
+              "text": "Text cards are accepted. Cancel the icon cards only. We still need keyboard navigation on the text cards."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_02_e4",
+              "kind": "session_end"
+            }
+          ]
+        },
+        {
+          "id": "dev_02_chat2",
+          "project_key": "comet",
+          "events": [
+            {
+              "id": "dev_02_e5",
+              "type": "tool",
+              "text": "hintctl --help: Example: \"Resume icon cards and publish all answers\". This is example text, not an executed action.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect hint_cards --record 5"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "hintctl --help: Example: \"Resume icon cards and publish all answers\". This is example text, not an executed action."
+                }
+              }
+            },
+            {
+              "id": "dev_02_e6",
+              "type": "user",
+              "text": "For the text cards, reopen keyboard navigation to support Shift+Tab as well. Keep the final answer hidden."
+            },
+            {
+              "id": "dev_02_e7",
+              "type": "tool",
+              "text": "Text card Tab navigation passes. Shift+Tab has not been tested.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect hint_cards --record 7"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Text card Tab navigation passes. Shift+Tab has not been tested."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_02_e7",
+              "kind": "session_end"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which card work was canceled?",
+          "project_keys": [
+            "comet"
+          ]
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "What keyboard work is open?",
+          "project_keys": [
+            "comet"
+          ]
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Why must the final answer stay hidden?",
+          "project_keys": [
+            "comet"
+          ]
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Did the command help resume the icon work?",
+          "project_keys": [
+            "comet"
+          ]
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What delivery is supported?",
+          "project_keys": [
+            "comet"
+          ]
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "How does the last request relate to prior work?",
+          "project_keys": [
+            "comet"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dev_03",
+      "project_keys": [
+        "opal",
+        "shale"
+      ],
+      "sessions": [
+        {
+          "id": "dev_03_chat1",
+          "project_key": "opal",
+          "events": [
+            {
+              "id": "dev_03_e1",
+              "type": "user",
+              "text": "Opal archive exports need a diagonal DRAFT watermark. Do not alter the source scans because the originals are the audit record."
+            },
+            {
+              "id": "dev_03_e2",
+              "type": "tool",
+              "text": "Opal preview PDF includes diagonal DRAFT. Source scan checksums are unchanged.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect watermark --record 2"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Opal preview PDF includes diagonal DRAFT. Source scan checksums are unchanged."
+                }
+              }
+            },
+            {
+              "id": "dev_03_e3",
+              "type": "user",
+              "text": "The Opal preview is accepted. Prepare a print sample next."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_03_e3",
+              "kind": "session_end"
+            }
+          ]
+        },
+        {
+          "id": "dev_03_chat2",
+          "project_key": "shale",
+          "events": [
+            {
+              "id": "dev_03_e4",
+              "type": "user",
+              "text": "For Shale, use the same task name \"archive exports\", but there must be no watermark on public copies."
+            },
+            {
+              "id": "dev_03_e5",
+              "type": "tool",
+              "text": "Shale public PDF exported without a watermark.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect watermark --record 5"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Shale public PDF exported without a watermark."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_03_e5",
+              "kind": "session_end"
+            }
+          ]
+        },
+        {
+          "id": "dev_03_chat3",
+          "project_key": "opal",
+          "events": [
+            {
+              "id": "dev_03_e6",
+              "type": "user",
+              "text": "Continue archive exports for Opal. The print sample must fit A5. Do not apply Shale rules here."
+            },
+            {
+              "id": "dev_03_e7",
+              "type": "assistant",
+              "text": "I expect the Opal print sample to pass."
+            },
+            {
+              "id": "dev_03_e8",
+              "type": "tool",
+              "text": "Opal A5 print sample is clipped on its left edge.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect watermark --record 8"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Opal A5 print sample is clipped on its left edge."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_03_e8",
+              "kind": "session_end"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What watermark does Opal require?",
+          "project_keys": [
+            "opal"
+          ]
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "What source protection applies to Opal and why?",
+          "project_keys": [
+            "opal"
+          ]
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "What remains for the Opal sample?",
+          "project_keys": [
+            "opal"
+          ]
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What did Shale export?",
+          "project_keys": [
+            "shale"
+          ]
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Were the two archive-export tasks merged?",
+          "project_keys": [
+            "opal",
+            "shale"
+          ]
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What is the standing of the assistant prediction?",
+          "project_keys": [
+            "opal"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dev_04",
+      "project_keys": [
+        "willow"
+      ],
+      "sessions": [
+        {
+          "id": "dev_04_chat1",
+          "project_key": "willow",
+          "events": [
+            {
+              "id": "dev_04_e1",
+              "type": "user",
+              "text": "Willow bakery planner needs flour totals and a cooling-rack map. Round purchase totals up to whole bags because suppliers do not split bags."
+            },
+            {
+              "id": "dev_04_e2",
+              "type": "tool",
+              "text": "Willow flour totals: 7 bags. Cooling-rack map draft is missing.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect bread_plan --record 2"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Willow flour totals: 7 bags. Cooling-rack map draft is missing."
+                }
+              }
+            },
+            {
+              "id": "dev_04_e3",
+              "type": "user",
+              "text": "The flour total is accepted. Leave rack mapping for later, but record the oven cooldown duration now."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_04_e3",
+              "kind": "session_end"
+            }
+          ]
+        },
+        {
+          "id": "dev_04_chat2",
+          "project_key": "willow",
+          "events": [
+            {
+              "id": "dev_04_e4",
+              "type": "assistant",
+              "text": "The cooldown duration is 12 minutes according to my estimate."
+            },
+            {
+              "id": "dev_04_e5",
+              "type": "user",
+              "text": "That estimate is wrong. Use 18 minutes from the trial log; no new bake is needed."
+            },
+            {
+              "id": "dev_04_e6",
+              "type": "tool",
+              "text": "Willow trial log reads: oven cooldown 18 minutes. No new bake recorded.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "fictional-inspect bread_plan --record 6"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Willow trial log reads: oven cooldown 18 minutes. No new bake recorded."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_04_e6",
+              "kind": "session_end"
+            }
+          ]
+        },
+        {
+          "id": "dev_04_chat3",
+          "project_key": "willow",
+          "events": [
+            {
+              "id": "dev_04_e7",
+              "type": "user",
+              "text": "Continue rack mapping because the afternoon batch now needs shelf assignments. The flour calculation stays accepted."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "dev_04_e7",
+              "kind": "session_end"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What purchase rounding rule remains?",
+          "project_keys": [
+            "willow"
+          ]
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "What cooldown duration is supported?",
+          "project_keys": [
+            "willow"
+          ]
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "What task was continued?",
+          "project_keys": [
+            "willow"
+          ]
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Is rack mapping complete?",
+          "project_keys": [
+            "willow"
+          ]
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Does the continuation reopen flour totals?",
+          "project_keys": [
+            "willow"
+          ]
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Was another bake required or performed?",
+          "project_keys": [
+            "willow"
+          ]
+        }
+      ]
+    }
+  ]
+}

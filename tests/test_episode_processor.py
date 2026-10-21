@@ -749,6 +749,74 @@ class EpisodeProcessorTests(unittest.TestCase):
 
 
 class EpisodeStorageIntegrationTests(unittest.TestCase):
+    def test_native_claim_binds_trusted_project_scope_without_model_worktree(self):
+        from codex_mem.config import configure
+        from codex_mem.project_memory import ProjectMemory
+        from codex_mem.store import Store
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary) / "project"
+            project.mkdir()
+            data = Path(temporary) / "memory"
+            configure(data, capture_scope="all", project_memory_mode="shadow",
+                      project_memory_projects=[str(project)])
+            with Store(data) as store:
+                store.remember(project, "Request", "Keep deployment open.",
+                               source="hook:UserPromptSubmit", session_id="session")
+            def run(request):
+                supplied = json.loads(request["prompt"].split("\n", 1)[1])
+                scope_schema = request["output_schema"]["properties"]["claims"]["items"]["properties"]["scope"]
+                self.assertNotIn("worktree", scope_schema["properties"])
+                refs = [supplied["events"][0]["spans"][0]["ref"]]
+                claim = {"text": "Keep deployment open.", "kind": "requirement", "workflow_state": "open",
+                         "scope": {"environment": "production", "version": ""}, "rationale": "",
+                         "evidence": {"text": refs, "workflow_state": refs, "rationale": []}}
+                return receipt({"episodes": [], "claims": [claim], "relations": []})
+            result = ep.process_project_memory(project, data, runner=run)
+            self.assertEqual(result["status"], "processed", result)
+            with Store(data) as store:
+                claim = ProjectMemory(store).snapshot(project)["claims"][0]
+                self.assertEqual(claim["scope"], {"environment": "production", "version": "", "worktree": str(project.resolve())})
+
+    def test_canonical_runner_scope_keys_and_states_obey_store_contract(self):
+        from codex_mem.config import configure
+        from codex_mem.project_memory import ProjectMemory
+        from codex_mem.store import Store
+        cases = (("canonical", "processed"), ("empty", "processed"),
+                 ("foreign", "failed"), ("basename", "failed"),
+                 ("bad-key", "failed"), ("bad-state", "failed"), ("duplicate-key", "failed"))
+        for case, status in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as temporary:
+                project = Path(temporary) / "project"
+                project.mkdir()
+                data = Path(temporary) / "memory"
+                configure(data, capture_scope="all", project_memory_mode="shadow",
+                          project_memory_projects=[str(project)])
+                with Store(data) as store:
+                    store.remember(project, "Request", "Keep deployment open.",
+                                   source="hook:UserPromptSubmit", session_id="session")
+                def run(request):
+                    supplied = json.loads(request["prompt"].split("\n", 1)[1])
+                    span = {"source_id": supplied["events"][0]["id"], "quote": "Keep deployment open.",
+                            "start": 0, "end": 21}
+                    worktree = {"empty": "", "foreign": "/foreign/project", "basename": "project"}.get(case, supplied["project"])
+                    claim = {"key": "bad key" if case == "bad-key" else "canonical-claim",
+                             "text": "Keep deployment open.", "kind": "requirement",
+                             "workflow_state": "pending_review" if case == "bad-state" else "open",
+                             "scope": {"environment": "production", "version": "", "worktree": worktree},
+                             "rationale": "", "evidence": {"text": [span], "workflow_state": [span], "rationale": []}}
+                    return receipt({"episodes": [], "claims": [claim, deepcopy(claim)] if case == "duplicate-key" else [claim],
+                                    "relations": []})
+                result = ep.process_project_memory(project, data, runner=run)
+                self.assertEqual(result["status"], status, result)
+                with Store(data) as store:
+                    claims = ProjectMemory(store).snapshot(project)["claims"]
+                    if status == "processed":
+                        expected = "" if case == "empty" else str(project.resolve())
+                        self.assertEqual(claims[0]["scope"]["worktree"], expected)
+                    else:
+                        self.assertEqual(result["code"], "invalid_response")
+                        self.assertEqual(claims, [])
+
     def test_temp_store_roundtrip_and_invalid_output_do_not_lose_events(self):
         from codex_mem.config import configure
         from codex_mem.project_memory import ProjectMemory

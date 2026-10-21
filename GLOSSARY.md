@@ -19,3 +19,8 @@ _Avoid_: Latest chat, latest observation
 **Episode consolidation**:
 A new episode version that brings together separate episodes about the same explicitly identified task.
 _Avoid_: Topic grouping, session merge
+
+**Source custody**:
+A record of whether retained user material has a supported representation or still requires reconciliation.
+It does not establish an active requirement.
+_Avoid_: Requirement acceptance, automatic obligation

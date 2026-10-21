@@ -1,0 +1,2032 @@
+{
+  "manifest": {
+    "fixture_sha256": "dde9f56e8f2aa9b24ec10a6129d9dd25a1c47add0369ee7554fb3fc60efcde88",
+    "script_sha256": "1cc7bbee2945b9bd294264c42f95ecca3b2349eb33e674e3836d6da5b28c409a",
+    "fixture_schema_sha256": "4bbd3bf032a0209f325cf6d9c7f0989a48d70996e9372bcdf8522efff5094b66",
+    "baseline_sha256": "d951a92225b968067d3ddf10057365d89c8e6baa548b03b73aa39988c6e381ce",
+    "policy_sha256": "9e765c10c15a96b33274283cbe1687efb861356f28dc19f7b6278586b48534ae",
+    "model": "jev-1.13.0",
+    "baseline_policy": "memory-quality-v12",
+    "purpose_policy": "final-field-purpose-v1",
+    "planned_cases": 24,
+    "planned_decisions": 48,
+    "max_requests": 40,
+    "max_reported_input_tokens": 150000,
+    "retry_policy": "none; baseline refinement is a separately ledgered request",
+    "external_truth": "not evaluated",
+    "production_gate_coverage": "final-field shadow representation following _quality, not production replay",
+    "supervised_retry": {
+      "ledger_sha256": "a59c9ffd2b4171e70bd0ad84cfca12bc3c3f477e4c40306dd0cfa854bc6d339c",
+      "attempts": 1,
+      "reported_input_tokens": 0,
+      "unknown_usage_attempts": 1,
+      "unknown_input_reservation": 11398
+    }
+  },
+  "status": "complete",
+  "results": {
+    "case_01": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.47,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2595,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.93,
+            "overclaim_probability": 0.13,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.93,
+              "overclaim_probability": 0.13,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2595,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.93
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.13
+              }
+            },
+            "cache_key": "877468f934b59381c343565693011d6a4a3072233bc31898d92c75fc3b70665f",
+            "duration_ms": 237,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 243
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_02": {
+      "purpose": "rejected",
+      "purpose_probability": 0.07,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2597,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.88,
+            "overclaim_probability": 0.15,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.88,
+              "overclaim_probability": 0.15,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2597,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.88
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.15
+              }
+            },
+            "cache_key": "b2cb26bb0dd54e8e7753cf598a486c9a1181255623b72b6acbe24fb4cb446453",
+            "duration_ms": 279,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 280
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_03": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.26,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2528,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.94,
+            "overclaim_probability": 0.08,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.94,
+              "overclaim_probability": 0.08,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2528,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.94
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.08
+              }
+            },
+            "cache_key": "38bab9b6097363f7d68770f1f75b23e174cf04711e198c7f9aac41a42a677386",
+            "duration_ms": 224,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 225
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_04": {
+      "purpose": "rejected",
+      "purpose_probability": 0.06,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2528,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.91,
+            "overclaim_probability": 0.1,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.91,
+              "overclaim_probability": 0.1,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2528,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.91
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "cache_key": "74466f1b5fb48df523a5e899db6308fb12ee9052c04b75776804d4f349d0ca5e",
+            "duration_ms": 313,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 314
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_05": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.51,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2449,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.97,
+            "overclaim_probability": 0.07,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.97,
+              "overclaim_probability": 0.07,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2449,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.97
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.07
+              }
+            },
+            "cache_key": "3359a7a914c3dfe83d6c3e60377acf1aed589e083482c7b856734a4c65dbbe66",
+            "duration_ms": 233,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 233
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_06": {
+      "purpose": "rejected",
+      "purpose_probability": 0.06,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2451,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.96,
+            "overclaim_probability": 0.08,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.96,
+              "overclaim_probability": 0.08,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2451,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.96
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.08
+              }
+            },
+            "cache_key": "0f897e544e7b8c18fc069934d2361e10032dd03cc48ccba462b100ee55905da9",
+            "duration_ms": 276,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 277
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_07": {
+      "purpose": "accept",
+      "purpose_probability": 0.91,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 2,
+          "cache_hits": 0,
+          "initial_uncertain": 1,
+          "refined": 1,
+          "fields_evaluated": 2
+        },
+        "usage": {
+          "input_tokens": 6259,
+          "output_tokens": 152
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.89,
+            "overclaim_probability": 0.14,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.93,
+              "overclaim_probability": 0.24,
+              "route": "uncertain"
+            },
+            "decision_source": "refinement",
+            "fields": [
+              {
+                "field_index": 0,
+                "field_path": "title",
+                "grounded_probability": 0.89,
+                "overclaim_probability": 0.11,
+                "route": "accept"
+              },
+              {
+                "field_index": 1,
+                "field_path": "body",
+                "grounded_probability": 0.91,
+                "overclaim_probability": 0.14,
+                "route": "accept"
+              }
+            ]
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2450,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.93
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.24
+              }
+            },
+            "cache_key": "48589c9988166565331e35e2c34e52b29e090573085429c6b9ea236386093dd9",
+            "duration_ms": 213,
+            "stage": "aggregate"
+          },
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 3809,
+              "output_tokens": 104
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_field_0_grounded": {
+                "type": "noul",
+                "noul": 0.89
+              },
+              "item_0_field_0_overclaim": {
+                "type": "noul",
+                "noul": 0.11
+              },
+              "item_0_field_1_grounded": {
+                "type": "noul",
+                "noul": 0.91
+              },
+              "item_0_field_1_overclaim": {
+                "type": "noul",
+                "noul": 0.14
+              }
+            },
+            "cache_key": "2c17e5ca3fd7441a4d5e15c16339a4a5fa5467e63f1b1a913e3216961ceb7871",
+            "duration_ms": 310,
+            "stage": "refinement"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 525
+      },
+      "baseline": "accept",
+      "combined": "accept"
+    },
+    "case_08": {
+      "purpose": "rejected",
+      "purpose_probability": 0.14,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 2,
+          "cache_hits": 0,
+          "initial_uncertain": 1,
+          "refined": 1,
+          "fields_evaluated": 2
+        },
+        "usage": {
+          "input_tokens": 6259,
+          "output_tokens": 152
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.88,
+            "overclaim_probability": 0.13,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.93,
+              "overclaim_probability": 0.24,
+              "route": "uncertain"
+            },
+            "decision_source": "refinement",
+            "fields": [
+              {
+                "field_index": 0,
+                "field_path": "title",
+                "grounded_probability": 0.88,
+                "overclaim_probability": 0.11,
+                "route": "accept"
+              },
+              {
+                "field_index": 1,
+                "field_path": "body",
+                "grounded_probability": 0.91,
+                "overclaim_probability": 0.13,
+                "route": "accept"
+              }
+            ]
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2450,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.93
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.24
+              }
+            },
+            "cache_key": "b83186e46696c13b0263aa00a267a179f9920fa594e997d772c31df85988b8e0",
+            "duration_ms": 231,
+            "stage": "aggregate"
+          },
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 3809,
+              "output_tokens": 104
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_field_0_grounded": {
+                "type": "noul",
+                "noul": 0.88
+              },
+              "item_0_field_0_overclaim": {
+                "type": "noul",
+                "noul": 0.11
+              },
+              "item_0_field_1_grounded": {
+                "type": "noul",
+                "noul": 0.91
+              },
+              "item_0_field_1_overclaim": {
+                "type": "noul",
+                "noul": 0.13
+              }
+            },
+            "cache_key": "9663cde0e1013ac18a9a0f4277ba2cd8fec115276e7713adf8e45a6ce688d2e9",
+            "duration_ms": 293,
+            "stage": "refinement"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 525
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_09": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.77,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2390,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.95,
+            "overclaim_probability": 0.08,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.95,
+              "overclaim_probability": 0.08,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2390,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.08
+              }
+            },
+            "cache_key": "3e783674a86c20827e06b39a2dfcdf07eb6e0c99b42b756fdb6f162f0fc30259",
+            "duration_ms": 234,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 235
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_10": {
+      "purpose": "rejected",
+      "purpose_probability": 0.16,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2396,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.95,
+            "overclaim_probability": 0.1,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.95,
+              "overclaim_probability": 0.1,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2396,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "cache_key": "8dd711fd97b8a952abc4bab931c72323ae2d4cc6bd70bf275a8e6df443194bab",
+            "duration_ms": 288,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 288
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_11": {
+      "purpose": "accept",
+      "purpose_probability": 0.87,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2670,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.96,
+            "overclaim_probability": 0.09,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.96,
+              "overclaim_probability": 0.09,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2670,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.96
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.09
+              }
+            },
+            "cache_key": "94fb68acfabbf45b66b3fec994ead7baf016189b44732ffd4e7cb422e2f98595",
+            "duration_ms": 223,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 224
+      },
+      "baseline": "accept",
+      "combined": "accept"
+    },
+    "case_12": {
+      "purpose": "rejected",
+      "purpose_probability": 0.15,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2670,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.97,
+            "overclaim_probability": 0.08,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.97,
+              "overclaim_probability": 0.08,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2670,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.97
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.08
+              }
+            },
+            "cache_key": "c278b3da9fdc62b5b27ac8ee562b195150eed0517e76f4a92b1ebfbed516d175",
+            "duration_ms": 300,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 300
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_13": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.74,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2398,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.93,
+            "overclaim_probability": 0.1,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.93,
+              "overclaim_probability": 0.1,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2398,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.93
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "cache_key": "e6ab2558aaf8eb2471e82940341f8e1bcb82282534bcaca7850088c8ffbcda3c",
+            "duration_ms": 239,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 240
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_14": {
+      "purpose": "rejected",
+      "purpose_probability": 0.17,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2396,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.92,
+            "overclaim_probability": 0.13,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.92,
+              "overclaim_probability": 0.13,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2396,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.92
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.13
+              }
+            },
+            "cache_key": "c48039b5339c262a03a65f176965c23eb2d9a836f1df227062c3044e92d5532f",
+            "duration_ms": 286,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 287
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_15": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.67,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2531,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.95,
+            "overclaim_probability": 0.08,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.95,
+              "overclaim_probability": 0.08,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2531,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.08
+              }
+            },
+            "cache_key": "9024b76495ea2da1913a7a316900f2d1bb333e1ddb1b7009634bcf5a61c4d9bb",
+            "duration_ms": 217,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 217
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_16": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.29,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2489,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.95,
+            "overclaim_probability": 0.09,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.95,
+              "overclaim_probability": 0.09,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2489,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.09
+              }
+            },
+            "cache_key": "fbc5a8eea68d9559884ebb22e811d7bb678fc2e91f732703e57d0f8bbc17121a",
+            "duration_ms": 216,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 216
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_17": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.33,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2522,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.89,
+            "overclaim_probability": 0.15,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.89,
+              "overclaim_probability": 0.15,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2522,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.89
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.15
+              }
+            },
+            "cache_key": "edb7dc2356e74de75fce790f7b7b8dab5424d1bb6b0bf295b5ee87d6909477ff",
+            "duration_ms": 290,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 290
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_18": {
+      "purpose": "rejected",
+      "purpose_probability": 0.15,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2480,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.91,
+            "overclaim_probability": 0.15,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.91,
+              "overclaim_probability": 0.15,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2480,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.91
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.15
+              }
+            },
+            "cache_key": "7b9e2e67abaf8ccd4f0f3e92d121c095ffc71de0b6cdb737bc02d2c891cda1c1",
+            "duration_ms": 227,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 227
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_19": {
+      "purpose": "accept",
+      "purpose_probability": 0.87,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2392,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.94,
+            "overclaim_probability": 0.08,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.94,
+              "overclaim_probability": 0.08,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2392,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.94
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.08
+              }
+            },
+            "cache_key": "24f1e7179ce585ffd7d2171299fbb38e2491795ef4d95722510ccd411ca06c2c",
+            "duration_ms": 315,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 315
+      },
+      "baseline": "accept",
+      "combined": "accept"
+    },
+    "case_20": {
+      "purpose": "rejected",
+      "purpose_probability": 0.13,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2378,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.93,
+            "overclaim_probability": 0.09,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.93,
+              "overclaim_probability": 0.09,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2378,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.93
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.09
+              }
+            },
+            "cache_key": "cd9e01386e0268ad3e395bdf1602fb5b94adaca4a939187635fe08c2ded6a5f5",
+            "duration_ms": 305,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 306
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_21": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.36,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2618,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.94,
+            "overclaim_probability": 0.09,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.94,
+              "overclaim_probability": 0.09,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2618,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.94
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.09
+              }
+            },
+            "cache_key": "706bf1d56a2d63da4f5d6ca10be41a553f00a2f19b80725f916f29eb1b615c16",
+            "duration_ms": 230,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 231
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    },
+    "case_22": {
+      "purpose": "rejected",
+      "purpose_probability": 0.06,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2620,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.93,
+            "overclaim_probability": 0.1,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.93,
+              "overclaim_probability": 0.1,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2620,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.93
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "cache_key": "7a725c355b14d78ae94c4315a137f7ec48421a359f45da734820f92f67269d5b",
+            "duration_ms": 293,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 294
+      },
+      "baseline": "accept",
+      "combined": "rejected"
+    },
+    "case_23": {
+      "purpose": "accept",
+      "purpose_probability": 0.84,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2471,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.96,
+            "overclaim_probability": 0.1,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.96,
+              "overclaim_probability": 0.1,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2471,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.96
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "cache_key": "a75100609d5ba7aa751876263336558df89dc188b6b659b1f182ad510982ef00",
+            "duration_ms": 244,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 244
+      },
+      "baseline": "accept",
+      "combined": "accept"
+    },
+    "case_24": {
+      "purpose": "uncertain",
+      "purpose_probability": 0.26,
+      "baseline_audit": {
+        "model": "jev-1.13.0",
+        "policy_version": "memory-quality-v12",
+        "status": "success",
+        "route": "accept",
+        "counts": {
+          "items": 1,
+          "evaluated": 1,
+          "accepted": 1,
+          "rejected": 0,
+          "uncertain": 0,
+          "requests": 1,
+          "cache_hits": 0,
+          "initial_uncertain": 0,
+          "refined": 0,
+          "fields_evaluated": 0
+        },
+        "usage": {
+          "input_tokens": 2517,
+          "output_tokens": 48
+        },
+        "usage_status": "reported",
+        "decisions": [
+          {
+            "item_index": 0,
+            "kind": "note",
+            "grounded_probability": 0.95,
+            "overclaim_probability": 0.1,
+            "route": "accept",
+            "initial": {
+              "grounded_probability": 0.95,
+              "overclaim_probability": 0.1,
+              "route": "accept"
+            },
+            "decision_source": "aggregate",
+            "fields": []
+          }
+        ],
+        "evaluations": [
+          {
+            "model": "jev-1.13.0",
+            "policy_version": "memory-quality-v12",
+            "status": "success",
+            "evaluation_source": "live",
+            "counts": {
+              "requests": 1,
+              "cache_hits": 0
+            },
+            "usage": {
+              "input_tokens": 2517,
+              "output_tokens": 48
+            },
+            "usage_status": "reported",
+            "answers": {
+              "item_0_grounded": {
+                "type": "noul",
+                "noul": 0.95
+              },
+              "item_0_overclaim": {
+                "type": "noul",
+                "noul": 0.1
+              }
+            },
+            "cache_key": "da079807bef62a264451707663bb026505a7704d0db3fd7c7283b927834684db",
+            "duration_ms": 279,
+            "stage": "aggregate"
+          }
+        ],
+        "audit_recorded": null,
+        "duration_ms": 279
+      },
+      "baseline": "accept",
+      "combined": "unresolved"
+    }
+  },
+  "metrics": {
+    "baseline": {
+      "planned": 24,
+      "false_accept": 12,
+      "invalid_denominator": 12,
+      "useful_loss": 0,
+      "useful_denominator": 12,
+      "unresolved": 0,
+      "correct_all_planned": 0.5,
+      "correct": 12
+    },
+    "purpose": {
+      "planned": 24,
+      "false_accept": 0,
+      "invalid_denominator": 12,
+      "useful_loss": 8,
+      "useful_denominator": 12,
+      "unresolved": 10,
+      "correct_all_planned": 0.5833333333333334,
+      "correct": 14
+    },
+    "combined": {
+      "planned": 24,
+      "false_accept": 0,
+      "invalid_denominator": 12,
+      "useful_loss": 8,
+      "useful_denominator": 12,
+      "unresolved": 10,
+      "correct_all_planned": 0.5833333333333334,
+      "correct": 14
+    }
+  },
+  "accounting": {
+    "attempts": 32,
+    "usage": {
+      "input_tokens": 85743,
+      "output_tokens": 1888
+    },
+    "usage_status": "reported",
+    "provider_latency_ms": 8221.08,
+    "wall_ms": 8287.78,
+    "budget_stopped": false,
+    "prior_attempts": {
+      "ledger_sha256": "a59c9ffd2b4171e70bd0ad84cfca12bc3c3f477e4c40306dd0cfa854bc6d339c",
+      "attempts": 1,
+      "reported_input_tokens": 0,
+      "unknown_usage_attempts": 1,
+      "unknown_input_reservation": 11398
+    },
+    "cumulative_attempts": 33,
+    "cumulative_reported_input_tokens": 85743,
+    "cumulative_usage_status": "partial"
+  }
+}

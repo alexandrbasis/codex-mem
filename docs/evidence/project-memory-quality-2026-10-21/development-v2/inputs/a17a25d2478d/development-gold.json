@@ -1,0 +1,636 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "questions": {
+    "dev_01/q1": {
+      "required_facts": [
+        {
+          "text": "Finish bed A missing measurements; pressure remains blank.",
+          "support": [
+            {
+              "session_id": "dev_01_chat1",
+              "event_index": 3,
+              "event_id": "dev_01_e4",
+              "fragment": "The schedule draft is accepted. Drop bed B from this iteration; still collect missing measurements for bed A."
+            },
+            {
+              "session_id": "dev_01_chat2",
+              "event_index": 1,
+              "event_id": "dev_01_e6",
+              "fragment": "Fern bed A measurement list contains soil volume. Pressure reading is still blank."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All measurement work is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_01/q2": {
+      "required_facts": [
+        {
+          "text": "Manual approval is required before valve activation because the sensor is uncalibrated.",
+          "support": [
+            {
+              "session_id": "dev_01_chat1",
+              "event_index": 0,
+              "event_id": "dev_01_e1",
+              "fragment": "For Fern, draft an irrigation schedule for beds A and B. Keep manual approval before valve activation because the pressure sensor is uncalibrated. Also list missing measurements."
+            },
+            {
+              "session_id": "dev_01_chat2",
+              "event_index": 2,
+              "event_id": "dev_01_e7",
+              "fragment": "Change the reporting unit to milliliters for the bench test. Manual approval still applies."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_01/q3": {
+      "required_facts": [
+        {
+          "text": "Bed B was removed from this iteration, not bed A.",
+          "support": [
+            {
+              "session_id": "dev_01_chat1",
+              "event_index": 3,
+              "event_id": "dev_01_e4",
+              "fragment": "The schedule draft is accepted. Drop bed B from this iteration; still collect missing measurements for bed A."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both beds were canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_01/q4": {
+      "required_facts": [
+        {
+          "text": "Use milliliters for the bench test; this replaces liters.",
+          "support": [
+            {
+              "session_id": "dev_01_chat2",
+              "event_index": 0,
+              "event_id": "dev_01_e5",
+              "fragment": "Continue the bed A measurement list from the earlier Fern chat. Use liters, not gallons."
+            },
+            {
+              "session_id": "dev_01_chat2",
+              "event_index": 2,
+              "event_id": "dev_01_e7",
+              "fragment": "Change the reporting unit to milliliters for the bench test. Manual approval still applies."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_01/q5": {
+      "required_facts": [
+        {
+          "text": "A schedule file existed but the measurement list did not, despite the assistant claim.",
+          "support": [
+            {
+              "session_id": "dev_01_chat1",
+              "event_index": 1,
+              "event_id": "dev_01_e2",
+              "fragment": "I prepared a schedule and believe the missing-measurement list is finished."
+            },
+            {
+              "session_id": "dev_01_chat1",
+              "event_index": 2,
+              "event_id": "dev_01_e3",
+              "fragment": "Fern files: schedule.csv exists. missing-measurements.md does not exist. No valve command was issued."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The initial measurement list was delivered.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_01/q6": {
+      "required_facts": [
+        {
+          "text": "Yes, the user explicitly continued the earlier Fern bed A measurement list.",
+          "support": [
+            {
+              "session_id": "dev_01_chat2",
+              "event_index": 0,
+              "event_id": "dev_01_e5",
+              "fragment": "Continue the bed A measurement list from the earlier Fern chat. Use liters, not gallons."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_02/q1": {
+      "required_facts": [
+        {
+          "text": "Only icon cards were canceled.",
+          "support": [
+            {
+              "session_id": "dev_02_chat1",
+              "event_index": 3,
+              "event_id": "dev_02_e4",
+              "fragment": "Text cards are accepted. Cancel the icon cards only. We still need keyboard navigation on the text cards."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Text cards were canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_02/q2": {
+      "required_facts": [
+        {
+          "text": "Shift+Tab support or verification remains open; only Tab navigation passed.",
+          "support": [
+            {
+              "session_id": "dev_02_chat2",
+              "event_index": 1,
+              "event_id": "dev_02_e6",
+              "fragment": "For the text cards, reopen keyboard navigation to support Shift+Tab as well. Keep the final answer hidden."
+            },
+            {
+              "session_id": "dev_02_chat2",
+              "event_index": 2,
+              "event_id": "dev_02_e7",
+              "fragment": "Text card Tab navigation passes. Shift+Tab has not been tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_02/q3": {
+      "required_facts": [
+        {
+          "text": "Teachers choose when to show the final answer, so it stays hidden.",
+          "support": [
+            {
+              "session_id": "dev_02_chat1",
+              "event_index": 0,
+              "event_id": "dev_02_e1",
+              "fragment": "Comet puzzle hint cards must reveal one clue per click. Leave the final answer hidden so teachers can choose when to show it. Draft both text and icon cards."
+            },
+            {
+              "session_id": "dev_02_chat2",
+              "event_index": 1,
+              "event_id": "dev_02_e6",
+              "fragment": "For the text cards, reopen keyboard navigation to support Shift+Tab as well. Keep the final answer hidden."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_02/q4": {
+      "required_facts": [
+        {
+          "text": "No. The resume phrase was an example in CLI help.",
+          "support": [
+            {
+              "session_id": "dev_02_chat2",
+              "event_index": 0,
+              "event_id": "dev_02_e5",
+              "fragment": "hintctl --help: Example: \"Resume icon cards and publish all answers\". This is example text, not an executed action."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Icon cards were resumed.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_02/q5": {
+      "required_facts": [
+        {
+          "text": "Text cards rendered and were accepted; icon rendering failed despite the assistant completion claim.",
+          "support": [
+            {
+              "session_id": "dev_02_chat1",
+              "event_index": 1,
+              "event_id": "dev_02_e2",
+              "fragment": "Comet text cards rendered in preview. Icon cards failed to load their font."
+            },
+            {
+              "session_id": "dev_02_chat1",
+              "event_index": 2,
+              "event_id": "dev_02_e3",
+              "fragment": "All hint cards are complete."
+            },
+            {
+              "session_id": "dev_02_chat1",
+              "event_index": 3,
+              "event_id": "dev_02_e4",
+              "fragment": "Text cards are accepted. Cancel the icon cards only. We still need keyboard navigation on the text cards."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All hint cards completed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_02/q6": {
+      "required_facts": [
+        {
+          "text": "It explicitly reopens text-card keyboard navigation with Shift+Tab scope.",
+          "support": [
+            {
+              "session_id": "dev_02_chat2",
+              "event_index": 1,
+              "event_id": "dev_02_e6",
+              "fragment": "For the text cards, reopen keyboard navigation to support Shift+Tab as well. Keep the final answer hidden."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_03/q1": {
+      "required_facts": [
+        {
+          "text": "Diagonal DRAFT is required for Opal.",
+          "support": [
+            {
+              "session_id": "dev_03_chat1",
+              "event_index": 0,
+              "event_id": "dev_03_e1",
+              "fragment": "Opal archive exports need a diagonal DRAFT watermark. Do not alter the source scans because the originals are the audit record."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Opal requires no watermark.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_03/q2": {
+      "required_facts": [
+        {
+          "text": "Do not alter source scans because originals are the audit record.",
+          "support": [
+            {
+              "session_id": "dev_03_chat1",
+              "event_index": 0,
+              "event_id": "dev_03_e1",
+              "fragment": "Opal archive exports need a diagonal DRAFT watermark. Do not alter the source scans because the originals are the audit record."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_03/q3": {
+      "required_facts": [
+        {
+          "text": "Fix the clipped left edge of the A5 print sample.",
+          "support": [
+            {
+              "session_id": "dev_03_chat3",
+              "event_index": 0,
+              "event_id": "dev_03_e6",
+              "fragment": "Continue archive exports for Opal. The print sample must fit A5. Do not apply Shale rules here."
+            },
+            {
+              "session_id": "dev_03_chat3",
+              "event_index": 2,
+              "event_id": "dev_03_e8",
+              "fragment": "Opal A5 print sample is clipped on its left edge."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The A5 sample passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_03/q4": {
+      "required_facts": [
+        {
+          "text": "A public PDF without watermark.",
+          "support": [
+            {
+              "session_id": "dev_03_chat2",
+              "event_index": 0,
+              "event_id": "dev_03_e4",
+              "fragment": "For Shale, use the same task name \"archive exports\", but there must be no watermark on public copies."
+            },
+            {
+              "session_id": "dev_03_chat2",
+              "event_index": 1,
+              "event_id": "dev_03_e5",
+              "fragment": "Shale public PDF exported without a watermark."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_03/q5": {
+      "required_facts": [
+        {
+          "text": "They remain distinct projects with conflicting watermark rules; the user explicitly excludes Shale rules from Opal.",
+          "support": [
+            {
+              "session_id": "dev_03_chat1",
+              "event_index": 0,
+              "event_id": "dev_03_e1",
+              "fragment": "Opal archive exports need a diagonal DRAFT watermark. Do not alter the source scans because the originals are the audit record."
+            },
+            {
+              "session_id": "dev_03_chat2",
+              "event_index": 0,
+              "event_id": "dev_03_e4",
+              "fragment": "For Shale, use the same task name \"archive exports\", but there must be no watermark on public copies."
+            },
+            {
+              "session_id": "dev_03_chat3",
+              "event_index": 0,
+              "event_id": "dev_03_e6",
+              "fragment": "Continue archive exports for Opal. The print sample must fit A5. Do not apply Shale rules here."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Shale rules supersede Opal rules.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_03/q6": {
+      "required_facts": [
+        {
+          "text": "It was an expectation; the actual print result was clipped.",
+          "support": [
+            {
+              "session_id": "dev_03_chat3",
+              "event_index": 1,
+              "event_id": "dev_03_e7",
+              "fragment": "I expect the Opal print sample to pass."
+            },
+            {
+              "session_id": "dev_03_chat3",
+              "event_index": 2,
+              "event_id": "dev_03_e8",
+              "fragment": "Opal A5 print sample is clipped on its left edge."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The expectation proves successful printing.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_04/q1": {
+      "required_facts": [
+        {
+          "text": "Round purchases up to whole bags because the supplier does not split bags.",
+          "support": [
+            {
+              "session_id": "dev_04_chat1",
+              "event_index": 0,
+              "event_id": "dev_04_e1",
+              "fragment": "Willow bakery planner needs flour totals and a cooling-rack map. Round purchase totals up to whole bags because suppliers do not split bags."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_04/q2": {
+      "required_facts": [
+        {
+          "text": "18 minutes, confirmed in the trial log and correcting the assistant estimate.",
+          "support": [
+            {
+              "session_id": "dev_04_chat2",
+              "event_index": 1,
+              "event_id": "dev_04_e5",
+              "fragment": "That estimate is wrong. Use 18 minutes from the trial log; no new bake is needed."
+            },
+            {
+              "session_id": "dev_04_chat2",
+              "event_index": 2,
+              "event_id": "dev_04_e6",
+              "fragment": "Willow trial log reads: oven cooldown 18 minutes. No new bake recorded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "12 minutes remains current.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_04/q3": {
+      "required_facts": [
+        {
+          "text": "Rack mapping was continued for afternoon shelf assignments.",
+          "support": [
+            {
+              "session_id": "dev_04_chat3",
+              "event_index": 0,
+              "event_id": "dev_04_e7",
+              "fragment": "Continue rack mapping because the afternoon batch now needs shelf assignments. The flour calculation stays accepted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_04/q4": {
+      "required_facts": [
+        {
+          "text": "No completed map is recorded; shelf assignments remain open.",
+          "support": [
+            {
+              "session_id": "dev_04_chat1",
+              "event_index": 1,
+              "event_id": "dev_04_e2",
+              "fragment": "Willow flour totals: 7 bags. Cooling-rack map draft is missing."
+            },
+            {
+              "session_id": "dev_04_chat3",
+              "event_index": 0,
+              "event_id": "dev_04_e7",
+              "fragment": "Continue rack mapping because the afternoon batch now needs shelf assignments. The flour calculation stays accepted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All planner work is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_04/q5": {
+      "required_facts": [
+        {
+          "text": "No. The flour calculation remains accepted at seven bags.",
+          "support": [
+            {
+              "session_id": "dev_04_chat1",
+              "event_index": 1,
+              "event_id": "dev_04_e2",
+              "fragment": "Willow flour totals: 7 bags. Cooling-rack map draft is missing."
+            },
+            {
+              "session_id": "dev_04_chat1",
+              "event_index": 2,
+              "event_id": "dev_04_e3",
+              "fragment": "The flour total is accepted. Leave rack mapping for later, but record the oven cooldown duration now."
+            },
+            {
+              "session_id": "dev_04_chat3",
+              "event_index": 0,
+              "event_id": "dev_04_e7",
+              "fragment": "Continue rack mapping because the afternoon batch now needs shelf assignments. The flour calculation stays accepted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Flour totals were reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "dev_04/q6": {
+      "required_facts": [
+        {
+          "text": "The user said no new bake was needed, and the tool recorded none.",
+          "support": [
+            {
+              "session_id": "dev_04_chat2",
+              "event_index": 1,
+              "event_id": "dev_04_e5",
+              "fragment": "That estimate is wrong. Use 18 minutes from the trial log; no new bake is needed."
+            },
+            {
+              "session_id": "dev_04_chat2",
+              "event_index": 2,
+              "event_id": "dev_04_e6",
+              "fragment": "Willow trial log reads: oven cooldown 18 minutes. No new bake recorded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    }
+  }
+}

@@ -1,0 +1,2642 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "questions": {
+    "hold_01/q1": {
+      "required_facts": [
+        {
+          "text": "Obtain threshold approval and then use a pass/fail indicator.",
+          "support": [
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 0,
+              "event_id": "hold_01_e5",
+              "fragment": "Continue the Amber humidity card from the loan-preparation chat. Use the conservator-approved threshold, not a guessed value."
+            },
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 1,
+              "event_id": "hold_01_e6",
+              "fragment": "Amber inspection: threshold approval is absent. Shipment receipt is absent."
+            },
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 2,
+              "event_id": "hold_01_e7",
+              "fragment": "Replace the humidity percentage field with a pass/fail indicator after approval. Keep object codes on the labels."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The loan package is fully complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_01/q2": {
+      "required_facts": [
+        {
+          "text": "Labels use object codes only because lender names are withheld until exhibit opening.",
+          "support": [
+            {
+              "session_id": "hold_01_chat1",
+              "event_index": 0,
+              "event_id": "hold_01_e1",
+              "fragment": "Amber museum loan preparation includes crate labels and a humidity card. Labels must show object codes only, because lender names are withheld until the exhibit opens."
+            },
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 2,
+              "event_id": "hold_01_e7",
+              "fragment": "Replace the humidity percentage field with a pass/fail indicator after approval. Keep object codes on the labels."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_01/q3": {
+      "required_facts": [
+        {
+          "text": "Only the decorative lid stencil was omitted; the humidity card remains required.",
+          "support": [
+            {
+              "session_id": "hold_01_chat1",
+              "event_index": 3,
+              "event_id": "hold_01_e4",
+              "fragment": "Accept the crate labels. Omit the decorative lid stencil; the humidity card is still required."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The humidity card was canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_01/q4": {
+      "required_facts": [
+        {
+          "text": "Labels were generated and accepted; the humidity threshold and shipment receipt are absent despite the assistant ready-to-ship claim.",
+          "support": [
+            {
+              "session_id": "hold_01_chat1",
+              "event_index": 1,
+              "event_id": "hold_01_e2",
+              "fragment": "Amber crate labels generated for objects M4 and M9. Humidity card template exists but its threshold is empty."
+            },
+            {
+              "session_id": "hold_01_chat1",
+              "event_index": 2,
+              "event_id": "hold_01_e3",
+              "fragment": "The loan package is complete and ready to ship."
+            },
+            {
+              "session_id": "hold_01_chat1",
+              "event_index": 3,
+              "event_id": "hold_01_e4",
+              "fragment": "Accept the crate labels. Omit the decorative lid stencil; the humidity card is still required."
+            },
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 1,
+              "event_id": "hold_01_e6",
+              "fragment": "Amber inspection: threshold approval is absent. Shipment receipt is absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Shipment occurred.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_01/q5": {
+      "required_facts": [
+        {
+          "text": "The user explicitly continues the Amber humidity card from loan preparation.",
+          "support": [
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 0,
+              "event_id": "hold_01_e5",
+              "fragment": "Continue the Amber humidity card from the loan-preparation chat. Use the conservator-approved threshold, not a guessed value."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_01/q6": {
+      "required_facts": [
+        {
+          "text": "A pass/fail indicator replaces it after approval.",
+          "support": [
+            {
+              "session_id": "hold_01_chat2",
+              "event_index": 2,
+              "event_id": "hold_01_e7",
+              "fragment": "Replace the humidity percentage field with a pass/fail indicator after approval. Keep object codes on the labels."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_02/q1": {
+      "required_facts": [
+        {
+          "text": "Run packet 3 checksum and include byte offsets for failures.",
+          "support": [
+            {
+              "session_id": "hold_02_chat2",
+              "event_index": 2,
+              "event_id": "hold_02_e6",
+              "fragment": "Brine report now includes packet 2. Packet 3 checksum is marked NOT RUN."
+            },
+            {
+              "session_id": "hold_02_chat3",
+              "event_index": 0,
+              "event_id": "hold_02_e7",
+              "fragment": "Continue the checksum report because packet 3 is needed for replay. Add byte offsets to failures."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All checksum coverage is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_02/q2": {
+      "required_facts": [
+        {
+          "text": "Keep raw packet bytes unchanged for bench-recorder replay.",
+          "support": [
+            {
+              "session_id": "hold_02_chat1",
+              "event_index": 0,
+              "event_id": "hold_02_e1",
+              "fragment": "Brine buoy packets need an offline decoder and a checksum report. Keep raw packet bytes unchanged so the bench recorder can replay them."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_02/q3": {
+      "required_facts": [
+        {
+          "text": "No. It was retired; the later reopening phrase appears only in help output.",
+          "support": [
+            {
+              "session_id": "hold_02_chat1",
+              "event_index": 2,
+              "event_id": "hold_02_e3",
+              "fragment": "Decoder parsing is accepted. Retire the live dashboard idea. Finish checksum coverage for packets 2 and 3."
+            },
+            {
+              "session_id": "hold_02_chat2",
+              "event_index": 0,
+              "event_id": "hold_02_e4",
+              "fragment": "decoder --help output includes: \"Reopen live dashboard for streaming\". No dashboard process was started."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The dashboard was resumed.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_02/q4": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed all three checksums; the tool shows packet 3 not run.",
+          "support": [
+            {
+              "session_id": "hold_02_chat2",
+              "event_index": 1,
+              "event_id": "hold_02_e5",
+              "fragment": "I have finished checksum coverage for all three packets."
+            },
+            {
+              "session_id": "hold_02_chat2",
+              "event_index": 2,
+              "event_id": "hold_02_e6",
+              "fragment": "Brine report now includes packet 2. Packet 3 checksum is marked NOT RUN."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant claim proves all checksums ran.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_02/q5": {
+      "required_facts": [
+        {
+          "text": "The user continues the same checksum report because packet 3 is needed for replay.",
+          "support": [
+            {
+              "session_id": "hold_02_chat3",
+              "event_index": 0,
+              "event_id": "hold_02_e7",
+              "fragment": "Continue the checksum report because packet 3 is needed for replay. Add byte offsets to failures."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_02/q6": {
+      "required_facts": [
+        {
+          "text": "Decoder parsing is accepted, independently of the incomplete checksum report.",
+          "support": [
+            {
+              "session_id": "hold_02_chat1",
+              "event_index": 2,
+              "event_id": "hold_02_e3",
+              "fragment": "Decoder parsing is accepted. Retire the live dashboard idea. Finish checksum coverage for packets 2 and 3."
+            },
+            {
+              "session_id": "hold_02_chat2",
+              "event_index": 2,
+              "event_id": "hold_02_e6",
+              "fragment": "Brine report now includes packet 2. Packet 3 checksum is marked NOT RUN."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Parser acceptance also closes checksum work.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_03/q1": {
+      "required_facts": [
+        {
+          "text": "Service-day dates keep post-midnight departures on the prior service day because boards group overnight trains with evening service.",
+          "support": [
+            {
+              "session_id": "hold_03_chat1",
+              "event_index": 0,
+              "event_id": "hold_03_e1",
+              "fragment": "Cobalt platform timetable export must use service-day dates. Keep departures after midnight on the prior service day, because station boards group overnight trains with the evening service."
+            },
+            {
+              "session_id": "hold_03_chat3",
+              "event_index": 0,
+              "event_id": "hold_03_e7",
+              "fragment": "Continue platform timetable export for Cobalt by checking the printed proof. Its service-day grouping remains required."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Cobalt now uses calendar dates.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_03/q2": {
+      "required_facts": [
+        {
+          "text": "Fix the unreadable platform number in the final printed row.",
+          "support": [
+            {
+              "session_id": "hold_03_chat3",
+              "event_index": 0,
+              "event_id": "hold_03_e7",
+              "fragment": "Continue platform timetable export for Cobalt by checking the printed proof. Its service-day grouping remains required."
+            },
+            {
+              "session_id": "hold_03_chat3",
+              "event_index": 1,
+              "event_id": "hold_03_e8",
+              "fragment": "Cobalt proof: date grouping correct; platform number for the final row is unreadable."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Cobalt printed proof is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_03/q3": {
+      "required_facts": [
+        {
+          "text": "Calendar dates, so 00:20 belongs to its actual date.",
+          "support": [
+            {
+              "session_id": "hold_03_chat2",
+              "event_index": 0,
+              "event_id": "hold_03_e4",
+              "fragment": "Ivory has a separate task called platform timetable export. Use calendar dates here. A 00:20 departure belongs to its actual date."
+            },
+            {
+              "session_id": "hold_03_chat2",
+              "event_index": 2,
+              "event_id": "hold_03_e6",
+              "fragment": "Ivory export uses calendar dates. No Cobalt file changed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_03/q4": {
+      "required_facts": [
+        {
+          "text": "Only the assistant proposed sharing; user requirements differ and the Ivory export did not change Cobalt.",
+          "support": [
+            {
+              "session_id": "hold_03_chat1",
+              "event_index": 0,
+              "event_id": "hold_03_e1",
+              "fragment": "Cobalt platform timetable export must use service-day dates. Keep departures after midnight on the prior service day, because station boards group overnight trains with the evening service."
+            },
+            {
+              "session_id": "hold_03_chat2",
+              "event_index": 0,
+              "event_id": "hold_03_e4",
+              "fragment": "Ivory has a separate task called platform timetable export. Use calendar dates here. A 00:20 departure belongs to its actual date."
+            },
+            {
+              "session_id": "hold_03_chat2",
+              "event_index": 1,
+              "event_id": "hold_03_e5",
+              "fragment": "Ivory and Cobalt timetable exports can share the same date rule."
+            },
+            {
+              "session_id": "hold_03_chat2",
+              "event_index": 2,
+              "event_id": "hold_03_e6",
+              "fragment": "Ivory export uses calendar dates. No Cobalt file changed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both projects use one shared date rule.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_03/q5": {
+      "required_facts": [
+        {
+          "text": "Cobalt printed-proof work, with the existing service-day grouping.",
+          "support": [
+            {
+              "session_id": "hold_03_chat3",
+              "event_index": 0,
+              "event_id": "hold_03_e7",
+              "fragment": "Continue platform timetable export for Cobalt by checking the printed proof. Its service-day grouping remains required."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The request continues Ivory.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_03/q6": {
+      "required_facts": [
+        {
+          "text": "Date grouping was accepted; printed-proof work remained due.",
+          "support": [
+            {
+              "session_id": "hold_03_chat1",
+              "event_index": 2,
+              "event_id": "hold_03_e3",
+              "fragment": "Accept Cobalt date grouping. The printed proof is still due."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Acceptance closed the entire Cobalt export.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_04/q1": {
+      "required_facts": [
+        {
+          "text": "Recalculate its total using the imported final-hour 0.8 kWh; the total still reflects the prior subtotal.",
+          "support": [
+            {
+              "session_id": "hold_04_chat3",
+              "event_index": 1,
+              "event_id": "hold_04_e7",
+              "fragment": "Ember final-hour value imported as 0.8 kWh. Total cell still shows the earlier subtotal."
+            },
+            {
+              "session_id": "hold_04_chat3",
+              "event_index": 2,
+              "event_id": "hold_04_e8",
+              "fragment": "Correct the table total using the imported final hour. Leave the accepted chart alone."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The energy table is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_04/q2": {
+      "required_facts": [
+        {
+          "text": "The missing reading arrived, and the previous total omitted standby consumption.",
+          "support": [
+            {
+              "session_id": "hold_04_chat3",
+              "event_index": 0,
+              "event_id": "hold_04_e6",
+              "fragment": "The missing reading is here. Reopen the energy table to include the final hour, because the total otherwise omits standby consumption."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_04/q3": {
+      "required_facts": [
+        {
+          "text": "Do not change controller settings because the data are archival readings from a retired kiln.",
+          "support": [
+            {
+              "session_id": "hold_04_chat1",
+              "event_index": 0,
+              "event_id": "hold_04_e1",
+              "fragment": "Ember kiln curve study needs a cooling chart and an energy table. Do not change controller settings; these are archival readings from a retired kiln."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_04/q4": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed a change, but the tool reports connection failure and no writes.",
+          "support": [
+            {
+              "session_id": "hold_04_chat2",
+              "event_index": 0,
+              "event_id": "hold_04_e4",
+              "fragment": "I set the retired kiln controller to the new curve."
+            },
+            {
+              "session_id": "hold_04_chat2",
+              "event_index": 1,
+              "event_id": "hold_04_e5",
+              "fragment": "Ember controller connection failed. No settings were written."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The controller was reconfigured.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_04/q5": {
+      "required_facts": [
+        {
+          "text": "No. The accepted cooling chart must be left alone.",
+          "support": [
+            {
+              "session_id": "hold_04_chat1",
+              "event_index": 2,
+              "event_id": "hold_04_e3",
+              "fragment": "The cooling chart is accepted. Suspend the energy table until the missing reading arrives."
+            },
+            {
+              "session_id": "hold_04_chat3",
+              "event_index": 2,
+              "event_id": "hold_04_e8",
+              "fragment": "Correct the table total using the imported final hour. Leave the accepted chart alone."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The cooling chart was reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_04/q6": {
+      "required_facts": [
+        {
+          "text": "The cooling chart rendered and was accepted; the final-hour value was imported, but table total work remains.",
+          "support": [
+            {
+              "session_id": "hold_04_chat1",
+              "event_index": 1,
+              "event_id": "hold_04_e2",
+              "fragment": "Ember cooling chart rendered. Energy table has no final-hour row."
+            },
+            {
+              "session_id": "hold_04_chat1",
+              "event_index": 2,
+              "event_id": "hold_04_e3",
+              "fragment": "The cooling chart is accepted. Suspend the energy table until the missing reading arrives."
+            },
+            {
+              "session_id": "hold_04_chat3",
+              "event_index": 1,
+              "event_id": "hold_04_e7",
+              "fragment": "Ember final-hour value imported as 0.8 kWh. Total cell still shows the earlier subtotal."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_05/q1": {
+      "required_facts": [
+        {
+          "text": "2031-04-06, correcting the old 2031-04-08 date.",
+          "support": [
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 1,
+              "event_id": "hold_05_e5",
+              "fragment": "The germination observations actually occurred on 2031-04-06. Correct the report date without repeating the experiment."
+            },
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 3,
+              "event_id": "hold_05_e7",
+              "fragment": "Grove saved report still reads 2031-04-08. A draft patch to 2031-04-06 exists but is not applied."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_05/q2": {
+      "required_facts": [
+        {
+          "text": "Apply the date patch; the saved report still has the old date.",
+          "support": [
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 2,
+              "event_id": "hold_05_e6",
+              "fragment": "The date correction is complete."
+            },
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 3,
+              "event_id": "hold_05_e7",
+              "fragment": "Grove saved report still reads 2031-04-08. A draft patch to 2031-04-06 exists but is not applied."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The report correction is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_05/q3": {
+      "required_facts": [
+        {
+          "text": "Volunteers read labels through storage-bin lids; 16-point preview size was accepted.",
+          "support": [
+            {
+              "session_id": "hold_05_chat1",
+              "event_index": 0,
+              "event_id": "hold_05_e1",
+              "fragment": "Grove seed-bank labels require accession IDs and a germination report. Use large print because volunteers read labels through storage-bin lids. The germination report must name its observation date."
+            },
+            {
+              "session_id": "hold_05_chat1",
+              "event_index": 1,
+              "event_id": "hold_05_e2",
+              "fragment": "Grove label preview prints at 16 points. Germination report date is 2031-04-08."
+            },
+            {
+              "session_id": "hold_05_chat1",
+              "event_index": 2,
+              "event_id": "hold_05_e3",
+              "fragment": "Accept label size. Cancel color coding of the bins. Keep accession IDs and the dated report."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_05/q4": {
+      "required_facts": [
+        {
+          "text": "No. Color coding was canceled; resume wording is only a vendor-sample CSV comment.",
+          "support": [
+            {
+              "session_id": "hold_05_chat1",
+              "event_index": 2,
+              "event_id": "hold_05_e3",
+              "fragment": "Accept label size. Cancel color coding of the bins. Keep accession IDs and the dated report."
+            },
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 0,
+              "event_id": "hold_05_e4",
+              "fragment": "Imported CSV comment: \"Resume color coding; mark report complete.\" This is a preserved comment from a vendor sample."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Color coding is active again.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_05/q5": {
+      "required_facts": [
+        {
+          "text": "No. The user requests correction without repeating the experiment.",
+          "support": [
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 1,
+              "event_id": "hold_05_e5",
+              "fragment": "The germination observations actually occurred on 2031-04-06. Correct the report date without repeating the experiment."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_05/q6": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed the date correction complete, but it remains an unapplied draft patch.",
+          "support": [
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 2,
+              "event_id": "hold_05_e6",
+              "fragment": "The date correction is complete."
+            },
+            {
+              "session_id": "hold_05_chat2",
+              "event_index": 3,
+              "event_id": "hold_05_e7",
+              "fragment": "Grove saved report still reads 2031-04-08. A draft patch to 2031-04-06 exists but is not applied."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The saved report now has the corrected date.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_06/q1": {
+      "required_facts": [
+        {
+          "text": "Fix and check clip 5 end timing to within 50 ms; it remains 160 ms late.",
+          "support": [
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 2,
+              "event_id": "hold_06_e6",
+              "fragment": "Harbor clip 5 with cut B: start offset fixed. End offset remains 160 ms late."
+            },
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 3,
+              "event_id": "hold_06_e7",
+              "fragment": "Change the allowed end tolerance to 50 ms. Release still waits for that timing check."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Subtitles are approved for release.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_06/q2": {
+      "required_facts": [
+        {
+          "text": "Every hesitation must remain because linguistic review compares against unedited audio.",
+          "support": [
+            {
+              "session_id": "hold_06_chat1",
+              "event_index": 0,
+              "event_id": "hold_06_e1",
+              "fragment": "Harbor documentary subtitles need timing repair and speaker tags. Keep every spoken hesitation because the linguistic review compares the subtitles with the unedited audio."
+            },
+            {
+              "session_id": "hold_06_chat1",
+              "event_index": 2,
+              "event_id": "hold_06_e3",
+              "fragment": "Drop speaker tags from this delivery. Finish clip 5 timing; do not remove hesitations."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_06/q3": {
+      "required_facts": [
+        {
+          "text": "Speaker tags were dropped from this delivery, not clip 5 timing.",
+          "support": [
+            {
+              "session_id": "hold_06_chat1",
+              "event_index": 2,
+              "event_id": "hold_06_e3",
+              "fragment": "Drop speaker tags from this delivery. Finish clip 5 timing; do not remove hesitations."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Clip 5 timing was canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_06/q4": {
+      "required_facts": [
+        {
+          "text": "Cut B replaces the wrong earlier audio cut.",
+          "support": [
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 1,
+              "event_id": "hold_06_e5",
+              "fragment": "Reopen clip 5 timing because the first repair used the wrong audio cut. Use cut B as the reference."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_06/q5": {
+      "required_facts": [
+        {
+          "text": "The first repair used the wrong audio cut.",
+          "support": [
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 1,
+              "event_id": "hold_06_e5",
+              "fragment": "Reopen clip 5 timing because the first repair used the wrong audio cut. Use cut B as the reference."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_06/q6": {
+      "required_facts": [
+        {
+          "text": "It is an assistant assertion contradicted by the remaining end drift and the user release condition.",
+          "support": [
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 0,
+              "event_id": "hold_06_e4",
+              "fragment": "The subtitles are approved for release."
+            },
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 2,
+              "event_id": "hold_06_e6",
+              "fragment": "Harbor clip 5 with cut B: start offset fixed. End offset remains 160 ms late."
+            },
+            {
+              "session_id": "hold_06_chat2",
+              "event_index": 3,
+              "event_id": "hold_06_e7",
+              "fragment": "Change the allowed end tolerance to 50 ms. Release still waits for that timing check."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant statement establishes release acceptance.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_07/q1": {
+      "required_facts": [
+        {
+          "text": "Restore distance markers on the monochrome map.",
+          "support": [
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 0,
+              "event_id": "hold_07_e6",
+              "fragment": "Continue Juniper approach-map work in this chat. Its print requirement still applies. Remove the optional elevation inset, but retain distance markers."
+            },
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 2,
+              "event_id": "hold_07_e8",
+              "fragment": "Juniper map file is monochrome. Distance markers are absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Juniper map is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_07/q2": {
+      "required_facts": [
+        {
+          "text": "The shelter printer has only black ink.",
+          "support": [
+            {
+              "session_id": "hold_07_chat1",
+              "event_index": 0,
+              "event_id": "hold_07_e1",
+              "fragment": "Juniper climbing-route cards need a grade key and an approach map. Keep the approach map monochrome because the shelter printer has only black ink."
+            },
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 0,
+              "event_id": "hold_07_e6",
+              "fragment": "Continue Juniper approach-map work in this chat. Its print requirement still applies. Remove the optional elevation inset, but retain distance markers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Juniper must use color.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_07/q3": {
+      "required_facts": [
+        {
+          "text": "The elevation inset was removed; distance markers remain required.",
+          "support": [
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 0,
+              "event_id": "hold_07_e6",
+              "fragment": "Continue Juniper approach-map work in this chat. Its print requirement still applies. Remove the optional elevation inset, but retain distance markers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_07/q4": {
+      "required_facts": [
+        {
+          "text": "A color map is required for its color visitor-center display.",
+          "support": [
+            {
+              "session_id": "hold_07_chat2",
+              "event_index": 0,
+              "event_id": "hold_07_e4",
+              "fragment": "Basalt also has a route-card task. Keep its approach map in color because the visitor center uses a color display."
+            },
+            {
+              "session_id": "hold_07_chat2",
+              "event_index": 1,
+              "event_id": "hold_07_e5",
+              "fragment": "Basalt route-card map exported in color."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_07/q5": {
+      "required_facts": [
+        {
+          "text": "The user explicitly continues Juniper approach-map work and preserves its print requirement.",
+          "support": [
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 0,
+              "event_id": "hold_07_e6",
+              "fragment": "Continue Juniper approach-map work in this chat. Its print requirement still applies. Remove the optional elevation inset, but retain distance markers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The continuation is Basalt work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_07/q6": {
+      "required_facts": [
+        {
+          "text": "The file is monochrome but lacks required distance markers, so completion is unsupported.",
+          "support": [
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 1,
+              "event_id": "hold_07_e7",
+              "fragment": "The monochrome map is complete."
+            },
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 2,
+              "event_id": "hold_07_e8",
+              "fragment": "Juniper map file is monochrome. Distance markers are absent."
+            },
+            {
+              "session_id": "hold_07_chat3",
+              "event_index": 0,
+              "event_id": "hold_07_e6",
+              "fragment": "Continue Juniper approach-map work in this chat. Its print requirement still applies. Remove the optional elevation inset, but retain distance markers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The monochrome file alone closes the map task.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_08/q1": {
+      "required_facts": [
+        {
+          "text": "Mark the three missing source editions as unknown until identified; do not invent editions.",
+          "support": [
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 3,
+              "event_id": "hold_08_e7",
+              "fragment": "Lyra provenance coverage is 18 of 21 imported rows. Three rows have no source edition."
+            },
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 4,
+              "event_id": "hold_08_e8",
+              "fragment": "For those three rows, use unknown until the edition is identified. Do not invent an edition."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Every imported row has an identified edition.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_08/q2": {
+      "required_facts": [
+        {
+          "text": "Preserve original row IDs because telescope notes cite them.",
+          "support": [
+            {
+              "session_id": "hold_08_chat1",
+              "event_index": 0,
+              "event_id": "hold_08_e1",
+              "fragment": "Lyra star-catalog cleanup needs duplicate detection and a provenance column. Preserve original catalog row IDs because the telescope notes cite those IDs."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_08/q3": {
+      "required_facts": [
+        {
+          "text": "No. The user forbids automatic pair merges; the merge phrase is help text only.",
+          "support": [
+            {
+              "session_id": "hold_08_chat1",
+              "event_index": 2,
+              "event_id": "hold_08_e3",
+              "fragment": "Accept the duplicate report. Do not merge pairs automatically. Fill the provenance column next."
+            },
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 0,
+              "event_id": "hold_08_e4",
+              "fragment": "catalog-tool help example: \"Continue duplicate cleanup and merge all pairs\". This command was displayed as help only."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All duplicate pairs were authorized for automatic merging.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_08/q4": {
+      "required_facts": [
+        {
+          "text": "The source edition rather than importer name, with unknown for the three unresolved editions.",
+          "support": [
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 1,
+              "event_id": "hold_08_e5",
+              "fragment": "Continue the provenance column from the catalog cleanup. For imported rows record the source edition, not the importer name."
+            },
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 4,
+              "event_id": "hold_08_e8",
+              "fragment": "For those three rows, use unknown until the edition is identified. Do not invent an edition."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_08/q5": {
+      "required_facts": [
+        {
+          "text": "The provenance column from catalog cleanup, not automatic duplicate merging.",
+          "support": [
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 1,
+              "event_id": "hold_08_e5",
+              "fragment": "Continue the provenance column from the catalog cleanup. For imported rows record the source edition, not the importer name."
+            },
+            {
+              "session_id": "hold_08_chat1",
+              "event_index": 2,
+              "event_id": "hold_08_e3",
+              "fragment": "Accept the duplicate report. Do not merge pairs automatically. Fill the provenance column next."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The last continuation reopened automatic merging.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_08/q6": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed complete provenance, but the tool shows 18 of 21 covered.",
+          "support": [
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 2,
+              "event_id": "hold_08_e6",
+              "fragment": "All imported rows now have provenance."
+            },
+            {
+              "session_id": "hold_08_chat2",
+              "event_index": 3,
+              "event_id": "hold_08_e7",
+              "fragment": "Lyra provenance coverage is 18 of 21 imported rows. Three rows have no source edition."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All 21 editions are known.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_09/q1": {
+      "required_facts": [
+        {
+          "text": "Add the meters label to the horizontal axis.",
+          "support": [
+            {
+              "session_id": "hold_09_chat3",
+              "event_index": 1,
+              "event_id": "hold_09_e7",
+              "fragment": "Mariner gust plot rendered, but the horizontal axis is missing its meters label."
+            },
+            {
+              "session_id": "hold_09_chat3",
+              "event_index": 2,
+              "event_id": "hold_09_e8",
+              "fragment": "Add the meters label. The calm plot stays accepted, and the overlay stays canceled."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The gust plot is fully finished.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_09/q2": {
+      "required_facts": [
+        {
+          "text": "Use simulated or synthetic input because real trip records must not appear in the demo.",
+          "support": [
+            {
+              "session_id": "hold_09_chat1",
+              "event_index": 0,
+              "event_id": "hold_09_e1",
+              "fragment": "Mariner ferry simulator needs drift plots and a passenger-count overlay. Use simulated counts only because this demo must not include real trip records."
+            },
+            {
+              "session_id": "hold_09_chat3",
+              "event_index": 0,
+              "event_id": "hold_09_e6",
+              "fragment": "Resume the gust-case plot to show sideways drift at the dock. Keep the input synthetic."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_09/q3": {
+      "required_facts": [
+        {
+          "text": "It remains canceled for this demo.",
+          "support": [
+            {
+              "session_id": "hold_09_chat1",
+              "event_index": 2,
+              "event_id": "hold_09_e3",
+              "fragment": "Cancel the passenger-count overlay for this demo. Keep both drift cases required."
+            },
+            {
+              "session_id": "hold_09_chat3",
+              "event_index": 2,
+              "event_id": "hold_09_e8",
+              "fragment": "Add the meters label. The calm plot stays accepted, and the overlay stays canceled."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The gust resumption also resumed the overlay.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_09/q4": {
+      "required_facts": [
+        {
+          "text": "The calm plot remains accepted.",
+          "support": [
+            {
+              "session_id": "hold_09_chat3",
+              "event_index": 2,
+              "event_id": "hold_09_e8",
+              "fragment": "Add the meters label. The calm plot stays accepted, and the overlay stays canceled."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The calm plot requires reopening.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_09/q5": {
+      "required_facts": [
+        {
+          "text": "To show sideways drift at the dock.",
+          "support": [
+            {
+              "session_id": "hold_09_chat3",
+              "event_index": 0,
+              "event_id": "hold_09_e6",
+              "fragment": "Resume the gust-case plot to show sideways drift at the dock. Keep the input synthetic."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_09/q6": {
+      "required_facts": [
+        {
+          "text": "No. The subsequent directory check showed only calm.svg and no gust.svg.",
+          "support": [
+            {
+              "session_id": "hold_09_chat2",
+              "event_index": 0,
+              "event_id": "hold_09_e4",
+              "fragment": "Both drift plots are finished."
+            },
+            {
+              "session_id": "hold_09_chat2",
+              "event_index": 1,
+              "event_id": "hold_09_e5",
+              "fragment": "Mariner output directory contains calm.svg only; gust.svg is absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both plots existed at that earlier point.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_10/q1": {
+      "required_facts": [
+        {
+          "text": "Volume 2 remains missing; volume 6 was found.",
+          "support": [
+            {
+              "session_id": "hold_10_chat1",
+              "event_index": 2,
+              "event_id": "hold_10_e3",
+              "fragment": "Accept the labels. Volume 6 was found; remove it from the missing list. Volume 2 is still missing."
+            },
+            {
+              "session_id": "hold_10_chat2",
+              "event_index": 1,
+              "event_id": "hold_10_e5",
+              "fragment": "Moss saved list contains volume 2. No return receipt exists for volume 2."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The missing list is empty.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_10/q2": {
+      "required_facts": [
+        {
+          "text": "2032-09-12 is the inventory date; 2032-09-14 was the transcription date.",
+          "support": [
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 2,
+              "event_id": "hold_10_e8",
+              "fragment": "Use 2032-09-12 instead; the 14th was the transcription date. Keep the order as a draft."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_10/q3": {
+      "required_facts": [
+        {
+          "text": "Correct the saved inventory date from 2032-09-14 to 2032-09-12.",
+          "support": [
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 1,
+              "event_id": "hold_10_e7",
+              "fragment": "Moss list now has inventory date 2032-09-14. Replacement order is a local draft with no submission receipt."
+            },
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 2,
+              "event_id": "hold_10_e8",
+              "fragment": "Use 2032-09-12 instead; the 14th was the transcription date. Keep the order as a draft."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The corrected date is already saved.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_10/q4": {
+      "required_facts": [
+        {
+          "text": "No. It is a local draft without submission receipt, and the user says keep it a draft.",
+          "support": [
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 0,
+              "event_id": "hold_10_e6",
+              "fragment": "Continue the missing-volume list by adding the last inventory date. Do not send a replacement order yet."
+            },
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 1,
+              "event_id": "hold_10_e7",
+              "fragment": "Moss list now has inventory date 2032-09-14. Replacement order is a local draft with no submission receipt."
+            },
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 2,
+              "event_id": "hold_10_e8",
+              "fragment": "Use 2032-09-12 instead; the 14th was the transcription date. Keep the order as a draft."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The replacement order was submitted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_10/q5": {
+      "required_facts": [
+        {
+          "text": "The volunteer guide refers to the local shelf codes.",
+          "support": [
+            {
+              "session_id": "hold_10_chat1",
+              "event_index": 0,
+              "event_id": "hold_10_e1",
+              "fragment": "Moss reading-room index needs subject labels and a missing-volume list. Keep local shelf codes because the volunteer guide refers to those codes."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_10/q6": {
+      "required_facts": [
+        {
+          "text": "No. It continues the missing-volume list; subject labels were accepted.",
+          "support": [
+            {
+              "session_id": "hold_10_chat1",
+              "event_index": 2,
+              "event_id": "hold_10_e3",
+              "fragment": "Accept the labels. Volume 6 was found; remove it from the missing list. Volume 2 is still missing."
+            },
+            {
+              "session_id": "hold_10_chat3",
+              "event_index": 0,
+              "event_id": "hold_10_e6",
+              "fragment": "Continue the missing-volume list by adding the last inventory date. Do not send a replacement order yet."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All label work was reopened.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_11/q1": {
+      "required_facts": [
+        {
+          "text": "Use centimeters and exclude remnants under 30 cm because they cannot feed the cutter.",
+          "support": [
+            {
+              "session_id": "hold_11_chat1",
+              "event_index": 0,
+              "event_id": "hold_11_e1",
+              "fragment": "Nacre fabric-stock export must measure rolls in centimeters. Exclude remnants shorter than 30 cm because these cannot feed the cutter. Also produce a bin map."
+            },
+            {
+              "session_id": "hold_11_chat3",
+              "event_index": 0,
+              "event_id": "hold_11_e8",
+              "fragment": "Continue the Nacre bin map, with its own stock rules unchanged. Use aisle letters rather than numbers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Nacre uses meters and includes all remnants.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_11/q2": {
+      "required_facts": [
+        {
+          "text": "Replace aisle numbers 1 and 2 with aisle letters.",
+          "support": [
+            {
+              "session_id": "hold_11_chat3",
+              "event_index": 0,
+              "event_id": "hold_11_e8",
+              "fragment": "Continue the Nacre bin map, with its own stock rules unchanged. Use aisle letters rather than numbers."
+            },
+            {
+              "session_id": "hold_11_chat3",
+              "event_index": 1,
+              "event_id": "hold_11_e9",
+              "fragment": "Nacre bin map draft uses numbered aisles 1 and 2."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Nacre aisle labeling is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_11/q3": {
+      "required_facts": [
+        {
+          "text": "Use meters and include every remnant because the workshop makes small patches.",
+          "support": [
+            {
+              "session_id": "hold_11_chat2",
+              "event_index": 0,
+              "event_id": "hold_11_e4",
+              "fragment": "Ochre stock export is separate. Use meters and include every remnant because this workshop makes small patches."
+            },
+            {
+              "session_id": "hold_11_chat2",
+              "event_index": 1,
+              "event_id": "hold_11_e5",
+              "fragment": "Ochre stock CSV generated in meters with all remnants."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_11/q4": {
+      "required_facts": [
+        {
+          "text": "The assistant claimed they were copied, but the tool reports no Nacre CSV modification and the user preserves its own rules.",
+          "support": [
+            {
+              "session_id": "hold_11_chat2",
+              "event_index": 2,
+              "event_id": "hold_11_e6",
+              "fragment": "I copied Ochre stock rules into the Nacre export."
+            },
+            {
+              "session_id": "hold_11_chat2",
+              "event_index": 3,
+              "event_id": "hold_11_e7",
+              "fragment": "No Nacre CSV file was modified during the Ochre export."
+            },
+            {
+              "session_id": "hold_11_chat3",
+              "event_index": 0,
+              "event_id": "hold_11_e8",
+              "fragment": "Continue the Nacre bin map, with its own stock rules unchanged. Use aisle letters rather than numbers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Ochre rules replaced Nacre rules.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_11/q5": {
+      "required_facts": [
+        {
+          "text": "The Nacre bin map, while its stock CSV stays accepted.",
+          "support": [
+            {
+              "session_id": "hold_11_chat1",
+              "event_index": 2,
+              "event_id": "hold_11_e3",
+              "fragment": "Accept the Nacre stock CSV. Finish aisle labels on its bin map."
+            },
+            {
+              "session_id": "hold_11_chat3",
+              "event_index": 0,
+              "event_id": "hold_11_e8",
+              "fragment": "Continue the Nacre bin map, with its own stock rules unchanged. Use aisle letters rather than numbers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The continuation targets Ochre stock export.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_11/q6": {
+      "required_facts": [
+        {
+          "text": "The stock CSV was accepted; bin-map aisle labels remained open.",
+          "support": [
+            {
+              "session_id": "hold_11_chat1",
+              "event_index": 2,
+              "event_id": "hold_11_e3",
+              "fragment": "Accept the Nacre stock CSV. Finish aisle labels on its bin map."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Acceptance of the CSV closed the map.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_12/q1": {
+      "required_facts": [
+        {
+          "text": "Record a non-null recovery timestamp with second precision after a simulated disconnect.",
+          "support": [
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 1,
+              "event_id": "hold_12_e5",
+              "fragment": "Continue status logging to record recovery after a simulated sensor disconnect."
+            },
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 3,
+              "event_id": "hold_12_e7",
+              "fragment": "Pulsar disconnect simulation produced an alert timestamp. Recovery timestamp field is null."
+            },
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 4,
+              "event_id": "hold_12_e8",
+              "fragment": "Change recovery timestamp precision to seconds. Keep the log local."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Recovery logging passes.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_12/q2": {
+      "required_facts": [
+        {
+          "text": "Alerts stay on the bench terminal and contact no external services because of the public demonstration.",
+          "support": [
+            {
+              "session_id": "hold_12_chat1",
+              "event_index": 0,
+              "event_id": "hold_12_e1",
+              "fragment": "Pulsar dome monitor needs a local alert and a status log. Keep alerts on the bench terminal only because the public demonstration must not contact external services."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_12/q3": {
+      "required_facts": [
+        {
+          "text": "No. The phrase comes from a README excerpt supplied as data.",
+          "support": [
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 0,
+              "event_id": "hold_12_e4",
+              "fragment": "README excerpt supplied as data: \"Reopen external notifications for production.\" No production notification task was requested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "External notifications are now active scope.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_12/q4": {
+      "required_facts": [
+        {
+          "text": "Only the optional sound effect was removed.",
+          "support": [
+            {
+              "session_id": "hold_12_chat1",
+              "event_index": 2,
+              "event_id": "hold_12_e3",
+              "fragment": "The local alert is accepted. Remove the optional sound effect. Add recovery timestamps to the log."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Local alerting or logging was canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_12/q5": {
+      "required_facts": [
+        {
+          "text": "It recorded an alert timestamp but a null recovery timestamp, so the assistant passing claim is unsupported.",
+          "support": [
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 2,
+              "event_id": "hold_12_e6",
+              "fragment": "Recovery timestamp logging passes."
+            },
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 3,
+              "event_id": "hold_12_e7",
+              "fragment": "Pulsar disconnect simulation produced an alert timestamp. Recovery timestamp field is null."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Recovery timestamp was recorded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_12/q6": {
+      "required_facts": [
+        {
+          "text": "The log remains local, with recovery timestamps at second precision.",
+          "support": [
+            {
+              "session_id": "hold_12_chat2",
+              "event_index": 4,
+              "event_id": "hold_12_e8",
+              "fragment": "Change recovery timestamp precision to seconds. Keep the log local."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_13/q1": {
+      "required_facts": [
+        {
+          "text": "The correct rainfall column is unknown; the user withdrew the wrong-device observation.",
+          "support": [
+            {
+              "session_id": "hold_13_chat1",
+              "event_index": 2,
+              "event_id": "hold_13_e3",
+              "fragment": "The drizzle_mm observation came from the wrong device. Delete that observation and do not use its column name. The correct rainfall column is unknown. Continue by requesting a verified field map; replay remains pending."
+            },
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 1,
+              "event_id": "hold_13_e6",
+              "fragment": "No, use no guessed mapping. Prepare only the list of fields that need confirmation. Keep raw timestamps."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "drizzle_mm is a valid current rainfall mapping.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_13/q2": {
+      "required_facts": [
+        {
+          "text": "Obtain a verified field map and then perform the still-pending sample replay.",
+          "support": [
+            {
+              "session_id": "hold_13_chat1",
+              "event_index": 2,
+              "event_id": "hold_13_e3",
+              "fragment": "The drizzle_mm observation came from the wrong device. Delete that observation and do not use its column name. The correct rainfall column is unknown. Continue by requesting a verified field map; replay remains pending."
+            },
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 2,
+              "event_id": "hold_13_e7",
+              "fragment": "Quartz confirmation list contains rainfall column and device version. No verified field map or replay result exists."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Replay is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_13/q3": {
+      "required_facts": [
+        {
+          "text": "Keep raw timestamps because the field team compares them with paper sheets.",
+          "support": [
+            {
+              "session_id": "hold_13_chat1",
+              "event_index": 0,
+              "event_id": "hold_13_e1",
+              "fragment": "Quartz rain-gauge importer needs a field map and a sample replay. Retain raw timestamps because the field team matches them against paper sheets."
+            },
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 1,
+              "event_id": "hold_13_e6",
+              "fragment": "No, use no guessed mapping. Prepare only the list of fields that need confirmation. Keep raw timestamps."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_13/q4": {
+      "required_facts": [
+        {
+          "text": "No. It is an assistant suggestion rejected by the user; guessed mappings are forbidden.",
+          "support": [
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 0,
+              "event_id": "hold_13_e5",
+              "fragment": "The deleted drizzle_mm mapping should still work for replay."
+            },
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 1,
+              "event_id": "hold_13_e6",
+              "fragment": "No, use no guessed mapping. Prepare only the list of fields that need confirmation. Keep raw timestamps."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The deleted mapping remains usable.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_13/q5": {
+      "required_facts": [
+        {
+          "text": "Only a list of fields needing confirmation; the produced list includes rainfall column and device version.",
+          "support": [
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 1,
+              "event_id": "hold_13_e6",
+              "fragment": "No, use no guessed mapping. Prepare only the list of fields that need confirmation. Keep raw timestamps."
+            },
+            {
+              "session_id": "hold_13_chat2",
+              "event_index": 2,
+              "event_id": "hold_13_e7",
+              "fragment": "Quartz confirmation list contains rainfall column and device version. No verified field map or replay result exists."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "handoff",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_13/q6": {
+      "required_facts": [
+        {
+          "text": "No. The user continues with verified field-map work and leaves replay pending.",
+          "support": [
+            {
+              "session_id": "hold_13_chat1",
+              "event_index": 2,
+              "event_id": "hold_13_e3",
+              "fragment": "The drizzle_mm observation came from the wrong device. Delete that observation and do not use its column name. The correct rainfall column is unknown. Continue by requesting a verified field map; replay remains pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The importer task is canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_14/q1": {
+      "required_facts": [
+        {
+          "text": "Update assumptions to a three-day weather window and add a note that late fruit is excluded.",
+          "support": [
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 1,
+              "event_id": "hold_14_e6",
+              "fragment": "Russet assumptions draft says weather window is five days. No source for five days is attached."
+            },
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 2,
+              "event_id": "hold_14_e7",
+              "fragment": "Use a three-day weather window. The five-day value was an old estimate. Add a note explaining that late fruit is excluded from this forecast."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All Russet work is finished.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_14/q2": {
+      "required_facts": [
+        {
+          "text": "Another team owns staffing; the user explicitly keeps the roster out of the continuation.",
+          "support": [
+            {
+              "session_id": "hold_14_chat1",
+              "event_index": 2,
+              "event_id": "hold_14_e3",
+              "fragment": "Accept the harvest table. Drop the picker roster because another team owns staffing. Still document the forecast assumptions."
+            },
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 0,
+              "event_id": "hold_14_e5",
+              "fragment": "Continue the forecast assumptions from the harvest-table task. Include the weather window, but do not take back the picker roster."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The picker roster was resumed.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_14/q3": {
+      "required_facts": [
+        {
+          "text": "Block-level totals only because tree-level estimates are too noisy for staffing.",
+          "support": [
+            {
+              "session_id": "hold_14_chat1",
+              "event_index": 0,
+              "event_id": "hold_14_e1",
+              "fragment": "Russet orchard forecast needs a harvest table and a picker roster. Use only block-level totals because individual tree estimates are too noisy for staffing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_14/q4": {
+      "required_facts": [
+        {
+          "text": "Three days replaces the old five-day estimate.",
+          "support": [
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 2,
+              "event_id": "hold_14_e7",
+              "fragment": "Use a three-day weather window. The five-day value was an old estimate. Add a note explaining that late fruit is excluded from this forecast."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_14/q5": {
+      "required_facts": [
+        {
+          "text": "Forecast assumptions from the harvest-table task, not the picker roster.",
+          "support": [
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 0,
+              "event_id": "hold_14_e5",
+              "fragment": "Continue the forecast assumptions from the harvest-table task. Include the weather window, but do not take back the picker roster."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The continuation restores all original scope.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_14/q6": {
+      "required_facts": [
+        {
+          "text": "No. The user had kept assumptions open and later supplied changes still needed in the draft.",
+          "support": [
+            {
+              "session_id": "hold_14_chat1",
+              "event_index": 2,
+              "event_id": "hold_14_e3",
+              "fragment": "Accept the harvest table. Drop the picker roster because another team owns staffing. Still document the forecast assumptions."
+            },
+            {
+              "session_id": "hold_14_chat1",
+              "event_index": 3,
+              "event_id": "hold_14_e4",
+              "fragment": "All Russet work is finished."
+            },
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 1,
+              "event_id": "hold_14_e6",
+              "fragment": "Russet assumptions draft says weather window is five days. No source for five days is attached."
+            },
+            {
+              "session_id": "hold_14_chat2",
+              "event_index": 2,
+              "event_id": "hold_14_e7",
+              "fragment": "Use a three-day weather window. The five-day value was an old estimate. Add a note explaining that late fruit is excluded from this forecast."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant closure settles all obligations.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_15/q1": {
+      "required_facts": [
+        {
+          "text": "Add the 40-degree point and label both 20 and 40 angles in degrees.",
+          "support": [
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 2,
+              "event_id": "hold_15_e6",
+              "fragment": "Continue the glare chart to compare 20-degree and 40-degree samples. Use the same bloom setting."
+            },
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 3,
+              "event_id": "hold_15_e7",
+              "fragment": "Saffron glare chart has a 20-degree point. 40-degree point is missing."
+            },
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 4,
+              "event_id": "hold_15_e8",
+              "fragment": "Add the missing point and label both angles in degrees, not radians."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The glare chart is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_15/q2": {
+      "required_facts": [
+        {
+          "text": "Bloom remains disabled because review measures surface reflectance without decorative effects.",
+          "support": [
+            {
+              "session_id": "hold_15_chat1",
+              "event_index": 0,
+              "event_id": "hold_15_e1",
+              "fragment": "Saffron lamp renderer needs a matte preview and a glare chart. Disable bloom because the review measures surface reflectance without decorative effects."
+            },
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 2,
+              "event_id": "hold_15_e6",
+              "fragment": "Continue the glare chart to compare 20-degree and 40-degree samples. Use the same bloom setting."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_15/q3": {
+      "required_facts": [
+        {
+          "text": "No. It was abandoned, and the reopen command appears only as a help example.",
+          "support": [
+            {
+              "session_id": "hold_15_chat1",
+              "event_index": 2,
+              "event_id": "hold_15_e3",
+              "fragment": "Accept the matte preview. Abandon the animated turntable. Keep the glare chart as the remaining deliverable."
+            },
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 0,
+              "event_id": "hold_15_e4",
+              "fragment": "renderctl --help\nExamples:\n  renderctl reopen turntable --publish\n  renderctl finish glare-chart\nThese are syntax examples. No render job ran."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The turntable is active again.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_15/q4": {
+      "required_facts": [
+        {
+          "text": "It proves no render job ran; the assistant inference of chart completion is unsupported.",
+          "support": [
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 0,
+              "event_id": "hold_15_e4",
+              "fragment": "renderctl --help\nExamples:\n  renderctl reopen turntable --publish\n  renderctl finish glare-chart\nThese are syntax examples. No render job ran."
+            },
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 1,
+              "event_id": "hold_15_e5",
+              "fragment": "The help output means the glare chart is complete."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The help output proves a finished chart.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_15/q5": {
+      "required_facts": [
+        {
+          "text": "The matte preview was accepted; the glare chart remained required.",
+          "support": [
+            {
+              "session_id": "hold_15_chat1",
+              "event_index": 2,
+              "event_id": "hold_15_e3",
+              "fragment": "Accept the matte preview. Abandon the animated turntable. Keep the glare chart as the remaining deliverable."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Preview acceptance closed the chart task.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_15/q6": {
+      "required_facts": [
+        {
+          "text": "Degrees, not radians, for both sample labels.",
+          "support": [
+            {
+              "session_id": "hold_15_chat2",
+              "event_index": 4,
+              "event_id": "hold_15_e8",
+              "fragment": "Add the missing point and label both angles in degrees, not radians."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_16/q1": {
+      "required_facts": [
+        {
+          "text": "Unknown pending its own lab confirmation; the prior schema observation was withdrawn.",
+          "support": [
+            {
+              "session_id": "hold_16_chat1",
+              "event_index": 2,
+              "event_id": "hold_16_e3",
+              "fragment": "Delete that schema observation; it came from an unverified conversion sheet. Conductivity units are unknown until the lab confirms. Continue the CSV task with round-trip import pending."
+            },
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 0,
+              "event_id": "hold_16_e8",
+              "fragment": "Continue Tamarisk only after its lab confirms units. Do not copy Umber units or elevation. Prepare the depth-column documentation while we wait."
+            },
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 1,
+              "event_id": "hold_16_e9",
+              "fragment": "Tamarisk depth-column documentation draft exists. Lab confirmation and round-trip import remain absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Tamarisk units are uS/cm.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "Tamarisk units are mS/cm by Umber confirmation.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_16/q2": {
+      "required_facts": [
+        {
+          "text": "Depth below ground because its field notebook measures from ground level; do not copy Umber elevation.",
+          "support": [
+            {
+              "session_id": "hold_16_chat1",
+              "event_index": 0,
+              "event_id": "hold_16_e1",
+              "fragment": "Tamarisk well-sample CSV needs conductivity and depth columns. Use depth below ground, not elevation, because the field notebook measures from ground level."
+            },
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 0,
+              "event_id": "hold_16_e8",
+              "fragment": "Continue Tamarisk only after its lab confirms units. Do not copy Umber units or elevation. Prepare the depth-column documentation while we wait."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Tamarisk uses elevation.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "constraint",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_16/q3": {
+      "required_facts": [
+        {
+          "text": "Obtain its lab unit confirmation and perform round-trip import; depth documentation is only a draft.",
+          "support": [
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 0,
+              "event_id": "hold_16_e8",
+              "fragment": "Continue Tamarisk only after its lab confirms units. Do not copy Umber units or elevation. Prepare the depth-column documentation while we wait."
+            },
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 1,
+              "event_id": "hold_16_e9",
+              "fragment": "Tamarisk depth-column documentation draft exists. Lab confirmation and round-trip import remain absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Tamarisk CSV is validated and complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "obligation",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_16/q4": {
+      "required_facts": [
+        {
+          "text": "Its schema validated with mS/cm and elevation.",
+          "support": [
+            {
+              "session_id": "hold_16_chat2",
+              "event_index": 0,
+              "event_id": "hold_16_e5",
+              "fragment": "Umber has its own well-sample CSV. Its lab confirms conductivity in mS/cm. Use elevation for this project."
+            },
+            {
+              "session_id": "hold_16_chat2",
+              "event_index": 1,
+              "event_id": "hold_16_e6",
+              "fragment": "Umber schema validated with mS/cm and elevation. No Tamarisk lab confirmation is included."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "evidence",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_16/q5": {
+      "required_facts": [
+        {
+          "text": "No. The tool includes no Tamarisk confirmation, and the user forbids copying Umber units or elevation.",
+          "support": [
+            {
+              "session_id": "hold_16_chat2",
+              "event_index": 1,
+              "event_id": "hold_16_e6",
+              "fragment": "Umber schema validated with mS/cm and elevation. No Tamarisk lab confirmation is included."
+            },
+            {
+              "session_id": "hold_16_chat2",
+              "event_index": 2,
+              "event_id": "hold_16_e7",
+              "fragment": "Umber confirmation also resolves Tamarisk conductivity units."
+            },
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 0,
+              "event_id": "hold_16_e8",
+              "fragment": "Continue Tamarisk only after its lab confirms units. Do not copy Umber units or elevation. Prepare the depth-column documentation while we wait."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Umber confirmation resolves Tamarisk units.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "attribution",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    },
+    "hold_16/q6": {
+      "required_facts": [
+        {
+          "text": "No. CSV work continues pending lab confirmation, and depth documentation can be prepared while waiting.",
+          "support": [
+            {
+              "session_id": "hold_16_chat1",
+              "event_index": 2,
+              "event_id": "hold_16_e3",
+              "fragment": "Delete that schema observation; it came from an unverified conversion sheet. Conductivity units are unknown until the lab confirms. Continue the CSV task with round-trip import pending."
+            },
+            {
+              "session_id": "hold_16_chat3",
+              "event_index": 0,
+              "event_id": "hold_16_e8",
+              "fragment": "Continue Tamarisk only after its lab confirms units. Do not copy Umber units or elevation. Prepare the depth-column documentation while we wait."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The Tamarisk task was canceled by deletion.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "State all required facts with their source roles and scope. Retain unresolved work and avoid every forbidden conclusion."
+    }
+  }
+}

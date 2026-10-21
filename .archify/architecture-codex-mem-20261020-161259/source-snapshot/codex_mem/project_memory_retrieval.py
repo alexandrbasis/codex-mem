@@ -13,6 +13,7 @@ from xml.sax.saxutils import escape, quoteattr
 
 from .jev_retrieval import exact_constraints
 from .privacy import redact_search_value
+from .project_memory import _execution_result_signal, _fts_query
 from .retrieval import current_state_scope, historical_query, prompt_match_score, prompt_query_plan, resume_topic_plan, project_lexical_text
 from .tool_io import is_private_prompt
 
@@ -211,7 +212,8 @@ def _record(item: Mapping[str, Any], lane: str) -> dict[str, Any]:
         'source_role', 'evidence_basis', 'requested_state', 'revision', 'session_id', 'seq', 'provisional',
         'source_capture_seq_min', 'source_capture_seq_max', 'capture_order_basis',
         'logical_episode_id', 'episode_version', 'parent_episode_id', 'is_current_head', 'continuity_basis',
-        'signal_kind', 'selection_basis', 'prior_context_status', 'retained_context_fields_omitted') if key in cleaned}
+        'signal_kind', 'selection_basis', 'prior_context_status', 'retained_context_fields_omitted',
+        'disposition', 'is_requirement_claim', 'meaning', 'uncertainty') if key in cleaned}
     record.update(project=cleaned.get('project'), source='project_memory',
                   created_at=cleaned.get('created_at'), updated_at=cleaned.get('updated_at'), tags=[],
                   source_ids=list(dict.fromkeys(source['source_id'] for source in _evidence(cleaned))),
@@ -267,7 +269,169 @@ def _record(item: Mapping[str, Any], lane: str) -> dict[str, Any]:
     return record
 
 
-def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
+def _source_evidence(store: Any, project: str, query_plan: Any, exclude_session_id: str | None,
+                     eligible: Any, relevant: Any, environment: str | None, version: str | None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Read bounded original roles independently of extraction, without new state."""
+    limit, candidate_limit, excerpt_limit = 2, 16, 1200
+    expressions = [_fts_query(candidate, project, topic_query=False)
+                   for candidate in query_plan.candidate_queries]
+    match = ''
+    parameters: list[Any] = [project, exclude_session_id, exclude_session_id]
+    if any(expressions):
+        match = ' AND (' + ' OR '.join(
+            'e.rowid IN (SELECT rowid FROM entries_fts WHERE entries_fts MATCH ?)' for expression in expressions if expression) + ')'
+        parameters.extend(expression for expression in expressions if expression)
+    elif not query_plan.generic_project_state and any(query_plan.candidate_queries):
+        return [], {'returned': 0, 'omitted': 0, 'roles': {}}
+    roles = {'assistant_report': 'hook:Stop', 'tool_record': 'hook:PostToolUse'}
+    selected, coverage = {}, {}
+    def scoped(value: Mapping[str, Any]) -> bool:
+        from .project_memory_query import environment_names
+        text = str(value.get('text') or value.get('body') or '')
+        observed = set(environment_names(text))
+        requested = set(environment_names(environment)) if environment else set()
+        if observed.intersection(query_plan.excluded_environments) or requested and observed and not requested.intersection(observed):
+            return False
+        if version:
+            try:
+                declared = exact_constraints(text, project)['versions']
+            except ValueError:
+                return False
+            if declared and not prompt_match_score(text, {'identifiers': [], 'versions': [version], 'terms': [], 'minimum': 0}):
+                return False
+        return relevant(value)
+    def read():
+        connection = store._connection
+        for role, source in roles.items():
+            predicate = (" FROM entries e JOIN pm_events v ON v.source_id=e.id AND v.project=e.project "
+                "WHERE e.project=? AND (? IS NULL OR COALESCE(e.session_id,'')!=?) "
+                "AND e.superseded_by IS NULL" + match + " AND (e.source=? OR e.source LIKE ?)")
+            args = (*parameters, source, source + ':%')
+            total = connection.execute('SELECT COUNT(*)' + predicate, args).fetchone()[0]
+            rows = connection.execute('SELECT e.*,v.seq' + predicate + ' ORDER BY v.seq DESC,e.id LIMIT ?',
+                                      (*args, candidate_limit)).fetchall()
+            records, oversized, invalid = [], 0, 0
+            for row in rows:
+                original = dict(row)
+                if not eligible(original):
+                    invalid += 1
+                    continue
+                if role == 'assistant_report':
+                    body = original['body']
+                    if not body or len(body) > excerpt_limit:
+                        oversized += 1
+                        continue
+                    value = dict(original, text=body, source_role=role, source_id=original['id'])
+                    if not scoped(value):
+                        invalid += 1
+                        continue
+                    record = _record(value, 'source_evidence')
+                    record['fields'] = [{'name': 'assistant_report', 'text': '',
+                        'basis': 'attributed_source_excerpts', 'field_association': 'original_source',
+                        'evidence': [{'source_id': original['id'], 'start': 0, 'end': len(body),
+                            'source_role': role, 'quote_excerpt': redact_search_value(body), 'quote_truncated': False,
+                            'excerpt_status': 'complete_source', 'source_chars': len(body)}]}]
+                else:
+                    signal = _execution_result_signal(connection, project, row)
+                    if signal is None or not scoped(signal):
+                        invalid += 1
+                        continue
+                    if signal['truncated']:
+                        oversized += 1
+                        continue
+                    record = _record(signal, 'signal')
+                    record.update(lane='source_evidence', kind='project_memory_source_evidence')
+                    record['provenance']['record_role'] = 'project_memory_source_evidence'
+                    record['execution'].update({key: signal['provenance'][key] for key in ('command_field', 'exit_field')})
+                    record.pop('workflow_state', None)
+                    record.pop('provisional', None)
+                    for field in record['fields']:
+                        field.update(text='', basis='attributed_source_excerpts', field_association='original_execution_capture')
+                        refs = signal['evidence'][field['name']]
+                        field['evidence'] = _evidence({'evidence': {field['name']: refs}}, quote_limit=excerpt_limit)
+                        for ref in field['evidence']:
+                            ref.update(excerpt_status='complete_capture_field', source_chars=ref['end'] - ref['start'])
+                record.update(project=project, source_capture_seq_min=row['seq'], source_capture_seq_max=row['seq'],
+                              capture_order_basis='local_capture_sequence_not_event_time')
+                if len(records) < limit:
+                    records.append(record)
+            selected[role] = records
+            coverage[role] = {'matched': total, 'candidates': len(rows), 'returned': len(records),
+                              'omitted': total - len(records), 'oversized': oversized, 'invalid': invalid}
+    with store._lock:
+        store._read(read)
+    records = [selected[role][index] for index in range(limit) for role in roles if index < len(selected[role])]
+    return records, {'returned': len(records), 'omitted': sum(value['omitted'] for value in coverage.values()),
+                     'roles': coverage, 'candidate_limit_per_role': candidate_limit, 'returned_limit_per_role': limit,
+                     'excerpt_char_limit': excerpt_limit, 'verification': 'not_assessed'}
+
+
+def _source_xml(source: Mapping[str, Any], *, complete: bool = False) -> str:
+    source = dict(source)
+    if not complete and isinstance(source.get('quote_excerpt'), str):
+        source['quote_truncated'] = bool(source.get('quote_truncated') or len(source['quote_excerpt']) > 160)
+        source['quote_excerpt'] = source['quote_excerpt'][:160]
+    excerpt = source.pop('quote_excerpt', None)
+    opening = '<source' + ''.join(' ' + key + '=' + _attr(value) for key, value in source.items())
+    if excerpt is None:
+        return opening + '/>'
+    return opening + '><quote_excerpt>' + escape(_xml_text(excerpt)) + '</quote_excerpt></source>'
+
+
+def _item_attrs(record: Mapping[str, Any], projection: str | None) -> str:
+    attrs = ''.join(' ' + key + '=' + _attr(record[key]) for key in
+                    ('id', 'lane', 'kind', 'project_memory_kind', 'workflow_state', 'requested_state', 'source_role', 'evidence_basis', 'provisional', 'inferred',
+                     'revision', 'source_capture_seq_min', 'source_capture_seq_max', 'capture_order_basis',
+                     'logical_episode_id', 'episode_version', 'parent_episode_id', 'is_current_head', 'continuity_basis',
+                     'signal_kind', 'selection_basis', 'prior_context_status', 'retained_context_fields_omitted',
+                     'disposition', 'is_requirement_claim', 'meaning', 'uncertainty') if key in record and record[key] is not None)
+    if projection == 'continuity' and record.get('session_id'):
+        attrs += ' session_id=' + _attr(record['session_id'])
+    if record.get('lane') == 'signal' and record.get('source_capture_seq_min') == record.get('source_capture_seq_max'):
+        for key in ('source_capture_seq_min', 'source_capture_seq_max'):
+            attrs = attrs.replace(' ' + key + '=' + _attr(record.get(key)), '')
+        if record.get('source_capture_seq_max') is not None:
+            attrs += ' source_capture_seq=' + _attr(record['source_capture_seq_max'])
+    scope = record.get('scope') or {}
+    attrs += ''.join(' ' + key + '=' + _attr(scope[key])
+                     for key in ('environment', 'version', 'worktree') if scope.get(key))
+    return attrs
+
+
+def _reserved_record_size(record: Mapping[str, Any], projection: str | None,
+                          seen: set[tuple[Any, ...]], maximum: int) -> int:
+    """Reserve complete useful groups; oversized groups cannot hide small reasons."""
+    if record.get('source_overlap_with_material'):
+        return 0
+    groups = []
+    for field in record.get('fields', []):
+        name = field['name'].removesuffix('_source_excerpt')
+        if name not in {'text', 'open_work', 'prior_open_work', 'rationale', 'prior_rationale', 'source_custody'}:
+            continue
+        refs = field.get('evidence') or []
+        identities = {(ref.get('source_id'), ref.get('start'), ref.get('end'), ref.get('source_role')) for ref in refs}
+        if not identities or identities.issubset(seen):
+            continue
+        if field.get('basis') != 'attributed_source_excerpts':
+            size = 900
+        else:
+            metadata = ''.join(' ' + key + '=' + _attr(field[key]) for key in
+                               ('basis', 'field_association', 'partial_context') if key in field)
+            size = len('<field name=' + _attr(field['name']) + metadata + '>' +
+                       ''.join(_source_xml(ref, complete=True) for ref in refs) + '</field>')
+        groups.append((size, identities))
+    overhead = len('<item' + _item_attrs(record, projection) + ' fields_omitted="99"></item>')
+    if overhead + sum(size for size, _ in groups) > maximum:
+        groups = [min(groups, key=lambda group: group[0])] if groups else []
+    total = overhead + sum(size for size, _ in groups)
+    if not groups or total > maximum:
+        return 0
+    for _, identities in groups:
+        seen.update(identities)
+    return total
+
+
+def _render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> tuple[str, dict[str, int]]:
     """Return valid XML within a character budget, without slicing XML markup."""
     if isinstance(budget, bool) or not isinstance(budget, int) or budget < 128 or budget > 60000:
         raise ValueError('budget must be between 128 and 60000')
@@ -285,12 +449,14 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
     values.update({key: coverage[key] for key in (
         'coverage_gaps', 'pending_reconciliation', 'quarantined_events',
         'omitted_transitions_count', 'downgraded_states_count',
-        'partially_processed_events', 'processed_through_seq', 'pending_events', 'historical_context_heads') if key in coverage})
+        'partially_processed_events', 'processed_through_seq', 'pending_events', 'historical_context_heads',
+        'unresolved_user_sources', 'user_sources_omitted', 'source_evidence_omitted') if key in coverage})
     reconsideration = coverage.get('reconsideration') or {}
     for field in ('ambiguous_heads', 'omitted_sources', 'omitted_heads', 'identity_sources_omitted', 'omitted_ancestor_chains'):
         if reconsideration.get(field):
             values['reconsideration_' + field] = reconsideration[field]
-    for key in ('complete_transcript', 'coverage_gaps', 'pending_reconciliation', 'pending',
+    for key in ('complete_transcript', 'coverage_gaps', 'unresolved_user_sources', 'user_sources_omitted', 'source_evidence_omitted',
+                'pending_reconciliation', 'pending',
                 'observations_only', 'quarantined_events', 'omitted_transitions_count',
                 'downgraded_states_count', 'partially_processed_events',
                 'processed_through_seq', 'pending_events', 'historical_context_heads',
@@ -311,22 +477,11 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
         if sum(map(len, parts)) + len(node) + len(closing) <= budget:
             parts.append(node)
     records = list(brief.get('records', []))
+    omissions = {'records': 0, 'fields': 0}
+    complete_refs: set[tuple[Any, ...]] = set()
+    complete_quotes: set[tuple[Any, ...]] = set()
     for index, record in enumerate(records):
-        attrs = ''.join(' ' + key + '=' + _attr(record[key]) for key in
-                        ('id', 'lane', 'kind', 'project_memory_kind', 'workflow_state', 'requested_state', 'source_role', 'evidence_basis', 'provisional', 'inferred',
-                         'revision', 'source_capture_seq_min', 'source_capture_seq_max', 'capture_order_basis',
-                         'logical_episode_id', 'episode_version', 'parent_episode_id', 'is_current_head', 'continuity_basis',
-                         'signal_kind', 'selection_basis', 'prior_context_status', 'retained_context_fields_omitted') if key in record and record[key] is not None)
-        if brief.get('projection') == 'continuity' and record.get('session_id'):
-            attrs += ' session_id=' + _attr(record['session_id'])
-        if record.get('lane') == 'signal' and record.get('source_capture_seq_min') == record.get('source_capture_seq_max'):
-            for key in ('source_capture_seq_min', 'source_capture_seq_max'):
-                attrs = attrs.replace(' ' + key + '=' + _attr(record.get(key)), '')
-            if record.get('source_capture_seq_max') is not None:
-                attrs += ' source_capture_seq=' + _attr(record['source_capture_seq_max'])
-        scope = record.get('scope') or {}
-        attrs += ''.join(' ' + key + '=' + _attr(scope[key])
-                         for key in ('environment', 'version', 'worktree') if scope.get(key))
+        attrs = _item_attrs(record, brief.get('projection'))
         remaining = budget - sum(map(len, parts)) - len(closing)
         # Reserve room for multiple useful records rather than letting an
         # episode's repeated provenance consume the entire brief. Evidence is
@@ -337,23 +492,20 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
         # records consume the space that group needed.
         if any(field.get('basis') == 'attributed_source_excerpts'
                for field in record.get('fields', [])):
-            item_budget = remaining
+            # Reserve complete later obligations/reasons before admitting an
+            # early record's secondary outcome. An impossible reservation must
+            # not prevent a fitting primary group from using the whole budget.
+            seen: set[tuple[Any, ...]] = set()
+            reservations = [_reserved_record_size(later, brief.get('projection'), seen, remaining // 2)
+                            for later in records[index + 1:]]
+            reserved = sum(reservations)
+            item_budget = max(item_budget, remaining - min(reserved, remaining // 2))
         text = str(record.get('preview') or '')[:700]
-        def source_xml(source: Mapping[str, Any], *, complete: bool = False) -> str:
-            source = dict(source)
-            if not complete and isinstance(source.get('quote_excerpt'), str):
-                source['quote_truncated'] = bool(source.get('quote_truncated') or len(source['quote_excerpt']) > 160)
-                source['quote_excerpt'] = source['quote_excerpt'][:160]
-            excerpt = source.pop('quote_excerpt', None)
-            opening = '<source' + ''.join(' ' + key + '=' + _attr(value) for key, value in source.items())
-            if excerpt is None:
-                return opening + '/>'
-            return opening + '><quote_excerpt>' + escape(_xml_text(excerpt)) + '</quote_excerpt></source>'
         content = ''
         if isinstance(record.get('execution'), Mapping):
             execution = record['execution']
             content = '<execution' + ''.join(' ' + key + '=' + _attr(
-                str(value)[:128] if key == 'command' else value)
+                str(value)[:128] if key == 'command' and record.get('lane') != 'source_evidence' else value)
                 for key, value in execution.items() if key != 'capture_recorded_at') + '/>'
         fields = record.get('fields') or [{'name': 'preview', 'text': text,
                                            'evidence': record.get('evidence', [])}]
@@ -366,12 +518,21 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
             identities = {(ref.get('source_id'), ref.get('start'), ref.get('end'),
                            ref.get('source_field'), ref.get('tool_use_id'), ref.get('source_role'))
                           for ref in refs}
-            if grounded and identities and identities.issubset(emitted_refs):
+            if identities and (grounded and identities.issubset(emitted_refs) or
+                               record.get('lane') == 'source_evidence' and identities.issubset(complete_refs)):
                 continue
             # Each prose field keeps ALL its source pointers. If they do not
             # fit together, omit that field instead of pairing its prose with
             # an unrelated subset of an episode's evidence.
-            evidence = ''.join(source_xml(ref, complete=grounded) for ref in refs)
+            displayed_refs = []
+            for ref in refs:
+                displayed = dict(ref)
+                quote_key = tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_role', 'quote_excerpt'))
+                if record.get('lane') == 'source_evidence' and quote_key in complete_quotes:
+                    displayed.pop('quote_excerpt', None)
+                    displayed['quote_display'] = 'quoted_above'
+                displayed_refs.append(displayed)
+            evidence = ''.join(_source_xml(ref, complete=grounded) for ref in displayed_refs)
             if field['name'] != 'preview' and not refs:
                 omitted_fields += 1
                 continue
@@ -391,6 +552,10 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
                 if len(whole) <= remaining_item:
                     content += whole
                     emitted_refs.update(identities)
+                    complete_refs.update(identities)
+                    complete_quotes.update(tuple(ref.get(key) for key in
+                        ('source_id', 'start', 'end', 'source_role', 'quote_excerpt')) for ref in refs
+                        if not ref.get('quote_truncated'))
                 else:
                     omitted_fields += 1
                     grounded_omissions += 1
@@ -406,14 +571,38 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
                 else:
                     high = middle - 1
             content += field_node(low)
+        omissions['fields'] += omitted_fields
         if not content and not grounded_omissions:
+            omissions['records'] += 1
             continue
         if omitted_fields:
             attrs += ' fields_omitted=' + _attr(omitted_fields)
         item_xml = '<item' + attrs + '>' + content + '</item>'
         if len(item_xml) <= remaining:
             parts.append(item_xml)
-    return ''.join(parts) + closing
+            if not content:
+                omissions['records'] += 1
+        else:
+            omissions['records'] += 1
+            omissions['fields'] += len(fields) - omitted_fields
+    if any(omissions.values()):
+        marker = '<omitted records=' + _attr(omissions['records']) + ' fields=' + _attr(omissions['fields']) + '/>'
+        # Counters use spare space or replace lower-priority coverage metrics.
+        # Never remove a whole fitting quotation merely to fit its marker.
+        if len(''.join(parts) + marker + closing) > budget and len(parts) > 1 and parts[1].startswith('<coverage'):
+            import re
+            coverage_attrs = re.findall(r' [a-z_]+="[^"]*"', parts[1])
+            while len(coverage_attrs) > 1 and len(''.join(parts) + marker + closing) > budget:
+                coverage_attrs.pop()
+                parts[1] = '<coverage' + ''.join(coverage_attrs) + '/>'
+        if len(''.join(parts) + marker + closing) <= budget:
+            parts.append(marker)
+    return ''.join(parts) + closing, omissions
+
+
+def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
+    """Return valid bounded XML; whole attributed quotation groups stay intact."""
+    return _render_project_brief(brief, budget)[0]
 
 
 def build_project_brief(store: Any, project: str | Path, query: str = '', budget: int = 6000,
@@ -440,7 +629,7 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
     if mode not in {'disabled', 'shadow', 'pilot'}:
         raise ValueError('invalid project memory mode')
     brief: dict[str, Any] = {'project': workspace, 'mode': mode, 'enabled': False,
-        'claims': [], 'episodes': [], 'signals': [], 'records': [], 'coverage': {}, 'pending': False}
+        'claims': [], 'episodes': [], 'signals': [], 'intent_custody': [], 'records': [], 'coverage': {}, 'pending': False}
     # Validate the budget even when this read is disabled.
     render_project_brief(brief, budget)
     if not configured or mode == 'disabled' or (mode == 'shadow' and not include_shadow) or is_private_prompt(query):
@@ -479,15 +668,18 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
         fallback_used = True
         snapshots.append(memory.snapshot(workspace, limit=_MAX_ITEMS, signal_limit=8,
             exclude_session_id=exclude_session_id, query='', environment=environment, version=version,
+            include_episode_history=query_plan.projection in {'continuity', 'history'},
             include_project_obligations=include_project_obligations))
     snapshot = dict(snapshots[0])
-    for lane in ('claims', 'episodes', 'provisional_signals', 'project_obligations', 'relations'):
+    for lane in ('claims', 'episodes', 'provisional_signals', 'project_obligations', 'relations', 'intent_custody'):
         seen: set[str] = set()
         snapshot[lane] = [item for part in snapshots for item in part.get(lane, [])
                           if item.get('id') not in seen and not seen.add(item.get('id'))]
     def relevant(item: Mapping[str, Any]) -> bool:
         if not query_plan.matches(item):
             return False
+        if query_plan.generic_project_state:
+            return True
         if query_plan.natural and (query_plan.task_ids or query_plan.identifiers or query_plan.versions):
             return True
         if not query_plan.natural:
@@ -551,7 +743,7 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
             selected = []
             seen_refs = set()
             priorities = {'rationale': 0, 'prior_rationale': 1, 'goal': 2} if query_plan.projection == 'rationale' else {
-                'open_work': 0, 'prior_open_work': 1, 'outcome': 2, 'summary': 3}
+                'open_work': 0, 'prior_open_work': 1, 'rationale': 2, 'prior_rationale': 2, 'goal': 2, 'prior_goal': 2, 'outcome': 3, 'summary': 4}
             if query_plan.projection == 'environments':
                 # Prefer the complete cross-environment field before narrower
                 # outcome/obligation groups repeat its sources and use its room.
@@ -653,10 +845,93 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
         boundary = [ordered[0]] + ([ordered[-1]] if ordered[-1]['id'] != ordered[0]['id'] else [])
         boundary_ids = {item['id'] for item in boundary}
         records = boundary + [item for item in records if item['id'] not in boundary_ids]
+    custody = []
+    unresolved = [item for item in snapshot.get('intent_custody', [])
+                  if item.get('disposition') == 'unresolved' and eligible(item)]
+    if unresolved:
+        sources = {item['id']: item for item in store.get(workspace, list(dict.fromkeys(
+            item['source_id'] for item in unresolved)))}
+        for item in unresolved:
+            source = sources.get(item['source_id'])
+            if not source or not _safe(source, workspace, exclude_session_id):
+                continue
+            body, start, end = source.get('body'), item.get('start'), item.get('end')
+            if not isinstance(body, str) or type(start) is not int or type(end) is not int or not 0 <= start < end <= len(body):
+                continue
+            quote = body[start:end]
+            if not relevant(dict(item, text=quote)):
+                continue
+            original = dict(item, text=quote, evidence={'text': [{'source_id': item['source_id'],
+                'start': start, 'end': end, 'source_role': 'user_intent', 'quote': quote}]})
+            record = _record(original, 'intent_custody')
+            record['fields'] = [{'name': 'source_custody', 'text': '', 'basis': 'attributed_source_excerpts',
+                'field_association': 'verbatim_user_source',
+                'evidence': [{'source_id': item['source_id'], 'start': start, 'end': end,
+                    'source_role': 'user_intent', 'field': 'source_custody',
+                    'quote_excerpt': redact_search_value(quote), 'quote_truncated': False}]}]
+            custody.append(record)
+    brief['intent_custody'] = custody
+    custody_coverage = snapshot.get('intent_custody_coverage') or {}
+    brief['intent_custody_coverage'] = custody_coverage
+    if custody_coverage:
+        brief['coverage'] = dict(brief['coverage'])
+        brief['coverage']['unresolved_user_sources'] = custody_coverage.get('unresolved', 0)
+        brief['coverage']['user_sources_omitted'] = custody_coverage.get('omitted', 0)
+        if custody_coverage.get('unresolved') or custody_coverage.get('omitted'):
+            brief['coverage'].update(coverage_gaps=True, pending_reconciliation=True)
+    # Avoid repeating source bodies already covered completely by candidate
+    # material fields. This is display deduplication, never a custody discharge.
+    def quoted_by_material(record: Mapping[str, Any]) -> bool:
+        pointer = record['fields'][0]['evidence'][0]
+        intervals = sorted((ref['start'], ref['end']) for other in records
+            for field in other.get('fields', []) for ref in field.get('evidence', [])
+            if ref.get('source_id') == pointer['source_id'] and not ref.get('quote_truncated')
+            and type(ref.get('start')) is int and type(ref.get('end')) is int)
+        covered = pointer['start']
+        for start, end in intervals:
+            if start > covered:
+                break
+            covered = max(covered, end)
+        return covered >= pointer['end']
+    unrepresented, deferred = [], []
+    for record in custody:
+        if quoted_by_material(record):
+            continue
+        source_id = record['fields'][0]['evidence'][0]['source_id']
+        overlaps = any(ref.get('source_id') == source_id for other in records
+                       for field in other.get('fields', []) for ref in field.get('evidence', []))
+        if overlaps:
+            record['source_overlap_with_material'] = True
+            deferred.append(record)
+        else:
+            unrepresented.append(record)
+    # Neutral unresolved sources follow independent open claims and precede
+    # incidental outcomes. No read infers that these quotes are active work.
+    open_ids = {record['id'] for record in obligations}
+    priority_records = [record for record in records if record['id'] in open_ids]
+    records = priority_records + unrepresented + [record for record in records if record['id'] not in open_ids] + deferred
+    sources, source_coverage = _source_evidence(store, workspace, query_plan, exclude_session_id, eligible, relevant, environment, version)
+    brief['source_evidence'] = sources
+    brief['source_evidence_coverage'] = source_coverage
+    brief['coverage'] = dict(brief['coverage'], source_evidence_omitted=source_coverage['omitted'])
+    priority_records = [record for record in records if record['id'] in open_ids]
+    def source_identity(ref: Mapping[str, Any]) -> tuple[Any, ...]:
+        return tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_field',
+                                             'tool_use_id', 'source_role', 'quote_excerpt'))
+    material_refs = {source_identity(ref) for record in records for field in record.get('fields', [])
+                     for ref in field.get('evidence', []) if not ref.get('quote_truncated')}
+    independent, repeated = [], []
+    material_source_ids = {ref[0] for ref in material_refs}
+    for record in sources:
+        refs = [ref for field in record['fields'] for ref in field['evidence']]
+        already_cited_tool = record.get('source_role') == 'tool_record' and record['id'] in material_source_ids
+        duplicate = refs and all(source_identity(ref) in material_refs for ref in refs)
+        (repeated if already_cited_tool or duplicate else independent).append(record)
+    records = priority_records + independent + [record for record in records if record['id'] not in open_ids] + repeated
     brief['records'] = records
     selected_ids = {item.get('id') for item in brief['records']}
     brief['relations'] = [dict(item) for item in snapshot.get('relations', []) if
                           item.get('from') in selected_ids and item.get('to') in selected_ids
                           and _safe(item, workspace, exclude_session_id)][:32]
-    brief['xml'] = render_project_brief(brief, budget)
+    brief['xml'], brief['render_omissions'] = _render_project_brief(brief, budget)
     return brief

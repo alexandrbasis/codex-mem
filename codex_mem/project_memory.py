@@ -62,6 +62,8 @@ def install_schema(connection: sqlite3.Connection) -> None:
     )
     for statement in statements:
         connection.execute(statement)
+    from .project_memory_custody import install_schema as install_custody_schema
+    install_custody_schema(connection)
     if "blocked_job_id" not in {r[1] for r in connection.execute("PRAGMA table_info(pm_events)")}:
         connection.execute("ALTER TABLE pm_events ADD COLUMN blocked_job_id TEXT")
     if "salient" not in {r[1] for r in connection.execute("PRAGMA table_info(pm_events)")}:
@@ -138,7 +140,8 @@ def protected_source_ids(connection: sqlite3.Connection, project: str) -> set[st
     """Retain sources backing live memory and pending work during age pruning."""
     from .store import project_key
     project = project_key(project)
-    return {r[0] for r in connection.execute(
+    from .project_memory_custody import protected_source_ids as custody_sources
+    return custody_sources(connection, project) | {r[0] for r in connection.execute(
         "SELECT e.source_id FROM pm_evidence e JOIN pm_objects o ON o.id=e.object_id WHERE o.project=? "
         "UNION SELECT e.source_id FROM pm_relation_evidence e JOIN pm_relations r ON r.id=e.relation_id WHERE r.project=? "
         "UNION SELECT source_id FROM pm_events WHERE project=? AND done=0", (project, project, project))}
@@ -216,9 +219,12 @@ class ProjectMemory:
         for relation in relations:
             relation["evidence"], relation["evidence_omitted"] = _bounded_evidence(relation["evidence"])
         signals = self._signals(project, signal_limit, exclude_session_id)
+        from .project_memory_custody import snapshot as custody_snapshot
+        custody, custody_coverage = custody_snapshot(c, project, signal_limit, exclude_session_id,
+            fts_query=_fts_query(query, project, topic_query=topic_query))
         coverage = self._coverage(project) if include_coverage else {"pending_events": 0}
         obligations = _project_obligations(c, project, min(limit, 32), exclude_session_id) if include_project_obligations else []
-        return {"project_obligations": obligations, "project": project, "revision": row["revision"] if row else 0, "deletion_generation": row["deletion_generation"] if row else 0, "claims": [o for o in objects if o["object_type"] == "claim"], "episodes": [o for o in objects if o["object_type"] == "episode"], "relations": relations, "provisional_signals": signals, "coverage": coverage, "pending": bool(coverage["pending_events"])}
+        return {"intent_custody": custody, "intent_custody_coverage": custody_coverage, "project_obligations": obligations, "project": project, "revision": row["revision"] if row else 0, "deletion_generation": row["deletion_generation"] if row else 0, "claims": [o for o in objects if o["object_type"] == "claim"], "episodes": [o for o in objects if o["object_type"] == "episode"], "relations": relations, "provisional_signals": signals, "coverage": coverage, "pending": bool(coverage["pending_events"])}
 
     def _signals(self, project: str, limit: int, exclude_session_id: str | None) -> list[dict[str, Any]]:
         if not limit:
@@ -792,7 +798,93 @@ class ProjectMemory:
             clean_relations.append(clean)
         return objects, clean_relations, {"omitted_transitions_count": len(omitted_reasons), "omitted_transitions_reason": ",".join(sorted(set(omitted_reasons))), "downgraded_states_count": len(downgraded_reasons), "downgraded_states_reason": ",".join(sorted(set(downgraded_reasons))), "omitted_continuities_count": len(omitted_continuities), "omitted_continuities_reason": ",".join(sorted(set(omitted_continuities))), "pending_reconciliation": bool(omitted_reasons or downgraded_reasons or omitted_continuities)}
 
-    def commit(self, snapshot: dict[str, Any], output: dict[str, Any], *, receipt: dict[str, Any] | None = None, conservative_transitions: bool = False) -> dict[str, Any]:
+    def _prepare_records(self, durable: dict[str, Any], output: dict[str, Any], *,
+                         conservative_transitions: bool) -> tuple[list[dict], list[dict], dict[str, Any]]:
+        c = self.store._connection
+        objects, relations, reconciliation = self._validate(durable, output, conservative_transitions=conservative_transitions)
+        # Preserve superseded narrative as explicitly historical context.
+        # It cannot reopen or close independently scoped claims. This
+        # avoids turning a compound old paragraph into a new obligation.
+        for episode in objects:
+            if episode["object_type"] != "episode":
+                continue
+            prior_ids = [episode.get("parent_episode_id"), *episode.get("consolidated_episode_ids", [])]
+            priors = []
+            for prior_id in filter(None, prior_ids):
+                row = c.execute("SELECT data_json FROM pm_objects WHERE project=? AND id=?", (durable["project"], prior_id)).fetchone()
+                if row:
+                    priors.append(json.loads(row[0]))
+            omitted_context = sum(prior.get("retained_context_fields_omitted", 0) for prior in priors)
+            disclosed = {source["id"]: source for source in durable["sources"]}
+            for field in ("goal", "rationale", "outcome", "open_work"):
+                historical = "prior_" + field
+                texts, refs = [], []
+                partial_context = False
+                for prior in priors:
+                    for name in (historical, field):
+                        text = prior.get(name)
+                        evidence = prior.get("evidence", {}).get(name, [])
+                        if not text or not evidence:
+                            continue
+                        try:
+                            text, evidence, provenance = _grounded_field(evidence, disclosed)
+                        except ValueError:
+                            omitted_context += 1
+                            continue
+                        if text == episode.get(field) or text in texts:
+                            continue
+                        combined = list(refs)
+                        combined.extend(ref for ref in evidence if ref not in combined)
+                        if (len("\n".join([*texts, text])) > 6000 or len(combined) > 32
+                                or sum(len(ref["quote"]) for ref in combined) > 6000):
+                            omitted_context += 1
+                            continue
+                        texts.append(text)
+                        refs = combined
+                        partial_context = partial_context or provenance["partial_context"]
+                if texts:
+                    episode[historical] = "\n".join(texts)
+                    episode["evidence"][historical] = refs
+                    episode.setdefault("field_provenance", {})[historical] = {
+                        "basis": "attributed_source_excerpts", "field_association": "model_inference",
+                        "source_roles": list(dict.fromkeys(ref["source_role"] for ref in refs)),
+                        "partial_context": partial_context}
+            if any(episode.get("prior_" + field) for field in ("goal", "rationale", "outcome", "open_work")):
+                episode["prior_context_status"] = "historical_current_validity_unresolved"
+                reconciliation["pending_reconciliation"] = True
+            episode["retained_context_fields_omitted"] = omitted_context
+        if len(_json({"objects": objects, "relations": relations})) > 180000:
+            raise ValueError("assembled project memory output exceeds limit")
+        return objects, relations, reconciliation
+
+    def prepare(self, snapshot: dict[str, Any], output: dict[str, Any], *,
+                conservative_transitions: bool = False) -> dict[str, Any]:
+        """Read final records for optional assessment outside the write transaction.
+
+        Commit rebuilds the records and compares their digest. This preview does
+        not grant a lease or bypass revision, source, deletion or head checks.
+        """
+        if type(conservative_transitions) is not bool:
+            raise ValueError("conservative_transitions must be a boolean trusted caller option")
+        with self.store._lock:
+            def read():
+                job, project = self._job(snapshot)
+                if not self._live(job, project, snapshot):
+                    raise ValueError("preparation requires a live claimed job")
+                durable = json.loads(job["input_json"])
+                for source in durable["sources"]:
+                    current = self.store._connection.execute(
+                        "SELECT body FROM entries WHERE project=? AND id=?",
+                        (durable["project"], source["id"])).fetchone()
+                    if current is None or current[0][source["body_offset"]:source["body_offset"]+len(source["body"])] != source["body"]:
+                        raise ValueError("preparation source changed")
+                objects, relations, reconciliation = self._prepare_records(
+                    durable, output, conservative_transitions=conservative_transitions)
+                prepared = {"objects": objects, "relations": relations, "reconciliation": reconciliation}
+                return dict(prepared, digest=_hash(prepared))
+            return self.store._read(read)
+
+    def commit(self, snapshot: dict[str, Any], output: dict[str, Any], *, receipt: dict[str, Any] | None = None, conservative_transitions: bool = False, expected_prepared_digest: str | None = None) -> dict[str, Any]:
         with self.store._lock:
             def commit_job():
                 c = self.store._connection
@@ -823,60 +915,11 @@ class ProjectMemory:
                                     return {"status": "stale", "reason": "episode_head_changed"}
                 if type(conservative_transitions) is not bool:
                     raise ValueError("conservative_transitions must be a boolean trusted caller option")
-                objects, relations, reconciliation = self._validate(durable, output, conservative_transitions=conservative_transitions)
-                # Preserve superseded narrative as explicitly historical context.
-                # It cannot reopen or close independently scoped claims. This
-                # avoids turning a compound old paragraph into a new obligation.
-                for episode in objects:
-                    if episode["object_type"] != "episode":
-                        continue
-                    prior_ids = [episode.get("parent_episode_id"), *episode.get("consolidated_episode_ids", [])]
-                    priors = []
-                    for prior_id in filter(None, prior_ids):
-                        row = c.execute("SELECT data_json FROM pm_objects WHERE project=? AND id=?", (durable["project"], prior_id)).fetchone()
-                        if row:
-                            priors.append(json.loads(row[0]))
-                    omitted_context = sum(prior.get("retained_context_fields_omitted", 0) for prior in priors)
-                    disclosed = {source["id"]: source for source in durable["sources"]}
-                    for field in ("goal", "rationale", "outcome", "open_work"):
-                        historical = "prior_" + field
-                        texts, refs = [], []
-                        partial_context = False
-                        for prior in priors:
-                            for name in (historical, field):
-                                text = prior.get(name)
-                                evidence = prior.get("evidence", {}).get(name, [])
-                                if not text or not evidence:
-                                    continue
-                                try:
-                                    text, evidence, provenance = _grounded_field(evidence, disclosed)
-                                except ValueError:
-                                    omitted_context += 1
-                                    continue
-                                if text == episode.get(field) or text in texts:
-                                    continue
-                                combined = list(refs)
-                                combined.extend(ref for ref in evidence if ref not in combined)
-                                if (len("\n".join([*texts, text])) > 6000 or len(combined) > 32
-                                        or sum(len(ref["quote"]) for ref in combined) > 6000):
-                                    omitted_context += 1
-                                    continue
-                                texts.append(text)
-                                refs = combined
-                                partial_context = partial_context or provenance["partial_context"]
-                        if texts:
-                            episode[historical] = "\n".join(texts)
-                            episode["evidence"][historical] = refs
-                            episode.setdefault("field_provenance", {})[historical] = {
-                                "basis": "attributed_source_excerpts", "field_association": "model_inference",
-                                "source_roles": list(dict.fromkeys(ref["source_role"] for ref in refs)),
-                                "partial_context": partial_context}
-                    if any(episode.get("prior_" + field) for field in ("goal", "rationale", "outcome", "open_work")):
-                        episode["prior_context_status"] = "historical_current_validity_unresolved"
-                        reconciliation["pending_reconciliation"] = True
-                    episode["retained_context_fields_omitted"] = omitted_context
-                if len(_json({"objects": objects, "relations": relations})) > 180000:
-                    raise ValueError("assembled project memory output exceeds limit")
+                objects, relations, reconciliation = self._prepare_records(
+                    durable, output, conservative_transitions=conservative_transitions)
+                if expected_prepared_digest is not None and expected_prepared_digest != _hash(
+                        {"objects": objects, "relations": relations, "reconciliation": reconciliation}):
+                    raise ValueError("prepared project memory changed after assessment")
                 derived_at = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
                 for obj in objects:
                     obj.update(created_at=derived_at, updated_at=derived_at, derived_created_at=derived_at, event_at=None, event_time_basis="source_capture_time")
@@ -911,8 +954,12 @@ class ProjectMemory:
                 for source in durable["sources"] if durable.get("job_kind") != "reconsideration" else []:
                     if source.get("historical"):
                         continue
+                    from .project_memory_custody import record_consumed
+                    record_consumed(c, durable["project"], source)
                     offset = source["body_offset"]+len(source["body"])
                     c.execute("UPDATE pm_events SET offset=?,done=? WHERE project=? AND source_id=?", (offset, int(offset>=source["body_length"]), durable["project"], source["id"]))
+                from .project_memory_custody import associate_claims
+                associate_claims(c, durable["project"], objects)
                 revision = durable["revision"]+1
                 c.execute("UPDATE pm_projects SET revision=? WHERE project=?", (revision, durable["project"]))
                 c.execute("INSERT INTO pm_revisions VALUES (?,?,?,?,?)", (durable["project"], revision, job["id"], max(s["seq"] for s in durable["sources"]), time.time()))

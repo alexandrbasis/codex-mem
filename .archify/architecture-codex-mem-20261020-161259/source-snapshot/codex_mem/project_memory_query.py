@@ -21,6 +21,37 @@ _CONTINUE = re.compile(r'\b(?:resume|continue|continuing|continuation)\b|pick\s+
 _HISTORY = re.compile(r'\b(?:originally|original|as[- ]of|historical|history)\b|первоначаль|истори|по состоянию на', re.I)
 _ENVS = re.compile(r'(?<![\w.-])(?:production|prod|staging|development|dev|local(?:ly)?|локальн[а-яё]*|стейджинг[а-яё]*|продакш(?:е|ё)?н[а-яё]*)(?![\w-]|\.[\w])', re.I)
 
+# Full grammatical frames distinguish an answer facet from a topical subject.
+# Any residual subject words keep the normal lexical candidate window.
+_OUTCOME_FACET = r'(?:delivery|deliveries|results?|outcomes?|work|progress|status|completion|implementation)'
+_OUTCOME_STATE = r'(?:supported|confirmed|observed|established|verified|completed?|delivered|finished|accepted)'
+_GENERIC_OUTCOME = re.compile(
+    rf'(?:what|which)\s+(?:'
+    rf'(?:{_OUTCOME_FACET})\s+(?:(?:is|are|was|were|has been|have been)\s+)?{_OUTCOME_STATE}'
+    rf'|(?:has|have)\s+(?:actually\s+)?been\s+{_OUTCOME_STATE}'
+    r'|did\s+(?:we|you)\s+(?:deliver|complete|finish|establish)'
+    r'|have\s+(?:we|you)\s+(?:delivered|completed|finished|established))'
+    rf'|what\s+is\s+(?:the\s+)?(?:current\s+)?(?:{_OUTCOME_FACET})(?:\s+status)?', re.I)
+_RECENT_REQUEST = r'(?:the\s+)?(?:last|latest|most recent)\s+(?:request|task|instruction)'
+_EARLIER_WORK = r'(?:the\s+)?(?:prior|previous|earlier|existing)\s+(?:work|tasks?|requests?|instructions?)'
+_GENERIC_REQUEST_RELATION = re.compile(
+    rf'how\s+(?:(?:does|did)\s+{_RECENT_REQUEST}\s+(?:relate|connect|compare)'
+    rf'|(?:is|was)\s+{_RECENT_REQUEST}\s+(?:related|connected|linked))\s+(?:to|with)\s+{_EARLIER_WORK}'
+    rf'|is\s+{_RECENT_REQUEST}\s+(?:a\s+)?(?:continuation|extension)\s+of\s+{_EARLIER_WORK}'
+    r'(?:\s+or\s+(?:a\s+)?separate\s+task)?', re.I)
+
+
+_GENERIC_ROLE_ATTRIBUTION = re.compile(
+    r'what\s+(?:is|was)\s+(?:the\s+)?(?:standing|status|support|evidence)\s+(?:of|for)\s+'
+    r'(?:the\s+)?assistant(?:\'s)?\s+(?:report|prediction|estimate|claim|assessment)', re.I)
+
+
+def _generic_facet(query: str) -> tuple[bool, bool]:
+    question = ' '.join(query.strip().rstrip('?.!').split())
+    relation = bool(_GENERIC_REQUEST_RELATION.fullmatch(question))
+    return bool(_GENERIC_OUTCOME.fullmatch(question) or _GENERIC_ROLE_ATTRIBUTION.fullmatch(question)) or relation, relation
+
+
 def environment_names(text: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(_environment_name(match.group()) for match in _ENVS.finditer(text)))
 
@@ -61,6 +92,7 @@ class QueryPlan:
     excluded_environments: tuple[str, ...]
     candidate_queries: tuple[str, ...]
     topic_query: bool
+    generic_project_state: bool
     exact: Mapping[str, Any]
 
     def matches(self, item: Mapping[str, Any]) -> bool:
@@ -125,6 +157,11 @@ def plan_query(query: str, project: str | Path) -> QueryPlan:
         if not _inside(match.start(), negative)))
     excluded_envs = tuple(dict.fromkeys(_environment_name(match.group()) for match in _ENVS.finditer(query)
         if _inside(match.start(), negative)))
+    generic_frame, generic_relation = _generic_facet(query)
+    generic_project_state = bool(natural and not (tasks or identifiers or versions) and generic_frame)
+    if generic_project_state and generic_relation:
+        continuation = True
+        historical = False
     projection = 'continuity' if natural and continuation and re.search(r'\b(?:chats?|sessions?|link|statements?|same task)\b|чат|сесси|связ', query, re.I) else 'state'
     if natural and re.search(r'\b(?:why|rationale|reconsider(?:ed)?)\b|почему|причин|пересмотр', query, re.I):
         projection = 'rationale'
@@ -132,6 +169,8 @@ def plan_query(query: str, project: str | Path) -> QueryPlan:
         projection = 'history'
     elif natural and (environments or excluded_envs):
         projection = 'environments'
+    if generic_project_state and generic_relation:
+        projection = 'continuity'
     if not natural:
         candidates = (query,)
         identifiers = list(exact['identifiers'])
@@ -146,10 +185,13 @@ def plan_query(query: str, project: str | Path) -> QueryPlan:
             raise ValueError('unbounded subject windows')
         candidates = tuple(windows)
         topic = False
+    elif generic_project_state:
+        candidates = ('',)
+        topic = False
     else:
         topical = resume_topic_plan(query) or prompt_query_plan('How ' + query)
         terms = topical['terms'] if topical else []
         candidates = (' '.join(stem for _, stem in terms),)
         topic = bool(terms)
     return QueryPlan(natural, historical, continuation, projection, tuple(tasks), tuple(identifiers),
-                     versions, tuple(excluded_versions), environments, excluded_envs, candidates, topic, exact)
+                     versions, tuple(excluded_versions), environments, excluded_envs, candidates, topic, generic_project_state, exact)

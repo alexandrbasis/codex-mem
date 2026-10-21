@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "sha256": "57a6cee78fbf3f88dccbd84795db6e68c61c4b1840fbfc8d995f386c3cedbbd3",
+    "bytes": 24707
+  },
+  "artifact": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "sha256": "3f1216d310c4a969a0cee6b868287ed2b6b0c117ad34d4dc2fc88cdc35b3775e",
+    "bytes": 848810
+  },
+  "gates": {
+    "validate": "fail",
+    "deliver": "not-run",
+    "check": "not-run",
+    "browser-check": "not-run"
+  },
+  "failedStage": "validate",
+  "diagnostics": [
+    {
+      "code": "schema/maxLength",
+      "severity": "error",
+      "message": "/components/4/sources/0/label (id/label: \"Native proposal, preparation, optional assessment and commit\") must NOT have more than 48 characters",
+      "subject": {
+        "diagramType": "architecture",
+        "path": "/components/4/sources/0/label",
+        "identity": "Native proposal, preparation, optional assessment and commit"
+      },
+      "evidence": {
+        "keyword": "maxLength",
+        "limit": 48
+      },
+      "supportedFixes": [
+        "provide at most 48 character(s)"
+      ]
+    },
+    {
+      "code": "schema/maxLength",
+      "severity": "error",
+      "message": "/components/10/sources/0/label (id/label: \"Complete quote groups, budget reservations and neutral custody\") must NOT have more than 48 characters",
+      "subject": {
+        "diagramType": "architecture",
+        "path": "/components/10/sources/0/label",
+        "identity": "Complete quote groups, budget reservations and neutral custody"
+      },
+      "evidence": {
+        "keyword": "maxLength",
+        "limit": 48
+      },
+      "supportedFixes": [
+        "provide at most 48 character(s)"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 2,
+    "shown": 2,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021/codex-mem.finalize.json",
+    "summaryReceipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021/codex-mem.finalize-summary.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T13:34:32.936Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 197,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "nextAction": {
+    "action": "edit-in-place",
+    "candidate": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "constraint": "Preserve unaffected semantics and geometry; apply each diagnostic's supportedFixes, or the fix its message names, and do not replace the whole candidate.",
+    "then": "finalize-once"
+  }
+}
