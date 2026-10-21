@@ -1,0 +1,22 @@
+test_for_explanation_reopens_confirmed_task_after_store_restart (test_project_memory_reopening_clauses.ReopeningClauseTests.test_for_explanation_reopens_confirmed_task_after_store_restart) ... ok
+test_to_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_to_explanation_reopens_confirmed_task) ... FAIL
+
+======================================================================
+FAIL: test_to_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_to_explanation_reopens_confirmed_task)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 92, in test_to_explanation_reopens_confirmed_task
+    self.assert_reconsidered('Reopen ORB-73 to fix the compact-price caption.')
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 83, in assert_reconsidered
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'idle' != 'processed'
+- idle
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'status': 'idle'}
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.072s
+
+FAILED (failures=1)

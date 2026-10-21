@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "audit_kind": "independent_offline_export_arithmetic_and_interpretation",
+  "inputs": {
+    "export_manifest_sha256": "1c6c4afc748fd0ef1899ea7b4afec1c09c2c868d85e4a7e80d79349484a93250",
+    "report_sha256": "d0f7e184cde173bc0b4b63e66e17736ab030ddd115aa1f95ad9e502b3f2b79a4",
+    "ledger_sha256": "cc8e2413ccbcb3d37e92b5e2d9b50e2268c3789945df07070d613d03463d3d98"
+  },
+  "manifest_validation": {
+    "listed_files": 14,
+    "hash_mismatches": [],
+    "archive_regular_files": 283,
+    "declared_archive_files": 283,
+    "unchanged_raw_members": 177,
+    "sanitized_members": 106,
+    "raw_public_hash_mismatches": [],
+    "unexpected_sanitization_changes": [],
+    "checks": "Compared all archive members to raw temporary originals. For 106 changed JSON members, independently substituted deterministic SHA256 UUID pseudonyms and compared complete parsed data; all remaining values, including answers, grades and usage, remain equal."
+  },
+  "ledger_validation": {
+    "started": 73,
+    "finished": 73,
+    "native_failed": 0,
+    "unresolved": 0,
+    "identity_or_duplicate_errors": [],
+    "tokens": {
+      "input_tokens": 1214879,
+      "cached_input_tokens": 74880,
+      "output_tokens": 66522,
+      "total_tokens": 1281401
+    },
+    "by_phase": {
+      "generation": {
+        "calls": 38,
+        "total_tokens": 587046
+      },
+      "consolidation": {
+        "calls": 3,
+        "total_tokens": 66678
+      },
+      "reader": {
+        "calls": 16,
+        "total_tokens": 295837
+      },
+      "judge": {
+        "calls": 16,
+        "total_tokens": 331840
+      }
+    },
+    "all_receipts_reported_usage": true,
+    "input_plus_output_equals_total_each_call": true,
+    "cumulative_attempts": 414,
+    "cumulative_tokens": {
+      "input_tokens": 7143246,
+      "cached_input_tokens": 919040,
+      "output_tokens": 352459,
+      "total_tokens": 7495705
+    },
+    "note": "Native completed is distinct from pipeline acceptance. Invalid generation and judge results still consume accounted calls/tokens. Billed cost and agent engineering overhead remain unknown."
+  },
+  "denominator_validation": {
+    "histories": 16,
+    "distinct_planned_questions": 96,
+    "per_question_records": 96,
+    "primary_attempt_rows_per_question_per_arm": 1,
+    "missing_retained": true
+  },
+  "primary_metrics": {
+    "baseline": {
+      "questions_planned": 96,
+      "questions_graded": 36,
+      "missing_histories": [
+        "fiction-05",
+        "fiction-06",
+        "fiction-11",
+        "fiction-12",
+        "fiction-14",
+        "fiction-15",
+        "fiction-16",
+        "fiction-17",
+        "fiction-19",
+        "fiction-20"
+      ],
+      "full_supported_count": 13,
+      "critical_errors": 0,
+      "constraints_obligations_reasons_count": 14,
+      "full_supported_rate": 0.13541666666666666,
+      "missing_questions": 60
+    },
+    "candidate": {
+      "questions_planned": 96,
+      "questions_graded": 42,
+      "missing_histories": [
+        "fiction-05",
+        "fiction-06",
+        "fiction-11",
+        "fiction-12",
+        "fiction-14",
+        "fiction-15",
+        "fiction-16",
+        "fiction-17",
+        "fiction-19"
+      ],
+      "full_supported_count": 18,
+      "critical_errors": 0,
+      "constraints_obligations_reasons_count": 23,
+      "full_supported_rate": 0.1875,
+      "missing_questions": 54
+    }
+  },
+  "reported_gain_percentage_points": 5.208333333333334,
+  "paired_recall_losses": [
+    {
+      "history_id": "fiction-10",
+      "question_id": "q5"
+    }
+  ],
+  "paired_fact_losses": [
+    {
+      "history_id": "fiction-08",
+      "question_id": "q2",
+      "fact_index": 1,
+      "category": "evidence"
+    },
+    {
+      "history_id": "fiction-10",
+      "question_id": "q6",
+      "fact_index": 1,
+      "category": "handoff"
+    }
+  ],
+  "individual_loss_assessment": [
+    {
+      "history_id": "fiction-08",
+      "question_id": "q2",
+      "shared_memory_union_exactly_equal": false,
+      "relevant_clause": "It does not establish a deployment, production behavior, or acceptance.",
+      "clause_visible_in_query_ids": {
+        "baseline": [],
+        "candidate": []
+      },
+      "accepted_merge_count": 0,
+      "interpretation": "Both answers report local scope, reject production evidence and preserve pending acceptance. The full explicit no-deployment/production/acceptance clause is absent from both memory unions. Baseline fact1 is true, candidate false, with stricter candidate rationale. Memory unions differ, but this flag does not isolate introduced retrieval loss; reader wording and judge interpretation remain confounded."
+    },
+    {
+      "history_id": "fiction-10",
+      "question_id": "q5",
+      "shared_memory_union_exactly_equal": false,
+      "relevant_clause": "Describe the blank participant name in the review note.",
+      "clause_visible_in_query_ids": {
+        "baseline": [
+          "q1",
+          "q2",
+          "q4",
+          "q5",
+          "q6"
+        ],
+        "candidate": [
+          "q1",
+          "q2",
+          "q4",
+          "q5",
+          "q6"
+        ]
+      },
+      "accepted_merge_count": 0,
+      "interpretation": "Both arms receive the blank-name obligation and tie-order requirement. Both answers omit the blank-name work and retain the tie-order requirement/reason. fact_recall arrays are identical [false,true,true], while the aggregate recall flag differs true versus false. This is evidence of inconsistent judge classification, not demonstrated new retrieval or substantive-answer loss. Frozen grade remains unchanged."
+    },
+    {
+      "history_id": "fiction-10",
+      "question_id": "q6",
+      "shared_memory_union_exactly_equal": false,
+      "relevant_clause": "This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance.",
+      "clause_visible_in_query_ids": {
+        "baseline": [
+          "q1",
+          "q2",
+          "q4",
+          "q5",
+          "q6"
+        ],
+        "candidate": [
+          "q1",
+          "q2",
+          "q4",
+          "q5",
+          "q6"
+        ]
+      },
+      "accepted_merge_count": 0,
+      "interpretation": "Both unions contain the explicit no-reopen/no-merge authorization limit. Neither answer prose explicitly states that limit; baseline grader nevertheless credits fact1 and says it was included, whereas candidate grader rejects it. Relevant evidence was visible in both arms. Judge/reader interpretation limits prevent attributing this scored loss to retrieval. Frozen grades remain unchanged."
+    }
+  ],
+  "repeat_validation": {
+    "primary_fiction05_absent_both_arms": true,
+    "regeneration_question_grade_rows": 12,
+    "regeneration_critical_errors": 0,
+    "reader_only_fiction06_repeat_missing": true,
+    "repeats_complete": false,
+    "interpretation": "Observed regeneration scores exist; missing primary scores prevent repeat-difference measurement. Missing fiction-06 repeat keeps planned repeats incomplete."
+  },
+  "operator_continuation": {
+    "journal_path": "baseline/holdout-manual-continuation.jsonl",
+    "journal_sha256": "d05cf7e983f8ec30c14d10c5df25c3aa10ea11a210bb582b25c3d9c27322818b",
+    "operator_sha256": "f871d4577d4faa4238425c3f28e49f604020d77b7b20c57e41c724fe9719cc55",
+    "calls_after_stop": 14,
+    "all_later_calls_within_disclosed_unstarted_phases": true,
+    "rejected_baseline_judge_not_retried": true
+  },
+  "raw_and_export_report_equal": true,
+  "findings": [
+    {
+      "severity": "interpretation_limit",
+      "topic": "incomplete_comparison",
+      "detail": "Only 36 baseline and 42 candidate primary questions have accepted grades. Denominator remains 96 per arm; nine shared histories lack primary extraction and baseline fiction-20 grading is rejected. Five-count aggregate gain includes three candidate fiction-20 successes against missing baseline grades, not an observed paired gain."
+    },
+    {
+      "severity": "interpretation_correction",
+      "topic": "regeneration_flags",
+      "detail": "fiction-05 primary reader/grades are absent in both arms. All 12 regeneration full_answer_changed and critical_error_changed booleans compare against missing primary values, not observed primary outcomes. They do not establish instability or critical-error changes. Keep raw fields unchanged and disclose this limitation."
+    },
+    {
+      "severity": "procedural_deviation",
+      "topic": "operator_continuation",
+      "detail": "After baseline fiction-20 judge call-0059 returned invalid fact coverage, the frozen driver stopped. A separately hashed operator script completed seven previously unstarted candidate judges and the prescribed fiction-05 regeneration, adding 14 native calls on the same ledger. It did not retry or replace rejected judge-0059. This is a disclosed departure from stopping the driver, not uninterrupted frozen-driver execution."
+    }
+  ],
+  "conclusion": "Export integrity and arithmetic checks pass. decision=incomplete is supported. Primary score differences and raw repeat-change flags do not establish consolidation benefit or observed critical-error instability. No grades corrected.",
+  "calls": {
+    "new_native_experiment_calls": 0,
+    "new_external_api_calls": 0
+  },
+  "scope_limits": [
+    "No rerun of model grading or product behavior.",
+    "One accepted primary merge only; many questions missing.",
+    "Six answers share context and are not independent samples.",
+    "Relevant-clause visibility checks are lexical; semantic equivalence can differ.",
+    "No source, protocol, helper, grade or prior evidence edits."
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "scope": "Primary baseline fiction-20 judge call-0059 only; content-free offline contract diagnosis.",
+  "inputs": {
+    "request": {
+      "path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0059-request.json",
+      "sha256": "3cd2f383e12ccdd29baf813e9af8f3ab8c66bc730c567287923891a4379b975d"
+    },
+    "response": {
+      "path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0059-response.json",
+      "sha256": "8c7f05c6441c67778010d6f097c91c1df38ca28ab36bcf174d95f8236fd781f6"
+    },
+    "blind_map": {
+      "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-20/judge-0.blind-map.json",
+      "sha256": "462c71ed455650a131d620aebf47794ec74bb72b50ab253c9c3035a5fdec083f"
+    },
+    "gold": {
+      "path": "docs/evidence/consolidation-retention-2026-10-20/inputs/holdout.gold.json",
+      "sha256": "4b532bf1d9f713b849e7719b606e5133325d09ca74bac897e76933ed05db522f"
+    },
+    "helper": {
+      "path": "scripts/project_memory_consolidation_experiment.py",
+      "sha256": "b44f489342588c28c2014356391f5b51720f57f5d1db0139147f4773d93d2475"
+    }
+  },
+  "native_call_status": "completed",
+  "requested_json_schema_validation": "pass",
+  "question_ids_match_six_unique_blind_map_entries": true,
+  "per_question_fact_coverage": [
+    {
+      "opaque_id": "answer-00",
+      "question_id": "q3",
+      "expected_fact_indices": [
+        0
+      ],
+      "returned_fact_indices": [
+        0
+      ],
+      "missing_indices": [],
+      "extra_indices": [],
+      "duplicate_indices": [],
+      "returned_required_facts_total": 1,
+      "gold_required_facts_total": 1,
+      "request_gold_fact_texts_match_frozen_gold": true,
+      "coverage_valid": true
+    },
+    {
+      "opaque_id": "answer-01",
+      "question_id": "q2",
+      "expected_fact_indices": [
+        0,
+        1
+      ],
+      "returned_fact_indices": [
+        0,
+        1
+      ],
+      "missing_indices": [],
+      "extra_indices": [],
+      "duplicate_indices": [],
+      "returned_required_facts_total": 2,
+      "gold_required_facts_total": 2,
+      "request_gold_fact_texts_match_frozen_gold": true,
+      "coverage_valid": true
+    },
+    {
+      "opaque_id": "answer-02",
+      "question_id": "q1",
+      "expected_fact_indices": [
+        0,
+        1
+      ],
+      "returned_fact_indices": [
+        0,
+        1
+      ],
+      "missing_indices": [],
+      "extra_indices": [],
+      "duplicate_indices": [],
+      "returned_required_facts_total": 2,
+      "gold_required_facts_total": 2,
+      "request_gold_fact_texts_match_frozen_gold": true,
+      "coverage_valid": true
+    },
+    {
+      "opaque_id": "answer-03",
+      "question_id": "q5",
+      "expected_fact_indices": [
+        0
+      ],
+      "returned_fact_indices": [
+        0
+      ],
+      "missing_indices": [],
+      "extra_indices": [],
+      "duplicate_indices": [],
+      "returned_required_facts_total": 1,
+      "gold_required_facts_total": 1,
+      "request_gold_fact_texts_match_frozen_gold": true,
+      "coverage_valid": true
+    },
+    {
+      "opaque_id": "answer-04",
+      "question_id": "q6",
+      "expected_fact_indices": [
+        0,
+        1,
+        2
+      ],
+      "returned_fact_indices": [
+        0,
+        1
+      ],
+      "missing_indices": [
+        2
+      ],
+      "extra_indices": [],
+      "duplicate_indices": [],
+      "returned_required_facts_total": 2,
+      "gold_required_facts_total": 3,
+      "request_gold_fact_texts_match_frozen_gold": true,
+      "coverage_valid": false
+    },
+    {
+      "opaque_id": "answer-05",
+      "question_id": "q4",
+      "expected_fact_indices": [
+        0
+      ],
+      "returned_fact_indices": [
+        0
+      ],
+      "missing_indices": [],
+      "extra_indices": [],
+      "duplicate_indices": [],
+      "returned_required_facts_total": 1,
+      "gold_required_facts_total": 1,
+      "request_gold_fact_texts_match_frozen_gold": true,
+      "coverage_valid": true
+    }
+  ],
+  "exact_rejection": {
+    "type": "ValueError",
+    "message": "judge fact coverage does not match frozen gold",
+    "owning_source": "scripts/project_memory_consolidation_experiment.py",
+    "lines": [
+      638,
+      640
+    ],
+    "condition": "Returned fact_index set must equal range(len(frozen required_facts)); array length must also match."
+  },
+  "first_rejected_question": "q6",
+  "counts": {
+    "valid_question_coverages": 5,
+    "invalid_question_coverages": 1
+  },
+  "interpretation": "Native response completion and JSON-schema acceptance do not imply usable grading. The schema allows arbitrary integer indices and array length; the helper adds exact frozen-gold coverage validation. This diagnosis does not repair indices, synthesize recalled booleans or reinterpret grades.",
+  "accounting": "The whole rejected answer-set grade remains missing; all six baseline fiction-20 planned questions remain in the denominator. Valid-looking rows from the same rejected response are not salvaged.",
+  "accepted_judge_file_exists_at_inspection": false,
+  "calls": {
+    "new_native_experiment_calls": 0,
+    "new_jev_calls": 0,
+    "new_external_api_calls": 0
+  },
+  "changes": "Only this diagnosis JSON written. No grades, products, helper, protocol, fixtures or earlier artifacts changed.",
+  "privacy": "No source text, generated rationale, answer text or native service UUIDs included."
+}

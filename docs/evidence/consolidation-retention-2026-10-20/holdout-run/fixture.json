@@ -1,0 +1,3108 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "fiction-05",
+      "split": "holdout",
+      "project_keys": [
+        "quartz-audio"
+      ],
+      "scenario_categories": [
+        "affirmative_reopening",
+        "retained_constraint",
+        "retained_reason",
+        "tool_scope",
+        "assistant_report",
+        "mixed_topic_interleaving",
+        "early_distinct_obligation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-05-s1",
+          "project_key": "quartz-audio",
+          "events": [
+            {
+              "id": "fiction-05-s1-e001",
+              "type": "user",
+              "text": "QA-517 is the audio chapter markers task in quartz-audio. Preserve the speaker-change markers. Editors use those markers to assign transcript review."
+            },
+            {
+              "id": "fiction-05-s1-e700",
+              "type": "user",
+              "text": "For QA-517, before review: Attach the unedited timestamp list to the review package. The reviewer needs to distinguish a marker shift from an omitted utterance. Keep this obligation even if later notes focus on layout or filenames."
+            },
+            {
+              "id": "fiction-05-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for QA-517. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-05-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for QA-517: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-05-s1-e800",
+              "type": "user",
+              "text": "QA-517, draft note 1: The local scratch report filename has spaces. Use underscores in the next scratch filename."
+            },
+            {
+              "id": "fiction-05-s1-e801",
+              "type": "assistant",
+              "text": "I renamed the scratch report reference with underscores. This changes the local filename only."
+            },
+            {
+              "id": "fiction-05-s1-e802",
+              "type": "user",
+              "text": "QA-517, draft note 2: For the review draft, put the fixture name above the result table."
+            },
+            {
+              "id": "fiction-05-s1-e803",
+              "type": "assistant",
+              "text": "I moved the fixture name above the table in the local draft."
+            },
+            {
+              "id": "fiction-05-s1-e804",
+              "type": "user",
+              "text": "QA-517, draft note 3: The small-screen preview loses the rightmost column. Record that layout issue for a later pass; do not expand this task."
+            },
+            {
+              "id": "fiction-05-s1-e805",
+              "type": "assistant",
+              "text": "I noted the small-screen clipping issue in the scratch log as deferred work."
+            },
+            {
+              "id": "fiction-05-s1-e806",
+              "type": "user",
+              "text": "QA-517, draft note 4: Use whole numbers for the draft progress counter. It describes rows visited, not correctness."
+            },
+            {
+              "id": "fiction-05-s1-e807",
+              "type": "assistant",
+              "text": "The draft counter now displays whole rows visited. It is not a pass count."
+            },
+            {
+              "id": "fiction-05-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For QA-517, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-05-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-05-s2",
+          "project_key": "quartz-audio",
+          "events": [
+            {
+              "id": "fiction-05-s2-e001",
+              "type": "assistant",
+              "text": "I believe QA-517 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-05-s1-e808",
+              "type": "user",
+              "text": "QA-517, draft note 5: The local sample folder contains an empty placeholder file. Exclude that file from the comparison list."
+            },
+            {
+              "id": "fiction-05-s1-e809",
+              "type": "assistant",
+              "text": "The comparison list excludes the empty placeholder; the actual fixture files remain listed."
+            },
+            {
+              "id": "fiction-05-s1-e810",
+              "type": "user",
+              "text": "QA-517, draft note 6: Put the command name in the local log heading so reviewers can distinguish the two saved scratch logs."
+            },
+            {
+              "id": "fiction-05-s1-e811",
+              "type": "assistant",
+              "text": "The draft log heading contains the command name. I did not run an additional command."
+            },
+            {
+              "id": "fiction-05-s1-e812",
+              "type": "user",
+              "text": "QA-517, draft note 7: The handoff has a spelling error in its title. Correct only that spelling."
+            },
+            {
+              "id": "fiction-05-s1-e813",
+              "type": "assistant",
+              "text": "I corrected the spelling in the draft title."
+            },
+            {
+              "id": "fiction-05-s1-e814",
+              "type": "user",
+              "text": "QA-517, draft note 8: Keep the temporary comparison table in the scratch folder until review. Do not attach it automatically."
+            },
+            {
+              "id": "fiction-05-s1-e815",
+              "type": "assistant",
+              "text": "The temporary table remains in the scratch folder and has not been attached or sent."
+            },
+            {
+              "id": "fiction-05-s2-e002",
+              "type": "tool",
+              "text": "Command: chapter-check --fixture interview\nExit code: 0\nLocal interview fixture: 8 speaker changes preserved; chapter 3 begins 2 seconds late.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "chapter-check --fixture interview"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local interview fixture: 8 speaker changes preserved; chapter 3 begins 2 seconds late."
+                }
+              }
+            },
+            {
+              "id": "fiction-05-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for QA-517. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-05-s2-e004",
+              "type": "user",
+              "text": "Resume QA-517 as the original audio chapter markers task. The late chapter start hides the first question. Adjust chapter 3 and rerun the interview fixture."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-05-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-05-s3",
+          "project_key": "quartz-audio",
+          "events": [
+            {
+              "id": "fiction-05-s3-e001",
+              "type": "user",
+              "text": "Keep the reopened work under QA-517. Adjust chapter 3 and rerun the interview fixture. The original constraint still applies, and acceptance remains pending."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What would be lost if the next draft of QA-517 ignored its original constraint? State that constraint and its purpose.",
+          "project_keys": [
+            "quartz-audio"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Compare the scope of the captured QA-517 check with a production claim. Include the check findings.",
+          "project_keys": [
+            "quartz-audio"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should a reviewer qualify the assistant readiness statement about QA-517?",
+          "project_keys": [
+            "quartz-audio"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What does the record authorize for QA-517, and which status or identity conclusion must the handoff preserve?",
+          "project_keys": [
+            "quartz-audio"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Before asking for review of QA-517, what work and supporting material are still owed, and why is that material needed?",
+          "project_keys": [
+            "quartz-audio"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "State the rationale, current task state, and deployment boundary for QA-517.",
+          "project_keys": [
+            "quartz-audio"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-06",
+      "split": "holdout",
+      "project_keys": [
+        "sable-meals"
+      ],
+      "scenario_categories": [
+        "affirmative_reopening",
+        "retained_constraint",
+        "retained_reason",
+        "tool_scope",
+        "assistant_report"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-06-s1",
+          "project_key": "sable-meals",
+          "events": [
+            {
+              "id": "fiction-06-s1-e001",
+              "type": "user",
+              "text": "SM-628 is the allergen badge layout task in sable-meals. Show each allergen badge as text as well as an icon. The meal cards must remain understandable when images fail to load."
+            },
+            {
+              "id": "fiction-06-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for SM-628. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-06-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for SM-628: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-06-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For SM-628, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-06-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-06-s2",
+          "project_key": "sable-meals",
+          "events": [
+            {
+              "id": "fiction-06-s2-e001",
+              "type": "assistant",
+              "text": "I believe SM-628 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-06-s2-e002",
+              "type": "tool",
+              "text": "Command: badge-check --fixture supper\nExit code: 0\nLocal supper fixture: text labels exist; the nut badge wraps onto a hidden line.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "badge-check --fixture supper"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local supper fixture: text labels exist; the nut badge wraps onto a hidden line."
+                }
+              }
+            },
+            {
+              "id": "fiction-06-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for SM-628. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-06-s2-e004",
+              "type": "user",
+              "text": "Put SM-628 back in progress. This continues the same allergen badge layout work because the hidden label defeats the text fallback. Expose the wrapped nut label and rerun the supper fixture."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-06-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-06-s3",
+          "project_key": "sable-meals",
+          "events": [
+            {
+              "id": "fiction-06-s3-e001",
+              "type": "user",
+              "text": "Keep the reopened work under SM-628. Expose the wrapped nut label and rerun the supper fixture. The original constraint still applies, and acceptance remains pending."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "A new maintainer takes over SM-628. Which original rule and purpose must survive the handoff?",
+          "project_keys": [
+            "sable-meals"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Give an evidence-limited account of the recorded command result for SM-628. What did it establish, and what did it not establish?",
+          "project_keys": [
+            "sable-meals"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Is the assistant completion statement for SM-628 a verified production result? Explain its attribution and evidence limit.",
+          "project_keys": [
+            "sable-meals"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Which task state and authority should govern the next action on SM-628?",
+          "project_keys": [
+            "sable-meals"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What must happen next for SM-628 before this work can be treated as finished?",
+          "project_keys": [
+            "sable-meals"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Connect the original purpose of SM-628 with the outstanding follow-up. What purpose must be retained and what action remains?",
+          "project_keys": [
+            "sable-meals"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-07",
+      "split": "holdout",
+      "project_keys": [
+        "ochre-tickets"
+      ],
+      "scenario_categories": [
+        "affirmative_reopening",
+        "retained_constraint",
+        "retained_reason",
+        "tool_scope",
+        "assistant_report",
+        "mixed_topic_interleaving",
+        "early_distinct_obligation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-07-s1",
+          "project_key": "ochre-tickets",
+          "events": [
+            {
+              "id": "fiction-07-s1-e001",
+              "type": "user",
+              "text": "OT-739 is the museum ticket receipts task in ochre-tickets. Retain the tax breakdown on every receipt. Group organizers need the breakdown for reimbursement."
+            },
+            {
+              "id": "fiction-07-s1-e700",
+              "type": "user",
+              "text": "For OT-739, before review: Attach one receipt with a zero tax line to the review package. The reimbursement team needs to see exempt purchases without guessing whether tax data is missing. Keep this obligation even if later notes focus on layout or filenames."
+            },
+            {
+              "id": "fiction-07-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for OT-739. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-07-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for OT-739: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-07-s1-e800",
+              "type": "user",
+              "text": "OT-739, draft note 1: The local scratch report filename has spaces. Use underscores in the next scratch filename."
+            },
+            {
+              "id": "fiction-07-s1-e801",
+              "type": "assistant",
+              "text": "I renamed the scratch report reference with underscores. This changes the local filename only."
+            },
+            {
+              "id": "fiction-07-s1-e802",
+              "type": "user",
+              "text": "OT-739, draft note 2: For the review draft, put the fixture name above the result table."
+            },
+            {
+              "id": "fiction-07-s1-e803",
+              "type": "assistant",
+              "text": "I moved the fixture name above the table in the local draft."
+            },
+            {
+              "id": "fiction-07-s1-e804",
+              "type": "user",
+              "text": "OT-739, draft note 3: The small-screen preview loses the rightmost column. Record that layout issue for a later pass; do not expand this task."
+            },
+            {
+              "id": "fiction-07-s1-e805",
+              "type": "assistant",
+              "text": "I noted the small-screen clipping issue in the scratch log as deferred work."
+            },
+            {
+              "id": "fiction-07-s1-e806",
+              "type": "user",
+              "text": "OT-739, draft note 4: Use whole numbers for the draft progress counter. It describes rows visited, not correctness."
+            },
+            {
+              "id": "fiction-07-s1-e807",
+              "type": "assistant",
+              "text": "The draft counter now displays whole rows visited. It is not a pass count."
+            },
+            {
+              "id": "fiction-07-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For OT-739, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-07-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-07-s2",
+          "project_key": "ochre-tickets",
+          "events": [
+            {
+              "id": "fiction-07-s2-e001",
+              "type": "assistant",
+              "text": "I believe OT-739 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-07-s1-e808",
+              "type": "user",
+              "text": "OT-739, draft note 5: The local sample folder contains an empty placeholder file. Exclude that file from the comparison list."
+            },
+            {
+              "id": "fiction-07-s1-e809",
+              "type": "assistant",
+              "text": "The comparison list excludes the empty placeholder; the actual fixture files remain listed."
+            },
+            {
+              "id": "fiction-07-s1-e810",
+              "type": "user",
+              "text": "OT-739, draft note 6: Put the command name in the local log heading so reviewers can distinguish the two saved scratch logs."
+            },
+            {
+              "id": "fiction-07-s1-e811",
+              "type": "assistant",
+              "text": "The draft log heading contains the command name. I did not run an additional command."
+            },
+            {
+              "id": "fiction-07-s1-e812",
+              "type": "user",
+              "text": "OT-739, draft note 7: The handoff has a spelling error in its title. Correct only that spelling."
+            },
+            {
+              "id": "fiction-07-s1-e813",
+              "type": "assistant",
+              "text": "I corrected the spelling in the draft title."
+            },
+            {
+              "id": "fiction-07-s1-e814",
+              "type": "user",
+              "text": "OT-739, draft note 8: Keep the temporary comparison table in the scratch folder until review. Do not attach it automatically."
+            },
+            {
+              "id": "fiction-07-s1-e815",
+              "type": "assistant",
+              "text": "The temporary table remains in the scratch folder and has not been attached or sent."
+            },
+            {
+              "id": "fiction-07-s2-e002",
+              "type": "tool",
+              "text": "Command: receipt-check --fixture group\nExit code: 0\nLocal group fixture: tax lines retained; the currency suffix is duplicated.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "receipt-check --fixture group"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local group fixture: tax lines retained; the currency suffix is duplicated."
+                }
+              }
+            },
+            {
+              "id": "fiction-07-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for OT-739. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-07-s2-e004",
+              "type": "user",
+              "text": "Revisit and reopen OT-739 itself. The duplicated suffix makes the same receipt repair unfinished. Remove the duplicate suffix and rerun the group receipt fixture."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-07-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-07-s3",
+          "project_key": "ochre-tickets",
+          "events": [
+            {
+              "id": "fiction-07-s3-e001",
+              "type": "user",
+              "text": "Keep the reopened work under OT-739. Remove the duplicate suffix and rerun the group receipt fixture. The original constraint still applies, and acceptance remains pending."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which early requirement still governs OT-739, and what practical need explains it?",
+          "project_keys": [
+            "ochre-tickets"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Can the recorded check for OT-739 support a deployment or acceptance claim? Include its actual local findings.",
+          "project_keys": [
+            "ochre-tickets"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Write one sentence that preserves both the assistant claim about OT-739 and the limitation imposed by the user.",
+          "project_keys": [
+            "ochre-tickets"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Summarize the currently supported status and task scope for OT-739.",
+          "project_keys": [
+            "ochre-tickets"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Before asking for review of OT-739, what work and supporting material are still owed, and why is that material needed?",
+          "project_keys": [
+            "ochre-tickets"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What must the next owner know about why OT-739 exists, its state, and publication limits?",
+          "project_keys": [
+            "ochre-tickets"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-08",
+      "split": "holdout",
+      "project_keys": [
+        "cedar-briefs"
+      ],
+      "scenario_categories": [
+        "affirmative_reopening",
+        "retained_constraint",
+        "retained_reason",
+        "tool_scope",
+        "assistant_report"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-08-s1",
+          "project_key": "cedar-briefs",
+          "events": [
+            {
+              "id": "fiction-08-s1-e001",
+              "type": "user",
+              "text": "CB-841 is the briefing PDF index task in cedar-briefs. Keep section references stable across page reflow. Reviewers annotate section references before printing."
+            },
+            {
+              "id": "fiction-08-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for CB-841. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-08-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for CB-841: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-08-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For CB-841, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-08-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-08-s2",
+          "project_key": "cedar-briefs",
+          "events": [
+            {
+              "id": "fiction-08-s2-e001",
+              "type": "assistant",
+              "text": "I believe CB-841 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-08-s2-e002",
+              "type": "tool",
+              "text": "Command: index-check --fixture briefing\nExit code: 0\nLocal briefing fixture: 19 stable section references; index entry 6 points to the preceding page.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "index-check --fixture briefing"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local briefing fixture: 19 stable section references; index entry 6 points to the preceding page."
+                }
+              }
+            },
+            {
+              "id": "fiction-08-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for CB-841. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-08-s2-e004",
+              "type": "user",
+              "text": "Continue CB-841 by reopening the original briefing PDF index task, not by creating another task. The wrong page blocks reviewer navigation. Correct index entry 6 and rerun the briefing fixture."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-08-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-08-s3",
+          "project_key": "cedar-briefs",
+          "events": [
+            {
+              "id": "fiction-08-s3-e001",
+              "type": "user",
+              "text": "Keep the reopened work under CB-841. Correct index entry 6 and rerun the briefing fixture. The original constraint still applies, and acceptance remains pending."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What would be lost if the next draft of CB-841 ignored its original constraint? State that constraint and its purpose.",
+          "project_keys": [
+            "cedar-briefs"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Compare the scope of the captured CB-841 check with a production claim. Include the check findings.",
+          "project_keys": [
+            "cedar-briefs"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should a reviewer qualify the assistant readiness statement about CB-841?",
+          "project_keys": [
+            "cedar-briefs"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What does the record authorize for CB-841, and which status or identity conclusion must the handoff preserve?",
+          "project_keys": [
+            "cedar-briefs"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Which concrete action remains open for CB-841?",
+          "project_keys": [
+            "cedar-briefs"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Connect the original purpose of CB-841 with the outstanding follow-up. What purpose must be retained and what action remains?",
+          "project_keys": [
+            "cedar-briefs"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-09",
+      "split": "holdout",
+      "project_keys": [
+        "moss-counts"
+      ],
+      "scenario_categories": [
+        "non_authorizing_language",
+        "task_identity",
+        "retained_constraint",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-09-s1",
+          "project_key": "moss-counts",
+          "events": [
+            {
+              "id": "fiction-09-s1-e001",
+              "type": "user",
+              "text": "MC-952 is the inventory count import task in moss-counts. Keep zero counts distinct from missing values. Stock reviewers must distinguish an empty shelf from an uncounted shelf."
+            },
+            {
+              "id": "fiction-09-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for MC-952. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-09-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for MC-952: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-09-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For MC-952, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-09-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-09-s2",
+          "project_key": "moss-counts",
+          "events": [
+            {
+              "id": "fiction-09-s2-e001",
+              "type": "assistant",
+              "text": "I believe MC-952 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-09-s2-e002",
+              "type": "tool",
+              "text": "Command: count-check --fixture shelves\nExit code: 0\nLocal shelves fixture: zero counts retained; two missing values remain flagged.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "count-check --fixture shelves"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local shelves fixture: zero counts retained; two missing values remain flagged."
+                }
+              }
+            },
+            {
+              "id": "fiction-09-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for MC-952. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-09-s2-e004",
+              "type": "user",
+              "text": "If a reviewer later requests a code change, reopen MC-952 then. No reviewer has requested that change yet."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-09-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-09-s3",
+          "project_key": "moss-counts",
+          "events": [
+            {
+              "id": "fiction-09-s3-e001",
+              "type": "user",
+              "text": "For MC-952, the current status remains awaiting review. Write a review note for the two missing shelf values. This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "A new maintainer takes over MC-952. Which original rule and purpose must survive the handoff?",
+          "project_keys": [
+            "moss-counts"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Give an evidence-limited account of the recorded command result for MC-952. What did it establish, and what did it not establish?",
+          "project_keys": [
+            "moss-counts"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Can the archived scratch note establish the current completion of MC-952? Explain the status of that source.",
+          "project_keys": [
+            "moss-counts"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Which task state and authority should govern the next action on MC-952?",
+          "project_keys": [
+            "moss-counts"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What must happen next for MC-952 before this work can be treated as finished?",
+          "project_keys": [
+            "moss-counts"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Prepare a short handoff for MC-952: explain the purpose, supported current state, and permission to deploy.",
+          "project_keys": [
+            "moss-counts"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-10",
+      "split": "holdout",
+      "project_keys": [
+        "amber-scores"
+      ],
+      "scenario_categories": [
+        "non_authorizing_language",
+        "task_identity",
+        "retained_constraint",
+        "tool_scope",
+        "mixed_topic_interleaving",
+        "early_distinct_obligation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-10-s1",
+          "project_key": "amber-scores",
+          "events": [
+            {
+              "id": "fiction-10-s1-e001",
+              "type": "user",
+              "text": "AS-163 is the scoreboard archive task in amber-scores. Preserve tied ranks in the archive. Tournament staff must reconstruct the original awards order."
+            },
+            {
+              "id": "fiction-10-s1-e700",
+              "type": "user",
+              "text": "For AS-163, before review: Include the original tie-order table in the review note. The awards secretary needs to separate display sorting from the official tied placements. Keep this obligation even if later notes focus on layout or filenames."
+            },
+            {
+              "id": "fiction-10-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for AS-163. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-10-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for AS-163: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-10-s1-e800",
+              "type": "user",
+              "text": "AS-163, draft note 1: The local scratch report filename has spaces. Use underscores in the next scratch filename."
+            },
+            {
+              "id": "fiction-10-s1-e801",
+              "type": "assistant",
+              "text": "I renamed the scratch report reference with underscores. This changes the local filename only."
+            },
+            {
+              "id": "fiction-10-s1-e802",
+              "type": "user",
+              "text": "AS-163, draft note 2: For the review draft, put the fixture name above the result table."
+            },
+            {
+              "id": "fiction-10-s1-e803",
+              "type": "assistant",
+              "text": "I moved the fixture name above the table in the local draft."
+            },
+            {
+              "id": "fiction-10-s1-e804",
+              "type": "user",
+              "text": "AS-163, draft note 3: The small-screen preview loses the rightmost column. Record that layout issue for a later pass; do not expand this task."
+            },
+            {
+              "id": "fiction-10-s1-e805",
+              "type": "assistant",
+              "text": "I noted the small-screen clipping issue in the scratch log as deferred work."
+            },
+            {
+              "id": "fiction-10-s1-e806",
+              "type": "user",
+              "text": "AS-163, draft note 4: Use whole numbers for the draft progress counter. It describes rows visited, not correctness."
+            },
+            {
+              "id": "fiction-10-s1-e807",
+              "type": "assistant",
+              "text": "The draft counter now displays whole rows visited. It is not a pass count."
+            },
+            {
+              "id": "fiction-10-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For AS-163, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-10-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-10-s2",
+          "project_key": "amber-scores",
+          "events": [
+            {
+              "id": "fiction-10-s2-e001",
+              "type": "assistant",
+              "text": "I believe AS-163 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-10-s1-e808",
+              "type": "user",
+              "text": "AS-163, draft note 5: The local sample folder contains an empty placeholder file. Exclude that file from the comparison list."
+            },
+            {
+              "id": "fiction-10-s1-e809",
+              "type": "assistant",
+              "text": "The comparison list excludes the empty placeholder; the actual fixture files remain listed."
+            },
+            {
+              "id": "fiction-10-s1-e810",
+              "type": "user",
+              "text": "AS-163, draft note 6: Put the command name in the local log heading so reviewers can distinguish the two saved scratch logs."
+            },
+            {
+              "id": "fiction-10-s1-e811",
+              "type": "assistant",
+              "text": "The draft log heading contains the command name. I did not run an additional command."
+            },
+            {
+              "id": "fiction-10-s1-e812",
+              "type": "user",
+              "text": "AS-163, draft note 7: The handoff has a spelling error in its title. Correct only that spelling."
+            },
+            {
+              "id": "fiction-10-s1-e813",
+              "type": "assistant",
+              "text": "I corrected the spelling in the draft title."
+            },
+            {
+              "id": "fiction-10-s1-e814",
+              "type": "user",
+              "text": "AS-163, draft note 8: Keep the temporary comparison table in the scratch folder until review. Do not attach it automatically."
+            },
+            {
+              "id": "fiction-10-s1-e815",
+              "type": "assistant",
+              "text": "The temporary table remains in the scratch folder and has not been attached or sent."
+            },
+            {
+              "id": "fiction-10-s2-e002",
+              "type": "tool",
+              "text": "Command: score-check --fixture finals\nExit code: 0\nLocal finals fixture: tied ranks retained; one participant name is blank.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "score-check --fixture finals"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local finals fixture: tied ranks retained; one participant name is blank."
+                }
+              }
+            },
+            {
+              "id": "fiction-10-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for AS-163. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-10-s2-e004",
+              "type": "user",
+              "text": "Would reopening AS-163 help, or is a review note enough? This is a question for discussion, not authorization to change its status."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-10-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-10-s3",
+          "project_key": "amber-scores",
+          "events": [
+            {
+              "id": "fiction-10-s3-e001",
+              "type": "user",
+              "text": "For AS-163, the current status remains awaiting review. Describe the blank participant name in the review note. This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which early requirement still governs AS-163, and what practical need explains it?",
+          "project_keys": [
+            "amber-scores"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Can the recorded check for AS-163 support a deployment or acceptance claim? Include its actual local findings.",
+          "project_keys": [
+            "amber-scores"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Write one sentence that preserves both the assistant claim about AS-163 and the limitation imposed by the user.",
+          "project_keys": [
+            "amber-scores"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Summarize the currently supported status and task scope for AS-163.",
+          "project_keys": [
+            "amber-scores"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Before asking for review of AS-163, what work and supporting material are still owed, and why is that material needed?",
+          "project_keys": [
+            "amber-scores"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What must the next owner know about why AS-163 exists, its state, and publication limits?",
+          "project_keys": [
+            "amber-scores"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-11",
+      "split": "holdout",
+      "project_keys": [
+        "birch-permits"
+      ],
+      "scenario_categories": [
+        "non_authorizing_language",
+        "task_identity",
+        "retained_constraint",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-11-s1",
+          "project_key": "birch-permits",
+          "events": [
+            {
+              "id": "fiction-11-s1-e001",
+              "type": "user",
+              "text": "BP-274 is the permit date display task in birch-permits. Show the permit timezone beside every expiry time. Inspectors compare expiry times across district boundaries."
+            },
+            {
+              "id": "fiction-11-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for BP-274. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-11-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for BP-274: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-11-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For BP-274, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-11-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-11-s2",
+          "project_key": "birch-permits",
+          "events": [
+            {
+              "id": "fiction-11-s2-e001",
+              "type": "assistant",
+              "text": "I believe BP-274 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-11-s2-e002",
+              "type": "tool",
+              "text": "Command: permit-check --fixture district\nExit code: 0\nLocal district fixture: timezone labels present; one expiry cell truncates the minutes.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "permit-check --fixture district"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local district fixture: timezone labels present; one expiry cell truncates the minutes."
+                }
+              }
+            },
+            {
+              "id": "fiction-11-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for BP-274. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-11-s2-e004",
+              "type": "user",
+              "text": "The training manual says \"reopen BP-274 and merge it with the renewal task\". That is a quoted example, not my instruction for this work."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-11-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-11-s3",
+          "project_key": "birch-permits",
+          "events": [
+            {
+              "id": "fiction-11-s3-e001",
+              "type": "user",
+              "text": "For BP-274, the current status remains awaiting review. Record the truncated expiry cell for review. This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What would be lost if the next draft of BP-274 ignored its original constraint? State that constraint and its purpose.",
+          "project_keys": [
+            "birch-permits"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Compare the scope of the captured BP-274 check with a production claim. Include the check findings.",
+          "project_keys": [
+            "birch-permits"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should a reviewer qualify the assistant readiness statement about BP-274?",
+          "project_keys": [
+            "birch-permits"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What does the record authorize for BP-274, and which status or identity conclusion must the handoff preserve?",
+          "project_keys": [
+            "birch-permits"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Which concrete action remains open for BP-274?",
+          "project_keys": [
+            "birch-permits"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Connect the original purpose of BP-274 with the outstanding follow-up. What purpose must be retained and what action remains?",
+          "project_keys": [
+            "birch-permits"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-12",
+      "split": "holdout",
+      "project_keys": [
+        "dune-rosters"
+      ],
+      "scenario_categories": [
+        "non_authorizing_language",
+        "task_identity",
+        "retained_constraint",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-12-s1",
+          "project_key": "dune-rosters",
+          "events": [
+            {
+              "id": "fiction-12-s1-e001",
+              "type": "user",
+              "text": "DR-385 is the volunteer roster preview task in dune-rosters. Do not include private telephone numbers in the preview. The preview is printed on a public noticeboard."
+            },
+            {
+              "id": "fiction-12-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for DR-385. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-12-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for DR-385: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-12-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For DR-385, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-12-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-12-s2",
+          "project_key": "dune-rosters",
+          "events": [
+            {
+              "id": "fiction-12-s2-e001",
+              "type": "assistant",
+              "text": "I believe DR-385 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-12-s2-e002",
+              "type": "tool",
+              "text": "Command: roster-check --fixture weekend\nExit code: 0\nLocal weekend fixture: no telephone fields rendered; one shift heading is missing.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "roster-check --fixture weekend"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local weekend fixture: no telephone fields rendered; one shift heading is missing."
+                }
+              }
+            },
+            {
+              "id": "fiction-12-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for DR-385. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-12-s2-e004",
+              "type": "user",
+              "text": "Explain what the command \"reopen DR-385\" would do. This is a help request only. Do not execute it or change task identity."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-12-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-12-s3",
+          "project_key": "dune-rosters",
+          "events": [
+            {
+              "id": "fiction-12-s3-e001",
+              "type": "user",
+              "text": "For DR-385, the current status remains awaiting review. Prepare a review note about the missing shift heading. This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "A new maintainer takes over DR-385. Which original rule and purpose must survive the handoff?",
+          "project_keys": [
+            "dune-rosters"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Give an evidence-limited account of the recorded command result for DR-385. What did it establish, and what did it not establish?",
+          "project_keys": [
+            "dune-rosters"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Can the archived scratch note establish the current completion of DR-385? Explain the status of that source.",
+          "project_keys": [
+            "dune-rosters"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Which task state and authority should govern the next action on DR-385?",
+          "project_keys": [
+            "dune-rosters"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What must happen next for DR-385 before this work can be treated as finished?",
+          "project_keys": [
+            "dune-rosters"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Prepare a short handoff for DR-385: explain the purpose, supported current state, and permission to deploy.",
+          "project_keys": [
+            "dune-rosters"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-13",
+      "split": "holdout",
+      "project_keys": [
+        "heron-queues"
+      ],
+      "scenario_categories": [
+        "non_authorizing_language",
+        "task_identity",
+        "retained_constraint",
+        "tool_scope",
+        "mixed_topic_interleaving",
+        "early_distinct_obligation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-13-s1",
+          "project_key": "heron-queues",
+          "events": [
+            {
+              "id": "fiction-13-s1-e001",
+              "type": "user",
+              "text": "HQ-496 is the visitor queue summary task in heron-queues. Keep wheelchair access requests visible in the summary. Desk staff must allocate accessible waiting spaces."
+            },
+            {
+              "id": "fiction-13-s1-e700",
+              "type": "user",
+              "text": "For HQ-496, before review: Include the original arrival-count sheet in the review note. The desk supervisor needs to reconcile the child ticket without changing the recorded arrival order. Keep this obligation even if later notes focus on layout or filenames."
+            },
+            {
+              "id": "fiction-13-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for HQ-496. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-13-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for HQ-496: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-13-s1-e800",
+              "type": "user",
+              "text": "HQ-496, draft note 1: The local scratch report filename has spaces. Use underscores in the next scratch filename."
+            },
+            {
+              "id": "fiction-13-s1-e801",
+              "type": "assistant",
+              "text": "I renamed the scratch report reference with underscores. This changes the local filename only."
+            },
+            {
+              "id": "fiction-13-s1-e802",
+              "type": "user",
+              "text": "HQ-496, draft note 2: For the review draft, put the fixture name above the result table."
+            },
+            {
+              "id": "fiction-13-s1-e803",
+              "type": "assistant",
+              "text": "I moved the fixture name above the table in the local draft."
+            },
+            {
+              "id": "fiction-13-s1-e804",
+              "type": "user",
+              "text": "HQ-496, draft note 3: The small-screen preview loses the rightmost column. Record that layout issue for a later pass; do not expand this task."
+            },
+            {
+              "id": "fiction-13-s1-e805",
+              "type": "assistant",
+              "text": "I noted the small-screen clipping issue in the scratch log as deferred work."
+            },
+            {
+              "id": "fiction-13-s1-e806",
+              "type": "user",
+              "text": "HQ-496, draft note 4: Use whole numbers for the draft progress counter. It describes rows visited, not correctness."
+            },
+            {
+              "id": "fiction-13-s1-e807",
+              "type": "assistant",
+              "text": "The draft counter now displays whole rows visited. It is not a pass count."
+            },
+            {
+              "id": "fiction-13-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For HQ-496, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-13-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-13-s2",
+          "project_key": "heron-queues",
+          "events": [
+            {
+              "id": "fiction-13-s2-e001",
+              "type": "assistant",
+              "text": "I believe HQ-496 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-13-s1-e808",
+              "type": "user",
+              "text": "HQ-496, draft note 5: The local sample folder contains an empty placeholder file. Exclude that file from the comparison list."
+            },
+            {
+              "id": "fiction-13-s1-e809",
+              "type": "assistant",
+              "text": "The comparison list excludes the empty placeholder; the actual fixture files remain listed."
+            },
+            {
+              "id": "fiction-13-s1-e810",
+              "type": "user",
+              "text": "HQ-496, draft note 6: Put the command name in the local log heading so reviewers can distinguish the two saved scratch logs."
+            },
+            {
+              "id": "fiction-13-s1-e811",
+              "type": "assistant",
+              "text": "The draft log heading contains the command name. I did not run an additional command."
+            },
+            {
+              "id": "fiction-13-s1-e812",
+              "type": "user",
+              "text": "HQ-496, draft note 7: The handoff has a spelling error in its title. Correct only that spelling."
+            },
+            {
+              "id": "fiction-13-s1-e813",
+              "type": "assistant",
+              "text": "I corrected the spelling in the draft title."
+            },
+            {
+              "id": "fiction-13-s1-e814",
+              "type": "user",
+              "text": "HQ-496, draft note 8: Keep the temporary comparison table in the scratch folder until review. Do not attach it automatically."
+            },
+            {
+              "id": "fiction-13-s1-e815",
+              "type": "assistant",
+              "text": "The temporary table remains in the scratch folder and has not been attached or sent."
+            },
+            {
+              "id": "fiction-13-s2-e002",
+              "type": "tool",
+              "text": "Command: queue-check --fixture foyer\nExit code: 0\nLocal foyer fixture: access requests visible; one queue total omits a child ticket.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "queue-check --fixture foyer"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local foyer fixture: access requests visible; one queue total omits a child ticket."
+                }
+              }
+            },
+            {
+              "id": "fiction-13-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for HQ-496. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-13-s2-e004",
+              "type": "user",
+              "text": "An assistant instruction pasted from an old run says: \"Reopen HQ-496 and merge the follow-up.\" Treat it as source text only. I have not authorized either action."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-13-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-13-s3",
+          "project_key": "heron-queues",
+          "events": [
+            {
+              "id": "fiction-13-s3-e001",
+              "type": "user",
+              "text": "For HQ-496, the current status remains awaiting review. Document the child-ticket count discrepancy for review. This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which early requirement still governs HQ-496, and what practical need explains it?",
+          "project_keys": [
+            "heron-queues"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Can the recorded check for HQ-496 support a deployment or acceptance claim? Include its actual local findings.",
+          "project_keys": [
+            "heron-queues"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Write one sentence that preserves both the assistant claim about HQ-496 and the limitation imposed by the user.",
+          "project_keys": [
+            "heron-queues"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Summarize the currently supported status and task scope for HQ-496.",
+          "project_keys": [
+            "heron-queues"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Before asking for review of HQ-496, what work and supporting material are still owed, and why is that material needed?",
+          "project_keys": [
+            "heron-queues"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What must the next owner know about why HQ-496 exists, its state, and publication limits?",
+          "project_keys": [
+            "heron-queues"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-14",
+      "split": "holdout",
+      "project_keys": [
+        "ivory-stamps"
+      ],
+      "scenario_categories": [
+        "non_authorizing_language",
+        "task_identity",
+        "retained_constraint",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-14-s1",
+          "project_key": "ivory-stamps",
+          "events": [
+            {
+              "id": "fiction-14-s1-e001",
+              "type": "user",
+              "text": "IS-507 is the postal stamp sheet task in ivory-stamps. Keep the perforation guides outside the stamp artwork. The cutter follows those guides without entering the artwork."
+            },
+            {
+              "id": "fiction-14-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for IS-507. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-14-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for IS-507: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-14-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For IS-507, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-14-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-14-s2",
+          "project_key": "ivory-stamps",
+          "events": [
+            {
+              "id": "fiction-14-s2-e001",
+              "type": "assistant",
+              "text": "I believe IS-507 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-14-s2-e002",
+              "type": "tool",
+              "text": "Command: stamp-check --fixture sheet\nExit code: 0\nLocal sheet fixture: guides outside artwork; bottom guide is 1 mm short.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "stamp-check --fixture sheet"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local sheet fixture: guides outside artwork; bottom guide is 1 mm short."
+                }
+              }
+            },
+            {
+              "id": "fiction-14-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for IS-507. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-14-s2-e004",
+              "type": "user",
+              "text": "Do not treat \"we could reopen IS-507\" in my earlier brainstorming as a decision. Keep this as review analysis only."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-14-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-14-s3",
+          "project_key": "ivory-stamps",
+          "events": [
+            {
+              "id": "fiction-14-s3-e001",
+              "type": "user",
+              "text": "For IS-507, the current status remains awaiting review. Write down the short bottom guide for review. This asks for analysis only; it does not authorize reopening, merging tasks, deployment, or acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What would be lost if the next draft of IS-507 ignored its original constraint? State that constraint and its purpose.",
+          "project_keys": [
+            "ivory-stamps"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Compare the scope of the captured IS-507 check with a production claim. Include the check findings.",
+          "project_keys": [
+            "ivory-stamps"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should a reviewer qualify the assistant readiness statement about IS-507?",
+          "project_keys": [
+            "ivory-stamps"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What does the record authorize for IS-507, and which status or identity conclusion must the handoff preserve?",
+          "project_keys": [
+            "ivory-stamps"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Which concrete action remains open for IS-507?",
+          "project_keys": [
+            "ivory-stamps"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Connect the original purpose of IS-507 with the outstanding follow-up. What purpose must be retained and what action remains?",
+          "project_keys": [
+            "ivory-stamps"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-15",
+      "split": "holdout",
+      "project_keys": [
+        "juniper-forms"
+      ],
+      "scenario_categories": [
+        "explicit_separate_tasks",
+        "retained_obligation",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-15-s1",
+          "project_key": "juniper-forms",
+          "events": [
+            {
+              "id": "fiction-15-s1-e001",
+              "type": "user",
+              "text": "JF-618 is the application form tab order task in juniper-forms. Keep the consent checkbox after the terms link. Keyboard users must read the terms before reaching consent."
+            },
+            {
+              "id": "fiction-15-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for JF-618. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-15-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for JF-618: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-15-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For JF-618, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-15-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-15-s2",
+          "project_key": "juniper-forms",
+          "events": [
+            {
+              "id": "fiction-15-s2-e001",
+              "type": "assistant",
+              "text": "I believe JF-618 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-15-s2-e002",
+              "type": "tool",
+              "text": "Command: tab-check --fixture applicant\nExit code: 0\nLocal applicant fixture: consent follows terms; the footer link receives focus twice.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "tab-check --fixture applicant"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local applicant fixture: consent follows terms; the footer link receives focus twice."
+                }
+              }
+            },
+            {
+              "id": "fiction-15-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for JF-618. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-15-s2-e004",
+              "type": "user",
+              "text": "Create separate task JF-619 to write the operator checklist. JF-618 still owns the application form tab order. These are two tasks even if they share fixtures. Do not merge them."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-15-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-15-s3",
+          "project_key": "juniper-forms",
+          "events": [
+            {
+              "id": "fiction-15-s3-e001",
+              "type": "user",
+              "text": "JF-619 is awaiting a checklist draft. JF-618 is awaiting review. Record the duplicate footer focus in the review handoff. Keep both task IDs in the handoff."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "A new maintainer takes over JF-618. Which original rule and purpose must survive the handoff?",
+          "project_keys": [
+            "juniper-forms"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Give an evidence-limited account of the recorded command result for JF-618. What did it establish, and what did it not establish?",
+          "project_keys": [
+            "juniper-forms"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Can the archived scratch note establish the current completion of JF-618? Explain the status of that source.",
+          "project_keys": [
+            "juniper-forms"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Which task state and authority should govern the next action on JF-618?",
+          "project_keys": [
+            "juniper-forms"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "What must happen next for JF-618 before this work can be treated as finished?",
+          "project_keys": [
+            "juniper-forms"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Prepare a short handoff for JF-618: explain the purpose, supported current state, and permission to deploy.",
+          "project_keys": [
+            "juniper-forms"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-16",
+      "split": "holdout",
+      "project_keys": [
+        "kelp-trails",
+        "pearl-bookings"
+      ],
+      "scenario_categories": [
+        "two_project_isolation",
+        "task_identity",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-16-s1",
+          "project_key": "kelp-trails",
+          "events": [
+            {
+              "id": "fiction-16-s1-e001",
+              "type": "user",
+              "text": "KT-729 is the walking trail legend task in kelp-trails. Keep steep-gradient warnings in the legend. Trip leaders use the warnings to select accessible routes."
+            },
+            {
+              "id": "fiction-16-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for KT-729. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-16-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for KT-729: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-16-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For KT-729, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-16-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-16-s2",
+          "project_key": "kelp-trails",
+          "events": [
+            {
+              "id": "fiction-16-s2-e001",
+              "type": "assistant",
+              "text": "I believe KT-729 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-16-s2-e002",
+              "type": "tool",
+              "text": "Command: trail-check --fixture cliff\nExit code: 0\nLocal cliff fixture: gradient warnings present; distance label rounding differs from the brief.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "trail-check --fixture cliff"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local cliff fixture: gradient warnings present; distance label rounding differs from the brief."
+                }
+              }
+            },
+            {
+              "id": "fiction-16-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for KT-729. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-16-s2-e004",
+              "type": "user",
+              "text": "KT-729 in kelp-trails remains awaiting review. Compare the distance rounding with the synthetic trail brief."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-16-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-16-s3",
+          "project_key": "pearl-bookings",
+          "events": [
+            {
+              "id": "fiction-16-s3-e001",
+              "type": "user",
+              "text": "PB-730 is the release checklist in pearl-bookings. I accept this checklist as complete. This acceptance applies only to PB-730 in pearl-bookings; it does not accept work in kelp-trails."
+            },
+            {
+              "id": "fiction-16-s3-e002",
+              "type": "assistant",
+              "text": "I will keep PB-730 in pearl-bookings separate from KT-729 in kelp-trails."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which early requirement still governs KT-729, and what practical need explains it?",
+          "project_keys": [
+            "kelp-trails"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Can the recorded check for KT-729 support a deployment or acceptance claim? Include its actual local findings.",
+          "project_keys": [
+            "kelp-trails"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Write one sentence that preserves both the assistant claim about KT-729 and the limitation imposed by the user.",
+          "project_keys": [
+            "kelp-trails"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Summarize the currently supported status and task scope for KT-729.",
+          "project_keys": [
+            "kelp-trails",
+            "pearl-bookings"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Name the pending follow-up for KT-729 precisely enough for another person to carry it out.",
+          "project_keys": [
+            "kelp-trails"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "What must the next owner know about why KT-729 exists, its state, and publication limits?",
+          "project_keys": [
+            "kelp-trails",
+            "pearl-bookings"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-17",
+      "split": "holdout",
+      "project_keys": [
+        "larch-grids"
+      ],
+      "scenario_categories": [
+        "long_history_retention",
+        "retained_obligation",
+        "retained_reason",
+        "mixed_topic_interleaving",
+        "early_distinct_obligation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-17-s1",
+          "project_key": "larch-grids",
+          "events": [
+            {
+              "id": "fiction-17-s1-e001",
+              "type": "user",
+              "text": "LG-832 is the seating grid export task in larch-grids. Keep emergency exit aisles empty in every exported grid. The venue steward needs clear evacuation paths in printed plans. Before review, carry out this obligation: Prepare a list of duplicate row H labels before requesting review."
+            },
+            {
+              "id": "fiction-17-s1-e700",
+              "type": "user",
+              "text": "For LG-832, before review: Attach the original aisle-width measurements to the review package. The steward needs measurements to distinguish an empty aisle from an aisle that is too narrow. Keep this obligation even if later notes focus on layout or filenames."
+            },
+            {
+              "id": "fiction-17-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for LG-832. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-17-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for LG-832: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-17-s1-e800",
+              "type": "user",
+              "text": "LG-832, draft note 1: The local scratch report filename has spaces. Use underscores in the next scratch filename."
+            },
+            {
+              "id": "fiction-17-s1-e801",
+              "type": "assistant",
+              "text": "I renamed the scratch report reference with underscores. This changes the local filename only."
+            },
+            {
+              "id": "fiction-17-s1-e802",
+              "type": "user",
+              "text": "LG-832, draft note 2: For the review draft, put the fixture name above the result table."
+            },
+            {
+              "id": "fiction-17-s1-e803",
+              "type": "assistant",
+              "text": "I moved the fixture name above the table in the local draft."
+            },
+            {
+              "id": "fiction-17-s1-e804",
+              "type": "user",
+              "text": "LG-832, draft note 3: The small-screen preview loses the rightmost column. Record that layout issue for a later pass; do not expand this task."
+            },
+            {
+              "id": "fiction-17-s1-e805",
+              "type": "assistant",
+              "text": "I noted the small-screen clipping issue in the scratch log as deferred work."
+            },
+            {
+              "id": "fiction-17-s1-e806",
+              "type": "user",
+              "text": "LG-832, draft note 4: Use whole numbers for the draft progress counter. It describes rows visited, not correctness."
+            },
+            {
+              "id": "fiction-17-s1-e807",
+              "type": "assistant",
+              "text": "The draft counter now displays whole rows visited. It is not a pass count."
+            },
+            {
+              "id": "fiction-17-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For LG-832, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-17-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-17-s2",
+          "project_key": "larch-grids",
+          "events": [
+            {
+              "id": "fiction-17-s2-e001",
+              "type": "assistant",
+              "text": "I believe LG-832 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-17-s1-e808",
+              "type": "user",
+              "text": "LG-832, draft note 5: The local sample folder contains an empty placeholder file. Exclude that file from the comparison list."
+            },
+            {
+              "id": "fiction-17-s1-e809",
+              "type": "assistant",
+              "text": "The comparison list excludes the empty placeholder; the actual fixture files remain listed."
+            },
+            {
+              "id": "fiction-17-s1-e810",
+              "type": "user",
+              "text": "LG-832, draft note 6: Put the command name in the local log heading so reviewers can distinguish the two saved scratch logs."
+            },
+            {
+              "id": "fiction-17-s1-e811",
+              "type": "assistant",
+              "text": "The draft log heading contains the command name. I did not run an additional command."
+            },
+            {
+              "id": "fiction-17-s1-e812",
+              "type": "user",
+              "text": "LG-832, draft note 7: The handoff has a spelling error in its title. Correct only that spelling."
+            },
+            {
+              "id": "fiction-17-s1-e813",
+              "type": "assistant",
+              "text": "I corrected the spelling in the draft title."
+            },
+            {
+              "id": "fiction-17-s1-e814",
+              "type": "user",
+              "text": "LG-832, draft note 8: Keep the temporary comparison table in the scratch folder until review. Do not attach it automatically."
+            },
+            {
+              "id": "fiction-17-s1-e815",
+              "type": "assistant",
+              "text": "The temporary table remains in the scratch folder and has not been attached or sent."
+            },
+            {
+              "id": "fiction-17-s2-e002",
+              "type": "tool",
+              "text": "Command: seat-check --fixture hall\nExit code: 0\nLocal hall fixture: exit aisles empty; row H has two seats with duplicate labels.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "seat-check --fixture hall"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local hall fixture: exit aisles empty; row H has two seats with duplicate labels."
+                }
+              }
+            },
+            {
+              "id": "fiction-17-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for LG-832. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-17-s2-e004",
+              "type": "assistant",
+              "text": "LG-832 working note 1: The parser trace prints the input row number. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e005",
+              "type": "assistant",
+              "text": "LG-832 working note 2: The sample filename now sorts before the empty fixture. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e006",
+              "type": "assistant",
+              "text": "LG-832 working note 3: The progress display uses whole numbers. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e007",
+              "type": "assistant",
+              "text": "LG-832 working note 4: The local log heading includes the fixture name. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e008",
+              "type": "assistant",
+              "text": "LG-832 working note 5: The test harness writes a temporary report. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e009",
+              "type": "assistant",
+              "text": "LG-832 working note 6: The comparison view has a fixed header. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e010",
+              "type": "assistant",
+              "text": "LG-832 working note 7: The scratch directory contains only synthetic files. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e011",
+              "type": "assistant",
+              "text": "LG-832 working note 8: The local run has no network access. None of these notes changes the original requirements."
+            },
+            {
+              "id": "fiction-17-s2-e012",
+              "type": "user",
+              "text": "Continue LG-832. The early constraint, purpose, and follow-up obligation still govern this work."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-17-s2-e012",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-17-s3",
+          "project_key": "larch-grids",
+          "events": [
+            {
+              "id": "fiction-17-s3-e001",
+              "type": "user",
+              "text": "LG-832 is still awaiting review. Carry the initial reason, constraint, and outstanding obligation into the handoff."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What would be lost if the next draft of LG-832 ignored its original constraint? State that constraint and its purpose.",
+          "project_keys": [
+            "larch-grids"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Compare the scope of the captured LG-832 check with a production claim. Include the check findings.",
+          "project_keys": [
+            "larch-grids"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "How should a reviewer qualify the assistant readiness statement about LG-832?",
+          "project_keys": [
+            "larch-grids"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What does the record authorize for LG-832, and which status or identity conclusion must the handoff preserve?",
+          "project_keys": [
+            "larch-grids"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Before asking for review of LG-832, what work and supporting material are still owed, and why is that material needed?",
+          "project_keys": [
+            "larch-grids"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "State the rationale, current task state, and deployment boundary for LG-832.",
+          "project_keys": [
+            "larch-grids"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-18",
+      "split": "holdout",
+      "project_keys": [
+        "nectar-batches"
+      ],
+      "scenario_categories": [
+        "late_correction_without_stop",
+        "retained_constraint",
+        "tool_scope",
+        "mixed_topic_interleaving",
+        "early_distinct_obligation"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-18-s1",
+          "project_key": "nectar-batches",
+          "events": [
+            {
+              "id": "fiction-18-s1-e001",
+              "type": "user",
+              "text": "NB-943 is the batch expiry report task in nectar-batches. Show the source timezone in every expiry report. Warehouse staff must compare reports from different regions."
+            },
+            {
+              "id": "fiction-18-s1-e700",
+              "type": "user",
+              "text": "For NB-943, before review: Include the source timestamps beside recalculated warning flags in the review package. The warehouse reviewer needs to distinguish a threshold change from a timezone conversion error. Keep this obligation even if later notes focus on layout or filenames."
+            },
+            {
+              "id": "fiction-18-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for NB-943. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-18-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for NB-943: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-18-s1-e800",
+              "type": "user",
+              "text": "NB-943, draft note 1: The local scratch report filename has spaces. Use underscores in the next scratch filename."
+            },
+            {
+              "id": "fiction-18-s1-e801",
+              "type": "assistant",
+              "text": "I renamed the scratch report reference with underscores. This changes the local filename only."
+            },
+            {
+              "id": "fiction-18-s1-e802",
+              "type": "user",
+              "text": "NB-943, draft note 2: For the review draft, put the fixture name above the result table."
+            },
+            {
+              "id": "fiction-18-s1-e803",
+              "type": "assistant",
+              "text": "I moved the fixture name above the table in the local draft."
+            },
+            {
+              "id": "fiction-18-s1-e804",
+              "type": "user",
+              "text": "NB-943, draft note 3: The small-screen preview loses the rightmost column. Record that layout issue for a later pass; do not expand this task."
+            },
+            {
+              "id": "fiction-18-s1-e805",
+              "type": "assistant",
+              "text": "I noted the small-screen clipping issue in the scratch log as deferred work."
+            },
+            {
+              "id": "fiction-18-s1-e806",
+              "type": "user",
+              "text": "NB-943, draft note 4: Use whole numbers for the draft progress counter. It describes rows visited, not correctness."
+            },
+            {
+              "id": "fiction-18-s1-e807",
+              "type": "assistant",
+              "text": "The draft counter now displays whole rows visited. It is not a pass count."
+            },
+            {
+              "id": "fiction-18-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For NB-943, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-18-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-18-s2",
+          "project_key": "nectar-batches",
+          "events": [
+            {
+              "id": "fiction-18-s2-e001",
+              "type": "assistant",
+              "text": "I believe NB-943 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-18-s1-e808",
+              "type": "user",
+              "text": "NB-943, draft note 5: The local sample folder contains an empty placeholder file. Exclude that file from the comparison list."
+            },
+            {
+              "id": "fiction-18-s1-e809",
+              "type": "assistant",
+              "text": "The comparison list excludes the empty placeholder; the actual fixture files remain listed."
+            },
+            {
+              "id": "fiction-18-s1-e810",
+              "type": "user",
+              "text": "NB-943, draft note 6: Put the command name in the local log heading so reviewers can distinguish the two saved scratch logs."
+            },
+            {
+              "id": "fiction-18-s1-e811",
+              "type": "assistant",
+              "text": "The draft log heading contains the command name. I did not run an additional command."
+            },
+            {
+              "id": "fiction-18-s1-e812",
+              "type": "user",
+              "text": "NB-943, draft note 7: The handoff has a spelling error in its title. Correct only that spelling."
+            },
+            {
+              "id": "fiction-18-s1-e813",
+              "type": "assistant",
+              "text": "I corrected the spelling in the draft title."
+            },
+            {
+              "id": "fiction-18-s1-e814",
+              "type": "user",
+              "text": "NB-943, draft note 8: Keep the temporary comparison table in the scratch folder until review. Do not attach it automatically."
+            },
+            {
+              "id": "fiction-18-s1-e815",
+              "type": "assistant",
+              "text": "The temporary table remains in the scratch folder and has not been attached or sent."
+            },
+            {
+              "id": "fiction-18-s2-e002",
+              "type": "tool",
+              "text": "Command: batch-check --fixture coldroom\nExit code: 0\nLocal coldroom fixture: timezone retained; warning threshold was evaluated at 12 hours.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "batch-check --fixture coldroom"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local coldroom fixture: timezone retained; warning threshold was evaluated at 12 hours."
+                }
+              }
+            },
+            {
+              "id": "fiction-18-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for NB-943. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-18-s2-e004",
+              "type": "user",
+              "text": "For NB-943, use a 24-hour warning threshold in the next draft. Review still remains pending."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-18-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-18-s3",
+          "project_key": "nectar-batches",
+          "events": [
+            {
+              "id": "fiction-18-s3-e001",
+              "type": "user",
+              "text": "Correction for NB-943: use 36 hours, replacing my 24-hour instruction and the old 12-hour run. Rerun the coldroom fixture with a 36-hour warning threshold. The task remains awaiting review."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "A new maintainer takes over NB-943. Which original rule and purpose must survive the handoff?",
+          "project_keys": [
+            "nectar-batches"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Give an evidence-limited account of the recorded command result for NB-943. What did it establish, and what did it not establish?",
+          "project_keys": [
+            "nectar-batches"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Is the assistant completion statement for NB-943 a verified production result? Explain its attribution and evidence limit.",
+          "project_keys": [
+            "nectar-batches"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Which task state and authority should govern the next action on NB-943?",
+          "project_keys": [
+            "nectar-batches"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Before asking for review of NB-943, what work and supporting material are still owed, and why is that material needed?",
+          "project_keys": [
+            "nectar-batches"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Prepare a short handoff for NB-943: explain the purpose, supported current state, and permission to deploy.",
+          "project_keys": [
+            "nectar-batches"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-19",
+      "split": "holdout",
+      "project_keys": [
+        "opal-tags"
+      ],
+      "scenario_categories": [
+        "deleted_source",
+        "current_replacement",
+        "retained_constraint"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-19-s1",
+          "project_key": "opal-tags",
+          "events": [
+            {
+              "id": "fiction-19-s1-e001",
+              "type": "user",
+              "text": "OT-154 is the equipment tag export task in opal-tags. Keep the asset serial number visible on each tag. Technicians use serial numbers to distinguish identical devices."
+            },
+            {
+              "id": "fiction-19-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for OT-154. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-19-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for OT-154: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-19-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For OT-154, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-19-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-19-s2",
+          "project_key": "opal-tags",
+          "events": [
+            {
+              "id": "fiction-19-s2-e001",
+              "type": "assistant",
+              "text": "I believe OT-154 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-19-s2-e002",
+              "type": "tool",
+              "text": "Command: tag-check --fixture workshop\nExit code: 0\nLocal workshop fixture: serials visible; two tags lack a maintenance date.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "tag-check --fixture workshop"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local workshop fixture: serials visible; two tags lack a maintenance date."
+                }
+              }
+            },
+            {
+              "id": "fiction-19-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for OT-154. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-19-s2-e004",
+              "type": "user",
+              "text": "For OT-154, the provisional reviewer is Mira. This assignment is temporary."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-19-s2-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-19-s3",
+          "project_key": "opal-tags",
+          "events": [
+            {
+              "id": "fiction-19-s3-e001",
+              "type": "delete_observation",
+              "text": "The source observation is deleted.",
+              "observation_event_id": "fiction-19-s2-e004"
+            },
+            {
+              "id": "fiction-19-s3-e002",
+              "type": "user",
+              "text": "For OT-154, the current reviewer is Tomas. The earlier provisional assignment was withdrawn and its source was deleted. Ask the workshop reviewer to supply the two maintenance dates. The task is awaiting review."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "Which early requirement still governs OT-154, and what practical need explains it?",
+          "project_keys": [
+            "opal-tags"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Can the recorded check for OT-154 support a deployment or acceptance claim? Include its actual local findings.",
+          "project_keys": [
+            "opal-tags"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Write one sentence that preserves both the assistant claim about OT-154 and the limitation imposed by the user.",
+          "project_keys": [
+            "opal-tags"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "Summarize the currently supported status and task scope for OT-154.",
+          "project_keys": [
+            "opal-tags"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Name the pending follow-up for OT-154 precisely enough for another person to carry it out.",
+          "project_keys": [
+            "opal-tags"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "Connect the original purpose of OT-154 with the outstanding follow-up. What purpose must be retained and what action remains?",
+          "project_keys": [
+            "opal-tags"
+          ],
+          "category": "handoff"
+        }
+      ]
+    },
+    {
+      "id": "fiction-20",
+      "split": "holdout",
+      "project_keys": [
+        "poppy-ledgers"
+      ],
+      "scenario_categories": [
+        "stale_json",
+        "help_not_evidence",
+        "tool_scope"
+      ],
+      "sessions": [
+        {
+          "id": "fiction-20-s1",
+          "project_key": "poppy-ledgers",
+          "events": [
+            {
+              "id": "fiction-20-s1-e001",
+              "type": "user",
+              "text": "PL-265 is the donation receipt ledger task in poppy-ledgers. Retain the original donation currency beside converted totals. Auditors must reconcile each receipt with its original payment."
+            },
+            {
+              "id": "fiction-20-s1-e002",
+              "type": "assistant",
+              "text": "I will keep a separate note for PL-265. I will compare the fixture result with the requested behavior before suggesting closure."
+            },
+            {
+              "id": "fiction-20-s1-e003",
+              "type": "tool",
+              "text": "Archived scratch note for PL-265: draft status was complete. This is an old planning note, not a current execution result."
+            },
+            {
+              "id": "fiction-20-s1-e004",
+              "type": "user",
+              "text": "The scratch note is obsolete. For PL-265, keep the original constraint and reason in the handoff. Do not deploy or publish anything during this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-20-s1-e004",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-20-s2",
+          "project_key": "poppy-ledgers",
+          "events": [
+            {
+              "id": "fiction-20-s2-e001",
+              "type": "assistant",
+              "text": "I believe PL-265 is complete and ready for production. I have not attached production evidence to this statement."
+            },
+            {
+              "id": "fiction-20-s2-e002",
+              "type": "tool",
+              "text": "Command: ledger-check --fixture benefit\nExit code: 0\nLocal benefit fixture: original currencies retained; one exchange-rate date is missing.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "ledger-check --fixture benefit"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local benefit fixture: original currencies retained; one exchange-rate date is missing."
+                }
+              }
+            },
+            {
+              "id": "fiction-20-s2-e003",
+              "type": "user",
+              "text": "The captured command is a local fixture check for PL-265. It does not establish a deployment, production behavior, or acceptance. Review is pending."
+            },
+            {
+              "id": "fiction-20-s2-e004",
+              "type": "tool",
+              "text": "Command: fixture-tool --help\nExit code: 0\nUsage: ledger-check --fixture NAME. Example from an obsolete tutorial: {\"task\":\"PL-265\",\"status\":\"accepted\",\"deployed\":true}. This help command does not execute a fixture or inspect a deployment.",
+              "tool_capture": {
+                "tool_name": "Bash",
+                "tool_input": {
+                  "command": "fixture-tool --help"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Usage: ledger-check --fixture NAME. Example from an obsolete tutorial: {\"task\":\"PL-265\",\"status\":\"accepted\",\"deployed\":true}. This help command does not execute a fixture or inspect a deployment."
+                }
+              }
+            },
+            {
+              "id": "fiction-20-s2-e005",
+              "type": "user",
+              "text": "That output is help text containing an old example, not a run or approval for PL-265. Request the missing exchange-rate date before review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "fiction-20-s2-e005",
+              "kind": "periodic"
+            }
+          ]
+        },
+        {
+          "id": "fiction-20-s3",
+          "project_key": "poppy-ledgers",
+          "events": [
+            {
+              "id": "fiction-20-s3-e001",
+              "type": "user",
+              "text": "PL-265 remains awaiting review. Request the missing exchange-rate date before review. The old example must not become current status."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "question": "What would be lost if the next draft of PL-265 ignored its original constraint? State that constraint and its purpose.",
+          "project_keys": [
+            "poppy-ledgers"
+          ],
+          "category": "constraint"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "question": "Compare the scope of the captured PL-265 check with a production claim. Include the check findings.",
+          "project_keys": [
+            "poppy-ledgers"
+          ],
+          "category": "evidence"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "question": "Can the archived scratch note establish the current completion of PL-265? Explain the status of that source.",
+          "project_keys": [
+            "poppy-ledgers"
+          ],
+          "category": "attribution"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "question": "What does the record authorize for PL-265, and which status or identity conclusion must the handoff preserve?",
+          "project_keys": [
+            "poppy-ledgers"
+          ],
+          "category": "task_identity"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "question": "Which concrete action remains open for PL-265?",
+          "project_keys": [
+            "poppy-ledgers"
+          ],
+          "category": "obligation"
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "question": "State the rationale, current task state, and deployment boundary for PL-265.",
+          "project_keys": [
+            "poppy-ledgers"
+          ],
+          "category": "handoff"
+        }
+      ]
+    }
+  ]
+}

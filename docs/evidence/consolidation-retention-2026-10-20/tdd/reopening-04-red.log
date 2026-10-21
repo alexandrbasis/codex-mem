@@ -1,0 +1,24 @@
+test_because_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_because_explanation_reopens_confirmed_task) ... ok
+test_explanation_before_command_keeps_original_task_identity (test_project_memory_reopening_clauses.ReopeningClauseTests.test_explanation_before_command_keeps_original_task_identity) ... FAIL
+test_for_explanation_reopens_confirmed_task_after_store_restart (test_project_memory_reopening_clauses.ReopeningClauseTests.test_for_explanation_reopens_confirmed_task_after_store_restart) ... ok
+test_to_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_to_explanation_reopens_confirmed_task) ... ok
+
+======================================================================
+FAIL: test_explanation_before_command_keeps_original_task_identity (test_project_memory_reopening_clauses.ReopeningClauseTests.test_explanation_before_command_keeps_original_task_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 98, in test_explanation_before_command_keeps_original_task_identity
+    self.assert_reconsidered('For a showroom terminal trial, reopen ORB-73.')
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 83, in assert_reconsidered
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'idle' != 'processed'
+- idle
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'status': 'idle'}
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.137s
+
+FAILED (failures=1)

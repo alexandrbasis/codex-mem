@@ -251,7 +251,10 @@ class Capture:
             raise RuntimeError('experiment_call_budget_exhausted')
         if counters['tokens']['total_tokens'] + self.protocol['limits']['per_call_token_reservation'] > self.protocol['limits']['max_observed_tokens']:
             raise RuntimeError('experiment_observed_token_budget_exhausted')
-        if time.time() - read(self.home / 'run.json')['started_at'] >= self.protocol['limits']['wall_seconds']:
+        # A phase can dispatch several calls. Reserve each call's full timeout
+        # under the shared lock, including the later calls within one phase.
+        if (time.time() - read(self.home / 'run.json')['started_at']
+                + self.protocol['limits']['call_seconds'] >= self.protocol['limits']['wall_seconds']):
             raise RuntimeError('experiment_wall_budget_exhausted')
         call_id = f"call-{counters['attempted_calls'] + 1:04d}"
         started = time.monotonic()

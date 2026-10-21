@@ -1,0 +1,26 @@
+test_because_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_because_explanation_reopens_confirmed_task) ... ok
+test_conditional_reopening_cannot_discover_a_task_through_generic_task_word (test_project_memory_reopening_clauses.ReopeningClauseTests.test_conditional_reopening_cannot_discover_a_task_through_generic_task_word) ... FAIL
+test_explanation_before_command_keeps_original_task_identity (test_project_memory_reopening_clauses.ReopeningClauseTests.test_explanation_before_command_keeps_original_task_identity) ... ok
+test_for_explanation_reopens_confirmed_task_after_store_restart (test_project_memory_reopening_clauses.ReopeningClauseTests.test_for_explanation_reopens_confirmed_task_after_store_restart) ... ok
+test_label_repair_is_a_purpose_rather_than_an_identity_reference (test_project_memory_reopening_clauses.ReopeningClauseTests.test_label_repair_is_a_purpose_rather_than_an_identity_reference) ... ok
+test_russian_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_russian_explanation_reopens_confirmed_task) ... ok
+test_russian_purpose_clause_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_russian_purpose_clause_reopens_confirmed_task) ... ok
+test_russian_reason_clause_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_russian_reason_clause_reopens_confirmed_task) ... ok
+test_to_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_to_explanation_reopens_confirmed_task) ... ok
+
+======================================================================
+FAIL: test_conditional_reopening_cannot_discover_a_task_through_generic_task_word (test_project_memory_reopening_clauses.ReopeningClauseTests.test_conditional_reopening_cannot_discover_a_task_through_generic_task_word)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 115, in test_conditional_reopening_cannot_discover_a_task_through_generic_task_word
+    self.assertEqual(result['status'], 'idle', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'idle'
+- failed
++ idle
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_da6076c77c08595f235a7d84804e6d8bc05f3542', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'orb-73', 'candidate_head_ids': ['pm_c2dece5a75031180e2e38afc1e8ee170a0c6ce0c', 'pm_f28d01dd5e5793bfe07c4ba8a5f99cec5501b922'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_ec7eb2e23a8e4293b08bc4da891a95a3', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792522672.2118149, 'usage_recording_status': 'recorded', 'duration_ms': 6}
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.320s
+
+FAILED (failures=1)

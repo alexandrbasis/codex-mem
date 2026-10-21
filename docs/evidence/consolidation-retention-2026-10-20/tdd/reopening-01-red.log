@@ -1,0 +1,21 @@
+test_for_explanation_reopens_confirmed_task_after_store_restart (test_project_memory_reopening_clauses.ReopeningClauseTests.test_for_explanation_reopens_confirmed_task_after_store_restart) ... FAIL
+
+======================================================================
+FAIL: test_for_explanation_reopens_confirmed_task_after_store_restart (test_project_memory_reopening_clauses.ReopeningClauseTests.test_for_explanation_reopens_confirmed_task_after_store_restart)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 89, in test_for_explanation_reopens_confirmed_task_after_store_restart
+    self.assert_reconsidered('Reopen ORB-73 for a showroom terminal trial.')
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 83, in assert_reconsidered
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'idle' != 'processed'
+- idle
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'status': 'idle'}
+
+----------------------------------------------------------------------
+Ran 1 test in 0.048s
+
+FAILED (failures=1)

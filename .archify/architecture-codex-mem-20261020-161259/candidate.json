@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "505a2df60c01d4aceea23450024c16101decd94c",
+      "revision": "a23b7812feb1a5cf394d68f022292f45e081852f",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -334,8 +334,8 @@
         {
           "path": "codex_mem/project_memory_retrieval.py",
           "line": 205,
-          "end_line": 469,
-          "label": "Shared brief"
+          "end_line": 584,
+          "label": "Whole evidence groups and query projection"
         },
         {
           "path": "codex_mem/store.py",
@@ -497,9 +497,9 @@
       "items": [
         "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1910-1979, service.py:905-955.",
         "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:282-315,1077-1083.",
-        "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:223-253,1051-1075,1225-1257, project_memory_retrieval.py:585-596.",
+        "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:223-253,1051-1075,1225-1257, project_memory_retrieval.py:599-610.",
         "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:761-848.",
-        "After eligible event batches, discovery can schedule a bounded reconsideration job for split heads with the same positive task identity in original user evidence. It reuses pm_jobs and retained observations. It does not replay a transcript. A completed fingerprint prevents repeated no-op calls for unchanged candidates. Sources: project_memory.py:364-471,1260-1296.",
+        "After eligible event batches, discovery can schedule a bounded reconsideration job for split heads with the same positive task identity in original user evidence. It reuses pm_jobs and retained observations. It does not replay a transcript. A completed fingerprint prevents repeated no-op calls for unchanged candidates. Sources: project_memory.py:364-471,1263-1340.",
         "Ordinary event jobs can disclose historical original sources for matching task IDs within their existing input budget. Historical sources do not advance the event queue again. Disclosure reports omitted heads, ancestor chains, and sources. Sources: project_memory.py:307-362,915-920."
       ]
     },
@@ -510,24 +510,26 @@
         "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, quotes, revision, deletion generation, and current episode version. Objects, links, the current head, and queue progress commit in one transaction. Source: project_memory.py:795-924.",
         "Unsupported completion or acceptance becomes a proposal. Unsupported links that close records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the full conclusion follows from the text. Sources: project_memory.py:651-676,758-793, episode_processor.py:848-851.",
         "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Sources: project_memory.py:86-134, store.py:5791-5827.",
-        "A reconsideration proposal can continue one current head and consolidate other eligible heads. Exact source spans must support explicit continuity and the same task identity. Commit creates a new immutable version and summarizes dependency links. Original records stay addressable. Consolidation does not close open claims. Sources: project_memory.py:731-750,795-937,1297-1384.",
+        "A reconsideration proposal can continue one current head and consolidate other eligible heads. Exact source spans must support explicit continuity and the same task identity. Commit creates a new immutable version and summarizes dependency links. Original records stay addressable. Consolidation does not close open claims. Sources: project_memory.py:731-750,795-937,1343-1432.",
         "Discovery inspects at most 100 heads and 64 identity sources totaling 24,000 characters. A job uses at most four heads, eight ancestors per head, 32 retained sources, and 24,000 source characters. Lower caller limits apply. A larger group uses the oldest three heads and newest head. Metadata reports omissions and incomplete history. Source: project_memory.py:364-471.",
         "New heads rebuild earlier goals, reasons, outcomes, and open work in prior_ fields from each field's own disclosed original references. Earlier model prose is not copied. Missing or oversized historical context increments the omission count. Current validity stays unresolved. This does not create or reopen active claims. Source: project_memory.py:839-877.",
         "Native output v10 selects its episode contract by job kind. Reconsideration requires a current primary head and at least one distinct additional head. A null primary cannot consolidate heads. Historical original observations can support both links. An unresolved reconsideration returns no episodes and records a completed no-op. Ordinary continuation requires new non-historical evidence. Sources: episode_processor.py:44-116,300-319,354-364.",
         "Storage code assembles episode summary, goal, rationale, outcome, and open_work, plus claim rationale, from each field's own original source sentences. Text carries source-role labels, original offsets, and field_provenance. Association with the field stays model-selected. Assistant and tool statements retain their original roles. Sources: project_memory.py:751-757, project_memory.py:982-1023.",
         "A current attributed field must fit 6,000 characters and 32 references. Assembled objects and relations must fit 180,000 serialized characters. Oversized current output is rejected atomically. Source sentences cut by the disclosed-body boundary carry partial-context labels. Earlier stored versions are not retroactively verified. Sources: project_memory.py:877-880, project_memory.py:982-1023.",
-        "A supported affirmative user command to reopen one confirmed task ID can support episode continuity in English or narrow Russian forms. Questions, negations, conditions, quoted examples, tool reports, reference labels, and distinct-task wording cannot authorize reopening. Unrecognized wording stays unresolved. Claim workflow transitions retain their separate checks. Sources: project_memory.py:1277-1294, project_memory.py:1297-1384."
+        "A supported affirmative user command to reopen one confirmed task ID can support continuity. English accepts one short for/to/because explanation. Russian accepts для/чтобы/потому что. The explanation uses one to twelve bounded words, after the command or before it with a comma. The recognizer accepts bounded complete commands. Its guards reject questions, known negations, conditions, approval-dependent wording, quoted examples, tool reports, and distinct-task wording. A label reference alone is insufficient. Reopening checks retain the punctuation-delimited statement across line breaks. Unrecognized wording stays unresolved. Claim transitions use separate checks. Sources: project_memory.py:1263-1340,1343-1432.",
+        "Event processing uses project-memory-v4. Reconsideration fingerprints use task-consolidation-v4. These policy identifiers do not migrate earlier records or prove deployment. Source: project_memory.py:20-21,307-311,401-446."
       ]
     },
     {
       "dot": "violet",
       "title": "What the agent receives",
       "items": [
-        "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. It includes history when requested. Sources: project_memory_retrieval.py:406-469, integration.py:70-132.",
+        "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. It includes history when requested. Sources: project_memory_retrieval.py:419-482, integration.py:70-132.",
         "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:220-243.",
         "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5753-5789, hooks.py:872-909.",
         "The brief renders prior_goal, prior_rationale, prior_outcome, and prior_open_work as historical fields. It includes their original source pointers and unresolved-current-validity status. Source: project_memory_retrieval.py:205-334.",
-        "The brief shows every complete exact quotation for an attributed field with its source ID, role, and original offsets. It omits the whole field visibly if all quotations cannot fit. It does not repeat them as derived prose. Longer quotations can displace other context within the fixed budget. Exact copying does not prove correct association or current validity. Sources: project_memory_retrieval.py:205-267, project_memory_retrieval.py:270-403."
+        "The brief shows complete exact quotations with source IDs, roles, and original offsets. It visibly omits the whole attributed field if its complete group cannot fit. It adds no derived prose. Records with attributed fields can use the remaining global budget. This greedy allocation can displace later records. Exact copying does not establish field relevance or current validity. Sources: project_memory_retrieval.py:205-267,270-416.",
+        "Natural-language episode projections prefer current open work, historical open work, outcome, then summary. Rationale and environment projections keep separate priorities. Within one record, only an emitted attributed group suppresses later groups whose reference identities all appeared. An oversized group leaves smaller later alternatives eligible. Sources: project_memory_retrieval.py:362-397,549-584."
       ]
     },
     {
@@ -537,7 +539,7 @@
         "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:733-788,1381-1408.",
         "The legacy note processor runs alongside project memory. It also uses NativeProcessorRunner. It operates independently of episode generation. Sources: service.py:695-706,791-820, processor.py:227-248,403-422.",
         "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35-45,532-608, store.py:5717-5725, episode_processor.py:841-844.",
-        "When enabled, Jev checks proposed project memory fields against each field's own exact source spans before storage assembles attributed excerpts. Full source context can clarify or contradict a quote. It cannot replace missing support. Association with the field and current validity remain unresolved by exact copying. Sources: episode_processor.py:612-733, episode_processor.py:841-851, jev_quality.py:348-463.",
+        "When enabled, Jev checks proposed new fields against their own exact source spans before storage assembles attributed excerpts. Full source context can clarify or contradict a quote, but cannot replace missing support. The gate does not assess the relevance of prior_ fields that commit assembles later. Exact copying leaves field association and current validity unresolved. Sources: episode_processor.py:612-733,841-848, project_memory.py:839-877.",
         "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove correctness. Sources: episode_processor.py:716-733,841-879, jev_quality.py:16-23."
       ]
     },
@@ -547,7 +549,8 @@
       "items": [
         "When capture, processing, storage, retrieval, or provider boundaries change, review the diagram and source links. Update candidate.json and rebuild the HTML with Archify. AGENTS.md requires this work in the same task.",
         "maintain.py check compares source files and hashes with the snapshot. It also compares the specification and HTML with their saved hashes. Code changes require a review of the architecture descriptions. Matching hashes alone do not prove that the diagram is complete.",
-        "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Bounded reconsideration does not repair every historical split or prove answer quality. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage."
+        "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Bounded reconsideration does not repair every historical split or prove answer quality. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage.",
+        "The retention iteration keeps a separate offline agent interpretation in docs/evidence/consolidation-retention-2026-10-20/field-association-assessment.json. It is not a calibrated semantic classifier. Source hashes, structural checks, and rendered output do not establish semantic quality, benchmark improvement, or production deployment."
       ]
     }
   ]

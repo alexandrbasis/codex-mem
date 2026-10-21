@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "experiment": "cross-episode-consolidation-retention-2026-10-20",
+  "baseline_commit": "f8764f6",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "medium",
+  "model_selection": "The production native runner fixes gpt-6-luna medium, verifies model/list and rejects fallback. All generator, reader and judge calls use that profile.",
+  "jev": {
+    "filter": false,
+    "quality": false,
+    "retrieval": false
+  },
+  "data_policy": "Fictional histories in isolated temporary Stores only. Never change global configuration or the installed service.",
+  "histories": {
+    "development": 4,
+    "holdout": 16,
+    "questions_per_history": 6
+  },
+  "context_chars": 6000,
+  "retrieval": "build_project_brief plus render_project_brief with include_shadow=True, identical query and character budget for both versions; questions spanning two projects divide the same total 6000-character budget across project contexts",
+  "comparison": "Shared-prefix paired comparison. Generate baseline checkpoints live once, then explicitly drain every late no-Stop tail with the baseline normal processor to the same observation watermark. Clone that exact fully processed baseline database. Candidate performs additional bounded reconsideration until idle. Both arms contain identical captured observations and original source identities. Each version retrieves context using its own code. No raw-tail freshness difference is credited to consolidation.",
+  "reader": "One fresh isolated reader per history and variant answers six questions from the shared union of six retrieved memories. Each retrieval query is capped at6000characters, with up to36000total memory characters. All sources in that shared union can support any answer. No history, gold, variant name or product version enters reader prompt.",
+  "judge": "One fresh isolated blinded judge per history and answer set receives original fictional history, gold required facts with exact support spans, the deduplicated complete shared memory union that the reader actually saw, and answers. Mechanical checks parse/decode XML and pair each quoted excerpt with its cited original source ID. No variant or product version enters judge prompt.",
+  "repeat_history_ids": [
+    "fiction-01",
+    "fiction-02",
+    "fiction-05",
+    "fiction-06"
+  ],
+  "repeats": "Four histories repeat. fiction-01 and fiction-05 regenerate initial memories live in independent Stores and rerun both arms. fiction-02 and fiction-06 repeat only readers and judges. Report generation, consolidation and reader instability separately. Primary scores exclude repeats.",
+  "limits": {
+    "max_calls": 220,
+    "max_observed_tokens": 3600000,
+    "wall_seconds": 7200,
+    "call_seconds": 180,
+    "jobs_per_checkpoint": 4,
+    "jobs_per_consolidation": 6,
+    "per_call_token_reservation": 100000
+  },
+  "budget_note": "This new iteration has a separate fixed cap of 220 native calls, 3600000 observed tokens, 7200 wall seconds, 180 seconds per call and a 100000-token reservation before every dispatch. All started generation, consolidation, reader, judge, smoke, failed, superseded and explicit retry attempts share its single append-only ledger under a process lock. No automatic retries. Duplicate or mismatched attempt receipts stop execution. Stop if usage is incomplete or a prior call has no final receipt. The native interface has no per-response hard token limit, so reservation is conservative rather than proof of an absolute bound. Prior pilot spend is preserved separately and included in cumulative pilot totals. Actual billed cost and coding/research overhead are unknown; hypothetical API-equivalent estimates use the repository reviewed pricing snapshot.",
+  "planned_call_allocation": {
+    "generation_and_consolidation": 120,
+    "readers": 48,
+    "judges": 48,
+    "smoke_or_explicit_retry_reserve": 4
+  },
+  "pass_criteria": {
+    "critical_errors_max": 0,
+    "candidate_fully_supported_min": 0.9,
+    "gain_min_percentage_points_if_baseline_below_90": 10,
+    "constraint_obligation_reason_recall_regression_max": 0,
+    "all_questions_must_be_graded": true,
+    "measured_improvement_required": true,
+    "baseline_at_or_above_90": "Require measurable quality gain or lower fully observed processing-plus-reader token use without worse supported quality. Passing safety/quality gate alone is not evidence of improvement.",
+    "paired_constraint_retention": "No individual question can lose constraint, obligation or reason recall that the baseline retained. Aggregate gains cannot cancel such a loss."
+  },
+  "critical_errors": [
+    "false_merge",
+    "false_closure",
+    "project_mixing",
+    "deleted_resurrection"
+  ],
+  "full_supported_answer": "All gold required facts recalled, current status and action scope correct, citations support the claims, no forbidden conclusion, no empty or evasive abstention.",
+  "metrics": [
+    "fully_supported_answer",
+    "current_state_actionability",
+    "constraint_obligation_reason_recall",
+    "citation_support",
+    "critical_error_types",
+    "empty_abstention",
+    "context_characters",
+    "latency_ms",
+    "reported_tokens",
+    "cost_usd_or_unknown"
+  ],
+  "failure_policy": "Record all started, failed and completed calls durably. Keep failed or missing answers in the planned denominator. A rejected consolidation remains an explicit pipeline failure, but the reader still receives its actual unchanged committed memory. Grade all six answers without retrying or replacing the failed job. A pipeline failure prevents a pilot pass even if answer scores happen to improve. Do not retry failed extraction silently or tune code after holdout release. Any post-freeze repair requires a new experiment and untouched holdout.",
+  "freeze_policy": "Freeze protocol, helper hash and candidate product hashes before opening sealed holdout. Root must disclose any subsequent code change and cannot claim a clean holdout pass.",
+  "limitations": [
+    "Blinded model grading is fallible and does not prove semantic correctness.",
+    "Shared live baseline generation isolates consolidation but does not estimate independent extraction variance.",
+    "A 20-history fictional comparison does not prove production quality."
+  ],
+  "reader_repeat_history_ids": [
+    "fiction-02",
+    "fiction-06"
+  ],
+  "regeneration_repeat_history_ids": [
+    "fiction-01",
+    "fiction-05"
+  ],
+  "blind_shuffle_seed": "consolidation-retention-blind-20261020-1",
+  "holdout_primary_questions": 96,
+  "grouped_reader_dependence": "Six questions in one fresh reader share context and are statistically dependent. Each question has its own independently selected memory capped at 6000 characters. Across six questions the combined memory can reach 36000 characters. Treat history as the sampling unit.",
+  "evidence_roles": "Assistant results require explicit reported attribution. They do not independently prove execution. User intent, assistant reports, actual tool results, local validation, deployment and production remain distinct.",
+  "capture_fidelity": "Events with type=tool remain actual hook:PostToolUse source observations. Optional tool_capture contains tool_name, tool_input.command, and tool_response.exit_code/output. The helper passes this inert structured payload through normalize_capture and public Store.remember in baseline, then clones the same captured tool evidence into candidate. Session, turn and tool-use IDs are fixed from fictional fixture scope. Commands are never executed. Tool results establish only their recorded command/output/exit-code scope, not unobserved deployment or production verification.",
+  "retrieval_timing": "Measure local Store-open plus build_project_brief/render_project_brief per project and total per-question retrieval wall time. Save append-only retrieval-timings.jsonl separately. Timing data never enters reader or judge prompts and never changes retrieval character budgets.",
+  "export_privacy": "Export pseudonymizes real native diagnostic worker/thread/turn UUIDs deterministically, including equivalent evidence spellings. Preserve fictional provenance IDs, answers, grades, token and latency totals, and original private run files. Publish exact transformation and original/public hashes without a raw ID mapping.",
+  "historical_spend": {
+    "experiment": "Two prior completed iterations",
+    "report": "docs/evidence/consolidation-retention-2026-10-20/historical-spend.json",
+    "sha256": "474da460ad45ee75fa59939a3f609ba57d0471cf8fe37e24862837571c01c834",
+    "attempted_calls": 341,
+    "reported_tokens": 6214304,
+    "cost_usd": null
+  },
+  "criteria_source": {
+    "protocol": "docs/evidence/consolidation-2026-10-20/protocol.json",
+    "sha256": "25652f4b93ca30128ddb2e8c3ecce0b3803bb1d0a3150245b46fb9aee6a8d3cb",
+    "unchanged_fields": [
+      "model",
+      "reasoning_effort",
+      "jev",
+      "context_chars",
+      "comparison",
+      "reader",
+      "judge",
+      "repeat_history_ids",
+      "repeats",
+      "pass_criteria",
+      "critical_errors",
+      "full_supported_answer",
+      "failure_policy",
+      "reader_repeat_history_ids",
+      "regeneration_repeat_history_ids",
+      "holdout_primary_questions",
+      "grouped_reader_dependence",
+      "evidence_roles"
+    ],
+    "canonical_criteria_sha256": "c0b0b2ae50f5d2e0ec386096b289740ba238b5e3826d23b402c28a234829a7d2"
+  },
+  "implementation_base_commit": "f094b07c33ad795bf46e8d205a800d04051e101e",
+  "separate_semantic_assessment": "Assess field association separately from exact quote copying. Primary comparison keeps all Jev gates off in both arms and cannot attribute a gain to Jev or independent new extraction.",
+  "previous_holdouts": "Both previously released holdouts are disclosed regression material only. New author seals new history and gold before implementation freeze.",
+  "driver_sha256": "8baa4df45e5a3d99e56827b9aecc5f12cba746e3fd94ff29ed32e10bc7c5f0af",
+  "dispatch_wall_reservation": "Under the shared budget lock, every native dispatch reserves its full call_seconds allowance against the remaining wall_seconds, including later calls within one phase."
+}

@@ -17,8 +17,8 @@ from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from .store import Store
 
-PROCESSOR_VERSION = "project-memory-v3"
-RECONSIDERATION_VERSION = "task-consolidation-v3"
+PROCESSOR_VERSION = "project-memory-v4"
+RECONSIDERATION_VERSION = "task-consolidation-v4"
 TASK_ID_PATTERN = r"(?<![\w-])[A-Za-z][A-Za-z0-9]{1,15}-[0-9]{1,10}(?![\w-])"
 RELATIONS = {"supports", "contradicts", "replaces", "closes", "summarizes"}
 STATES = {"proposed", "accepted", "open", "blocked", "completed"}
@@ -1257,6 +1257,29 @@ def _episode_identity(connection: sqlite3.Connection, project: str, item: dict[s
     item.update(logical_episode_id=logical, episode_version=item.get("episode_version", 1), parent_episode_id=item.get("parent_episode_id"), continuity_basis=item.get("continuity_basis", "standalone"), is_current_head=(head[0] == item["id"]) if head else logical == item["id"])
 
 
+_REOPENING_MENTION = r"\breopen(?:ed|ing)?\b|\bпереоткр[а-яё]*\b|\bповторно\s+откр[а-яё]*\b"
+
+
+def _task_evidence_sentences(ref: dict, source: str) -> list[str]:
+    """Keep reopening qualifiers across soft wraps, with original offsets."""
+    # UserPromptSubmit capture adds this exact leading structural header.
+    # Blank it in the recognition copy only, keeping every source offset.
+    header = "[User prompt]\n"
+    if source.startswith(header):
+        source = " " * (len(header) - 1) + "\n" + source[len(header):]
+    if "\n" not in source:
+        return _evidence_sentences(ref, source)
+
+    def join_reopening_wraps(match):
+        text = match.group(0)
+        # Replacing one character preserves citation offsets. Other source
+        # statements keep their existing line and punctuation boundaries.
+        return text.replace("\n", " ") if re.search(_REOPENING_MENTION, text, re.I) else text
+
+    unwrapped = re.sub(r".+?(?:[.!?](?=\s|$)|$)", join_reopening_wraps, source, flags=re.S)
+    return _evidence_sentences(ref, unwrapped)
+
+
 def _source_task_identity(item: dict, contexts: dict[str, str]) -> str | None:
     """Require one affirmative user task identity in the original evidence."""
     identities = set()
@@ -1264,10 +1287,14 @@ def _source_task_identity(item: dict, contexts: dict[str, str]) -> str | None:
         for ref in item.get("evidence", {}).get(field, []):
             if ref.get("source_role") != "user_intent":
                 continue
-            for sentence in _evidence_sentences(ref, contexts.get(ref["source_id"], "")):
+            for sentence in _task_evidence_sentences(ref, contexts.get(ref["source_id"], "")):
                 if "?" in sentence or re.search(r"\b(?:not|never|unrelated|different|separate|example|fixture)\b|не\s|друг(?:ая|ой|ую)|отдельн|пример", sentence, re.I):
                     continue
                 found = {value.casefold() for value in re.findall(TASK_ID_PATTERN, sentence)}
+                if re.search(_REOPENING_MENTION, sentence, re.I) and (
+                        len(found) != 1 or re.search(r"```|~~~", contexts.get(ref["source_id"], ""))
+                        or not _positive_reopening(sentence, next(iter(found)))):
+                    continue
                 if len(found) == 1 and (re.match(r"\s*" + TASK_ID_PATTERN, sentence) or re.search(r"(?:^|\b)(?:task|issue|ticket|continue|resume|correction|update|задача|задачи|задачу|продолжаем|исправление|уточнение)\b", sentence, re.I)
                                        or _positive_reopening(sentence, next(iter(found)))):
                     identities.update(found)
@@ -1291,7 +1318,26 @@ def _positive_reopening(sentence: str, task_id: str) -> bool:
     russian = (r"(?:пожалуйста,?\s+)?(?:переоткрой(?:те)?|повторно\s+открой(?:те)?)\s+"
                r"(?:(?:ту\s+же\s+|эту\s+же\s+)?задачу\s+)?" + identity +
                r"(?:\s*,\s*(?:ту|эту)\s+же\s+задачу)?")
-    return bool(re.fullmatch(r"\s*(?:" + english + "|" + russian + r")\s*[.!]?\s*", sentence, re.I))
+    # One short explanation can describe the purpose of an unconditional
+    # command. Qualifiers and reported/quoted commands remain unsupported.
+    clause_word = (r"(?!(?:only|if|after|before|when|whenever|unless|until|without|not|no|never|"
+                   r"once|provided|assuming|pending|awaiting|and|or|but|quote|example|reference|instruction|command|help|"
+                   r"maybe|possibly|perhaps|might|may|must|should|would|could|can|will|"
+                   r"new|different|separate|unrelated|independent|forbidden|prohibited|"
+                   r"approv[a-z]*|authori[sz][a-z]*|permit[a-z]*|permission|consent|confirmation|conditional|contingent|subject)\b)"
+                   r"[A-Za-z]+(?:-[A-Za-z]+)*")
+    explanation = r"(?:for|to|because)\s+" + clause_word + r"(?:\s+" + clause_word + r"){0,11}"
+    english_with_clause = r"(?:" + english + r"(?:\s+" + explanation + r")?|" + explanation + r",\s*" + english + r")"
+    russian_word = (r"(?!(?:не|нет|нельзя|запрещено|только|если|после|перед|когда|пока|без|при|"
+                    r"соглас[а-яё]*|одобр[а-яё]*|разреш[а-яё]*|авторизац[а-яё]*|"
+                    r"ожида[а-яё]*|возможно|вероятно|может|нужно|надо|"
+                    r"пример[а-яё]*|команд[а-яё]*|инструкц[а-яё]*|справк[а-яё]*|ссылк[а-яё]*|"
+                    r"нов[а-яё]*|друг[а-яё]*|отдельн[а-яё]*|независим[а-яё]*|и|или|но)\b)"
+                    r"[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*")
+    russian_explanation = r"(?:для|чтобы|потому\s+что)\s+" + russian_word + r"(?:\s+" + russian_word + r"){0,11}"
+    russian_with_clause = (r"(?:" + russian + r"(?:(?:\s+|,\s*)" + russian_explanation + r")?|"
+                           + russian_explanation + r",\s*" + russian + r")")
+    return bool(re.fullmatch(r"\s*(?:" + english_with_clause + "|" + russian_with_clause + r")\s*[.!]?\s*", sentence, re.I))
 
 
 def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str]) -> bool:
@@ -1299,7 +1345,6 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
     # completion. Fuzzy topic linking and same-session linking are deferred.
     task_pattern = r"(?<![\w-])[A-Za-z][A-Za-z0-9]{1,15}-[0-9]{1,10}(?![\w-])"
     reopen_marker = r"\breopen(?:ed|ing)?\b|\bпереоткрой(?:те)?\b|\bповторно\s+открой(?:те)?\b"
-    reopening_mention = r"\breopen(?:ed|ing)?\b|\bпереоткр[а-яё]*\b|\bповторно\s+откр[а-яё]*\b"
     update_marker = r"^\s*(?:correction|update|amendment)\s+(?:(?:for|to|on)\s+)?(?:task\s+)?|^\s*(?:исправление|поправка|уточнение|обновление)\s+(?:(?:для|по)\s+)?(?:задач[еиу]\s+)?"
     # A named goal is authoritative. Incidental identifiers in a summary or
     # its evidence must never expand the identity of that goal.
@@ -1313,7 +1358,7 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
             for evidence in prior.get("evidence", {}).get(field, []):
                 context = contexts.get(evidence["source_id"])
                 if context is not None:
-                    candidates.extend(_evidence_sentences(evidence, context))
+                    candidates.extend(_task_evidence_sentences(evidence, context))
         for text in candidates:
             for sentence in re.findall(r".+?(?:[.!?](?=\s|$)|\n|$)", text, re.S):
                 if "?" in sentence or re.search(r"\b(?:not|never|unrelated|different|separate|instead)\b|не\s|друг(?:ая|ой|ую)|отдельн|не\s+связан", sentence, re.I):
@@ -1347,8 +1392,9 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
                          and bool(re.search(reopen_marker, ref["quote"], re.I)))
         if not quoted_continuation and not quoted_update and not quoted_reopen:
             continue
-        for sentence in _evidence_sentences(ref, contexts.get(ref["source_id"], "")):
-            if re.search(reopening_mention, sentence, re.I):
+        for sentence in _task_evidence_sentences(ref, contexts.get(ref["source_id"], "")):
+            sentence_reopening = bool(re.search(_REOPENING_MENTION, sentence, re.I))
+            if sentence_reopening:
                 # Reopening is user authority, not a reported command or a
                 # quoted example. Apply this before every continuity branch.
                 if (ref["source_role"] != "user_intent" or len(task_ids) != 1
@@ -1362,13 +1408,15 @@ def _continuity_supported(refs: list[dict], prior: dict, contexts: dict[str, str
                 continue
             # A matching label or reference identifies mentioned text, not
             # the task being continued. Leave that association unresolved.
-            if ((quoted_reopen or named_same_task and re.search(named_same_task, sentence, re.I))
+            if (not (quoted_reopen and sentence_reopening)
+                    and named_same_task and re.search(named_same_task, sentence, re.I)
                     and re.search(r"\b(?:labels?|references?|identifiers?)\b|\brefer(?:s|red|ring)?\s+to\b|\b(?:ссылк|метк|идентификатор)[а-яё]*\b", sentence, re.I)):
                 continue
             continuation = quoted_continuation and bool(re.search(marker, sentence, re.I))
             update = quoted_update and bool(re.search(update_marker, sentence, re.I))
-            reopen = (quoted_reopen and bool(re.search(reopen_marker, sentence, re.I))
-                      and not _nonassertive_context(sentence))
+            # The complete-command gate above owns reopening authority. A
+            # failed check in its reason does not negate the user command.
+            reopen = quoted_reopen and bool(re.search(reopen_marker, sentence, re.I))
             if not continuation and not update and not reopen:
                 continue
             quoted_ids = {value.casefold() for value in re.findall(task_pattern, ref["quote"])}

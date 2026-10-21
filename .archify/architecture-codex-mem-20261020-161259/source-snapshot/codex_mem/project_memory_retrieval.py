@@ -332,6 +332,12 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
         # episode's repeated provenance consume the entire brief. Evidence is
         # still explicit, with omissions counted, and state/scope never sliced.
         item_budget = min(remaining, max((2200 if brief.get('anchored_natural') and brief.get('projection') != 'continuity' else 1400) if record.get('lane') == 'episode' else 1100 if record.get('execution') else 900, remaining // min(6, len(records) - index)))
+        # Complete attributed fields compete against the global budget. A
+        # per-item share can reject a useful whole group while lower-priority
+        # records consume the space that group needed.
+        if any(field.get('basis') == 'attributed_source_excerpts'
+               for field in record.get('fields', [])):
+            item_budget = remaining
         text = str(record.get('preview') or '')[:700]
         def source_xml(source: Mapping[str, Any], *, complete: bool = False) -> str:
             source = dict(source)
@@ -353,9 +359,15 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
                                            'evidence': record.get('evidence', [])}]
         omitted_fields = 0
         grounded_omissions = 0
+        emitted_refs = set()
         for field in fields:
             refs = field.get('evidence') or []
             grounded = field.get('basis') == 'attributed_source_excerpts'
+            identities = {(ref.get('source_id'), ref.get('start'), ref.get('end'),
+                           ref.get('source_field'), ref.get('tool_use_id'), ref.get('source_role'))
+                          for ref in refs}
+            if grounded and identities and identities.issubset(emitted_refs):
+                continue
             # Each prose field keeps ALL its source pointers. If they do not
             # fit together, omit that field instead of pairing its prose with
             # an unrelated subset of an episode's evidence.
@@ -378,6 +390,7 @@ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
                 whole = field_node(len(value))
                 if len(whole) <= remaining_item:
                     content += whole
+                    emitted_refs.update(identities)
                 else:
                     omitted_fields += 1
                     grounded_omissions += 1
@@ -538,7 +551,7 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
             selected = []
             seen_refs = set()
             priorities = {'rationale': 0, 'prior_rationale': 1, 'goal': 2} if query_plan.projection == 'rationale' else {
-                'outcome': 0, 'open_work': 1, 'prior_open_work': 2, 'summary': 3}
+                'open_work': 0, 'prior_open_work': 1, 'outcome': 2, 'summary': 3}
             if query_plan.projection == 'environments':
                 # Prefer the complete cross-environment field before narrower
                 # outcome/obligation groups repeat its sources and use its room.
@@ -547,7 +560,8 @@ def build_project_brief(store: Any, project: str | Path, query: str = '', budget
                 selected_pointers = []
                 for pointer in field['evidence']:
                     identity = (pointer.get('source_id'), pointer.get('start'), pointer.get('end'))
-                    if identity in seen_refs or not pointer.get('quote_excerpt'):
+                    if (field.get('basis') != 'attributed_source_excerpts' and identity in seen_refs
+                            or not pointer.get('quote_excerpt')):
                         continue
                     if query_plan.projection == 'environments':
                         import re

@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import types
 import unittest
+from unittest.mock import patch
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 
@@ -29,6 +30,32 @@ def model_call(call_id, phase, variant, total=100, run_id='primary', repeat=0):
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_every_native_dispatch_reserves_its_full_wall_allowance(self):
+        protocol = experiment.read(Path(__file__).resolve().parents[2] /
+                                   'docs/evidence/consolidation-retention-2026-10-20/protocol.json')
+        limits = protocol['limits']
+        for remaining, blocked in ((limits['call_seconds'] - 1, True),
+                                   (limits['call_seconds'] + 60, False)):
+            with self.subTest(remaining=remaining), tempfile.TemporaryDirectory() as temporary:
+                run = Path(temporary)
+                experiment.write(run / 'run.json', {
+                    'started_at': experiment.time.time() - limits['wall_seconds'] + remaining,
+                    'budget_run': str(run),
+                })
+                capture = experiment.Capture(run, protocol, 'generation', 'baseline', 'fiction-01')
+                with patch('codex_mem.processor.NativeProcessorRunner') as runner:
+                    runner.return_value.return_value = {'metrics': receipt()}
+                    if blocked:
+                        with self.assertRaisesRegex(RuntimeError, 'experiment_wall_budget_exhausted'):
+                            capture({'prompt': 'Fictional test only.'})
+                        runner.assert_not_called()
+                        self.assertFalse((run / 'calls.jsonl').exists())
+                    else:
+                        capture({'prompt': 'Fictional test only.'})
+                        runner.assert_called_once_with(timeout=limits['call_seconds'])
+                        self.assertEqual(experiment.usage(experiment.ledger_calls(
+                            run / 'calls.jsonl'))['attempted_calls'], 1)
+
     def test_actual_renderer_pairs_complete_long_quote_with_its_original_source(self):
         sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'tests'))
         from test_project_memory_consolidation import ConsolidationTests

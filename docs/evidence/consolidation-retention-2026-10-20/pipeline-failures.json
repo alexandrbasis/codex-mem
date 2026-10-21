@@ -1,0 +1,420 @@
+{
+  "schema_version": 1,
+  "scope": "Completed primary holdout baseline generation failures and the primary fiction-20 consolidation failure only. Excludes development and all regeneration attempts, including any later fiction-05 repeat.",
+  "assessment_kind": "content_free_offline_validator_replay",
+  "method": "Each saved request/response is replayed in a fresh process importing its owning runtime. Original source bodies are reconstructed from disclosed prompt spans. Object refs, evidence refs, quotes, optional fields and canonical output validation run before ProjectMemory._validate on a mode=ro SQLite connection. No commit or model call runs.",
+  "snapshot_reconstruction": "Prompt project/session/job_kind/reconsideration/current_state and disclosed sources are reused. revision comes from current_state; neutral job_id offline-diagnosis only supplies deterministic object IDs. Historical validation is not a replay of transaction lease or freshness checks.",
+  "counts": {
+    "failed_holdout_baseline_generations": 9,
+    "failed_holdout_consolidations": 1,
+    "native_completed_calls": 10,
+    "requested_schema_pass": 10,
+    "processor_canonical_validation_pass": 10,
+    "commit_value_errors_reproduced": 10,
+    "unknown_causes": 0
+  },
+  "calls": {
+    "new_native_experiment_calls": 0,
+    "new_jev_calls": 0,
+    "new_external_api_calls": 0
+  },
+  "attempts": [
+    {
+      "history_id": "fiction-05",
+      "phase": "generation",
+      "attempt_alias": "call-0006",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "69db38ad3aef56daf9023b5947762f18f830a9edb83e3d62a8ec0438b8f06e33",
+      "response_sha256": "37ebc10208d7b868be3de36b9e97700ff2bd2c19fd84cdf3aea4933f285394fb",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0006-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0006-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-05/generation.json",
+        "sha256": "4bb6dd5757539c603492ed69aa3124f05540b024994fd190b4213c99732fa1cc"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-06",
+      "phase": "generation",
+      "attempt_alias": "call-0007",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "6c67f0e3a4c81157f7b9b02bf20d5a39423b96d1f9532cd0b09b2f98a5b9908d",
+      "response_sha256": "939af2ff86b396600ce3a7a69740817c19e87b7c0124aa2cd68672caf0d5c088",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0007-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0007-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-06/generation.json",
+        "sha256": "18b5197522d48e73c8042feb33ab12c557bd429a3f68fdc7d1336c237357529c"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-11",
+      "phase": "generation",
+      "attempt_alias": "call-0020",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "4873e363b8702933e7248b45c9402946c27c5c14f4a9ec4f99bf53a85358cb62",
+      "response_sha256": "ad7eb289bc02f785b48e7d020d5af069642488917f8eb4dfb963825c24e0ea25",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0020-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0020-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-11/generation.json",
+        "sha256": "10fa7153d62690fa8a57e55918106ee62ea8086b974957ab4404cbb6af20ee91"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-12",
+      "phase": "generation",
+      "attempt_alias": "call-0021",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "9bb5ba35cecfc9c664972436c47afac0097e72662821ca9e547dcf5d27af40cd",
+      "response_sha256": "0e469716702530dcdf3264c0ffce3235e0a6124825cc898aaa40582634abdfc7",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0021-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0021-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-12/generation.json",
+        "sha256": "41e4f371438fa783ce2af7e1f7ea88093889584b494b4f9d47d7280246214e29"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-14",
+      "phase": "generation",
+      "attempt_alias": "call-0025",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "1c1c61db4c47fa5ae4e64011a9e655bf1625b24dd9246ae9fb2975793ee2d5b4",
+      "response_sha256": "26ce8f213dc4ed8b219aeb868bb97e8c25cf940603ecc1f10262aadbbeb1ea6b",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0025-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0025-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-14/generation.json",
+        "sha256": "83ba3a4b4261175c4ffbc5af74d99967a0a6bf5fecf4522017271488f6829a49"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-15",
+      "phase": "generation",
+      "attempt_alias": "call-0026",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "5b06d17d70d005cb29d8a985c027e3cecf2366662b270dd9df755d77430d3a00",
+      "response_sha256": "532ac848d72ac0a756caf7493cfc784e0abc5b4016a78a0e47d476c0184a5902",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0026-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0026-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-15/generation.json",
+        "sha256": "ed486daf274ca28e7413d5e379176687b14b7d5f0a1670067522e9baba95b984"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-16",
+      "phase": "generation",
+      "attempt_alias": "call-0027",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "121f27b6ea325997eb43831c71a7d29ff77bd85dc42bbbbc06ada1982c0bbe9e",
+      "response_sha256": "523b81d4bf7ff1172fe79cbf0f9591dfc55c2f88f964c3c531fcdad3bf2ef04d",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0027-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0027-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-16/generation.json",
+        "sha256": "2e6f52779bbb71a9443a635ae0599b06b696b0867c8fe49feac4bfbd2ef02285"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-17",
+      "phase": "generation",
+      "attempt_alias": "call-0028",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "0dffc84c40794d734f3e2b8c76c5ec286daff117e3fc1acf68aa5ad3bebc31ea",
+      "response_sha256": "bfd60d8d7b40e8477cd193709230ccb24deec3237d73e79049fe95cfee2f9920",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0028-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0028-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-17/generation.json",
+        "sha256": "627eefe7854825ccdf9d27dd29a5e7130b16b67f1baf87dad1ef518aa08869ab"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-19",
+      "phase": "generation",
+      "attempt_alias": "call-0032",
+      "runtime": "/tmp/codex-mem-retention-baseline",
+      "request_sha256": "952ffdc622c18de002966716a537911c3f493cb3d77ef3240009065a720e0c0e",
+      "response_sha256": "a62ad7b851e5e0b633d46f9e85978af06eb18cb815c1bead3ea04c974604c303",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0032-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0032-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "claim worktree must match project",
+        "source": {
+          "path": "/tmp/codex-mem-retention-baseline/codex_mem/project_memory.py",
+          "line": 492,
+          "sha256": "0f6b2705b1bc5a57aae257848cf403719c87767f1f8017bfe05d9b949f7561f5"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/baseline/fiction-19/generation.json",
+        "sha256": "3f4cc2eb1bef87b02a135dbdf47cf9c99ddc58aded90f290f7e7690d1b8ed47d"
+      },
+      "classification": "worktree_scope_contract_mismatch",
+      "diagnostic_details": "The supplied nonempty claim worktree is not equal to the canonical project path. Requested schema accepts a bounded string, but commit enforces project equality."
+    },
+    {
+      "history_id": "fiction-20",
+      "phase": "consolidation",
+      "attempt_alias": "call-0038",
+      "runtime": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public",
+      "request_sha256": "f40ddd54a93a2ca48c4f01e6b89b69bf7e39c2f97fe6f8c3ac7accb467509904",
+      "response_sha256": "73e13389c3228cb12d810ae4e1319553ce6a37397fffda111da7e4a6deead1c7",
+      "request_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0038-request.json",
+      "response_path": "/tmp/codex-mem-consolidation-retention-experiment/receipts/call-0038-response.json",
+      "completed_stages": [
+        "requested_json_schema",
+        "runner_receipt",
+        "object_reference_resolution",
+        "evidence_reference_resolution",
+        "quote_resolution",
+        "optional_field_filter",
+        "processor_canonical_validation"
+      ],
+      "reproduced_error": {
+        "type": "ValueError",
+        "message": "consolidation needs a distinct continued head",
+        "source": {
+          "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py",
+          "line": 727,
+          "sha256": "9e80e199e519663e7b3d9f7e729b8d32f906c8396a93669a6f149e1d2c603ffb"
+        }
+      },
+      "native_call_status": "completed",
+      "pipeline_status": "failed",
+      "pipeline_error_codes": [
+        "invalid_response"
+      ],
+      "pipeline_receipt": {
+        "path": "/tmp/codex-mem-consolidation-retention-experiment/candidate/fiction-20/consolidation.json",
+        "sha256": "4fa51d33a46b432ff422b18ea73654d25bd121715ec99ae510d7db889ce20d93"
+      },
+      "classification": "unsupported_continuation_prevents_consolidation",
+      "diagnostic_details": "The supplied continuation target and consolidation target are distinct. Selected continuation evidence is a pending-review status statement, not explicit continuity. The continuity guard leaves parent_episode_id empty; the subsequent consolidation precondition raises the recorded error. The consolidation evidence is a task-identification statement. No schema/ref failure occurred."
+    }
+  ],
+  "limits": [
+    "Native completed means a response was returned; all ten corresponding pipeline attempts rejected it as invalid_response.",
+    "Only completed failed primary attempts selected before this audit are included. No claims about ongoing readers, judges or repeats.",
+    "No frozen product/helper/protocol/input changes, retries, grade changes or evidence replacement.",
+    "Error reproduction establishes validator rejection, not a general semantic model-quality measurement.",
+    "No original source prose, generated prose or raw native service IDs are stored here."
+  ]
+}

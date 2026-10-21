@@ -1,0 +1,26 @@
+test_because_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_because_explanation_reopens_confirmed_task) ... ok
+test_explanation_before_command_keeps_original_task_identity (test_project_memory_reopening_clauses.ReopeningClauseTests.test_explanation_before_command_keeps_original_task_identity) ... ok
+test_for_explanation_reopens_confirmed_task_after_store_restart (test_project_memory_reopening_clauses.ReopeningClauseTests.test_for_explanation_reopens_confirmed_task_after_store_restart) ... ok
+test_label_repair_is_a_purpose_rather_than_an_identity_reference (test_project_memory_reopening_clauses.ReopeningClauseTests.test_label_repair_is_a_purpose_rather_than_an_identity_reference) ... ok
+test_russian_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_russian_explanation_reopens_confirmed_task) ... FAIL
+test_to_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_to_explanation_reopens_confirmed_task) ... ok
+
+======================================================================
+FAIL: test_russian_explanation_reopens_confirmed_task (test_project_memory_reopening_clauses.ReopeningClauseTests.test_russian_explanation_reopens_confirmed_task)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 104, in test_russian_explanation_reopens_confirmed_task
+    self.assert_reconsidered('Переоткрой задачу ORB-73 для проверки витринного терминала.')
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_reopening_clauses.py", line 83, in assert_reconsidered
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v10', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_6f3b72832d8f4b7701cae57b7e79b1441837952d', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'orb-73', 'candidate_head_ids': ['pm_08cb94dc43ea11d4c736627896e8e5b26d7e52d8', 'pm_eac4c79de6a3e79387aaae13a0fc46b5ae7d05c2'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_1979a0dee0e047ce94d69723c64108d3', 'usage_status': 'reported', 'runner_duration_ms': 12, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'worker-1', 'worker_turn_id': 'turn-1', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792522581.633657, 'usage_recording_status': 'recorded', 'duration_ms': 5}
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.205s
+
+FAILED (failures=1)
