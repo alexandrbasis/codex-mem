@@ -1,0 +1,858 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only first-case R7 diagnosis. No runtime/helper/fixture changes, native calls, rescoring or original DB/log writes. Diagnostic query substitutions do not change recorded trial input or scores.",
+  "runtime_hashes": {
+    "codex_mem/project_memory_query.py": "e20edbbca511eb6f2e2e0d2a0a0c03142b3ba66fa9bfb49b27c753bc27daf82a",
+    "codex_mem/project_memory_retrieval.py": "a12567bae970c4fade51e147b936a81585b871e2e042066712f251a1837c4ab6",
+    "codex_mem/project_memory.py": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02"
+  },
+  "original_database_sha256_before": "a4bc097797b62084ee50b79e09d81112dfaa537d8ef0153d40bc37e690e074e6",
+  "original_database_sha256_after": "a4bc097797b62084ee50b79e09d81112dfaa537d8ef0153d40bc37e690e074e6",
+  "evidence_paths": {
+    "contexts": "/private/tmp/codex-mem-quality-20261021-r7-experiment/candidate/hold_401/contexts.json",
+    "generation": "/private/tmp/codex-mem-quality-20261021-r7-experiment/candidate/hold_401/generation.json",
+    "sqlite": "/private/tmp/codex-mem-quality-20261021-r7-experiment/candidate/hold_401/data/memory.sqlite3"
+  },
+  "project_scope": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive",
+  "broad_snapshot_counts": {
+    "claims": 1,
+    "episodes": 2,
+    "intent_custody": 3
+  },
+  "safe_scope_eligible_count": 6,
+  "retained_sources": [
+    {
+      "event_id": "hold_401_current",
+      "source_id": "09dc5384fdd445c3b3a4ca8c0f9d74b7",
+      "source_field": "body",
+      "body": "The curator still needs to check the two disputed dates. Treat that as open work. The removed temporary note is withdrawn and must not be used as a current fact.",
+      "captured_source": "hook:UserPromptSubmit",
+      "raw_project_slug_in_body": false
+    },
+    {
+      "event_id": "hold_401_goal",
+      "source_id": "0df1454107a3401ea6dabd9424d33695",
+      "source_field": "body",
+      "body": "Please help us recover the tide-ledger scan index. This matters because volunteers need to find damaged pages before the winter exhibit. Keep original page numbers. Initially, also: Export a searchable PDF.",
+      "captured_source": "hook:UserPromptSubmit",
+      "raw_project_slug_in_body": false
+    },
+    {
+      "event_id": "hold_401_check",
+      "source_id": "9ac264f8114c4cce99516235774e6035",
+      "source_field": "body",
+      "body": "Batch west-shelf: 18 index rows checked. Two date conflicts remain. No shelf map was written.",
+      "captured_source": "hook:PostToolUse",
+      "raw_project_slug_in_body": false
+    },
+    {
+      "event_id": "hold_401_revision",
+      "source_id": "2c3a9031f903499587604e8012e3ca2c",
+      "source_field": "body",
+      "body": "Continuing the same work in this chat. Cancel this requirement: Export a searchable PDF. Replacement: Produce a plain-text shelf map instead. Still binding: Keep original page numbers. Requirements for harbor_labels do not apply to this project.",
+      "captured_source": "hook:UserPromptSubmit",
+      "raw_project_slug_in_body": false
+    }
+  ],
+  "withdrawn_source_entry_count": 0,
+  "cases": [
+    {
+      "question_id": "q1",
+      "original_query": "What is the current goal for tidal_archive, and why is it needed?",
+      "query_ir": {
+        "natural": true,
+        "historical": false,
+        "continuation": false,
+        "projection": "rationale",
+        "task_ids": [],
+        "identifiers": [
+          "tidal_archive"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "`tidal_archive`"
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "tidal_archive"
+          ],
+          "versions": [],
+          "minimum": 0
+        }
+      },
+      "candidate_fts": "\"tidal_archive\"",
+      "initial_snapshot_counts": {
+        "claims": 0,
+        "episodes": 0,
+        "intent_custody": 0
+      },
+      "broader_project_candidates": [
+        {
+          "lane": "claims",
+          "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+          "plan_matches": true,
+          "scope": {
+            "environment": "",
+            "version": "",
+            "worktree": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive"
+          }
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+          "plan_matches": false,
+          "scope": null
+        }
+      ],
+      "original_source_pointers": [],
+      "diagnostic_only_substitution": {
+        "query": "What is the current goal for this project, and why is it needed?",
+        "source_pointers": [
+          {
+            "source_id": "0df1454107a3401ea6dabd9424d33695",
+            "start": "0",
+            "end": "206",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "0",
+            "end": "245",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "09dc5384fdd445c3b3a4ca8c0f9d74b7",
+            "start": "0",
+            "end": "161",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          }
+        ],
+        "xml_chars": 4248
+      }
+    },
+    {
+      "question_id": "q2",
+      "original_query": "Which requirement was canceled in tidal_archive, what replaced it, and which constraint remains active?",
+      "query_ir": {
+        "natural": true,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "tidal_archive"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "`tidal_archive`"
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "tidal_archive"
+          ],
+          "versions": [],
+          "minimum": 0
+        }
+      },
+      "candidate_fts": "\"tidal_archive\"",
+      "initial_snapshot_counts": {
+        "claims": 0,
+        "episodes": 0,
+        "intent_custody": 0
+      },
+      "broader_project_candidates": [
+        {
+          "lane": "claims",
+          "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+          "plan_matches": true,
+          "scope": {
+            "environment": "",
+            "version": "",
+            "worktree": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive"
+          }
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+          "plan_matches": false,
+          "scope": null
+        }
+      ],
+      "original_source_pointers": [],
+      "diagnostic_only_substitution": {
+        "query": "Which requirement was canceled in this project, what replaced it, and which constraint remains active?",
+        "source_pointers": [],
+        "xml_chars": 474
+      }
+    },
+    {
+      "question_id": "q3",
+      "original_query": "What does the actual tool result establish about tidal_archive, despite the assistant’s completion claim?",
+      "query_ir": {
+        "natural": true,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "tidal_archive"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "`tidal_archive`"
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "tidal_archive"
+          ],
+          "versions": [],
+          "minimum": 0
+        }
+      },
+      "candidate_fts": "\"tidal_archive\"",
+      "initial_snapshot_counts": {
+        "claims": 0,
+        "episodes": 0,
+        "intent_custody": 0
+      },
+      "broader_project_candidates": [
+        {
+          "lane": "claims",
+          "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+          "plan_matches": true,
+          "scope": {
+            "environment": "",
+            "version": "",
+            "worktree": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive"
+          }
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+          "plan_matches": false,
+          "scope": null
+        }
+      ],
+      "original_source_pointers": [],
+      "diagnostic_only_substitution": {
+        "query": "What does the actual tool result establish about this project, despite the assistant’s completion claim?",
+        "source_pointers": [
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "0",
+            "end": "245",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "09dc5384fdd445c3b3a4ca8c0f9d74b7",
+            "start": "0",
+            "end": "161",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "38",
+            "end": "88",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "88",
+            "end": "141",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "141",
+            "end": "184",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          }
+        ],
+        "xml_chars": 4897
+      }
+    },
+    {
+      "question_id": "q4",
+      "original_query": "What work remains open in tidal_archive, and what evidence supports keeping it open?",
+      "query_ir": {
+        "natural": true,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "tidal_archive"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "`tidal_archive`"
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "tidal_archive"
+          ],
+          "versions": [],
+          "minimum": 0
+        }
+      },
+      "candidate_fts": "\"tidal_archive\"",
+      "initial_snapshot_counts": {
+        "claims": 0,
+        "episodes": 0,
+        "intent_custody": 0
+      },
+      "broader_project_candidates": [
+        {
+          "lane": "claims",
+          "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+          "plan_matches": true,
+          "scope": {
+            "environment": "",
+            "version": "",
+            "worktree": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive"
+          }
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+          "plan_matches": false,
+          "scope": null
+        }
+      ],
+      "original_source_pointers": [],
+      "diagnostic_only_substitution": {
+        "query": "What work remains open in this project, and what evidence supports keeping it open?",
+        "source_pointers": [
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "0",
+            "end": "245",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "09dc5384fdd445c3b3a4ca8c0f9d74b7",
+            "start": "0",
+            "end": "161",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "38",
+            "end": "88",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "88",
+            "end": "141",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "141",
+            "end": "184",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          }
+        ],
+        "xml_chars": 4897
+      }
+    },
+    {
+      "question_id": "q5",
+      "original_query": "Does the requirement from harbor_labels carry over to tidal_archive? Explain the project boundary.",
+      "query_ir": {
+        "natural": true,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "harbor_labels",
+          "tidal_archive"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "`harbor_labels` `tidal_archive`"
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "harbor_labels",
+            "tidal_archive"
+          ],
+          "versions": [],
+          "minimum": 0
+        }
+      },
+      "candidate_fts": "\"harbor_labels\" AND \"tidal_archive\"",
+      "initial_snapshot_counts": {
+        "claims": 0,
+        "episodes": 0,
+        "intent_custody": 0
+      },
+      "broader_project_candidates": [
+        {
+          "lane": "claims",
+          "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+          "plan_matches": false,
+          "scope": {
+            "environment": "",
+            "version": "",
+            "worktree": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive"
+          }
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+          "plan_matches": false,
+          "scope": null
+        }
+      ],
+      "original_source_pointers": [],
+      "diagnostic_only_substitution": {
+        "query": "Does the requirement from harbor_labels carry over to this project? Explain the project boundary.",
+        "source_pointers": [
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "0",
+            "end": "245",
+            "source_role": "user_intent"
+          }
+        ],
+        "xml_chars": 1447
+      }
+    },
+    {
+      "question_id": "q6",
+      "original_query": "Can the removed temporary note supply a current fact for tidal_archive? What should be used as current guidance instead?",
+      "query_ir": {
+        "natural": true,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "tidal_archive"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "`tidal_archive`"
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "tidal_archive"
+          ],
+          "versions": [],
+          "minimum": 0
+        }
+      },
+      "candidate_fts": "\"tidal_archive\"",
+      "initial_snapshot_counts": {
+        "claims": 0,
+        "episodes": 0,
+        "intent_custody": 0
+      },
+      "broader_project_candidates": [
+        {
+          "lane": "claims",
+          "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+          "plan_matches": true,
+          "scope": {
+            "environment": "",
+            "version": "",
+            "worktree": "/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive"
+          }
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "episodes",
+          "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+          "plan_matches": false,
+          "scope": null
+        },
+        {
+          "lane": "intent_custody",
+          "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+          "plan_matches": false,
+          "scope": null
+        }
+      ],
+      "original_source_pointers": [],
+      "diagnostic_only_substitution": {
+        "query": "Can the removed temporary note supply a current fact for this project? What should be used as current guidance instead?",
+        "source_pointers": [
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "0",
+            "end": "245",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "09dc5384fdd445c3b3a4ca8c0f9d74b7",
+            "start": "0",
+            "end": "161",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "38",
+            "end": "88",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "88",
+            "end": "141",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "2c3a9031f903499587604e8012e3ca2c",
+            "start": "141",
+            "end": "184",
+            "source_role": "user_intent"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "0",
+            "end": "40",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "67",
+            "end": "93",
+            "source_role": "tool_record"
+          },
+          {
+            "source_id": "9ac264f8114c4cce99516235774e6035",
+            "start": "40",
+            "end": "67",
+            "source_role": "tool_record"
+          }
+        ],
+        "xml_chars": 4897
+      }
+    }
+  ],
+  "cause": "Natural-language questions use the scoped project basename tidal_archive. The underscore makes it a mandatory code-shaped identifier. Candidate FTS requires that literal identifier in indexed source/object text, while real source bodies use a descriptive project name or implicit same-project references. Anchored query planning also prevents the no-anchor empty-query fallback. No selected episode/custody source reaches rendering. One broad claim can pass QueryPlan.matches only through scope.worktree, but is already removed by initial FTS. q5 requires both project slugs together, incorrectly intersecting two project subjects under each separately scoped read.",
+  "diagnostic_limits": [
+    "Replacing only tidal_archive with this project restores sources for q1/q3/q4/q6. q2 still has no visible sources, so recognizing owned project scope alone does not solve every lexical answer-framing question.",
+    "q5 retains harbor_labels as a hard identifier after the one-name substitution. Cross-project boundary queries need explicit scope/subject handling, not unrestricted removal of identifiers.",
+    "The withdrawn source is absent from entries, as expected after deletion. Retained user guidance explicitly says it is withdrawn. No deleted body is needed to diagnose this failure."
+  ],
+  "conservative_repair_proposal": "For natural queries, recognize an unquoted exact canonical current-project basename as a project selector before creating mandatory text identifiers. Keep the actual project-path SQL scope mandatory. Do not remove arbitrary underscore identifiers, quoted code symbols, paths, versions, task IDs, environment conditions or session/deletion guards. Treat other named project selectors as explicitly scoped comparison/boundary subjects rather than requiring every project name in every record. Preserve residual topical subjects. Test natural owned slug, explicit quoted same token, neighboring slug, matching basename under distinct absolute roots, and real code identifier collisions. Alias recognition must never establish cross-project evidence membership.",
+  "reproduction_commands": [
+    "PYTHONPATH=. python3 -c \"from codex_mem.project_memory_query import plan_query; print(plan_query(\"What is the current goal for tidal_archive, and why is it needed?\", \"/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive\"))\"",
+    "Copy only candidate/hold_401/data/memory.sqlite3 and config.json to a fresh temporary directory; with Store(temp), call ProjectMemory.snapshot(project,query=plan.candidate_queries[0],topic_query=plan.topic_query), then build_project_brief for the original query and a diagnostic query replacing only tidal_archive with this project. Do not open the original Store for mutation."
+  ]
+}

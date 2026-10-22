@@ -1,0 +1,24 @@
+......E......
+======================================================================
+ERROR: test_preserve_whitespace_bytes_and_exact_owned_slices (__main__.OwnershipTests.test_preserve_whitespace_bytes_and_exact_owned_slices)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 45, in test_preserve_whitespace_bytes_and_exact_owned_slices
+    out=self.resolve(p)['answers'][0]
+        ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 26, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/v1/helper.py", line 1042, in resolve_reader_output
+    return resolve_assertion_reader_output(output, contexts, catalog)
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/v1/helper.py", line 962, in resolve_assertion_reader_output
+    text(value, 1000)
+    ~~~~^^^^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/v1/helper.py", line 950, in text
+    raise ValueError('invalid bounded assertion text')
+ValueError: invalid bounded assertion text
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.008s
+
+FAILED (errors=1)

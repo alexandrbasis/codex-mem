@@ -1,0 +1,32 @@
+.FF.F
+======================================================================
+FAIL: test_same_original_different_scope_and_custody_never_loses_context (test_project_memory_single_source_packing.SingleSourcePackingTests.test_same_original_different_scope_and_custody_never_loses_context) (order=['canonical-a', 'canonical-b'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 58, in test_same_original_different_scope_and_custody_never_loses_context
+    self.assertIsNotNone(item.find("./field[@name='goal']"), xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="selected-source-1" lane="source_excerpts" uncertainty="review_pending" environment="lab"><field name="source_excerpts" basis="attributed_source_excerpts" field_association="not_assessed"><source source_id="public-source" source_role="user_intent" source_field="body" start="0" end="22" quote_truncated="False"><quote_excerpt>Keep raw measurements.</quote_excerpt></source></field></item><item id="canonical-a" lane="episode" uncertainty="review_pending" environment="lab" field_associations_omitted="1" fields_omitted="1"></item><item id="canonical-b" lane="episode" uncertainty="review_pending" environment="field" field_associations_omitted="1" fields_omitted="1"></item><omitted records="2" fields="2"/></project-memory>
+
+======================================================================
+FAIL: test_same_original_different_scope_and_custody_never_loses_context (test_project_memory_single_source_packing.SingleSourcePackingTests.test_same_original_different_scope_and_custody_never_loses_context) (order=['canonical-b', 'canonical-a'])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 58, in test_same_original_different_scope_and_custody_never_loses_context
+    self.assertIsNotNone(item.find("./field[@name='goal']"), xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="selected-source-1" lane="source_excerpts" uncertainty="review_pending" environment="field"><field name="source_excerpts" basis="attributed_source_excerpts" field_association="not_assessed"><source source_id="public-source" source_role="user_intent" source_field="body" start="0" end="22" quote_truncated="False"><quote_excerpt>Keep raw measurements.</quote_excerpt></source></field></item><item id="canonical-b" lane="episode" uncertainty="review_pending" environment="field" field_associations_omitted="1" fields_omitted="1"></item><item id="canonical-a" lane="episode" uncertainty="review_pending" environment="lab" field_associations_omitted="1" fields_omitted="1"></item><omitted records="2" fields="2"/></project-memory>
+
+======================================================================
+FAIL: test_shared_original_keeps_both_independently_qualified_associations (test_project_memory_single_source_packing.SingleSourcePackingTests.test_shared_original_keeps_both_independently_qualified_associations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 39, in test_shared_original_keeps_both_independently_qualified_associations
+    self.assertIsNotNone(field, xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="selected-source-1" lane="source_excerpts" uncertainty="review_pending"><field name="source_excerpts" basis="attributed_source_excerpts" field_association="not_assessed"><source source_id="public-source" source_role="user_intent" source_field="body" start="0" end="39" quote_truncated="False"><quote_excerpt>Retain &lt;raw&gt; &amp; calibrated measurements.</quote_excerpt></source></field></item><item id="canonical-a" lane="episode" uncertainty="review_pending" field_associations_omitted="1" fields_omitted="1"></item><item id="canonical-b" lane="episode" uncertainty="review_pending" field_associations_omitted="1" fields_omitted="1"></item><omitted records="2" fields="2"/></project-memory>
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+FAILED (failures=3)

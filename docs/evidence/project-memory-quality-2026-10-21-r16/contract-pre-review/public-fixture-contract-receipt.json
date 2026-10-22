@@ -1,0 +1,81 @@
+{
+  "schema_version": 2,
+  "status": "prospective_standalone_author_contract_verified",
+  "contract_file": "docs/evidence/project-memory-quality-2026-10-21-r16/public-fixture-contract.py",
+  "contract_sha256": "18dd227387d50f6496e2969bf5b661bc7c08f6571f71b4edb913d6442daa0a32",
+  "tests_file": "docs/evidence/project-memory-quality-2026-10-21-r16/test_public_fixture_contract_v2.py",
+  "tests_sha256": "6bf5796784b540931b876cec9fb660c710e353e447c5938a8490ca5b0aa6e2d6",
+  "test_result": {
+    "tests": 9,
+    "passed": 9,
+    "native_calls": 0,
+    "runtime_imports": 0
+  },
+  "existing_fixture_parser": {
+    "prior_contract_sha256": "56a223a0d3997f92e1f32dc1017d546756f3eb981a4d8f123203c2280900527a",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "unchanged_functions": {
+      "read": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "e3faf3e0b1adaadec08633e65f00a6793b65d50073785671a8198dd427b0589d"
+      },
+      "identifier": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "abe825ddf49d3c4fb4707ba63617a2a4a255f5b71fbacb61caef52750a86ac38"
+      },
+      "validate_tool_capture": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "e58ac428f71d10a4c4e6dc8b63caec133e1060d82d1f083bab8f30898f624088"
+      },
+      "fixture": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "f4836ec7ae9fc31988f6ab5a8b5623691ae7f69539a6aa2dee34116bc12f469b"
+      }
+    },
+    "holdout_cardinality": "16 histories; six final questions each;96 total",
+    "event_types_unchanged": [
+      "user",
+      "assistant",
+      "tool",
+      "delete_observation"
+    ]
+  },
+  "author_usage": [
+    "Copy this standalone Python file and run: python3 public-fixture-contract.py YOUR_FIXTURE.json YOUR_GOLD.json",
+    "The validator needs only your two JSON files and the Python standard library. It does not import the helper or product, or read a prior fixture.",
+    "Use existing schema_version1 fictional fixture and gold shapes. Positive support remains event_id,start,end,quote; omitted source_field means body.",
+    "An optional source_field names a captured string field. An optional reader_visible_equivalent must reproduce the same quote in a canonical field of the same event. It is not a source substitute."
+  ],
+  "positive_anchor_contract": [
+    "A positive support event is user, assistant or tool; it survives all final deletion controls.",
+    "Its project is among the question selected project keys. Session attribution comes from the owning fixture session.",
+    "Offsets are non-boolean integers and the exact nonempty quote equals that canonical field slice.",
+    "Questions remain final-stage only. A late source after an explicit checkpoint is valid because final settling includes the tail. Checkpoint provenance is reported, not treated as a nonexistent earlier question stage.",
+    "Deletion is a control action and creates no positive citation source. A deleted original cannot be required as positive evidence.",
+    "A surviving source may describe an event or state, but this mechanical validator does not infer the semantic fact from its text."
+  ],
+  "negative_contract": [
+    "Sixteen deletion operations are accepted by the toy holdout test. Existing forbidden conclusions and deleted-source-resurrection critical checks remain separate and unchanged.",
+    "No thresholds, answer grading criteria, critical definitions or runtime source eligibility rules are relaxed.",
+    "This prospective clarification does not rewrite prior gold, regrade outcomes, or claim a prior fixture was schema-invalid."
+  ],
+  "toy_test_coverage": [
+    "user/assistant/tool roles",
+    "16 deletions and96question cardinality",
+    "deletion control positive rejection",
+    "deleted target positive rejection",
+    "surviving negative deletion assertion retained",
+    "tail after last checkpoint accepted at final_settle",
+    "cross-project rejection and explicit selected-project union",
+    "offset/quote/type/field rejection",
+    "same-source canonical tool-field mirror",
+    "existing checkpoint/final-stage parser guards",
+    "unknown event and exact question-key coverage"
+  ],
+  "limits": [
+    "Mechanical representability only; no guarantee of reader context retention or semantic answer support.",
+    "No scenario difficulty guidance or prior holdout scenario contents are included."
+  ],
+  "models": 0,
+  "old_fixture_gold_grades_modified": false
+}

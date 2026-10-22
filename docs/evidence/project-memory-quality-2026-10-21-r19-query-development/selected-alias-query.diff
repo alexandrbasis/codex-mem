@@ -1,0 +1,82 @@
+--- before/project_memory_query.py
++++ selected-alias/project_memory_query.py
+@@ -20,6 +20,12 @@
+ _CONTINUE = re.compile(r'\b(?:resume|continue|continuing|continuation)\b|pick\s+up|продолж[а-яё]*', re.I)
+ _HISTORY = re.compile(r'\b(?:originally|as[- ]of|historical|history)\b|первоначаль|истори|по состоянию на', re.I)
+ _ENVS = re.compile(r'(?<![\w.-])(?:production|prod|staging|development|dev|local(?:ly)?|локальн[а-яё]*|стейджинг[а-яё]*|продакш(?:е|ё)?н[а-яё]*)(?![\w-]|\.[\w])', re.I)
++# Explicit syntax, rather than the meaning of a project name, marks literals.
++_CONTENT_LABEL = re.compile(
++    r'\b(?:function|method|symbol|field|table|column|module|variable|identifier|artifact|file|'
++    r'command|executable|program|script|run|execute|invoke)\s+'
++    r'(?:(?:named|called)\s+)?([A-Za-z_][A-Za-z0-9_.:-]*)', re.I)
++
+ 
+ # Full grammatical frames distinguish an answer facet from a topical subject.
+ # Any residual subject words keep the normal lexical candidate window.
+@@ -87,8 +93,11 @@
+                         selected_project_scopes: Sequence[str | Path] | None = None) -> tuple[str, tuple[str, ...]]:
+     """Separate explicit natural scope selectors from literal content anchors.
+ 
+-    Only exact canonical basenames in scope positions qualify. Quoting or an
+-    ambiguous basename keeps a token literal. This never changes a read owner.
++    Trusted selected paths identify structured basenames without requiring a
++    finite natural-language frame. Quoted, code and artifact uses stay literal.
++    Plain lowercase words retain their old strength outside explicit scope
++    syntax because metadata alone cannot resolve a content-noun collision.
++    Basename collisions never normalize. This never changes a read owner.
+     """
+     if not _NATURAL.search(query.strip()):
+         return query, ()
+@@ -102,6 +111,7 @@
+     for scope in scopes:
+         aliases.setdefault(Path(scope).name.casefold(), set()).add(scope)
+     quoted = [match.span() for match in re.finditer(r'`[^`\n]*`|"[^"\n]*"|\'[^\'\n]*\'', query)]
++    literal_spans = [match.span(1) for match in _CONTENT_LABEL.finditer(query)]
+     changes, used, candidates = [], [], []
+     for alias, owners in aliases.items():
+         if (not alias or len(owners) != 1 or _ENVS.fullmatch(alias) or _TASK.fullmatch(alias)
+@@ -110,17 +120,21 @@
+         for match in re.finditer(r'(?<![\w./:-])' + re.escape(alias) + r'(?![\w./:-])', query, re.I):
+             candidates.append((match.start(), match.end(), alias))
+     for left, right, alias in sorted(candidates):
+-        if any(start <= left < end for start, end in quoted):
++        if (any(start <= left < end for start, end in [*quoted, *literal_spans]) or
++                re.match(r'\s*\(', query[right:])):
+             continue
+         prefix = query[:left]
+-        position = re.search(r'\b(?P<prep>for|in|from|to|on|about|regarding|within|of|project|projects|compare|versus|vs|between|with|and)\s+$', prefix, re.I)
+-        if not position:
++        position = re.search(r'\b(?P<prep>for|in|from|to|on|about|regarding|within|of|project|projects|compare|versus|vs|between|across|with|and)\s+$', prefix, re.I)
++        prep = position.group('prep').casefold() if position else None
++        coordinated_scope = prep in {'with', 'and'} and bool(changes)
++        explicit_scope = position is not None and (prep not in {'with', 'and'} or coordinated_scope)
++        canonical_name = Path(next(iter(aliases[alias]))).name
++        structured = bool(re.search(r'[_\d-]|[a-z][A-Z]', canonical_name))
++        if not explicit_scope and not structured:
+             continue
+-        # Keep the comparison operator, but remove a redundant scope clause.
+-        prep = position.group('prep').casefold()
+-        if prep in {'with', 'and'} and not (_COMPARE.search(query) and changes):
+-            continue
+-        start = left if prep in {'compare', 'versus', 'vs', 'between'} else position.start()
++        # Preserve operators; remove a preceding scope clause only when it is
++        # explicit. The remaining natural wording remains a soft content topic.
++        start = position.start() if explicit_scope and prep not in {'compare', 'versus', 'vs', 'between'} else left
+         changes.append((start, right))
+         used.append(alias)
+     for start, end in sorted(changes, reverse=True):
+@@ -428,10 +442,11 @@
+     explicit = {match.group()[1:-1].casefold() for match in
+                 re.finditer(r'`[^`\s]+`|"[^"\s]+"|\'[^\'\s]+\'', query)}
+     selected_names = {Path(value).name.casefold() for value in (project, *(selected_project_scopes or ()))}
+-    artifact_names = {match.group(1).casefold() for match in re.finditer(
+-        r'\b(?:function|method|symbol|field|table|column|module|variable|identifier|artifact|file)\s+'
+-        r'(?:(?:named|called)\s+)?([A-Za-z_][A-Za-z0-9_.:-]*)', query, re.I)
++    artifact_names = {match.group(1).casefold() for match in _CONTENT_LABEL.finditer(query)
+         if match.group(1).casefold() in selected_names or re.search(r'[_./:-]|\d|[a-z][A-Z]', match.group(1))}
++    artifact_names.update(match.group(1).casefold() for match in re.finditer(
++        r'(?<![\w./:-])([A-Za-z_][A-Za-z0-9_-]*)\s*\(', query)
++        if match.group(1).casefold() in selected_names)
+     # Explicit content positions remain literal even when a name happens to
+     # equal a selected project's ordinary alphabetic or hyphenated basename.
+     exact = dict(exact, identifiers=list(dict.fromkeys([*exact['identifiers'], *sorted(explicit | artifact_names)])))

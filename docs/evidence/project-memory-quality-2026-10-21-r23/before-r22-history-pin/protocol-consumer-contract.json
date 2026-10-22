@@ -1,0 +1,818 @@
+{
+  "status": "prospective_R23_consumer_compatibility_not_actual_protocol",
+  "historical_spend": {
+    "builder_input_ref": [
+      "path",
+      "sha256"
+    ],
+    "emitted_protocol_pointer": [
+      "report",
+      "sha256",
+      "usage_field"
+    ],
+    "consumers": [
+      "helper.historical_accounting",
+      "helper.aggregate",
+      "helper.export_evidence historical-report copy"
+    ],
+    "no_fallback": "Absent selector retains legacy usage. Explicit cumulative selection never silently falls back to current-only usage. Unknown selectors or missing selected field reject.",
+    "selected_usage_field": "cumulative_pilot_usage"
+  },
+  "consumer_smoke": {
+    "command": "python3 consumer-smoke.py --protocol EMITTED_PROTOCOL_JSON --protocol-sha256 EXACT_SHA256 --output NEW_SMOKE_OUTPUT_DIRECTORY",
+    "timing": "After actual final protocol generation, before any actual trial clock/native call.",
+    "paths": "No actual-run argument. Uses a temporary NONEXPERIMENT synthetic run and public toy fixture/gold only. Output retains canonical synthetic export and machine receipt.",
+    "verifies": [
+      "Exact actual candidate/helper/harness/baseline/history pins",
+      "Actual unchanged historical accounting with usage([])",
+      "Actual unchanged aggregate and canonical export,96questionrecords/216missingplannedarm/repeat slots",
+      "Export historical copy,manifest hashes,archive,0native/noStore/noactualclock"
+    ],
+    "scope": "Compatibility proof only, never independent trial evidence or rescoring.",
+    "output_scope": "CLI output must resolve to a new child directory inside R23 evidence folder. Actual-run/private sealed paths reject before protocol reading or mkdir. Unit seam permits output only inside its separate toy source root. Sealed directory overlap always rejects."
+  },
+  "input_privacy": "Actual sealed fixture/gold/rationale/full findings remain closed. Opaque repeat IDs only are borrowed from protocol into separate public toy histories.",
+  "consumer_inventory": {
+    "scripts/project_memory_consolidation_experiment.py": {
+      "observed_sha256": "9e555332205828540cd7c44b3ac2becbc408bbc813ff5279b03726a720801d87",
+      "literal_protocol_accesses": [
+        {
+          "path": [
+            "historical_spend"
+          ],
+          "kind": "optional",
+          "line": 247
+        },
+        {
+          "path": [
+            "paired_native_request_reuse"
+          ],
+          "kind": "optional",
+          "line": 285
+        },
+        {
+          "path": [
+            "model"
+          ],
+          "kind": "required",
+          "line": 365
+        },
+        {
+          "path": [
+            "reasoning_effort"
+          ],
+          "kind": "required",
+          "line": 365
+        },
+        {
+          "path": [
+            "model"
+          ],
+          "kind": "required",
+          "line": 379
+        },
+        {
+          "path": [
+            "reasoning_effort"
+          ],
+          "kind": "required",
+          "line": 379
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 511
+        },
+        {
+          "path": [
+            "limits",
+            "wall_seconds"
+          ],
+          "kind": "required",
+          "line": 511
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 526
+        },
+        {
+          "path": [
+            "limits",
+            "max_calls"
+          ],
+          "kind": "required",
+          "line": 526
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 528
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 528
+        },
+        {
+          "path": [
+            "limits",
+            "max_observed_tokens"
+          ],
+          "kind": "required",
+          "line": 528
+        },
+        {
+          "path": [
+            "limits",
+            "per_call_token_reservation"
+          ],
+          "kind": "required",
+          "line": 528
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 533
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 533
+        },
+        {
+          "path": [
+            "limits",
+            "call_seconds"
+          ],
+          "kind": "required",
+          "line": 533
+        },
+        {
+          "path": [
+            "limits",
+            "wall_seconds"
+          ],
+          "kind": "required",
+          "line": 533
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 547
+        },
+        {
+          "path": [
+            "limits",
+            "call_seconds"
+          ],
+          "kind": "required",
+          "line": 547
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 609
+        },
+        {
+          "path": [
+            "limits",
+            "call_seconds"
+          ],
+          "kind": "required",
+          "line": 609
+        },
+        {
+          "path": [
+            "shared_generation_runtime"
+          ],
+          "kind": "optional",
+          "line": 658
+        },
+        {
+          "path": [
+            "comparison_mode"
+          ],
+          "kind": "optional",
+          "line": 660
+        },
+        {
+          "path": [
+            "baseline_runtime_hashes"
+          ],
+          "kind": "optional",
+          "line": 664
+        },
+        {
+          "path": [
+            "baseline_runtime_root"
+          ],
+          "kind": "optional",
+          "line": 664
+        },
+        {
+          "path": [
+            "baseline_runtime_hashes"
+          ],
+          "kind": "required",
+          "line": 677
+        },
+        {
+          "path": [
+            "baseline_runtime_root"
+          ],
+          "kind": "required",
+          "line": 677
+        },
+        {
+          "path": [
+            "baseline_commit"
+          ],
+          "kind": "required",
+          "line": 682
+        },
+        {
+          "path": [
+            "comparison_mode"
+          ],
+          "kind": "optional",
+          "line": 723
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 774
+        },
+        {
+          "path": [
+            "limits",
+            "jobs_per_checkpoint"
+          ],
+          "kind": "required",
+          "line": 774
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 780
+        },
+        {
+          "path": [
+            "limits",
+            "jobs_per_checkpoint"
+          ],
+          "kind": "required",
+          "line": 780
+        },
+        {
+          "path": [
+            "candidate_processing_mode"
+          ],
+          "kind": "optional",
+          "line": 818
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 860
+        },
+        {
+          "path": [
+            "limits",
+            "jobs_per_consolidation"
+          ],
+          "kind": "required",
+          "line": 860
+        },
+        {
+          "path": [
+            "reader_context_isolation"
+          ],
+          "kind": "optional",
+          "line": 953
+        },
+        {
+          "path": [
+            "reader_citation_contract"
+          ],
+          "kind": "optional",
+          "line": 956
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 962
+        },
+        {
+          "path": [
+            "reader_fidelity_contract"
+          ],
+          "kind": "optional",
+          "line": 963
+        },
+        {
+          "path": [
+            "context_chars"
+          ],
+          "kind": "optional",
+          "line": 969
+        },
+        {
+          "path": [
+            "reader_citation_contract"
+          ],
+          "kind": "optional",
+          "line": 975
+        },
+        {
+          "path": [
+            "context_chars"
+          ],
+          "kind": "optional",
+          "line": 1121
+        },
+        {
+          "path": [
+            "reader_fidelity_contract"
+          ],
+          "kind": "optional",
+          "line": 1137
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1273
+        },
+        {
+          "path": [
+            "context_chars"
+          ],
+          "kind": "optional",
+          "line": 1276
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1366
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1377
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1379
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "required",
+          "line": 1380
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "required",
+          "line": 1398
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1399
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1401
+        },
+        {
+          "path": [
+            "reader_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 1472
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1476
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "required",
+          "line": 1477
+        },
+        {
+          "path": [
+            "context_chars"
+          ],
+          "kind": "required",
+          "line": 1485
+        },
+        {
+          "path": [
+            "explicit_project_scope_context"
+          ],
+          "kind": "optional",
+          "line": 1486
+        },
+        {
+          "path": [
+            "judge_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 1580
+        },
+        {
+          "path": [
+            "blind_shuffle_seed"
+          ],
+          "kind": "required",
+          "line": 1935
+        },
+        {
+          "path": [
+            "pipeline_receipt_contract"
+          ],
+          "kind": "required",
+          "line": 2073
+        },
+        {
+          "path": [
+            "regeneration_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 2185
+        },
+        {
+          "path": [
+            "reader_repeat_history_ids"
+          ],
+          "kind": "optional",
+          "line": 2212
+        },
+        {
+          "path": [
+            "regeneration_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 2213
+        },
+        {
+          "path": [
+            "improvement_policy"
+          ],
+          "kind": "optional",
+          "line": 2221
+        },
+        {
+          "path": [
+            "pipeline_receipt_contract"
+          ],
+          "kind": "required",
+          "line": 2231
+        },
+        {
+          "path": [
+            "comparison_mode"
+          ],
+          "kind": "optional",
+          "line": 2235
+        },
+        {
+          "path": [
+            "historical_spend"
+          ],
+          "kind": "optional",
+          "line": 2372
+        },
+        {
+          "path": [
+            "historical_spend"
+          ],
+          "kind": "required",
+          "line": 2374
+        },
+        {
+          "path": [
+            "historical_spend",
+            "report"
+          ],
+          "kind": "required",
+          "line": 2374
+        },
+        {
+          "path": [
+            "reader_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 2418
+        },
+        {
+          "path": [
+            "regeneration_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 2420
+        },
+        {
+          "path": [
+            "explicit_project_scope_context"
+          ],
+          "kind": "required",
+          "line": 2658
+        },
+        {
+          "path": [
+            "baseline_runtime_root"
+          ],
+          "kind": "required",
+          "line": 2679
+        },
+        {
+          "path": [
+            "regeneration_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 2710
+        }
+      ]
+    },
+    "docs/evidence/project-memory-quality-2026-10-21-r23/run-experiment.py": {
+      "observed_sha256": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+      "literal_protocol_accesses": [
+        {
+          "path": [
+            "shared_generation_runtime"
+          ],
+          "kind": "optional",
+          "line": 45
+        },
+        {
+          "path": [
+            "comparison_mode"
+          ],
+          "kind": "optional",
+          "line": 47
+        },
+        {
+          "path": [
+            "baseline_runtime_root"
+          ],
+          "kind": "optional",
+          "line": 50
+        },
+        {
+          "path": [
+            "independent_review_contract"
+          ],
+          "kind": "optional",
+          "line": 60
+        },
+        {
+          "path": [
+            "prospective_author_contract"
+          ],
+          "kind": "optional",
+          "line": 83
+        },
+        {
+          "path": [
+            "driver_sha256"
+          ],
+          "kind": "required",
+          "line": 183
+        },
+        {
+          "path": [
+            "comparison_mode"
+          ],
+          "kind": "optional",
+          "line": 185
+        },
+        {
+          "path": [
+            "candidate_processing_mode"
+          ],
+          "kind": "optional",
+          "line": 186
+        },
+        {
+          "path": [
+            "prospective_author_contract"
+          ],
+          "kind": "required",
+          "line": 202
+        },
+        {
+          "path": [
+            "prospective_author_contract",
+            "sha256"
+          ],
+          "kind": "required",
+          "line": 202
+        },
+        {
+          "path": [
+            "limits"
+          ],
+          "kind": "required",
+          "line": 215
+        },
+        {
+          "path": [
+            "regeneration_repeat_history_ids"
+          ],
+          "kind": "required",
+          "line": 276
+        }
+      ]
+    },
+    "docs/evidence/project-memory-quality-2026-10-21-r23/run-public-preflight.py": {
+      "observed_sha256": "228bc127209ec1eb29b9dc08aa03456f4ade8e7dfb97f65f950ab9ae9b704bf5",
+      "literal_protocol_accesses": [
+        {
+          "path": [
+            "public_preflight"
+          ],
+          "kind": "required",
+          "line": 39
+        },
+        {
+          "path": [
+            "reader_fidelity_contract"
+          ],
+          "kind": "optional",
+          "line": 42
+        },
+        {
+          "path": [
+            "reader_fidelity_contract"
+          ],
+          "kind": "optional",
+          "line": 43
+        },
+        {
+          "path": [
+            "judge_calibration"
+          ],
+          "kind": "required",
+          "line": 79
+        },
+        {
+          "path": [
+            "reader_evidence_contract"
+          ],
+          "kind": "optional",
+          "line": 93
+        }
+      ]
+    }
+  },
+  "generated_metadata_only_root_fields": [
+    "authorship",
+    "budget_note",
+    "capture_fidelity",
+    "comparison",
+    "criteria_source",
+    "critical_errors",
+    "data_policy",
+    "dispatch_wall_reservation",
+    "evidence_roles",
+    "experiment",
+    "export_privacy",
+    "external_stop_policy",
+    "failure_policy",
+    "freeze_policy",
+    "full_supported_answer",
+    "grouped_reader_dependence",
+    "histories",
+    "holdout_primary_questions",
+    "implementation_base_commit",
+    "jev",
+    "judge",
+    "judge_profile",
+    "judge_schema_version",
+    "metrics",
+    "native_capacity_observation",
+    "paired_reuse_policy",
+    "pass_criteria",
+    "planned_call_allocation",
+    "protocol_preparation",
+    "reader",
+    "reader_profile",
+    "repeat_history_ids",
+    "repeats",
+    "retrieval",
+    "retrieval_timing",
+    "schema_version",
+    "source_repairs"
+  ],
+  "dynamic_or_aliased_consumers": {
+    "historical_spend": "helper alias pointer[report]/[sha256]/get(usage_field,usage), exercised by actual accounting/aggregate/export; explicit cumulative selection has no fallback.",
+    "reader_profile_and_judge_profile": "Actual helper.phase_profile exercised for each phase; no native dispatch.",
+    "independent_review_contract": "Held generic driver validates fixed metadata path/schema/pins; copied20actualguard unit tests cover concrete metadata keys/counts and stop ordering.",
+    "public_preflight": "Copied runner consumes file_sha256 and attempt_id plus judge_calibration; byte pins checked, public offline/native gate not rerun before final protocol.",
+    "metadata_only_pointers": "Builder generic path/SHA refs in source_repairs/authorship/protocol_preparation are provenance only. They are not active historical_accounting pointers and need no report-key conversion."
+  },
+  "audit_limit": "Literal AST inventory is not a semantic proof. Actual consumer roundtrips and held driver guard tests cover active nested/aliased fields; native dispatch remains unexecuted.",
+  "helper_pin_policy": "Exact final hash comes from emitted public_preflight file map, config, and original harness source reviews. No hardcoded current hash.",
+  "reader_contracts": {
+    "legacy": "clause-support-v2",
+    "opt_in": "assertion-owned-citations-v1",
+    "uniform_both_arms": true,
+    "decoder": "resolve_reader_output(..., evidence_contract=protocol.reader_evidence_contract)",
+    "auxiliary_credit": false,
+    "fidelity": "quantified-source-fidelity-v1"
+  },
+  "historical_bounds": {
+    "full_native_usage_complete": false,
+    "known_reported_subtotal_only": true,
+    "billing_unknown": true,
+    "unknown_native_attempts_not_zero": true
+  },
+  "offline_evidence": "Actual helper historical_accounting/aggregate/export and public producer commit are exercised with scratch-only fictional Stores. Actual Capture/reader/judge validators run with only external native runner stubbed; raw assertion ownership retained. No native success or quality acceptance claimed.",
+  "inventory_limit": "Literal AST inventory only; dynamic aliases are covered separately by actual consumer tests. Observed hashes are tooling evidence, not final frozen source pins.",
+  "prospective_public_native_plan": {
+    "readers": 8,
+    "public_reader_judge_packets": 1,
+    "known_six_judge_packets": 1,
+    "total": 10,
+    "all_eight_required_to_pass": true,
+    "no_native_result_now": true
+  },
+  "formal_release_metadata_contract": {
+    "module": "source-audit-bindings.py",
+    "formal_flat_fields": [
+      "archive_members_and_hashes",
+      "prerequisite_pins",
+      "actual_freeze_sha256",
+      "protocol_canonical_digest"
+    ],
+    "source_archive_fields": [
+      "runtime_files",
+      "runtime_archive_sha256",
+      "helper_sha256"
+    ],
+    "actual_closed_R20_metadata_regression": "32archive_members/31nonselfmanifest/22rootpins; mappings flat SHA values. No archive/private contents read.",
+    "public_native_calls": 10,
+    "limit": "Source-only schema/pin binding, not actual R23 export audit."
+  },
+  "pipeline_receipt_contract": {
+    "emitted": "complete-shared-pipeline-v1",
+    "owning_consumer": "global helper aggregate/export",
+    "scope": "Each physical shared generation once, candidate preparation, required regeneration stages; native call failures and unknown usage remain canonical ledger/accounting. Missing questions remain in216-slot denominator."
+  },
+  "pending_R22_historical_source": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r22/holdout/report.json",
+    "sha256": null,
+    "usage_field": "cumulative_pilot_usage",
+    "status": "pending_immutable_close_export_audit_no_protocol_allowed",
+    "usage_totals": "not_finalized_or_guessed"
+  },
+  "closed_history_reference_tests": "Tests use immutable closed R21 report as a reference only; synthetic accounting/aggregate/export exercises exact owning consumers. This does not verify future R22 canonical history or authorize an R23 protocol."
+}

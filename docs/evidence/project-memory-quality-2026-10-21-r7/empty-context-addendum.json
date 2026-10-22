@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only R7 q2 and public scope-selector API addendum. No runtime/helper/test edits, native calls, scores or frozen database changes.",
+  "runtime_hashes": {
+    "codex_mem/project_memory_query.py": "e20edbbca511eb6f2e2e0d2a0a0c03142b3ba66fa9bfb49b27c753bc27daf82a",
+    "codex_mem/project_memory_retrieval.py": "a12567bae970c4fade51e147b936a81585b871e2e042066712f251a1837c4ab6",
+    "codex_mem/project_memory.py": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02",
+    "codex_mem/store.py": "f12cf17301db71b6f9534b84111308e8ad0ca4c5ce584f58daa5011f6ce19afb",
+    "codex_mem/mcp.py": "4c6b2fbd422a24f7992d7977da517786a8d9c27d091f1e10822b2ac98ba2523f"
+  },
+  "q2": {
+    "original_query": "Which requirement was canceled in tidal_archive, what replaced it, and which constraint remains active?",
+    "diagnostic_query": "Which requirement was canceled in this project, what replaced it, and which constraint remains active?",
+    "plan": {
+      "natural": true,
+      "historical": false,
+      "continuation": false,
+      "projection": "state",
+      "task_ids": [],
+      "identifiers": [],
+      "versions": [],
+      "excluded_versions": [],
+      "environments": [],
+      "excluded_environments": [],
+      "candidate_queries": [
+        "canceled replaced constraint active"
+      ],
+      "topic_query": true,
+      "generic_project_state": false,
+      "assesses_current_evidence": false,
+      "exact": {
+        "terms": [],
+        "identifiers": [],
+        "versions": [],
+        "minimum": 0
+      }
+    },
+    "initial_fts": "\"canceled\"* AND \"replaced\"* AND \"constraint\"* AND \"active\"*",
+    "initial_counts": {
+      "claims": 0,
+      "episodes": 0,
+      "intent_custody": 0
+    },
+    "fallback_counts": {
+      "claims": 1,
+      "episodes": 2,
+      "intent_custody": 3
+    },
+    "soft_plan": {
+      "terms": [
+        [
+          "canceled",
+          "canceled"
+        ],
+        [
+          "replaced",
+          "replaced"
+        ],
+        [
+          "constraint",
+          "constraint"
+        ],
+        [
+          "active",
+          "active"
+        ]
+      ],
+      "identifiers": [],
+      "versions": [],
+      "minimum": 1
+    },
+    "fallback_candidates": [
+      {
+        "lane": "claims",
+        "id": "pm_6e53ca791ae9ef196fa39ea57883f11ee436e002",
+        "safe": true,
+        "scope_eligible": true,
+        "hard_plan_matches": true,
+        "soft_relevance_score": 0,
+        "text": "text: Two date conflicts remain.\nkey: claim_0\nscope: {'environment': '', 'version': '', 'worktree': '/private/tmp/codex-mem-quality-20261021-r7-experiment/projects/hold_401/tidal_archive'}"
+      },
+      {
+        "lane": "episodes",
+        "id": "pm_991447e605d42446c9bd331c98c455951098d638",
+        "safe": true,
+        "scope_eligible": true,
+        "hard_plan_matches": true,
+        "soft_relevance_score": 0,
+        "text": "summary: User intent: Cancel this requirement: Export a searchable PDF.\nUser intent: Replacement: Produce a plain-text shelf map instead.\nUser intent: Still binding: Keep original page numbers.\nTool record: Batch west-shelf: 18 index rows checked.\nTool record: Two date conflicts remain.\nTool record: No shelf map was written.\ngoal: User intent: Replacement: Produce a plain-text shelf map instead.\noutcome: Tool record: Batch west-shelf: 18 index rows checked.\nTool record: Two date conflicts remain.\nTool record: No shelf map was written.\nopen_work: User intent: The curator still needs to check the two disputed dates.\nUser intent: Treat that as open work.\nUser intent: Still binding: Keep original page numbers.\nkey: episode_0"
+      },
+      {
+        "lane": "episodes",
+        "id": "pm_7a95bc1ac88270e51410d736d462d4316bc90ae3",
+        "safe": true,
+        "scope_eligible": true,
+        "hard_plan_matches": true,
+        "soft_relevance_score": 0,
+        "text": "summary: User intent: Please help us recover the tide-ledger scan index.\nUser intent: This matters because volunteers need to find damaged pages before the winter exhibit.\ngoal: User intent: Please help us recover the tide-ledger scan index.\nrationale: User intent: This matters because volunteers need to find damaged pages before the winter exhibit.\nopen_work: User intent: Keep original page numbers.\nUser intent: Initially, also: Export a searchable PDF.\nkey: episode_0"
+      },
+      {
+        "lane": "intent_custody",
+        "id": "pmc_4cdc93372a3b5315c8ecd24a329a26111ae39419",
+        "safe": true,
+        "scope_eligible": true,
+        "hard_plan_matches": true,
+        "soft_relevance_score": 0,
+        "text": "text: Continuing the same work in this chat. Cancel this requirement: Export a searchable PDF. Replacement: Produce a plain-text shelf map instead. Still binding: Keep original page numbers. Requirements for harbor_labels do not apply to this project."
+      },
+      {
+        "lane": "intent_custody",
+        "id": "pmc_6188d8f833504c5eaaa7c70aeb44ff646d686b96",
+        "safe": true,
+        "scope_eligible": true,
+        "hard_plan_matches": true,
+        "soft_relevance_score": 0,
+        "text": "text: The curator still needs to check the two disputed dates. Treat that as open work. The removed temporary note is withdrawn and must not be used as a current fact."
+      },
+      {
+        "lane": "intent_custody",
+        "id": "pmc_c759f0c37b936cd58202e1433782df5879ae724c",
+        "safe": true,
+        "scope_eligible": true,
+        "hard_plan_matches": true,
+        "soft_relevance_score": 0,
+        "text": "text: Please help us recover the tide-ledger scan index. This matters because volunteers need to find damaged pages before the winter exhibit. Keep original page numbers. Initially, also: Export a searchable PDF."
+      }
+    ],
+    "cause": "Cancellation, replacement and active-constraint answer facets are treated as topical predicates. Initial all-term FTS requires canceled/replaced/constraint/active together. The fallback final relevance check requires at least one exact lexical variant and finds none. Sources instead contain Cancel this requirement, Replacement, Still binding and Keep. All six fallback records pass safety, scope and hard constraints; rendering never receives them. This is lexical answer-framing selection, not history classification or budget starvation.",
+    "general_repair": "A bounded requirement-state question projection can remove grammatical cancellation/replacement/retained-constraint facets after extracting trusted project selectors. If no residual subject remains, select bounded eligible project lanes and rank the requested fields. If residual topics or exact anchors remain, preserve them. Do not add cancellation synonyms globally or treat every failed topical query as generic."
+  },
+  "q5": {
+    "query": "Does the requirement from harbor_labels carry over to tidal_archive? Explain the project boundary.",
+    "current_identifiers": [
+      "harbor_labels",
+      "tidal_archive"
+    ],
+    "cause": "The two separately selected project names become an all-required text identifier intersection in each single-project read. They identify requested project scopes, not a requirement that both names occur in each source body."
+  },
+  "public_interfaces": [
+    {
+      "owner": "codex_mem/mcp.py:_execute_tool(memory_project_state)",
+      "current": "Accepts project/query/budget and calls build_project_brief. Single explicit project scope."
+    },
+    {
+      "owner": "codex_mem/store.py:Store.context",
+      "current": "Accepts one explicit project and calls build_project_brief inside the broader context path. Existing exact search and other context lanes also see the original query."
+    },
+    {
+      "owner": "codex_mem/project_memory_retrieval.py:build_project_brief",
+      "current": "Public bounded model-free ledger read accepts one canonical project; owns plan_query invocation."
+    },
+    {
+      "owner": "codex_mem/project_memory.py:ProjectMemory.snapshot",
+      "current": "Lower-level snapshot accepts literal query plus topic_query. Query plans are already compiled by build_project_brief before snapshot; changing literal snapshot semantics silently would be risky."
+    }
+  ],
+  "scope_aware_api_proposal": {
+    "default_single_scope": "At the common public project-read planning layer, treat an unquoted exact current-project canonical basename as a trusted project selector. Actual project-path SQL scoping remains mandatory. Pass only the remaining content subject to candidate text matching. Preserve original query for display and diagnostics. Raw literal/quoted lookup semantics remain strict.",
+    "multi_scope": "Add an optional explicit canonical selected-project scope list at the public context/state API, propagated into the query planner. Derive aliases from those selected canonical paths, never fixture project keys, arbitrary metadata or all globally known projects. The list describes scope names in the question; each result loader remains scoped to its one canonical owner path. A boundary/comparison projection can request evidence from each selected scope without requiring other project names in every source.",
+    "api_coverage": "Implement once in shared project planning used by public Store.context and memory_project_state/build_project_brief. A helper-only replacement would conceal the product defect and leave direct users broken. Keep low-level literal snapshot queries strict unless an explicit structured query-plan argument is introduced.",
+    "hard_guards": [
+      "Quoted code symbols, explicit non-scope identifiers, paths, task IDs and version constraints remain mandatory.",
+      "Exact absolute project ownership, environment conditions and exclusions remain mandatory.",
+      "Source session exclusions, privacy checks, deletion/revocation and source-role attribution remain mandatory.",
+      "No source association or permission is inferred merely because another selected project name appears in the question."
+    ],
+    "alias_risks": [
+      {
+        "case": "Unknown or unselected project name",
+        "policy": "Keep as an ordinary content identifier/subject; do not silently discover or add its project scope."
+      },
+      {
+        "case": "Two selected canonical paths have the same basename",
+        "policy": "Mark the short alias ambiguous; retain the constraint or require explicit canonical disambiguation. Never merge projects by basename."
+      },
+      {
+        "case": "Artifact identifier equals the active project basename",
+        "policy": "Quoted/backticked tokens remain literal. Automatic natural-language scope recognition needs an explicit scope frame such as for/in/from that project or a structured trusted selector, not unbounded global string replacement."
+      },
+      {
+        "case": "Neighboring permission or completion",
+        "policy": "Keep returned evidence physically attributed to its owner scope. A selected-project alias is not evidence that a requirement transfers."
+      },
+      {
+        "case": "Residual topical subject",
+        "policy": "Retain it after scope/facet extraction. Unknown topics must not become broad project-state requests."
+      }
+    ]
+  },
+  "verification_needed_after_trial": [
+    "Natural current-project underscore alias succeeds through public Store/MCP read paths with semantic source names.",
+    "Explicit quoted same token and real code/path/task/version anchors stay strict.",
+    "A two-selected-project boundary query returns separately attributed scopes without conjunctive text anchors.",
+    "Unknown/unselected/ambiguous project names do not relax selection.",
+    "A generic requirement-state paraphrase selects bounded state, while the same wording plus a distinct topic keeps that topic.",
+    "Source deletion, session exclusion and environment/version mismatch still remove evidence."
+  ],
+  "original_evidence_paths": {
+    "candidate_contexts": "/private/tmp/codex-mem-quality-20261021-r7-experiment/candidate/hold_401/contexts.json",
+    "sqlite": "/private/tmp/codex-mem-quality-20261021-r7-experiment/candidate/hold_401/data/memory.sqlite3"
+  },
+  "reproduction": "Using a fresh temporary copy of memory.sqlite3 and config.json, call plan_query with q2 after replacing only tidal_archive with this project. Inspect ProjectMemory.snapshot once with its candidate query and once with query empty. Apply _safe, _scope_matches, QueryPlan.matches, then prompt_match_score with the same minimum=1 soft plan used by build_project_brief. All six broad candidates pass hard guards and score zero."
+}

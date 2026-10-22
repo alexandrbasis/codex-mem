@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-21T23:42:41.598Z",
+  "specification": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "sha256": "2b2ef61b82b79cd0fbb3fb6439eb92258988dd256a87406bc731a78449678888",
+    "bytes": 41263
+  },
+  "artifact": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "sha256": "62e17c6f2d4aaf991e577079e925e4027f5e419e113b9b8987ff46026d607f51",
+    "bytes": 867929
+  },
+  "stages": {
+    "validate": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": null,
+      "command": [
+        "/Users/alexandrbasis/.hermes/node/bin/node",
+        "/Users/alexandrbasis/.agents/skills/archify/bin/archify.mjs",
+        "deliver",
+        "architecture",
+        "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+        "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "/var/folders/xb/f6nzfjps1977ts7qybykjtlh0000gn/T/codex-mem-architecture-evidence-demh34hs",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "deliver",
+        "receiptId": "7b64a013-8b8f-436a-83ef-fb5d7d47d3c1",
+        "stage": "render",
+        "type": "architecture",
+        "input": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+        "output": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+        "error": "architecture schema validation failed:\n  /components/10/sources/1/label (id/label: \"Exact quotation registry and checked XML compaction\") must NOT have more than 48 characters {\"limit\":48}",
+        "diagnostics": [
+          {
+            "code": "schema/maxLength",
+            "severity": "error",
+            "message": "/components/10/sources/1/label (id/label: \"Exact quotation registry and checked XML compaction\") must NOT have more than 48 characters",
+            "subject": {
+              "diagramType": "architecture",
+              "path": "/components/10/sources/1/label",
+              "identity": "Exact quotation registry and checked XML compaction"
+            },
+            "evidence": {
+              "keyword": "maxLength",
+              "limit": 48
+            },
+            "supportedFixes": [
+              "provide at most 48 character(s)"
+            ]
+          }
+        ],
+        "provenance": "failed",
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "execution": "embedded-in-deliver"
+    },
+    "deliver": {
+      "status": "not-run",
+      "execution": "blocked-by-validate"
+    }
+  },
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  },
+  "diagnostics": [
+    {
+      "code": "schema/maxLength",
+      "severity": "error",
+      "message": "/components/10/sources/1/label (id/label: \"Exact quotation registry and checked XML compaction\") must NOT have more than 48 characters",
+      "subject": {
+        "diagramType": "architecture",
+        "path": "/components/10/sources/1/label",
+        "identity": "Exact quotation registry and checked XML compaction"
+      },
+      "evidence": {
+        "keyword": "maxLength",
+        "limit": 48
+      },
+      "supportedFixes": [
+        "provide at most 48 character(s)"
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021-r17-v7/codex-mem.finalize.json",
+    "summaryReceipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021-r17-v7/codex-mem.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "validate",
+  "finishedAt": "2026-10-21T23:42:41.779Z",
+  "durationMs": 180,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-21T18:32:47.519Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}

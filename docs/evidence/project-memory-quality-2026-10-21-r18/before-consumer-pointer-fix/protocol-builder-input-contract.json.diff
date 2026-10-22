@@ -1,0 +1,42 @@
+--- copied-R17/protocol-builder-input-contract.json
++++ prospective-R18/protocol-builder-input-contract.json
+@@ -1,6 +1,6 @@
+ {
+   "schema_version": 1,
+-  "status": "protocol_builder_input_contract_not_an_actual_protocol",
++  "status": "R18_protocol_builder_input_contract_not_an_actual_protocol",
+   "purpose": "Generate final pins only after independent source reviews and central checks. Does not start a clock, freeze, release or dispatch. No sealed fixture/gold/rationale/full-findings file is read.",
+   "invocation": [
+     "Prepare a new contents-free builder-inputs.json meeting this contract after final source checks. Do not use placeholders.",
+@@ -27,11 +27,11 @@
+     "sealed_pins": "Pinned contents-free sealed files manifest copy only; basename\u2192SHA256. Does not cause reading those sealed files.",
+     "review_metadata": "Pinned public copy of strict sealed-semantic-review-metadata schema object; bytes match sealed metadata pin. Accepted/zero unresolved/complete coverage and exact contracts required.",
+     "review_readiness": "Pinned parent metadata-only readiness receipt; accepted metadata-not-trial-readiness status, matching metadata/pins/author-manifest SHA and zero unresolved review findings.",
+-    "historical_spend": "Pinned contents-free historical native-spend receipt. No amount is inferred or charged to new trial.",
++    "historical_spend": "Pinned contents-free historical native-spend receipt with usage object; immutable R18 historical-spend.json root SHA5b2905e0d96e8a0fde73cb9c7a9f4d3d0c2a8d6e422891fd1b31aef690706cf1. Builder input stays path/SHA; output active helper pointer is report/SHA.",
+     "repeats": {
+-      "regeneration": "Explicit one author-reported history identifier. Parent-reported R17 identifier is F01.",
+-      "reader": "Explicit distinct author-reported history identifier. Parent-reported R17 identifier is F02.",
+-      "source": "Parent received IDs F01..F16 as contents-free author metadata. Builder cannot prove ID membership without opening fixture; parent must confirm against author ID-only attestation."
++      "regeneration": "Required explicit fresh-author-reported history ID; no inherited/default R17 ID.",
++      "reader": "Required distinct fresh-author-reported history ID; no inherited/default R17 ID.",
++      "source": "Parent must obtain a new contents-free author ID attestation before final protocol generation."
+     }
+   },
+   "normalized_binding": {
+@@ -96,6 +96,13 @@
+     "Additional sealed receipt pins can be frozen with unchanged helper. Accepted metadata remains an attestation, not proof of truth, independence or scenario difficulty.",
+     "This builder does not call the helper, import the runtime, make native calls, start or reset a clock, create run.json/freeze.json, repair old inputs, or mark the trial ready.",
+     "The pure build_protocol unit seam accepts a toy guide only for synthetic tests. CLI pins exact historical R16 public protocol SHA; no configurable alternative guide.",
+-    "No real protocol exists until root supplies final successful source/test/review bindings and explicitly invokes generation. Preserve the earlier6pass1missing-protocol scaffold error; do not rerun public offline suite before then."
+-  ]
++    "No real protocol exists until root supplies final successful source/test/review bindings and explicitly invokes generation. Preserve the earlier6pass1missing-protocol scaffold error; do not rerun public offline suite before then.",
++    "Copied R17 historical pointer bug remains immutable; new R18 output/report pointer is tested against exact unchanged helper accounting, aggregate and canonical export."
++  ],
++  "consumer_compatibility": {
++    "active_history_pointer": "historical_spend.report, not historical_spend.path",
++    "other_path_refs": "Generic builder/provenance path/SHA records remain path/SHA. Translate only active consumer field, not every sibling mapping.",
++    "required_before_clock": "After final actual protocol is emitted, run consumer-smoke.py with exact file SHA and new output folder. Verify machine receipt and all216missing synthetic slots before any real R18clock/native dispatch.",
++    "no_protocol_now": "Final author/source/test/review pins remain required; tooling tests do not create actual protocol or establish trial readiness."
++  }
+ }

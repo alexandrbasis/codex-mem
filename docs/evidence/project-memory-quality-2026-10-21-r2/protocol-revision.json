@@ -1,0 +1,56 @@
+{
+  "revision": "explicit_pre_freeze",
+  "reason": {
+    "after_development_attempts": 39,
+    "after_reported_tokens": 635888,
+    "old_protocol_sha256": "966eb116ce0eb0e782d5b13f30e91a9c1a4074b2b9c2a5e6f9114708fc38db93",
+    "preserved_result": "development-v1/report.json: baseline23/24,candidate22/24,zero critical,three fact losses; decision fail. No rescoring.",
+    "changes": [
+      "Repair actual tool visibility loss caused by custody reservations, verified by public Store regressions and offline replay before holdout.",
+      "Couple exact native requests across arms to separate product effects from the observed reader variation on identical inputs.",
+      "Align optional improvement calculation with the ALREADY declared quality-gain OR lower-cost rule for baseline at least90%. Legacy helper additionally required non-increasing cost for a quality gain. This discrepancy does not change development-v1 failure."
+    ],
+    "budget": "Original180calls/3500000tokens/5400seconds and started_at stay unchanged; all first39attempts remain charged. No additional live development rerun is planned.",
+    "holdout": "Still sealed. Apply and review these revisions before freezing or opening it."
+  },
+  "command": [
+    "python3",
+    "scripts/project_memory_consolidation_experiment.py",
+    "validate",
+    "--run",
+    "/private/tmp/codex-mem-quality-20261021-r2-experiment",
+    "--protocol",
+    "docs/evidence/project-memory-quality-2026-10-21-r2/protocol.json",
+    "--fixture",
+    "/private/tmp/codex-mem-quality-20261021-next-sealed/development.json",
+    "--gold",
+    "/private/tmp/codex-mem-quality-20261021-next-sealed/development-gold.json",
+    "--revise-protocol"
+  ],
+  "validation_stdout": {
+    "valid": true,
+    "histories": 4,
+    "questions": 24,
+    "split": "development"
+  },
+  "old_run_protocol_sha256": "9d836a99b96912c1ff494b747ebaedfeeaf3ad13ca7b25dcf34be12bfd6ac355",
+  "new_run_protocol_sha256": "86f056f855258d39551ef333007551be62be7bf4e791589ec9d195eb43b7660c",
+  "original_started_at": 1792565376.801672,
+  "started_at_unchanged": true,
+  "native_ledger_unchanged": true,
+  "native_ledger_sha256": "57e21c0d16f0715aceefbf98faa58d3fd4b5e3229a281b25de6bdcee09af974e",
+  "attempts_preserved": 39,
+  "reported_tokens_preserved": 635888,
+  "limits_unchanged": {
+    "max_calls": 180,
+    "max_observed_tokens": 3500000,
+    "wall_seconds": 5400,
+    "call_seconds": 180,
+    "jobs_per_checkpoint": 5,
+    "jobs_per_consolidation": 6,
+    "per_call_token_reservation": 100000
+  },
+  "helper_sha256": "58489c82edd88c2171de4245cbe539f4dd31567e7b188db9954b5347626fee0a",
+  "at": 1792566746.749655,
+  "holdout_opened": false
+}

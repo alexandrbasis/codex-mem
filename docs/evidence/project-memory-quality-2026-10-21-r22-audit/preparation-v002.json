@@ -1,0 +1,175 @@
+{
+  "status": "minimal_checkpoint_auditor_repair_held_no_actual_R22_audit",
+  "source_sha256": {
+    "audit-final-export.py": "0efcab49288fa332a6a19d35aa28c70d8a1d430c47dc88d4713d4b9d3d77e742",
+    "pipeline_contract.py": "62fdab9f1951bb74978818856a171ccb2f1b52e79228caf362a8fa7e2137c927",
+    "test-pipeline-contract.py": "d08471e03b90668396291cc09cf54bee3e21d93460f17d53a79f0dc7d9ca5859",
+    "test-checkpoint-six-counters.py": "3a4fbdceaeff042c0bd3ba8588fc7204581e485908159a2bec95b503149271f2",
+    "count_contract.py": "68dea2909f07a6ebf765962c16b244b85674a637e07c58e5c156967faf10e8a6",
+    "author_counts.py": "a44d8d411e54b999af16aa1385d57aa897d69aa67643ef3833ecb0081005648e",
+    "held-helper-source.py": "9e555332205828540cd7c44b3ac2becbc408bbc813ff5279b03726a720801d87"
+  },
+  "preserved_v001_files": 56,
+  "all_preserved_byte_exact": true,
+  "preservation_manifest_sha256": "681c1bef96df97c434fc150bc47c7e1b35d638506ad45ba8db60b8dd9e3c2ed5",
+  "root_review_red_sha256": "457f913f06c58ba80288641f28cd782dfc5079a28c2bf72e808a11d17c30ad57",
+  "replay_red": {
+    "command": "python3 docs/evidence/project-memory-quality-2026-10-21-r22-review-findings/spec-checkpoint-seam.py",
+    "returncode": 1,
+    "log_sha256": "457f913f06c58ba80288641f28cd782dfc5079a28c2bf72e808a11d17c30ad57"
+  },
+  "replay_green": {
+    "same_command": true,
+    "returncode": 0,
+    "log_sha256": "e508ed6d35e67079d8cacf96bff50c3a4b376a86b461ecb5d0b865ac7f87ddd8"
+  },
+  "old_58_pass_coverage_retraction": "The preserved58test returncodes weregreen, but the positivecheckpointfixture supplied4counters. Capture required6 and emittednoartifact; missingfile/countassertions allowed all([]) to pass. Prior claim of real producer-consumerpositivecoverage is retracted. No actual audit or native usage was claimed or run.",
+  "fix": "Independent exact6counter JSON shape now matches owningpricing.token_counts numeric bounds, cache-read+write subset, reasoning-output subset and input+output sum. Exactkeys additionally reject extras. Corepricing/helper untouched.",
+  "owner_pricing_source_sha256": "a120523807e42a839ac86e44899d5f46e11ad2aebbbde2f483ab2e860c7c52b9",
+  "tests": {
+    "passed": 62,
+    "old_tests": 58,
+    "new_tests": 4,
+    "malformed_subtests": "Each missingcounter, extra, bool, negative, >int63, wrongsum, cachedsubsets, reasoning subset; badattempt/IDs/duration/updates tested.",
+    "individual_commands_exitcodes_logs": [
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py"
+        ],
+        "returncode": 0,
+        "tests": 8,
+        "log": "checkpoint-v002-tests-1.log",
+        "sha256": "a0f4118b266d1b2e81f01bc13f32228de040de181429cff3366e1df13ed2001e"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-count-contract.py"
+        ],
+        "returncode": 0,
+        "tests": 6,
+        "log": "checkpoint-v002-tests-2.log",
+        "sha256": "c1de396add63b60b7739446ae754c9af4d1c4c8af85083ffc8071726ef9e4e98"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-explicit-paths.py"
+        ],
+        "returncode": 0,
+        "tests": 1,
+        "log": "checkpoint-v002-tests-3.log",
+        "sha256": "a8863d43fce791d45cd20072cfd5882fd0ddba9d11f3f704444a96e20721a18b"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-accounting-ownership.py"
+        ],
+        "returncode": 0,
+        "tests": 13,
+        "log": "checkpoint-v002-tests-4.log",
+        "sha256": "19ce4c3fe936ba5a289b545d890b7ffce48ced29d4b7b20a8c6b10a871321dd4"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-author-metadata.py"
+        ],
+        "returncode": 0,
+        "tests": 4,
+        "log": "checkpoint-v002-tests-5.log",
+        "sha256": "d094b1bd2c8318c96097f80c50da282add5b2972970a77046de8db6c8935f6ca"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-resource-derivation.py"
+        ],
+        "returncode": 0,
+        "tests": 3,
+        "log": "checkpoint-v002-tests-6.log",
+        "sha256": "33060fd73862c5e1af97335504d5b45211fce6d229657f556d8deceeadc52ce4"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-checkpoint-six-counters.py"
+        ],
+        "returncode": 0,
+        "tests": 4,
+        "log": "checkpoint-v002-tests-7.log",
+        "sha256": "98255317dbdec068621cfd1c730ebd962e38b6f8c534b73c2b3cbfc806ea738c"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-binding.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "tests": 1,
+        "log": "checkpoint-v002-tests-8.log",
+        "sha256": "1f595a73b2ed09c1daaeb8becdd5972805c2e54d319d1d1379fd724d863b04e4"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-improvement.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "tests": 10,
+        "log": "checkpoint-v002-tests-9.log",
+        "sha256": "cf8d3a2572a7898fcf32a4c2dd1445509b3d59e66061853243c4627f80695068"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-release-schema.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "tests": 8,
+        "log": "checkpoint-v002-tests-10.log",
+        "sha256": "23d0a927fbc9389e7cbeff2d5545619839b9712d5a86ee6784d5909b6ba5c6b8"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-reader-contracts.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r22-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "tests": 4,
+        "log": "checkpoint-v002-tests-11.log",
+        "sha256": "be996dbc6c975a794ece15a8b7e39a924ec7ecb834e0f0b1d94dff12a065112d"
+      }
+    ],
+    "positive_artifact_requirements": [
+      "realCapture._save_checkpoint6counters",
+      "fileexists",
+      "exact1checkpointprocessed",
+      "nonemptychecks",
+      "allcheckspositive"
+    ],
+    "compile_without_bytecode_writes": "passed"
+  },
+  "current_delta_sha256": "5d3fd6d7697086794bc6d9d65bd18bd7837fdd7fc2748c3be9ee7834c351dbb8",
+  "review_manifest_path_gate": {
+    "main_unchanged": true,
+    "allowed": "base/review-source-manifest.json",
+    "versioned_basename_not_allowed": true,
+    "root_will_publish_newcanonical_prospective_manifest_with_oldbytes_preserved": true
+  },
+  "no_product_helper_native_harness_protocol_freeze_privatecase_Store_network_model_actualaudit_changes": true,
+  "limits": [
+    "Requires newfullscope twoaxisreview before prospectiveclearance.",
+    "Alltests publictoy/contents-free metadata only. NoactualR22protocol/freeze/clock/export/audit or qualityresult."
+  ]
+}

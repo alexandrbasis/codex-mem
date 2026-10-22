@@ -1,0 +1,49 @@
+{
+  "status": "append_only_compatible_source_prepared_not_actual_audit",
+  "held_v1_sha256": "54fe2614655154bd01ee3080e190e76843357b12181d04a25b925d59e9cd8c91",
+  "new_source_sha256": {
+    "audit-final-export-v2.py": "a001f756c4d862d64ca628ab5886e44419ceb476a5351ed085eab06a86d1b235",
+    "release_schema_v2.py": "a68c05c9c1b6ceee2a740c97b3d8b5061502d2fcedadaf9ab104ac53e401b341",
+    "test-release-schema-v2.py": "74f135a0a1c25a5d42b5c47da7085d9147d4aa4d8cbf339cca9a0af4d3f8d9c2"
+  },
+  "delta_sha256": "3834802b048fd382cd62930c6550839510f60ed87df872ef1b3fff77dd665962",
+  "test_log_sha256": {
+    "release-schema-red-v2.log": "b0cdbdad6d75463a630e9f88f698bc97fc772dfc656a70a3057bf4dcf314820c",
+    "release-schema-green.log": "6d024d30205e269c3848bc234f2d070697fe5a86ac5cc9f4004ee91571f6f353",
+    "improvement-schema-v2-green.log": "a60e0d2d66e445b0734c0563e528ca7eae6f1b838b35a48522a62ef5a010522e",
+    "binding-schema-v2-green.log": "9f75add94930d82f86f40553d972627172fa9fcad2415eaa9947d6de3d460011",
+    "contracts-schema-v2-green.log": "7619adf08deb962c380f8c328bca4f84c77b1a3a62146d2972b15d167c7b18d7",
+    "cli-schema-v2-help.log": "804eb926c5597fd66f64d6aafc27c13e2b30febd1337cea5f4f03b293e4ddcc4"
+  },
+  "tests": {
+    "release_schema_and_archive": 5,
+    "actual_main_improvement_seam": 10,
+    "actual_main_binding_seam": 1,
+    "existing_contracts": 14,
+    "total_green": 30,
+    "red": "Held v1 actual release-consumer statement fails KeyError actual_freeze with flat metadata.",
+    "scope": "Release validator runs end-to-end over synthetic32member authorarchive+31manifestpins+22rootpins/privateoriginals/prerequisites. Main schema consumer, binding and improvement tests execute owning statement slices; full actual canonical-export main has NOT run. CLI help-only smoke is not end-to-end audit.",
+    "compile": "passed"
+  },
+  "strict_release_checks": [
+    "flat freeze/protocol/helper/48runtime pins",
+    "accepted independent review and zero unresolved findings",
+    "exact prereq fingerprints",
+    "archive byte SHA, regular safe unique membernames",
+    "32 exact archive members and hashes",
+    "31 exact nonself manifest pins plus selfmanifestSHA",
+    "22rootfile count",
+    "private authored bytes equal archive",
+    "generic public contract pins and count bindings",
+    "binding receipt/archive pins",
+    "released fixture/gold identity preserved by main"
+  ],
+  "actual_release_metadata_sha256": "f3a0d0cd4f2416940603e8e015075fcee092e80bb22db2098b4c54e8f31875ae",
+  "native_models_network_store_actual_main_calls": 0,
+  "old_held_scripts_receipts_trial_source_protocol_inputs_changed": false,
+  "limits": [
+    "Actual export is not ready; no actualaudit or quality pass claimed.",
+    "Full actual main remains gated formalrelease+canonicalexport confirmation.",
+    "Pattern scans and structural ownership do not establish semantic entailment or absence of all possible private strings."
+  ]
+}

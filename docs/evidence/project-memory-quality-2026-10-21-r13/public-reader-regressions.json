@@ -1,0 +1,1311 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "status": "prepared_no_native_calls",
+  "corpus": "Six disclosed R12 histories with new source views; no unreleased R13 inputs.",
+  "selection": "Preregistered two critical-source cases, two source-allocation cases, one obsolete-scope case and one citation case. Purposive regression only.",
+  "proof_policy": "All required original support spans must be visible before the first dispatch. No old answer or grade is retried, replaced, or rescored.",
+  "planned_native_calls": {
+    "fresh_reader_probes": 6,
+    "fresh_probe_judge_batch": 1,
+    "fresh_known_judge_control": 1,
+    "total": 8,
+    "all_inside_new_trial_limits": true
+  },
+  "reader_contract": {
+    "reader_citation_contract": "visible-span-refs-v1",
+    "reader_context_isolation": "per-question-v1",
+    "reader_evidence_contract": "clause-support-v2",
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "context_chars": 6000,
+    "reader_profile": {
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium"
+    }
+  },
+  "expected_probe_policy": "All six fresh answers fully supported with supported citations and zero critical errors. Stop on any failure without retry or regrade.",
+  "cases": [
+    {
+      "id": "public-reader-01",
+      "focus": "constraint",
+      "provenance": {
+        "disclosed_case": "hold_909/q1",
+        "generation_sha256": "1c3ef728c532c4efe68dc4f8339ccb804849c6f698c36631a1ed26a022a0314f",
+        "replay_contexts_sha256": "aae491052e99412677c264f473314c1e037de88bdcadf651cf05622c8861c9c3",
+        "fixture_sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "gold_sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "fresh_views_not_old_answers_or_grades": true
+      },
+      "context": {
+        "id": "q1",
+        "question": "What should happen to thumbnail previews?",
+        "memory": "PROJECT sable_archive\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"2\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"selected-source-1\" lane=\"source_excerpts\" context_episode_version=\"1\" context_is_current_head=\"True\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"0\" end=\"90\" source_role=\"user_intent\" quote_truncated=\"False\"><quote_excerpt>Prepare searchable scans and thumbnail previews. Preserve the source folder names exactly.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"source_excerpts\" uncertainty=\"extracted_representation_completeness_unresolved\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"0\" end=\"90\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"pm_a24326636844de75e72542c6641a0535d21a3bce\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_a24326636844de75e72542c6641a0535d21a3bce\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"1\" fields_omitted=\"1\"><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"ebbe932f3e5246b6818ddbc3b026297f\" start=\"0\" end=\"60\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>Archive check failed: source folder CaseA was renamed casea.</quote_excerpt></source></field><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"48\" end=\"90\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Preserve the source folder names exactly.</quote_excerpt></source><source source_id=\"ebbe932f3e5246b6818ddbc3b026297f\" start=\"0\" end=\"60\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Archive check failed: source folder CaseA was renamed casea.</quote_excerpt></source></field><field name=\"summary_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"0\" end=\"48\" source_role=\"user_intent\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt>Prepare searchable scans and thumbnail previews.</quote_excerpt></source><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"48\" end=\"90\" source_role=\"user_intent\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt> Preserve the source folder names exactly.</quote_excerpt></source><source source_id=\"ebbe932f3e5246b6818ddbc3b026297f\" start=\"0\" end=\"60\" source_role=\"tool_record\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt>Archive check failed: source folder CaseA was renamed casea.</quote_excerpt></source></field></item><item id=\"unassociated-user-sources-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"2\"><field name=\"source_custody\"><source source_id=\"eb738bbdf80e4cdb994a58ee72d3063e\" start=\"0\" end=\"138\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Next session, have the archivist test finding-aid links against a staging copy. Wait for that review before uploading to archival storage.</quote_excerpt></source><source source_id=\"ca56e99957f747bf9dca51b89ce03c3b\" start=\"0\" end=\"112\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Thumbnails are expendable; leave them out. Exact folder names stay because the finding aid links to those names.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\"2\" omitted=\"0\"/><omitted records=\"0\" fields=\"1\"/></project-memory>",
+        "context_chars": 4900,
+        "context_sha256": "e9c29507126ab526af44ca4b8eb0df84a6ab25118529d194c6487353017fd8d2",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_909/sable_archive"
+          ]
+        }
+      },
+      "original_history": [
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_909_t1"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_909_u",
+              "text": "Prepare searchable scans and thumbnail previews. Preserve the source folder names exactly.",
+              "type": "user",
+              "source_id": "db6b1fca813f45619b9410b86bbe9792"
+            },
+            {
+              "id": "hold_909_old",
+              "text": "Perhaps normalize folder names to lowercase.",
+              "type": "assistant",
+              "source_id": "ecd541bd7d094c8f9bf892bcee496021"
+            },
+            {
+              "id": "hold_909_a",
+              "text": "The archive check is green.",
+              "type": "assistant",
+              "source_id": "46628b75279d4eabbb9cf4d8233d2db0"
+            },
+            {
+              "id": "hold_909_t1",
+              "text": "Archive check failed: source folder CaseA was renamed casea.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Archive check failed: source folder CaseA was renamed casea."
+                }
+              },
+              "type": "tool",
+              "source_id": "ebbe932f3e5246b6818ddbc3b026297f"
+            }
+          ],
+          "id": "hold_909_morning",
+          "project_key": "sable_archive"
+        },
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_909_t2"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_909_r",
+              "text": "Thumbnails are expendable; leave them out. Exact folder names stay because the finding aid links to those names.",
+              "type": "user",
+              "source_id": "ca56e99957f747bf9dca51b89ce03c3b"
+            },
+            {
+              "id": "hold_909_d",
+              "observation_event_id": "hold_909_old",
+              "text": "Remove the lowercase suggestion.",
+              "type": "delete_observation",
+              "source_id": null
+            },
+            {
+              "id": "hold_909_t2",
+              "text": "Local archive check passed with source folder names intact. Remote archival storage was not contacted.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local archive check passed with source folder names intact. Remote archival storage was not contacted."
+                }
+              },
+              "type": "tool",
+              "source_id": "ac3f55653afa496fb866ed31b064254b"
+            }
+          ],
+          "id": "hold_909_return",
+          "project_key": "sable_archive"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_909_l",
+              "text": "Next session, have the archivist test finding-aid links against a staging copy. Wait for that review before uploading to archival storage.",
+              "type": "user",
+              "source_id": "eb738bbdf80e4cdb994a58ee72d3063e"
+            }
+          ],
+          "id": "hold_909_tail",
+          "project_key": "sable_archive"
+        }
+      ],
+      "original_source_fields": {
+        "db6b1fca813f45619b9410b86bbe9792": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Prepare searchable scans and thumbnail previews. Preserve the source folder names exactly."
+          }
+        },
+        "ecd541bd7d094c8f9bf892bcee496021": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Perhaps normalize folder names to lowercase."
+          }
+        },
+        "46628b75279d4eabbb9cf4d8233d2db0": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "The archive check is green."
+          }
+        },
+        "ebbe932f3e5246b6818ddbc3b026297f": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Archive check failed: source folder CaseA was renamed casea.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Archive check failed: source folder CaseA was renamed casea."
+          }
+        },
+        "ca56e99957f747bf9dca51b89ce03c3b": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Thumbnails are expendable; leave them out. Exact folder names stay because the finding aid links to those names."
+          }
+        },
+        "ac3f55653afa496fb866ed31b064254b": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Local archive check passed with source folder names intact. Remote archival storage was not contacted.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Local archive check passed with source folder names intact. Remote archival storage was not contacted."
+          }
+        },
+        "eb738bbdf80e4cdb994a58ee72d3063e": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Next session, have the archivist test finding-aid links against a staging copy. Wait for that review before uploading to archival storage."
+          }
+        }
+      },
+      "gold": {
+        "category": "constraint",
+        "forbidden_conclusions": [
+          "Thumbnails are required."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 42,
+                "event_id": "hold_909_r",
+                "quote": "Thumbnails are expendable; leave them out.",
+                "start": 0,
+                "source_id": "ca56e99957f747bf9dca51b89ce03c3b"
+              }
+            ],
+            "text": "Leave thumbnails out."
+          }
+        ]
+      },
+      "oracle": {
+        "required_facts_recalled": [
+          true
+        ],
+        "critical_errors_allowed": [],
+        "citations_supported": true,
+        "claim": "Known disclosed regression only. All required facts and scope must survive.",
+        "frozen_before_new_native_calls": true
+      }
+    },
+    {
+      "id": "public-reader-02",
+      "focus": "status",
+      "provenance": {
+        "disclosed_case": "hold_916/q4",
+        "generation_sha256": "9fea9b5ad13bace07d816e97e4ec89f3dd4848379785f67d444fe52087ff0f98",
+        "replay_contexts_sha256": "aae491052e99412677c264f473314c1e037de88bdcadf651cf05622c8861c9c3",
+        "fixture_sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "gold_sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "fresh_views_not_old_answers_or_grades": true
+      },
+      "context": {
+        "id": "q4",
+        "question": "How should the first ordering check be recorded?",
+        "memory": "PROJECT heather_lessons\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"3\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"f7d11000481c4eb4a70a7f690c0912d1\" lane=\"source_evidence\" source_role=\"tool_record\" source_capture_seq_min=\"3\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" signal_kind=\"observed_execution_result\" selection_basis=\"captured_execution_shape\"><execution tool_use_id=\"hold_916_t1\" tool_name=\"exec_command\" command=\"inert fictional command\" exit_code=\"1\" result_field=\"tool_response.output\" command_field=\"tool_input.command\" exit_field=\"tool_response.exit_code\"/><field name=\"execution_result\" basis=\"attributed_source_excerpts\" field_association=\"original_execution_capture\"><source source_id=\"f7d11000481c4eb4a70a7f690c0912d1\" start=\"0\" end=\"81\" source_role=\"tool_record\" tool_use_id=\"hold_916_t1\" source_field=\"tool_response.output\" field=\"execution_result\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"81\"><quote_excerpt>Card order check failed: three cards placed practice ahead of the worked example.</quote_excerpt></source></field><field name=\"execution_command\" basis=\"attributed_source_excerpts\" field_association=\"original_execution_capture\"><source source_id=\"f7d11000481c4eb4a70a7f690c0912d1\" start=\"0\" end=\"23\" source_role=\"tool_record\" tool_use_id=\"hold_916_t1\" source_field=\"tool_input.command\" field=\"execution_command\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"23\"><quote_excerpt>inert fictional command</quote_excerpt></source></field></item><item id=\"55f623a785a643e2921a5940f7f46777\" lane=\"source_evidence\" source_role=\"tool_record\" source_capture_seq_min=\"6\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" signal_kind=\"observed_execution_result\" selection_basis=\"captured_execution_shape\"><execution tool_use_id=\"hold_916_t2\" tool_name=\"exec_command\" command=\"inert fictional command\" exit_code=\"0\" result_field=\"tool_response.output\" command_field=\"tool_input.command\" exit_field=\"tool_response.exit_code\"/><field name=\"execution_result\" basis=\"attributed_source_excerpts\" field_association=\"original_execution_capture\"><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"0\" end=\"105\" source_role=\"tool_record\" tool_use_id=\"hold_916_t2\" source_field=\"tool_response.output\" field=\"execution_result\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"105\"><quote_excerpt>Local card order check passed: examples precede practice on every card. No learner trial has taken place.</quote_excerpt></source></field><field name=\"execution_command\" basis=\"attributed_source_excerpts\" field_association=\"original_execution_capture\"><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"0\" end=\"23\" source_role=\"tool_record\" tool_use_id=\"hold_916_t2\" source_field=\"tool_input.command\" field=\"execution_command\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"23\"><quote_excerpt>inert fictional command</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"2\"><field name=\"source_custody\"><source source_id=\"41a7c32cc43f45baa3f8e62daeb98749\" start=\"0\" end=\"114\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>Assemble lesson cards and a teacher checklist. Keep the worked example before the practice exercise on every card.</quote_excerpt></source><source source_id=\"6969e81ba5134ab6a6ab4c27289508a3\" start=\"0\" end=\"111\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Leave the teacher checklist for later. Examples still go first so learners can see the method before trying it.</quote_excerpt></source></field></item><item id=\"pm_56ee94e579fb880a77d7bbb3337f848935edb84d\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_56ee94e579fb880a77d7bbb3337f848935edb84d\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"4\"><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"0\" end=\"71\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>Local card order check passed: examples precede practice on every card.</quote_excerpt></source><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"71\" end=\"105\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt> No learner trial has taken place.</quote_excerpt></source></field></item><omitted records=\"1\" fields=\"8\"/></project-memory>",
+        "context_chars": 5587,
+        "context_sha256": "cdb2f95b75dc57aa31f92eaf3624de6ffe9b41edb00aacf8ab616876c49da21f",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_916/heather_lessons"
+          ]
+        }
+      },
+      "original_history": [
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_916_a"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_916_u",
+              "text": "Assemble lesson cards and a teacher checklist. Keep the worked example before the practice exercise on every card.",
+              "type": "user",
+              "source_id": "41a7c32cc43f45baa3f8e62daeb98749"
+            },
+            {
+              "id": "hold_916_old",
+              "text": "Tentative redesign: place practice first.",
+              "type": "assistant",
+              "source_id": "296670f69b964ca29fe9126bb55f98e2"
+            },
+            {
+              "id": "hold_916_t1",
+              "text": "Card order check failed: three cards placed practice ahead of the worked example.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Card order check failed: three cards placed practice ahead of the worked example."
+                }
+              },
+              "type": "tool",
+              "source_id": "f7d11000481c4eb4a70a7f690c0912d1"
+            },
+            {
+              "id": "hold_916_a",
+              "text": "Every card follows the requested teaching sequence.",
+              "type": "assistant",
+              "source_id": "cddf2debd94047b88064f4c573352cd6"
+            }
+          ],
+          "id": "hold_916_morning",
+          "project_key": "heather_lessons"
+        },
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_916_t2"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_916_r",
+              "text": "Leave the teacher checklist for later. Examples still go first so learners can see the method before trying it.",
+              "type": "user",
+              "source_id": "6969e81ba5134ab6a6ab4c27289508a3"
+            },
+            {
+              "id": "hold_916_d",
+              "observation_event_id": "hold_916_old",
+              "text": "Remove the practice-first redesign.",
+              "type": "delete_observation",
+              "source_id": null
+            },
+            {
+              "id": "hold_916_t2",
+              "text": "Local card order check passed: examples precede practice on every card. No learner trial has taken place.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local card order check passed: examples precede practice on every card. No learner trial has taken place."
+                }
+              },
+              "type": "tool",
+              "source_id": "55f623a785a643e2921a5940f7f46777"
+            }
+          ],
+          "id": "hold_916_return",
+          "project_key": "heather_lessons"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_916_l",
+              "text": "Start next session by arranging a learner trial with the tutor. We need the tutor’s feedback from that trial before adopting the cards.",
+              "type": "user",
+              "source_id": "90170ea119434df99d0359444d63bf58"
+            }
+          ],
+          "id": "hold_916_tail",
+          "project_key": "heather_lessons"
+        }
+      ],
+      "original_source_fields": {
+        "41a7c32cc43f45baa3f8e62daeb98749": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Assemble lesson cards and a teacher checklist. Keep the worked example before the practice exercise on every card."
+          }
+        },
+        "296670f69b964ca29fe9126bb55f98e2": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Tentative redesign: place practice first."
+          }
+        },
+        "f7d11000481c4eb4a70a7f690c0912d1": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Card order check failed: three cards placed practice ahead of the worked example.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Card order check failed: three cards placed practice ahead of the worked example."
+          }
+        },
+        "cddf2debd94047b88064f4c573352cd6": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Every card follows the requested teaching sequence."
+          }
+        },
+        "6969e81ba5134ab6a6ab4c27289508a3": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Leave the teacher checklist for later. Examples still go first so learners can see the method before trying it."
+          }
+        },
+        "55f623a785a643e2921a5940f7f46777": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Local card order check passed: examples precede practice on every card. No learner trial has taken place.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Local card order check passed: examples precede practice on every card. No learner trial has taken place."
+          }
+        },
+        "90170ea119434df99d0359444d63bf58": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Start next session by arranging a learner trial with the tutor. We need the tutor’s feedback from that trial before adopting the cards."
+          }
+        }
+      },
+      "gold": {
+        "category": "status",
+        "forbidden_conclusions": [
+          "The assistant sequence claim establishes a pass."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 81,
+                "event_id": "hold_916_t1",
+                "quote": "Card order check failed: three cards placed practice ahead of the worked example.",
+                "start": 0,
+                "source_id": "f7d11000481c4eb4a70a7f690c0912d1",
+                "reader_visible_equivalent": {
+                  "source_field": "tool_response.output",
+                  "start": 0,
+                  "end": 81
+                }
+              }
+            ],
+            "text": "It failed because three cards put practice first."
+          }
+        ]
+      },
+      "oracle": {
+        "required_facts_recalled": [
+          true
+        ],
+        "critical_errors_allowed": [],
+        "citations_supported": true,
+        "claim": "Known disclosed regression only. All required facts and scope must survive.",
+        "frozen_before_new_native_calls": true
+      }
+    },
+    {
+      "id": "public-reader-03",
+      "focus": "constraint",
+      "provenance": {
+        "disclosed_case": "hold_915/q1",
+        "generation_sha256": "a78a5dd12ce0fbcce212bc7457b026f3a54886907ab669a00f7d7685bbc63a00",
+        "replay_contexts_sha256": "aae491052e99412677c264f473314c1e037de88bdcadf651cf05622c8861c9c3",
+        "fixture_sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "gold_sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "fresh_views_not_old_answers_or_grades": true
+      },
+      "context": {
+        "id": "q1",
+        "question": "What identifying content remains on the badge?",
+        "memory": "PROJECT river_badges\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_915/river_badges\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"3\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"selected-source-1\" lane=\"source_excerpts\" uncertainty=\"extracted_representation_completeness_unresolved\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"38afb85e02594cdc97a297056d5873ba\" start=\"0\" end=\"119\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Remove the route icon; the large group code stays. No full names, because badges will be visible in public photographs.</quote_excerpt></source><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"0\" end=\"113\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>Make visitor badges with a large group code and a small route icon. Never put a visitor’s full name on the badge.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"source_excerpts\" context_episode_version=\"1\" context_is_current_head=\"True\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"38afb85e02594cdc97a297056d5873ba\" start=\"0\" end=\"119\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"0\" end=\"113\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"selected-source-3\" lane=\"source_excerpts\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"67\" end=\"113\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"pm_695509ae6135e84ceb16b0b58d925c38936220a4\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\"><field name=\"text\"><derived_text>Never put a visitor’s full name on the badge.</derived_text><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"67\" end=\"113\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt> Never put a visitor’s full name on the badge.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"078ca38f72b84a53a8b607b2da9693f3\" start=\"0\" end=\"59\" source_role=\"tool_record\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt>Badge check failed: the sample badge displayed a full name.</quote_excerpt></source></field></item><item id=\"7d924853096040eea6cdc89a630b81c9\" lane=\"source_evidence\" source_role=\"tool_record\" source_capture_seq_min=\"6\" source_capture_seq_max=\"6\" signal_kind=\"observed_execution_result\" selection_basis=\"captured_execution_shape\"><execution tool_use_id=\"hold_915_t2\" tool_name=\"exec_command\" command=\"inert fictional command\" exit_code=\"0\" result_field=\"tool_response.output\" command_field=\"tool_input.command\" exit_field=\"tool_response.exit_code\"/><field name=\"execution_result\" basis=\"attributed_source_excerpts\" field_association=\"original_execution_capture\"><source source_id=\"7d924853096040eea6cdc89a630b81c9\" start=\"0\" end=\"87\" source_role=\"tool_record\" tool_use_id=\"hold_915_t2\" source_field=\"tool_response.output\" field=\"execution_result\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"87\"><quote_excerpt>Local badge check passed: group code only, no full name. No physical badge was printed.</quote_excerpt></source></field><field name=\"execution_command\" basis=\"attributed_source_excerpts\" field_association=\"original_execution_capture\"><source source_id=\"7d924853096040eea6cdc89a630b81c9\" start=\"0\" end=\"23\" source_role=\"tool_record\" tool_use_id=\"hold_915_t2\" source_field=\"tool_input.command\" field=\"execution_command\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"23\"><quote_excerpt>inert fictional command</quote_excerpt></source></field></item><item id=\"7ccdb5f1ece148c98776b0e1f9f767ca\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"3\" source_capture_seq_max=\"3\"><field name=\"assistant_report\"><source source_id=\"7ccdb5f1ece148c98776b0e1f9f767ca\" start=\"0\" end=\"34\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"34\"><quote_excerpt>Badge privacy checks are finished.</quote_excerpt></source></field></item><item id=\"pm_4f9d8c1c9ebf61fa9515d2227f8b589a64a7b937\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" logical_episode_id=\"pm_4f9d8c1c9ebf61fa9515d2227f8b589a64a7b937\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"5\"></item><source-context-coverage selected_source_count=\"0\" omitted=\"1\"/><omitted records=\"3\" fields=\"11\" unassociated_user_sources=\"1\"/></project-memory>",
+        "context_chars": 5786,
+        "context_sha256": "fefedf624a38a692f772f9d511f669e01fc06fc67a440dca3364bff74e00b24e",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_915/river_badges"
+          ]
+        }
+      },
+      "original_history": [
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_915_t1"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_915_u",
+              "text": "Make visitor badges with a large group code and a small route icon. Never put a visitor’s full name on the badge.",
+              "type": "user",
+              "source_id": "efea01570a2346808256c34e7396745d"
+            },
+            {
+              "id": "hold_915_old",
+              "text": "Draft option: add full names for staff convenience.",
+              "type": "assistant",
+              "source_id": "0e20aa4bcc14414ab302552c3b2c9ab3"
+            },
+            {
+              "id": "hold_915_a",
+              "text": "Badge privacy checks are finished.",
+              "type": "assistant",
+              "source_id": "7ccdb5f1ece148c98776b0e1f9f767ca"
+            },
+            {
+              "id": "hold_915_t1",
+              "text": "Badge check failed: the sample badge displayed a full name.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Badge check failed: the sample badge displayed a full name."
+                }
+              },
+              "type": "tool",
+              "source_id": "078ca38f72b84a53a8b607b2da9693f3"
+            }
+          ],
+          "id": "hold_915_morning",
+          "project_key": "river_badges"
+        },
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_915_t2"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_915_r",
+              "text": "Remove the route icon; the large group code stays. No full names, because badges will be visible in public photographs.",
+              "type": "user",
+              "source_id": "38afb85e02594cdc97a297056d5873ba"
+            },
+            {
+              "id": "hold_915_d",
+              "observation_event_id": "hold_915_old",
+              "text": "Delete the full-name option.",
+              "type": "delete_observation",
+              "source_id": null
+            },
+            {
+              "id": "hold_915_t2",
+              "text": "Local badge check passed: group code only, no full name. No physical badge was printed.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local badge check passed: group code only, no full name. No physical badge was printed."
+                }
+              },
+              "type": "tool",
+              "source_id": "7d924853096040eea6cdc89a630b81c9"
+            }
+          ],
+          "id": "hold_915_return",
+          "project_key": "river_badges"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_915_l",
+              "text": "When you resume, print a single sample and get the front-desk lead’s approval of code readability before printing the batch.",
+              "type": "user",
+              "source_id": "ae8e4c337294488ba9cfd80fa43622f1"
+            }
+          ],
+          "id": "hold_915_tail",
+          "project_key": "river_badges"
+        }
+      ],
+      "original_source_fields": {
+        "efea01570a2346808256c34e7396745d": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Make visitor badges with a large group code and a small route icon. Never put a visitor’s full name on the badge."
+          }
+        },
+        "0e20aa4bcc14414ab302552c3b2c9ab3": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Draft option: add full names for staff convenience."
+          }
+        },
+        "7ccdb5f1ece148c98776b0e1f9f767ca": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Badge privacy checks are finished."
+          }
+        },
+        "078ca38f72b84a53a8b607b2da9693f3": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Badge check failed: the sample badge displayed a full name.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Badge check failed: the sample badge displayed a full name."
+          }
+        },
+        "38afb85e02594cdc97a297056d5873ba": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Remove the route icon; the large group code stays. No full names, because badges will be visible in public photographs."
+          }
+        },
+        "7d924853096040eea6cdc89a630b81c9": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Local badge check passed: group code only, no full name. No physical badge was printed.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Local badge check passed: group code only, no full name. No physical badge was printed."
+          }
+        },
+        "ae8e4c337294488ba9cfd80fa43622f1": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "When you resume, print a single sample and get the front-desk lead’s approval of code readability before printing the batch."
+          }
+        }
+      },
+      "gold": {
+        "category": "constraint",
+        "forbidden_conclusions": [
+          "The group code was removed along with the icon."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 50,
+                "event_id": "hold_915_r",
+                "quote": "Remove the route icon; the large group code stays.",
+                "start": 0,
+                "source_id": "38afb85e02594cdc97a297056d5873ba"
+              }
+            ],
+            "text": "The large group code remains and route icon is removed."
+          }
+        ]
+      },
+      "oracle": {
+        "required_facts_recalled": [
+          true
+        ],
+        "critical_errors_allowed": [],
+        "citations_supported": true,
+        "claim": "Known disclosed regression only. All required facts and scope must survive.",
+        "frozen_before_new_native_calls": true
+      }
+    },
+    {
+      "id": "public-reader-04",
+      "focus": "scope",
+      "provenance": {
+        "disclosed_case": "hold_911/q5",
+        "generation_sha256": "efdc1b4888fb9d7b4a4fe1f3ce88e199e8dcdf6a4fed1cbeeaa4ae3bf9ac2ab1",
+        "replay_contexts_sha256": "aae491052e99412677c264f473314c1e037de88bdcadf651cf05622c8861c9c3",
+        "fixture_sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "gold_sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "fresh_views_not_old_answers_or_grades": true
+      },
+      "context": {
+        "id": "q5",
+        "question": "Which project needs a ledger comparison, and which may proceed to internal use?",
+        "memory": "PROJECT loom_receipts\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_911/loom_receipts\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"3\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\"/><item id=\"selected-source-1\" lane=\"source_excerpts\" uncertainty=\"extracted_representation_completeness_unresolved\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"488cd3bf920a4b9aa6b97d19a3f960c0\" start=\"0\" end=\"144\" source_role=\"user_intent\" source_capture_seq=\"8\" quote_truncated=\"False\"><quote_excerpt>At the next session compare the sample against the paper ledger with the treasurer. Only the treasurer can approve issuing the revised receipts.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"source_excerpts\" context_episode_version=\"1\" context_is_current_head=\"True\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"488cd3bf920a4b9aa6b97d19a3f960c0\" start=\"0\" end=\"144\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"pm_00bb97a22a09aa67d496d7710d45fd1b79bd591d\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"6\" source_capture_seq_max=\"7\"><field name=\"text\"><derived_text>Keep each receipt number unchanged when correcting its wording.</derived_text><source source_id=\"caf8e6a0dc7342ee9bdf5a0bc39dd212\" start=\"40\" end=\"119\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt> Stable receipt numbers matter because the paper ledger already refers to them.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"6e13f36c655c46cdb8af3a9e81c32df1\" start=\"0\" end=\"45\" source_role=\"tool_record\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt>Local correction test passed: R17 stayed R17.</quote_excerpt></source><source source_id=\"6e13f36c655c46cdb8af3a9e81c32df1\" start=\"45\" end=\"75\" source_role=\"tool_record\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt> No ledger comparison was run.</quote_excerpt></source></field></item><item lane=\"episode\" id=\"pm_04f4db55d3de25d9124c02b5ae01a94cec4a0b61\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" fields_omitted=\"3\"/><omitted records=\"6\" fields=\"15\" user_sources=\"2\"/></project-memory>\n\nPROJECT tansy_notes\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_911/tansy_notes\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"1\" user_sources_omitted=\"1\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"5\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"selected-source-1\" lane=\"source_excerpts\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"4e352b401383438495a067f92efa4439\" start=\"0\" end=\"92\" source_role=\"user_intent\" quote_truncated=\"False\"><quote_excerpt>Tansy notes are approved for internal use now. No ledger comparison belongs to that project.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"source_excerpts\" context_episode_version=\"1\" context_is_current_head=\"True\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"4e352b401383438495a067f92efa4439\" start=\"0\" end=\"92\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"pm_3bbfc0c669e388346ec8a3b2add4cb1ed588b382\" lane=\"claim\" project_memory_kind=\"constraint\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq=\"5\"><field name=\"text\"><derived_text>No ledger comparison belongs to that project.</derived_text><source source_id=\"4e352b401383438495a067f92efa4439\" start=\"46\" end=\"92\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt> No ledger comparison belongs to that project.</quote_excerpt></source></field></item><item id=\"pm_e71f6f9e21e82ac74e1368567fcbd48d7f73eee8\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"5\" source_capture_seq_max=\"5\" logical_episode_id=\"pm_e71f6f9e21e82ac74e1368567fcbd48d7f73eee8\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"2\"></item><omitted records=\"2\" fields=\"3\"/></project-memory>",
+        "context_chars": 5400,
+        "context_sha256": "3e2879306dd565146b21a20c33bc4c4fc4af579ab6d7717c95fbf6247d8cbeac",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_911/loom_receipts",
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_911/tansy_notes"
+          ]
+        }
+      },
+      "original_history": [
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_911_t1"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_911_u",
+              "text": "Create numbered donation receipts and a year-end summary. Keep each receipt number unchanged when correcting its wording.",
+              "type": "user",
+              "source_id": "42c5f5d94f7b45c4be29125c4d2caa69"
+            },
+            {
+              "id": "hold_911_old",
+              "text": "Possible approach: give corrected receipts new numbers.",
+              "type": "assistant",
+              "source_id": "40045bdec67d4ef8bd5a515f437ddba5"
+            },
+            {
+              "id": "hold_911_a",
+              "text": "Corrections preserve numbering now.",
+              "type": "assistant",
+              "source_id": "b6b14d0e5db149d3ad850d4ee8bcc2fe"
+            },
+            {
+              "id": "hold_911_t1",
+              "text": "Correction test failed: receipt R17 became R18 after a wording edit.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Correction test failed: receipt R17 became R18 after a wording edit."
+                }
+              },
+              "type": "tool",
+              "source_id": "152fcc52e5944b7cb906e7aaabc4ae6a"
+            }
+          ],
+          "id": "hold_911_morning",
+          "project_key": "loom_receipts"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_911_s",
+              "text": "Tansy notes are approved for internal use now. No ledger comparison belongs to that project.",
+              "type": "user",
+              "source_id": "4e352b401383438495a067f92efa4439"
+            }
+          ],
+          "id": "hold_911_other",
+          "project_key": "tansy_notes"
+        },
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_911_t2"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_911_r",
+              "text": "We do not need the year-end summary yet. Stable receipt numbers matter because the paper ledger already refers to them.",
+              "type": "user",
+              "source_id": "caf8e6a0dc7342ee9bdf5a0bc39dd212"
+            },
+            {
+              "id": "hold_911_d",
+              "observation_event_id": "hold_911_old",
+              "text": "Delete the new-number approach.",
+              "type": "delete_observation",
+              "source_id": null
+            },
+            {
+              "id": "hold_911_t2",
+              "text": "Local correction test passed: R17 stayed R17. No ledger comparison was run.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local correction test passed: R17 stayed R17. No ledger comparison was run."
+                }
+              },
+              "type": "tool",
+              "source_id": "6e13f36c655c46cdb8af3a9e81c32df1"
+            }
+          ],
+          "id": "hold_911_return",
+          "project_key": "loom_receipts"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_911_l",
+              "text": "At the next session compare the sample against the paper ledger with the treasurer. Only the treasurer can approve issuing the revised receipts.",
+              "type": "user",
+              "source_id": "488cd3bf920a4b9aa6b97d19a3f960c0"
+            }
+          ],
+          "id": "hold_911_tail",
+          "project_key": "loom_receipts"
+        }
+      ],
+      "original_source_fields": {
+        "42c5f5d94f7b45c4be29125c4d2caa69": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Create numbered donation receipts and a year-end summary. Keep each receipt number unchanged when correcting its wording."
+          }
+        },
+        "40045bdec67d4ef8bd5a515f437ddba5": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Possible approach: give corrected receipts new numbers."
+          }
+        },
+        "b6b14d0e5db149d3ad850d4ee8bcc2fe": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Corrections preserve numbering now."
+          }
+        },
+        "152fcc52e5944b7cb906e7aaabc4ae6a": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Correction test failed: receipt R17 became R18 after a wording edit.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Correction test failed: receipt R17 became R18 after a wording edit."
+          }
+        },
+        "4e352b401383438495a067f92efa4439": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Tansy notes are approved for internal use now. No ledger comparison belongs to that project."
+          }
+        },
+        "caf8e6a0dc7342ee9bdf5a0bc39dd212": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "We do not need the year-end summary yet. Stable receipt numbers matter because the paper ledger already refers to them."
+          }
+        },
+        "6e13f36c655c46cdb8af3a9e81c32df1": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Local correction test passed: R17 stayed R17. No ledger comparison was run.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Local correction test passed: R17 stayed R17. No ledger comparison was run."
+          }
+        },
+        "488cd3bf920a4b9aa6b97d19a3f960c0": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "At the next session compare the sample against the paper ledger with the treasurer. Only the treasurer can approve issuing the revised receipts."
+          }
+        }
+      },
+      "gold": {
+        "category": "scope",
+        "forbidden_conclusions": [
+          "Loom is approved for issue because Tansy is approved."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 83,
+                "event_id": "hold_911_l",
+                "quote": "compare the sample against the paper ledger with the treasurer.",
+                "start": 20,
+                "source_id": "488cd3bf920a4b9aa6b97d19a3f960c0"
+              }
+            ],
+            "text": "Loom needs sample comparison against the paper ledger with the treasurer."
+          },
+          {
+            "support": [
+              {
+                "end": 46,
+                "event_id": "hold_911_s",
+                "quote": "Tansy notes are approved for internal use now.",
+                "start": 0,
+                "source_id": "4e352b401383438495a067f92efa4439"
+              }
+            ],
+            "text": "Tansy notes are approved by the user for internal use."
+          }
+        ]
+      },
+      "oracle": {
+        "required_facts_recalled": [
+          true,
+          true
+        ],
+        "critical_errors_allowed": [],
+        "citations_supported": true,
+        "claim": "Known disclosed regression only. All required facts and scope must survive.",
+        "frozen_before_new_native_calls": true
+      }
+    },
+    {
+      "id": "public-reader-05",
+      "focus": "constraint",
+      "provenance": {
+        "disclosed_case": "hold_901/q1",
+        "generation_sha256": "3707baf9fa2cdf6c9590c7e587c120c86f34dc5f1be4826203c4810418b2cfb6",
+        "replay_contexts_sha256": "aae491052e99412677c264f473314c1e037de88bdcadf651cf05622c8861c9c3",
+        "fixture_sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "gold_sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "fresh_views_not_old_answers_or_grades": true
+      },
+      "context": {
+        "id": "q1",
+        "question": "What export remains requested for Lantern?",
+        "memory": "PROJECT lantern_catalog\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_901/lantern_catalog\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"2\" source_evidence_omitted=\"1\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"8\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"selected-source-1\" lane=\"source_excerpts\" context_episode_version=\"1\" context_is_current_head=\"True\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"f2b22b4002e240398c918651926f5e0a\" start=\"0\" end=\"107\" source_role=\"user_intent\" quote_truncated=\"False\"><quote_excerpt>For Lantern, export the catalog as CSV and include an optional cover sheet. Keep accession numbers as text.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"source_excerpts\" uncertainty=\"extracted_representation_completeness_unresolved\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"f2b22b4002e240398c918651926f5e0a\" start=\"0\" end=\"107\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"selected-source-3\" lane=\"source_excerpts\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"f2b22b4002e240398c918651926f5e0a\" start=\"0\" end=\"75\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"selected-source-4\" lane=\"source_excerpts\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"3806b615dc144ed19da38ae4e52f215d\" start=\"0\" end=\"76\" source_role=\"tool_record\" quote_truncated=\"False\"><quote_excerpt>Catalog check failed: accession 0042 became 42. No deliverable was produced.</quote_excerpt></source></field></item><item id=\"pm_f87d082e9a62d83eb70241e3466a33043d420f8a\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq=\"1\"><field name=\"text\"><derived_text>Include an optional cover sheet in the Lantern CSV export.</derived_text><source source_id=\"f2b22b4002e240398c918651926f5e0a\" start=\"0\" end=\"75\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt>For Lantern, export the catalog as CSV and include an optional cover sheet.</quote_excerpt></source></field></item><item id=\"pm_c019293f596901313c9893b28ddbc844e1142408\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\" logical_episode_id=\"pm_c019293f596901313c9893b28ddbc844e1142408\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"4\" fields_omitted=\"4\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"f2b22b4002e240398c918651926f5e0a\" start=\"0\" end=\"75\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>For Lantern, export the catalog as CSV and include an optional cover sheet.</quote_excerpt></source><source source_id=\"f2b22b4002e240398c918651926f5e0a\" start=\"75\" end=\"107\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Keep accession numbers as text.</quote_excerpt></source><source source_id=\"3806b615dc144ed19da38ae4e52f215d\" start=\"0\" end=\"47\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Catalog check failed: accession 0042 became 42.</quote_excerpt></source><source source_id=\"3806b615dc144ed19da38ae4e52f215d\" start=\"47\" end=\"76\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> No deliverable was produced.</quote_excerpt></source></field></item><item id=\"unassociated-user-sources-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"2\"><field name=\"source_custody\"><source source_id=\"c6f0ad276db04a3cbd3a06754455a5b7\" start=\"0\" end=\"88\" source_role=\"user_intent\" source_capture_seq=\"8\" quote_truncated=\"False\"><quote_excerpt>Picking this up tomorrow: ask the collections lead to approve the CSV before sending it.</quote_excerpt></source><source source_id=\"cd9c46e7fbc24a11a1932fd979dad8dd\" start=\"0\" end=\"127\" source_role=\"user_intent\" source_capture_seq=\"6\" quote_truncated=\"False\"><quote_excerpt>Drop the cover sheet only. The CSV and text accession numbers still matter because labels on the shelves include leading zeros.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\"2\" omitted=\"0\"/><omitted records=\"0\" fields=\"4\"/></project-memory>",
+        "context_chars": 5560,
+        "context_sha256": "1b761da1d8a71c9bcc478a96e79e21ea34a42eeb800713725ef4161e3703b86a",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_901/lantern_catalog"
+          ]
+        }
+      },
+      "original_history": [
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_901_t1"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_901_u",
+              "text": "For Lantern, export the catalog as CSV and include an optional cover sheet. Keep accession numbers as text.",
+              "type": "user",
+              "source_id": "f2b22b4002e240398c918651926f5e0a"
+            },
+            {
+              "id": "hold_901_old",
+              "text": "Temporary note: accession numbers might be integers.",
+              "type": "assistant",
+              "source_id": "fdf0879ac6154baaae96a696b56aa544"
+            },
+            {
+              "id": "hold_901_a",
+              "text": "The export has passed and is ready to hand over.",
+              "type": "assistant",
+              "source_id": "cb711489c711481bab8d6a459f2b283a"
+            },
+            {
+              "id": "hold_901_t1",
+              "text": "Catalog check failed: accession 0042 became 42. No deliverable was produced.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Catalog check failed: accession 0042 became 42. No deliverable was produced."
+                }
+              },
+              "type": "tool",
+              "source_id": "3806b615dc144ed19da38ae4e52f215d"
+            }
+          ],
+          "id": "hold_901_morning",
+          "project_key": "lantern_catalog"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_901_s",
+              "text": "Reed uses numeric trail distances and has no accession field.",
+              "type": "user",
+              "source_id": "41d3ddf0af254b21b3b48a9fb3ce99a6"
+            }
+          ],
+          "id": "hold_901_other",
+          "project_key": "reed_maps"
+        },
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_901_t2"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_901_r",
+              "text": "Drop the cover sheet only. The CSV and text accession numbers still matter because labels on the shelves include leading zeros.",
+              "type": "user",
+              "source_id": "cd9c46e7fbc24a11a1932fd979dad8dd"
+            },
+            {
+              "id": "hold_901_d",
+              "observation_event_id": "hold_901_old",
+              "text": "Remove the temporary integer note.",
+              "type": "delete_observation",
+              "source_id": null
+            },
+            {
+              "id": "hold_901_t2",
+              "text": "Local CSV check passed: 0042 remained 0042. No files were sent.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local CSV check passed: 0042 remained 0042. No files were sent."
+                }
+              },
+              "type": "tool",
+              "source_id": "306e879532fc4451a8c43d7f0b7355d5"
+            }
+          ],
+          "id": "hold_901_return",
+          "project_key": "lantern_catalog"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_901_l",
+              "text": "Picking this up tomorrow: ask the collections lead to approve the CSV before sending it.",
+              "type": "user",
+              "source_id": "c6f0ad276db04a3cbd3a06754455a5b7"
+            }
+          ],
+          "id": "hold_901_tail",
+          "project_key": "lantern_catalog"
+        }
+      ],
+      "original_source_fields": {
+        "f2b22b4002e240398c918651926f5e0a": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "For Lantern, export the catalog as CSV and include an optional cover sheet. Keep accession numbers as text."
+          }
+        },
+        "fdf0879ac6154baaae96a696b56aa544": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Temporary note: accession numbers might be integers."
+          }
+        },
+        "cb711489c711481bab8d6a459f2b283a": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "The export has passed and is ready to hand over."
+          }
+        },
+        "3806b615dc144ed19da38ae4e52f215d": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Catalog check failed: accession 0042 became 42. No deliverable was produced.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Catalog check failed: accession 0042 became 42. No deliverable was produced."
+          }
+        },
+        "41d3ddf0af254b21b3b48a9fb3ce99a6": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Reed uses numeric trail distances and has no accession field."
+          }
+        },
+        "cd9c46e7fbc24a11a1932fd979dad8dd": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Drop the cover sheet only. The CSV and text accession numbers still matter because labels on the shelves include leading zeros."
+          }
+        },
+        "306e879532fc4451a8c43d7f0b7355d5": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Local CSV check passed: 0042 remained 0042. No files were sent.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Local CSV check passed: 0042 remained 0042. No files were sent."
+          }
+        },
+        "c6f0ad276db04a3cbd3a06754455a5b7": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Picking this up tomorrow: ask the collections lead to approve the CSV before sending it."
+          }
+        }
+      },
+      "gold": {
+        "category": "constraint",
+        "forbidden_conclusions": [
+          "The entire export was cancelled."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 74,
+                "event_id": "hold_901_r",
+                "quote": "The CSV and text accession numbers still matter",
+                "start": 27,
+                "source_id": "cd9c46e7fbc24a11a1932fd979dad8dd"
+              }
+            ],
+            "text": "The user still wants a CSV with text accession numbers."
+          }
+        ]
+      },
+      "oracle": {
+        "required_facts_recalled": [
+          true
+        ],
+        "critical_errors_allowed": [],
+        "citations_supported": true,
+        "claim": "Known disclosed regression only. All required facts and scope must survive.",
+        "frozen_before_new_native_calls": true
+      }
+    },
+    {
+      "id": "public-reader-06",
+      "focus": "reason",
+      "provenance": {
+        "disclosed_case": "hold_915/q3",
+        "generation_sha256": "a78a5dd12ce0fbcce212bc7457b026f3a54886907ab669a00f7d7685bbc63a00",
+        "replay_contexts_sha256": "aae491052e99412677c264f473314c1e037de88bdcadf651cf05622c8861c9c3",
+        "fixture_sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "gold_sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "fresh_views_not_old_answers_or_grades": true
+      },
+      "context": {
+        "id": "q3",
+        "question": "Why did the user prohibit names?",
+        "memory": "PROJECT river_badges\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_915/river_badges\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"3\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\"/><item id=\"selected-source-1\" lane=\"source_excerpts\" uncertainty=\"extracted_representation_completeness_unresolved\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"ae8e4c337294488ba9cfd80fa43622f1\" start=\"0\" end=\"124\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>When you resume, print a single sample and get the front-desk lead’s approval of code readability before printing the batch.</quote_excerpt></source><source source_id=\"38afb85e02594cdc97a297056d5873ba\" start=\"0\" end=\"119\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Remove the route icon; the large group code stays. No full names, because badges will be visible in public photographs.</quote_excerpt></source><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"0\" end=\"113\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>Make visitor badges with a large group code and a small route icon. Never put a visitor’s full name on the badge.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"source_excerpts\" context_episode_version=\"1\" context_is_current_head=\"True\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"ae8e4c337294488ba9cfd80fa43622f1\" start=\"0\" end=\"124\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/><source source_id=\"38afb85e02594cdc97a297056d5873ba\" start=\"0\" end=\"119\" source_role=\"user_intent\" quote_truncated=\"False\" quote_display=\"quoted_in_context\"/></field></item><item id=\"pm_695509ae6135e84ceb16b0b58d925c38936220a4\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\"><field name=\"text\"><derived_text>Never put a visitor’s full name on the badge.</derived_text><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"67\" end=\"113\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt> Never put a visitor’s full name on the badge.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"078ca38f72b84a53a8b607b2da9693f3\" start=\"0\" end=\"59\" source_role=\"tool_record\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt>Badge check failed: the sample badge displayed a full name.</quote_excerpt></source></field></item><item id=\"pm_4f9d8c1c9ebf61fa9515d2227f8b589a64a7b937\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" logical_episode_id=\"pm_4f9d8c1c9ebf61fa9515d2227f8b589a64a7b937\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"7d924853096040eea6cdc89a630b81c9\" start=\"56\" end=\"87\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> No physical badge was printed.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"7d924853096040eea6cdc89a630b81c9\" start=\"0\" end=\"56\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>Local badge check passed: group code only, no full name.</quote_excerpt></source><source source_id=\"7d924853096040eea6cdc89a630b81c9\" start=\"56\" end=\"87\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt> No physical badge was printed.</quote_excerpt></source></field></item><item id=\"pm_5a68d43738241b99baa59986904d35c12717144b\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\" logical_episode_id=\"pm_5a68d43738241b99baa59986904d35c12717144b\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"efea01570a2346808256c34e7396745d\" start=\"67\" end=\"113\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Never put a visitor’s full name on the badge.</quote_excerpt></source><source source_id=\"078ca38f72b84a53a8b607b2da9693f3\" start=\"0\" end=\"59\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Badge check failed: the sample badge displayed a full name.</quote_excerpt></source></field></item><item lane=\"episode\" id=\"pm_ce462f5fc79cc29767343ac468c4b1eba06a8d31\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" fields_omitted=\"3\"/><omitted records=\"1\" fields=\"9\"/></project-memory>",
+        "context_chars": 5909,
+        "context_sha256": "cd2a3d84bc0548bd613c0cb18c55b601bac190a28e7ec070ed85f6780e58e282",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r12-experiment/projects/hold_915/river_badges"
+          ]
+        }
+      },
+      "original_history": [
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_915_t1"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_915_u",
+              "text": "Make visitor badges with a large group code and a small route icon. Never put a visitor’s full name on the badge.",
+              "type": "user",
+              "source_id": "efea01570a2346808256c34e7396745d"
+            },
+            {
+              "id": "hold_915_old",
+              "text": "Draft option: add full names for staff convenience.",
+              "type": "assistant",
+              "source_id": "0e20aa4bcc14414ab302552c3b2c9ab3"
+            },
+            {
+              "id": "hold_915_a",
+              "text": "Badge privacy checks are finished.",
+              "type": "assistant",
+              "source_id": "7ccdb5f1ece148c98776b0e1f9f767ca"
+            },
+            {
+              "id": "hold_915_t1",
+              "text": "Badge check failed: the sample badge displayed a full name.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 1,
+                  "output": "Badge check failed: the sample badge displayed a full name."
+                }
+              },
+              "type": "tool",
+              "source_id": "078ca38f72b84a53a8b607b2da9693f3"
+            }
+          ],
+          "id": "hold_915_morning",
+          "project_key": "river_badges"
+        },
+        {
+          "checkpoints": [
+            {
+              "after_event_id": "hold_915_t2"
+            }
+          ],
+          "events": [
+            {
+              "id": "hold_915_r",
+              "text": "Remove the route icon; the large group code stays. No full names, because badges will be visible in public photographs.",
+              "type": "user",
+              "source_id": "38afb85e02594cdc97a297056d5873ba"
+            },
+            {
+              "id": "hold_915_d",
+              "observation_event_id": "hold_915_old",
+              "text": "Delete the full-name option.",
+              "type": "delete_observation",
+              "source_id": null
+            },
+            {
+              "id": "hold_915_t2",
+              "text": "Local badge check passed: group code only, no full name. No physical badge was printed.",
+              "tool_capture": {
+                "tool_input": {
+                  "command": "inert fictional command"
+                },
+                "tool_name": "exec_command",
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Local badge check passed: group code only, no full name. No physical badge was printed."
+                }
+              },
+              "type": "tool",
+              "source_id": "7d924853096040eea6cdc89a630b81c9"
+            }
+          ],
+          "id": "hold_915_return",
+          "project_key": "river_badges"
+        },
+        {
+          "checkpoints": [],
+          "events": [
+            {
+              "id": "hold_915_l",
+              "text": "When you resume, print a single sample and get the front-desk lead’s approval of code readability before printing the batch.",
+              "type": "user",
+              "source_id": "ae8e4c337294488ba9cfd80fa43622f1"
+            }
+          ],
+          "id": "hold_915_tail",
+          "project_key": "river_badges"
+        }
+      ],
+      "original_source_fields": {
+        "efea01570a2346808256c34e7396745d": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Make visitor badges with a large group code and a small route icon. Never put a visitor’s full name on the badge."
+          }
+        },
+        "0e20aa4bcc14414ab302552c3b2c9ab3": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Draft option: add full names for staff convenience."
+          }
+        },
+        "7ccdb5f1ece148c98776b0e1f9f767ca": {
+          "source_role": "assistant_report",
+          "fields": {
+            "body": "Badge privacy checks are finished."
+          }
+        },
+        "078ca38f72b84a53a8b607b2da9693f3": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Badge check failed: the sample badge displayed a full name.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Badge check failed: the sample badge displayed a full name."
+          }
+        },
+        "38afb85e02594cdc97a297056d5873ba": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "Remove the route icon; the large group code stays. No full names, because badges will be visible in public photographs."
+          }
+        },
+        "7d924853096040eea6cdc89a630b81c9": {
+          "source_role": "tool_record",
+          "fields": {
+            "body": "Local badge check passed: group code only, no full name. No physical badge was printed.",
+            "tool_input.command": "inert fictional command",
+            "tool_response.output": "Local badge check passed: group code only, no full name. No physical badge was printed."
+          }
+        },
+        "ae8e4c337294488ba9cfd80fa43622f1": {
+          "source_role": "user_intent",
+          "fields": {
+            "body": "When you resume, print a single sample and get the front-desk lead’s approval of code readability before printing the batch."
+          }
+        }
+      },
+      "gold": {
+        "category": "reason",
+        "forbidden_conclusions": [
+          "Privacy no longer matters after removing the icon."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 119,
+                "event_id": "hold_915_r",
+                "quote": "badges will be visible in public photographs.",
+                "start": 74,
+                "source_id": "38afb85e02594cdc97a297056d5873ba"
+              }
+            ],
+            "text": "Badges will be visible in public photographs."
+          }
+        ]
+      },
+      "oracle": {
+        "required_facts_recalled": [
+          true
+        ],
+        "critical_errors_allowed": [],
+        "citations_supported": true,
+        "claim": "Known disclosed regression only. All required facts and scope must survive.",
+        "frozen_before_new_native_calls": true
+      }
+    }
+  ]
+}

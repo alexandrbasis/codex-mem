@@ -1,0 +1,4005 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "questions": {
+    "hold_201/q1": {
+      "required_facts": [
+        {
+          "text": "Reopen the plain-text exporter for the dock trial.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 0,
+              "event_id": "hold_201_direction",
+              "fragment": "Reopen the plain-text exporter for the dock trial."
+            }
+          ]
+        },
+        {
+          "text": "The dock supervisor found that damp labels make QR codes unreliable.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 0,
+              "event_id": "hold_201_direction",
+              "fragment": "The dock supervisor found that damp labels make QR codes unreliable."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Build a multilingual crate-label exporter for Harbor. The first proposal includes French labels and a QR label designer.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_201/q2": {
+      "required_facts": [
+        {
+          "text": "Drop the QR label designer.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 1,
+              "event_id": "hold_201_scope",
+              "fragment": "Drop the QR label designer."
+            }
+          ]
+        },
+        {
+          "text": "Retain the plain-text exporter.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 1,
+              "event_id": "hold_201_scope",
+              "fragment": "Retain the plain-text exporter."
+            }
+          ]
+        },
+        {
+          "text": "Keep lot numbers as strings, including leading zeros.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 0,
+              "event_id": "hold_201_direction",
+              "fragment": "Keep lot numbers as strings, including leading zeros."
+            }
+          ]
+        },
+        {
+          "text": "The dock trial must run without internet access.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 0,
+              "event_id": "hold_201_direction",
+              "fragment": "The dock trial must run without internet access."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_201/q3": {
+      "required_facts": [
+        {
+          "text": "Local export check: 18 of 18 sample rows retained their leading zeros.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 2,
+              "event_id": "hold_201_observed",
+              "fragment": "Local export check: 18 of 18 sample rows retained their leading zeros."
+            }
+          ]
+        },
+        {
+          "text": "Packing-floor deployment: not attempted.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 2,
+              "event_id": "hold_201_observed",
+              "fragment": "Packing-floor deployment: not attempted."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: I have deployed the exporter to the packing floor and every scanner accepted a label.",
+          "support": [
+            {
+              "session_id": "hold_201_early",
+              "event_index": 2,
+              "event_id": "hold_201_report",
+              "fragment": "I have deployed the exporter to the packing floor and every scanner accepted a label."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_201/q4": {
+      "required_facts": [
+        {
+          "text": "Mira must bring two damp label samples before the Thursday dock trial.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 3,
+              "event_id": "hold_201_pending",
+              "fragment": "Mira must bring two damp label samples before the Thursday dock trial."
+            }
+          ]
+        },
+        {
+          "text": "Scanner compatibility remains open until those samples are scanned.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 3,
+              "event_id": "hold_201_pending",
+              "fragment": "Scanner compatibility remains open until those samples are scanned."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_201/q5": {
+      "required_facts": [
+        {
+          "text": "Orchard labels may use cloud translation.",
+          "support": [
+            {
+              "session_id": "hold_201_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_201_boundary",
+              "fragment": "Orchard labels may use cloud translation."
+            }
+          ]
+        },
+        {
+          "text": "That permission belongs only to Orchard; Harbor remains offline.",
+          "support": [
+            {
+              "session_id": "hold_201_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_201_boundary",
+              "fragment": "That permission belongs only to Orchard; Harbor remains offline."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_201/q6": {
+      "required_facts": [
+        {
+          "text": "The retired scanner inventory is no longer usable evidence.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 5,
+              "event_id": "hold_201_source_rule",
+              "fragment": "The retired scanner inventory is no longer usable evidence."
+            }
+          ]
+        },
+        {
+          "text": "Measure the payload limit on the dock scanner before choosing a limit.",
+          "support": [
+            {
+              "session_id": "hold_201_return",
+              "event_index": 5,
+              "event_id": "hold_201_source_rule",
+              "fragment": "Measure the payload limit on the dock scanner before choosing a limit."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Harbor scanners support a 48-character payload.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_202/q1": {
+      "required_facts": [
+        {
+          "text": "Finish a draft rota for coordinator review.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 0,
+              "event_id": "hold_202_direction",
+              "fragment": "Finish a draft rota for coordinator review."
+            }
+          ]
+        },
+        {
+          "text": "Several volunteers share one phone, so individual confirmation links cannot establish attendance.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 0,
+              "event_id": "hold_202_direction",
+              "fragment": "Several volunteers share one phone, so individual confirmation links cannot establish attendance."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prepare a monthly volunteer rota with automatic shift swaps and a printable attendance sheet.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_202/q2": {
+      "required_facts": [
+        {
+          "text": "Cancel automatic shift swaps.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 3,
+              "event_id": "hold_202_scope",
+              "fragment": "Cancel automatic shift swaps."
+            }
+          ]
+        },
+        {
+          "text": "Keep the printable attendance sheet in scope.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 3,
+              "event_id": "hold_202_scope",
+              "fragment": "Keep the printable attendance sheet in scope."
+            }
+          ]
+        },
+        {
+          "text": "Use initials on the printed sheet.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 0,
+              "event_id": "hold_202_direction",
+              "fragment": "Use initials on the printed sheet."
+            }
+          ]
+        },
+        {
+          "text": "Do not send confirmation messages from this task.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 0,
+              "event_id": "hold_202_direction",
+              "fragment": "Do not send confirmation messages from this task."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_202/q3": {
+      "required_facts": [
+        {
+          "text": "Roster validation: two shifts have no assigned volunteer.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 2,
+              "event_id": "hold_202_observed",
+              "fragment": "Roster validation: two shifts have no assigned volunteer."
+            }
+          ]
+        },
+        {
+          "text": "Confirmation messages sent: 0.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 2,
+              "event_id": "hold_202_observed",
+              "fragment": "Confirmation messages sent: 0."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: All volunteers have confirmed the final rota.",
+          "support": [
+            {
+              "session_id": "hold_202_early",
+              "event_index": 2,
+              "event_id": "hold_202_report",
+              "fragment": "All volunteers have confirmed the final rota."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_202/q4": {
+      "required_facts": [
+        {
+          "text": "Coordinator Ellis must assign the two empty shifts by 4 November.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 6,
+              "event_id": "hold_202_pending",
+              "fragment": "Coordinator Ellis must assign the two empty shifts by 4 November."
+            }
+          ]
+        },
+        {
+          "text": "Publication waits for the coordinator review.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 6,
+              "event_id": "hold_202_pending",
+              "fragment": "Publication waits for the coordinator review."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_202/q5": {
+      "required_facts": [
+        {
+          "text": "This is the same November rota task as yesterday.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 1,
+              "event_id": "hold_202_boundary",
+              "fragment": "This is the same November rota task as yesterday."
+            }
+          ]
+        },
+        {
+          "text": "The separate December fundraiser guest list is not a volunteer roster and must not fill these shifts.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 1,
+              "event_id": "hold_202_boundary",
+              "fragment": "The separate December fundraiser guest list is not a volunteer roster and must not fill these shifts."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_202/q6": {
+      "required_facts": [
+        {
+          "text": "Do not rely on the removed availability import for Hana.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 5,
+              "event_id": "hold_202_source_rule",
+              "fragment": "Do not rely on the removed availability import for Hana."
+            }
+          ]
+        },
+        {
+          "text": "Ask the coordinator for a fresh availability confirmation.",
+          "support": [
+            {
+              "session_id": "hold_202_return",
+              "event_index": 5,
+              "event_id": "hold_202_source_rule",
+              "fragment": "Ask the coordinator for a fresh availability confirmation."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Hana is available every Saturday in November.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_203/q1": {
+      "required_facts": [
+        {
+          "text": "Prepare downloadable audio packs for the east gallery pilot.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 0,
+              "event_id": "hold_203_direction",
+              "fragment": "Prepare downloadable audio packs for the east gallery pilot."
+            }
+          ]
+        },
+        {
+          "text": "The curator needs a pilot that works during the network maintenance window.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 0,
+              "event_id": "hold_203_direction",
+              "fragment": "The curator needs a pilot that works during the network maintenance window."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Publish a streamed museum audio guide with transcripts and visitor analytics.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_203/q2": {
+      "required_facts": [
+        {
+          "text": "Pause the streaming player until after the pilot.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 1,
+              "event_id": "hold_203_scope",
+              "fragment": "Pause the streaming player until after the pilot."
+            }
+          ]
+        },
+        {
+          "text": "Keep the transcript work active.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 1,
+              "event_id": "hold_203_scope",
+              "fragment": "Keep the transcript work active."
+            }
+          ]
+        },
+        {
+          "text": "Transcripts must ship with every audio pack.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 0,
+              "event_id": "hold_203_direction",
+              "fragment": "Transcripts must ship with every audio pack."
+            }
+          ]
+        },
+        {
+          "text": "Do not collect visitor identifiers.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 0,
+              "event_id": "hold_203_direction",
+              "fragment": "Do not collect visitor identifiers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_203/q3": {
+      "required_facts": [
+        {
+          "text": "Download pack build: successful, 12 tracks and 12 transcripts.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 2,
+              "event_id": "hold_203_observed",
+              "fragment": "Download pack build: successful, 12 tracks and 12 transcripts."
+            }
+          ]
+        },
+        {
+          "text": "Gallery device installation: pending curator access.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 2,
+              "event_id": "hold_203_observed",
+              "fragment": "Gallery device installation: pending curator access."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The streamed guide is live in the east gallery.",
+          "support": [
+            {
+              "session_id": "hold_203_early",
+              "event_index": 2,
+              "event_id": "hold_203_report",
+              "fragment": "The streamed guide is live in the east gallery."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_203/q4": {
+      "required_facts": [
+        {
+          "text": "Oren must provide a gallery tablet on Monday morning.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 3,
+              "event_id": "hold_203_pending",
+              "fragment": "Oren must provide a gallery tablet on Monday morning."
+            }
+          ]
+        },
+        {
+          "text": "The team must check playback on that tablet before the pilot.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 3,
+              "event_id": "hold_203_pending",
+              "fragment": "The team must check playback on that tablet before the pilot."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_203/q5": {
+      "required_facts": [
+        {
+          "text": "Cobalt Archive is a separate preservation project and may retain accession identifiers.",
+          "support": [
+            {
+              "session_id": "hold_203_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_203_boundary",
+              "fragment": "Cobalt Archive is a separate preservation project and may retain accession identifiers."
+            }
+          ]
+        },
+        {
+          "text": "Those are collection records; its permission does not permit visitor identifiers in the audio guide.",
+          "support": [
+            {
+              "session_id": "hold_203_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_203_boundary",
+              "fragment": "Those are collection records; its permission does not permit visitor identifiers in the audio guide."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_203/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted venue survey does not establish present wireless coverage.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 5,
+              "event_id": "hold_203_source_rule",
+              "fragment": "The deleted venue survey does not establish present wireless coverage."
+            }
+          ]
+        },
+        {
+          "text": "Use the maintenance window as the reason for offline delivery; coverage still needs a fresh survey.",
+          "support": [
+            {
+              "session_id": "hold_203_return",
+              "event_index": 5,
+              "event_id": "hold_203_source_rule",
+              "fragment": "Use the maintenance window as the reason for offline delivery; coverage still needs a fresh survey."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The east gallery has uninterrupted wireless coverage.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_204/q1": {
+      "required_facts": [
+        {
+          "text": "Resume only the invoice preview comparison.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 0,
+              "event_id": "hold_204_direction",
+              "fragment": "Resume only the invoice preview comparison."
+            }
+          ]
+        },
+        {
+          "text": "Finance found that the replacement layout hides adjustment notes.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 0,
+              "event_id": "hold_204_direction",
+              "fragment": "Finance found that the replacement layout hides adjustment notes."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Replace the invoice engine and add automatic monthly dispatch.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_204/q2": {
+      "required_facts": [
+        {
+          "text": "Cancel automatic monthly dispatch for this work item.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 3,
+              "event_id": "hold_204_scope",
+              "fragment": "Cancel automatic monthly dispatch for this work item."
+            }
+          ]
+        },
+        {
+          "text": "Keep comparing the current and proposed previews.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 3,
+              "event_id": "hold_204_scope",
+              "fragment": "Keep comparing the current and proposed previews."
+            }
+          ]
+        },
+        {
+          "text": "Show adjustment notes in the preview.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 0,
+              "event_id": "hold_204_direction",
+              "fragment": "Show adjustment notes in the preview."
+            }
+          ]
+        },
+        {
+          "text": "Do not modify live invoice records.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 0,
+              "event_id": "hold_204_direction",
+              "fragment": "Do not modify live invoice records."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_204/q3": {
+      "required_facts": [
+        {
+          "text": "Preview comparison: 7 of 9 examples include adjustment notes.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 2,
+              "event_id": "hold_204_observed",
+              "fragment": "Preview comparison: 7 of 9 examples include adjustment notes."
+            }
+          ]
+        },
+        {
+          "text": "Live invoice records written: 0.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 2,
+              "event_id": "hold_204_observed",
+              "fragment": "Live invoice records written: 0."
+            }
+          ]
+        },
+        {
+          "text": "Dispatch attempted: false.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 2,
+              "event_id": "hold_204_observed",
+              "fragment": "Dispatch attempted: false."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: I replaced the live invoice engine and delivered this month’s invoices.",
+          "support": [
+            {
+              "session_id": "hold_204_early",
+              "event_index": 2,
+              "event_id": "hold_204_report",
+              "fragment": "I replaced the live invoice engine and delivered this month’s invoices."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_204/q4": {
+      "required_facts": [
+        {
+          "text": "Pavel must supply the two missing adjustment examples before the review on 12 December.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 6,
+              "event_id": "hold_204_pending",
+              "fragment": "Pavel must supply the two missing adjustment examples before the review on 12 December."
+            }
+          ]
+        },
+        {
+          "text": "The preview comparison stays open.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 6,
+              "event_id": "hold_204_pending",
+              "fragment": "The preview comparison stays open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_204/q5": {
+      "required_facts": [
+        {
+          "text": "Reopening the preview comparison continues ticket BIR-41.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 1,
+              "event_id": "hold_204_boundary",
+              "fragment": "Reopening the preview comparison continues ticket BIR-41."
+            }
+          ]
+        },
+        {
+          "text": "The completed tax-export ticket BIR-14 stays closed and its acceptance does not approve this preview.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 1,
+              "event_id": "hold_204_boundary",
+              "fragment": "The completed tax-export ticket BIR-14 stays closed and its acceptance does not approve this preview."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_204/q6": {
+      "required_facts": [
+        {
+          "text": "The removed finance note cannot determine the rounding rule.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 5,
+              "event_id": "hold_204_source_rule",
+              "fragment": "The removed finance note cannot determine the rounding rule."
+            }
+          ]
+        },
+        {
+          "text": "Request a current rounding example from Finance before changing arithmetic.",
+          "support": [
+            {
+              "session_id": "hold_204_return",
+              "event_index": 5,
+              "event_id": "hold_204_source_rule",
+              "fragment": "Request a current rounding example from Finance before changing arithmetic."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Invoice rounding is always to the nearest whole unit.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_205/q1": {
+      "required_facts": [
+        {
+          "text": "Produce an internal route review map.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 0,
+              "event_id": "hold_205_direction",
+              "fragment": "Produce an internal route review map."
+            }
+          ]
+        },
+        {
+          "text": "The ranger wants uncertain crossings visible before any public release.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 0,
+              "event_id": "hold_205_direction",
+              "fragment": "The ranger wants uncertain crossings visible before any public release."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Create a public trail map with estimated hiking times and an elevation profile.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_205/q2": {
+      "required_facts": [
+        {
+          "text": "Remove estimated hiking times from this release.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 1,
+              "event_id": "hold_205_scope",
+              "fragment": "Remove estimated hiking times from this release."
+            }
+          ]
+        },
+        {
+          "text": "Retain the elevation profile.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 1,
+              "event_id": "hold_205_scope",
+              "fragment": "Retain the elevation profile."
+            }
+          ]
+        },
+        {
+          "text": "Mark unverified crossings as unknown.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 0,
+              "event_id": "hold_205_direction",
+              "fragment": "Mark unverified crossings as unknown."
+            }
+          ]
+        },
+        {
+          "text": "Preserve wheelchair-access notes on each route.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 0,
+              "event_id": "hold_205_direction",
+              "fragment": "Preserve wheelchair-access notes on each route."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_205/q3": {
+      "required_facts": [
+        {
+          "text": "Internal map rendered: 6 routes.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 2,
+              "event_id": "hold_205_observed",
+              "fragment": "Internal map rendered: 6 routes."
+            }
+          ]
+        },
+        {
+          "text": "Public publish command rejected: missing ranger approval.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 2,
+              "event_id": "hold_205_observed",
+              "fragment": "Public publish command rejected: missing ranger approval."
+            }
+          ]
+        },
+        {
+          "text": "Public map changed: false.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 2,
+              "event_id": "hold_205_observed",
+              "fragment": "Public map changed: false."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The public map has been published with all routes approved.",
+          "support": [
+            {
+              "session_id": "hold_205_early",
+              "event_index": 2,
+              "event_id": "hold_205_report",
+              "fragment": "The public map has been published with all routes approved."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_205/q4": {
+      "required_facts": [
+        {
+          "text": "Ranger Ivo must inspect the north crossing after the next rain.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 3,
+              "event_id": "hold_205_pending",
+              "fragment": "Ranger Ivo must inspect the north crossing after the next rain."
+            }
+          ]
+        },
+        {
+          "text": "Public release waits for Ivo’s approval.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 3,
+              "event_id": "hold_205_pending",
+              "fragment": "Public release waits for Ivo’s approval."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_205/q5": {
+      "required_facts": [
+        {
+          "text": "Moss School may publish its courtyard plan without ranger approval.",
+          "support": [
+            {
+              "session_id": "hold_205_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_205_boundary",
+              "fragment": "Moss School may publish its courtyard plan without ranger approval."
+            }
+          ]
+        },
+        {
+          "text": "That is a separate project and does not authorize publication of the trail map.",
+          "support": [
+            {
+              "session_id": "hold_205_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_205_boundary",
+              "fragment": "That is a separate project and does not authorize publication of the trail map."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_205/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted ranger memo is not current proof that the north footbridge is open.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 5,
+              "event_id": "hold_205_source_rule",
+              "fragment": "The deleted ranger memo is not current proof that the north footbridge is open."
+            }
+          ]
+        },
+        {
+          "text": "Keep that crossing unknown until the inspection.",
+          "support": [
+            {
+              "session_id": "hold_205_return",
+              "event_index": 5,
+              "event_id": "hold_205_source_rule",
+              "fragment": "Keep that crossing unknown until the inspection."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The north footbridge is open to walkers.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_206/q1": {
+      "required_facts": [
+        {
+          "text": "Reopen the migration as a dry-run reconciliation.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 0,
+              "event_id": "hold_206_direction",
+              "fragment": "Reopen the migration as a dry-run reconciliation."
+            }
+          ]
+        },
+        {
+          "text": "Curators found that repeated catalogue numbers can refer to distinct specimens.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 0,
+              "event_id": "hold_206_direction",
+              "fragment": "Curators found that repeated catalogue numbers can refer to distinct specimens."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Migrate the specimen inventory and merge records that share a catalogue number.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_206/q2": {
+      "required_facts": [
+        {
+          "text": "Cancel automatic duplicate merging.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 3,
+              "event_id": "hold_206_scope",
+              "fragment": "Cancel automatic duplicate merging."
+            }
+          ]
+        },
+        {
+          "text": "Retain the migration mapping report.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 3,
+              "event_id": "hold_206_scope",
+              "fragment": "Retain the migration mapping report."
+            }
+          ]
+        },
+        {
+          "text": "Never merge records solely because catalogue numbers match.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 0,
+              "event_id": "hold_206_direction",
+              "fragment": "Never merge records solely because catalogue numbers match."
+            }
+          ]
+        },
+        {
+          "text": "Preserve the original catalogue strings.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 0,
+              "event_id": "hold_206_direction",
+              "fragment": "Preserve the original catalogue strings."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_206/q3": {
+      "required_facts": [
+        {
+          "text": "Dry-run mapping report created: 214 records.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 2,
+              "event_id": "hold_206_observed",
+              "fragment": "Dry-run mapping report created: 214 records."
+            }
+          ]
+        },
+        {
+          "text": "Potential repeated catalogue numbers: 9.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 2,
+              "event_id": "hold_206_observed",
+              "fragment": "Potential repeated catalogue numbers: 9."
+            }
+          ]
+        },
+        {
+          "text": "Destination writes: 0.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 2,
+              "event_id": "hold_206_observed",
+              "fragment": "Destination writes: 0."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The migration is complete and all duplicates have been merged.",
+          "support": [
+            {
+              "session_id": "hold_206_early",
+              "event_index": 2,
+              "event_id": "hold_206_report",
+              "fragment": "The migration is complete and all duplicates have been merged."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_206/q4": {
+      "required_facts": [
+        {
+          "text": "Curator Sal must classify the nine repeated numbers before the Friday review.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 6,
+              "event_id": "hold_206_pending",
+              "fragment": "Curator Sal must classify the nine repeated numbers before the Friday review."
+            }
+          ]
+        },
+        {
+          "text": "Real migration remains pending curator classification.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 6,
+              "event_id": "hold_206_pending",
+              "fragment": "Real migration remains pending curator classification."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_206/q5": {
+      "required_facts": [
+        {
+          "text": "This resumes migration job OPL-8, not the already finished cabinet-photo job OPL-3.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 1,
+              "event_id": "hold_206_boundary",
+              "fragment": "This resumes migration job OPL-8, not the already finished cabinet-photo job OPL-3."
+            }
+          ]
+        },
+        {
+          "text": "Finishing the photographs did not complete the inventory migration.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 1,
+              "event_id": "hold_206_boundary",
+              "fragment": "Finishing the photographs did not complete the inventory migration."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_206/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted register is not evidence of cabinet K’s current count.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 5,
+              "event_id": "hold_206_source_rule",
+              "fragment": "The deleted register is not evidence of cabinet K’s current count."
+            }
+          ]
+        },
+        {
+          "text": "Count cabinet K again before reconciling its total.",
+          "support": [
+            {
+              "session_id": "hold_206_return",
+              "event_index": 5,
+              "event_id": "hold_206_source_rule",
+              "fragment": "Count cabinet K again before reconciling its total."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Cabinet K currently contains 82 specimens.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_207/q1": {
+      "required_facts": [
+        {
+          "text": "Deliver a staff-only reservation preview.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 0,
+              "event_id": "hold_207_direction",
+              "fragment": "Deliver a staff-only reservation preview."
+            }
+          ]
+        },
+        {
+          "text": "The instructor wants to review seating before customers can reserve.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 0,
+              "event_id": "hold_207_direction",
+              "fragment": "The instructor wants to review seating before customers can reserve."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Launch workshop reservations with card deposits and a waitlist.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_207/q2": {
+      "required_facts": [
+        {
+          "text": "Defer card deposits.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 1,
+              "event_id": "hold_207_scope",
+              "fragment": "Defer card deposits."
+            }
+          ]
+        },
+        {
+          "text": "Keep the waitlist design in the preview.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 1,
+              "event_id": "hold_207_scope",
+              "fragment": "Keep the waitlist design in the preview."
+            }
+          ]
+        },
+        {
+          "text": "Collect no payment in the preview.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 0,
+              "event_id": "hold_207_direction",
+              "fragment": "Collect no payment in the preview."
+            }
+          ]
+        },
+        {
+          "text": "Display the cancellation terms alongside each session.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 0,
+              "event_id": "hold_207_direction",
+              "fragment": "Display the cancellation terms alongside each session."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_207/q3": {
+      "required_facts": [
+        {
+          "text": "Preview route returned HTTP 200 for the staff role.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 2,
+              "event_id": "hold_207_observed",
+              "fragment": "Preview route returned HTTP 200 for the staff role."
+            }
+          ]
+        },
+        {
+          "text": "Public route returned HTTP 403.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 2,
+              "event_id": "hold_207_observed",
+              "fragment": "Public route returned HTTP 403."
+            }
+          ]
+        },
+        {
+          "text": "Payment provider calls: 0.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 2,
+              "event_id": "hold_207_observed",
+              "fragment": "Payment provider calls: 0."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The booking page is live and deposits are enabled.",
+          "support": [
+            {
+              "session_id": "hold_207_early",
+              "event_index": 2,
+              "event_id": "hold_207_report",
+              "fragment": "The booking page is live and deposits are enabled."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_207/q4": {
+      "required_facts": [
+        {
+          "text": "Lea must confirm studio seating before the 18 January walkthrough.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 3,
+              "event_id": "hold_207_pending",
+              "fragment": "Lea must confirm studio seating before the 18 January walkthrough."
+            }
+          ]
+        },
+        {
+          "text": "Public reservations remain blocked until seating is confirmed.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 3,
+              "event_id": "hold_207_pending",
+              "fragment": "Public reservations remain blocked until seating is confirmed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_207/q5": {
+      "required_facts": [
+        {
+          "text": "Saffron Dining accepts deposits for supper bookings.",
+          "support": [
+            {
+              "session_id": "hold_207_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_207_boundary",
+              "fragment": "Saffron Dining accepts deposits for supper bookings."
+            }
+          ]
+        },
+        {
+          "text": "That separate dining setup does not authorize deposits for the workshop preview.",
+          "support": [
+            {
+              "session_id": "hold_207_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_207_boundary",
+              "fragment": "That separate dining setup does not authorize deposits for the workshop preview."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_207/q6": {
+      "required_facts": [
+        {
+          "text": "The removed room worksheet does not establish a workshop capacity.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 5,
+              "event_id": "hold_207_source_rule",
+              "fragment": "The removed room worksheet does not establish a workshop capacity."
+            }
+          ]
+        },
+        {
+          "text": "Leave the capacity unset until Lea measures the seating layout.",
+          "support": [
+            {
+              "session_id": "hold_207_return",
+              "event_index": 5,
+              "event_id": "hold_207_source_rule",
+              "fragment": "Leave the capacity unset until Lea measures the seating layout."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Studio B seats 36 workshop participants.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_208/q1": {
+      "required_facts": [
+        {
+          "text": "Continue the dictionary as an editorial review draft.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 0,
+              "event_id": "hold_208_direction",
+              "fragment": "Continue the dictionary as an editorial review draft."
+            }
+          ]
+        },
+        {
+          "text": "The historian says some spelling differences carry meaning.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 0,
+              "event_id": "hold_208_direction",
+              "fragment": "The historian says some spelling differences carry meaning."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Finish a searchable field dictionary and automatically normalize historical spellings.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_208/q2": {
+      "required_facts": [
+        {
+          "text": "Stop automatic spelling normalization.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 3,
+              "event_id": "hold_208_scope",
+              "fragment": "Stop automatic spelling normalization."
+            }
+          ]
+        },
+        {
+          "text": "Continue the search index work.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 3,
+              "event_id": "hold_208_scope",
+              "fragment": "Continue the search index work."
+            }
+          ]
+        },
+        {
+          "text": "Keep source spellings visible.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 0,
+              "event_id": "hold_208_direction",
+              "fragment": "Keep source spellings visible."
+            }
+          ]
+        },
+        {
+          "text": "Every proposed expansion must cite a source page.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 0,
+              "event_id": "hold_208_direction",
+              "fragment": "Every proposed expansion must cite a source page."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_208/q3": {
+      "required_facts": [
+        {
+          "text": "Draft search index built: 530 entries.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 2,
+              "event_id": "hold_208_observed",
+              "fragment": "Draft search index built: 530 entries."
+            }
+          ]
+        },
+        {
+          "text": "Entries missing source pages: 17.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 2,
+              "event_id": "hold_208_observed",
+              "fragment": "Entries missing source pages: 17."
+            }
+          ]
+        },
+        {
+          "text": "Release artifact uploaded: false.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 2,
+              "event_id": "hold_208_observed",
+              "fragment": "Release artifact uploaded: false."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The dictionary has been released and all historical spellings are normalized.",
+          "support": [
+            {
+              "session_id": "hold_208_early",
+              "event_index": 2,
+              "event_id": "hold_208_report",
+              "fragment": "The dictionary has been released and all historical spellings are normalized."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_208/q4": {
+      "required_facts": [
+        {
+          "text": "Historian Neri must review the 17 missing citations by 2 February.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 6,
+              "event_id": "hold_208_pending",
+              "fragment": "Historian Neri must review the 17 missing citations by 2 February."
+            }
+          ]
+        },
+        {
+          "text": "Release remains open until citation review.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 6,
+              "event_id": "hold_208_pending",
+              "fragment": "Release remains open until citation review."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_208/q5": {
+      "required_facts": [
+        {
+          "text": "The field dictionary is task FL-22 from the earlier session.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 1,
+              "event_id": "hold_208_boundary",
+              "fragment": "The field dictionary is task FL-22 from the earlier session."
+            }
+          ]
+        },
+        {
+          "text": "The town-name cleanup in FL-27 is a different task; its normalization approval does not apply here.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 1,
+              "event_id": "hold_208_boundary",
+              "fragment": "The town-name cleanup in FL-27 is a different task; its normalization approval does not apply here."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_208/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted glossary note cannot support an expansion of RQ.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 5,
+              "event_id": "hold_208_source_rule",
+              "fragment": "The deleted glossary note cannot support an expansion of RQ."
+            }
+          ]
+        },
+        {
+          "text": "Keep RQ unexpanded until a cited source is supplied.",
+          "support": [
+            {
+              "session_id": "hold_208_return",
+              "event_index": 5,
+              "event_id": "hold_208_source_rule",
+              "fragment": "Keep RQ unexpanded until a cited source is supplied."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "RQ means river quarry.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_209/q1": {
+      "required_facts": [
+        {
+          "text": "Reopen unit validation for the meter export.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 0,
+              "event_id": "hold_209_direction",
+              "fragment": "Reopen unit validation for the meter export."
+            }
+          ]
+        },
+        {
+          "text": "A technician found totals that differ by a factor of one thousand.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 0,
+              "event_id": "hold_209_direction",
+              "fragment": "A technician found totals that differ by a factor of one thousand."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Ship a live meter export with hourly aggregation and a comparison chart.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_209/q2": {
+      "required_facts": [
+        {
+          "text": "Pause the comparison chart.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 1,
+              "event_id": "hold_209_scope",
+              "fragment": "Pause the comparison chart."
+            }
+          ]
+        },
+        {
+          "text": "Retain hourly aggregation in the validation run.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 1,
+              "event_id": "hold_209_scope",
+              "fragment": "Retain hourly aggregation in the validation run."
+            }
+          ]
+        },
+        {
+          "text": "Preserve raw readings beside converted values.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 0,
+              "event_id": "hold_209_direction",
+              "fragment": "Preserve raw readings beside converted values."
+            }
+          ]
+        },
+        {
+          "text": "Do not overwrite historical measurements.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 0,
+              "event_id": "hold_209_direction",
+              "fragment": "Do not overwrite historical measurements."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_209/q3": {
+      "required_facts": [
+        {
+          "text": "Sandbox unit test: 5 cases passed, 1 case failed.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 2,
+              "event_id": "hold_209_observed",
+              "fragment": "Sandbox unit test: 5 cases passed, 1 case failed."
+            }
+          ]
+        },
+        {
+          "text": "Live meter configuration updated: false.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 2,
+              "event_id": "hold_209_observed",
+              "fragment": "Live meter configuration updated: false."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The live meter export is installed and reporting accurate totals.",
+          "support": [
+            {
+              "session_id": "hold_209_early",
+              "event_index": 2,
+              "event_id": "hold_209_report",
+              "fragment": "The live meter export is installed and reporting accurate totals."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_209/q4": {
+      "required_facts": [
+        {
+          "text": "Technician Ro must photograph the M7 display on the next site visit.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 3,
+              "event_id": "hold_209_pending",
+              "fragment": "Technician Ro must photograph the M7 display on the next site visit."
+            }
+          ]
+        },
+        {
+          "text": "Unit selection stays unresolved until that evidence arrives.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 3,
+              "event_id": "hold_209_pending",
+              "fragment": "Unit selection stays unresolved until that evidence arrives."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_209/q5": {
+      "required_facts": [
+        {
+          "text": "Lumen Demo uses synthetic kilowatt-hour samples.",
+          "support": [
+            {
+              "session_id": "hold_209_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_209_boundary",
+              "fragment": "Lumen Demo uses synthetic kilowatt-hour samples."
+            }
+          ]
+        },
+        {
+          "text": "Those units are fixed for the demo only and must not decide the live M7 unit.",
+          "support": [
+            {
+              "session_id": "hold_209_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_209_boundary",
+              "fragment": "Those units are fixed for the demo only and must not decide the live M7 unit."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_209/q6": {
+      "required_facts": [
+        {
+          "text": "The removed meter sheet is not evidence for M7’s unit.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 5,
+              "event_id": "hold_209_source_rule",
+              "fragment": "The removed meter sheet is not evidence for M7’s unit."
+            }
+          ]
+        },
+        {
+          "text": "Keep M7’s unit unresolved until the display photograph is checked.",
+          "support": [
+            {
+              "session_id": "hold_209_return",
+              "event_index": 5,
+              "event_id": "hold_209_source_rule",
+              "fragment": "Keep M7’s unit unresolved until the display photograph is checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "M7 reports energy in watt-hours.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_210/q1": {
+      "required_facts": [
+        {
+          "text": "Reopen the poster proof for readability changes.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 0,
+              "event_id": "hold_210_direction",
+              "fragment": "Reopen the poster proof for readability changes."
+            }
+          ]
+        },
+        {
+          "text": "The venue found that the date is illegible from the entrance.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 0,
+              "event_id": "hold_210_direction",
+              "fragment": "The venue found that the date is illegible from the entrance."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Finalize exhibition posters with sponsor logos and export files for the printer.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_210/q2": {
+      "required_facts": [
+        {
+          "text": "Drop the animated social-media variant.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 3,
+              "event_id": "hold_210_scope",
+              "fragment": "Drop the animated social-media variant."
+            }
+          ]
+        },
+        {
+          "text": "Keep the physical poster export in scope.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 3,
+              "event_id": "hold_210_scope",
+              "fragment": "Keep the physical poster export in scope."
+            }
+          ]
+        },
+        {
+          "text": "Keep the exhibition title unchanged.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 0,
+              "event_id": "hold_210_direction",
+              "fragment": "Keep the exhibition title unchanged."
+            }
+          ]
+        },
+        {
+          "text": "Use only the sponsor logos already approved by the venue.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 0,
+              "event_id": "hold_210_direction",
+              "fragment": "Use only the sponsor logos already approved by the venue."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_210/q3": {
+      "required_facts": [
+        {
+          "text": "Local PDF proof generated: 2 pages.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 2,
+              "event_id": "hold_210_observed",
+              "fragment": "Local PDF proof generated: 2 pages."
+            }
+          ]
+        },
+        {
+          "text": "Printer upload failed: destination unavailable.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 2,
+              "event_id": "hold_210_observed",
+              "fragment": "Printer upload failed: destination unavailable."
+            }
+          ]
+        },
+        {
+          "text": "Printer approval received: false.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 2,
+              "event_id": "hold_210_observed",
+              "fragment": "Printer approval received: false."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The print files have been sent and the printer has approved them.",
+          "support": [
+            {
+              "session_id": "hold_210_early",
+              "event_index": 2,
+              "event_id": "hold_210_report",
+              "fragment": "The print files have been sent and the printer has approved them."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_210/q4": {
+      "required_facts": [
+        {
+          "text": "Ari must supply an entrance-distance photograph by Tuesday noon.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 6,
+              "event_id": "hold_210_pending",
+              "fragment": "Ari must supply an entrance-distance photograph by Tuesday noon."
+            }
+          ]
+        },
+        {
+          "text": "Printer submission remains pending after the readability check.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 6,
+              "event_id": "hold_210_pending",
+              "fragment": "Printer submission remains pending after the readability check."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_210/q5": {
+      "required_facts": [
+        {
+          "text": "This is a revision of poster job WR-6.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 1,
+              "event_id": "hold_210_boundary",
+              "fragment": "This is a revision of poster job WR-6."
+            }
+          ]
+        },
+        {
+          "text": "The accepted invitation-card job WR-9 stays separate; its print approval does not approve these posters.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 1,
+              "event_id": "hold_210_boundary",
+              "fragment": "The accepted invitation-card job WR-9 stays separate; its print approval does not approve these posters."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_210/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted printer note cannot establish the current bleed requirement.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 5,
+              "event_id": "hold_210_source_rule",
+              "fragment": "The deleted printer note cannot establish the current bleed requirement."
+            }
+          ]
+        },
+        {
+          "text": "Obtain the printer’s current specification before the final export.",
+          "support": [
+            {
+              "session_id": "hold_210_return",
+              "event_index": 5,
+              "event_id": "hold_210_source_rule",
+              "fragment": "Obtain the printer’s current specification before the final export."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The current required bleed is 3 millimetres.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_211/q1": {
+      "required_facts": [
+        {
+          "text": "Prepare a desk-only checkout catalogue.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 0,
+              "event_id": "hold_211_direction",
+              "fragment": "Prepare a desk-only checkout catalogue."
+            }
+          ]
+        },
+        {
+          "text": "Volunteers cannot yet package seeds for shipping.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 0,
+              "event_id": "hold_211_direction",
+              "fragment": "Volunteers cannot yet package seeds for shipping."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Build a seed checkout catalogue with postal delivery and return reminders.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_211/q2": {
+      "required_facts": [
+        {
+          "text": "Cancel postal delivery for the spring pilot.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 1,
+              "event_id": "hold_211_scope",
+              "fragment": "Cancel postal delivery for the spring pilot."
+            }
+          ]
+        },
+        {
+          "text": "Keep return reminders in scope.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 1,
+              "event_id": "hold_211_scope",
+              "fragment": "Keep return reminders in scope."
+            }
+          ]
+        },
+        {
+          "text": "Retain seed lot identifiers on checkout slips.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 0,
+              "event_id": "hold_211_direction",
+              "fragment": "Retain seed lot identifiers on checkout slips."
+            }
+          ]
+        },
+        {
+          "text": "Do not expose donor names in the catalogue.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 0,
+              "event_id": "hold_211_direction",
+              "fragment": "Do not expose donor names in the catalogue."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_211/q3": {
+      "required_facts": [
+        {
+          "text": "Desk catalogue imported: 41 lots.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 2,
+              "event_id": "hold_211_observed",
+              "fragment": "Desk catalogue imported: 41 lots."
+            }
+          ]
+        },
+        {
+          "text": "Public catalogue route disabled.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 2,
+              "event_id": "hold_211_observed",
+              "fragment": "Public catalogue route disabled."
+            }
+          ]
+        },
+        {
+          "text": "Shipping labels generated: 0.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 2,
+              "event_id": "hold_211_observed",
+              "fragment": "Shipping labels generated: 0."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The catalogue is public and postal delivery is ready.",
+          "support": [
+            {
+              "session_id": "hold_211_early",
+              "event_index": 2,
+              "event_id": "hold_211_report",
+              "fragment": "The catalogue is public and postal delivery is ready."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_211/q4": {
+      "required_facts": [
+        {
+          "text": "Volunteer Toma must test one checkout and one return before the spring desk rehearsal.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 3,
+              "event_id": "hold_211_pending",
+              "fragment": "Volunteer Toma must test one checkout and one return before the spring desk rehearsal."
+            }
+          ]
+        },
+        {
+          "text": "The pilot is not accepted until that rehearsal passes.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 3,
+              "event_id": "hold_211_pending",
+              "fragment": "The pilot is not accepted until that rehearsal passes."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_211/q5": {
+      "required_facts": [
+        {
+          "text": "Copper Shop may display merchant names on receipts.",
+          "support": [
+            {
+              "session_id": "hold_211_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_211_boundary",
+              "fragment": "Copper Shop may display merchant names on receipts."
+            }
+          ]
+        },
+        {
+          "text": "It is a separate retail project; this does not permit donor names in the seed catalogue.",
+          "support": [
+            {
+              "session_id": "hold_211_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_211_boundary",
+              "fragment": "It is a separate retail project; this does not permit donor names in the seed catalogue."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_211/q6": {
+      "required_facts": [
+        {
+          "text": "The removed donation card does not support planting advice for lot S14.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 5,
+              "event_id": "hold_211_source_rule",
+              "fragment": "The removed donation card does not support planting advice for lot S14."
+            }
+          ]
+        },
+        {
+          "text": "Ask the seed steward for a replacement provenance record before adding advice.",
+          "support": [
+            {
+              "session_id": "hold_211_return",
+              "event_index": 5,
+              "event_id": "hold_211_source_rule",
+              "fragment": "Ask the seed steward for a replacement provenance record before adding advice."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Lot S14 is suitable for shaded balconies.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_212/q1": {
+      "required_facts": [
+        {
+          "text": "Resume the shuttle board as an operator review screen.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 0,
+              "event_id": "hold_212_direction",
+              "fragment": "Resume the shuttle board as an operator review screen."
+            }
+          ]
+        },
+        {
+          "text": "The operator changed the evening service and has not approved a new schedule.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 0,
+              "event_id": "hold_212_direction",
+              "fragment": "The operator changed the evening service and has not approved a new schedule."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Publish a shuttle departure board with estimated arrivals and service alerts.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_212/q2": {
+      "required_facts": [
+        {
+          "text": "Disable estimated arrivals for the first release.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 3,
+              "event_id": "hold_212_scope",
+              "fragment": "Disable estimated arrivals for the first release."
+            }
+          ]
+        },
+        {
+          "text": "Keep scheduled departures in the review screen.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 3,
+              "event_id": "hold_212_scope",
+              "fragment": "Keep scheduled departures in the review screen."
+            }
+          ]
+        },
+        {
+          "text": "Show schedule status as provisional.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 0,
+              "event_id": "hold_212_direction",
+              "fragment": "Show schedule status as provisional."
+            }
+          ]
+        },
+        {
+          "text": "Retain service alerts even when arrival estimates are missing.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 0,
+              "event_id": "hold_212_direction",
+              "fragment": "Retain service alerts even when arrival estimates are missing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_212/q3": {
+      "required_facts": [
+        {
+          "text": "Operator review screen rendered with 24 provisional departures.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 2,
+              "event_id": "hold_212_observed",
+              "fragment": "Operator review screen rendered with 24 provisional departures."
+            }
+          ]
+        },
+        {
+          "text": "Station display sync skipped: no approved schedule.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 2,
+              "event_id": "hold_212_observed",
+              "fragment": "Station display sync skipped: no approved schedule."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The station board is live and all departure times are confirmed.",
+          "support": [
+            {
+              "session_id": "hold_212_early",
+              "event_index": 2,
+              "event_id": "hold_212_report",
+              "fragment": "The station board is live and all departure times are confirmed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_212/q4": {
+      "required_facts": [
+        {
+          "text": "Dispatcher Fen must provide the signed evening schedule before Friday’s shift change.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 6,
+              "event_id": "hold_212_pending",
+              "fragment": "Dispatcher Fen must provide the signed evening schedule before Friday’s shift change."
+            }
+          ]
+        },
+        {
+          "text": "Station deployment waits for that schedule.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 6,
+              "event_id": "hold_212_pending",
+              "fragment": "Station deployment waits for that schedule."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_212/q5": {
+      "required_facts": [
+        {
+          "text": "This continues board request IV-12 across sessions.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 1,
+              "event_id": "hold_212_boundary",
+              "fragment": "This continues board request IV-12 across sessions."
+            }
+          ]
+        },
+        {
+          "text": "The closed shelter-sign repair IV-2 concerns physical signs and does not close the departure-board request.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 1,
+              "event_id": "hold_212_boundary",
+              "fragment": "The closed shelter-sign repair IV-2 concerns physical signs and does not close the departure-board request."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_212/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted operator sheet cannot establish the last eastbound departure.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 5,
+              "event_id": "hold_212_source_rule",
+              "fragment": "The deleted operator sheet cannot establish the last eastbound departure."
+            }
+          ]
+        },
+        {
+          "text": "Keep the last departure unknown until Fen supplies the signed schedule.",
+          "support": [
+            {
+              "session_id": "hold_212_return",
+              "event_index": 5,
+              "event_id": "hold_212_source_rule",
+              "fragment": "Keep the last departure unknown until Fen supplies the signed schedule."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The last eastbound shuttle departs at 21:40.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_213/q1": {
+      "required_facts": [
+        {
+          "text": "Reopen the captions for consent review.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 0,
+              "event_id": "hold_213_direction",
+              "fragment": "Reopen the captions for consent review."
+            }
+          ]
+        },
+        {
+          "text": "The archivist found that some speakers consented to audio but not identification.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 0,
+              "event_id": "hold_213_direction",
+              "fragment": "The archivist found that some speakers consented to audio but not identification."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Release captioned oral-history clips with speaker identification and translated summaries.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_213/q2": {
+      "required_facts": [
+        {
+          "text": "Cancel translated summaries for this release.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 1,
+              "event_id": "hold_213_scope",
+              "fragment": "Cancel translated summaries for this release."
+            }
+          ]
+        },
+        {
+          "text": "Retain caption correction work.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 1,
+              "event_id": "hold_213_scope",
+              "fragment": "Retain caption correction work."
+            }
+          ]
+        },
+        {
+          "text": "Use anonymous speaker labels until identification consent is documented.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 0,
+              "event_id": "hold_213_direction",
+              "fragment": "Use anonymous speaker labels until identification consent is documented."
+            }
+          ]
+        },
+        {
+          "text": "Keep timestamps aligned to the original audio.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 0,
+              "event_id": "hold_213_direction",
+              "fragment": "Keep timestamps aligned to the original audio."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_213/q3": {
+      "required_facts": [
+        {
+          "text": "Caption alignment check: 32 of 32 clips within tolerance.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 2,
+              "event_id": "hold_213_observed",
+              "fragment": "Caption alignment check: 32 of 32 clips within tolerance."
+            }
+          ]
+        },
+        {
+          "text": "Identification consent records checked: 0.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 2,
+              "event_id": "hold_213_observed",
+              "fragment": "Identification consent records checked: 0."
+            }
+          ]
+        },
+        {
+          "text": "Publication write attempted: false.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 2,
+              "event_id": "hold_213_observed",
+              "fragment": "Publication write attempted: false."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: All captions and speaker names have been verified and published.",
+          "support": [
+            {
+              "session_id": "hold_213_early",
+              "event_index": 2,
+              "event_id": "hold_213_report",
+              "fragment": "All captions and speaker names have been verified and published."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_213/q4": {
+      "required_facts": [
+        {
+          "text": "Archivist Bela must review the consent forms before the Wednesday screening.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 3,
+              "event_id": "hold_213_pending",
+              "fragment": "Archivist Bela must review the consent forms before the Wednesday screening."
+            }
+          ]
+        },
+        {
+          "text": "Named speaker labels remain blocked until that review.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 3,
+              "event_id": "hold_213_pending",
+              "fragment": "Named speaker labels remain blocked until that review."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_213/q5": {
+      "required_facts": [
+        {
+          "text": "Plum Radio has explicit consent to name its presenters.",
+          "support": [
+            {
+              "session_id": "hold_213_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_213_boundary",
+              "fragment": "Plum Radio has explicit consent to name its presenters."
+            }
+          ]
+        },
+        {
+          "text": "That separate broadcast project does not supply consent for the oral-history speakers.",
+          "support": [
+            {
+              "session_id": "hold_213_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_213_boundary",
+              "fragment": "That separate broadcast project does not supply consent for the oral-history speakers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_213/q6": {
+      "required_facts": [
+        {
+          "text": "The removed speaker index cannot identify voice C.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 5,
+              "event_id": "hold_213_source_rule",
+              "fragment": "The removed speaker index cannot identify voice C."
+            }
+          ]
+        },
+        {
+          "text": "Keep voice C anonymous until identity and identification consent are independently confirmed.",
+          "support": [
+            {
+              "session_id": "hold_213_return",
+              "event_index": 5,
+              "event_id": "hold_213_source_rule",
+              "fragment": "Keep voice C anonymous until identity and identification consent are independently confirmed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Voice C belongs to Maren Vale.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_214/q1": {
+      "required_facts": [
+        {
+          "text": "Finish a technician-facing intake draft.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 0,
+              "event_id": "hold_214_direction",
+              "fragment": "Finish a technician-facing intake draft."
+            }
+          ]
+        },
+        {
+          "text": "The workshop needs to inspect damage before promising prices.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 0,
+              "event_id": "hold_214_direction",
+              "fragment": "The workshop needs to inspect damage before promising prices."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Launch repair intake with automated repair estimates and appointment slots.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_214/q2": {
+      "required_facts": [
+        {
+          "text": "Remove automated repair estimates.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 3,
+              "event_id": "hold_214_scope",
+              "fragment": "Remove automated repair estimates."
+            }
+          ]
+        },
+        {
+          "text": "Retain appointment slot selection.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 3,
+              "event_id": "hold_214_scope",
+              "fragment": "Retain appointment slot selection."
+            }
+          ]
+        },
+        {
+          "text": "Do not quote a repair price automatically.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 0,
+              "event_id": "hold_214_direction",
+              "fragment": "Do not quote a repair price automatically."
+            }
+          ]
+        },
+        {
+          "text": "Keep the customer’s reported fault separate from the technician’s diagnosis.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 0,
+              "event_id": "hold_214_direction",
+              "fragment": "Keep the customer’s reported fault separate from the technician’s diagnosis."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_214/q3": {
+      "required_facts": [
+        {
+          "text": "Draft intake test: fault and diagnosis stored in separate fields.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 2,
+              "event_id": "hold_214_observed",
+              "fragment": "Draft intake test: fault and diagnosis stored in separate fields."
+            }
+          ]
+        },
+        {
+          "text": "Customer portal deployment blocked: technician sign-off missing.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 2,
+              "event_id": "hold_214_observed",
+              "fragment": "Customer portal deployment blocked: technician sign-off missing."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: Intake is live and the estimates are approved by the technicians.",
+          "support": [
+            {
+              "session_id": "hold_214_early",
+              "event_index": 2,
+              "event_id": "hold_214_report",
+              "fragment": "Intake is live and the estimates are approved by the technicians."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_214/q4": {
+      "required_facts": [
+        {
+          "text": "Technician Uma must review three sample intake records by 9 March.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 6,
+              "event_id": "hold_214_pending",
+              "fragment": "Technician Uma must review three sample intake records by 9 March."
+            }
+          ]
+        },
+        {
+          "text": "Customer portal release remains open.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 6,
+              "event_id": "hold_214_pending",
+              "fragment": "Customer portal release remains open."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_214/q5": {
+      "required_facts": [
+        {
+          "text": "The draft continues intake task SL-5.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 1,
+              "event_id": "hold_214_boundary",
+              "fragment": "The draft continues intake task SL-5."
+            }
+          ]
+        },
+        {
+          "text": "The completed stock-count task SL-8 has no authority to approve customer intake or prices.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 1,
+              "event_id": "hold_214_boundary",
+              "fragment": "The completed stock-count task SL-8 has no authority to approve customer intake or prices."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_214/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted workshop card does not establish the fuse for model T.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 5,
+              "event_id": "hold_214_source_rule",
+              "fragment": "The deleted workshop card does not establish the fuse for model T."
+            }
+          ]
+        },
+        {
+          "text": "Require a technician’s model-specific check before naming a replacement fuse.",
+          "support": [
+            {
+              "session_id": "hold_214_return",
+              "event_index": 5,
+              "event_id": "hold_214_source_rule",
+              "fragment": "Require a technician’s model-specific check before naming a replacement fuse."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All model T appliances use fuse F8.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_215/q1": {
+      "required_facts": [
+        {
+          "text": "Reopen the water log in observation-only mode.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 0,
+              "event_id": "hold_215_direction",
+              "fragment": "Reopen the water log in observation-only mode."
+            }
+          ]
+        },
+        {
+          "text": "The groundskeeper found inconsistent valve labels.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 0,
+              "event_id": "hold_215_direction",
+              "fragment": "The groundskeeper found inconsistent valve labels."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Deploy a water-use log with automatic irrigation commands and daily summaries.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_215/q2": {
+      "required_facts": [
+        {
+          "text": "Cancel automatic irrigation control for this trial.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 1,
+              "event_id": "hold_215_scope",
+              "fragment": "Cancel automatic irrigation control for this trial."
+            }
+          ]
+        },
+        {
+          "text": "Retain daily usage summaries.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 1,
+              "event_id": "hold_215_scope",
+              "fragment": "Retain daily usage summaries."
+            }
+          ]
+        },
+        {
+          "text": "Send no actuator commands during observation.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 0,
+              "event_id": "hold_215_direction",
+              "fragment": "Send no actuator commands during observation."
+            }
+          ]
+        },
+        {
+          "text": "Keep raw meter timestamps in daily summaries.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 0,
+              "event_id": "hold_215_direction",
+              "fragment": "Keep raw meter timestamps in daily summaries."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_215/q3": {
+      "required_facts": [
+        {
+          "text": "Observation run completed: 48 meter samples logged.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 2,
+              "event_id": "hold_215_observed",
+              "fragment": "Observation run completed: 48 meter samples logged."
+            }
+          ]
+        },
+        {
+          "text": "Actuator commands sent: 0.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 2,
+              "event_id": "hold_215_observed",
+              "fragment": "Actuator commands sent: 0."
+            }
+          ]
+        },
+        {
+          "text": "Controller deployment: not performed.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 2,
+              "event_id": "hold_215_observed",
+              "fragment": "Controller deployment: not performed."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: The controller is deployed and the west beds were watered automatically.",
+          "support": [
+            {
+              "session_id": "hold_215_early",
+              "event_index": 2,
+              "event_id": "hold_215_report",
+              "fragment": "The controller is deployed and the west beds were watered automatically."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_215/q4": {
+      "required_facts": [
+        {
+          "text": "Groundskeeper Davi must trace V3 before the April trial review.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 3,
+              "event_id": "hold_215_pending",
+              "fragment": "Groundskeeper Davi must trace V3 before the April trial review."
+            }
+          ]
+        },
+        {
+          "text": "Automatic control remains outside the trial.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 3,
+              "event_id": "hold_215_pending",
+              "fragment": "Automatic control remains outside the trial."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_215/q5": {
+      "required_facts": [
+        {
+          "text": "Amber Garden is a separate simulated planning model and may simulate watering commands.",
+          "support": [
+            {
+              "session_id": "hold_215_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_215_boundary",
+              "fragment": "Amber Garden is a separate simulated planning model and may simulate watering commands."
+            }
+          ]
+        },
+        {
+          "text": "Simulation permission does not allow Amber Water to send real actuator commands.",
+          "support": [
+            {
+              "session_id": "hold_215_boundary_session",
+              "event_index": 0,
+              "event_id": "hold_215_boundary",
+              "fragment": "Simulation permission does not allow Amber Water to send real actuator commands."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_215/q6": {
+      "required_facts": [
+        {
+          "text": "The removed valve map cannot establish what V3 feeds.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 5,
+              "event_id": "hold_215_source_rule",
+              "fragment": "The removed valve map cannot establish what V3 feeds."
+            }
+          ]
+        },
+        {
+          "text": "Leave V3’s destination unknown until Davi traces it.",
+          "support": [
+            {
+              "session_id": "hold_215_return",
+              "event_index": 5,
+              "event_id": "hold_215_source_rule",
+              "fragment": "Leave V3’s destination unknown until Davi traces it."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Valve V3 feeds the west beds.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    },
+    "hold_216/q1": {
+      "required_facts": [
+        {
+          "text": "Resume certificate generation as an instructor review batch.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 0,
+              "event_id": "hold_216_direction",
+              "fragment": "Resume certificate generation as an instructor review batch."
+            }
+          ]
+        },
+        {
+          "text": "The instructor found that attendance corrections have not been applied.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 0,
+              "event_id": "hold_216_direction",
+              "fragment": "The instructor found that attendance corrections have not been applied."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Issue course certificates with grades and automatic email delivery.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Continue the current goal for its stated reason."
+    },
+    "hold_216/q2": {
+      "required_facts": [
+        {
+          "text": "Drop printed grades from the certificates.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 3,
+              "event_id": "hold_216_scope",
+              "fragment": "Drop printed grades from the certificates."
+            }
+          ]
+        },
+        {
+          "text": "Keep completion status visible in the review table.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 3,
+              "event_id": "hold_216_scope",
+              "fragment": "Keep completion status visible in the review table."
+            }
+          ]
+        },
+        {
+          "text": "Use participant codes in the review batch.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 0,
+              "event_id": "hold_216_direction",
+              "fragment": "Use participant codes in the review batch."
+            }
+          ]
+        },
+        {
+          "text": "Do not email certificates before instructor approval.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 0,
+              "event_id": "hold_216_direction",
+              "fragment": "Do not email certificates before instructor approval."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire project has been canceled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Keep the retained work and enforce both constraints."
+    },
+    "hold_216/q3": {
+      "required_facts": [
+        {
+          "text": "Draft certificate batch generated: 23 files.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 2,
+              "event_id": "hold_216_observed",
+              "fragment": "Draft certificate batch generated: 23 files."
+            }
+          ]
+        },
+        {
+          "text": "Instructor approval flag: false.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 2,
+              "event_id": "hold_216_observed",
+              "fragment": "Instructor approval flag: false."
+            }
+          ]
+        },
+        {
+          "text": "Email submissions: 0.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 2,
+              "event_id": "hold_216_observed",
+              "fragment": "Email submissions: 0."
+            }
+          ]
+        },
+        {
+          "text": "The assistant earlier reported: Every certificate has been issued and emailed to its participant.",
+          "support": [
+            {
+              "session_id": "hold_216_early",
+              "event_index": 2,
+              "event_id": "hold_216_report",
+              "fragment": "Every certificate has been issued and emailed to its participant."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant’s earlier completion report proves the live work succeeded.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+    },
+    "hold_216/q4": {
+      "required_facts": [
+        {
+          "text": "Instructor Juno must reconcile attendance before the 6 May review.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 6,
+              "event_id": "hold_216_pending",
+              "fragment": "Instructor Juno must reconcile attendance before the 6 May review."
+            }
+          ]
+        },
+        {
+          "text": "Certificate issue remains pending approval of the corrected batch.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 6,
+              "event_id": "hold_216_pending",
+              "fragment": "Certificate issue remains pending approval of the corrected batch."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "No follow-up remains; this work is fully accepted.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Carry forward the named owner, trigger or deadline, and pending condition."
+    },
+    "hold_216/q5": {
+      "required_facts": [
+        {
+          "text": "This resumes certificate task PE-18.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 1,
+              "event_id": "hold_216_boundary",
+              "fragment": "This resumes certificate task PE-18."
+            }
+          ]
+        },
+        {
+          "text": "The accepted course-feedback report PE-11 is a separate deliverable and does not prove certificate eligibility.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 1,
+              "event_id": "hold_216_boundary",
+              "fragment": "The accepted course-feedback report PE-11 is a separate deliverable and does not prove certificate eligibility."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project or completed task authorizes or completes the current work.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "task_identity",
+      "expected_actionability": "Keep the stated task identity and permission boundary."
+    },
+    "hold_216/q6": {
+      "required_facts": [
+        {
+          "text": "The deleted course export cannot establish P19’s completion.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 5,
+              "event_id": "hold_216_source_rule",
+              "fragment": "The deleted course export cannot establish P19’s completion."
+            }
+          ]
+        },
+        {
+          "text": "Leave P19’s eligibility unverified until the corrected attendance is approved.",
+          "support": [
+            {
+              "session_id": "hold_216_return",
+              "event_index": 5,
+              "event_id": "hold_216_source_rule",
+              "fragment": "Leave P19’s eligibility unverified until the corrected attendance is approved."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Participant P19 has completed all modules.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Treat the deleted detail as unverified and use the specified replacement check."
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "schema_version": "r22-continuation-source-release-v1",
+  "status": "source_held_for_central_review_not_quality_acceptance",
+  "authorization": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r21/closing-status.json",
+    "sha256": "d2d08c6777282b2cc066821e694027af0a19719053987109601b39385f06b08b",
+    "root_message": "Explicit source hold release; minimal continuation slot fix approved after R21 closed."
+  },
+  "changed_files": [
+    {
+      "path": "codex_mem/project_memory.py",
+      "sha256": "1c1ddb663c4ca3b76bbc063c539dec78352e2bfbe1a9e6911b3f463afd2461c3"
+    },
+    {
+      "path": "tests/test_project_memory_continuation_slots.py",
+      "sha256": "a94267be64e614c01c2956d1df1ea09ecd6e64c277bada37938dc67c9d70591f"
+    }
+  ],
+  "old_product_source": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/project_memory.before.py",
+    "sha256": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02"
+  },
+  "semantic_change": "Only supported continuation edges reserve/check continued_roots. Existing unproved continuity omission yields standalone record without consuming a logical-root slot. Two supported edges for same logical root and consolidation overlaps still reject the entire batch.",
+  "line_anchors": {
+    "previous_reservation": "before source lines706-708",
+    "new_reservation": "codex_mem/project_memory.py:722-724",
+    "unsupported_omission": "codex_mem/project_memory.py:719-720"
+  },
+  "compatibility": {
+    "canonical_format": "unchanged",
+    "native_schema_version": "project-memory-output-v12 unchanged",
+    "native_request_schema_prompt": "episode_processor.py unchanged; no request/profile/grader changes",
+    "stored_memory": "no migration or old memory rewriting",
+    "evidence_scope_deletion_leases": "existing checks unchanged",
+    "no_response_repair": "No selection/merge/synthesis of duplicate episodes. Unsupported continuity follows preexisting omission semantics. Historical failure status/grades/usage unchanged."
+  },
+  "red_evidence": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/red-receipt.json",
+    "sha256": "99210c7ae55fd753bbbc79a4be8d03930347da6a59a5a403ccc85825dc213a95"
+  },
+  "red_artifacts_verified_immutable": true,
+  "green_tests_total": 237,
+  "commands_individually_exit_checked": [
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory_continuation_slots.py' -v",
+      "exit_code": 0,
+      "tests": 12,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/green-12.log",
+        "sha256": "0c3530f0d6821bc9691cd6a9efa661e0f7369142d7fbd5a13802843ff09543ef"
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory_store.py' -v",
+      "exit_code": 0,
+      "tests": 69,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_project_memory_store.log",
+        "sha256": "7570948233a2b5b7d7876fdcfcd0dc2ee23cc8459ebf1e6ad54340d877ea0ad7"
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_episode_processor.py' -v",
+      "exit_code": 0,
+      "tests": 52,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_episode_processor.log",
+        "sha256": "8a3a20fa7116f9d94d5ba379e5f04bd07b2be5e15543527d5f395284bd5453bb"
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory_consolidation.py' -v",
+      "exit_code": 0,
+      "tests": 61,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_project_memory_consolidation.log",
+        "sha256": "ef06c27a211c0af8875edab82ce2502c4fb56923bde86e4ba890d4be33864fcb"
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory_lifecycle.py' -v",
+      "exit_code": 0,
+      "tests": 11,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_project_memory_lifecycle.log",
+        "sha256": "9549ac51f1d44dc390291f53febc693f26349561b344b2553d2587b5dc819c42"
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_queue_recovery.py' -v",
+      "exit_code": 0,
+      "tests": 10,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_queue_recovery.log",
+        "sha256": "2b913c5bf7f41d3af423a09c1873b6d66c1a850078c80d08f4e8159169ee4866"
+      }
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory_reopening_clauses.py' -v",
+      "exit_code": 0,
+      "tests": 22,
+      "raw_log": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_project_memory_reopening_clauses.log",
+        "sha256": "cd5c89c41a7f86c3389330682ef0ac2e9729abf273227064b11567454ac31d8d"
+      }
+    },
+    {
+      "command": "python3 docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/prospective-saved-response-replay.py",
+      "exit_code": 0,
+      "result": {
+        "path": "docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/prospective-saved-response-result.json",
+        "sha256": "020f6eedd2d286f0fa3869ee09a033641d0472b7cca5c94e9d69db9509eb3dc9"
+      }
+    }
+  ],
+  "saved_response_result": {
+    "entire_unminimized_saved_output": "validated under new runtime, not committed",
+    "standalone_episodes": 2,
+    "claims": 2,
+    "relations": 0,
+    "omitted_continuities_count": 2,
+    "pending_reconciliation": true,
+    "original_receipt_db_unchanged": true,
+    "native_calls": 0,
+    "retry_calls": 0,
+    "commits": 0,
+    "limit": "Disclosure snapshot reconstructed from captured request because quarantined durable snapshot erased. Validates actual decoder and Store validator, not a live claimed-job/commit replay."
+  },
+  "unchanged_boundaries": [
+    {
+      "path": "codex_mem/episode_processor.py",
+      "sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a"
+    },
+    {
+      "path": "scripts/project_memory_consolidation_experiment.py",
+      "sha256": "1ac66fcbd8971a93252607a0304238d2334e61d3d050fcf3a9e0e12494c00a60"
+    }
+  ],
+  "limits": [
+    "Public tests use deterministic injected native receipts, not behavioral model evidence.",
+    "No full suite run here; parent coordinates central CI, architecture/docs and independent reviews.",
+    "No new native/network/model calls; no old trial result or database mutation.",
+    "No source changes beyond owned project_memory.py and new permanent test module."
+  ]
+}

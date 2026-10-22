@@ -1,0 +1,348 @@
+{
+  "status": "read_only_design_assessment_fixed_partial_snapshot_not_implementation",
+  "created_utc": "2026-10-21T17:59:09.508760+00:00",
+  "scope": "Only the existing 36-question first-six-history partial snapshot; no later grades/histories inspected.",
+  "models_called": 0,
+  "runtime_edits": 0,
+  "source_hashes": {
+    "codex_mem/__init__.py": "89b3142a99050a98a4e28a4d5483f351e3c65f81481b4b6793bd6388eca14fe3",
+    "codex_mem/__main__.py": "307299fda7b77d22c64cb51430ec75e5f59d78e9c948786afb3b2544fe45e4b7",
+    "codex_mem/cli.py": "485d00cd8e82225f57735afc9dcab68b5031c392a72fa8bd16454036f795917d",
+    "codex_mem/config.py": "10685f1162602d5c6c74b8a93b67ef5031cced53c01548d0dd7ab43f19df8009",
+    "codex_mem/cost_report.py": "37ea568c3cf851f25e7a349a24506f466efc2bc709a819fd0fd32210fdb1a2be",
+    "codex_mem/dashboard.py": "fcae6cfff58e5bc5671de60d06797806686fc145fe31663257a69604def71a3f",
+    "codex_mem/dashboard_data.py": "0e62a5b978ed3193d704ee761dc2f0475aaceab31ad034175569f0b8dfa8b8f8",
+    "codex_mem/episode_processor.py": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "codex_mem/evidence.py": "1ad35b7659877747cc85d93dcb2a3438125150ddac26984abb8660312a5f3884",
+    "codex_mem/freshness.py": "4d6a32eeb7595d97058784f21eb408da37ffbc847cd0d95ba7e88dcbff9e9330",
+    "codex_mem/hook_diagnostics.py": "a11a7533ffcc37d2fb18e1e2c9ef2ebc5f1ac983ea09d00e3f77ebb2320580ba",
+    "codex_mem/hook_log_reader.py": "e3638d4444aa6939144d06cabe6fca0311e08a8b93fe6c6e60ca11cab4f0c6f0",
+    "codex_mem/hook_process.py": "95c3a662860d60c5607101fafa16d4979f3ec7147760886854fd6dd7a3595f14",
+    "codex_mem/hook_runner.py": "74b744ae68ef9dca9ede26b7ff55ba7ceffd74391079dcd45d9cbf82ca9c9620",
+    "codex_mem/hooks.py": "fe6eb93a32826adcc50df8ee194f4294f40585609a929fde4f87183e896290c5",
+    "codex_mem/importer.py": "28bffc66c0b23dccc90b8588b4453559f56126352106739fc7b898b6b0fb77c2",
+    "codex_mem/integration.py": "121cb19bf16b0a00caa73ee0f1aaed5146292da6e5069a824aab415b528bc3a7",
+    "codex_mem/jev_audit.py": "333685d110cc24e1f35f8281a53f3a1bf79290bb0f98a7cfc4a722fa3f033c20",
+    "codex_mem/jev_cache.py": "a43ab3dad7a64354c7385bcb6890308b9ee946f01820dc67fc67165b5fd9bd8b",
+    "codex_mem/jev_client.py": "55db20ace755f34ee42c249f2f24dc558e8b57f735b088b89f2c08c90f1be6e5",
+    "codex_mem/jev_filter.py": "4f7d4a8c31767c12ae8893f493d03a7a15cc5f082dcb5bc5dd9d9e4d2f36c0d6",
+    "codex_mem/jev_quality.py": "d951a92225b968067d3ddf10057365d89c8e6baa548b03b73aa39988c6e381ce",
+    "codex_mem/jev_retrieval.py": "34fcd24f3d5f0085e9d9872a0bf12706f77b18e740700a821e53cabd365610e5",
+    "codex_mem/mcp.py": "696cd3cff0e6bb854293f82d10b10e923019e457c8446c2d0d3a17566cf71d51",
+    "codex_mem/observation_diagnostics.py": "91772353e4c57881285d41ae5ebab8df6ddca0558368435787459f7d0376a3c4",
+    "codex_mem/observer_usage_store.py": "37d37ddad14a682122b8243efd2cf759a718e9f61b134e54ae0eb570b043a888",
+    "codex_mem/pricing.py": "a120523807e42a839ac86e44899d5f46e11ad2aebbbde2f483ab2e860c7c52b9",
+    "codex_mem/privacy.py": "04f3bb232080b1df6ed0615a121822d3d1ddbd2442d3792627d24e9b509e2a29",
+    "codex_mem/private_gate.py": "cc830949260cf77e4957fbca93faef7e10c0ebb9ca6224a2e03895d08616706c",
+    "codex_mem/processor.py": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39",
+    "codex_mem/project_memory.py": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02",
+    "codex_mem/project_memory_custody.py": "f3de450361a33a6e89b2b2ce67b962ab2afede19ad5fc6753f7bbfc45dca7823",
+    "codex_mem/project_memory_query.py": "79b5e1a9a3effec4dc27ad06ef8cc5d8424696e7c9820b9246eba2bb9b8da054",
+    "codex_mem/project_memory_retrieval.py": "f498843e8456217fa230c008482a01e09c5d1a8238f8e5148fe24c9c07061a22",
+    "codex_mem/project_scopes.py": "23a5acb8ca90294f577d9c09b85804fa4596dc20fd16ac7546035ea84e2ada03",
+    "codex_mem/quarantine_recovery.py": "67c639cfa6b8a8c800c8a3d6e0569699c3c31d42136caed1025c20fa93f5a8d6",
+    "codex_mem/query.py": "c7fca48750c9f06528a75fe619d4e71e24af9f6595b6ac982e6ba208b86c5354",
+    "codex_mem/request_limits.py": "7b18ecc9aab28e2ac66cb579459ea28863a6438df55aed764cc902cf80467866",
+    "codex_mem/retrieval.py": "de913dfd172a647ef76084e80c9a0b72ded2b5f74ed23bf2f6c00fd4ac6a1b6d",
+    "codex_mem/semantic.py": "65b04f88f4fa59d3bc6850c4a2def3ebba0af08a8b76c077cfcafeec6efc7548",
+    "codex_mem/service.py": "e2027c0f5216c2c83196cad60a4dba22b77477ff1b122549e3054eede47a71bd",
+    "codex_mem/store.py": "8e38683a5549a9dd11ec0422d9495c9ad9e44841a7c9dfcac27b72829657339d",
+    "codex_mem/tool_io.py": "4049943cfdeb5beccd27468ca1482e9a0b65f5dcddfa8026bd83ada93a7d05ae",
+    "codex_mem/ui_autostart.py": "e14a989ccf426ab96182eae0b1a6304c0292ee17f8782ee37eafd160edfdaf2a",
+    "codex_mem/usage.py": "13fea34d4464e8748bcee7290255b50b2b8ab68b054731682161042cb8798db7",
+    "codex_mem/usage_api.py": "c9303ab199d3482c046de8c0d0f9c6733c18b1341fba5f40b6d1d39ea0dd850e",
+    "codex_mem/usage_store.py": "57be55fb2d6887998bb6a7b1960a36eeb1449a948de99a5777de5f89009140a1"
+  },
+  "evidence": "partial-reader-diagnosis.json",
+  "finding": {
+    "missing_facts": 10,
+    "missing_sources_linked_to_raw_snapshot_candidates": 8,
+    "missing_sources_linked_to_final_selected_objects": 0,
+    "unlinked_original_assistant_reports": 2,
+    "consequence": "Expanding sources only from final eligible+relevant selected records is safe to implement but cannot by itself restore any of these ten missing facts. Eight linked objects survive bounded candidate retrieval and are filtered before final material selection; broad fallback candidacy alone must not establish task relevance."
+  },
+  "case_link_audit": [
+    {
+      "case": "hold_1001/q6",
+      "fact_index": 0,
+      "source_id": "2c114426183244fbbb319d9a4699e4f1",
+      "linked_objects": [],
+      "linked_raw_snapshot_candidates": {
+        "lantern_catalog": []
+      },
+      "linked_final_selected_objects": {
+        "lantern_catalog": []
+      },
+      "pre_render_lanes": {
+        "lantern_catalog": []
+      },
+      "large_budget_visible": false
+    },
+    {
+      "case": "hold_1002/q3",
+      "fact_index": 0,
+      "source_id": "03d360497f3446a9aaf82bc77d68468e",
+      "linked_objects": [
+        "pm_b1f0b14d8fdcbcc9647d97ca1d5db905f9213b0e"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "canal_sampler": [
+          "pm_b1f0b14d8fdcbcc9647d97ca1d5db905f9213b0e"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "canal_sampler": []
+      },
+      "pre_render_lanes": {
+        "canal_sampler": []
+      },
+      "large_budget_visible": false
+    },
+    {
+      "case": "hold_1002/q4",
+      "fact_index": 0,
+      "source_id": "d167d4a0d328449da10a22c215ef4e70",
+      "linked_objects": [
+        "pm_b1f0b14d8fdcbcc9647d97ca1d5db905f9213b0e"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "canal_sampler": [
+          "pm_b1f0b14d8fdcbcc9647d97ca1d5db905f9213b0e"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "canal_sampler": []
+      },
+      "pre_render_lanes": {
+        "canal_sampler": []
+      },
+      "large_budget_visible": false
+    },
+    {
+      "case": "hold_1002/q4",
+      "fact_index": 1,
+      "source_id": "35710ef7eaf249cdb77e5eecf7d73463",
+      "linked_objects": [
+        "pm_0bc16f7bddbe6b33a33f2a695b77ef1d57df68fe"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "canal_sampler": [
+          "pm_0bc16f7bddbe6b33a33f2a695b77ef1d57df68fe"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "canal_sampler": []
+      },
+      "pre_render_lanes": {
+        "canal_sampler": []
+      },
+      "large_budget_visible": false
+    },
+    {
+      "case": "hold_1003/q4",
+      "fact_index": 1,
+      "source_id": "ce40524987e94f9b9aaf02cb339a7973",
+      "linked_objects": [
+        "pm_9f30081557e9d95c038b37eb43efe0252efad390"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "copper_routes": [
+          "pm_9f30081557e9d95c038b37eb43efe0252efad390"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "copper_routes": []
+      },
+      "pre_render_lanes": {
+        "copper_routes": [
+          "unassociated_user_context"
+        ]
+      },
+      "large_budget_visible": true
+    },
+    {
+      "case": "hold_1005/q3",
+      "fact_index": 0,
+      "source_id": "5a3c1c163ef24a77a4ffcf50c705254a",
+      "linked_objects": [
+        "pm_ec5e5cba38b208654b3c44daaa7d74731c1c49a8",
+        "pm_324f6a58f041c0b6a59d8f2b7bc6fd552aacff02",
+        "pm_b840378ae58ca7e11830c580224c050105388503"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "saffron_forms": [
+          "pm_324f6a58f041c0b6a59d8f2b7bc6fd552aacff02",
+          "pm_ec5e5cba38b208654b3c44daaa7d74731c1c49a8",
+          "pm_b840378ae58ca7e11830c580224c050105388503"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "saffron_forms": []
+      },
+      "pre_render_lanes": {
+        "saffron_forms": []
+      },
+      "large_budget_visible": false
+    },
+    {
+      "case": "hold_1005/q6",
+      "fact_index": 0,
+      "source_id": "949eeb7a0a3746409aa47cbc14ea31f8",
+      "linked_objects": [],
+      "linked_raw_snapshot_candidates": {
+        "saffron_forms": []
+      },
+      "linked_final_selected_objects": {
+        "saffron_forms": []
+      },
+      "pre_render_lanes": {
+        "saffron_forms": [
+          "records",
+          "source_evidence"
+        ]
+      },
+      "large_budget_visible": true
+    },
+    {
+      "case": "hold_1005/q4",
+      "fact_index": 1,
+      "source_id": "43507b55d37640d69fe6859625d67457",
+      "linked_objects": [
+        "pm_86c17a92c46f3903d0f98fdbb7e06a44b4f6cc05",
+        "pm_86daac9807efaf31310f7191e626859b5c8fc5a2"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "saffron_forms": [
+          "pm_86c17a92c46f3903d0f98fdbb7e06a44b4f6cc05",
+          "pm_86daac9807efaf31310f7191e626859b5c8fc5a2"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "saffron_forms": []
+      },
+      "pre_render_lanes": {
+        "saffron_forms": [
+          "unassociated_user_context"
+        ]
+      },
+      "large_budget_visible": true
+    },
+    {
+      "case": "hold_1006/q3",
+      "fact_index": 0,
+      "source_id": "c39bae846d6748b08098285334a44091",
+      "linked_objects": [
+        "pm_de63bf5b76134b858702a35c48905c60a513adb4"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "basalt_alerts": [
+          "pm_de63bf5b76134b858702a35c48905c60a513adb4"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "basalt_alerts": []
+      },
+      "pre_render_lanes": {
+        "basalt_alerts": []
+      },
+      "large_budget_visible": false
+    },
+    {
+      "case": "hold_1006/q2",
+      "fact_index": 0,
+      "source_id": "39d0103f1a194d7e9e030b04358769e4",
+      "linked_objects": [
+        "pm_dacd2117c95353191e6abde883d9bfa241837914"
+      ],
+      "linked_raw_snapshot_candidates": {
+        "basalt_alerts": [
+          "pm_dacd2117c95353191e6abde883d9bfa241837914"
+        ]
+      },
+      "linked_final_selected_objects": {
+        "basalt_alerts": []
+      },
+      "pre_render_lanes": {
+        "basalt_alerts": [
+          "unassociated_user_context"
+        ]
+      },
+      "large_budget_visible": false
+    }
+  ],
+  "proposed_seams": [
+    {
+      "name": "bounded evidence closure of selected material",
+      "owner_functions": [
+        "build_project_brief snapshots and relevant at project_memory_retrieval.py:1210-1285",
+        "_record at project_memory_retrieval.py:310",
+        "_continuity_context at project_memory_retrieval.py:212",
+        "_source_evidence at project_memory_retrieval.py:376"
+      ],
+      "proposal": "After hard eligibility and query relevance choose material object IDs, form a bounded union of their explicit evidence source IDs. Fetch only those original entries, require exact persisted citation spans/field/role and owner equality, and expand same-source omitted intervals under per-source/aggregate caps. Emit as attributed source excerpts with field_association=not_assessed; preserve each original role and record qualifiers. A pm_evidence SQL link is an index; validate object evidence pointers against original fields before display.",
+      "constraints": [
+        "No source chosen by adjacency, same session, same project, semantic similarity or text equality across source IDs.",
+        "Selected object and source independently pass owner/worktree/environment/version/session/privacy/deletion guards; role-aware user environment semantics remain.",
+        "Quoted literals/task/version hard constraints still apply to originals; incompatible complete groups are omitted atomically.",
+        "A source linked to multiple objects does not establish relations among those objects.",
+        "Never turn assistant reports, raw unknown tools, or neutral source context into user requirements or observed execution.",
+        "Historical/current and scope uncertainty must stay with each associated source/field, not a shared first-source flag."
+      ],
+      "snapshot_limit": "Zero missing sources are linked to final selected objects. This seam is a structural completeness improvement, not a demonstrated fix for the six lexical omissions.",
+      "necessary_precondition": "A separate general grammatical answer-facet plan may select an eligible bounded state episode for subject-free questions. For an explicit residual subject, require independently relevant material; do not promote every eligible raw fallback episode. Unknown/unrelated subjects must still yield no asserted association."
+    },
+    {
+      "name": "single source table plus compact typed associations",
+      "owner_functions": [
+        "_complete_source_groups at project_memory_retrieval.py:640",
+        "_source_value_repeated at project_memory_retrieval.py:699",
+        "_render_project_brief at project_memory_retrieval.py:715",
+        "_source_xml at project_memory_retrieval.py:493"
+      ],
+      "proposal": "Build one per-render evidence allocation plan keyed by exact source ID, canonical field, role, interval, and scope/uncertainty qualifiers. Reserve bounded complete original material first, then render concise typed claim/episode association references to those emitted intervals. Exact duplicate derived_text can be elided using existing literal-equality proof, while independent actor/scope/status fields remain explicit. Avoid repeatedly paying full source attributes and identical quote text across source_excerpts, custody and episode fields; keep canonical source attributes on one actual quotation and explicit references elsewhere.",
+      "preserve": [
+        "Existing canonical citation catalog must resolve exact original offsets and fields without guessing. A reference-only element must not masquerade as a displayed quote.",
+        "Execution command/result/exit and tool identity remain one atomic group; allowlisted execution policy unchanged.",
+        "Whole group omission rather than truncated raw command/output; every omitted group/field/source remains counted.",
+        "Per-source uncertainty cannot be dropped or spread to a neutral source.",
+        "Keep total XML within existing 6000 characters and existing hard guards. No quality promise if eligible material exceeds capacity."
+      ],
+      "current_obstacles": [
+        "Renderer already prefers complete groups and exact duplicate prose elision, so further gains require measuring repeated structural metadata, not assuming all derived prose is redundant.",
+        "Three missing facts reappear at 60000 chars; one remains in supplemental context omitted under its separate 1200-char/two-source bounded allocation. Increasing global budget alone cannot repair that fixed lane cap.",
+        "A canonical reference format change needs helper catalog compatibility tests before use; prefer existing quoted_in_context conventions if they retain exact association and role."
+      ],
+      "allocation_tradeoff": "Spend savings on already eligible complete source groups, with deterministic source-structure/query-facet ordering. Do not silently make unrelated supplemental custody requirements or remove omission accounting. Some eligible groups may remain unfit."
+    }
+  ],
+  "public_regression_plan": [
+    {
+      "tests": "tests/test_project_memory_source_bundle.py; tests/test_project_memory_complete_source_groups.py",
+      "cases": [
+        "Selected episode cites two sources; second lacks question words but exact link remains displayed neutrally.",
+        "Unselected episode and same-session unrelated source never enter closure.",
+        "Mixed-source claim must preserve both exact sources without merging or assigning one source role to the other.",
+        "Deleted/private/excluded-session/opposite environment/version/task/literal source remains excluded through linked-source path.",
+        "Unknown topical question remains empty even when broad fallback has many eligible episodes."
+      ]
+    },
+    {
+      "tests": "tests/test_project_memory_evidence_allocation.py; tests/test_environment_constraint_queries.py; tests/test_project_memory_retention.py",
+      "cases": [
+        "6000-char exact-size fixture compares material bytes and complete retained source intervals before/after deduplication, with unchanged eligibility.",
+        "Exact duplicate derived text is omitted; near-equal literals and independent actor/scope fields remain.",
+        "Two uncertainty groups in both insertion orders retain warning on exactly the correct source.",
+        "Atomic tool group fits or explicit omission, including exact-fit and one-character-short boundary.",
+        "Supplementary unassociated original remains labeled unresolved and not requirement evidence; source limits and omission counts remain truthful.",
+        "Canonical catalog from emitted XML matches exact body and same-source tool-field mirrors after compact reference rendering."
+      ]
+    }
+  ],
+  "risks": [
+    "Object-source linkage proves provenance, not task identity or factual truth.",
+    "Global fallback closure would erase topical selection and leak unrelated task material; not recommended.",
+    "A shorter XML format can accidentally lose typed role/scope/uncertainty or break citation resolution.",
+    "Bounded 6000-character capacity can require a disclosed tradeoff among complete eligible groups."
+  ],
+  "assessment": "Architecture supports a narrow evidence-closure module and shared allocation plan without a model on reads. It does not support claiming all hidden support repaired by source expansion alone; candidate relevance must remain explicit and independent. No implementation authorized by this artifact."
+}

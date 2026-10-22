@@ -1,0 +1,10 @@
+--- copied-R17/test-protocol-builder.py
++++ prospective-R18/test-protocol-builder.py
+@@ -28,6 +28,7 @@
+         self.guide = json.loads((REPO / 'docs/evidence/project-memory-quality-2026-10-21-r16/protocol.json').read_text())
+         self.baseline = self.repo / 'baseline'
+         (self.baseline / 'codex_mem').mkdir(parents=True)
++        (self.baseline / '.experiment-baseline-commit').write_text('dd60f1c8bc7788b856e80b626975b2f609aa394a\n')
+         for number in range(47):
+             (self.baseline / 'codex_mem' / f'module_{number}.py').write_text(f'# public baseline toy {number}\n')
+         # Pure seam supplies a toy guide. CLI always pins the real R16 guide SHA.

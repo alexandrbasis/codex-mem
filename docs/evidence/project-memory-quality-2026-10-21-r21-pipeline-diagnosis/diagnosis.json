@@ -1,0 +1,286 @@
+{
+  "schema_version": "r21-pipeline-diagnosis-v1",
+  "status": "offline_reproduced_no_trial_changes",
+  "native_calls": 0,
+  "historical_result_unchanged": {
+    "decision": "incomplete",
+    "primary_complete": false,
+    "repeats_complete": false,
+    "graded_primary_questions": 0,
+    "planned_question_slots_including_repeats": 216,
+    "native_usage": {
+      "hypothetical_api_equivalent_usd": {
+        "standard": "1.0242094",
+        "fast": "2.0484188"
+      },
+      "pricing_snapshot": "openai-2026-10-07.1",
+      "attempted_calls": 55,
+      "finished_calls": 55,
+      "failed_calls": 1,
+      "unresolved_calls": 0,
+      "calls_with_reported_tokens": 54,
+      "calls_with_unknown_or_partial_tokens": 1,
+      "calls_with_partial_tokens": 0,
+      "partial_total_tokens_lower_bound": 0,
+      "reported_tokens_lower_bound": {
+        "input_tokens": 749927,
+        "cached_input_tokens": 0,
+        "output_tokens": 20728,
+        "total_tokens": 770655
+      },
+      "tokens": {
+        "input_tokens": null,
+        "cached_input_tokens": null,
+        "output_tokens": null,
+        "total_tokens": null
+      },
+      "pricing_complete": false,
+      "token_accounting_complete": false,
+      "cost_usd": null
+    }
+  },
+  "reproduction": {
+    "red_command": "python3 docs/evidence/project-memory-quality-2026-10-21-r21-pipeline-diagnosis/replay.py --red",
+    "red_exit_code": 1,
+    "red_wall_seconds_observed": 0.677,
+    "probe_command": "python3 docs/evidence/project-memory-quality-2026-10-21-r21-pipeline-diagnosis/replay.py",
+    "probe_exit_code": 0,
+    "probe_wall_seconds_observed": 0.887,
+    "dependencies": "Python3, installed jsonschema; no network/model",
+    "runtime_binding": "Checks every frozen R21 runtime_files hash before import; --runtime-root accepts a separately extracted frozen runtime.",
+    "original_db_access": "SQLite mode=ro, backup to automatically removed new scratch; actual Store is opened only on scratch. Validation has zero SQLite total_changes.",
+    "snapshot_limit": "Quarantine erased pm_jobs.input_json to {}. Reconstruct disclosed event bodies from lossless request spans and bounded state from current_state; not a live claimed-job/commit replay. Original entries and relevant prior episode identity/evidence/goal/summary/version match captured request exactly. Reapplying bounded state selection does not regenerate the full original request byte-for-byte; no such equivalence is claimed.",
+    "entrypoints": [
+      "episode_processor._validate_runner_receipt",
+      "episode_processor._resolve_object_references",
+      "episode_processor._resolve_evidence_refs",
+      "episode_processor._resolve_quotes",
+      "episode_processor._omit_unsupported_optional_fields",
+      "episode_processor._validate_output",
+      "ProjectMemory._validate(conservative_transitions=True)"
+    ]
+  },
+  "exact_failure": {
+    "call_id": "call-0028",
+    "job_id": "pmj_ecbc604fe3aeedab432943f0e31a005d7937b76a",
+    "native_schema_version": "project-memory-output-v12",
+    "captured_native_schema_validation": "passes jsonschema.validate",
+    "schema_sha256": "fa3b37f204ca397b79aef705ffb06abaeef66fe743ef31f19497a106cf35fee0",
+    "rejection_owner": "codex_mem/project_memory.py:706-708",
+    "predicate": "one continuation per logical episode is allowed in each job",
+    "exception": "ValueError",
+    "processor_mapping": "codex_mem/episode_processor.py:942-944 maps ValueError/TypeError/KeyError/JevQualityError to invalid_response; whole batch quarantined.",
+    "requested_continuation_targets": [
+      "pm_a9006f83a5275f40651f789f70d18bc831ab17ec",
+      "pm_a9006f83a5275f40651f789f70d18bc831ab17ec"
+    ],
+    "critical_distinction": "Both episodes REQUEST the same target. Each alone is accepted as a standalone episode with omitted_continuities_count=1. The replay does NOT demonstrate two supported successor edges. continued_roots is reserved before continuity support is checked, so even the first unproved/omitted continuation blocks the second.",
+    "native_contract_gap": "Each array item may independently select any disclosed current head. No cross-item unique-target/logical-root rule is represented in native schema; prompt does not explicitly state one successor per logical root per job.",
+    "earlier_boundary_results": "Raw receipt, object ownership, exact refs/quotes and canonical schema/span validation all pass.",
+    "historical_job_rows": [
+      {
+        "id": "pmj_e3746d3e5f19a8e11dac67d0dc88b48381674a87",
+        "status": "completed",
+        "error": null,
+        "input_json_bytes": 2
+      },
+      {
+        "id": "pmj_ecbc604fe3aeedab432943f0e31a005d7937b76a",
+        "status": "quarantined",
+        "error": "invalid_response",
+        "input_json_bytes": 2
+      }
+    ],
+    "historical_objects": {
+      "claim": 3,
+      "episode": 1
+    },
+    "historical_events": [
+      {
+        "seq": 1,
+        "done": 1,
+        "blocked_job_id": null
+      },
+      {
+        "seq": 2,
+        "done": 1,
+        "blocked_job_id": null
+      },
+      {
+        "seq": 3,
+        "done": 1,
+        "blocked_job_id": null
+      },
+      {
+        "seq": 4,
+        "done": 0,
+        "blocked_job_id": "pmj_ecbc604fe3aeedab432943f0e31a005d7937b76a"
+      },
+      {
+        "seq": 5,
+        "done": 0,
+        "blocked_job_id": "pmj_ecbc604fe3aeedab432943f0e31a005d7937b76a"
+      },
+      {
+        "seq": 6,
+        "done": 0,
+        "blocked_job_id": "pmj_ecbc604fe3aeedab432943f0e31a005d7937b76a"
+      },
+      {
+        "seq": 7,
+        "done": 0,
+        "blocked_job_id": "pmj_ecbc604fe3aeedab432943f0e31a005d7937b76a"
+      }
+    ]
+  },
+  "ranked_falsifiable_hypotheses": [
+    {
+      "rank": 1,
+      "hypothesis": "The duplicated requested continuation root triggers rejection independently of prose, claims or number of sources.",
+      "prediction": "Two minimal episodes targeting same prior fail; removal of either or making either standalone passes.",
+      "tests": [
+        "saved_exact_output",
+        "remove_episode_0",
+        "remove_episode_1",
+        "remove_all_claims",
+        "remove_optional_fields_and_claims",
+        "minimal_two_continuations",
+        "minimal_one_source_two_continuations",
+        "minimal_one_standalone_0",
+        "minimal_one_standalone_1"
+      ],
+      "result": "Confirmed exact trigger; not evidence that both requested continuations were valid."
+    },
+    {
+      "rank": 2,
+      "hypothesis": "The guard requires two actually supported successor edges, and therefore conservative continuity omission prevents this failure.",
+      "prediction": "If a single candidate has omitted_continuities_count=1, a pair of such candidates will not consume a continuation slot.",
+      "tests": [
+        "remove_episode_0",
+        "remove_episode_1",
+        "saved_exact_output"
+      ],
+      "result": "Refuted. Both singles omit continuity, but the pair rejects. Code reserves the root before _continuity_supported."
+    },
+    {
+      "rank": 3,
+      "hypothesis": "Malformed native v12 shape or fabricated/nonexact evidence causes the historical rejection.",
+      "prediction": "The saved output fails captured schema or ref/span decoder before Store validation.",
+      "tests": [
+        "native captured jsonschema validation",
+        "saved_exact_output",
+        "invalid_ref_control"
+      ],
+      "result": "Refuted for this failure. Saved schema/ref/span validation passes; the invalid-ref counterfactual fails earlier at _resolve_evidence_refs, proving the seam is live."
+    },
+    {
+      "rank": 4,
+      "hypothesis": "Reconstructed context, missing source bodies or changed prior identity explains the duplicate failure.",
+      "prediction": "Disclosed source bodies/prior fields differ from original retained Store, or reducing sources changes the predicate.",
+      "tests": [
+        "original_source_bodies_and_relevant_prior_fields_match_disclosed_request",
+        "minimal_one_source_two_continuations"
+      ],
+      "result": "No supporting evidence for exact predicate. Bodies and relevant identity/evidence fields match and one source still reproduces. Full erased pre-selection snapshot/live commit cannot be reconstructed exactly, so broader equivalence remains explicitly unproved."
+    }
+  ],
+  "minimization": {
+    "output_file": "probes.json",
+    "retained": "Two episodes, each with one exact summary ref and same continuation_of; claims empty; optional fields empty. One consumed source suffices. Prior canonical episode retained from original read-only backup.",
+    "counterfactual_policy": "No minimized or accepted variant was committed, persisted as model output, graded, or substituted into trial."
+  },
+  "pipeline_failures_field": {
+    "observed": [],
+    "current_contract": "A projection of noncomplete existing consolidation receipts, primary generation receipts only in independent-generation mode, and included regeneration pipeline receipts. Not a universal error/event/driver-stop list.",
+    "owning_source": [
+      "scripts/project_memory_consolidation_experiment.py:2011-2034",
+      "scripts/project_memory_consolidation_experiment.py:2079-2083",
+      "scripts/project_memory_consolidation_experiment.py:2110-2133"
+    ],
+    "why_h05_absent": "shared-prefix mode leaves primary generation_receipts empty. h05 consolidation.json is absent after driver skip; missing primary consolidation is synthesized only for independent-generation. Thus neither the failed shared generation nor the skipped clone/consolidation enters this list.",
+    "why_h12_absent": "Native ledger failed call and driver unknown_usage_stop are not inputs to this list; no h12 consolidation file exists. Usage records failed_calls=1, unknown count=1 and tokens=null correctly.",
+    "driver_evidence": "run-experiment.py:248-260 records h05 pipeline_failure_no_retry; 278-286 skips invalid prefix phases. 290-299 records driver_stopped and attempts report; execute checks unknown usage before nonzero subprocess exit, so h12 stop journal says unknown_usage_stop.",
+    "classification": "Observability scope gap if interpreted as all pipeline failures, not an incorrect complete/pass decision or absent failed usage. Existing broad field name does not convey its restricted projection. No report change requested/applied.",
+    "prospective_recommendation": "Include shared-prefix generation outcomes and explicit unstarted/skipped/driver-stop/native-failure categories in a separately versioned comprehensive pipeline summary, or name/document present narrow scope. Keep missing216 denominator, distinct stage statuses and unknown cost; avoid duplicating calls/tokens."
+  },
+  "prospective_minimal_general_repair": {
+    "primary": "Reserve/check continued_roots only for validated supported successor edges. An unproved continuity already follows the conservative standalone-plus-omission path and should not consume a root slot. Preserve strict rejection of two supported continuations of one logical episode and of continuation/consolidation root overlap. No selection of a winning duplicate, no model-output merging or synthesizing a claim.",
+    "native_boundary": "State one supported successor per logical root per job explicitly. An earlier duplicate-request reject alone improves diagnosis but does not remove the observed schema/runtime mismatch. A future structural native contract can expose one optional continuation slot per disclosed head, with a distinct standalone list, if preventing representable duplicate targets is required; version it explicitly. Do not globally cap episodes to one.",
+    "tests_required_before_implementation": [
+      "Two unproved same-head continuations become separate standalone records with two explicit continuity omissions; prior head unchanged.",
+      "Two supported same-root successors reject the entire batch, no objects/evidence/events partially committed.",
+      "A supported plus unproved same-root request produces only the supported successor; test both array orders.",
+      "Distinct supported logical roots succeed; aliases/current heads sharing a logical root still reject.",
+      "Continuation versus consolidation root overlap remains rejected in either order.",
+      "Unknown head, unknown refs, foreign project/scope and malformed native layout remain rejected.",
+      "Native-schema/request version and canonical Store/API compatibility pinned; no old receipt reprocessing."
+    ],
+    "semantic_limit": "Structural and deterministic provenance checks do not establish semantic truth or guarantee model extraction quality.",
+    "historical_policy": "No replay/retry/repair/rescore of h05/h12 or any closed trial. Prospective source revision only after parent source hold release/review."
+  },
+  "pins": [
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/holdout/report.json",
+      "sha256": "945747db507fb1e02740d92adcdd81f39ad1071fc4b8686c555e89fbf915b76d"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/frozen-helper.py",
+      "sha256": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/runtime-source-receipt.json",
+      "sha256": "3488a1e311d9296f78e57e30d6e76fbe68b989397ff50c566f27b3251aee58f4"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/protocol.json",
+      "sha256": "c379c34e3d4daffb9c963271efde3f747d42c5443b067f9564a12d5f87f140a1"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/run-experiment.py",
+      "sha256": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r21-experiment/receipts/call-0028-request.json",
+      "sha256": "bb78ab20f47959f7bfc385e19b10778aed6faf66ed9f208d785e77b776e82116"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r21-experiment/receipts/call-0028-response.json",
+      "sha256": "e3bce1634ce5a4608ee91fc6b993ffdec621f8fe16e18f830a6e1c5876a821f1"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r21-experiment/receipts/call-0055-request.json",
+      "sha256": "9ff2b1c209f55e4b9b711c3bd333795be35c3553bc198dfa55379041d5ae2c9c"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r21-experiment/calls.jsonl",
+      "sha256": "6d77af7da99ae6ccf12a44eb9a14f3857f8bc59dc1109401b9c1ecdb48c122a4"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/h05/generation.json",
+      "sha256": "4b24150a1fcf7c7b1ad60b7d8b9d2597a89b5a9f6fe4269165b6f38cae8a60c3"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/holdout-phase-execution.jsonl",
+      "sha256": "8d8480cb3b6558f59038edef6ccbf020872597da5ac226b6666dce792632217f"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/episode_processor.py",
+      "sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py",
+      "sha256": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py",
+      "sha256": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102"
+    }
+  ],
+  "limits": [
+    "No source fixes or acceptance tests implemented. Diagnosis artifacts only.",
+    "No original Store writes, new model/native/network calls, regrade or old report regeneration.",
+    "Replays validate actual owning deterministic decoder/Store validation, not full live-job lease/atomic commit path.",
+    "h12 native_server_error is recorded; diagnosis does not assert quota or another remote cause.",
+    "Native response was structurally schema-valid but requested duplicate targets. Existing Store rejected conservatively; accepted single-episode counterfactuals are diagnostic only."
+  ]
+}

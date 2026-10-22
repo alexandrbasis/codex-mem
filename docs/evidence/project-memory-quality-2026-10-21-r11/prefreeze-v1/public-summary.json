@@ -1,0 +1,442 @@
+{
+  "status": "failed",
+  "fresh_reader_questions": 6,
+  "fresh_judge_packets": 2,
+  "grades": [
+    {
+      "full_supported_answer": true,
+      "current_state_actionable": true,
+      "constraints_obligations_reasons_recalled": true,
+      "citations_supported": true,
+      "empty_or_evasive": false,
+      "critical_errors": [],
+      "fact_recall": [
+        {
+          "fact_index": 0,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0002",
+              "start": 0,
+              "end": 119,
+              "quote": "The later captured check established only that group boundaries were present in the local marshal packet sample’s JSON."
+            },
+            {
+              "ref": "A0003",
+              "start": 120,
+              "end": 249,
+              "quote": "The same tool record says the physical ramp drill had no recorded result, so the marshal’s observation of the route remains open."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0007",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "source_role": "tool_record",
+              "start": 0,
+              "end": 62,
+              "quote": "LOCAL marshal packet sample: group boundaries present in JSON.",
+              "reader_visible": true
+            },
+            {
+              "ref": "J0006",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "source_role": "tool_record",
+              "start": 62,
+              "end": 106,
+              "quote": " Physical ramp drill has no recorded result.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        },
+        {
+          "fact_index": 1,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0004",
+              "start": 250,
+              "end": 405,
+              "quote": "The last user instruction identifies the rain-route drill with the marshal as the remaining work and says not to infer live dock use from the local replay."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0005",
+              "source_id": "c96e980342614df09571234d9858df62",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 0,
+              "end": 110,
+              "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        }
+      ],
+      "rationale": "Recalls the local JSON finding, unrecorded physical drill, and remaining rain-route work. It preserves the cutover restriction and correctly qualifies the assistant's live-use report.",
+      "critical_witnesses": [],
+      "id": "answer-01"
+    },
+    {
+      "full_supported_answer": false,
+      "current_state_actionable": true,
+      "constraints_obligations_reasons_recalled": true,
+      "citations_supported": false,
+      "empty_or_evasive": false,
+      "critical_errors": [
+        "false_merge"
+      ],
+      "fact_recall": [
+        {
+          "fact_index": 0,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0002",
+              "start": 0,
+              "end": 91,
+              "quote": "The continuation adds an umbrella-storage stop before the ramp and keeps families together."
+            },
+            {
+              "ref": "A0004",
+              "start": 228,
+              "end": 370,
+              "quote": "[R0003] The remaining work is a rain-route drill with the marshal, and dock cutover must stay closed until the marshal observes the new route."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0005",
+              "source_id": "931ce67e25b141d3a46995b96b0db017",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 0,
+              "end": 180,
+              "quote": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        }
+      ],
+      "rationale": "Recalls the continuation and its restrictions, but A0005 attributes the JSON finding to a replay. J0008 establishes only a marshal packet sample; the neighboring denial of live deployment does not repair this conflation.",
+      "critical_witnesses": [
+        {
+          "error_type": "false_merge",
+          "answer_ref": "A0005",
+          "assertion_mode": "affirmative_current",
+          "relation": "asserts_forbidden_conclusion",
+          "prohibition_ref": "gold:0",
+          "answer_witness": {
+            "ref": "A0005",
+            "start": 371,
+            "end": 649,
+            "quote": "[R0006, R0005] A local replay showed group boundaries in the JSON sample, but the assistant reported that it had not run the rain drill, and the tool record says the physical ramp drill has no recorded result; the user explicitly said not to infer live dock use from the replay."
+          }
+        }
+      ],
+      "id": "answer-02"
+    },
+    {
+      "full_supported_answer": true,
+      "current_state_actionable": true,
+      "constraints_obligations_reasons_recalled": true,
+      "citations_supported": true,
+      "empty_or_evasive": false,
+      "critical_errors": [],
+      "fact_recall": [
+        {
+          "fact_index": 0,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0002",
+              "start": 0,
+              "end": 50,
+              "quote": "The blackout transition is fixed at three seconds."
+            },
+            {
+              "ref": "A0003",
+              "start": 51,
+              "end": 158,
+              "quote": "The stated reason is that the dancer uses that interval to leave a narrow platform without seeing the edge."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0001",
+              "source_id": "8b9c9dfb17af458494542ff8ae5c4ad3",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 0,
+              "end": 72,
+              "quote": "For Lumen rehearsal cues, keep the blackout transition at three seconds.",
+              "reader_visible": true
+            },
+            {
+              "ref": "J0002",
+              "source_id": "8b9c9dfb17af458494542ff8ae5c4ad3",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 72,
+              "end": 154,
+              "quote": " The dancer uses that interval to leave a narrow platform without seeing the edge.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        }
+      ],
+      "rationale": "States the three-second requirement and the dancer's platform-exit reason. Structured citations support the claims, and the answer does not infer a current causal dependency from the earlier network condition.",
+      "critical_witnesses": [],
+      "id": "answer-03"
+    },
+    {
+      "full_supported_answer": true,
+      "current_state_actionable": true,
+      "constraints_obligations_reasons_recalled": true,
+      "citations_supported": true,
+      "empty_or_evasive": false,
+      "critical_errors": [],
+      "fact_recall": [
+        {
+          "fact_index": 0,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0002",
+              "start": 0,
+              "end": 120,
+              "quote": "The bilingual names are kept in separate language clips because the old player truncates one long combined clip (R0002)."
+            },
+            {
+              "ref": "A0003",
+              "start": 121,
+              "end": 267,
+              "quote": "Hardware playback still needs to be checked on a spare player, and fleet installation remains pending hardware playback acceptance (R0002, R0004)."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0002",
+              "source_id": "afbf14091b054539b3bd475d8b307d43",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 0,
+              "end": 166,
+              "quote": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        }
+      ],
+      "rationale": "Preserves separate clips for the bilingual names, explains the combined-clip truncation, and keeps spare-player testing and fleet acceptance pending. The bus-loading statement remains an attributed assistant report.",
+      "critical_witnesses": [],
+      "id": "answer-04"
+    },
+    {
+      "full_supported_answer": false,
+      "current_state_actionable": true,
+      "constraints_obligations_reasons_recalled": false,
+      "citations_supported": true,
+      "empty_or_evasive": false,
+      "critical_errors": [],
+      "fact_recall": [
+        {
+          "fact_index": 0,
+          "recalled": false,
+          "answer_witnesses": [
+            {
+              "ref": "A0002",
+              "start": 0,
+              "end": 156,
+              "quote": "For the Bracken archive index, preserve obsolete street names as searchable aliases; a local search snapshot reports 27 such aliases returning linked boxes."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0001",
+              "source_id": "0024fc1ee2fb4615b1c2a43d202227aa",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 0,
+              "end": 84,
+              "quote": "For the Bracken archive index, preserve obsolete street names as searchable aliases.",
+              "reader_visible": true
+            },
+            {
+              "ref": "J0002",
+              "source_id": "0024fc1ee2fb4615b1c2a43d202227aa",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 84,
+              "end": 178,
+              "quote": " Family researchers bring addresses from old letters and may not know the modern street names.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "literal_omission",
+          "missing_anchor": "Family researchers"
+        },
+        {
+          "fact_index": 1,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0003",
+              "start": 157,
+              "end": 272,
+              "quote": "[R0001] [R0004] For Bracken event posters, use only modern street names so current attendees can find the entrance."
+            },
+            {
+              "ref": "A0004",
+              "start": 273,
+              "end": 346,
+              "quote": "[R0005] The source also says the archive search alias policy is separate."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0006",
+              "source_id": "27fb40794f6949edae1a74814a54fb45",
+              "source_field": "body",
+              "source_role": "user_intent",
+              "start": 0,
+              "end": 144,
+              "quote": "For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        }
+      ],
+      "rationale": "Correctly separates archive aliases from modern-only poster names, with supported citations. However, it omits the available archive rationale: researchers bring old-letter addresses and may not know modern names.",
+      "critical_witnesses": [],
+      "id": "answer-05"
+    },
+    {
+      "full_supported_answer": true,
+      "current_state_actionable": true,
+      "constraints_obligations_reasons_recalled": true,
+      "citations_supported": true,
+      "empty_or_evasive": false,
+      "critical_errors": [],
+      "fact_recall": [
+        {
+          "fact_index": 0,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0006",
+              "start": 312,
+              "end": 441,
+              "quote": "The statement that the form was deployed to all repair desks is an assistant report, not evidence of observed deployment (R0001)."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0001",
+              "source_id": "86924ad00aa640aba84a6ad4dece593e",
+              "source_field": "body",
+              "source_role": "assistant_report",
+              "start": 0,
+              "end": 58,
+              "quote": "The new intake form has been deployed to all repair desks.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        },
+        {
+          "fact_index": 1,
+          "recalled": true,
+          "answer_witnesses": [
+            {
+              "ref": "A0003",
+              "start": 4,
+              "end": 121,
+              "quote": "The captured test was local and reports that owner text and the mechanic summary appeared in separate fields (R0007)."
+            },
+            {
+              "ref": "A0004",
+              "start": 122,
+              "end": 238,
+              "quote": "It does not prove deployment at repair desks: the tool record says repair desk endpoints were not contacted (R0006)."
+            }
+          ],
+          "source_witnesses": [
+            {
+              "ref": "J0007",
+              "source_id": "243708c424284226a3d64ce0be802b80",
+              "source_field": "body",
+              "source_role": "tool_record",
+              "start": 0,
+              "end": 75,
+              "quote": "LOCAL form test: owner text and mechanic summary appear in separate fields.",
+              "reader_visible": true
+            },
+            {
+              "ref": "J0006",
+              "source_id": "243708c424284226a3d64ce0be802b80",
+              "source_field": "body",
+              "source_role": "tool_record",
+              "start": 75,
+              "end": 112,
+              "quote": " Repair desk endpoints not contacted.",
+              "reader_visible": true
+            }
+          ],
+          "omission_reason": "not_omitted",
+          "missing_anchor": ""
+        }
+      ],
+      "rationale": "Qualifies deployment as an assistant report and recalls both the local field-separation result and uncontacted endpoints. It preserves the open rollout and postal-sample authorization without claiming external verification.",
+      "critical_witnesses": [],
+      "id": "answer-06"
+    }
+  ],
+  "interpretation": "Disclosed regression only. No independent holdout score.",
+  "native_usage": {
+    "hypothetical_api_equivalent_usd": {
+      "standard": "0.7437842",
+      "fast": "1.4875684"
+    },
+    "pricing_snapshot": "openai-2026-10-07.1",
+    "attempted_calls": 8,
+    "finished_calls": 8,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 8,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "calls_with_partial_tokens": 0,
+    "partial_total_tokens_lower_bound": 0,
+    "reported_tokens_lower_bound": {
+      "input_tokens": 129592,
+      "cached_input_tokens": 0,
+      "output_tokens": 5063,
+      "total_tokens": 134655
+    },
+    "tokens": {
+      "input_tokens": 129592,
+      "cached_input_tokens": 0,
+      "output_tokens": 5063,
+      "total_tokens": 134655
+    },
+    "pricing_complete": false,
+    "token_accounting_complete": true,
+    "cost_usd": null
+  }
+}

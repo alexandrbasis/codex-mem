@@ -1,0 +1,77 @@
+.FFFFFFFF.
+======================================================================
+FAIL: test_cumulative_selector_carries_unknown_and_counts_prior_chain_once (selector_regression.HistoricalUsageSelectionTests.test_cumulative_selector_carries_unknown_and_counts_prior_chain_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 35, in test_cumulative_selector_carries_unknown_and_counts_prior_chain_once
+    self.assertEqual(result['attempted_calls'],3)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 3
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback) (selector='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 53, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.subTest(selector=selector),self.assertRaises(ValueError):
+                                         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback) (selector='historical_usage')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 53, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.subTest(selector=selector),self.assertRaises(ValueError):
+                                         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback) (selector=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 53, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.subTest(selector=selector),self.assertRaises(ValueError):
+                                         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback) (selector=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 53, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.subTest(selector=selector),self.assertRaises(ValueError):
+                                         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback) (selector=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 53, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.subTest(selector=selector),self.assertRaises(ValueError):
+                                         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback) (selector={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 53, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.subTest(selector=selector),self.assertRaises(ValueError):
+                                         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_selector_and_missing_cumulative_do_not_fallback (selector_regression.HistoricalUsageSelectionTests.test_invalid_selector_and_missing_cumulative_do_not_fallback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_historical_usage_selection.py", line 57, in test_invalid_selector_and_missing_cumulative_do_not_fallback
+    with self.assertRaises(KeyError):self.total({**self.pointer,'usage_field':'cumulative_pilot_usage'})
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+AssertionError: KeyError not raised
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.008s
+
+FAILED (failures=8)

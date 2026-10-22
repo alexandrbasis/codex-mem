@@ -1,0 +1,125 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q3",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "37025946716bbb11b190468710289499b058fbe19de473689420573feb3e0c04",
+  "context_sha256": "361a9a36ad06c997de2717381c2d3da69b0a7465281f7fb40d3c4f9134218939",
+  "raw_output_sha256": "338c6b9ad3bd3b34eec6639d2ddc65db41ee385c06ae510a4ba88e567f8bc1ae",
+  "native_receipt": {
+    "source_call_id": "call-0100",
+    "request_sha256": "2a8d76021c8b792e14b1465e58885a04b757963ef06edc83c78ddfc41c893d85",
+    "response_sha256": "cbb7e0917876227de426e28549223ce3df07427aeb5fa29ac46b407bfa1b23f4",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q3",
+        "answer": "The user permits sending the Pebble map only after both conditions are met: Sela signs the inlet sketch, and the depth sheet passes reconciliation. Both are necessary because an unmarked inlet misleads the survey crew. The reopened winter map must mark the shallow inlet; the accepted pond survey stays closed.",
+        "uncertainties": [
+          "The supplied evidence does not establish whether Sela signed the inlet sketch, the depth sheet passed reconciliation, or the map was sent."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0004",
+            "source_id": "cdd93f37ead345da94cdd724747fa442",
+            "source_field": "body",
+            "start": 0,
+            "end": 292,
+            "source_role": "user_intent",
+            "quote": "For Pebble, you can send the map only after Sela signs the inlet sketch. For Pebble, permission to send the map also requires that the depth sheet passes reconciliation. Both conditions for permission to send the map in Pebble are necessary because an unmarked inlet misleads the survey crew."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "b7a2aa867a7b40fba504fadcdc99f590",
+            "source_field": "body",
+            "start": 0,
+            "end": 201,
+            "source_role": "user_intent",
+            "quote": "Reopen the Pebble winter map because a new inlet appeared after the survey. The Pebble winter map must mark the shallow inlet. The accepted Pebble pond survey stays closed while the winter map is open."
+          },
+          {
+            "catalog_ref": "R0001",
+            "source_id": "4a1885071bea41a69cacc7d0c234b5c9",
+            "source_field": "body",
+            "start": 0,
+            "end": 88,
+            "source_role": "assistant_report",
+            "quote": "I believe sending for Pebble pond survey is complete because the local preview finished."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "02370841576644e9b08aae1c61719d46",
+            "source_field": "body",
+            "start": 73,
+            "end": 149,
+            "source_role": "user_intent",
+            "quote": " Treat the preview receipt as evidence of the recorded local operation only."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 10554,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12490,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 341,
+        "reasoning_output_tokens": 141,
+        "total_tokens": 12831
+      }
+    }
+  },
+  "latency_ms": 10566,
+  "native_dispatch": {
+    "key": "a12de7b80bcecdccb148bf57c7433b2f4d4f74e4f2f72b5a7ec892d608f9c717",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F03",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q3",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0100",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "8e665e43c6e277a1947fd47f29d18df6e7dde52b84f7b4a3e7f289fae928e3d1",
+    "request_file_sha256": "07eee615eb674e6ed19ff294cc88855222e81973530ded48154d5f8ae2ae28a3",
+    "response_file_sha256": "1686cdaf53583db86026ac354883b59886817347e598586c1fa2d847bda4a901",
+    "reused": false,
+    "native_wall_ms": 10566
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F03",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q3"
+  },
+  "evidence_checks": {
+    "Q3": {
+      "accepted_results": "The accepted Pebble pond survey stays closed.",
+      "open_work_and_reasons": "The winter map is reopened to mark a shallow inlet that appeared after the survey.",
+      "source_role_distinctions": "The assistant’s sending-complete claim is a report; the preview receipt supports only the recorded local operation."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

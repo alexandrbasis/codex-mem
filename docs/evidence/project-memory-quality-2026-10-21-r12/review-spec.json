@@ -1,0 +1,37 @@
+{
+  "axis": "Spec",
+  "status": "no_remaining_actionable_findings",
+  "base": "2ca7445139805243c1d30a1ff7fd15be2b2dd85a",
+  "manifest_sha256": "df2c59445f518b795b12541930b7203a6cc28ad8707c067df012579661961b3f",
+  "scope": "Same full owned manifest, prior reviews retained, R12 changed implementation and new public probe/driver contents reviewed. No sealed R12 content opened.",
+  "reviewed_hashes": {
+    "codex_mem/episode_processor.py": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "scripts/project_memory_consolidation_experiment.py": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "tests/test_episode_native_relations.py": "8f02fa1f9489e354a641d64d1e4f9580e2edf01ba149cc6bd53fddc54dbd19af",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/prepare-producer-probe.py": "8bc0b332d2c4bddd9bbb9a9dfcad58667536977dbcfadaa250374c3040ff7439",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/run-public-preflight.py": "9ab26d2db5a7623ff9a24f823547535c008bf718a615e642667ac389b99249b7",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/run-experiment.py": "0b0cb0dfde5d238d7214cc9cca37689494cb522da06879c1fb92b127d68e727a",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/protocol.json": "574b5177d5aaab0af72eb120676735f7a4ec566c14b858bbbbc49aeb850a75a1",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/test-public-preflight.py": "9a2f1e6338d420df4198c5d83339eca3330251904ba233b0f89cac5a56b1d381"
+  },
+  "otherwise": "v12 owner-derived endpoints preserve canonical/injected contract and strict batch rejection. Shared candidate producer is explicitly attributed to both arms, with pinned old baseline retrieval and frozen producer guards. Probe validates exact request evidence and committed owner identity without claiming semantic truth. Strict quality criteria unchanged.",
+  "pending": "Author receipt/pins and final pre-freeze metadata review, declared public native preflight and independent quality result remain pending. This clears reviewed implementation, not the quality goal.",
+  "actions": {
+    "native_calls": 0,
+    "code_edits": false,
+    "only_review_artifact_written": true
+  },
+  "resolved_findings": [
+    {
+      "priority": "P2",
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r12/run-public-preflight.py",
+      "line": 87,
+      "problem": "Fresh namespaced public preflight cannot create destination because public-preflight parent does not exist and mkdir omits parents=True. R12 declares attempt_id r12-public-v1. Stops before any control on fresh run.",
+      "required_fix": "Create missing public-preflight parent while keeping namespace leaf exclusive/no retry; test a fresh declared namespaced run.",
+      "spec_source": "docs/handoffs/project-memory-quality-2026-10-21.md:76",
+      "spec_quote": "Проверь публичный путь до сохранения результата.",
+      "resolution": "Verified mkdir(parents=True, exist_ok=False) creates fresh parent while preserving exclusive leaf. Seven offline preflight tests pass, including fresh namespace and refused second execution with original stopped receipt retained."
+    }
+  ],
+  "findings": []
+}

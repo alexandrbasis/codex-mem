@@ -1,0 +1,18 @@
+.E.........
+======================================================================
+ERROR: test_durable_ownership_roundtrip_and_tamper_rejection (__main__.OwnershipTests.test_durable_ownership_roundtrip_and_tamper_rejection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 104, in test_durable_ownership_roundtrip_and_tamper_rejection
+    h.isolated_readers(args,PROTOCOL,{'id':'public-fiction'},destination,context,originals,catalog,0,'state-pin','complete')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 1238, in isolated_readers
+    catalog = reader_citation_catalog([context], originals)
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 921, in reader_citation_catalog
+    raise ValueError('displayed citation does not match its original source field')
+ValueError: displayed citation does not match its original source field
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.021s
+
+FAILED (errors=1)

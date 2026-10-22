@@ -1,0 +1,38 @@
+FFF.
+======================================================================
+FAIL: test_complete_capture_fits_tight_budget_without_field_wrapper_tax (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_complete_capture_fits_tight_budget_without_field_wrapper_tax)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 55, in test_complete_capture_fits_tight_budget_without_field_wrapper_tax
+    self.assert_execution(xml, source)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 30, in assert_execution
+    self.assertIsNotNone(item, xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified" capture_order_basis="local_capture_sequence_not_event_time"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="5927e162d05a4894b35021c2373a047d" lane="source_evidence" selection_basis="captured_execution_shape" source_capture_seq="1" field_association="original_execution_capture" complete_capture_fields="true"><execution tool_use_id="capture-71" tool_name="functions.exec_command" command="python check.py ORB-27 --run 71" exit_code="1" exit_field="tool_response.exit_code"/><source source_id="5927e162d05a4894b35021c2373a047d" start="0" end="102" source_role="tool_record" tool_use_id="capture-71" source_field="tool_response.output" id="s1"><quote_excerpt>Instrument fixture: sample rows matched. Remote delivery was not attempted. Labels were not inspected.</quote_excerpt></source><source source_id="5927e162d05a4894b35021c2373a047d" start="0" end="31" source_role="tool_record" tool_use_id="capture-71" source_field="tool_input.cmd" id="s2"><quote_excerpt>python check.py ORB-27 --run 71</quote_excerpt></source></item></project-memory>
+
+======================================================================
+FAIL: test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 62, in test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group
+    self.assert_execution(full, source)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 30, in assert_execution
+    self.assertIsNotNone(item, xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified" capture_order_basis="local_capture_sequence_not_event_time"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="27c418aac0854c2690cd0ff823061db4" lane="source_evidence" selection_basis="captured_execution_shape" source_capture_seq="1" field_association="original_execution_capture" complete_capture_fields="true"><execution tool_use_id="capture-71" tool_name="functions.exec_command" command="python check.py ORB-27 --run 71" exit_code="1" exit_field="tool_response.exit_code"/><source source_id="27c418aac0854c2690cd0ff823061db4" start="0" end="102" source_role="tool_record" tool_use_id="capture-71" source_field="tool_response.output" id="s1"><quote_excerpt>Instrument fixture: sample rows matched. Remote delivery was not attempted. Labels were not inspected.</quote_excerpt></source><source source_id="27c418aac0854c2690cd0ff823061db4" start="0" end="31" source_role="tool_record" tool_use_id="capture-71" source_field="tool_input.cmd" id="s2"><quote_excerpt>python check.py ORB-27 --run 71</quote_excerpt></source></item></project-memory>
+
+======================================================================
+FAIL: test_two_project_views_keep_atomic_originals_and_owner_fences_at_2900_each (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_two_project_views_keep_atomic_originals_and_owner_fences_at_2900_each)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 95, in test_two_project_views_keep_atomic_originals_and_owner_fences_at_2900_each
+    self.assertIsNotNone(item, xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified" capture_order_basis="local_capture_sequence_not_event_time"><coverage complete_transcript="false" coverage_gaps="false" unresolved_user_sources="0" user_sources_omitted="0" source_evidence_omitted="0" pending_reconciliation="false" pending="false" observations_only="true" quarantined_events="0" omitted_transitions_count="0" downgraded_states_count="0" partially_processed_events="0" processed_through_seq="1" pending_events="0" historical_context_heads="0"/><item id="7426b9fd6125444587223a9d3f78c801" lane="source_evidence" selection_basis="captured_execution_shape" source_capture_seq="1" field_association="original_execution_capture" complete_capture_fields="true"><execution tool_use_id="public-0" tool_name="functions.exec_command" command="python inspect.py --sample 0" exit_code="0" exit_field="tool_response.exit_code"/><source source_id="7426b9fd6125444587223a9d3f78c801" start="0" end="70" source_role="tool_record" tool_use_id="public-0" source_field="tool_response.output" id="s1"><quote_excerpt>Independent sample 0: rows matched. Remote delivery was not attempted.</quote_excerpt></source><source source_id="7426b9fd6125444587223a9d3f78c801" start="0" end="28" source_role="tool_record" tool_use_id="public-0" source_field="tool_input.cmd" id="s2"><quote_excerpt>python inspect.py --sample 0</quote_excerpt></source></item></project-memory>
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.062s
+
+FAILED (failures=3)

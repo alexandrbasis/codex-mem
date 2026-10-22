@@ -1,0 +1,390 @@
+{
+  "schema_version": 1,
+  "status": "report_foundation_not_final_report_goal_not_complete",
+  "language": "ru",
+  "intended_report_max_words": 1200,
+  "scope": "Локальная подготовка отчёта по разрешённым источникам. Новых тестов, моделей, сетевых вызовов, оценок качества и изменений продукта не выполнялось.",
+  "requirements": [
+    {
+      "requirement": "1. Исправить границы конвейера до смысловой проверки.",
+      "status": "implemented_offline_verified",
+      "behavior": "Канонический путь проекта задаёт код. Продолжение требует текущую голову эпизода, идентичность задачи и исходные основания. Чужие ссылки отклоняются. Неполный ответ оценщика не исправляется вручную. Проверка требует полное покрытие фактов.",
+      "evidence": [
+        "canonical_scope",
+        "continuity",
+        "judge_coverage_test",
+        "tests"
+      ],
+      "limit": "Проверки реализации не доказывают качество модельных ответов."
+    },
+    {
+      "requirement": "2. Проверять окончательные поля, включая prior_*, и измерить смысловую связь.",
+      "status": "implemented_with_measured_limit",
+      "behavior": "При включённом Jev проверяются окончательно собранные поля и исходная интерпретация изменённых полей. Перед записью код повторяет сборку и сравнивает хеш результата. Несовпадение запрещает запись.",
+      "evidence": [
+        "final_fields",
+        "digest_code",
+        "assessment_code",
+        "final_field_tests",
+        "field_measurement",
+        "field_protocol"
+      ],
+      "limit": "Проверка назначения поля не стала блокирующим фильтром. На 24 раскрытых примерах исходная проверка приняла 12 из 12 неподходящих полей, полезных потерь было 0 из 12. Узкая проверка приняла 0 из 12 неподходящих, но оставила неопределёнными 8 из 12 полезных. Всего неопределённых решений 10. Это пример для разработки, не независимая проверка качества."
+    },
+    {
+      "requirement": "3. Сделать судьбу требования проверяемой, включая частичную отмену и другой чат.",
+      "status": "partial_conservative_accounting",
+      "behavior": "Отдельный учёт сохраняет пользовательский оригинал после обработки. Полное точное утверждение отмечает представление источника; обоснованная связь закрытия отмечает выполнение. Частичное представление, замена и неясная отмена оставляют остаток неразрешённым. Продолжение между чатами проверяет одну задачу.",
+      "evidence": [
+        "custody",
+        "custody_decision",
+        "continuity"
+      ],
+      "limit": "Это учёт источников, а не полноценная смысловая судьба каждого требования. Отмена автоматически не выводится, счётчик cancelled остаётся нулевым. Историческая цитата не активирует требование. Старые наблюдения автоматически не восстанавливаются."
+    },
+    {
+      "requirement": "4. Доставить ограничения и полные основания читателю при прежнем бюджете.",
+      "status": "implemented_quality_pending",
+      "behavior": "Контекст остаётся ограниченным 6000 символами. Целые интервалы сохраняют роль, область, смещения и неопределённость. Уплотнение не вытесняет уже выбранные цитаты. Пропуски явно учитываются. Каждое утверждение экспериментального читателя владеет своими ссылками.",
+      "evidence": [
+        "bounded_reader",
+        "owned_citations"
+      ],
+      "limit": "Чтение контекста не вызывает модель. Ограниченная выдача не обещает полный диалог или все нужные источники. Принадлежность ссылки не доказывает смысловую поддержку, причинность или истинность."
+    },
+    {
+      "requirement": "5. Новый независимый эксперимент после фиксации кода, критериев и бюджета.",
+      "status": "R23_pending",
+      "behavior": "Для R23 приняты отдельные метаданные авторства и смыслового review. Квитанции готовности связывают исходники, разрешение и бюджет. Набор содержит 96 вопросов, 192 факта и 208 положительных оснований.",
+      "evidence": [
+        "r23_metadata",
+        "r23_readiness",
+        "r23_budget",
+        "r23_source"
+      ],
+      "limit": "Готовность входов не является результатом качества. Живые ответы, оценки и логи R23 в этой подготовке не читались. Итог R23 ещё должен быть добавлен."
+    },
+    {
+      "requirement": "Сохранить пороги и полный знаменатель.",
+      "status": "pending_quality_gate",
+      "behavior": "Для положительного решения нужны не менее 90% полностью подтверждённых ответов, ноль критических ошибок и отсутствие индивидуальных потерь. Если baseline ниже 90%, нужен прирост минимум 10 процентных пунктов. Пропущенные вопросы и повторы остаются в знаменателе.",
+      "evidence": [
+        "requirements",
+        "r22_closure"
+      ],
+      "limit": "Нельзя объявить успех по тестам реализации, метаданным готовности или неполному проходу."
+    },
+    {
+      "requirement": "Учитывать все попытки и ограничить бюджет.",
+      "status": "through_R22_verified_R23_pending",
+      "behavior": "R22 закрыт incomplete: 167 вызовов, 2 159 780 известных токенов, оценено 0 из 216 позиций. До R22 включительно учтены 3972 попытки; у 3970 есть токены, у двух прежних попыток расход неизвестен. Известный нижний предел составляет 62 723 895 токенов. Полный итог и фактическая денежная стоимость неизвестны.",
+      "evidence": [
+        "r22_closure",
+        "r22_closed",
+        "r22_audit",
+        "pipeline_accounting",
+        "r23_budget"
+      ],
+      "limit": "Гипотетический API-эквивалент в старых квитанциях не является счётом. R23 имеет отдельный предел 420 попыток, 7 000 000 наблюдённых токенов и 7200 секунд. Итоговые расходы R23 здесь не предполагаются. Ноль оценённых ответов R22 не позволяет сделать вывод о критической безопасности."
+    },
+    {
+      "requirement": "Проверить реализацию, архитектуру, пакет и состояние сервиса.",
+      "status": "offline_checkpoint_verified_finalization_pending",
+      "behavior": "R22 прошёл 1867 основных и 124 протокольных теста. Все 48 текущих файлов runtime совпали с их хешами в этой квитанции. Архитектурная проверка совпадения хешей и проверка пакета сохранены.",
+      "evidence": [
+        "tests",
+        "runtime",
+        "architecture",
+        "package",
+        "r23_source",
+        "installed"
+      ],
+      "limit": "Совпадение архитектурных хешей не доказывает смысл описаний. Последнее наблюдение сервиса от 22 октября 08:45:36 UTC: running, версия 1.12.0. Загруженные байты процесса не проверены. В этой работе нет установки или перезапуска."
+    },
+    {
+      "requirement": "Отчёт, review и локальное завершение.",
+      "status": "pending",
+      "behavior": "Итоговый русский отчёт должен отдельно назвать изменения, измеренный эффект, пробелы и сервис. Локальный коммит не равен установке или публикации.",
+      "evidence": [
+        "finish_requirements"
+      ],
+      "limit": "Остались окончательные результаты R23, экспорт и аудит, свежее наблюдение сервиса, итоговый пакет, прикреплённый Roughdraft review с обработкой замечаний и локальный коммит."
+    }
+  ],
+  "runtime_byte_verification": {
+    "against": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/final-tests.original.v002.json",
+    "matched_files": 48,
+    "drift": [],
+    "reused_test_counts_not_new_run": true
+  },
+  "sources": {
+    "requirements": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/handoffs/project-memory-quality-2026-10-21.md",
+      "lines": [
+        76,
+        90
+      ],
+      "sha256": "b89a80d7b6e418e57017c28976ad8c0e2a2097c15cf81e39549fb334ec509e23",
+      "quote": "Неполное выполнение не даёт положительного решения."
+    },
+    "finish_requirements": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/handoffs/project-memory-quality-2026-10-21.md",
+      "lines": [
+        102,
+        106
+      ],
+      "sha256": "b89a80d7b6e418e57017c28976ad8c0e2a2097c15cf81e39549fb334ec509e23",
+      "quote": "Локальный коммит не означает установку или публикацию."
+    },
+    "canonical_scope": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/PROJECT_MEMORY.md",
+      "lines": [
+        54,
+        60
+      ],
+      "sha256": "07a4570873e6dd5fbfe6169973171b651836f8cb6ab20513b37b4665ecc6b1ff",
+      "quote": "Trusted code also binds the canonical project path."
+    },
+    "continuity": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/PROJECT_MEMORY.md",
+      "lines": [
+        76,
+        96
+      ],
+      "sha256": "07a4570873e6dd5fbfe6169973171b651836f8cb6ab20513b37b4665ecc6b1ff",
+      "quote": "Shared chat membership or similar wording alone does not merge episodes."
+    },
+    "final_fields": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/PROJECT_MEMORY.md",
+      "lines": [
+        62,
+        68
+      ],
+      "sha256": "07a4570873e6dd5fbfe6169973171b651836f8cb6ab20513b37b4665ecc6b1ff",
+      "quote": "Commit rebuilds the records and compares their digest with the assessed result"
+    },
+    "digest_code": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py",
+      "lines": [
+        918,
+        922
+      ],
+      "sha256": "1c1ddb663c4ca3b76bbc063c539dec78352e2bfbe1a9e6911b3f463afd2461c3",
+      "quote": "prepared project memory changed after assessment"
+    },
+    "assessment_code": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/episode_processor.py",
+      "lines": [
+        909,
+        922
+      ],
+      "sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+      "quote": "prepared_digest = prepared[\"digest\"]"
+    },
+    "final_field_tests": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_final_quality.py",
+      "lines": [
+        49,
+        85
+      ],
+      "sha256": "c1c5f8db5b94969707894a4b9109d6e08ca8d042a9cfc12feb77aebede900aed",
+      "quote": "test_prepared_digest_cannot_authorize_a_different_commit"
+    },
+    "judge_coverage_test": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_protocol.py",
+      "lines": [
+        868,
+        877
+      ],
+      "sha256": "bbefec6f80756a27fefc642299744f768d663c550b156ddeffa1d097ce123068",
+      "quote": "test_saved_missing_fact_rejects_whole_batch_without_changing_receipt"
+    },
+    "field_measurement": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21/field-assessment.json",
+      "lines": [
+        2,
+        41
+      ],
+      "sha256": "725d5b3f08cea614e67a97a466edb7bbca31d3c51241f8b1c9e5044434330f4c",
+      "quote": "No useful case is explicitly rejected, but quarantine would still lose those8 useful fields."
+    },
+    "field_protocol": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21/field-protocol.json",
+      "lines": [
+        28,
+        44
+      ],
+      "sha256": "c4b80ca680d443df36e3c038a291fb9a3b3e5e2ec7f9545b7985a03ec1789e2c",
+      "quote": "No blocker recommendation unless false_accept=0,useful_loss=0,unresolved=0"
+    },
+    "custody": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/PROJECT_MEMORY.md",
+      "lines": [
+        70,
+        82
+      ],
+      "sha256": "07a4570873e6dd5fbfe6169973171b651836f8cb6ab20513b37b4665ecc6b1ff",
+      "quote": "Cancellation is not inferred."
+    },
+    "custody_decision": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/adr/0003-retain-unresolved-user-material.md",
+      "lines": [
+        3,
+        7
+      ],
+      "sha256": "0c27cdbf03b4476bf04ec9ab394cfc9e4b73283a77cfde595773208bbeb06ca9",
+      "quote": "Partial clauses, paraphrases, replacement and uncertain cancellation retain an unresolved remainder."
+    },
+    "bounded_reader": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/PROJECT_MEMORY.md",
+      "lines": [
+        156,
+        178
+      ],
+      "sha256": "07a4570873e6dd5fbfe6169973171b651836f8cb6ab20513b37b4665ecc6b1ff",
+      "quote": "The read calls no model and does not enlarge the body window or storage schema."
+    },
+    "owned_citations": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/adr/0009-own-reader-citations-by-delivered-assertion.md",
+      "lines": [
+        5,
+        23
+      ],
+      "sha256": "a789a6cc5eb8c54388f99bec7f517b40db606db7147e534fa2e63c4d236d6c00",
+      "quote": "Ownership establishes an address and a delivered text interval."
+    },
+    "pipeline_accounting": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/PROJECT_MEMORY.md",
+      "lines": [
+        251,
+        253
+      ],
+      "sha256": "07a4570873e6dd5fbfe6169973171b651836f8cb6ab20513b37b4665ecc6b1ff",
+      "quote": "Failed physical generation excludes stale grades from both reader arms."
+    },
+    "tests": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/final-tests.original.v002.json",
+      "lines": [
+        53,
+        99
+      ],
+      "sha256": "455d261fd41838aec338a8187a51274a43b372fe4fbfc6d3feb5702e3e72f48d",
+      "quote": "\"core\": 1867"
+    },
+    "runtime": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/runtime-source-receipt.json",
+      "lines": [
+        53,
+        57
+      ],
+      "sha256": "2d3553b1a4140595373d365c04599f1035081268bbc727c5f671c2bd645b8a69",
+      "quote": "\"protocol_tests\": 124"
+    },
+    "architecture": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-validation/architecture-check.json",
+      "lines": [
+        2,
+        15
+      ],
+      "sha256": "67651249a7246614a43ca7e2e74021add1cd41147aa3eb11326be17a37f9356b",
+      "quote": "\"semantic_freshness\": \"not_checked\""
+    },
+    "package": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-validation/package-verification.v002.json",
+      "lines": [
+        2,
+        17
+      ],
+      "sha256": "337e723fd0f80b033da3b3d4afa6928a6660c0b0a0b1370ff4e735c2ab98dc2b",
+      "quote": "\"all_runtime_hashes_match\": true"
+    },
+    "r22_closure": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/closing-status-v001.json",
+      "lines": [
+        2,
+        87
+      ],
+      "sha256": "f1840bdda81c36484555ece3145ad60d97f8b1a70593a32fd57eaf52ab77d86b",
+      "quote": "\"quality_score_claim\": null"
+    },
+    "r22_closed": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/source-hold-release-v001.json",
+      "lines": [
+        2,
+        19
+      ],
+      "sha256": "0f5ca18e2e915a4de42c82f74ee586d5893f6b54640a2188946b6b82a49f4428",
+      "quote": "\"critical_error_safety_established\": false"
+    },
+    "r22_audit": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/final-export-audit.json",
+      "lines": [
+        2,
+        19
+      ],
+      "sha256": "9442936da501980c9c703114bfcae1a930b81cd5e1c03c21f5d989ec9948769b",
+      "quote": "\"decision_preserved\": \"incomplete\""
+    },
+    "installed": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/installed-service-observation.json",
+      "lines": [
+        2,
+        17
+      ],
+      "sha256": "de853616ac5bffaa9b444f182818d67461843fcd92b8f3a7e4815d7f0f5fd339",
+      "quote": "\"actual_loaded_process_source_hashes_verified\": false"
+    },
+    "r23_source": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r23/central-source-readiness.json",
+      "lines": [
+        30,
+        44
+      ],
+      "sha256": "630d83107cccb2e19aeb203ba316c8496c6238b8c63bd168436119355a561505",
+      "quote": "\"runtime_and_tests_reused_only_for_unchanged_source\""
+    },
+    "r23_metadata": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r23-preparation/metadata-binding-receipt.v003.json",
+      "lines": [
+        2,
+        43
+      ],
+      "sha256": "4128920a179cf1eae2296ca34c09752f0fb800a59108b5b1bfd50f3f66292c9d",
+      "quote": "\"status\": \"accepted_metadata_consistency_only_no_trial_ready\""
+    },
+    "r23_readiness": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r23/pre-native-readiness-verification.json",
+      "lines": [
+        2,
+        43
+      ],
+      "sha256": "57ea37b37d67c9932f968512d54a7a95d37b1242a400900dd9685a09b2d84e42",
+      "quote": "\"sealed_input_files_hashed_only\": 19"
+    },
+    "r23_budget": {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r23/budget-binding.approved.v001.json",
+      "lines": [
+        3,
+        22
+      ],
+      "sha256": "cb357fb2fa8c32da7d6feea4386459230e147923db47a81ef925bd084d52b765",
+      "quote": "\"status\": \"approved_bounded_budget\""
+    }
+  },
+  "pending_gates": [
+    "R23 final results and accounting",
+    "R23 final export and independent audit",
+    "Fresh installed-service observation with explicit loaded-byte limits",
+    "Final package verification",
+    "Attached Roughdraft human review and CriticMarkup resolution",
+    "Local commit"
+  ],
+  "forbidden_conclusions": [
+    "Цель достигнута.",
+    "Независимое качество подтверждено тестами реализации.",
+    "R22 доказал отсутствие критических ошибок.",
+    "Известный нижний предел токенов равен полному расходу.",
+    "Версия 1.12.0 доказывает загрузку текущих исходников."
+  ],
+  "r23_result": null
+}

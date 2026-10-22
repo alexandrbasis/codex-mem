@@ -1,0 +1,162 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q1",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "272a76dcaad89225cf9eb284cc78fe873dd0113014bce59a9ce6faac26afaee6",
+  "context_sha256": "a365bc7c94da913d2cec749cb64eb24806d05efe043fbdc47efe912b430645cf",
+  "raw_output_sha256": "e136a61ea86380701fc1a4d6de30fe1c26f817b8671124f0ec70498e65106222",
+  "native_receipt": {
+    "source_call_id": "call-0131",
+    "request_sha256": "9598131f3ba21edee45a5e95b3715cfd17d4fe11e9659bf9566f3847aef3249c",
+    "response_sha256": "7fd10914fb007f63a1c9c024acd7fd9e8026c16ad2d7a4a8618e801b9b59057b",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q1",
+        "answer": "Mica work appears in F08_first_chat and F08_receipt_chat. In the first, the assistant planned to put the preview beside the working notes under “draft café 8.” In the receipt chat, the assistant believed publication was complete because the local preview finished; the user requested reopening the Mica foldout key because the archive acquired a cabinet of oversized folders. Publication is therefore only an assistant report in the supplied evidence. [R0002, R0001, R0003]\n\nWillow archive crates belongs to F08_other_chat and is explicitly independent of Mica. Its requirements are to weigh each crate before transport and keep the work in planning until its own review. That continuing constraint makes Willow’s own review the condition for leaving planning. The status query recorded that Willow remained in planning and wrote no acceptance entry. [R0008, R0004, R0005, R0006, R0007]\n\nAny separate continuing constraint for Mica, and its purpose, are unknown from the supplied spans.",
+        "uncertainties": [
+          "The supplied spans do not state a continuing Mica constraint or its purpose.",
+          "Mica publication completion is not verified by an observed execution result in the supplied evidence."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "ab6d48cfc57642cbbb991b3aea141747",
+            "source_field": "body",
+            "start": 0,
+            "end": 92,
+            "source_role": "assistant_report",
+            "quote": "I believe publication for Mica archive guide is complete because the local preview finished."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "1b8f2c42eefe496bb8cb72df719d2fc3",
+            "source_field": "body",
+            "start": 0,
+            "end": 101,
+            "source_role": "assistant_report",
+            "quote": "I will put the Mica archive guide preview beside the working notes. The folder label is draft café 8."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "2a27ce69c03c45d29f7814786582269e",
+            "source_field": "body",
+            "start": 0,
+            "end": 88,
+            "source_role": "user_intent",
+            "quote": "Reopen the Mica foldout key because the archive acquired a cabinet of oversized folders."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "b41ab45372d44f7997dedbc4f7d41b72",
+            "source_field": "body",
+            "start": 71,
+            "end": 141,
+            "source_role": "user_intent",
+            "quote": " For Willow archive crates, weigh each archive crate before transport."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "b41ab45372d44f7997dedbc4f7d41b72",
+            "source_field": "body",
+            "start": 141,
+            "end": 213,
+            "source_role": "user_intent",
+            "quote": " I want the Willow archive crates kept in planning until its own review."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "b808350f219b4821b0536cc22a111807",
+            "source_field": "body",
+            "start": 50,
+            "end": 93,
+            "source_role": "tool_record",
+            "quote": " Willow archive crates remains in planning."
+          },
+          {
+            "catalog_ref": "R0007",
+            "source_id": "b808350f219b4821b0536cc22a111807",
+            "source_field": "body",
+            "start": 93,
+            "end": 147,
+            "source_role": "tool_record",
+            "quote": " No acceptance entry was written by this status query."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "b41ab45372d44f7997dedbc4f7d41b72",
+            "source_field": "body",
+            "start": 0,
+            "end": 71,
+            "source_role": "user_intent",
+            "quote": "In Willow, the archive crates is independent of the Mica archive guide."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 12091,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12467,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 458,
+        "reasoning_output_tokens": 73,
+        "total_tokens": 12925
+      }
+    }
+  },
+  "latency_ms": 12138,
+  "native_dispatch": {
+    "key": "3cc9c15c09b59f3ca10cacb179786ae4f3e9d62f712d24c4c91c9b1e888c52f5",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F08",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q1",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0131",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "650045e19c1f6bafde39fb49612974bf7584b06c9c13ca8e4f153e8c86094d00",
+    "request_file_sha256": "0ac3d638f0c2af61d3773290ff2769ce3a00d12b8cd7099d992d2979283a3cec",
+    "response_file_sha256": "6150b09dbe386b1b1e74d76f8d7b43e70cb47c746b7df2b288d75a8ae86d34c7",
+    "reused": false,
+    "native_wall_ms": 12138
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F08",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q1"
+  },
+  "evidence_checks": {
+    "Q1": {
+      "accepted_results": "No accepted Mica result is evidenced; the Willow status query wrote no acceptance entry.",
+      "open_work_and_reasons": "Mica’s foldout key is to reopen because of oversized folders; Willow remains in planning until its own review.",
+      "source_role_distinctions": "Mica publication completion is an assistant belief; Willow’s planning status is a tool-record observation."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

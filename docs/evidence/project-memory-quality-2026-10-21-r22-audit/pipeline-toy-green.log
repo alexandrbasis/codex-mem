@@ -1,0 +1,23 @@
+..E.....
+======================================================================
+ERROR: test_checkpoint_wrong_attempt_metadata_rejected (__main__.PipelineContract.test_checkpoint_wrong_attempt_metadata_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 41, in test_checkpoint_wrong_attempt_metadata_rejected
+    run,value,p,b=self.toy();capture=h.Capture(run,p,'generation','baseline','toy');base={**capture.identity,'call_id':'call-0001'};capture._save_checkpoint(base,{'worker_thread_id':'synthetic','worker_turn_id':None,'metrics':{'duration_ms':1,'usage':{'status':'unavailable','source':'app_server_thread_total','updates':0,'tokens':None}}});path=run/'receipts/call-0001-checkpoint.json';data=json.loads(path.read_text());data['history_id']='other';h.write(path,data);checks=[];validate_checkpoints(run,{'call-0001':base},lambda v,k:checks.append((k,v)));self.assertIn(('checkpoint_attempt_binding:call-0001',False),checks)
+                                                                                                                                                                                                                                                                                                                                                                                                                  ~~~~~~~~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/xb/f6nzfjps1977ts7qybykjtlh0000gn/T/tmp8rllw6t_/receipts/call-0001-checkpoint.json'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.047s
+
+FAILED (errors=1)

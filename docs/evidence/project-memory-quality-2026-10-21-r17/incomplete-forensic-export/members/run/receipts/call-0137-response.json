@@ -1,0 +1,57 @@
+{
+  "output": {
+    "answers": {
+      "Q3": {
+        "evidence_check": {
+          "accepted_results": "The user requires the line-length column and corrects wind units from knots to meters per second.",
+          "open_work_and_reasons": "Review was pending at the opening meeting; the gust appendix is a separate follow-up.",
+          "source_role_distinctions": "An assistant claims release is complete, while the observed record covers only a local preview; release permission is not evidenced."
+        },
+        "answer": "The full list of prerequisites for permission to release is unknown: the supplied sources do not explicitly define release gates or their reasons.\n\nThe supported requirements and status are:\n- Retain the line-length column because crews pair each kite with its line. The register was waiting for review at the opening meeting, but the source does not explicitly make completed review a release prerequisite. The gust appendix is a separate follow-up; it is not identified as a release prerequisite. [R0005]\n- Use meters per second for wind speed, replacing the initial instruction to use knots. No reason for this correction is supplied. [R0006]\n\nRelease permission is not established by the preview evidence. `fictional_record --record F09_first_record` exited with code 0; its output says the first preview contains the requested register row order and covers a local preview only. [R0003, R0004] An assistant later said it believed release was complete because the local preview finished; that is an assistant report, not verified release permission. [R0001]",
+        "citation_refs": [
+          "R0001",
+          "R0003",
+          "R0004",
+          "R0005",
+          "R0006"
+        ],
+        "uncertainties": [
+          "The complete release prerequisites and their reasons are not supplied.",
+          "Whether review was completed or release permission was granted is unknown.",
+          "The sources do not establish that retaining the column, correcting wind units, completing review, or finishing the appendix are explicit conditions for release permission."
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "duration_ms": 15155,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12485,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 537,
+        "reasoning_output_tokens": 138,
+        "total_tokens": 13022
+      }
+    }
+  },
+  "evidence": {
+    "thread_start": {
+      "thread_id": "diagnostic-thread-af95a908cac2327c6613",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "model_provider": "openai"
+    },
+    "turn_started": {
+      "thread_id": "diagnostic-thread-af95a908cac2327c6613",
+      "turn_id": "diagnostic-turn-285492254af2a063c3e5"
+    },
+    "turn_completed": true,
+    "no_tools": true,
+    "rerouted": false
+  }
+}

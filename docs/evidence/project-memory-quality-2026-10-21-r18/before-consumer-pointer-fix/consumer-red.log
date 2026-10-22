@@ -1,0 +1,59 @@
+EE.F.E
+======================================================================
+ERROR: test_actual_aggregate_and_canonical_export_keep_all_missing_planned_slots (__main__.ActualConsumerCompatibilityTests.test_actual_aggregate_and_canonical_export_keep_all_missing_planned_slots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/test-consumer-compatibility.py", line 87, in test_actual_aggregate_and_canonical_export_keep_all_missing_planned_slots
+    report=helper.aggregate(types.SimpleNamespace(run=run),fixture,protocol)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py", line 1986, in aggregate
+    report.update(historical_accounting(protocol,report['usage']))
+                  ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py", line 220, in historical_accounting
+    path=ROOT/pointer['report']
+              ~~~~~~~^^^^^^^^^^
+KeyError: 'report'
+
+======================================================================
+ERROR: test_actual_consumer_rejects_changed_report_or_missing_sha_without_normalization (__main__.ActualConsumerCompatibilityTests.test_actual_consumer_rejects_changed_report_or_missing_sha_without_normalization)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/test-consumer-compatibility.py", line 77, in test_actual_consumer_rejects_changed_report_or_missing_sha_without_normalization
+    helper.historical_accounting(protocol,helper.usage([]))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py", line 220, in historical_accounting
+    path=ROOT/pointer['report']
+              ~~~~~~~^^^^^^^^^^
+KeyError: 'report'
+
+======================================================================
+ERROR: test_real_accounting_preserves_cumulative_known_and_unknown_usage (__main__.ActualConsumerCompatibilityTests.test_real_accounting_preserves_cumulative_known_and_unknown_usage)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/test-consumer-compatibility.py", line 64, in test_real_accounting_preserves_cumulative_known_and_unknown_usage
+    total=helper.historical_accounting(protocol,helper.usage(self.calls('new')))['cumulative_pilot_usage']
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py", line 220, in historical_accounting
+    path=ROOT/pointer['report']
+              ~~~~~~~^^^^^^^^^^
+KeyError: 'report'
+
+======================================================================
+FAIL: test_emitted_history_pointer_is_actual_consumer_report_key (__main__.ActualConsumerCompatibilityTests.test_emitted_history_pointer_is_actual_consumer_report_key)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/test-consumer-compatibility.py", line 41, in test_emitted_history_pointer_is_actual_consumer_report_key
+    self.assertEqual(protocol['historical_spend'],{'report':self.history['path'],'sha256':self.history['sha256']})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'path': '/private/tmp/tmp79bpl80j/syntheti[98 chars]2f9'} != {'report': '/private/tmp/tmp79bpl80j/synthe[100 chars]2f9'}
+- {'path': '/private/tmp/tmp79bpl80j/synthetic-historical-usage.json',
+?    ^ -
+
++ {'report': '/private/tmp/tmp79bpl80j/synthetic-historical-usage.json',
+?   ++ ^^
+
+   'sha256': '2e7ade9d1a614cf9fb1485166ccd20c072a5c223f64f291b5a4d92a57913c2f9'}
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.134s
+
+FAILED (failures=1, errors=3)

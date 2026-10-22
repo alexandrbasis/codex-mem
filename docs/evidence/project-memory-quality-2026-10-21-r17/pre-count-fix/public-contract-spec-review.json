@@ -1,0 +1,57 @@
+{
+  "axis": "Spec",
+  "status": "changes_required",
+  "reviewed_sha256": {
+    "public-contract-pack-receipt.json": "c47950d3197fda64c602ec8abb0556afb40f960ceed6016021d1921b5e8fdbaa",
+    "public-fixture-contract.py": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+    "public-fixture-contract-receipt.json": "9e59863312363f69cee69b2a6ea123cd9b7b8eae37748f7f0e14a454a73c8d6b",
+    "prospective-gold-semantics-contract.json": "a3ceb608bc9d336cc0dd1d611f1294063f58f86cd651cf7e421a596510f6795e",
+    "sealed-semantic-review-metadata.schema.json": "8df15b220de0b83be4b6d280ece4289f10312677ae2bd943da21174d09d84d59",
+    "sealed-semantic-review-findings.schema.json": "1f179454dd4772956c0ab0d4bd9e9303fc14b071a83f830a16eb36b04d0767e8",
+    "run-experiment.py": "e911f5aa1d4643fb28a42f9250ce7a3885e17337667acbcd963ec422ed2b5d74",
+    "test-driver.py": "62dd593c395fa2352c3d5a0ec17c437ebd9973a335aa1c2ec11d4cb9092f13e4",
+    "carried-public-files.json": "2ec314e24fa101053701f733614cdd325a932ff76849f76d557df50339e398a5"
+  },
+  "global_helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "findings": [
+    {
+      "priority": "P2",
+      "file": "docs/evidence/project-memory-quality-2026-10-21-r17/run-experiment.py",
+      "line": 103,
+      "title": "Bind claimed complete review counts to pinned inputs",
+      "requirement": {
+        "file": "docs/evidence/project-memory-quality-2026-10-21-r17/prospective-gold-semantics-contract.json",
+        "line": 91,
+        "quote": "all questions and required facts"
+      },
+      "evidence": "A fresh public toy has96required facts. Changing pinned metadata coverage.required_facts to1 while all_required_facts_reviewed remains true produces independent_review_metadata_validated with required_facts_reviewed=1. The guard accepts any positive fact count rather than comparing with the pinned gold.",
+      "impact": "An internally inconsistent completeness attestation passes the mechanical pre-dispatch gate. This does not prove semantic review absent, but the claimed mechanical count is not enforced.",
+      "fix": "Before a success receipt or phase dispatch, derive question and required-fact counts from exact pinned fixture/gold bytes and reject count mismatches. Keep detailed findings opaque. Test undercount and overcount as well as matching counts."
+    }
+  ],
+  "reproduction": {
+    "public_toy_only": true,
+    "actual_required_facts": 96,
+    "claimed_reviewed_facts": 1,
+    "result": "accepted_success_receipt",
+    "native_calls": 0,
+    "private_inputs_read": false
+  },
+  "other_assessment": [
+    "Generic future author guidance preserves fixed thresholds, difficult cases, deletion negatives and role/time/scope qualifications. It does not modify historical gold.",
+    "Separate reviewer allowlist and sealed detailed findings prevent deliberate product/answer exposure; metadata acceptance remains an attestation, not proof.",
+    "Optional author_fact_rationale_sha256 is already supported by the full findings schema; no finding on appendix binding.",
+    "Source hash, acceptance, unresolved finding, boolean completeness and input binding rejection otherwise precede phase dispatch; R17 protocol must declare the optional guard."
+  ],
+  "clearance": {
+    "author_dispatch": false,
+    "condition": "Resolve count consistency before final pack approval; preserve reviewed version and public red reproduction.",
+    "trial_ready": false,
+    "quality_acceptance": false
+  },
+  "limits": [
+    "No product-worker files, R16 fixture/gold, private author content or grades read.",
+    "No model calls or reviewed source changes.",
+    "Only the new review artifact was written."
+  ]
+}

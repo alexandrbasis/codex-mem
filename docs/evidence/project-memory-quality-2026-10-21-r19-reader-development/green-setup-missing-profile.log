@@ -1,0 +1,23 @@
+..E.....
+======================================================================
+ERROR: test_new_prompt_schema_is_opt_in (__main__.OwnershipTests.test_new_prompt_schema_is_opt_in)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 52, in test_new_prompt_schema_is_opt_in
+    req=h.typed_reader_request(CONTEXT,CAT,PROTOCOL)
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 1152, in typed_reader_request
+    return assertion_reader_request(contexts, catalog, protocol)
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 1037, in assertion_reader_request
+    return request(prompt, schema, protocol)
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 793, in request
+    return {**phase_profile(protocol, phase),
+              ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 322, in phase_profile
+    profile = {'model': protocol['model'], 'reasoning_effort': protocol['reasoning_effort']}
+                        ~~~~~~~~^^^^^^^^^
+KeyError: 'model'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.004s
+
+FAILED (errors=1)

@@ -1,0 +1,75 @@
+"""Read released R20 evidence; validate saved catalogs; never invoke models or original Stores."""
+import json,hashlib,sqlite3,sys,importlib.util,re
+from xml.etree import ElementTree as ET
+from pathlib import Path
+sys.dont_write_bytecode=True
+ROOT=Path.cwd();OUT=ROOT/'docs/evidence/project-memory-quality-2026-10-21-r20-source-diagnosis';RUN=Path('/private/tmp/codex-mem-quality-20261021-r20-experiment');SEALED=Path('/private/tmp/codex-mem-quality-20261021-r20-sealed')
+def load(p):return json.loads(Path(p).read_text())
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def pin(p):return {'path':str(p),'sha256':sha(p)}
+helper=ROOT/'docs/evidence/project-memory-quality-2026-10-21-r20/frozen-helper.py'
+spec=importlib.util.spec_from_file_location('r20_frozen_helper',helper);h=importlib.util.module_from_spec(spec);sys.modules[spec.name]=h;spec.loader.exec_module(h)
+fixture=load(SEALED/'holdout-fixture.json');histories={x['id']:x for x in fixture['histories']}
+reportpath=ROOT/'docs/evidence/project-memory-quality-2026-10-21-r20/holdout/report.json';report=load(reportpath)
+inputs=[reportpath,helper,RUN/'freeze.json',SEALED/'holdout-fixture.json',SEALED/'holdout-gold.json',ROOT/'docs/evidence/project-memory-quality-2026-10-21-r20-semantic-diagnosis/first-critical-analysis.json']
+nonfull=[];paired=[];views=[]
+for case in sorted(histories):
+ grades={arm:{g['id']:g for g in load(RUN/arm/case/'judge-0.json')['grades']} for arm in ['baseline','candidate']}
+ for q,g in grades['candidate'].items():
+  b=grades['baseline'][q]
+  for f in g['fact_recall']:
+   bf=next(x for x in b['fact_recall'] if x['fact_index']==f['fact_index'])
+   if bf['recalled'] and not f['recalled']:paired.append({'history_id':case,'question_id':q,'fact_index':f['fact_index'],'category':g['category']})
+  if g['full_supported_answer']:continue
+  row={'history_id':case,'question_id':q,'category':g['category'],'candidate_grade':g,'baseline_grade':b,'paired_fact_indices':[f['fact_index'] for f in g['fact_recall'] if not f['recalled'] and next(x for x in b['fact_recall'] if x['fact_index']==f['fact_index'])['recalled']]}
+  for arm in ['baseline','candidate']:
+   d=RUN/arm/case;context=next(x for x in load(d/'contexts.json') if x['id']==q);generation=load(d/'generation.json');reader=load(d/f'reader-0.q-{q}.json')
+   originals=h.original_source_fields(histories[case],generation['source_map']);catalog=h.reader_citation_catalog([context],originals);assert h.digest(catalog)==reader['catalog_sha256']
+   requestpath=RUN/'receipts'/(reader['native_dispatch']['source_call_id']+'-request.json');request=load(requestpath);canonical=json.loads(request['prompt'][request['prompt'].index('{"contexts":'):])['contexts'][0]
+   v={'history_id':case,'question_id':q,'arm':arm,'raw_context':context,'canonical_delivered_context':canonical,'catalog':catalog,'catalog_sha256':h.digest(catalog),'reader':reader,'pins':[pin(p) for p in [d/'contexts.json',d/'generation.json',d/'judge-0.json',d/f'reader-0.q-{q}.json',requestpath]]}
+   wire_sources=[source for block in re.findall(r'<project-memory\b.*?</project-memory>',canonical['memory'],flags=re.S) for source in ET.fromstring(block).iter('source')]
+   for entry in catalog:
+    assert any(source.get('citation_ref')==entry['ref'] and source.get('source_field','body')==entry['source_field'] and source.get('source_role')==entry['source_role'] and int(source.get('start'))==entry['start'] and source.findtext('quote_excerpt')==entry['quote'] for source in wire_sources),(case,q,arm,entry)
+   v['canonical_catalog_quotes_verified']=True
+   views.append(v);inputs.extend([d/'contexts.json',d/'generation.json',d/'judge-0.json',d/f'reader-0.q-{q}.json',requestpath])
+  nonfull.append(row)
+assert paired==report['paired_fact_losses'];assert len(nonfull)==6
+# Persisted state is inspected through SQLite read-only, with byte hashes held.
+state=[]
+targets={'h03':['f32c97f5029e4250bead3691dd58bf3a','cedfbea4663945eb97197b73676fed31'],'h05':['0428bdd470da4dbd9ceb321b494d581d'],'h12':['ff04670987ed48669501566ae1d5099e']}
+for arm in ['baseline','candidate']:
+ for case,ids in targets.items():
+  p=RUN/arm/case/'data/memory.sqlite3';before=sha(p);con=sqlite3.connect('file:'+str(p)+'?mode=ro',uri=True);con.row_factory=sqlite3.Row
+  objects=[{**dict(x),'data':json.loads(x['data_json'])} for x in con.execute('SELECT * FROM pm_objects') if any(s in x['data_json'] for s in ids)]
+  for x in objects:del x['data_json']
+  entries=[dict(x) for x in con.execute('SELECT * FROM entries') if x['id'] in ids]
+  custody=[dict(x) for x in con.execute('SELECT * FROM pm_intent_custody') if any(s in str(dict(x)) for s in ids)]
+  relations=[dict(x) for x in con.execute('SELECT * FROM pm_relations')];con.close();assert before==sha(p)
+  state.append({'arm':arm,'history_id':case,'original_db':pin(p),'hash_unchanged':True,'canonical_entries':entries,'persisted_objects':objects,'custody':custody,'relations':relations});inputs.append(p)
+traces={arm:load(OUT/(arm+'-trace.json')) for arm in ['baseline','candidate']}
+chains=[]
+for case,q,sid,diagnosis in [('h03','q2',targets['h03'][0],'reopening_persisted_but_only_neutral_in_this_query_then_neutral_count_cap'),('h05','q5',targets['h05'][0],'admitted_selected_source_rejected_by_owner_packing_budget'),('h12','q5',targets['h12'][0],'exact_full_source_delivered_and_cited_answer_quantifier_omission')]:
+ chain={'history_id':case,'question_id':q,'source_id':sid,'diagnosis':diagnosis,'arms':[]}
+ for arm in ['baseline','candidate']:
+  t=next(r for r in traces[arm]['rows'] if r['case']==case and r['id']==q);v=next(v for v in views if v['arm']==arm and v['history_id']==case and v['question_id']==q)
+  chain['arms'].append({'arm':arm,'replay_byteexact':t['replay_byteexact'],'source_catalog_entries':[e for e in v['catalog'] if e['source_id']==sid], 'owners':[{'project':o['project'],'project_key':o['project_key'],'budget':max(1000,6000//len(t['owners'])-100),'plan':o['plan'],'raw_owner_chars':len(o['brief'].get('xml','')),'records_containing_source':[r for r in o['brief']['records'] if sid in json.dumps(r)],'neutral_containing_source':[r for r in o['brief'].get('unassociated_user_context',[]) if sid in json.dumps(r)],'packing_steps':[s for s in o['trace'].get('packing_steps',[]) if sid in s['source_ids']],'render_omissions':o['brief'].get('render_omissions'),'coverage':o['brief'].get('coverage')} for o in t['owners']]})
+ chains.append(chain)
+# Model-produced output and persisted result must not be conflated with reconciliation.
+generation_output=RUN/'receipts/call-0020-response.json';generation_request=RUN/'receipts/call-0020-request.json';inputs += [generation_output,generation_request]
+result={'schema_version':1,'purpose':'Read-only technical diagnosis; no new grades or product changes','canonical_report':pin(reportpath),'paired_fact_losses':paired,'all_candidate_nonfull':nonfull,'source_chains':chains,'persisted_state':state,'generation_reopening':{'request':pin(generation_request),'response':pin(generation_output),'output':load(generation_output)['output'],'inference_limit':'The producer returned standalone episodes and claims=[]; this does not prove a Store rejection or a reader fix. No existing claim transition/episode continuation was proposed in this output.'},'counterevidence_and_limits':['project_isolation is a question category, not evidence of project_mixing. Canonical report records no project_mixing error in either arm.','h03/q2 required drum-cue fact was recalled; false closure is a volunteered extra assertion, not a required-fact loss.','h03 source entered a neutral pool despite failing topical direct selection; the transport count cap, not source acquisition absence, removes it.','h05 source packing refusal is observed under canonical conservative prices. No counterfactual allocator or changed cap was run; source visibility alone cannot prove a repaired answer.','h12 full source contains all disputed scores, is reader-visible and cited. This is answer fidelity, not project boundary or packing failure.','h05/q4 causal relation was visible but absent from delivered answer; coarse recall loss is separate from individual required-fact paired losses.','h10/q6 and h13/q6 have unavailable required instructions in both reader arms; no claim is made about a repaired result.','No repeated-generation quality result or final release verdict is inferred from these primary source traces.'],'generic_next_design_intents':[{'boundary':'source-chain completeness around a displayed state quotation','intent':'Consider an exact, independently qualified later same-task reopening/correction safety supplement only with demonstrated identity; never infer cancellation or merge from topic similarity.','public_test':'Older closure displayed, later explicit reopening retained as standalone original; unrelated similarly named task must not change currentness. Preserve honest incomplete-history warnings.'},{'boundary':'owner allocation','intent':'Measure a general stable whole-source allocation that protects an already admitted direct answer-bearing source before optional unrelated neutral context, within existing owner budgets and exact prices.','public_test':'A selected authority source near a 2900-character owner boundary versus three unrelated neutral originals; account every displaced source and no cross-owner quota borrowing.'},{'boundary':'reader assertion fidelity','intent':'Evaluate preservation of required quantifiers and explicit causal clauses in actual delivered assertions; catalogs and auxiliary checks do not supply missing answer text.','public_test':'Answer names authority but omits all, or states effect and acceptance separately without because; source visible in both controls.'}],'pins':[pin(p) for p in dict.fromkeys(inputs)]}
+result['measured_decisions']=[
+ {'history_id':'h03','question_id':'q2','owner':'p03a','owner_budget':5900,'source_id':targets['h03'][0], 'persisted':'Whole user body[0,100), standalone episode with exact rationale/summary[0,72) and goal/open_work[72,100); old completed claim still present; no relations.', 'query':'Natural scoped topic search music cue remains after scope change; direct topical snapshot does not select the reopening episode. Guarded unassociated custody pool nevertheless contains its whole body.', 'packing':'Neutral stream puts latest then earliest then interior sources. Reopening reaches line932 with neutral_selected=3, neutral_spent=1150, neutral_limit=1800 and available=1929; line933 skips before computing this group cost. Any cost variable at that branch is stale from the preceding group and is NOT a price for reopening.', 'delivery':'No source-catalog span for reopening in either arm q2. Candidate raw5395/canonical5331; older closure body[0,84) is citable. Required cue fact remains recalled; false_closure is an additional current assertion.', 'limit':'Not proof that raising the neutral cap is safe or that adding the quote would fix reader currentness. No allocator counterfactual run.'},
+ {'history_id':'h05','question_id':'q5','owner':'p05a','owner_budget':2900,'source_id':targets['h05'][0],'persisted':'Whole user source[0,143) persisted and represented in selected custody/claim/episode associations.','query':'Natural subject query, no hard identifiers, task IDs, environments or versions. Both selected owner paths preserved; no project widening.','packing':'Selected complete-source offers at line965 cost333/310/511 respectively, plus64 neutral-coverage marker, against available294. All refuse at line967; repeat traces are builder and public emission of same primary plan.','delivery':'Baseline catalog contains the Sada source; candidate catalog contains none of its body. Owner p05b succeeds independently. Candidate3906 total is not a fungible6000-character owner budget.','limit':'Owner local fit is causal evidence for this omission, not proof of optimal packing or a supported counterfactual answer.'},
+ {'history_id':'h12','question_id':'q5','owner':'p12a','owner_budget':2900,'source_id':targets['h12'][0],'persisted':'Whole user source[0,151) persisted.','packing':'Selected whole-source cost341+64 marker <= available564; accepted, leaving223 at the tested stage.','delivery':'Baseline and candidate both have exact body[0,151). Candidate R0001 includes arbiter resolves all disputed scores and is selected by delivered assertion. Answer says arbiter resolves disputed scores; saved judge reports missing all.','limit':'Reader fidelity/quantifier omission. A source-transport or project-alias repair cannot be credited from this evidence.'}]
+for row in result['all_candidate_nonfull']:
+ key=(row['history_id'],row['question_id'])
+ row['diagnostic_classification']={('h03','q2'):'no_required_fact_loss; extra_current_closure; reopening neutral_count_cap',('h05','q5'):'paired_required_fact_loss; selected_source_owner_packing_refusal',('h05','q4'):'coarse_recall_loss_only; visible_causal_quote_not_expressed_in_answer',('h12','q5'):'paired_required_fact_loss; full_source_visible_and_cited; answer_quantifier_omitted',('h10','q6'):'not_paired; required_source_not_visible_in_either_arm; deeper_admission_stage_not_traced',('h13','q6'):'not_paired; required_source_not_visible_in_either_arm; deeper_admission_stage_not_traced'}[key]
+ row['missing_source_visibility']=[]
+ for f in row['candidate_grade']['fact_recall']:
+  if f['recalled']:continue
+  for witness in f['source_witnesses']:
+   row['missing_source_visibility'].append({'fact_index':f['fact_index'],'source_id':witness['source_id'],'quote':witness['quote'],'catalogs':{a:[e for v in views if v['arm']==a and v['history_id']==key[0] and v['question_id']==key[1] for e in v['catalog'] if e['source_id']==witness['source_id']] for a in ['baseline','candidate']}})
+(OUT/'source-chain.json').write_text(json.dumps(result,indent=2)+'\n');(OUT/'reader-views.json').write_text(json.dumps(views,indent=2)+'\n')
+freeze=load(RUN/'freeze.json');runtime={p:sha(ROOT/p) for p in freeze['candidate_hashes']};assert runtime==freeze['candidate_hashes'];assert sha(helper)==freeze['helper_sha256']
+receipt={'schema_version':1,'source_chain':pin(OUT/'source-chain.json'),'reader_views':pin(OUT/'reader-views.json'),'trace_files':[pin(OUT/(a+'-trace.json')) for a in ['baseline','candidate']],'scripts':[pin(OUT/'trace-arm.py'),pin(OUT/'synthesize.py')],'six_owner_views_replayed_byteexact':all(r['replay_byteexact'] for a in traces.values() for r in a['rows']),'per_question_catalogs_match_saved_reader':len(views),'original_db_hashes_unchanged':len(state),'runtime_48_matches_freeze':runtime,'frozen_helper':pin(helper),'model_calls':0,'native_calls':0,'network_calls':0,'original_store_constructors':0,'product_or_grade_changes':0,'paired_fact_losses':paired,'candidate_nonfull_count':len(nonfull),'final_quality_verdict':'not issued; canonical report and independent closure are owned by parent'}
+(OUT/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n');print('receipt',sha(OUT/'receipt.json'),'source-chain',sha(OUT/'source-chain.json'))

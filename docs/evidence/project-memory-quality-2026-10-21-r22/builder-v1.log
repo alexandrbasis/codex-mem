@@ -1,0 +1,153 @@
+..EE..E.E...EEE..F
+======================================================================
+ERROR: test_builder_never_opens_sealed_directory_or_named_content (__main__.ProtocolBuilderTests.test_builder_never_opens_sealed_directory_or_named_content)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 297, in test_builder_never_opens_sealed_directory_or_named_content
+    with patch.object(Path,'read_bytes',guarded):self.build()
+                                                 ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 119, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 161, in build_protocol
+    require(config['repeat_selection']['sha256'] == '5a49eaf99c427749eae49d1c3c41aac9d64f7131e5fef8f33b2b11e6d20c05e5'
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('regeneration_repeat_history_ids') == ['h07']
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('reader_repeat_history_ids') == ['h15'], 'prospective_repeat_selection_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 49, in require
+    raise ValueError(reason)
+ValueError: prospective_repeat_selection_changed
+
+======================================================================
+ERROR: test_changed_helper_review_and_informational_capacity_semantics (__main__.ProtocolBuilderTests.test_changed_helper_review_and_informational_capacity_semantics)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 186, in test_changed_helper_review_and_informational_capacity_semantics
+    self.assertEqual(self.build()['native_capacity_observation'],self.config['native_capacity'])
+                     ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 119, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 161, in build_protocol
+    require(config['repeat_selection']['sha256'] == '5a49eaf99c427749eae49d1c3c41aac9d64f7131e5fef8f33b2b11e6d20c05e5'
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('regeneration_repeat_history_ids') == ['h07']
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('reader_repeat_history_ids') == ['h15'], 'prospective_repeat_selection_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 49, in require
+    raise ValueError(reason)
+ValueError: prospective_repeat_selection_changed
+
+======================================================================
+ERROR: test_complete_pins_build_in_memory_with_all_strict_gates_and_no_clock (__main__.ProtocolBuilderTests.test_complete_pins_build_in_memory_with_all_strict_gates_and_no_clock)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 189, in test_complete_pins_build_in_memory_with_all_strict_gates_and_no_clock
+    result = self.build()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 119, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 161, in build_protocol
+    require(config['repeat_selection']['sha256'] == '5a49eaf99c427749eae49d1c3c41aac9d64f7131e5fef8f33b2b11e6d20c05e5'
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('regeneration_repeat_history_ids') == ['h07']
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('reader_repeat_history_ids') == ['h15'], 'prospective_repeat_selection_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 49, in require
+    raise ValueError(reason)
+ValueError: prospective_repeat_selection_changed
+
+======================================================================
+ERROR: test_final_contents_free_v002_bindings_build_only_with_synthetic_source_dependencies (__main__.ProtocolBuilderTests.test_final_contents_free_v002_bindings_build_only_with_synthetic_source_dependencies)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 168, in test_final_contents_free_v002_bindings_build_only_with_synthetic_source_dependencies
+    target=self.repo/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(REPO/name,target)
+                                                                          ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/shutil.py", line 260, in copyfile
+    with open(src, 'rb') as fsrc:
+         ~~~~^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/metadata-readiness-binding.v001.json'
+
+======================================================================
+ERROR: test_new_reader_contract_and_capacity_require_final_helper_and_harness_reviews (__main__.ProtocolBuilderTests.test_new_reader_contract_and_capacity_require_final_helper_and_harness_reviews)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 122, in test_new_reader_contract_and_capacity_require_final_helper_and_harness_reviews
+    result=self.build()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 119, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 161, in build_protocol
+    require(config['repeat_selection']['sha256'] == '5a49eaf99c427749eae49d1c3c41aac9d64f7131e5fef8f33b2b11e6d20c05e5'
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('regeneration_repeat_history_ids') == ['h07']
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('reader_repeat_history_ids') == ['h15'], 'prospective_repeat_selection_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 49, in require
+    raise ValueError(reason)
+ValueError: prospective_repeat_selection_changed
+
+======================================================================
+ERROR: test_new_trial_explicit_complete_shared_pipeline_contract (__main__.ProtocolBuilderTests.test_new_trial_explicit_complete_shared_pipeline_contract)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 88, in test_new_trial_explicit_complete_shared_pipeline_contract
+    self.assertEqual(self.build()['pipeline_receipt_contract'], 'complete-shared-pipeline-v1')
+                     ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 119, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 161, in build_protocol
+    require(config['repeat_selection']['sha256'] == '5a49eaf99c427749eae49d1c3c41aac9d64f7131e5fef8f33b2b11e6d20c05e5'
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('regeneration_repeat_history_ids') == ['h07']
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('reader_repeat_history_ids') == ['h15'], 'prospective_repeat_selection_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 49, in require
+    raise ValueError(reason)
+ValueError: prospective_repeat_selection_changed
+
+======================================================================
+ERROR: test_real_count_budget_and_repeat_pins_are_required_without_topic_text (__main__.ProtocolBuilderTests.test_real_count_budget_and_repeat_pins_are_required_without_topic_text)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 137, in test_real_count_budget_and_repeat_pins_are_required_without_topic_text
+    result=self.build()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 119, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 161, in build_protocol
+    require(config['repeat_selection']['sha256'] == '5a49eaf99c427749eae49d1c3c41aac9d64f7131e5fef8f33b2b11e6d20c05e5'
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('regeneration_repeat_history_ids') == ['h07']
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and repeats_receipt.get('reader_repeat_history_ids') == ['h15'], 'prospective_repeat_selection_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/build-protocol.py", line 49, in require
+    raise ValueError(reason)
+ValueError: prospective_repeat_selection_changed
+
+======================================================================
+FAIL: test_stale_author_resource_and_unapproved_budget_reject (__main__.ProtocolBuilderTests.test_stale_author_resource_and_unapproved_budget_reject)
+----------------------------------------------------------------------
+ValueError: prospective_repeat_selection_changed
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22/test-protocol-builder.py", line 156, in test_stale_author_resource_and_unapproved_budget_reject
+    with self.assertRaisesRegex(ValueError,'resource_author_version_not_final'):self.build()
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "resource_author_version_not_final" does not match "prospective_repeat_selection_changed"
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.752s
+
+FAILED (failures=1, errors=7)

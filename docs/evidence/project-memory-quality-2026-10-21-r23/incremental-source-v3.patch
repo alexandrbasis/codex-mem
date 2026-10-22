@@ -1,0 +1,29 @@
+--- before-accepted-metadata-v3/test-protocol-builder.py
++++ test-protocol-builder.py
+@@ -180,6 +180,26 @@
+         self.assertFalse(Path(self.config['sealed_directory']).exists())
+         self.assertFalse((REPO/builder.PREFIX/'protocol.json').exists())
+ 
++    def test_final_v002_contents_free_metadata_matches_existing_builder_contract(self):
++        prep='docs/evidence/project-memory-quality-2026-10-21-r23-preparation/'
++        names={'author_manifest':'author-manifest.v002.json','review_metadata':'sealed-semantic-review-metadata.v002.json','sealed_pins':'sealed-pins-normalized.v002.json','resource_counts':'resource-counts.v002.json','review_readiness':'metadata-readiness-binding.v002.json'}
++        for key,name in names.items():
++            relative=prep+name
++            target=self.repo/relative;target.parent.mkdir(parents=True,exist_ok=True)
++            shutil.copyfile(REPO/relative,target)
++            self.config[key]={'path':relative,'sha256':builder.sha(target.read_bytes())}
++        # Only source/test/harness review and budget dependencies are synthetic.
++        # Exact accepted metadata is the shape under test, never trial readiness.
++        budget=json.loads(Path(self.config['budget_binding']['path']).read_text())
++        budget['resource_counts']=self.config['resource_counts']
++        self.config['budget_binding']=self.save('synthetic-budget-with-real-resource-pin.json',budget)
++        result=self.build()
++        self.assertEqual(result['independent_review_contract']['metadata_receipt_sha256'],'01849a4f323f2006b9e06ec4ca0ef3f9a858f40dc51f5913991c164dc9b50636')
++        self.assertEqual(result['independent_review_contract']['metadata_receipt_basename'],'sealed-semantic-review-metadata.json')
++        self.assertEqual(len(json.loads((self.repo/self.config['sealed_pins']['path']).read_text())['files']),19)
++        self.assertFalse(Path(self.config['sealed_directory']).exists())
++        self.assertFalse((REPO/builder.PREFIX/'protocol.json').exists())
++
+     def test_changed_helper_review_and_informational_capacity_semantics(self):
+         old=self.config['helper_sha256'];self.config['helper_sha256']=builder.sha(b'not the reviewed helper')
+         with self.assertRaisesRegex(ValueError,'held_helper_or_driver_changed'):self.build()

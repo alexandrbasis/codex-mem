@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "status": "sealed_awaiting_separate_release",
+  "counts": {
+    "histories": 16,
+    "questions": 96,
+    "two_project_histories": 12,
+    "processing_checkpoints": 32,
+    "tool_captures": 48,
+    "delete_events": 16,
+    "multisource_histories": 16
+  },
+  "validation": {
+    "public_complete_fixture": "passed",
+    "exact_offset_quotes": "passed",
+    "scope_and_deleted_support": "passed",
+    "earlier_same_project_deletes": "passed",
+    "same_session_checkpoints": "passed",
+    "final_user_after_last_checkpoint": "passed",
+    "inert_capture_shape_and_output": "passed",
+    "two_builds_byte_identical": "passed",
+    "question_gold_key_alignment": "passed",
+    "multisource_every_history": "passed"
+  },
+  "read_audit": {
+    "explicit_external_reads": [
+      {
+        "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r14/public-fixture-contract.py",
+        "sha256": "56a223a0d3997f92e1f32dc1017d546756f3eb981a4d8f123203c2280900527a"
+      },
+      {
+        "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r14/public-fixture-contract-receipt.json",
+        "sha256": "ea2c2aec4c5a28a062071523fec29e3fa57e256f64dac72c45e1079489a6c842"
+      }
+    ],
+    "other_explicit_external_reads": [],
+    "own_generated_files_read": true,
+    "network_calls": 0,
+    "native_model_calls": 0,
+    "store_db_calls": 0,
+    "fictional_commands_executed": false
+  },
+  "independence_limits": [
+    "The same author wrote fixture and gold; this is not independent semantic adjudication.",
+    "Platform-injected parent context and memory were visible, including high-level descriptions of earlier project-memory evaluation work and unrelated user projects. No scenario details were reused intentionally; no prior fixture, gold, answer, report, product implementation or helper implementation was explicitly opened.",
+    "Only the standalone public validator and its receipt were explicitly read outside the owned output directory.",
+    "Schema validation and author self-checks do not prove semantic truth, production behavior or absence of author bias."
+  ],
+  "hashes": {
+    "author.py": "f3892185debd42ccf9818176c168d0433db3cf1f9d8e5e406bb5d4733998c8ce",
+    "holdout-fixture.json": "de5279ec13d2b5a4632874d228deb61001acd96666e25abeb9eebd5f3028bb44",
+    "holdout-gold.json": "a8962aa3bcfe33c96d2936da8727b7f4bbf2902d24e98bedb1c2535527473873"
+  }
+}

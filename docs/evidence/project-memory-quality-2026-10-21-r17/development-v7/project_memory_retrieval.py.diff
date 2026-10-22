@@ -1,0 +1,109 @@
+--- held-v6/project_memory_retrieval.py
++++ candidate-v7/project_memory_retrieval.py
+@@ -14,7 +14,7 @@
+ from .jev_retrieval import exact_constraints
+ from .privacy import redact_search_value
+ from .project_memory import _EXECUTION_TOOLS, _execution_result_signal, _fts_query
+-from .project_memory_source_transport import OriginalSourcePlan, source_qualifiers, qualifier_key
++from .project_memory_source_transport import OriginalSourcePlan, source_qualifiers, qualifier_key, compact_selected_xml
+ from .retrieval import current_state_scope, historical_query, prompt_match_score, prompt_query_plan, resume_topic_plan, project_lexical_text
+ from .tool_io import is_private_prompt
+ 
+@@ -1482,7 +1482,87 @@
+ 
+ def render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> str:
+     """Return valid bounded XML; whole attributed quotation groups stay intact."""
+-    return _render_project_brief(brief, budget)[0]
++    return _render_final_project_brief(brief, budget)[0]
++
++
++def _render_final_project_brief(brief: Mapping[str, Any], budget: int) -> tuple[str, dict[str, int]]:
++    canonical, omissions = _render_project_brief(brief, budget)
++    return _compact_and_refill_sources(brief, canonical, budget, omissions)
++
++
++def _compact_and_refill_sources(brief: Mapping[str, Any], canonical: str, budget: int,
++                               omissions: dict[str, int] | None = None) -> tuple[str, dict[str, int]]:
++    """Preserve the primary selection, then spend proven wire savings once.
++
++    quote_refs="provenance_only" means that association qualifiers stay local.
++    A quoted observation never inherits another container's truth, scope,
++    history, custody, or relationship. New source quotations do not activate
++    omitted canonical associations, so their omission counters remain intact.
++    """
++    from xml.etree import ElementTree as ET
++
++    omissions = dict(omissions or {})
++    declaration = ' quote_refs="provenance_only"'
++    incoming = {value for relation in brief.get('relations', [])
++                for value in (relation.get('from'), relation.get('to')) if value}
++    # A generated display label must not shadow any admitted canonical identity.
++    for record in [*(brief.get('records') or []), *(brief.get('unassociated_user_context') or []),
++                   *(brief.get('unassociated_role_context') or [])]:
++        if record.get('id'):
++            incoming.add(record['id'])
++        incoming.update(ref['source_id'] for field in record.get('fields', [])
++                        for ref in field.get('evidence', []) if ref.get('source_id'))
++    wire = compact_selected_xml(canonical, incoming, native_tools=_EXECUTION_TOOLS)
++    has_references = ET.fromstring(wire).find('.//quote_ref') is not None
++    if has_references and len(wire) + len(declaration) > budget:
++        # The mandatory wire format has a real price. Retry the unchanged
++        # primary policy once with that price reserved. Refill never evicts.
++        canonical, omissions = _render_project_brief(brief, budget - len(declaration))
++        wire = compact_selected_xml(canonical, incoming, native_tools=_EXECUTION_TOOLS)
++        has_references = ET.fromstring(wire).find('.//quote_ref') is not None
++    if has_references:
++        wire = wire.replace('<project-memory', '<project-memory' + declaration, 1)
++    # Existing slack alone does not trigger a different primary allocation.
++    if len(wire) >= len(canonical):
++        return wire, omissions
++    tree = ET.fromstring(wire)
++    registry = OriginalSourcePlan(0)
++    used = {source.get('id') for source in tree.iter('source') if source.get('id')}
++    for source in tree.iter('source'):
++        quote = source.findtext('quote_excerpt')
++        if quote is None:
++            continue
++        pointer = dict(source.attrib)
++        pointer.update(start=int(pointer['start']), end=int(pointer['end']), quote_excerpt=quote,
++                       quote_truncated=pointer.get('quote_truncated') not in {None, 'False'})
++        registry.add(pointer, {})
++    next_id = 1
++    for group in _complete_source_groups(list(brief.get('records') or [])):
++        refs = group['refs']
++        if all(registry.find(ref, {}, same_context=False) is not None for ref in refs):
++            continue
++        qualifiers = dict(group['qualifiers'])
++        scope = qualifiers.get('scope') or {}
++        if tree.get('worktree') and scope.get('worktree') == tree.get('worktree'):
++            qualifiers['scope'] = {key: value for key, value in scope.items() if key != 'worktree'}
++        displayed = []
++        for ref in refs:
++            while 's' + str(next_id) in used:
++                next_id += 1
++            identifier = 's' + str(next_id)
++            used.add(identifier)
++            next_id += 1
++            displayed.append({**ref, 'id': identifier})
++        node = '<item' + _item_attrs({'lane': 'source_excerpts', **qualifiers}, brief.get('projection')) + (
++            '><field basis="attributed_source_excerpts" field_association="not_assessed">') + ''.join(
++            _source_xml(ref, complete=True) for ref in displayed) + '</field></item>'
++        if len(wire) + len(node) > budget:
++            continue
++        wire = wire.removesuffix('</project-memory>') + node + '</project-memory>'
++        for ref in displayed:
++            registry.add(ref, qualifiers)
++    assert len(wire) <= budget
++    return wire, omissions
+ 
+ 
+ def build_project_brief(store: Any, project: str | Path, query: str = '', budget: int = 6000,
+@@ -1967,7 +2047,7 @@
+     brief['relations'] = [dict(item) for item in snapshot.get('relations', []) if
+                           item.get('from') in selected_ids and item.get('to') in selected_ids
+                           and _safe(item, workspace, exclude_session_id)][:32]
+-    brief['xml'], brief['render_omissions'] = _render_project_brief(brief, budget)
++    brief['xml'], brief['render_omissions'] = _render_final_project_brief(brief, budget)
+     count = len(unassociated)
+     omitted = brief['render_omissions'].get('unassociated_user_sources', 0)
+     brief['unassociated_user_context_coverage'] = {'eligible': count, 'selected_source_count': count - omitted,

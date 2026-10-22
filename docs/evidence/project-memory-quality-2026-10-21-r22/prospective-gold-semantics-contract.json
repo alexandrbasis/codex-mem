@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "contract": "prospective-question-responsive-gold-semantics-v1",
+  "status": "public_generic_requirements_not_a_trial_readiness_receipt",
+  "mechanical_contract": {
+    "file": "public-fixture-contract.py",
+    "sha256": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+    "compatibility": "Existing fixture/gold schema and mechanical validation unchanged. Semantic review is separate."
+  },
+  "requirements": [
+    {
+      "id": "responsive_proposition",
+      "rule": "Each required fact expresses one question-responsive proposition. Name the exact question clause that requires it. Cite the shortest exact surviving source span that supports the proposition. Do not require an entire event paragraph just because it contains the responsive clause."
+    },
+    {
+      "id": "complete_question_requirements",
+      "rule": "Preserve every actual question requirement. Split conjunctions when each obligation must be recalled. Retain actor, project/task scope, permission conditions, explicitly requested reasons, role attribution and temporal scope. Include nearby source words when they are needed to resolve those meanings."
+    },
+    {
+      "id": "optional_background",
+      "rule": "Classify other supported details as optional background. A descriptor, calendar reference, opinion or unrelated source rule becomes required only when asked for or needed to prevent an incorrect scope, role or state inference."
+    },
+    {
+      "id": "role_and_time",
+      "rule": "Distinguish historical instructions, current instructions, assistant reports and observed tool results. Qualify historical pending states by time. Require an assistant opinion only when the question asks about the report, its contradiction or its evidentiary role. An instruction does not prove that an action occurred."
+    },
+    {
+      "id": "negative_and_difficult_cases",
+      "rule": "Retain difficult scenarios and critical negative cases. Deletion questions use surviving positive rules or states and prohibit resurrection of removed claims and dependent conclusions. Deleted content and unobservable global absence are not positive recall facts. Preserve conditional tasks, genuine closure, partial acceptance, cancellation, reopenings and project isolation."
+    },
+    {
+      "id": "independent_sealed_review",
+      "rule": "An independent reviewer seals semantic review before trial freeze and before product or answer exposure. Review question relevance, source entailment, role/time/scope, negative cases and completeness against this generic contract. Keep gold facts, fact mappings and answer-revealing offsets out of reader inputs. Do not hardcode fixture terms, inspect holdout answers, tune to earlier failures or relax fixed thresholds."
+    },
+    {
+      "id": "prospective_only",
+      "rule": "Apply this contract only to a future independently authored trial. Keep historical fixtures, gold, cases, criteria, grades, failures and costs immutable. Do not draft replacement historical gold or exclude historical cases."
+    }
+  ],
+  "fixed_evaluation_constraints": {
+    "minimum_quality_percent": 90,
+    "maximum_critical_errors": 0,
+    "all_planned_questions_and_repeats_required": true,
+    "no_individual_fact_loss": true,
+    "reader_context_characters_per_view": 6000,
+    "hard_cases_must_be_preserved": true,
+    "threshold_or_grade_changes_authorized": false
+  },
+  "author_delivery_allowlist": [
+    "public-fixture-contract.py",
+    "prospective-gold-semantics-contract.json"
+  ],
+  "reviewer_delivery_allowlist": [
+    "independently_authored_fixture",
+    "independently_authored_gold",
+    "prospective-gold-semantics-contract.json",
+    "public-fixture-contract.py",
+    "sealed_author_fact_rationale_appendix_if_separate",
+    "sealed-semantic-review-metadata.schema.json",
+    "sealed-semantic-review-findings.schema.json"
+  ],
+  "forbidden_reviewer_inputs": [
+    "product_source",
+    "retrieval_or_reader_outputs",
+    "prior_fixture_or_gold",
+    "prior_answers_or_grades",
+    "historical_diagnostics_or_public_regression_cases"
+  ],
+  "sealed_author_fact_rationale": {
+    "location": "Separate sealed appendix, or sealed review records; never reader input. Existing gold schema need not change.",
+    "per_required_fact": [
+      "exact case/question and fact index",
+      "question clause requiring this proposition",
+      "one proposition with necessary actor/scope/permission/role/time qualifications",
+      "shortest sufficient exact surviving support span(s)",
+      "explanation of any needed nearby context"
+    ],
+    "background_details": "Record optional background separately from required recall obligations."
+  },
+  "sealed_review_receipt": {
+    "required": true,
+    "before_freeze": true,
+    "bindings": [
+      "fixture_sha256",
+      "gold_sha256",
+      "mechanical_contract_sha256",
+      "semantic_contract_sha256",
+      "author_fact_rationale_sha256_if_separate"
+    ],
+    "required_review_coverage": [
+      "all questions and required facts",
+      "question relevance and complete conjunction coverage",
+      "exact source entailment and minimal sufficient anchors",
+      "role/time/project/task/permission qualification",
+      "negative deletion and other critical cases",
+      "preserved difficult scenarios and optional-versus-required distinction"
+    ],
+    "full_findings": "Keep detailed case findings and source clauses sealed. Findings are not model-reader inputs.",
+    "completion": "accepted only after all substantive findings are resolved against the same sealed input hashes; retain rejected and revised versions.",
+    "full_findings_basename": "sealed-semantic-review.json",
+    "schema_file": "sealed-semantic-review-findings.schema.json",
+    "review_versioning": "Each required fact index and question must occur exactly once for the final input hashes. Accepted findings have all checks true and zero unresolved findings. The reviewer checks these semantics privately; the driver does not parse detailed findings."
+  },
+  "parent_metadata_only_result": {
+    "allowed": [
+      "review status accepted or changes_required",
+      "fixture/gold/contract/appendix/full-review-receipt hashes and basenames",
+      "question/fact/negative-case coverage counts",
+      "unresolved finding count and version lineage",
+      "attestations of no product/prior-input/answer/grade exposure",
+      "fixed independence attestation, with reviewer identity only in sealed findings"
+    ],
+    "forbidden": [
+      "question or fact text",
+      "source quotes or offsets",
+      "case identifiers or scenario summaries",
+      "findings that reveal answer content"
+    ],
+    "readiness": "accepted status, all question/fact coverage complete, zero unresolved substantive findings, matching final input/contract pins and required independence attestations. A metadata-only status is not proof of semantic correctness.",
+    "file_basename": "sealed-semantic-review-metadata.json",
+    "schema_file": "sealed-semantic-review-metadata.schema.json",
+    "identity_attestation": "The reviewer identity remains in the sealed full receipt. Public metadata uses the exact fixed independence attestation string in the schema."
+  },
+  "workflow_before_freeze": [
+    {
+      "step": 1,
+      "action": "Review and pin this public generic pack before independent author dispatch. Keep the main trial unfrozen and its clock unstarted."
+    },
+    {
+      "step": 2,
+      "action": "Independent author produces new sealed inputs and a per-fact rationale. Run unchanged mechanical validation privately. Send parent only contents-free file hashes and readiness metadata."
+    },
+    {
+      "step": 3,
+      "action": "Fresh independent reviewer receives only the reviewer allowlist. Review every required fact and negative case. Seal the full review and send parent only metadata result."
+    },
+    {
+      "step": 4,
+      "action": "If changes are required, do not freeze or run models. Preserve original inputs and review. Revise privately, assign new version hashes, rerun mechanical validation and obtain a new independent sealed review. Never silently edit or relabel an old review."
+    },
+    {
+      "step": 5,
+      "action": "Parent checks accepted metadata, complete coverage, zero unresolved findings, matching final hashes and fixed constraints. Pin independent_review_contract fields in protocol and include both fixed review basenames/hashes in sealed manifest alongside fixture/gold."
+    },
+    {
+      "step": 6,
+      "action": "Only after accepted readiness may parent perform existing freeze. Unchanged helper validates frozen fixture/gold bytes. R17 driver then validates pinned review metadata before unchanged author mechanical validation or model phases. Preserve all versions and costs."
+    }
+  ],
+  "freeze_compatibility": {
+    "global_helper_change_required": false,
+    "prospective_driver_guard": "When protocol.independent_review_contract is declared, the R17 driver validates fixed receipt basenames beside fixture after frozen helper pin validation and before author-contract import or model phases. It hashes detailed findings without parsing or printing them. It rejects changed pins, rejected/incomplete metadata and conflicting prior run receipts.",
+    "protocol_fields": {
+      "schema_version": 1,
+      "metadata_receipt_basename": "sealed-semantic-review-metadata.json",
+      "metadata_receipt_sha256": "SHA256 of metadata receipt",
+      "metadata_schema_sha256": "SHA256 of public metadata schema",
+      "fixture_sha256": "SHA256 of final fixture",
+      "gold_sha256": "SHA256 of final gold",
+      "mechanical_contract_sha256": "SHA256 of public-fixture-contract.py; also matches prospective_author_contract.sha256",
+      "semantic_guidance_sha256": "SHA256 of this semantic contract",
+      "sealed_review_receipt_sha256": "SHA256 of sealed-semantic-review.json"
+    },
+    "existing_freeze_mechanism": "The frozen protocol hash binds declared review pins. The sealed-manifest files mapping includes both sealed review files beside fixture/gold.",
+    "enforcement_limit": "The unchanged helper validates manifest shape and fixture/gold bytes. Parent metadata readiness remains a mandatory pre-freeze gate. The new driver enforces declared acceptance/bindings at dispatch; metadata attestations are not semantic proof.",
+    "not_ready_until": "Independent authoring, independent sealed review, metadata readiness, trial-specific pins and all other trial gates are completed."
+  }
+}

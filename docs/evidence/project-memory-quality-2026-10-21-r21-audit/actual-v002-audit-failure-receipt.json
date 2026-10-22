@@ -1,0 +1,59 @@
+{
+  "status": "actual_v002_integrity_audit_blocked_no_complete_audit_or_archive_reproduction_claim",
+  "binding_sha256": "8cdc45a00587de97ef82a3421326ae9fee7231cfb57cf9ac23fa81b3a7e9ebca",
+  "source_sha256": {
+    "audit-final-export-v002.py": "26ec7b0230034d40da912932a5b1b38b5868347fa211a43f3bc688ea3d2cb7ed",
+    "release_schema_v002.py": "ccb2c03b521e4308730512005153772cca584e046cbfb2126c0a00fc2e885e10"
+  },
+  "actual_failure": {
+    "exit_code": 1,
+    "type": "KeyError",
+    "key": "positive_anchors",
+    "owning_source": "audit-final-export-v002.py:153",
+    "consumer": "release['counts']['positive_anchors']",
+    "actual_release_counts_keys": [
+      "histories",
+      "questions",
+      "required_facts",
+      "typed_negatives",
+      "deletion_controls",
+      "observations",
+      "sessions",
+      "checkpoints",
+      "per_history"
+    ],
+    "log": "actual-audit-v002-integrity.log",
+    "log_sha256": "7ac2e3426c3c1f544aeb83d1b0172027ed19b65c48120e1787631b45b883902d"
+  },
+  "earlier_startup_failure_preserved": {
+    "binding_assembly": "Old manifest.root assumption failed; exact author_root obtained from protocol.authorship.private_directory. No trial source or metadata was normalized.",
+    "startup_log": "actual-audit-v002.log",
+    "startup_log_sha256": "3eabd81f95f365d5ac821c1d941c04595ab0ced75fedf0a3bcdf0c8f5c38ab7c",
+    "scope": "Missingbinding caused CLIstartupfailure before any integritychecks; subsequent completedbinding path ran once and reached owningline153."
+  },
+  "export_pins": {
+    "report.json": "945747db507fb1e02740d92adcdd81f39ad1071fc4b8686c555e89fbf915b76d",
+    "export-manifest.json": "83506d3012729badfb797a90073b462fed2501c0450578145302fe4f77347806",
+    "fictional-run-evidence.tar.gz": "8babbb959d224a2a9bc5b4222203d7c6248ef48e826bdbce6cf24af1ebfbeb5b"
+  },
+  "release_pins": {
+    "formal-release.json": "65527c180aa17618c44381a64b34c1127202843b0f4bf37f3e1cf357a55792b7",
+    "released-author-evidence.tar": "bd1281e1a984f0a17c4d4fea0ab7168e23ce151e113131f3b049decbcff06619",
+    "protocol.json": "c379c34e3d4daffb9c963271efde3f747d42c5443b067f9564a12d5f87f140a1",
+    "actual-freeze.json": "16716e5713b914805586783ffcd2f18b03561943ff98e054631b9db7eba780ff",
+    "freeze.json": "16716e5713b914805586783ffcd2f18b03561943ff98e054631b9db7eba780ff"
+  },
+  "completed_main_check_count": null,
+  "main_result_emitted": false,
+  "archive_supplement_run": false,
+  "archive_reason": "User gate requires mainintegrity pass first; main didnot complete.",
+  "cost_coverage_status": "Not independently reconciled by completedmainaudit. Preserve canonical incomplete reportedusage/216missing slots pending append-only reviewed repair.",
+  "quality_status_preserved": "incomplete",
+  "no_native_retries_model_network_regrade_storemutation_source_export_input_changes": true,
+  "needed_reviewed_repair": "ExplicitR21support-count contract must bind mechanicalsupportcount without pretending actualrelease includes R20positive_anchors. Review remaining partial-round consumers before rerun.",
+  "limits": [
+    "Actual main failed before emitting a result; no completedintegritypass or checkcount claim.",
+    "This is auditor metadata compatibility failure, not a new trialpipeline/model failure.",
+    "Original h05invalidresponse/h12servererror andunknown tokens remain unchanged in canonical evidence."
+  ]
+}

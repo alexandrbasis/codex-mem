@@ -1,0 +1,273 @@
+"""Original source visibility for grammatical state questions, without new truth."""
+from xml.etree import ElementTree as ET
+import unittest
+
+from codex_mem.project_memory import ProjectMemory
+from codex_mem.project_memory_query import plan_query
+from codex_mem.project_memory_retrieval import build_project_brief
+import test_project_memory_source_coverage_allocation as support
+
+
+class RetrospectiveSourceCoverageTests(unittest.TestCase):
+    setUp = support.SourceCoverageAllocationTests.setUp
+    user = support.SourceCoverageAllocationTests.user
+    consume = support.SourceCoverageAllocationTests.consume
+    span = staticmethod(support.SourceCoverageAllocationTests.span)
+    visible = staticmethod(support.SourceCoverageAllocationTests.visible)
+    tool = support.SourceCoverageAllocationTests.tool
+
+    def test_subject_free_revision_question_keeps_original_revision(self):
+        original = self.user('Keep sensor measurements and create an illustrated summary.', 'initial')
+        self.consume(original)
+        changed = self.user('Continue the same sensor study. Drop the illustrated summary. Retain raw units.', 'revision')
+        self.consume(changed)
+        query = 'Which requested addition did I withdraw?'
+        brief = build_project_brief(self.store, self.project, query=query, budget=6000)
+        self.assertTrue(self.visible(brief['xml'], changed), brief['xml'])
+        self.assertEqual(plan_query(query, self.project).answer_subject, '')
+        self.assertIn('current_revision', plan_query(query, self.project).answer_facets)
+        self.assertLessEqual(len(brief['xml']), 6000)
+        unknown = build_project_brief(self.store, self.project,
+                                     query='Which telescope addition did I withdraw?', budget=6000)
+        self.assertFalse(any(item.get('relationship_to_query') != 'unresolved' and any(
+            source.get('source_id') == changed['id'] for source in item.iter('source'))
+            for item in ET.fromstring(unknown['xml']).findall('item')))
+
+    def test_named_completion_keeps_separate_unassociated_assistant_report(self):
+        request = self.user('Keep receiver calibration available during the update.', 'request')
+        self.consume(request)
+        observed = self.tool('Receiver audit: package staged. Live update was not attempted.', 1)
+        memory = ProjectMemory(self.store)
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        report = self.store.remember(self.project, 'Assistant report', 'Everything is finished and installed.',
+                                     source='hook:Stop', session_id='assistant')
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        brief = build_project_brief(self.store, self.project,
+                                  query='Has the receiver update actually been demonstrated?', budget=6000)
+        self.assertIn(observed['id'], brief['xml'])
+        self.assertTrue(self.visible(brief['xml'], report), brief['xml'])
+        wrappers = [item for item in ET.fromstring(brief['xml']).findall('item')
+                    if any(ref.get('source_id') == report['id'] for ref in item.iter('source'))]
+        self.assertTrue(all(item.get('relationship_to_query') == 'unresolved' for item in wrappers))
+        self.assertTrue(all(item.get('source_role') == 'assistant_report' for item in wrappers))
+        unknown = build_project_brief(self.store, self.project,
+                                     query='Has the telescope update actually been demonstrated?', budget=6000)
+        self.assertFalse(any(item.get('relationship_to_query') != 'unresolved' and any(
+            source.get('source_id') == report['id'] for source in item.iter('source'))
+            for item in ET.fromstring(unknown['xml']).findall('item')))
+
+    def test_deictic_reason_and_coordinated_state_keep_qualified_originals(self):
+        reason = self.user('Keep the calibration sheet separate. Combining sheets would mix instrument owners.', 'reason')
+        self.consume(reason)
+        observed = self.tool('Sheet audit: labels matched. Remote write skipped.', 2)
+        memory = ProjectMemory(self.store)
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        pending = self.user('Ask the operator to approve the sample before any remote write. Both remain pending.', 'pending')
+        self.consume(pending)
+        reason_view = build_project_brief(self.store, self.project,
+                                         query='Why was that grouping requested?', budget=6000)
+        self.assertTrue(self.visible(reason_view['xml'], reason), reason_view['xml'])
+        state = build_project_brief(self.store, self.project,
+            query='Given the check and my latest message, what is ready and what remains?', budget=6000)
+        self.assertIn(observed['id'], state['xml'])
+        self.assertTrue(self.visible(state['xml'], pending), state['xml'])
+        self.assertLessEqual(len(state['xml']), 6000)
+
+    def test_active_receipt_assessment_keeps_roles_and_named_object(self):
+        request = self.user('The monitor bundle needs a signed receipt.', 'request')
+        self.consume(request)
+        observed = self.tool('Monitor audit: bundle delivery disabled.', 3)
+        memory = ProjectMemory(self.store)
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        report = self.store.remember(self.project, 'Assistant report', 'The monitor received the final bundle.',
+                                     source='hook:Stop', session_id='assistant')
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        query = 'Has the monitor actually received the finished bundle?'
+        plan = plan_query(query, self.project)
+        self.assertIn('execution_assessment', plan.answer_facets)
+        self.assertIn('monitor', plan.answer_subject)
+        self.assertIn('bundle', plan.answer_subject)
+        brief = build_project_brief(self.store, self.project, query=query, budget=6000)
+        self.assertTrue(self.visible(brief['xml'], report), brief['xml'])
+        self.assertIn(observed['id'], brief['xml'])
+        unknown = build_project_brief(self.store, self.project,
+                                     query='Has the telescope actually received the finished bundle?', budget=6000)
+        self.assertFalse(any(item.get('relationship_to_query') != 'unresolved' and any(
+            source.get('source_id') == report['id'] for source in item.iter('source'))
+            for item in ET.fromstring(unknown['xml']).findall('item')))
+
+    def test_original_role_context_keeps_hard_guards_and_whole_source_limits(self):
+        request = self.user('ORB-27 calibration must remain local.', 'request')
+        self.consume(request)
+        memory = ProjectMemory(self.store)
+        blocked = []
+        for body, session, project in (
+            ('ORB-28 calibration is finished.', 'other-task', self.project),
+            ('ORB-27 production calibration finished.', 'wrong-environment', self.project),
+            ('ORB-27 calibration finished.', 'hidden-session', self.project),
+            ('ORB-27 calibration details. ' * 80, 'large-report', self.project),
+            ('ORB-27 calibration finished elsewhere.', 'foreign', self.other),
+        ):
+            row = self.store.remember(project, 'Assistant report', body,
+                                      source='hook:Stop', session_id=session)
+            blocked.append(row)
+            owner = ProjectMemory(self.store)
+            claimed = owner.claim(project)
+            owner.commit(claimed, {'episodes': [], 'claims': [], 'relations': []})
+        query = 'Has ORB-27 calibration been demonstrated in local?'
+        brief = build_project_brief(self.store, self.project, query=query, budget=6000,
+                                  exclude_session_id='hidden-session')
+        self.assertTrue(self.visible(brief['xml'], request))
+        for row in blocked:
+            self.assertNotIn(row['id'], brief['xml'])
+        self.assertLessEqual(len(brief['xml']), 6000)
+
+    def test_second_render_is_identical_and_counters_match_delivered_sources(self):
+        from codex_mem.project_memory_retrieval import render_project_brief
+        original = self.user('The telescope export needs review.', 'initial')
+        self.consume(original)
+        memory = ProjectMemory(self.store)
+        for index in range(3):
+            self.user(f'Keep the sample number {index} until approval.', f'followup-{index}')
+            memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        for budget in (600, 1400, 2900, 6000):
+            brief = build_project_brief(self.store, self.project,
+                                      query='Which telescope export remains required?', budget=budget)
+            delivered = render_project_brief(brief, budget=budget)
+            self.assertEqual(brief['xml'], delivered)
+            self.assertEqual(delivered, render_project_brief(brief, budget=budget))
+            tree = ET.fromstring(delivered)
+            actual = sum(len(list(item.iter('source'))) for item in tree.findall('item')
+                         if item.get('selection_basis') == 'unassociated_user_context')
+            coverage = brief['unassociated_user_context_coverage']
+            self.assertEqual(coverage['selected_source_count'], actual)
+            self.assertEqual(coverage['omitted'], coverage['eligible'] - actual)
+            for marker in tree.findall('source-context-coverage'):
+                self.assertEqual(int(marker.get('selected_source_count')), actual)
+                self.assertEqual(int(marker.get('omitted')), coverage['omitted'])
+            self.assertLessEqual(len(delivered), budget)
+
+    def test_unknown_soft_subject_gets_only_neutral_original_observations(self):
+        original = self.user('Preserve measurement worksheets.', 'initial')
+        self.consume(original, claim=True)
+        latest = self.user('The instrument labels need operator approval.', 'latest')
+        self.consume(latest)
+        before = ProjectMemory(self.store).snapshot(self.project)
+        brief = build_project_brief(self.store, self.project,
+                                  query='Why was the telescope restriction requested?', budget=6000)
+        self.assertTrue(self.visible(brief['xml'], original), brief['xml'])
+        self.assertTrue(self.visible(brief['xml'], latest), brief['xml'])
+        tree = ET.fromstring(brief['xml'])
+        for item in tree.findall('item'):
+            if list(item.iter('source')):
+                self.assertEqual(item.get('relationship_to_query'), 'unresolved')
+                self.assertEqual(item.get('is_requirement_claim'), 'False')
+                self.assertIsNone(item.get('workflow_state'))
+        self.assertEqual(ProjectMemory(self.store).snapshot(self.project)['claims'], before['claims'])
+        hard_unknown = build_project_brief(self.store, self.project,
+                                          query='Why was TASK-99 requested?', budget=6000)
+        self.assertNotIn(original['id'], hard_unknown['xml'])
+        self.assertNotIn(latest['id'], hard_unknown['xml'])
+
+    def test_completed_original_keeps_disposition_scope_and_never_reopens(self):
+        source = self.user('PUB-82 measurement worksheets', 'initial')
+        self.consume(source, claim=True, environment='local', version='1.2.0')
+        memory = ProjectMemory(self.store)
+        target = memory.snapshot(self.project)['claims'][0]['id']
+        done = self.user('PUB-82 measurement worksheets completed.', 'completion')
+        ref = self.span(done)
+        result = memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [
+            {'key': 'finished', 'text': done['body'], 'kind': 'result', 'workflow_state': 'completed',
+             'scope': {'environment': 'local', 'version': '1.2.0'},
+             'evidence': {'text': [ref], 'workflow_state': [ref]}}],
+             'relations': [{'from': 'finished', 'to': target, 'type': 'closes', 'evidence': [ref]}]})
+        self.assertEqual(result['status'], 'committed')
+        before = memory.snapshot(self.project)
+        self.assertEqual(next(item for item in before['intent_custody']
+                              if item['source_id'] == source['id'])['disposition'], 'completed')
+        brief = build_project_brief(self.store, self.project,
+                                  query='Why was the telescope constraint chosen?', budget=6000,
+                                  environment='local', version='1.2.0')
+        self.assertTrue(self.visible(brief['xml'], source), brief['xml'])
+        for item in ET.fromstring(brief['xml']).findall('item'):
+            if any(ref.get('source_id') == source['id'] for ref in item.iter('source')):
+                self.assertEqual(item.get('disposition'), 'completed')
+                self.assertEqual(item.get('relationship_to_query'), 'unresolved')
+                self.assertIsNone(item.get('workflow_state'))
+        wrong = build_project_brief(self.store, self.project,
+                                  query='Why was the telescope constraint chosen?', budget=6000,
+                                  environment='production', version='1.2.1')
+        self.assertNotIn(source['id'], wrong['xml'])
+        self.assertEqual(memory.snapshot(self.project)['claims'], before['claims'])
+
+    def test_neutral_user_window_uses_boundary_diversity_without_identity(self):
+        rows = []
+        for index in range(4):
+            row = self.user(f'Keep instrument sample {index} for independent review.', f'capture-{index}')
+            rows.append(row)
+            memory = ProjectMemory(self.store)
+            memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        brief = build_project_brief(self.store, self.project,
+                                  query='Why was the telescope restriction chosen?', budget=6000)
+        self.assertTrue(self.visible(brief['xml'], rows[0]), brief['xml'])
+        self.assertTrue(self.visible(brief['xml'], rows[-1]), brief['xml'])
+        self.assertEqual(brief['unassociated_user_context_coverage']['selected_source_count'], 3)
+        self.assertEqual(brief['unassociated_user_context_coverage']['omitted'], 1)
+        self.assertEqual(brief['relations'], [])
+
+    def test_original_reason_survives_compatible_qualifier_duplicates(self):
+        reason = self.user('Keep the optional receiver switch available. Some operators cannot reach the wall, so the desk control must still work.', 'reason')
+        self.consume(reason)
+        middle = self.user('Continue the receiver work. Remove the optional diagram, but keep the optional receiver switch.', 'revision')
+        self.consume(middle)
+        latest = self.user('An operator must approve the optional switch sample before deployment. Approval and deployment both remain pending.', 'pending')
+        self.consume(latest)
+        memory = ProjectMemory(self.store)
+        for index in range(2):
+            self.tool('Receiver fixture: the optional switch accepts local input; remote delivery skipped.', index)
+            memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        report = self.store.remember(self.project, 'Assistant report', 'Receiver work is finished and delivered.',
+                                     source='hook:Stop', session_id='assistant')
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        brief = build_project_brief(self.store, self.project,
+                                  query='What user problem explains the optional switch?', budget=6000)
+        self.assertTrue(self.visible(brief['xml'], reason), brief['xml'])
+        self.assertLessEqual(len(brief['xml']), 6000)
+
+    def test_current_assessment_of_original_operation_keeps_earliest_capture(self):
+        first = self.tool('Verification failed: the two measurements were combined without conversion.', 0, 1)
+        self.tool('Verification passed after separate units were retained.', 1)
+        memory = ProjectMemory(self.store)
+        memory.commit(memory.claim(self.project), {'episodes': [], 'claims': [], 'relations': []})
+        query = 'Did the original verification support the assistant’s claim?'
+        brief = build_project_brief(self.store, self.project, query=query, budget=6000)
+        self.assertEqual(plan_query(query, self.project).source_order, 'earliest')
+        self.assertIn(first['id'], brief['xml'])
+        self.assertIn('Verification failed', brief['xml'])
+
+    def test_unknown_scope_and_historical_associations_do_not_gain_current_qualifiers(self):
+        from codex_mem.project_memory_retrieval import render_project_brief
+        body = 'Keep the measurement worksheet for independent review.'
+        pointer = {'source_id': 'public-shared-original', 'start': 0, 'end': len(body),
+                   'source_role': 'user_intent', 'quote_excerpt': body, 'quote_truncated': False}
+        def episode(identifier, scope, version, current):
+            return {'id': identifier, 'lane': 'episode', 'scope': scope,
+                    'episode_version': version, 'is_current_head': current,
+                    'uncertainty': 'historical_current_validity_unresolved' if not current else None,
+                    'fields': [{'name': 'rationale', 'text': '', 'basis': 'attributed_source_excerpts',
+                                'field_association': 'model_inference', 'evidence': [dict(pointer)]}]}
+        records = [episode('unknown', {}, 1, False),
+                   episode('declared', {'environment': 'local'}, 2, True)]
+        xml = render_project_brief({'records': records, 'user_source_coverage_requested': True,
+                                    'coverage': {}, 'projection': 'rationale'}, budget=6000)
+        tree = ET.fromstring(xml)
+        unknown = tree.find("item[@id='unknown']")
+        declared = tree.find("item[@id='declared']")
+        self.assertIsNotNone(unknown, xml)
+        self.assertIsNone(unknown.get('environment'))
+        self.assertEqual(unknown.get('is_current_head'), 'False')
+        self.assertEqual(unknown.get('uncertainty'), 'historical_current_validity_unresolved')
+        self.assertIsNotNone(declared, xml)
+        self.assertEqual(declared.get('environment'), 'local')
+        self.assertEqual(declared.get('is_current_head'), 'True')
+        self.assertIsNone(declared.get('uncertainty'))

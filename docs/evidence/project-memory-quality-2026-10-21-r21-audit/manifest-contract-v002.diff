@@ -1,0 +1,36 @@
+--- preserved-main-v001
++++ append-only-main-v002
+@@ -122,7 +122,7 @@
+         check(sha((baseline / name).read_bytes()) == expected, 'baseline_source:' + name)
+     author_root = Path(binding['author_root'])
+     author_path = base / 'sealed-author-manifest.json'
+-    from release_schema import validate_release
++    from release_schema_v002 import validate_release
+     check(sha((base / 'formal-release.json').read_bytes()) == binding['evidence_pins']['formal-release.json'], 'binding_formal_release_pin')
+     check(sha((base / 'released-author-evidence.tar').read_bytes()) == binding['evidence_pins']['released-author-evidence.tar'], 'binding_author_archive_pin')
+     author = validate_release(base, author_root, run, release, helper.digest(protocol), helper_hash, binding, check)
+
+--- preserved-validator-v001
++++ append-only-validator-v002
+@@ -30,6 +30,20 @@
+  check(root_pins==binding['release_root_pins'],'author_exact_root_pin_map')
+  check(len(root_pins)==release['verified_frozen_root_pin_count'],'author_root_pin_count')
+  for n,data in author.items():check((author_root/n).read_bytes()==data,'released_author_private_identity:'+n)
+- for n,expected in manifest['generic_contract_pins'].items():check(sha((base/n).read_bytes())==expected,'author_generic_contract_pin:'+n)
++ validate_generic_manifest_pins(base,manifest,binding['author_manifest_contract'],check)
+  check(manifest['counts']==release['counts'],'author_release_count_binding')
+  return author
++
++
++def validate_generic_manifest_pins(base,manifest,contract,check):
++ """Validate one explicitly selected public manifest schema. No fallback."""
++ fields={'generic-pack-files-v1':'generic_pack_files','generic-contract-pins-v1':'generic_contract_pins'}
++ if type(contract) is not str or contract not in fields:raise ValueError('unsupported author_manifest_contract')
++ pins=manifest[fields[contract]]
++ if not isinstance(pins,dict) or not pins:raise ValueError('selected generic pin map must be nonempty')
++ for name,expected in pins.items():
++  if (not isinstance(name,str) or Path(name).name!=name or not isinstance(expected,str)
++      or len(expected)!=64 or any(c not in '0123456789abcdef' for c in expected)):
++   raise ValueError('invalid selected generic basename/hash')
++  check(hashlib.sha256((base/name).read_bytes()).hexdigest()==expected,'author_generic_contract_pin:'+name)
++ return pins

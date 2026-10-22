@@ -1,0 +1,112 @@
+{
+  "output": {
+    "episodes": [
+      {
+        "summary": "The Bramble seed ledger packet unit is corrected to single packets, and the dormancy note is reopened for the new seed lot’s cold-storage interval. The ledger remains closed while the note is open; the next step is a manual count.",
+        "goal": "This chat continues the same Bramble seed ledger work item opened in the first chat. The Bramble seed ledger constraint to preserve the harvest-year field still applies. The Bramble dormancy note must record the cold-storage interval.",
+        "rationale": "The harvest-year field must be preserved because older seeds need different storage. Ledger sharing requires Omi to accept the dormancy note and the lot totals to balance; both conditions are necessary because an unbalanced lot obscures missing packets.",
+        "outcome": "The user accepted the ledger columns and closed Bramble seed ledger. The packet unit was corrected to single packets. A local command wrote a ledger preview; it did not perform sharing or test whether permission conditions are satisfied.",
+        "open_work": "Hold the new lot for a manual count. The lot totals must balance and Omi must accept the dormancy note before sharing the ledger. The dormancy note must record the cold-storage interval.",
+        "evidence": {
+          "summary": [
+            "rb51686b903",
+            "re98cb6384f",
+            "r7f28bdb73d",
+            "r64e83967ae",
+            "r33b22d4324",
+            "r15768ee2a6"
+          ],
+          "goal": [
+            "rb51686b903",
+            "raea48d24be",
+            "re98cb6384f",
+            "r7f28bdb73d"
+          ],
+          "rationale": [
+            "r64e83967ae",
+            "rd3c92280af"
+          ],
+          "outcome": [
+            "r15768ee2a6",
+            "r02380e7bd0",
+            "rd3c92280af"
+          ],
+          "open_work": [
+            "r33b22d4324",
+            "r7f28bdb73d",
+            "r64e83967ae"
+          ],
+          "continuation_of": [
+            "rb51686b903"
+          ],
+          "consolidation_of": []
+        },
+        "continuation_of": "pm_a8b6d1356a7ad632a6a28fcad27b581aa1b5e874",
+        "consolidation_of": []
+      }
+    ],
+    "claims": [
+      {
+        "text": "The packet unit for Bramble seed ledger is single packets.",
+        "kind": "fact",
+        "workflow_state": "proposed",
+        "scope": {
+          "environment": "",
+          "version": ""
+        },
+        "rationale": "The user corrected the recorded packet unit to single packets.",
+        "evidence": {
+          "text": [
+            "rb51686b903"
+          ],
+          "workflow_state": [
+            "rb51686b903"
+          ],
+          "rationale": [
+            "rb51686b903"
+          ]
+        },
+        "outgoing_relations": [
+          {
+            "type": "replaces",
+            "to_claim_id": "pm_ddb7081073a1ce7bf61cdacbeee68e8dede082a1",
+            "evidence": [
+              "rb51686b903"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 6728,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 17232,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 594,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 17826
+      }
+    }
+  },
+  "evidence": {
+    "thread_start": {
+      "thread_id": "diagnostic-thread-343354aee7cd5223f11b",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "model_provider": "openai"
+    },
+    "turn_started": {
+      "thread_id": "diagnostic-thread-343354aee7cd5223f11b",
+      "turn_id": "diagnostic-turn-f9be4db0a9130821dee0"
+    },
+    "turn_completed": true,
+    "no_tools": true,
+    "rerouted": false
+  }
+}

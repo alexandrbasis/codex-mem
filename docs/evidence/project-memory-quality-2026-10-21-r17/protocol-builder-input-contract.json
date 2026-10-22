@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "status": "protocol_builder_input_contract_not_an_actual_protocol",
+  "purpose": "Generate final pins only after independent source reviews and central checks. Does not start a clock, freeze, release or dispatch. No sealed fixture/gold/rationale/full-findings file is read.",
+  "invocation": [
+    "Prepare a new contents-free builder-inputs.json meeting this contract after final source checks. Do not use placeholders.",
+    "Compute its exact SHA256 yourself, then run: python3 build-protocol.py --inputs BUILDER_INPUTS_JSON --inputs-sha256 EXACT_SHA256 --output NEW_PROTOCOL_JSON",
+    "The output path must not exist. Review the generated protocol and pins before separate inventory/clock/freeze actions. No protocol is generated during tooling development."
+  ],
+  "input_ref_definition": {
+    "shape": [
+      "path",
+      "sha256"
+    ],
+    "rules": "Exactly these two fields. SHA256 is lowercase64hex and must match current existing public bytes. Missing, changed, all-zero or repeated-character pins reject. Paths inside sealed_directory or named private fixture/gold/findings/author files reject before read."
+  },
+  "required_input_fields": {
+    "schema_version": 1,
+    "sealed_directory": "Absolute private sealed directory path; never opened by builder.",
+    "baseline_runtime_root": "Actual exact47-module isolated dd60f1c baseline root.",
+    "runtime_receipt": "Pinned JSON ref with status final_source_candidate and exact runtime_files map. Map equals every current codex_mem/*.py (not a fixed47assumption).",
+    "tests_binding": "Pinned normalized binding JSON; described below.",
+    "spec_binding": "Pinned normalized binding JSON; described below.",
+    "standards_binding": "Pinned normalized binding JSON; described below.",
+    "harness_files": "Nonempty relative repo path\u2192actual SHA256 map. Must cover global helper plus every PUBLIC path declared by builder, including builder/tests/this contract; optional additional evidence pins are verified too.",
+    "author_manifest": "Pinned contents-free author manifest copy only. files pins include final fixture/gold/bothsealedreviewfiles; counts include96questions and reviewed required-fact total.",
+    "sealed_pins": "Pinned contents-free sealed files manifest copy only; basename\u2192SHA256. Does not cause reading those sealed files.",
+    "review_metadata": "Pinned public copy of strict sealed-semantic-review-metadata schema object; bytes match sealed metadata pin. Accepted/zero unresolved/complete coverage and exact contracts required.",
+    "review_readiness": "Pinned parent metadata-only readiness receipt; accepted metadata-not-trial-readiness status, matching metadata/pins/author-manifest SHA and zero unresolved review findings.",
+    "historical_spend": "Pinned contents-free historical native-spend receipt. No amount is inferred or charged to new trial.",
+    "repeats": {
+      "regeneration": "Explicit one author-reported history identifier. Parent-reported R17 identifier is F01.",
+      "reader": "Explicit distinct author-reported history identifier. Parent-reported R17 identifier is F02.",
+      "source": "Parent received IDs F01..F16 as contents-free author metadata. Builder cannot prove ID membership without opening fixture; parent must confirm against author ID-only attestation."
+    }
+  },
+  "normalized_binding": {
+    "fields": [
+      "status",
+      "runtime_files",
+      "original"
+    ],
+    "tests_status": "passed",
+    "source_review_status": "clear",
+    "runtime_files": "Exact same final runtime map as runtime_receipt and current files.",
+    "original": "Pinned existing original machine-verdict JSON. Not an invented substitute for the original review/test artifact. Bind both layers, never infer clear from normalized binding alone."
+  },
+  "original_tests_receipt": {
+    "required_fields": {
+      "status": "passed",
+      "runtime_files": "exact final map",
+      "tests_run": "positive integer",
+      "failed": 0,
+      "errors": 0,
+      "full_suite": true,
+      "acceptance_hooks": true,
+      "protocol_tests": true,
+      "evidence_files": "nonempty public raw-log/test-evidence path\u2192SHA map; all bytes verified"
+    },
+    "limits": "Machine verdicts and logs remain evidence, not mathematical proof tests exercise all intended behavior."
+  },
+  "original_source_review_receipt": {
+    "required_fields": {
+      "status": "clear",
+      "runtime_files": "exact final map",
+      "unresolved_findings": 0,
+      "source_manifest": "Pinned original reviewed manifest JSON with runtime_files exactly equal current candidate modules"
+    },
+    "limits": "Root ensures these are the actual independent review outputs and manifest, not self-certified replacements. Both Spec and Standards required."
+  },
+  "fixed_constraints": {
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "driver_sha256": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+    "common_v12_producer_sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "baseline_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+    "generation": "gpt-6-luna medium",
+    "reader": "gpt-6.1-sol medium",
+    "judge": "gpt-6-astra medium",
+    "context_chars": 6000,
+    "max_calls": 360,
+    "max_observed_tokens": 7000000,
+    "wall_seconds": 7200,
+    "call_seconds": 180,
+    "per_call_token_reservation": 100000,
+    "minimum_primary_supported": 87,
+    "primary_denominator_per_arm": 96,
+    "planned_primary_and_repeat_answer_records": 216,
+    "critical_errors_including_repeats_max": 0,
+    "individual_fact_loss_max": 0,
+    "all_planned_questions_and_repeats_required": true
+  },
+  "preserved_public_controls": "Six previously disclosed cases and known grouped-six judge packet remain unchanged, pinned to historical public corpus/library bytes. Their success would be a regression gate, not independent quality evidence.",
+  "output_and_limits": [
+    "Actual48orotherfinal module count comes from exact filesystem inventory; missing/extra/changed modules or stale review/test bindings reject. All observed pins and runtime inventories are rechecked before return. A later independent freeze still must verify current bytes.",
+    "Strict semantic-review metadata/schema/full-findings hash bindings enter independent_review_contract. Full findings stay private and are never parsed by this builder. Driver later validates sealed bytes/counts after permitted release.",
+    "Additional sealed receipt pins can be frozen with unchanged helper. Accepted metadata remains an attestation, not proof of truth, independence or scenario difficulty.",
+    "This builder does not call the helper, import the runtime, make native calls, start or reset a clock, create run.json/freeze.json, repair old inputs, or mark the trial ready.",
+    "The pure build_protocol unit seam accepts a toy guide only for synthetic tests. CLI pins exact historical R16 public protocol SHA; no configurable alternative guide.",
+    "No real protocol exists until root supplies final successful source/test/review bindings and explicitly invokes generation. Preserve the earlier6pass1missing-protocol scaffold error; do not rerun public offline suite before then."
+  ]
+}

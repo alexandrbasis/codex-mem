@@ -1,0 +1,2101 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "hold_101",
+      "project_keys": [
+        "puzzle_boxes"
+      ],
+      "sessions": [
+        {
+          "id": "hold_101_s1",
+          "project_key": "puzzle_boxes",
+          "events": [
+            {
+              "id": "hold_101_a",
+              "type": "user",
+              "text": "For the puzzle-box register, show piece counts in whole numbers because the volunteers count by hand. Add a missing-piece column and a photo column."
+            },
+            {
+              "id": "hold_101_b",
+              "type": "assistant",
+              "text": "Both columns are in the draft."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_101_s1_processed",
+              "after_event_id": "hold_101_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_101_s2",
+          "project_key": "puzzle_boxes",
+          "events": [
+            {
+              "id": "hold_101_c",
+              "type": "user",
+              "text": "Cancel just the photo column. Keep the missing-piece column, but leave its cells empty until the boxes are checked."
+            },
+            {
+              "id": "hold_101_d",
+              "type": "tool",
+              "text": "Draft columns: title, piece_count, missing_piece. Box inspection: not started.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "puzzle-register inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Draft columns: title, piece_count, missing_piece. Box inspection: not started."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_101_s2_processed",
+              "after_event_id": "hold_101_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_101_s3",
+          "project_key": "puzzle_boxes",
+          "events": [
+            {
+              "id": "hold_101_e",
+              "type": "user",
+              "text": "Correction to the label: call that retained column \"pieces absent\". Its cells should still stay empty pending inspection."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_101_s3_processed",
+              "after_event_id": "hold_101_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "How should piece counts be shown, and why?",
+          "project_keys": [
+            "puzzle_boxes"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Which column was cancelled?",
+          "project_keys": [
+            "puzzle_boxes"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What should the retained column be called now?",
+          "project_keys": [
+            "puzzle_boxes"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What should go into those cells before inspection?",
+          "project_keys": [
+            "puzzle_boxes"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "How far has the box inspection got?",
+          "project_keys": [
+            "puzzle_boxes"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "What condition must be met before filling the absence column?",
+          "project_keys": [
+            "puzzle_boxes"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_102",
+      "project_keys": [
+        "trail_cards",
+        "museum_cards"
+      ],
+      "sessions": [
+        {
+          "id": "hold_102_s1",
+          "project_key": "trail_cards",
+          "events": [
+            {
+              "id": "hold_102_a",
+              "type": "user",
+              "text": "Our Pebble cards are trail markers. Use arrows without words so walkers can read them at a glance. The bend marker still needs review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_102_s1_processed",
+              "after_event_id": "hold_102_a"
+            }
+          ]
+        },
+        {
+          "id": "hold_102_s2",
+          "project_key": "museum_cards",
+          "events": [
+            {
+              "id": "hold_102_b",
+              "type": "user",
+              "text": "The museum Pebble cards are a separate job. Each card needs a written object title. There are no arrows in this job."
+            },
+            {
+              "id": "hold_102_c",
+              "type": "tool",
+              "text": "Museum card titles: drafted. Proofreading: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "museum-cards inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Museum card titles: drafted. Proofreading: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_102_s2_processed",
+              "after_event_id": "hold_102_c"
+            }
+          ]
+        },
+        {
+          "id": "hold_102_s3",
+          "project_key": "trail_cards",
+          "events": [
+            {
+              "id": "hold_102_d",
+              "type": "user",
+              "text": "Picking up the trail Pebble cards from the first chat: review the bend marker next. Keep the wordless arrows."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_102_s3_processed",
+              "after_event_id": "hold_102_d"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What work is the final chat continuing?",
+          "project_keys": [
+            "trail_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Why did we choose arrows without words?",
+          "project_keys": [
+            "trail_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Are the museum cards part of the trail marker job?",
+          "project_keys": [
+            "museum_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What content does each museum card require?",
+          "project_keys": [
+            "museum_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What still needs attention on the trail cards?",
+          "project_keys": [
+            "trail_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "What remains after the museum titles were drafted?",
+          "project_keys": [
+            "museum_cards"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_103",
+      "project_keys": [
+        "chair_map"
+      ],
+      "sessions": [
+        {
+          "id": "hold_103_s1",
+          "project_key": "chair_map",
+          "events": [
+            {
+              "id": "hold_103_a",
+              "type": "user",
+              "text": "The chair map should leave the center aisle clear for moving carts. Make a paper copy before trying any wall projection."
+            },
+            {
+              "id": "hold_103_b",
+              "type": "tool",
+              "text": "Usage: chair-map render [--project]\nExample: chair-map render --project\nHelp only; no map was rendered.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "chair-map --help"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Usage: chair-map render [--project]\nExample: chair-map render --project\nHelp only; no map was rendered."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_103_s1_processed",
+              "after_event_id": "hold_103_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_103_s2",
+          "project_key": "chair_map",
+          "events": [
+            {
+              "id": "hold_103_c",
+              "type": "assistant",
+              "text": "The paper map is printed and the aisle has been checked."
+            },
+            {
+              "id": "hold_103_d",
+              "type": "tool",
+              "text": "Paper map: queued, not printed. Aisle check: not run.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "chair-map status"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Paper map: queued, not printed. Aisle check: not run."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_103_s2_processed",
+              "after_event_id": "hold_103_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_103_s3",
+          "project_key": "chair_map",
+          "events": [
+            {
+              "id": "hold_103_e",
+              "type": "user",
+              "text": "Use that status as the record. Finish the paper copy and check the aisle before starting the projection trial."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_103_s3_processed",
+              "after_event_id": "hold_103_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Why must the center aisle stay clear?",
+          "project_keys": [
+            "chair_map"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Is the paper copy actually printed?",
+          "project_keys": [
+            "chair_map"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which verification is outstanding?",
+          "project_keys": [
+            "chair_map"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What must precede a projection trial?",
+          "project_keys": [
+            "chair_map"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "Did the help example produce a projection?",
+          "project_keys": [
+            "chair_map"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Which account did I tell you to rely on for completion?",
+          "project_keys": [
+            "chair_map"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_104",
+      "project_keys": [
+        "recipe_tabs"
+      ],
+      "sessions": [
+        {
+          "id": "hold_104_s1",
+          "project_key": "recipe_tabs",
+          "events": [
+            {
+              "id": "hold_104_a",
+              "type": "user",
+              "text": "For the recipe binder, put tabs on the right edge. Make both an alphabetical index and a cooking-time index."
+            },
+            {
+              "id": "hold_104_b",
+              "type": "user",
+              "text": "The cooking-time index uses the penciled durations, not estimates."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_104_s1_processed",
+              "after_event_id": "hold_104_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_104_s2",
+          "project_key": "recipe_tabs",
+          "events": [
+            {
+              "id": "hold_104_c",
+              "type": "user",
+              "text": "Drop the alphabetical index only. Finish the cooking-time index using those penciled durations."
+            },
+            {
+              "id": "hold_104_d",
+              "type": "tool",
+              "text": "Cooking-time index: draft saved. Duration cross-check: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "recipe-tabs inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Cooking-time index: draft saved. Duration cross-check: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_104_s2_processed",
+              "after_event_id": "hold_104_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_104_s3",
+          "project_key": "recipe_tabs",
+          "events": [
+            {
+              "id": "hold_104_e",
+              "type": "user",
+              "text": "I need to correct the tab position: use the top edge. The right edge catches on the storage sleeve. The cooking-time index is still wanted."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_104_s3_processed",
+              "after_event_id": "hold_104_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Where should the tabs go after my correction?",
+          "project_keys": [
+            "recipe_tabs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What caused the change in tab placement?",
+          "project_keys": [
+            "recipe_tabs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which index remains in scope?",
+          "project_keys": [
+            "recipe_tabs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Which source should supply cooking durations?",
+          "project_keys": [
+            "recipe_tabs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What check is still outstanding?",
+          "project_keys": [
+            "recipe_tabs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "What did the cancellation remove?",
+          "project_keys": [
+            "recipe_tabs"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_105",
+      "project_keys": [
+        "bench_labels"
+      ],
+      "sessions": [
+        {
+          "id": "hold_105_s1",
+          "project_key": "bench_labels",
+          "events": [
+            {
+              "id": "hold_105_a",
+              "type": "user",
+              "text": "Bench labels must show station numbers in dark ink. The first wording proposal for the spare bench is \"Quiet corner\"."
+            },
+            {
+              "id": "hold_105_b",
+              "type": "tool",
+              "text": "Numbered labels: draft only. Smudge test: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "bench-labels inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Numbered labels: draft only. Smudge test: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_105_s1_processed",
+              "after_event_id": "hold_105_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_105_s2",
+          "project_key": "bench_labels",
+          "events": [
+            {
+              "id": "hold_105_c",
+              "type": "delete_observation",
+              "text": "Remove the first source note containing the spare-bench wording proposal, even though that note was processed earlier.",
+              "observation_event_id": "hold_105_a"
+            },
+            {
+              "id": "hold_105_d",
+              "type": "user",
+              "text": "Here is the requirement again, independently of the deleted note: bench labels must show station numbers in dark ink. No spare-bench wording is approved."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_105_s2_processed",
+              "after_event_id": "hold_105_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_105_s3",
+          "project_key": "bench_labels",
+          "events": [
+            {
+              "id": "hold_105_e",
+              "type": "user",
+              "text": "Leave the spare-bench wording undecided. The next step is a smudge test of the numbered labels."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_105_s3_processed",
+              "after_event_id": "hold_105_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must the labels display?",
+          "project_keys": [
+            "bench_labels"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What ink requirement remains available?",
+          "project_keys": [
+            "bench_labels"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What wording is approved for the spare bench?",
+          "project_keys": [
+            "bench_labels"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What should happen with the undecided wording?",
+          "project_keys": [
+            "bench_labels"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What test comes next?",
+          "project_keys": [
+            "bench_labels"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Were the numbered labels final at inspection?",
+          "project_keys": [
+            "bench_labels"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_106",
+      "project_keys": [
+        "bird_cards"
+      ],
+      "sessions": [
+        {
+          "id": "hold_106_s1",
+          "project_key": "bird_cards",
+          "events": [
+            {
+              "id": "hold_106_a",
+              "type": "user",
+              "text": "The bird-card pack needs a silhouette on every front. Use one bird per card so children can sort them."
+            },
+            {
+              "id": "hold_106_b",
+              "type": "assistant",
+              "text": "All fronts have silhouettes now."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_106_s1_processed",
+              "after_event_id": "hold_106_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_106_s2",
+          "project_key": "bird_cards",
+          "events": [
+            {
+              "id": "hold_106_c",
+              "type": "tool",
+              "text": "Card fronts: 8. Fronts with silhouettes: 6. Back captions: unreviewed.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "bird-cards inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Card fronts: 8. Fronts with silhouettes: 6. Back captions: unreviewed."
+                }
+              }
+            },
+            {
+              "id": "hold_106_d",
+              "type": "user",
+              "text": "Complete the two missing silhouettes before reviewing captions."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_106_s2_processed",
+              "after_event_id": "hold_106_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_106_s3",
+          "project_key": "bird_cards",
+          "events": [
+            {
+              "id": "hold_106_e",
+              "type": "user",
+              "text": "A late correction: the back captions should use common names only. Keep one bird per card."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_106_s3_processed",
+              "after_event_id": "hold_106_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Why does each card carry only one bird?",
+          "project_keys": [
+            "bird_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "How many fronts had silhouettes in the inspection?",
+          "project_keys": [
+            "bird_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What must be finished before caption review?",
+          "project_keys": [
+            "bird_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What naming rule applies to back captions now?",
+          "project_keys": [
+            "bird_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "Did the late caption change alter the bird count per card?",
+          "project_keys": [
+            "bird_cards"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Has the caption review been completed?",
+          "project_keys": [
+            "bird_cards"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_107",
+      "project_keys": [
+        "reading_cart",
+        "plant_cart"
+      ],
+      "sessions": [
+        {
+          "id": "hold_107_s1",
+          "project_key": "reading_cart",
+          "events": [
+            {
+              "id": "hold_107_a",
+              "type": "user",
+              "text": "This Maple checklist covers the reading cart. List the books by height because tall books tip on the top shelf. The wheel check remains open."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_107_s1_processed",
+              "after_event_id": "hold_107_a"
+            }
+          ]
+        },
+        {
+          "id": "hold_107_s2",
+          "project_key": "plant_cart",
+          "events": [
+            {
+              "id": "hold_107_b",
+              "type": "user",
+              "text": "My Maple checklist here is separate: it is for the plant cart. List pots by watering day. Do not carry over the book ordering."
+            },
+            {
+              "id": "hold_107_c",
+              "type": "tool",
+              "text": "Plant cart watering-day list: saved. Tray fit: not checked.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "maple-checklist inspect --cart plant"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Plant cart watering-day list: saved. Tray fit: not checked."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_107_s2_processed",
+              "after_event_id": "hold_107_c"
+            }
+          ]
+        },
+        {
+          "id": "hold_107_s3",
+          "project_key": "reading_cart",
+          "events": [
+            {
+              "id": "hold_107_d",
+              "type": "user",
+              "text": "Resume the reading-cart checklist from our earlier chat. Check the wheels next; retain the height ordering."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_107_s3_processed",
+              "after_event_id": "hold_107_d"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which Maple job are we resuming?",
+          "project_keys": [
+            "reading_cart"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Why is height used to order the books?",
+          "project_keys": [
+            "reading_cart"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "How should the pots be listed?",
+          "project_keys": [
+            "plant_cart"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Can the two Maple checklists be treated as one?",
+          "project_keys": [
+            "plant_cart"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What is the next check for the reading cart?",
+          "project_keys": [
+            "reading_cart"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Which physical check is still missing for the plant cart?",
+          "project_keys": [
+            "plant_cart"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_108",
+      "project_keys": [
+        "ribbon_drawer"
+      ],
+      "sessions": [
+        {
+          "id": "hold_108_s1",
+          "project_key": "ribbon_drawer",
+          "events": [
+            {
+              "id": "hold_108_a",
+              "type": "user",
+              "text": "For the ribbon drawer guide, group ribbons by width. This makes the dividers easy to label."
+            },
+            {
+              "id": "hold_108_b",
+              "type": "tool",
+              "text": "Usage: ribbon-guide build --group <width|shade>\nExample: ribbon-guide build --group shade\nNo drawer data was loaded.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "ribbon-guide --help"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Usage: ribbon-guide build --group <width|shade>\nExample: ribbon-guide build --group shade\nNo drawer data was loaded."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_108_s1_processed",
+              "after_event_id": "hold_108_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_108_s2",
+          "project_key": "ribbon_drawer",
+          "events": [
+            {
+              "id": "hold_108_c",
+              "type": "user",
+              "text": "The sample note says \"group by shade\". That is a quoted example only; my width grouping remains the requirement."
+            },
+            {
+              "id": "hold_108_d",
+              "type": "tool",
+              "text": "Saved guide grouping: width. Divider count comparison: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "ribbon-guide inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Saved guide grouping: width. Divider count comparison: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_108_s2_processed",
+              "after_event_id": "hold_108_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_108_s3",
+          "project_key": "ribbon_drawer",
+          "events": [
+            {
+              "id": "hold_108_e",
+              "type": "user",
+              "text": "Continue with the same drawer guide. Compare the guide with the divider count next; leave the grouping as width."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_108_s3_processed",
+              "after_event_id": "hold_108_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What grouping should the guide use?",
+          "project_keys": [
+            "ribbon_drawer"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What was the reason for that grouping?",
+          "project_keys": [
+            "ribbon_drawer"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Does the help example establish anything about the actual drawer contents?",
+          "project_keys": [
+            "ribbon_drawer"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Did the sample note change my grouping request?",
+          "project_keys": [
+            "ribbon_drawer"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What comparison still needs doing?",
+          "project_keys": [
+            "ribbon_drawer"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Is the final chat starting a new drawer guide?",
+          "project_keys": [
+            "ribbon_drawer"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_109",
+      "project_keys": [
+        "tile_samples"
+      ],
+      "sessions": [
+        {
+          "id": "hold_109_s1",
+          "project_key": "tile_samples",
+          "events": [
+            {
+              "id": "hold_109_a",
+              "type": "user",
+              "text": "Build a tile-sample sheet with a texture column and a shine column. Use short labels because the sample spaces are narrow."
+            },
+            {
+              "id": "hold_109_b",
+              "type": "assistant",
+              "text": "I prepared a draft."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_109_s1_processed",
+              "after_event_id": "hold_109_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_109_s2",
+          "project_key": "tile_samples",
+          "events": [
+            {
+              "id": "hold_109_c",
+              "type": "user",
+              "text": "Remove only the shine column. The texture column is still needed. Check that its labels fit."
+            },
+            {
+              "id": "hold_109_d",
+              "type": "tool",
+              "text": "Texture column: present. Label fit: not checked.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "tile-sheet inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Texture column: present. Label fit: not checked."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_109_s2_processed",
+              "after_event_id": "hold_109_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_109_s3",
+          "project_key": "tile_samples",
+          "events": [
+            {
+              "id": "hold_109_e",
+              "type": "user",
+              "text": "Correction: describe texture as smooth or rough, not with numbered grades. Keep the labels short."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_109_s3_processed",
+              "after_event_id": "hold_109_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which column survived the scope reduction?",
+          "project_keys": [
+            "tile_samples"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What was removed?",
+          "project_keys": [
+            "tile_samples"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What vocabulary should texture labels use?",
+          "project_keys": [
+            "tile_samples"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Why do the labels have to be short?",
+          "project_keys": [
+            "tile_samples"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What remains unverified in the sheet?",
+          "project_keys": [
+            "tile_samples"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Does the correction remove the short-label constraint?",
+          "project_keys": [
+            "tile_samples"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_110",
+      "project_keys": [
+        "chalk_signs"
+      ],
+      "sessions": [
+        {
+          "id": "hold_110_s1",
+          "project_key": "chalk_signs",
+          "events": [
+            {
+              "id": "hold_110_a",
+              "type": "user",
+              "text": "The chalk sign set needs a thick border so it stands out on the dark wall. Create a doorway sign and a counter sign."
+            },
+            {
+              "id": "hold_110_b",
+              "type": "tool",
+              "text": "Doorway sign: draft saved. Counter sign: draft saved. Wall contrast check: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "chalk-signs inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Doorway sign: draft saved. Counter sign: draft saved. Wall contrast check: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_110_s1_processed",
+              "after_event_id": "hold_110_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_110_s2",
+          "project_key": "chalk_signs",
+          "events": [
+            {
+              "id": "hold_110_c",
+              "type": "user",
+              "text": "Cancel the counter sign only. Keep the doorway sign and its thick border."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_110_s2_processed",
+              "after_event_id": "hold_110_c"
+            }
+          ]
+        },
+        {
+          "id": "hold_110_s3",
+          "project_key": "chalk_signs",
+          "events": [
+            {
+              "id": "hold_110_d",
+              "type": "user",
+              "text": "Following up on the doorway sign from that chat: check it against the wall. Also, correct the heading to \"Tools return\"; I previously asked for \"Tools desk\"."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_110_s3_processed",
+              "after_event_id": "hold_110_d"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What sign are we still making?",
+          "project_keys": [
+            "chalk_signs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did I cancel?",
+          "project_keys": [
+            "chalk_signs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What heading belongs on the doorway sign now?",
+          "project_keys": [
+            "chalk_signs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What purpose does the thick border serve?",
+          "project_keys": [
+            "chalk_signs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What check did the follow-up ask for?",
+          "project_keys": [
+            "chalk_signs"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Is the follow-up a continuation of the same sign?",
+          "project_keys": [
+            "chalk_signs"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_111",
+      "project_keys": [
+        "marble_board",
+        "button_board"
+      ],
+      "sessions": [
+        {
+          "id": "hold_111_s1",
+          "project_key": "marble_board",
+          "events": [
+            {
+              "id": "hold_111_a",
+              "type": "user",
+              "text": "The Orbit board here holds marbles. Its pockets need round labels to match the pocket shapes. A label-size check is still due."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_111_s1_processed",
+              "after_event_id": "hold_111_a"
+            }
+          ]
+        },
+        {
+          "id": "hold_111_s2",
+          "project_key": "button_board",
+          "events": [
+            {
+              "id": "hold_111_b",
+              "type": "user",
+              "text": "This other Orbit board is for buttons and is independent of the marble board. Use rectangular labels here. Check the fasteners after labeling."
+            },
+            {
+              "id": "hold_111_c",
+              "type": "assistant",
+              "text": "The button-board layout has been drafted."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_111_s2_processed",
+              "after_event_id": "hold_111_c"
+            }
+          ]
+        },
+        {
+          "id": "hold_111_s3",
+          "project_key": "marble_board",
+          "events": [
+            {
+              "id": "hold_111_d",
+              "type": "user",
+              "text": "Carry on with the marble Orbit board from the first conversation. Round labels remain required."
+            },
+            {
+              "id": "hold_111_e",
+              "type": "tool",
+              "text": "Marble board label-size check: pending. Button board: not inspected by this command.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "orbit-board inspect --kind marble"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Marble board label-size check: pending. Button board: not inspected by this command."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_111_s3_processed",
+              "after_event_id": "hold_111_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Why are the marble-board labels round?",
+          "project_keys": [
+            "marble_board"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What label shape belongs to the button board?",
+          "project_keys": [
+            "button_board"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Is the button board the same task as the marble board?",
+          "project_keys": [
+            "button_board"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Which board does the last conversation continue?",
+          "project_keys": [
+            "marble_board"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What check remains for the marble board?",
+          "project_keys": [
+            "marble_board"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "What should be checked after labeling the button board?",
+          "project_keys": [
+            "button_board"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_112",
+      "project_keys": [
+        "shell_catalog"
+      ],
+      "sessions": [
+        {
+          "id": "hold_112_s1",
+          "project_key": "shell_catalog",
+          "events": [
+            {
+              "id": "hold_112_a",
+              "type": "user",
+              "text": "The shell catalog must keep one row per tray, because each tray is stored as a unit. Include a paper export."
+            },
+            {
+              "id": "hold_112_b",
+              "type": "tool",
+              "text": "Usage: shell-catalog export --rows <tray|shell>\nExample: shell-catalog export --rows shell\nNo export requested; displaying help.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "shell-catalog export --help"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Usage: shell-catalog export --rows <tray|shell>\nExample: shell-catalog export --rows shell\nNo export requested; displaying help."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_112_s1_processed",
+              "after_event_id": "hold_112_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_112_s2",
+          "project_key": "shell_catalog",
+          "events": [
+            {
+              "id": "hold_112_c",
+              "type": "assistant",
+              "text": "The paper export is finished."
+            },
+            {
+              "id": "hold_112_d",
+              "type": "tool",
+              "text": "Paper export: failed. Reason: page width not set. Saved row mode: tray.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "shell-catalog status"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Paper export: failed. Reason: page width not set. Saved row mode: tray."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_112_s2_processed",
+              "after_event_id": "hold_112_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_112_s3",
+          "project_key": "shell_catalog",
+          "events": [
+            {
+              "id": "hold_112_e",
+              "type": "user",
+              "text": "Set the page width and retry the paper export. Keep one row per tray. The example with rows per shell was only documentation."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_112_s3_processed",
+              "after_event_id": "hold_112_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the row unit for this catalog?",
+          "project_keys": [
+            "shell_catalog"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Why was that row unit chosen?",
+          "project_keys": [
+            "shell_catalog"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Did the paper export succeed?",
+          "project_keys": [
+            "shell_catalog"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What blocked the export?",
+          "project_keys": [
+            "shell_catalog"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What is the requested recovery work?",
+          "project_keys": [
+            "shell_catalog"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Should the rows-per-shell example replace the tray rule?",
+          "project_keys": [
+            "shell_catalog"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_113",
+      "project_keys": [
+        "fabric_swatches"
+      ],
+      "sessions": [
+        {
+          "id": "hold_113_s1",
+          "project_key": "fabric_swatches",
+          "events": [
+            {
+              "id": "hold_113_a",
+              "type": "user",
+              "text": "Make a fabric-swatch guide with washable and delicate sections. Use large section headings so the guide is readable across the table."
+            },
+            {
+              "id": "hold_113_b",
+              "type": "assistant",
+              "text": "The sections are drafted."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_113_s1_processed",
+              "after_event_id": "hold_113_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_113_s2",
+          "project_key": "fabric_swatches",
+          "events": [
+            {
+              "id": "hold_113_c",
+              "type": "user",
+              "text": "Remove the delicate section for now. Keep the washable section, and check its order against the sample stack."
+            },
+            {
+              "id": "hold_113_d",
+              "type": "tool",
+              "text": "Washable section: saved. Stack-order check: incomplete.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "swatch-guide inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Washable section: saved. Stack-order check: incomplete."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_113_s2_processed",
+              "after_event_id": "hold_113_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_113_s3",
+          "project_key": "fabric_swatches",
+          "events": [
+            {
+              "id": "hold_113_e",
+              "type": "user",
+              "text": "Small correction to the washable section: order it from light to dark. Keep the large heading."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_113_s3_processed",
+              "after_event_id": "hold_113_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What section remains in the guide?",
+          "project_keys": [
+            "fabric_swatches"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Which section was removed for now?",
+          "project_keys": [
+            "fabric_swatches"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "How should the remaining section be ordered?",
+          "project_keys": [
+            "fabric_swatches"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Why does the guide need large headings?",
+          "project_keys": [
+            "fabric_swatches"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What comparison is not complete yet?",
+          "project_keys": [
+            "fabric_swatches"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Did the order correction change the heading size requirement?",
+          "project_keys": [
+            "fabric_swatches"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_114",
+      "project_keys": [
+        "table_game"
+      ],
+      "sessions": [
+        {
+          "id": "hold_114_s1",
+          "project_key": "table_game",
+          "events": [
+            {
+              "id": "hold_114_a",
+              "type": "user",
+              "text": "For the table game, make the score sheet with room for four rounds. Use circles for score marks because squares look like the board spaces."
+            },
+            {
+              "id": "hold_114_b",
+              "type": "user",
+              "text": "Include a rules card as well."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_114_s1_processed",
+              "after_event_id": "hold_114_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_114_s2",
+          "project_key": "table_game",
+          "events": [
+            {
+              "id": "hold_114_c",
+              "type": "user",
+              "text": "Cancel only the rules card. The score sheet still needs a test with the wooden counters."
+            },
+            {
+              "id": "hold_114_d",
+              "type": "tool",
+              "text": "Score sheet rounds: 4. Counter test: not run.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "table-game inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Score sheet rounds: 4. Counter test: not run."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_114_s2_processed",
+              "after_event_id": "hold_114_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_114_s3",
+          "project_key": "table_game",
+          "events": [
+            {
+              "id": "hold_114_e",
+              "type": "user",
+              "text": "The score-sheet draft needs a correction: make room for five rounds. Keep circles for the marks, and test it with the wooden counters next."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_114_s3_processed",
+              "after_event_id": "hold_114_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "How many rounds should the sheet support now?",
+          "project_keys": [
+            "table_game"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Which part did I cancel?",
+          "project_keys": [
+            "table_game"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What shape should the score marks use?",
+          "project_keys": [
+            "table_game"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Why did I avoid square score marks?",
+          "project_keys": [
+            "table_game"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What test should happen next?",
+          "project_keys": [
+            "table_game"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "How many rounds were in the inspected draft before the correction?",
+          "project_keys": [
+            "table_game"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_115",
+      "project_keys": [
+        "window_display",
+        "shelf_display"
+      ],
+      "sessions": [
+        {
+          "id": "hold_115_s1",
+          "project_key": "window_display",
+          "events": [
+            {
+              "id": "hold_115_a",
+              "type": "user",
+              "text": "The Harbor display in this project goes in the window. Use a pale background so the dark paper boats are visible. Check glare before installation."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_115_s1_processed",
+              "after_event_id": "hold_115_a"
+            }
+          ]
+        },
+        {
+          "id": "hold_115_s2",
+          "project_key": "shelf_display",
+          "events": [
+            {
+              "id": "hold_115_b",
+              "type": "user",
+              "text": "This Harbor display is a separate shelf project. Use a dark background for the pale wooden boats. Its shelf-depth check is pending."
+            },
+            {
+              "id": "hold_115_c",
+              "type": "tool",
+              "text": "Shelf display: layout saved. Shelf-depth check: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "harbor-display inspect --location shelf"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Shelf display: layout saved. Shelf-depth check: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_115_s2_processed",
+              "after_event_id": "hold_115_c"
+            }
+          ]
+        },
+        {
+          "id": "hold_115_s3",
+          "project_key": "window_display",
+          "events": [
+            {
+              "id": "hold_115_d",
+              "type": "user",
+              "text": "Continue our window Harbor display from the earlier chat. The pale background stays. Next, check glare."
+            },
+            {
+              "id": "hold_115_e",
+              "type": "assistant",
+              "text": "I will prepare the glare check."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_115_s3_processed",
+              "after_event_id": "hold_115_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which Harbor display are we continuing?",
+          "project_keys": [
+            "window_display"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Why use a pale background in the window?",
+          "project_keys": [
+            "window_display"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What background does the shelf project need?",
+          "project_keys": [
+            "shelf_display"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "Do the two Harbor displays share one job?",
+          "project_keys": [
+            "shelf_display"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What must be checked next for the window display?",
+          "project_keys": [
+            "window_display"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "What is still pending for the shelf display?",
+          "project_keys": [
+            "shelf_display"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_116",
+      "project_keys": [
+        "stamp_album"
+      ],
+      "sessions": [
+        {
+          "id": "hold_116_s1",
+          "project_key": "stamp_album",
+          "events": [
+            {
+              "id": "hold_116_a",
+              "type": "user",
+              "text": "For the stamp album divider guide, sort sections by decade so the empty spaces line up with the album. Leave an empty section for missing decades."
+            },
+            {
+              "id": "hold_116_b",
+              "type": "tool",
+              "text": "Usage: divider-guide --sort <decade|country>\nExample: divider-guide --sort country\nExamples are illustrative; no guide was saved.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "divider-guide --help"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Usage: divider-guide --sort <decade|country>\nExample: divider-guide --sort country\nExamples are illustrative; no guide was saved."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_116_s1_processed",
+              "after_event_id": "hold_116_b"
+            }
+          ]
+        },
+        {
+          "id": "hold_116_s2",
+          "project_key": "stamp_album",
+          "events": [
+            {
+              "id": "hold_116_c",
+              "type": "user",
+              "text": "A visitor wrote \"remove every empty section\" in the sample comments. I am quoting that comment, not accepting it. Keep empty sections for missing decades."
+            },
+            {
+              "id": "hold_116_d",
+              "type": "tool",
+              "text": "Saved divider sort: decade. Empty-section check: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "divider-guide inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Saved divider sort: decade. Empty-section check: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_116_s2_processed",
+              "after_event_id": "hold_116_d"
+            }
+          ]
+        },
+        {
+          "id": "hold_116_s3",
+          "project_key": "stamp_album",
+          "events": [
+            {
+              "id": "hold_116_e",
+              "type": "user",
+              "text": "Picking this album guide back up: review the empty sections against the album. One correction: print decade headings in full, such as \"1980s\", rather than two-digit shorthand."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "hold_116_s3_processed",
+              "after_event_id": "hold_116_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "How are the sections meant to be sorted, and for what reason?",
+          "project_keys": [
+            "stamp_album"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Should missing decades have empty sections?",
+          "project_keys": [
+            "stamp_album"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Did I accept the visitor suggestion to remove the empty sections?",
+          "project_keys": [
+            "stamp_album"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What did the country-sort help example actually save?",
+          "project_keys": [
+            "stamp_album"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What review is left on the resumed guide?",
+          "project_keys": [
+            "stamp_album"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "How should decade headings be printed after the correction?",
+          "project_keys": [
+            "stamp_album"
+          ],
+          "stage": "final"
+        }
+      ]
+    }
+  ]
+}

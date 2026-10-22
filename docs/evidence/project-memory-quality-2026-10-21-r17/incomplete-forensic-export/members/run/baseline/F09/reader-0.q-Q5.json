@@ -1,0 +1,138 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q5",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "e737425f9b05748cc428b13d54349825eef0ed15b879647a5eb8a9ec0d38315b",
+  "context_sha256": "b2e9a1cd414a78e8eadd4b47a4219bac2014f416b58524168841b26ad8e68394",
+  "raw_output_sha256": "a624d4a11dbdb2e8312873aa0b1135fa7b33379640cbd833d27db783e914405e",
+  "native_receipt": {
+    "source_call_id": "call-0139",
+    "request_sha256": "99d63001fd745e2f395e93a35c4a59d7d8e34cac6e0ac27882bba9fdda810a10",
+    "response_sha256": "61fa2402069c5092d453e649b41a3ef1f287eb5bcda905d7b83498e99ce5659d",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q5",
+        "answer": "The assistant reported, “I believe release for Saffron kite register is complete because the local preview finished.” This is an attributed belief, not verified release completion. [R0001]\n\nThe only displayed execution receipt records `fictional_record --record F09_first_record`, with exit code 0. Its output says the first preview contains the requested register row order and explicitly limits the record to “a local preview only.” That supports the reported preview content, but does not establish release, deployment, production completion, review approval, or authorization to release. Whether this receipt is the final receipt for the underlying work is unknown. [R0003, R0004]\n\nThe supplied user source says the register was waiting for review at the opening meeting, requires retaining the line-length column because crews pair each kite with its line, and identifies the gust appendix as a separate follow-up. A later correction replaces knots with meters per second. The receipt does not establish that review finished, that those column and unit requirements were satisfied, or that the separate follow-up was completed. [R0003, R0005, R0006]",
+        "uncertainties": [
+          "No supplied source explicitly links the assistant’s completion claim to this particular execution receipt.",
+          "The underlying final operation and any release authorization are unknown; the supplied view contains only one execution receipt, explicitly scoped to a first local preview.",
+          "Current review status and fulfillment of the retained column, corrected wind unit, and separate gust appendix are not established by the supplied receipt."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "9a8e72f7af164634a060a946dd41ee53",
+            "source_field": "body",
+            "start": 0,
+            "end": 91,
+            "source_role": "assistant_report",
+            "quote": "I believe release for Saffron kite register is complete because the local preview finished."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "60f4e3e9003e4c3894c59bacaa5ccdb5",
+            "source_field": "tool_response.output",
+            "start": 0,
+            "end": 151,
+            "source_role": "tool_record",
+            "quote": "Fictional local record for Saffron kite register. The first preview contains the requested register row order. This record covers a local preview only.",
+            "tool_use_id": "F09_first_record"
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "60f4e3e9003e4c3894c59bacaa5ccdb5",
+            "source_field": "tool_input.command",
+            "start": 0,
+            "end": 42,
+            "source_role": "tool_record",
+            "quote": "fictional_record --record F09_first_record",
+            "tool_use_id": "F09_first_record"
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "54f09e444a404c29985677acb72e5e29",
+            "source_field": "body",
+            "start": 0,
+            "end": 359,
+            "source_role": "user_intent",
+            "quote": "For Saffron, open the kite register work item. For Saffron kite register, retain the line-length column because crews pair each kite with its line. At this opening meeting, Saffron kite register is waiting for review. My initial instruction for Saffron kite register sets wind unit to knots. The gust appendix is a separate follow-up to Saffron kite register."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "94dcab5a3065460396e88892929d4d85",
+            "source_field": "body",
+            "start": 0,
+            "end": 110,
+            "source_role": "user_intent",
+            "quote": "Correction for Saffron kite register: use wind unit of meters per second, replacing my initial value of knots."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 14849,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12503,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 528,
+        "reasoning_output_tokens": 92,
+        "total_tokens": 13031
+      }
+    }
+  },
+  "latency_ms": 14873,
+  "native_dispatch": {
+    "key": "4a41e24d944ea3e84ae9f5e56da0487ba6c1f20c9c7c206227e91d392a866cca",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F09",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q5",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0139",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "544e6387a9f2ae5f135a4f41104d6c31cab4b5f00600cea3cb257ae9d787ceda",
+    "request_file_sha256": "fd6f3f50d8f79648e6cf24ec1d61867a843fc4f0b1274d8d5582189a31f6ef0a",
+    "response_file_sha256": "e745c01f71ff2ba233ce6383f858a24ffb35c98ba03013a00111fc1b4e9ea3f4",
+    "reused": false,
+    "native_wall_ms": 14873
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F09",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q5"
+  },
+  "evidence_checks": {
+    "Q5": {
+      "accepted_results": "The displayed receipt records a local first preview containing the requested register row order.",
+      "open_work_and_reasons": "The user source says review was pending, retains line length for kite–line pairing, and treats the gust appendix as a separate follow-up.",
+      "source_role_distinctions": "Completion is an assistant belief; the observed receipt covers only a local preview, with release authorization not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

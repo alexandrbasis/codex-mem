@@ -1,0 +1,66 @@
+{
+  "axis": "Standards",
+  "status": "clear_for_pre_native_stage",
+  "mode": "working changes including staged, unstaged and owned untracked",
+  "base": "2ca7445139805243c1d30a1ff7fd15be2b2dd85a",
+  "review_manifest_sha256": "df2c59445f518b795b12541930b7203a6cc28ad8707c067df012579661961b3f",
+  "owned_paths": 593,
+  "prior_review_context": "Prior R2\u2013R11 reviews retained; this review focuses on the R12 delta. Large prior evidence reviewed through integrity/provenance summaries, not sealed contents.",
+  "standards": [
+    "CODING_STANDARDS.md",
+    ".agents/skills/code-review/SKILL.md",
+    "AGENTS.md",
+    "docs/agents/engineering-skills.md"
+  ],
+  "reviewed_hashes": {
+    "codex_mem/episode_processor.py": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/frozen-helper.py": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/frozen-test-protocol.py": "7bf5915c8c02b25ed40818851895cfb926debccc842fed1dbabba488afc397a8",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/prepare-producer-probe.py": "8bc0b332d2c4bddd9bbb9a9dfcad58667536977dbcfadaa250374c3040ff7439",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/prepare-reader-probe.py": "5f7a00d0cccc1b35ad8b10b7ff8ff9530d26da0eb848a3d8c1d33a6e11fc766b",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/protocol.json": "574b5177d5aaab0af72eb120676735f7a4ec566c14b858bbbbc49aeb850a75a1",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/public-calibration-library.py": "d2355d7b66e26575a163e092e3ea035b53b4240cc4351b02d9e86497b8ee9461",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/public-fixture-contract.py": "56a223a0d3997f92e1f32dc1017d546756f3eb981a4d8f123203c2280900527a",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/run-experiment.py": "0b0cb0dfde5d238d7214cc9cca37689494cb522da06879c1fb92b127d68e727a",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/run-public-preflight.py": "9ab26d2db5a7623ff9a24f823547535c008bf718a615e642667ac389b99249b7",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/test-driver.py": "9c2e9e3f118bfc58b28a8cca07dfad1c43f27f25eb69efd2b52e779ee31c4a63",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/test-producer-probe.py": "37d7371e23e9c67faaefa43c195550ef315f2f8508f89c353d7f1e08b7c4c8cd",
+    "docs/evidence/project-memory-quality-2026-10-21-r12/test-public-preflight.py": "9a2f1e6338d420df4198c5d83339eca3330251904ba233b0f89cac5a56b1d381",
+    "scripts/consolidation_experiment/test_protocol.py": "7bf5915c8c02b25ed40818851895cfb926debccc842fed1dbabba488afc397a8",
+    "scripts/project_memory_consolidation_experiment.py": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "tests/test_episode_native_relations.py": "8f02fa1f9489e354a641d64d1e4f9580e2edf01ba149cc6bd53fddc54dbd19af",
+    "tests/test_episode_processor.py": "76ae53e813e4df55681f9aa96bd5be1bf2285e42f861989ea1e1e4bb776eeb38",
+    "tests/test_project_memory_consolidation.py": "8cc632098180f27db01c172a79a8805539a08b19726e2d9e420fe6ff4820fca5"
+  },
+  "findings": [],
+  "resolved_findings": [
+    {
+      "priority": "P2",
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r12/run-public-preflight.py",
+      "issue": "Fresh namespaced R12 root lacked public-preflight parent, so mkdir failed before first dispatch.",
+      "resolution": "parents=True creates container while exist_ok=False preserves no retry/overwrite for namespace. Public fresh-root test reaches fake first dispatch and rejects a second execution preserving the receipt."
+    }
+  ],
+  "verification": {
+    "independently_run": [
+      "8 offline real-Store producer-probe tests passed",
+      "7 offline public-preflight tests passed",
+      "All owned manifest hashes match current files",
+      "All public preflight pins match current files",
+      "Call allocation totals 340",
+      "Architecture maintain.py check: hashes_match, no issues"
+    ],
+    "parent_reported": [
+      "1740 unit tests passed",
+      "82 protocol tests passed",
+      "5 driver tests passed",
+      "11 acceptance checks passed"
+    ]
+  },
+  "limits": [
+    "No edits except this review artifact.",
+    "No native model calls or sealed R12 fixture/gold/author reads.",
+    "Author metadata remains pending and requires final follow-up; this is not execution, holdout-quality, installed-service or semantic adequacy proof."
+  ],
+  "heuristic_smells": []
+}

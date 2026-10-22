@@ -1,0 +1,1225 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-22T05:48:51.173465+00:00",
+  "status": "post_release_read_only_diagnosis",
+  "case": {
+    "history_id": "h03",
+    "question_id": "q2",
+    "variant": "candidate",
+    "repeat": 0,
+    "question": {
+      "id": "q2",
+      "question": "Which music-cue work remains after the scope change?",
+      "stage": "final",
+      "project_key": "p03a"
+    }
+  },
+  "summary": "Candidate recalls the required drum-cue check, then adds an affirmative current closure claim about the separate dialogue edit. The cited historical user closure is exact and visible. The later reopening is persisted in generation evidence but omitted from this question view. Valid citation structure does not establish current-state truth.",
+  "scope_and_limits": {
+    "authorization": "Parent confirmed formal release and allowed read-only diagnosis while the trial runs.",
+    "not_regrade_or_appeal": true,
+    "not_fresh_holdout_reviewer": true,
+    "prior_exposure": "This agent reviewed the sealed R20 gold before release; platform historical MEMORY_SUMMARY was injected. Post-release answer/grade exposure is now explicit.",
+    "inspection": "Completed primary judge packets were scanned to locate the reported first critical. Detailed diagnosis concerns h03/q2, its corresponding baseline, canonical request contexts, fixture/gold/rationale and saved generation JSON. No not-yet-graded answer is used to infer a result.",
+    "no_trial_mutation": "No source/helper/protocol/input/log/store edit, model/native/network call, Store constructor or database access. Only this new JSON is written.",
+    "completion": "No final result or final count claimed. The unchanged driver must finish all 216 slots."
+  },
+  "problematic_assertion": {
+    "span": {
+      "start": 121,
+      "end": 185,
+      "quote": "The dialogue edit is a separate task and is accepted and closed.",
+      "offset_unit": "Python characters"
+    },
+    "ownership": {
+      "start": 78,
+      "end": 185,
+      "text": "The music cue sheet is still under review. The dialogue edit is a separate task and is accepted and closed.",
+      "citation_refs": [
+        "R0005",
+        "R0008"
+      ]
+    },
+    "grade_witness": {
+      "error_type": "false_closure",
+      "answer_ref": "A0004",
+      "assertion_mode": "affirmative_current",
+      "relation": "asserts_forbidden_conclusion",
+      "prohibition_ref": "policy:false_closure",
+      "answer_witness": {
+        "ref": "A0004",
+        "start": 121,
+        "end": 185,
+        "quote": "The dialogue edit is a separate task and is accepted and closed."
+      }
+    },
+    "temporal_analysis": "The user closure at capture sequence 3 was valid historically. The user reopened the same task at sequence 8. Present tense is accepted and closed drops this temporal qualification.",
+    "role_scope_analysis": "Both instructions concern the same p03a dialogue task and are user-intent sources. This is neither assistant-report promotion nor project mixing. The separate cue-sheet task is correctly distinguished.",
+    "reopening_reason_and_boundary": "The final line names the wrong station; correction is limited to that station name. Reopening establishes work to do, not proof that the correction happened.",
+    "question_responsiveness": "The question only asks remaining music-cue work. Dialogue closure is volunteered, not a required fact. No new required fact is proposed."
+  },
+  "source_chain": [
+    {
+      "event_id": "e2",
+      "source_id": "6dccdf98003e46cc92e787d6cede4bf8",
+      "role": "user",
+      "fixture_pointer": "/histories/2/sessions/0/events/1/text",
+      "span": {
+        "start": 0,
+        "end": 62,
+        "quote": "Treat the music cue sheet and dialogue edit as separate tasks.",
+        "offset_unit": "Python characters"
+      }
+    },
+    {
+      "event_id": "e3",
+      "source_id": "cedfbea4663945eb97197b73676fed31",
+      "role": "user",
+      "fixture_pointer": "/histories/2/sessions/0/events/2/text",
+      "span": {
+        "start": 0,
+        "end": 84,
+        "quote": "The dialogue edit is accepted and closed. The music cue sheet is still under review.",
+        "offset_unit": "Python characters"
+      }
+    },
+    {
+      "event_id": "e9",
+      "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+      "role": "user",
+      "fixture_pointer": "/histories/2/sessions/2/events/3/text",
+      "span": {
+        "start": 0,
+        "end": 100,
+        "quote": "Reopen the dialogue edit because the final line names the wrong station. Fix only that station name.",
+        "offset_unit": "Python characters"
+      }
+    },
+    {
+      "event_id": "e10",
+      "source_id": "5e0cdd540e5949b9b4ee84de6f716aea",
+      "role": "user",
+      "fixture_pointer": "/histories/2/sessions/2/events/4/text",
+      "span": {
+        "start": 0,
+        "end": 81,
+        "quote": "Drop the optional flute cue from the cue sheet, but finish checking the drum cue.",
+        "offset_unit": "Python characters"
+      }
+    }
+  ],
+  "gold": {
+    "q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "Checking the drum cue remains required.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 52,
+              "end": 81,
+              "quote": "finish checking the drum cue."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "All music-cue work was canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "All music-cue work was canceled."
+        }
+      ]
+    },
+    "q2_rationale": {
+      "case": "h03/q2",
+      "question": "Which music-cue work remains after the scope change?",
+      "required_facts": [
+        {
+          "fact_index": 0,
+          "question_clause": "remains",
+          "proposition": "Checking the drum cue remains required.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 52,
+              "end": 81,
+              "quote": "finish checking the drum cue."
+            }
+          ],
+          "needed_context": "The source role and session project identify attribution and scope. Quoted conditions and time words are retained where the proposition depends on them."
+        }
+      ],
+      "optional_background": [
+        "The optional flute cue was dropped."
+      ]
+    },
+    "reopening_reference_q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The dialogue edit was reopened because its final line names the wrong station.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 72,
+              "quote": "Reopen the dialogue edit because the final line names the wrong station."
+            }
+          ]
+        },
+        {
+          "text": "Only that station name must be fixed.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 73,
+              "end": 100,
+              "quote": "Fix only that station name."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The dialogue edit remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The dialogue edit remains closed."
+        }
+      ]
+    },
+    "policy_note": "Existing judge uses policy:false_closure for volunteered closure. Gold and grade remain unchanged."
+  },
+  "findings": [
+    {
+      "layer": "acquisition_and_persistence",
+      "confidence": "high",
+      "finding": "Saved generation source_map and standalone episode contain the reopening source. Summary/rationale retain the reopening and reason; goal/open_work retain the restricted correction. Complete acquisition loss is contradicted by this evidence.",
+      "limit": "Persistence of a standalone episode does not establish successful reconciliation with the earlier closure. No live DB or product source inspected."
+    },
+    {
+      "layer": "selection_and_transport",
+      "confidence": "high",
+      "finding": "The q2 raw and canonical views include historical closure but exclude reopening. Canonical context retains freshness=not_verified, coverage_gaps=true and unassociated_user_sources=1 omitted. This establishes a view-level completeness gap.",
+      "limit": "No ranking trace, code or counterfactual run identifies the exact mechanism. Raw length 5395 and canonical length 5331 below 6000 do not by themselves prove a budget bug."
+    },
+    {
+      "layer": "reader_delivery",
+      "confidence": "high",
+      "finding": "The answer volunteers present-tense closure without historical qualification. Its uncertainties cover only cue-work execution. Auxiliary accepted_results also repeats the earlier closure. The missing reopening prevents reconstructing the exact current task state from this view alone, but incomplete/freshness warnings were visible.",
+      "limit": "No single-layer causal attribution is warranted: deficient view and unqualified answer both contribute."
+    },
+    {
+      "layer": "citation_structure",
+      "confidence": "high",
+      "finding": "All delivered citations match original source offsets and canonical inline refs; owned answer spans match exactly. The completed judge marks citations_supported=true while recording false_closure. Provenance correctness does not guarantee temporal entailment.",
+      "limit": "Per-question inline refs were checked against the actual native request, not the history-wide catalog."
+    }
+  ],
+  "strongest_counterreading": {
+    "argument": "The sentence faithfully summarizes the latest dialogue status supplied to this reader. It cites a genuine user instruction, not an invented source. The reader had no reopening source in q2, so blaming only the reader would ignore an upstream omission.",
+    "assessment": "This explains the failure but does not make the present-tense final-state claim true. It says is accepted and closed, without earlier/source-says qualification; the uncertainty does not cover that task. Full surviving history explicitly reopens it, and the visible coverage warns of incompleteness.",
+    "action": "No grade modification or appeal."
+  },
+  "baseline_comparison": {
+    "answer": "The music cue sheet remains under review.",
+    "finding": "Baseline omits the required drum-cue check, which is absent from its q2 view, and explicitly says the scope-change details are unavailable. It makes no dialogue-closure assertion.",
+    "observed_grade": {
+      "required_facts_recalled": 0,
+      "required_facts_total": 1,
+      "critical_errors": []
+    },
+    "limit": "This single pair shows required-fact recall gained alongside a stale extra assertion. It is not a final comparison or a general causal estimate."
+  },
+  "evidence": {
+    "candidate": {
+      "raw_context": {
+        "id": "q2",
+        "question": "Which music-cue work remains after the scope change?",
+        "memory": "PROJECT p03a\n<project-memory quote_refs=\"provenance_only\" trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"6\" user_sources_omitted=\"6\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"10\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"ad1789e57d834fdd8b53a3b6ecf1a426\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" selection_basis=\"unassociated_source_context\" relationship_to_query=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_source_without_task_association\" source_capture_seq=\"6\"><field name=\"assistant_report\" basis=\"attributed_source_excerpts\" field_association=\"original_source\"><source source_id=\"ad1789e57d834fdd8b53a3b6ecf1a426\" start=\"0\" end=\"65\" source_role=\"assistant_report\" excerpt_status=\"complete_source\" id=\"s1\" source_field=\"body\"><quote_excerpt>I exported a preview of Copper episode two. I did not release it.</quote_excerpt></source></field></item><item id=\"aa70909203854701b128592fba90ded8\" lane=\"source_evidence\" selection_basis=\"unassociated_source_context\" relationship_to_query=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_source_without_task_association\" source_capture_seq=\"10\" field_association=\"original_execution_capture\" complete_capture_fields=\"true\"><execution tool_use_id=\"e11\" tool_name=\"exec_command\" command=\"fictional-inspector --record e11\" exit_code=\"0\" exit_field=\"tool_response.exit_code\"/><source source_id=\"aa70909203854701b128592fba90ded8\" start=\"0\" end=\"74\" source_role=\"tool_record\" tool_use_id=\"e11\" source_field=\"tool_response.output\" id=\"s2\"><quote_excerpt>Export folder contains preview-02.wav; publication receipt field is empty.</quote_excerpt></source><source source_id=\"aa70909203854701b128592fba90ded8\" start=\"0\" end=\"32\" source_role=\"tool_record\" tool_use_id=\"e11\" source_field=\"tool_input.command\" id=\"s3\"><quote_excerpt>fictional-inspector --record e11</quote_excerpt></source></item><item lane=\"intent_custody\" source_role=\"user_intent\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\"><field><source source_id=\"5e0cdd540e5949b9b4ee84de6f716aea\" start=\"0\" end=\"81\" source_role=\"user_intent\" source_capture_seq=\"9\" source_field=\"body\" id=\"s4\"><quote_excerpt>Drop the optional flute cue from the cue sheet, but finish checking the drum cue.</quote_excerpt></source><source source_id=\"6dccdf98003e46cc92e787d6cede4bf8\" start=\"0\" end=\"62\" source_role=\"user_intent\" source_capture_seq=\"2\" source_field=\"body\" id=\"s6\"><quote_excerpt>Treat the music cue sheet and dialogue edit as separate tasks.</quote_excerpt></source><source source_id=\"abb2b4405b5f4737bdfead54b26bdd05\" start=\"0\" end=\"83\" source_role=\"user_intent\" source_capture_seq=\"7\" source_field=\"body\" id=\"s7\"><quote_excerpt>Route Copper rights questions to the reviewer listed in the active rights register.</quote_excerpt></source></field></item><item lane=\"intent_custody\" source_role=\"user_intent\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\"><field><source source_id=\"a2d9ccc19f6b467bb3fda1105aeb6df9\" start=\"0\" end=\"165\" source_role=\"user_intent\" source_capture_seq=\"1\" source_field=\"body\" id=\"s8\"><quote_excerpt>For the Copper radio play, release episode two only when both actors sign the voice-use form. We need both signatures because the episode includes both performances.</quote_excerpt></source><source source_id=\"cedfbea4663945eb97197b73676fed31\" start=\"0\" end=\"84\" source_role=\"user_intent\" source_capture_seq=\"3\" source_field=\"body\" id=\"s5\"><quote_excerpt>The dialogue edit is accepted and closed. The music cue sheet is still under review.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\"3\" omitted=\"1\"/><item id=\"pm_58b14969f8dc5f89f2ed1fec8e0af2bfcf5fa0dc\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"user_intent\" evidence_basis=\"exact_quote\" revision=\"1\" source_capture_seq=\"1\"><field name=\"text\"><quote_ref ref=\"s8\" start=\"0\" end=\"93\"/></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><quote_ref ref=\"s8\" start=\"93\" end=\"165\"/></field></item><item id=\"pm_693037e3685bcf56c56b934996e0732444a4da17\" lane=\"claim\" project_memory_kind=\"task\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq=\"3\"><field name=\"text\"><derived_text>The music cue sheet is still under review.</derived_text><quote_ref ref=\"s5\" start=\"41\" end=\"84\"/></field></item><omitted records=\"0\" fields=\"0\" unassociated_user_sources=\"1\"/></project-memory>",
+        "context_chars": 5395,
+        "context_sha256": "6eb2687414b7e8dd4bf44fb6da44c724a666af409ba79c95e1e565ad97d2fdae",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": true,
+          "used": true,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a"
+          ]
+        }
+      },
+      "canonical_reader_context": {
+        "id": "q2",
+        "question": "Which music-cue work remains after the scope change?",
+        "memory": "PROJECT p03a\n<project-memory quote_refs=\"provenance_only\" trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"6\" user_sources_omitted=\"6\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"10\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"ad1789e57d834fdd8b53a3b6ecf1a426\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" selection_basis=\"unassociated_source_context\" relationship_to_query=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_source_without_task_association\" source_capture_seq=\"6\"><field name=\"assistant_report\" basis=\"attributed_source_excerpts\" field_association=\"original_source\"><source source_id=\"S01\" start=\"0\" end=\"65\" source_role=\"assistant_report\" excerpt_status=\"complete_source\" id=\"s1\" source_field=\"body\" citation_ref=\"R0001\"><quote_excerpt>I exported a preview of Copper episode two. I did not release it.</quote_excerpt></source></field></item><item id=\"aa70909203854701b128592fba90ded8\" lane=\"source_evidence\" selection_basis=\"unassociated_source_context\" relationship_to_query=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_source_without_task_association\" source_capture_seq=\"10\" field_association=\"original_execution_capture\" complete_capture_fields=\"true\"><execution tool_use_id=\"e11\" tool_name=\"exec_command\" command=\"fictional-inspector --record e11\" exit_code=\"0\" exit_field=\"tool_response.exit_code\"/><source source_id=\"S02\" start=\"0\" end=\"74\" source_role=\"tool_record\" tool_use_id=\"e11\" source_field=\"tool_response.output\" id=\"s2\" citation_ref=\"R0002\"><quote_excerpt>Export folder contains preview-02.wav; publication receipt field is empty.</quote_excerpt></source><source source_id=\"S02\" start=\"0\" end=\"32\" source_role=\"tool_record\" tool_use_id=\"e11\" source_field=\"tool_input.command\" id=\"s3\" citation_ref=\"R0003\"><quote_excerpt>fictional-inspector --record e11</quote_excerpt></source></item><item lane=\"intent_custody\" source_role=\"user_intent\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\"><field><source source_id=\"S03\" start=\"0\" end=\"81\" source_role=\"user_intent\" source_capture_seq=\"9\" source_field=\"body\" id=\"s4\" citation_ref=\"R0004\"><quote_excerpt>Drop the optional flute cue from the cue sheet, but finish checking the drum cue.</quote_excerpt></source><source source_id=\"S04\" start=\"0\" end=\"62\" source_role=\"user_intent\" source_capture_seq=\"2\" source_field=\"body\" id=\"s6\" citation_ref=\"R0005\"><quote_excerpt>Treat the music cue sheet and dialogue edit as separate tasks.</quote_excerpt></source><source source_id=\"S05\" start=\"0\" end=\"83\" source_role=\"user_intent\" source_capture_seq=\"7\" source_field=\"body\" id=\"s7\" citation_ref=\"R0006\"><quote_excerpt>Route Copper rights questions to the reviewer listed in the active rights register.</quote_excerpt></source></field></item><item lane=\"intent_custody\" source_role=\"user_intent\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\"><field><source source_id=\"S06\" start=\"0\" end=\"165\" source_role=\"user_intent\" source_capture_seq=\"1\" source_field=\"body\" id=\"s8\" citation_ref=\"R0007\"><quote_excerpt>For the Copper radio play, release episode two only when both actors sign the voice-use form. We need both signatures because the episode includes both performances.</quote_excerpt></source><source source_id=\"S07\" start=\"0\" end=\"84\" source_role=\"user_intent\" source_capture_seq=\"3\" source_field=\"body\" id=\"s5\" citation_ref=\"R0008\"><quote_excerpt>The dialogue edit is accepted and closed. The music cue sheet is still under review.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\"3\" omitted=\"1\"/><item id=\"pm_58b14969f8dc5f89f2ed1fec8e0af2bfcf5fa0dc\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"user_intent\" evidence_basis=\"exact_quote\" revision=\"1\" source_capture_seq=\"1\"><field name=\"text\"><quote_ref ref=\"s8\" start=\"0\" end=\"93\"/></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><quote_ref ref=\"s8\" start=\"93\" end=\"165\"/></field></item><item id=\"pm_693037e3685bcf56c56b934996e0732444a4da17\" lane=\"claim\" project_memory_kind=\"task\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq=\"3\"><field name=\"text\"><derived_text>The music cue sheet is still under review.</derived_text><quote_ref ref=\"s5\" start=\"41\" end=\"84\"/></field></item><omitted records=\"0\" fields=\"0\" unassociated_user_sources=\"1\"/></project-memory>",
+        "context_chars": 5331,
+        "context_sha256": "bcea07b0eed251d67ad2c0a31f4d14087f73763bd03db8749e02590658cdbd77"
+      },
+      "canonical_sources": [
+        {
+          "attributes": {
+            "source_id": "S01",
+            "start": "0",
+            "end": "65",
+            "source_role": "assistant_report",
+            "excerpt_status": "complete_source",
+            "id": "s1",
+            "source_field": "body",
+            "citation_ref": "R0001"
+          },
+          "quote": "I exported a preview of Copper episode two. I did not release it."
+        },
+        {
+          "attributes": {
+            "source_id": "S02",
+            "start": "0",
+            "end": "74",
+            "source_role": "tool_record",
+            "tool_use_id": "e11",
+            "source_field": "tool_response.output",
+            "id": "s2",
+            "citation_ref": "R0002"
+          },
+          "quote": "Export folder contains preview-02.wav; publication receipt field is empty."
+        },
+        {
+          "attributes": {
+            "source_id": "S02",
+            "start": "0",
+            "end": "32",
+            "source_role": "tool_record",
+            "tool_use_id": "e11",
+            "source_field": "tool_input.command",
+            "id": "s3",
+            "citation_ref": "R0003"
+          },
+          "quote": "fictional-inspector --record e11"
+        },
+        {
+          "attributes": {
+            "source_id": "S03",
+            "start": "0",
+            "end": "81",
+            "source_role": "user_intent",
+            "source_capture_seq": "9",
+            "source_field": "body",
+            "id": "s4",
+            "citation_ref": "R0004"
+          },
+          "quote": "Drop the optional flute cue from the cue sheet, but finish checking the drum cue."
+        },
+        {
+          "attributes": {
+            "source_id": "S04",
+            "start": "0",
+            "end": "62",
+            "source_role": "user_intent",
+            "source_capture_seq": "2",
+            "source_field": "body",
+            "id": "s6",
+            "citation_ref": "R0005"
+          },
+          "quote": "Treat the music cue sheet and dialogue edit as separate tasks."
+        },
+        {
+          "attributes": {
+            "source_id": "S05",
+            "start": "0",
+            "end": "83",
+            "source_role": "user_intent",
+            "source_capture_seq": "7",
+            "source_field": "body",
+            "id": "s7",
+            "citation_ref": "R0006"
+          },
+          "quote": "Route Copper rights questions to the reviewer listed in the active rights register."
+        },
+        {
+          "attributes": {
+            "source_id": "S06",
+            "start": "0",
+            "end": "165",
+            "source_role": "user_intent",
+            "source_capture_seq": "1",
+            "source_field": "body",
+            "id": "s8",
+            "citation_ref": "R0007"
+          },
+          "quote": "For the Copper radio play, release episode two only when both actors sign the voice-use form. We need both signatures because the episode includes both performances."
+        },
+        {
+          "attributes": {
+            "source_id": "S07",
+            "start": "0",
+            "end": "84",
+            "source_role": "user_intent",
+            "source_capture_seq": "3",
+            "source_field": "body",
+            "id": "s5",
+            "citation_ref": "R0008"
+          },
+          "quote": "The dialogue edit is accepted and closed. The music cue sheet is still under review."
+        }
+      ],
+      "answer": {
+        "id": "q2",
+        "answer": "Finish checking the drum cue; drop the optional flute cue from the cue sheet. The music cue sheet is still under review. The dialogue edit is a separate task and is accepted and closed.",
+        "citations": [
+          {
+            "catalog_ref": "R0004",
+            "source_id": "5e0cdd540e5949b9b4ee84de6f716aea",
+            "source_field": "body",
+            "start": 0,
+            "end": 81,
+            "source_role": "user_intent",
+            "quote": "Drop the optional flute cue from the cue sheet, but finish checking the drum cue."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "6dccdf98003e46cc92e787d6cede4bf8",
+            "source_field": "body",
+            "start": 0,
+            "end": 62,
+            "source_role": "user_intent",
+            "quote": "Treat the music cue sheet and dialogue edit as separate tasks."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "cedfbea4663945eb97197b73676fed31",
+            "source_field": "body",
+            "start": 0,
+            "end": 84,
+            "source_role": "user_intent",
+            "quote": "The dialogue edit is accepted and closed. The music cue sheet is still under review."
+          }
+        ],
+        "uncertainties": [
+          "The supplied memory does not establish that the drum-cue check or flute-cue removal has been completed."
+        ]
+      },
+      "assertion_ownership": [
+        {
+          "start": 0,
+          "end": 77,
+          "text": "Finish checking the drum cue; drop the optional flute cue from the cue sheet.",
+          "citation_refs": [
+            "R0004"
+          ]
+        },
+        {
+          "start": 78,
+          "end": 185,
+          "text": "The music cue sheet is still under review. The dialogue edit is a separate task and is accepted and closed.",
+          "citation_refs": [
+            "R0005",
+            "R0008"
+          ]
+        }
+      ],
+      "evidence_checks": {
+        "accepted_results": {
+          "text": "The user states that the dialogue edit is accepted and closed.",
+          "citation_refs": [
+            "R0008"
+          ]
+        },
+        "open_work_and_reasons": {
+          "text": "The user requests finishing the drum-cue check while dropping the optional flute cue; the cue sheet is under review.",
+          "citation_refs": [
+            "R0004",
+            "R0008"
+          ]
+        },
+        "source_role_distinctions": {
+          "text": "These scope and status statements are user sources, not observed execution or assistant completion reports.",
+          "citation_refs": [
+            "R0004",
+            "R0005",
+            "R0008"
+          ]
+        }
+      },
+      "completed_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": false,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [
+          "false_closure"
+        ],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0002",
+                "start": 0,
+                "end": 77,
+                "quote": "Finish checking the drum cue; drop the optional flute cue from the cue sheet."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0004",
+                "source_id": "5e0cdd540e5949b9b4ee84de6f716aea",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 81,
+                "quote": "Drop the optional flute cue from the cue sheet, but finish checking the drum cue.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "A0002 correctly retains the drum check and drops the flute cue. Citations match visible sources, but A0004 asserts current dialogue closure despite the later reopening in reference truth. That reopening was unavailable to this reader.",
+        "critical_witnesses": [
+          {
+            "error_type": "false_closure",
+            "answer_ref": "A0004",
+            "assertion_mode": "affirmative_current",
+            "relation": "asserts_forbidden_conclusion",
+            "prohibition_ref": "policy:false_closure",
+            "answer_witness": {
+              "ref": "A0004",
+              "start": 121,
+              "end": 185,
+              "quote": "The dialogue edit is a separate task and is accepted and closed."
+            }
+          }
+        ],
+        "id": "q2",
+        "required_facts_total": 1,
+        "required_facts_recalled": 1,
+        "context_chars": 5395,
+        "reader_shared_latency_ms": 73356,
+        "reader_shared_metrics": {
+          "duration_ms": 73210,
+          "usage": {
+            "status": "reported",
+            "source": "per_question_native_receipts",
+            "updates": 6,
+            "tokens": {
+              "reasoning_output_tokens": 691,
+              "output_tokens": 2064,
+              "cached_input_tokens": 9088,
+              "total_tokens": 77167,
+              "cache_write_input_tokens": 0,
+              "input_tokens": 75103
+            }
+          }
+        },
+        "reader_question_metrics": {
+          "duration_ms": 11484,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 12462,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 368,
+              "reasoning_output_tokens": 142,
+              "total_tokens": 12830
+            }
+          }
+        },
+        "reader_question_latency_ms": 11496,
+        "reader_context_isolation": "per-question-v1",
+        "category": "partial_cancellation"
+      },
+      "native_receipt": {
+        "source_call_id": "call-0200",
+        "request_sha256": "2336374bb9cea0d724804524eb14941560f083ecc980e8638364bc8a3c54bd4b",
+        "response_sha256": "b0c0e3a99b135ed3a2e21357edbdce429c1a0ded9624037b5f57773ae680f337",
+        "reused": false
+      },
+      "native_dispatch": {
+        "key": "bf52244c49d5e2fcffce10deefe6940d650dfd7d51428b63aa2491ede11df8da",
+        "scope": {
+          "phase": "reader",
+          "history_id": "h03",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "f73edee22050b8d3bbc00170d9fa6aede0e590fbc38dba8046d82da6c066388c",
+          "helper_sha256": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+          "question_id": "q2",
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0200",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "814eae5bf4810eff39515cf1789f46cdc5671c49981f6d2e2041023a77ff9f26",
+        "request_file_sha256": "c57842baaf6a4216696d8075d0c9a8847b174281461ddc0241cccebd0e418656",
+        "response_file_sha256": "62cbf7cf6744ff3c977c964917ad144ecc03d63f8e4bbbfb93cd4f9c6de99442",
+        "reused": false,
+        "native_wall_ms": 11496
+      },
+      "judge_native_dispatch": {
+        "key": "3e7da2a1fd9facf633696604ebbccfdb80fdab2b8fff614ca3eba7a32f29cc0a",
+        "scope": {
+          "phase": "judge",
+          "history_id": "h03",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "f73edee22050b8d3bbc00170d9fa6aede0e590fbc38dba8046d82da6c066388c",
+          "helper_sha256": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+          "model": "gpt-6-astra",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0307",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "5699547ae4caef33029872d3b1badd9c4553c5da773dbd79ac482389ac5eaeb9",
+        "request_file_sha256": "f8d65bc4a5becd1abc402ead84c02a7ded925aafad8fc589a7b54272fbea0ab5",
+        "response_file_sha256": "b0d0ae434018d06f566cc8d4db0cbbe5923ce5375cf2e68c7f0ded689a87047e",
+        "reused": false,
+        "native_wall_ms": 27440
+      },
+      "structural_validation": [
+        {
+          "ref": "R0004",
+          "event_id": "e10",
+          "exact_original_and_canonical_quote": true
+        },
+        {
+          "ref": "R0005",
+          "event_id": "e2",
+          "exact_original_and_canonical_quote": true
+        },
+        {
+          "ref": "R0008",
+          "event_id": "e3",
+          "exact_original_and_canonical_quote": true
+        }
+      ],
+      "reopening_in_q2_view": false,
+      "generation": {
+        "status": "complete",
+        "shared_generation_runtime": "candidate",
+        "common_prefix_runtime_source": "candidate",
+        "state_sha256": "fee45d72a535aeaf3bf1abeaa713290b9c43154edb98bc56a93fed46f10674ba",
+        "source_map": {
+          "e1": "a2d9ccc19f6b467bb3fda1105aeb6df9",
+          "e2": "6dccdf98003e46cc92e787d6cede4bf8",
+          "e3": "cedfbea4663945eb97197b73676fed31",
+          "e4": "ecf13cd83f9e4e5086d4f6a250ca0d4f",
+          "e5": "d6c16431660b41ce933ae904da533066",
+          "e6": "ad1789e57d834fdd8b53a3b6ecf1a426",
+          "e8": "abb2b4405b5f4737bdfead54b26bdd05",
+          "e9": "f32c97f5029e4250bead3691dd58bf3a",
+          "e10": "5e0cdd540e5949b9b4ee84de6f716aea",
+          "e11": "aa70909203854701b128592fba90ded8"
+        },
+        "reopening_episodes": [
+          {
+            "id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+            "logical_episode_id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+            "episode_version": 1,
+            "parent_episode_id": null,
+            "consolidated_episode_ids": null,
+            "stored_record": {
+              "continuity_basis": "standalone",
+              "created_at": "2026-10-22T04:43:19.155+00:00",
+              "derived_created_at": "2026-10-22T04:43:19.155+00:00",
+              "episode_version": 1,
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 100,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Fix only that station name.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 72
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 100,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Fix only that station name.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 72
+                  }
+                ],
+                "rationale": [
+                  {
+                    "end": 72,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Reopen the dialogue edit because the final line names the wrong station.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 72,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Reopen the dialogue edit because the final line names the wrong station.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ]
+              },
+              "field_provenance": {
+                "goal": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                },
+                "open_work": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                },
+                "rationale": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                },
+                "summary": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                }
+              },
+              "goal": "User intent: Fix only that station name.",
+              "id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+              "key": "episode_0",
+              "logical_episode_id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+              "object_type": "episode",
+              "open_work": "User intent: Fix only that station name.",
+              "outcome": "",
+              "parent_episode_id": null,
+              "project": "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a",
+              "rationale": "User intent: Reopen the dialogue edit because the final line names the wrong station.",
+              "retained_context_fields_omitted": 0,
+              "revision": 4,
+              "session_id": "h03s3",
+              "summary": "User intent: Reopen the dialogue edit because the final line names the wrong station.",
+              "updated_at": "2026-10-22T04:43:19.155+00:00"
+            }
+          }
+        ],
+        "event_coverage": [
+          {
+            "project": "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a",
+            "captured_events": 8,
+            "observation_watermark": 10,
+            "pending_events": 0
+          },
+          {
+            "project": "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03b",
+            "captured_events": 1,
+            "observation_watermark": 5,
+            "pending_events": 0
+          }
+        ]
+      },
+      "reader_context_receipt_hash": "ac431bbfb6a0d254bd2b93cde91873b68e99c673b902e46bfd237d8b84445862",
+      "hash_domain_note": "Raw rendered memory, canonical memory, and receipt context hash are separate fields. Both memory string hashes and native request-file pin verified. Receipt hash serialization was not reconstructed."
+    },
+    "baseline": {
+      "raw_context": {
+        "id": "q2",
+        "question": "Which music-cue work remains after the scope change?",
+        "memory": "PROJECT p03a\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"6\" user_sources_omitted=\"6\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"10\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_58b14969f8dc5f89f2ed1fec8e0af2bfcf5fa0dc\" lane=\"claim\" kind=\"project_memory_claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"user_intent\" evidence_basis=\"exact_quote\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"1\" capture_order_basis=\"local_capture_sequence_not_event_time\" worktree=\"/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a\"><field name=\"text\"><derived_text>For the Copper radio play, release episode two only when both actors sign the voice-use form.</derived_text><source source_id=\"a2d9ccc19f6b467bb3fda1105aeb6df9\" start=\"0\" end=\"93\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt>For the Copper radio play, release episode two only when both actors sign the voice-use form.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"a2d9ccc19f6b467bb3fda1105aeb6df9\" start=\"93\" end=\"165\" source_role=\"user_intent\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt> We need both signatures because the episode includes both performances.</quote_excerpt></source></field></item><item id=\"pm_693037e3685bcf56c56b934996e0732444a4da17\" lane=\"claim\" kind=\"project_memory_claim\" project_memory_kind=\"task\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"3\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" worktree=\"/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a\"><field name=\"text\"><derived_text>The music cue sheet is still under review.</derived_text><source source_id=\"cedfbea4663945eb97197b73676fed31\" start=\"41\" end=\"84\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt> The music cue sheet is still under review.</quote_excerpt></source></field></item></project-memory>",
+        "context_chars": 2470,
+        "context_sha256": "eec4711213fd322a89fefd8c58ede9b8f557db4b2abd96c817d28166cf32905d",
+        "selected_scope_context": {
+          "requested": true,
+          "supported": false,
+          "used": false,
+          "selected_project_scopes": [
+            "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a"
+          ]
+        }
+      },
+      "canonical_reader_context": {
+        "id": "q2",
+        "question": "Which music-cue work remains after the scope change?",
+        "memory": "PROJECT p03a\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"6\" user_sources_omitted=\"6\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"10\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_58b14969f8dc5f89f2ed1fec8e0af2bfcf5fa0dc\" lane=\"claim\" kind=\"project_memory_claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"user_intent\" evidence_basis=\"exact_quote\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"1\" capture_order_basis=\"local_capture_sequence_not_event_time\" worktree=\"/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a\"><field name=\"text\"><derived_text>For the Copper radio play, release episode two only when both actors sign the voice-use form.</derived_text><source source_id=\"S01\" start=\"0\" end=\"93\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\" citation_ref=\"R0001\"><quote_excerpt>For the Copper radio play, release episode two only when both actors sign the voice-use form.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"S01\" start=\"93\" end=\"165\" source_role=\"user_intent\" field=\"rationale\" quote_truncated=\"False\" citation_ref=\"R0002\"><quote_excerpt> We need both signatures because the episode includes both performances.</quote_excerpt></source></field></item><item id=\"pm_693037e3685bcf56c56b934996e0732444a4da17\" lane=\"claim\" kind=\"project_memory_claim\" project_memory_kind=\"task\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"3\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" worktree=\"/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a\"><field name=\"text\"><derived_text>The music cue sheet is still under review.</derived_text><source source_id=\"S02\" start=\"41\" end=\"84\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\" citation_ref=\"R0003\"><quote_excerpt> The music cue sheet is still under review.</quote_excerpt></source></field></item></project-memory>",
+        "context_chars": 2446,
+        "context_sha256": "f615f0782f1f945b9bfaad899942167ddb6fb011f4faede561cd41ebdc170536"
+      },
+      "canonical_sources": [
+        {
+          "attributes": {
+            "source_id": "S01",
+            "start": "0",
+            "end": "93",
+            "source_role": "user_intent",
+            "field": "text",
+            "quote_truncated": "False",
+            "citation_ref": "R0001"
+          },
+          "quote": "For the Copper radio play, release episode two only when both actors sign the voice-use form."
+        },
+        {
+          "attributes": {
+            "source_id": "S01",
+            "start": "93",
+            "end": "165",
+            "source_role": "user_intent",
+            "field": "rationale",
+            "quote_truncated": "False",
+            "citation_ref": "R0002"
+          },
+          "quote": " We need both signatures because the episode includes both performances."
+        },
+        {
+          "attributes": {
+            "source_id": "S02",
+            "start": "41",
+            "end": "84",
+            "source_role": "user_intent",
+            "field": "text",
+            "quote_truncated": "False",
+            "citation_ref": "R0003"
+          },
+          "quote": " The music cue sheet is still under review."
+        }
+      ],
+      "answer": {
+        "id": "q2",
+        "answer": "The music cue sheet remains under review.",
+        "citations": [
+          {
+            "catalog_ref": "R0003",
+            "source_id": "cedfbea4663945eb97197b73676fed31",
+            "source_field": "body",
+            "start": 41,
+            "end": 84,
+            "source_role": "user_intent",
+            "quote": " The music cue sheet is still under review."
+          }
+        ],
+        "uncertainties": [
+          "The supplied memory does not describe the scope change or specify what review work remains or why."
+        ]
+      },
+      "assertion_ownership": [
+        {
+          "start": 0,
+          "end": 41,
+          "text": "The music cue sheet remains under review.",
+          "citation_refs": [
+            "R0003"
+          ]
+        }
+      ],
+      "evidence_checks": {
+        "accepted_results": {
+          "text": "not evidenced",
+          "citation_refs": []
+        },
+        "open_work_and_reasons": {
+          "text": "The music cue sheet is still under review; no reason is supplied.",
+          "citation_refs": [
+            "R0003"
+          ]
+        },
+        "source_role_distinctions": {
+          "text": "The review status appears in a user-intent source quote within an item labeled model inference.",
+          "citation_refs": [
+            "R0003"
+          ]
+        }
+      },
+      "completed_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": false,
+        "constraints_obligations_reasons_recalled": false,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": false,
+            "answer_witnesses": [],
+            "source_witnesses": [
+              {
+                "ref": "J0014",
+                "source_id": "5e0cdd540e5949b9b4ee84de6f716aea",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 81,
+                "quote": "Drop the optional flute cue from the cue sheet, but finish checking the drum cue.",
+                "reader_visible": false
+              }
+            ],
+            "omission_reason": "literal_omission",
+            "missing_anchor": "drum cue"
+          }
+        ],
+        "rationale": "A0001 gives the review status supported by visible J0003, but omits the required drum-cue check. J0014 contains that requirement but was not reader-visible. The answer does not claim all cue work was canceled.",
+        "critical_witnesses": [],
+        "id": "q2",
+        "required_facts_total": 1,
+        "required_facts_recalled": 0,
+        "context_chars": 2470,
+        "reader_shared_latency_ms": 64765,
+        "reader_shared_metrics": {
+          "duration_ms": 64680,
+          "usage": {
+            "status": "reported",
+            "source": "per_question_native_receipts",
+            "updates": 6,
+            "tokens": {
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1833,
+              "reasoning_output_tokens": 476,
+              "cached_input_tokens": 0,
+              "input_tokens": 73009,
+              "total_tokens": 74842
+            }
+          }
+        },
+        "reader_question_metrics": {
+          "duration_ms": 8505,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 11641,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 213,
+              "reasoning_output_tokens": 66,
+              "total_tokens": 11854
+            }
+          }
+        },
+        "reader_question_latency_ms": 8518,
+        "reader_context_isolation": "per-question-v1",
+        "category": "partial_cancellation"
+      },
+      "native_receipt": {
+        "source_call_id": "call-0098",
+        "request_sha256": "8811e6be51a049810d987be25892e8bb20d863fb4ada285f53696a1f7b8fdad4",
+        "response_sha256": "ca60cdcc3afbcfba39506088e4eaf3642ccd4d2b3b9d0fc9d38dd9f6b680d2d4",
+        "reused": false
+      },
+      "native_dispatch": {
+        "key": "5cf6d5ce88b0ac289b31ee4177fb2e44e32bd805ae8ba341313265c347dd7035",
+        "scope": {
+          "phase": "reader",
+          "history_id": "h03",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "f73edee22050b8d3bbc00170d9fa6aede0e590fbc38dba8046d82da6c066388c",
+          "helper_sha256": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+          "question_id": "q2",
+          "model": "gpt-6.1-sol",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0098",
+        "source_variant": "baseline",
+        "request_bytes_sha256": "b731b866c0cb1169d8fe11b2df03a6fa2668ab76496b5ed37ff77e19ca454361",
+        "request_file_sha256": "b9bbc669192eb75ea82871ac9b6fe8de9fd4d8016aeb4f4d817844b21d662f63",
+        "response_file_sha256": "a79941c773b1e1867d2ac9bd418c135479bd09b2bbbe4870c1b3a53afc030b1d",
+        "reused": false,
+        "native_wall_ms": 8518
+      },
+      "judge_native_dispatch": {
+        "key": "b6f7dea7eceeac43fbfde798b099387457fc7f52751674e1936360bca31bf8fe",
+        "scope": {
+          "phase": "judge",
+          "history_id": "h03",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "f73edee22050b8d3bbc00170d9fa6aede0e590fbc38dba8046d82da6c066388c",
+          "helper_sha256": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+          "model": "gpt-6-astra",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0290",
+        "source_variant": "baseline",
+        "request_bytes_sha256": "59d2c6108af69d993ab0f1df0c9c32710a2dc6ba01e745c7a9d5ca88b4d1db8d",
+        "request_file_sha256": "744ee506683dbce0b5f29a7a009b2871f901ba2bb18ada004d9e78b3185ec82e",
+        "response_file_sha256": "992d1b13d3a0f7a4eabf2a4560a5c8f5ae4f2d2b9633eac00db595f98d1a8e78",
+        "reused": false,
+        "native_wall_ms": 25896
+      },
+      "structural_validation": [
+        {
+          "ref": "R0003",
+          "event_id": "e3",
+          "exact_original_and_canonical_quote": true
+        }
+      ],
+      "reopening_in_q2_view": false,
+      "generation": {
+        "status": "complete",
+        "shared_generation_runtime": "candidate",
+        "common_prefix_runtime_source": "candidate",
+        "state_sha256": "fee45d72a535aeaf3bf1abeaa713290b9c43154edb98bc56a93fed46f10674ba",
+        "source_map": {
+          "e1": "a2d9ccc19f6b467bb3fda1105aeb6df9",
+          "e2": "6dccdf98003e46cc92e787d6cede4bf8",
+          "e3": "cedfbea4663945eb97197b73676fed31",
+          "e4": "ecf13cd83f9e4e5086d4f6a250ca0d4f",
+          "e5": "d6c16431660b41ce933ae904da533066",
+          "e6": "ad1789e57d834fdd8b53a3b6ecf1a426",
+          "e8": "abb2b4405b5f4737bdfead54b26bdd05",
+          "e9": "f32c97f5029e4250bead3691dd58bf3a",
+          "e10": "5e0cdd540e5949b9b4ee84de6f716aea",
+          "e11": "aa70909203854701b128592fba90ded8"
+        },
+        "reopening_episodes": [
+          {
+            "id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+            "logical_episode_id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+            "episode_version": 1,
+            "parent_episode_id": null,
+            "consolidated_episode_ids": null,
+            "stored_record": {
+              "continuity_basis": "standalone",
+              "created_at": "2026-10-22T04:43:19.155+00:00",
+              "derived_created_at": "2026-10-22T04:43:19.155+00:00",
+              "episode_version": 1,
+              "event_at": null,
+              "event_time_basis": "source_capture_time",
+              "evidence": {
+                "goal": [
+                  {
+                    "end": 100,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Fix only that station name.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 72
+                  }
+                ],
+                "open_work": [
+                  {
+                    "end": 100,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": " Fix only that station name.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 72
+                  }
+                ],
+                "rationale": [
+                  {
+                    "end": 72,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Reopen the dialogue edit because the final line names the wrong station.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ],
+                "summary": [
+                  {
+                    "end": 72,
+                    "event_at": null,
+                    "event_time_basis": "source_capture_time",
+                    "quote": "Reopen the dialogue edit because the final line names the wrong station.",
+                    "session_id": "h03s3",
+                    "source_id": "f32c97f5029e4250bead3691dd58bf3a",
+                    "source_recorded_at": "2026-10-22T04:43:08.576421Z",
+                    "source_role": "user_intent",
+                    "start": 0
+                  }
+                ]
+              },
+              "field_provenance": {
+                "goal": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                },
+                "open_work": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                },
+                "rationale": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                },
+                "summary": {
+                  "basis": "attributed_source_excerpts",
+                  "field_association": "model_inference",
+                  "partial_context": false,
+                  "source_roles": [
+                    "user_intent"
+                  ]
+                }
+              },
+              "goal": "User intent: Fix only that station name.",
+              "id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+              "key": "episode_0",
+              "logical_episode_id": "pm_bf297c644179cd09687a1a27217707e3aacabaca",
+              "object_type": "episode",
+              "open_work": "User intent: Fix only that station name.",
+              "outcome": "",
+              "parent_episode_id": null,
+              "project": "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a",
+              "rationale": "User intent: Reopen the dialogue edit because the final line names the wrong station.",
+              "retained_context_fields_omitted": 0,
+              "revision": 4,
+              "session_id": "h03s3",
+              "summary": "User intent: Reopen the dialogue edit because the final line names the wrong station.",
+              "updated_at": "2026-10-22T04:43:19.155+00:00"
+            }
+          }
+        ],
+        "event_coverage": [
+          {
+            "project": "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03a",
+            "captured_events": 8,
+            "observation_watermark": 10,
+            "pending_events": 0
+          },
+          {
+            "project": "/private/tmp/codex-mem-quality-20261021-r20-experiment/projects/h03/p03b",
+            "captured_events": 1,
+            "observation_watermark": 5,
+            "pending_events": 0
+          }
+        ]
+      },
+      "reader_context_receipt_hash": "8c6c4d4c62843fe70465b1c1191d741936c32c89d5b1fa44ffa20ae8d8af1c19",
+      "hash_domain_note": "Raw rendered memory, canonical memory, and receipt context hash are separate fields. Both memory string hashes and native request-file pin verified. Receipt hash serialization was not reconstructed."
+    }
+  },
+  "provenance": {
+    "/private/tmp/codex-mem-quality-20261021-r20-sealed/holdout-fixture.json": {
+      "sha256": "2bf7823e6589b76817b023946f6208cdc41df4ba8d5326cbeeefd629add4e443",
+      "bytes": 78432
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-sealed/holdout-gold.json": {
+      "sha256": "cf32d8002178d72c4b4996def42b0239a1649812ad7e11502fc42971f2e5d992",
+      "bytes": 96401
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-sealed/author-fact-rationale.json": {
+      "sha256": "ec324e89c4c3668deb4b481a73f408d708561c7e8ee719c3ad5d1f13ecc1d778",
+      "bytes": 127754
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/inputs.json": {
+      "sha256": "6dd5f426038083d61bd2f5d24a7d5d942c2367bb35c2dd1be979e3e89eb5be08",
+      "bytes": 290
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/candidate/h03/reader-0.q-q2.json": {
+      "sha256": "e52026a587806f39b7c92fd34f105eafa86320c634ab1d668e4a85381bab125e",
+      "bytes": 5465
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/candidate/h03/judge-0.json": {
+      "sha256": "ab10ceed18ae33540e7ae99a0f9e9e539ab2bf6a4032ccadb6577a9422a9c273",
+      "bytes": 22244
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/candidate/h03/contexts.json": {
+      "sha256": "12f6b5b343cea381c545dc5535e426c016dc8a0ccc58f7a1cd4055dead55e592",
+      "bytes": 38261
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/candidate/h03/generation.json": {
+      "sha256": "be09d6c19885ef6362d4896c7c9a448a117033f93ae2e4b125cde32fb49a6fb6",
+      "bytes": 46197
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/receipts/call-0200-request.json": {
+      "sha256": "c57842baaf6a4216696d8075d0c9a8847b174281461ddc0241cccebd0e418656",
+      "bytes": 14747
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/baseline/h03/reader-0.q-q2.json": {
+      "sha256": "763c89622843c85c5fd3cb2238ebe0d4edd791c66721f3d33a93f4e9810c4d89",
+      "bytes": 4094
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/baseline/h03/judge-0.json": {
+      "sha256": "91f51015eb78532539d7ae171e83e99ee8a7050a843368d4d0d8e59913e2a905",
+      "bytes": 21391
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/baseline/h03/contexts.json": {
+      "sha256": "ecb41b3e30dce89a18e811571e5d39b08216cea1d23d9ae44297e3a3f94d4c47",
+      "bytes": 30557
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/baseline/h03/generation.json": {
+      "sha256": "fe43bb97672a94f338e767614b4032aa200cd2d7294b4a2869693540ca6391e5",
+      "bytes": 46095
+    },
+    "/private/tmp/codex-mem-quality-20261021-r20-experiment/receipts/call-0098-request.json": {
+      "sha256": "b9bbc669192eb75ea82871ac9b6fe8de9fd4d8016aeb4f4d817844b21d662f63",
+      "bytes": 10562
+    }
+  },
+  "verification": {
+    "input_manifest_pins_match": true,
+    "native_request_file_pins_match": true,
+    "raw_and_canonical_memory_string_hashes_match": true,
+    "all_citation_offsets_and_inline_refs_match": true,
+    "all_assertion_owned_offsets_match": true,
+    "source_files_unchanged_at_write": true,
+    "initial_diagnostic_attempt": "A preliminary assertion wrongly equated raw memory hash and reader receipt context hash. It failed before any output write. The saved native request shows canonical source aliasing and citation refs; separate hash domains are now preserved, without changing trial artifacts."
+  }
+}

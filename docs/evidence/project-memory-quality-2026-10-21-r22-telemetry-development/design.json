@@ -1,0 +1,57 @@
+{
+  "schema_version": "r22-telemetry-development-design-v1",
+  "status": "RED_ONLY_WAITING_FOR_ROOT_HOLD_RELEASE",
+  "authorized_scope": "New evidence directory only. Future helper-only implementation requires explicit root hold release.",
+  "seam": "Actual Capture.__call__ dispatch and canonical ledger_calls/usage, replacing only the NativeProcessorRunner boundary with deterministic fake execution.",
+  "reproduction_scope": "Synthetic wrapper observability defect only. No remote native failure reproduction or causal claim.",
+  "observed_red": {
+    "test_count": 1,
+    "failure": "Capture discarded the native usage checkpoint callback",
+    "prior_assertions_passed": [
+      "reported terminal receipt counts exactly 100 tokens once",
+      "unknown terminal receipt stays null despite a synthetic 25-token partial checkpoint",
+      "two attempts yield exactly four canonical ledger rows",
+      "new Capture stops before third dispatch with unknown usage",
+      "no automatic retry"
+    ]
+  },
+  "proposed_minimal_helper_change": [
+    "Construct one Capture-owned callback for each reserved call ID. Pass it as usage_checkpoint to the actual injected NativeProcessorRunner constructor.",
+    "Keep the latest sanitized snapshot in receipts/call-NNNN-checkpoint.json, version native-usage-checkpoint-v1. Do not append checkpoint rows to calls.jsonl.",
+    "Allow only current call identity, validated worker thread/turn IDs, bounded duration_ms and usage status/source/updates/six token counters. Drop unknown keys and raw strings. Keep null tokens when unavailable. Never copy arbitrary errors, prompts, URLs, configuration, or nested values.",
+    "Write a bounded replacement snapshot atomically with file fsync and directory fsync. NativeProcessorRunner already bounds callback frequency and tolerates callback failure. Do not change native outcome if telemetry storage fails.",
+    "Leave terminal success/failure metrics authoritative. Checkpoint reported/partial status does not change usage(), reuse eligibility, budget reservations, report totals, unresolved status, or unknown-usage stop.",
+    "Do not add episode-processor callback API. The injected runner currently receives only the request, so helper-only forwarding does not restore incremental episode SQLite checkpoints."
+  ],
+  "next_vertical_controls_after_release": [
+    "Malformed checkpoint keys/IDs/usage cannot retain raw sentinel or malformed values; no synthetic zero for absent usage.",
+    "A reported checkpoint followed by unknown terminal metrics still leaves totals null.",
+    "Repeated checkpoints replace one bounded artifact, leave exactly one start and terminal row, and do not create cache/reuse eligibility.",
+    "Storage callback failure does not mask successful result or original safe failure."
+  ],
+  "failure_tuple": {
+    "decision": "DEFER",
+    "reason": "NativeProcessorRunner exposes safe mapped reason plus metrics and worker IDs, but discards the original error tag/status. Helper-only code cannot recover it. No failing case justifies broad telemetry now. A separate prospective processor change would require root approval and a bounded sanitization test. No raw error text."
+  },
+  "future_summary_contract_suggestion": {
+    "owner": "parent, sequential helper mutation only after this patch ends",
+    "opt_in": "pipeline_observability_contract=complete-shared-pipeline-v1",
+    "minimal_behavior": "Under the new opt-in, collect each physical shared generation receipt once, even when independent_generation is false. Include failed shared generation in pipeline_failures. Keep legacy output unchanged without opt-in.",
+    "identity": "Use actual execution variant/history/stage=generation/status from saved generation.json; identify shared generation runtime separately rather than relabel baseline execution as candidate.",
+    "missing_stage": "When absent, show missing only for required physical shared generation executions from the selected protocol. Do not duplicate one shared execution across both arms.",
+    "controls": "Synthetic failed shared generation appears once; complete shared generation adds no failure; missing required stage remains distinct; independent mode and legacy output unchanged. No retry, grade, token-total, or gate promotion."
+  },
+  "existing_inputs_sha256": {
+    "scripts/project_memory_consolidation_experiment.py": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102",
+    "codex_mem/processor.py": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39",
+    "codex_mem/episode_processor.py": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "docs/evidence/project-memory-quality-2026-10-21-r21/frozen-helper.py": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102"
+  },
+  "forbidden_actions_not_taken": [
+    "native/model/network execution",
+    "original DB access",
+    "global logs/history/auth access",
+    "held source edits",
+    "R21 report or receipt mutation"
+  ]
+}

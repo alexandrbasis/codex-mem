@@ -703,9 +703,6 @@ class ProjectMemory:
                             raise ValueError("continuation_of must identify a known project episode")
                         prior = json.loads(prior_row[0])
                         _episode_identity(self.store._connection, snapshot["project"], prior)
-                        if prior["logical_episode_id"] in continued_roots:
-                            raise ValueError("one continuation per logical episode is allowed in each job")
-                        continued_roots.add(prior["logical_episode_id"])
                         refs = spans(continuation_refs) if continuation_refs not in (None, []) else []
                         if refs:
                             clean_evidence["continuation_of"] = refs
@@ -722,6 +719,9 @@ class ProjectMemory:
                         if not continuity_refs or not _continuity_supported(continuity_refs, continuity_target, continuity_contexts):
                             omitted_continuities.append("unproved_continuity")
                         else:
+                            if prior["logical_episode_id"] in continued_roots:
+                                raise ValueError("one continuation per logical episode is allowed in each job")
+                            continued_roots.add(prior["logical_episode_id"])
                             clean.update(logical_episode_id=prior["logical_episode_id"], episode_version=prior["episode_version"]+1, parent_episode_id=prior["id"], continuity_basis="model_inference")
                 if kind == "episode" and snapshot.get("job_kind") == "reconsideration" and not item.get("consolidation_of"):
                     raise ValueError("reconsideration episodes must reduce the number of split heads")

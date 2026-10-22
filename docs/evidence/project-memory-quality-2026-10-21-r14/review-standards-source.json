@@ -1,0 +1,43 @@
+{
+  "axis": "Standards",
+  "status": "finding_requires_fix_before_source_clearance",
+  "base": "2ca7445139805243c1d30a1ff7fd15be2b2dd85a",
+  "manifest_sha256": "9576a520aa5f45e9419f5f4836912b6ffabd329f900807b8e29f1dd6978011f8",
+  "protocol_sha256": "34186c8f98b2b9d30d0a1712e0eb997cc4a1b4db1e7306f76e28b3bbfed97c2f",
+  "reviewed_hashes": {
+    "codex_mem/project_memory_query.py": "9d0416f83cac631226bb5b17242c2556d0bba7806f2b329fff3a8c0e18eaf7ac",
+    "codex_mem/project_memory_retrieval.py": "bdb1e0ef5eb632f842ce2ab392d24e49d8e85a2f63db75186173ddc194fad307",
+    "codex_mem/project_memory_custody.py": "1ee06da47cd8f0783183956ba020e42bd8f3e0244d0020a95ce06623298514d5",
+    "tests/test_project_memory_retrospective_coverage.py": "5cf7dde4891a076d642647c472d9912035b7f98a14cfdabe800ed8b76bbf0ee1",
+    "tests/test_project_memory_source_coverage_allocation.py": "2d90e62e9c52bd32fbabfebdbfb822c09ac106ba12505c80e13bd96ce3a3c6ea",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/prepare-reader-probe.py": "b29274d43b912de7a8aa91b1bea84b7d98e53b9bab733c181d70a7168bd4f4fa",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/run-public-preflight.py": "a73ca82c180f59bf581f77c02fbeb6622b25fe8c9221c38a5586f104576511ac",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/build-public-reader-regressions.py": "40c6f1b9ff333fa566c65590f02f2b9a5f067a7c6014422b91cfc1f29bd87bc1",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/protocol.json": "34186c8f98b2b9d30d0a1712e0eb997cc4a1b4db1e7306f76e28b3bbfed97c2f"
+  },
+  "findings": [
+    {
+      "priority": "P2",
+      "path": "codex_mem/project_memory_retrieval.py",
+      "line": 1550,
+      "rule": "CODING_STANDARDS.md: preserve memory record scope and provenance; ADR0006: each original retains scope and different/unknown scopes must not merge.",
+      "issue": "recent_context returns source_record.scope; scoped_original uses it for filtering, but original=dict(item,...) drops it before _record. Two stored whole-source claims scoped local/1.2.0 and production/2.0.0 enter unassociated_user_context with scope=None and render in one unscoped neutral bundle.",
+      "reproduction": "Real Store via RetrospectiveSourceCoverageTests helpers: commit two source-backed requirements with distinct environment/version; ask unrelated soft-topic natural reason question unscoped. Both records lose scopes and one XML source_count=2 bundle appears.",
+      "requested_fix": "Retain the existing declared source scope as a record qualifier without inferring current applicability; test both ordering directions and differing declared environment/version vs unknown scope."
+    }
+  ],
+  "heuristic_smells": [],
+  "verification": [
+    "813 manifest hashes match",
+    "65 public pins match",
+    "360 call allocation total",
+    "12 retrospective tests independently passed",
+    "7 public preflight tests independently passed",
+    "Architecture hash check passed"
+  ],
+  "limits": [
+    "No native/Jev calls, current sealed fixture/gold/author reads, source changes or old artifact changes. Only own review receipt written.",
+    "Final source clearance and declared8publiccalls must await finding resolution and refreshed source pins.",
+    "No quality acceptance."
+  ]
+}

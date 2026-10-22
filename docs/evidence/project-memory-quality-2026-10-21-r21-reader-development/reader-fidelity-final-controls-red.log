@@ -1,0 +1,99 @@
+F..FFFFFFFFF
+======================================================================
+FAIL: test_capture_reuse_isolated_by_fidelity_identity_but_shared_between_matching_arms (final_fidelity_controls.ReaderFidelityContractTests.test_capture_reuse_isolated_by_fidelity_identity_but_shared_between_matching_arms)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 159, in test_capture_reuse_isolated_by_fidelity_identity_but_shared_between_matching_arms
+    self.assertNotEqual(identities[0]['prompt_version'],identities[1]['prompt_version'])
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'role-attribution-per-question-assertions-v1' == 'role-attribution-per-question-assertions-v1'
+
+======================================================================
+FAIL: test_new_request_is_explicit_fidelity_version_with_identical_schema (final_fidelity_controls.ReaderFidelityContractTests.test_new_request_is_explicit_fidelity_version_with_identical_schema)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 68, in test_new_request_is_explicit_fidelity_version_with_identical_schema
+    self.assertEqual(experiment.reader_prompt_version(protocol()),VERSION)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'role-attribution-per-question-assertions-v1' != 'role-attribution-per-question-assertions-fidelity-v1'
+- role-attribution-per-question-assertions-v1
++ role-attribution-per-question-assertions-fidelity-v1
+?                                          +++++++++
+
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'reader_fidelity_contract': 'unknown'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'reader_fidelity_contract': None})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'reader_fidelity_contract': False})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'reader_fidelity_contract': []})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'reader_fidelity_contract': {}})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'reader_evidence_contract': 'clause-support-v2'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'context_chars': 5999})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 90, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.typed_reader_request([self.context],self.catalog,chosen)
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_and_incompatible_mode_reject_before_capture_or_request (final_fidelity_controls.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) (change={'context_chars': True})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/consolidation_experiment/test_reader_fidelity_contract.py", line 91, in test_unknown_and_incompatible_mode_reject_before_capture_or_request
+    with self.assertRaises(ValueError):experiment.Capture(run,chosen,'reader','candidate','public')
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.060s
+
+FAILED (failures=10)

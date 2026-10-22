@@ -1,0 +1,75 @@
+{
+  "version": "R18-public-harness-consumer-contract-v1",
+  "status": "SOURCESTABLE_pending_source_review_and_fresh_author_gates_not_trial_ready",
+  "owned_new_source_files": {
+    "build-protocol.py": "e4268bc0587fe6384914ed4a9c86d5723967548e44427fde0d410b68f096a09d",
+    "test-protocol-builder.py": "8902413347e0118937cfc4e759c6ab1e80d56126d7f4a7ba2eebc7a25b4f30e6",
+    "protocol-builder-input-contract.json": "7fcf82c07592843410911f76258e3a52a8deece8bf40a4b394675c3d77f331c5",
+    "test-consumer-compatibility.py": "6d8f171af82cdc720b60bf4701060bafc24e1577b5e27d09ae01327c47bf31fa",
+    "consumer-smoke.py": "7cb67acefe5da0dbb9d593e81d314c4a3a67354203ae3eb783a5afa827a86dd3",
+    "protocol-consumer-contract.json": "ee039be1227fcc7c50828cfb44723c9f5d930d3ecf4f824d9f98522bb94337b8"
+  },
+  "author_delivery_allowlist": {
+    "public-fixture-contract.py": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+    "prospective-gold-semantics-contract.json": "a3ceb608bc9d336cc0dd1d611f1294063f58f86cd651cf7e421a596510f6795e"
+  },
+  "reviewer_public_contract_schemas": {
+    "sealed-semantic-review-metadata.schema.json": "8df15b220de0b83be4b6d280ece4289f10312677ae2bd943da21174d09d84d59",
+    "sealed-semantic-review-findings.schema.json": "1f179454dd4772956c0ab0d4bd9e9303fc14b071a83f830a16eb36b04d0767e8"
+  },
+  "carried_public_files_manifest": "carried-public-files.json",
+  "held_driver_sha256": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+  "held_helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "common_native_producer_sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+  "R17_immutable_failure_evidence_read_first": {
+    "historical-pointer-incompatibility-reproduction.json": "3ff8fa86e22f82b19f2fd7a5fcf04f622187dcaa46f41987aab8df8a513b17f4",
+    "historical-pointer-contract-audit.json": "a9d95c7a4d7971960b585ece38403888505f9a0bbe4152933bb4165b9954428c",
+    "external-stop.json": "3caf6c4c62ea008c10e837419b7a5deeab36d3e35ef7da32c1dbff28a4bf52a1"
+  },
+  "change": "Only active historical_spend output is translated from builder input {path,sha256} into consumer {report,sha256}; generic provenance sibling refs remain path/SHA. Builder experiment/PREFIX now R18; no inherited repeat IDs. New actual-consumer tests and reusable mandatory pre-clock smoke cover frozen ABI.",
+  "validation": {
+    "builder_tests": 11,
+    "actual_consumer_tests": 9,
+    "unchanged_driver_guard_tests": 20,
+    "unchanged_mechanical_contract_tests": 14,
+    "total_targeted_tests": 54,
+    "red": "Valid pretranslation R18 candidate:1pointer-shape assertionfailure plus3 actual KeyError(report) consumer errors;2 passing controls. Exact log and copied R17 original bytes/test before/diffs retained. Earlier17ModuleNotFoundError test-path setup log preserved separately; this was corrected test setup, not a model/pipeline event.",
+    "green": "All54targeted tests pass. Actual frozen helper functions are imported and invoked without implementation monkeypatches: usage/historical_accounting,aggregate,canonical export,profile/contract selectors,baseline verification.",
+    "all_missing_canonical_export": {
+      "synthetic_only": true,
+      "question_records": 96,
+      "planned_arm_repeat_slots": 216,
+      "missing_status": "missing_counts_as_failure",
+      "grades": 0,
+      "native_attempts": 0,
+      "Store_calls": 0,
+      "real_trial_clock_created": false
+    },
+    "root_immutable_history_component": {
+      "sha256": "5b2905e0d96e8a0fde73cb9c7a9f4d3d0c2a8d6e422891fd1b31aef690706cf1",
+      "actual_consumer_usage_empty_adds_zero": true,
+      "cumulative_attempts": 2823,
+      "cumulative_tokens": 45532599,
+      "not_a_new_ledger_or_duplicate_cost_entry": true
+    },
+    "py_compile": true,
+    "diff_check": true,
+    "public_offline_preflight_not_rerun": true
+  },
+  "required_next_consumer_smoke": {
+    "tool": "consumer-smoke.py",
+    "command": "python3 consumer-smoke.py --protocol ACTUAL_EMITTED_R18_PROTOCOL --protocol-sha256 EXACT_FILE_SHA --output NEW_SYNTHETIC_SMOKE_OUTPUT",
+    "before": "Any actual R18clock/nativecall",
+    "reads": "Actual public protocol and pinned source/historical bytes; existing public toy inputs only. Never fresh fixture/gold/findings.",
+    "retains": "Machine receipt plus canonical synthetic export/manifest/archive. All216slots missing by construction; no readiness/quality inference.",
+    "status": "Prepared_and_unit_tested_only;actual_emitted_protocol_smoke_pending"
+  },
+  "consumer_field_audit": "protocol-consumer-contract.json literal required/get access inventory plus explicit aliased/dynamic consumers. AST alone is not used as proof; actual accounting/aggregate/export and held driver guard roundtrips cover owners.",
+  "scope_limits": [
+    "No product/helper/held driver/R17/run/grade/closed artifact edited or repaired. New files only under R18; root-owned historical/runtime/readiness receipts untouched.",
+    "No actual R18protocol/clock/freeze/native dispatch or fresh author input opening. Source reviews/finalbindings/fresh author+independent sealed review remain required.",
+    "Generic contracts/schema/old public6cases/reader/judge bytes are identical copies. No old input is claimed fresh and no historical native output is reused as new evidence.",
+    "Source field compatibility and missing-slot accounting do not establish semantic reader/judge quality. Unknown usage remains null; actual billing remains unknown."
+  ],
+  "source_held": true
+}

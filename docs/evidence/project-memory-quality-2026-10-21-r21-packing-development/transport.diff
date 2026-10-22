@@ -1,0 +1,22 @@
+--- docs/evidence/project-memory-quality-2026-10-21-r21-packing-development/transport-before.py	2026-10-22 08:59:31
++++ docs/evidence/project-memory-quality-2026-10-21-r21-packing-development/transport-after.py	2026-10-22 09:16:17
+@@ -48,8 +48,17 @@
+         self.remaining -= len(node)
+         return True
+ 
+-    def add(self, pointer: Mapping[str, Any], qualifiers: Mapping[str, Any]) -> str:
+-        identifier = 's' + str(len(self.entries) + 1)
++    def add(self, pointer: Mapping[str, Any], qualifiers: Mapping[str, Any], *,
++            identifier: str | None = None) -> str:
++        if identifier is None:
++            index = len(self.entries) + 1
++            identifier = 's' + str(index)
++            while any(identifier == existing for existing, _, _ in self.entries):
++                index += 1
++                identifier = 's' + str(index)
++        if not isinstance(identifier, str) or not identifier or any(
++                identifier == existing for existing, _, _ in self.entries):
++            raise ValueError('source display identifier must be unique nonempty text')
+         self.entries.append((identifier, dict(pointer), qualifier_key(qualifiers)))
+         return identifier
+ 

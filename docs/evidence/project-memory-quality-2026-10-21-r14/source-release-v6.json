@@ -1,0 +1,89 @@
+{
+  "version": "R14-disclosed-v6",
+  "status": "SOURCESTABLE_candidate_for_central_checks_not_quality_acceptance",
+  "previous_release_preserved": "source-release.json",
+  "module_hashes": {
+    "codex_mem/project_memory_query.py": "9d0416f83cac631226bb5b17242c2556d0bba7806f2b329fff3a8c0e18eaf7ac",
+    "codex_mem/project_memory_retrieval.py": "5bf690a619719f411a8bd1fe3021484e139a3e5155470aea960a47a8859f7b1a",
+    "codex_mem/project_memory_custody.py": "1ee06da47cd8f0783183956ba020e42bd8f3e0244d0020a95ce06623298514d5"
+  },
+  "new_test_hashes": {
+    "tests/test_project_memory_neutral_scope_transport.py": "3401bfb3bb2c9c62dca36a6bf622187b69db0392c11196fcef713e2452badab5"
+  },
+  "change": {
+    "file": "codex_mem/project_memory_retrieval.py",
+    "line": 1550,
+    "before": "original = dict(item, text=quote, evidence=...)",
+    "after": "original = dict(scoped_original, evidence=...)",
+    "meaning": "Preserve only checked original representation scope on neutral source transport. No query-derived scope, applicability or workflow promotion; no allocation change."
+  },
+  "red_green": {
+    "scope-v6-red": {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r14/scope-transport-v6/scope-v6-red.log",
+      "sha256": "1317ff18ea5de4d79187d74ddbd70ab9b72f9f556d3895a05717579e65762dd7",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_neutral_scope_transport",
+      "failed_subcases": 8,
+      "errors": 0
+    },
+    "scope-v6-green": {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r14/scope-transport-v6/scope-v6-green.log",
+      "sha256": "0a7bc1d16d98ad92cfbd86a8b672e6840b33873d04666089ec61ba8024cab58c",
+      "command": "PYTHONPATH=tests python3 -m unittest test_project_memory_neutral_scope_transport",
+      "tests_passed": 2,
+      "passing_subcases": 8
+    },
+    "focused-v6": {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r14/scope-transport-v6/focused-v6.log",
+      "sha256": "d0ec23891f6c7cbcbaaeb075361b278d98843aa53201871bce17f33c9be97bf4",
+      "command": "python3 -m unittest discover -s tests -p 'test_project_memory*.py'",
+      "tests_passed": 385
+    },
+    "env-v6": {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r14/scope-transport-v6/env-v6.log",
+      "sha256": "61bccbe47d52cb16f3cde1189a560f74cbb28cb5598fc4debad7100177fb937e",
+      "command": "python3 -m unittest discover -s tests -p test_environment_constraint_queries.py",
+      "tests_passed": 22
+    }
+  },
+  "public_controls": [
+    "Real Store stored and completed full-source canonical claims under unscoped natural query.",
+    "Both insertion orders for local/v1.2.0 versus production/v2.0.0.",
+    "Both insertion orders for unknown scope versus local/v1.2.0.",
+    "Each source retains its own XML environment/version qualifier and disposition, whole exact quote, neutral unresolved relationship and false requirement flag; no workflow state.",
+    "Distinct scope wrappers remain separate, double rendering is identical, context stays <=6000 and canonical claims stay unchanged."
+  ],
+  "additional_checks": {
+    "py_compile_passed": true,
+    "git_diff_check_passed": true,
+    "worker_full_suite": false
+  },
+  "unchanged_boundaries": {
+    "producer_sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "producer_helper_protocol_profiles_changed_by_worker": false,
+    "native_calls": 0,
+    "grades_changed": 0,
+    "v1_to_v5_archives_preserved": true
+  },
+  "replay": {
+    "comparison": "v6-source-receipt/replay-comparison.json",
+    "comparison_sha256": "bad3a3f2161995c3e2f34f37a81634a18e4b33fc084054fb8483f94e145d36de",
+    "archive": "v6-source-receipt/product.tar.gz",
+    "archive_sha256": "f84939a0cc7887ae049377c39d9b8e852c75a9185d5caaa2c216c9ea87099c91",
+    "manifest": "v6-source-receipt/product-manifest.json",
+    "r13_exact_mirrors": 121,
+    "r13_facts": 128,
+    "r13_fact_catalog_xml_changes_vs_v5": 0,
+    "r12_exact_mirrors": 97,
+    "r12_facts": 101,
+    "r12_fact_catalog_changes_vs_v5": 0,
+    "r12_xml_changes_vs_v5": [
+      "hold_904/q6 neutral stored original now retains checked worktree qualifier"
+    ]
+  },
+  "limits": [
+    "Visibility is not answer quality or semantic truth. No model answers or grades changed.",
+    "V5 ordering, candidate windows, hard guards, whole execution groups, source intervals, render limits and explicit omissions remain unchanged.",
+    "Central full suite, independent review and architecture sealing remain parent-owned."
+  ]
+}

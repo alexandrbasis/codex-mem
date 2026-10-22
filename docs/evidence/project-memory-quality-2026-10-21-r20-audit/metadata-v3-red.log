@@ -1,0 +1,26 @@
+EE
+======================================================================
+ERROR: test_actual_whole_sourcearchive_consumer_block (__main__.MetadataConsumers.test_actual_whole_sourcearchive_consumer_block)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20-audit/test-metadata-consumers-v3.py", line 30, in test_actual_whole_sourcearchive_consumer_block
+    exec(compile(ast.fix_missing_locations(ast.Module(body=nodes,type_ignores=[])),str(args.source),'exec'),env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export-v2.py", line 95, in <module>
+    check(sha((base / 'frozen-product.tar.gz').read_bytes()) == source_archive['archive_sha256'], 'product_archive_pin')
+                                                                ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+KeyError: 'archive_sha256'
+
+======================================================================
+ERROR: test_all_literal_metadata_paths_in_main_exist (__main__.MetadataConsumers.test_all_literal_metadata_paths_in_main_exist)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20-audit/test-metadata-consumers-v3.py", line 22, in test_all_literal_metadata_paths_in_main_exist
+    for key in chain:current=current[key]
+                             ~~~~~~~^^^^^
+KeyError: 'archive_sha256'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.022s
+
+FAILED (errors=2)

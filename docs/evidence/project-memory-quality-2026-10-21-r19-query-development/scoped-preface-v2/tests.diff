@@ -1,0 +1,76 @@
+--- held-v1/test_project_memory_query_scope_contract.py
++++ scoped-preface-v2/test_project_memory_query_scope_contract.py
+@@ -8,6 +8,73 @@
+ class QueryScopeContractTests(unittest.TestCase):
+     owner = Path('/public/scope-contract/relay_workspace')
+     neighbor = Path('/public/scope-contract/beacon-board')
++
++    def test_selected_scope_preface_classifies_period_ended_natural_request_body(self):
++        plain = self.owner.parent / 'catalogue'
++        for owner in (self.owner, plain):
++            for verb in ('compare', 'contrast'):
++                query = f'For {owner.name}, {verb} the earlier request with the final instruction.'
++                with self.subTest(owner=owner, verb=verb):
++                    plan = plan_query(query, owner)
++                    self.assertTrue(plan.natural)
++                    self.assertEqual((owner.name.casefold(),), plan.scope_aliases)
++                    self.assertEqual(f'{verb} the earlier request with the final instruction.', plan.content_query)
++                    self.assertFalse(plan.identifiers)
++                    self.assertTrue(plan.matches({'summary': 'Preserve the raw inventory records.'}))
++        for prep in ('Within', 'In', 'Across'):
++            query = f'{prep} relay_workspace and beacon-board, compare the earlier request with the final instruction.'
++            plan = plan_query(query, self.owner, selected_project_scopes=[self.owner, self.neighbor])
++            self.assertTrue(plan.natural)
++            self.assertEqual({'relay_workspace', 'beacon-board'}, set(plan.scope_aliases))
++            self.assertFalse(plan.identifiers)
++
++    def test_scope_preface_does_not_relax_literal_lookup_or_untrusted_prefix(self):
++        for remainder in ('bundle_rule.', 'JET-806 4.6.2.', '`scan_rule`.',
++                          'relay_workspace --raw.', 'function relay_workspace.',
++                          'compare_rule.', 'showThing().', 'list().', 'compare().', 'contrast().'):
++            query = f'For relay_workspace, {remainder}'
++            with self.subTest(remainder=remainder):
++                plan = plan_query(query, self.owner)
++                self.assertFalse(plan.natural)
++                self.assertEqual((), plan.scope_aliases)
++                self.assertEqual(query, plan.content_query)
++        for prefix in ('missing_workspace', 'beacon-board', '`relay_workspace`', '"relay_workspace"'):
++            query = f'For {prefix}, compare the earlier request with the final instruction.'
++            plan = plan_query(query, self.owner)
++            self.assertFalse(plan.natural)
++            self.assertEqual((), plan.scope_aliases)
++            self.assertEqual(query, plan.content_query)
++        for name in ('JET-806', '4.6.2', 'production'):
++            plan = plan_query(f'For {name}, compare the earlier request with the final instruction.',
++                              self.owner.parent / name)
++            self.assertFalse(plan.natural)
++            self.assertEqual((), plan.scope_aliases)
++        collision = self.owner.parent / 'another' / self.owner.name
++        plan = plan_query(f'For {self.owner.name}, compare the earlier and final instruction.', self.owner,
++                          selected_project_scopes=[self.owner, collision])
++        self.assertFalse(plan.natural)
++        self.assertEqual((), plan.scope_aliases)
++
++    def test_natural_scope_preface_keeps_literal_body_and_exact_subject_constraints(self):
++        plan = plan_query('For relay_workspace, compare `scan_rule` for JET-806 version 4.6.2 in production.', self.owner)
++        self.assertTrue(plan.natural)
++        self.assertEqual(('jet-806',), plan.task_ids)
++        self.assertEqual(('scan_rule',), plan.identifiers)
++        self.assertEqual(('4.6.2',), plan.versions)
++        self.assertEqual(('production',), plan.environments)
++        for wrong in ('JET-807 scan_rule version 4.6.2', 'JET-806 other_rule version 4.6.2',
++                      'JET-806 scan_rule version 4.6.20'):
++            self.assertFalse(plan.matches({'summary': wrong}))
++        for literal in ('command relay_workspace', 'executable named relay_workspace',
++                        '`relay_workspace`', 'relay_workspace()', '/exports/relay_workspace'):
++            plan = plan_query(f'For relay_workspace, show {literal}.', self.owner)
++            self.assertTrue(plan.natural)
++            self.assertTrue(plan.identifiers)
++            self.assertFalse(plan.matches({'summary': 'Only an inventory receipt is present.'}))
++        plain = self.owner.parent / 'catalogue'
++        plan = plan_query('For catalogue, compare function catalogue with the last instruction.', plain)
++        self.assertIn('catalogue', plan.identifiers)
++        self.assertFalse(plan.matches({'summary': 'Only an inventory receipt is present.'}))
+ 
+     def test_selected_aliases_are_scope_in_unrecognized_natural_grammar(self):
+         scopes = [self.owner, self.neighbor]

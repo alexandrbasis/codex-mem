@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "purpose": "Public synthetic judge contract controls. Contains no R4 author data or historical trial rescoring.",
+  "native_calibration": {
+    "packets": 7,
+    "max_calls": 8,
+    "max_observed_tokens": 200000,
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "reader": "Fixed delivered answers, not native-reader receipts. Expected labels stay outside model requests.",
+    "retry_policy": "One attempt per control; stop on contract rejection or human-label mismatch. No automatic retry or regrade.",
+    "budget": "Every dispatch uses Capture against the existing trial root clock, protocol and global ledger; calibration is an explicitly labeled shared cost, not an arm cost.",
+    "grouped_packet": "Seventh packet contains all six public controls in one production-shaped blinded batch with opaque unique case and source IDs."
+  },
+  "controls": [
+    {
+      "id": "codes-paraphrase",
+      "question": "What is the current scope, reason, and evidence boundary?",
+      "sources": [
+        {
+          "id": "source-codes-paraphrase",
+          "role": "user_intent",
+          "field": "body",
+          "text": "Use participant codes in the review batch. Keep review completion visible.",
+          "visible": true
+        }
+      ],
+      "answer": "The review batch must use participant codes and continue to show completion status.",
+      "required_facts": [
+        "Use participant codes in the review batch.",
+        "Keep review completion visible."
+      ],
+      "forbidden_inferences": [],
+      "expected": {
+        "fact_recall": [
+          true,
+          true
+        ],
+        "critical_errors": []
+      }
+    },
+    {
+      "id": "missing-scoped-cancel",
+      "question": "What is the current scope, reason, and evidence boundary?",
+      "sources": [
+        {
+          "id": "source-missing-scoped-cancel",
+          "role": "user_intent",
+          "field": "body",
+          "text": "Cancel automatic duplicate merging. Retain the mapping report.",
+          "visible": false
+        }
+      ],
+      "answer": "No cancellation is evidenced. The report exists and records zero writes. Matching catalogue numbers alone must not trigger merges.",
+      "required_facts": [
+        "Cancel automatic duplicate merging.",
+        "Retain the mapping report."
+      ],
+      "forbidden_inferences": [],
+      "expected": {
+        "fact_recall": [
+          false,
+          false
+        ],
+        "critical_errors": []
+      }
+    },
+    {
+      "id": "reject-neighbor-transfer",
+      "question": "What is the current scope, reason, and evidence boundary?",
+      "sources": [
+        {
+          "id": "source-reject-neighbor-transfer",
+          "role": "user_intent",
+          "field": "body",
+          "text": "The separate dining deposit setup does not authorize workshop deposits.",
+          "visible": true
+        }
+      ],
+      "answer": "Do not carry over dining permission to accept workshop deposits or treat dining completion as workshop completion.",
+      "required_facts": [
+        "The separate dining deposit setup does not authorize workshop deposits."
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Dining permission authorizes workshop deposits.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "expected": {
+        "fact_recall": [
+          true
+        ],
+        "critical_errors": []
+      }
+    },
+    {
+      "id": "historical-canceled-scope",
+      "question": "What is the current scope, reason, and evidence boundary?",
+      "sources": [
+        {
+          "id": "source-historical-canceled-scope",
+          "role": "user_intent",
+          "field": "body",
+          "text": "Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.",
+          "visible": true
+        },
+        {
+          "id": "source-rota-initial",
+          "role": "user_intent",
+          "field": "body",
+          "text": "Prepare a monthly rota with automatic swaps and a printed sheet.",
+          "visible": true
+        }
+      ],
+      "answer": "The current goal is a draft rota for coordinator review. The initial same-task request included automatic swaps; those swaps were later canceled while the printed sheet remains in scope.",
+      "required_facts": [
+        "Finish a draft rota for coordinator review.",
+        "Cancel automatic swaps; keep the printed sheet."
+      ],
+      "forbidden_inferences": [],
+      "expected": {
+        "fact_recall": [
+          true,
+          true
+        ],
+        "critical_errors": []
+      }
+    },
+    {
+      "id": "real-causal-conflation",
+      "question": "What is the current scope, reason, and evidence boundary?",
+      "sources": [
+        {
+          "id": "source-real-causal-conflation",
+          "role": "user_intent",
+          "field": "body",
+          "text": "Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.",
+          "visible": true
+        },
+        {
+          "id": "source-dining-boundary",
+          "role": "user_intent",
+          "field": "body",
+          "text": "The separate dining deposit setup does not authorize workshop deposits.",
+          "visible": true
+        }
+      ],
+      "answer": "The current goal is a staff-only workshop preview. The goal changed because the separate dining deposit setup does not authorize workshop deposits.",
+      "required_facts": [
+        "Prepare a staff-only workshop preview.",
+        "The instructor needs to review seating before public reservations."
+      ],
+      "forbidden_inferences": [],
+      "expected": {
+        "fact_recall": [
+          true,
+          false
+        ],
+        "critical_errors": [
+          "false_merge"
+        ]
+      }
+    },
+    {
+      "id": "original-only-visibility",
+      "question": "What is the current scope, reason, and evidence boundary?",
+      "sources": [
+        {
+          "id": "source-original-only-visibility",
+          "role": "user_intent",
+          "field": "body",
+          "text": "Observed dry run produced 12 files and made zero external submissions.",
+          "visible": false
+        },
+        {
+          "id": "source-assistant-report",
+          "role": "assistant_report",
+          "field": "body",
+          "text": "All files were issued and submitted.",
+          "visible": true
+        }
+      ],
+      "answer": "The observed dry-run result is not included in the supplied memory, so its counts are unknown. An assistant completion report alone is not observed execution.",
+      "required_facts": [
+        "Observed dry run produced 12 files.",
+        "External submissions: zero."
+      ],
+      "forbidden_inferences": [],
+      "expected": {
+        "fact_recall": [
+          false,
+          false
+        ],
+        "critical_errors": []
+      }
+    }
+  ],
+  "deterministic_counterexamples": [
+    {
+      "name": "false-literal-omission",
+      "answer": "Use participant codes in the review batch.",
+      "gold": "Use participant codes in the review batch.",
+      "packet_missing_anchor": "participant codes",
+      "expected": "reject_without_regrade"
+    },
+    {
+      "name": "positive-without-answer-witness",
+      "answer": "No cancellation is evidenced.",
+      "claimed_fact": "Cancel automatic duplicate merging.",
+      "packet_answer_quotes": [],
+      "expected": "reject_without_regrade"
+    },
+    {
+      "name": "negative-critical-polarity",
+      "answer": "Do not carry over dining permission.",
+      "packet_assertion_mode": "negated",
+      "critical_error": "project_mixing",
+      "expected": "reject_without_regrade"
+    },
+    {
+      "name": "historical-critical-polarity",
+      "answer": "The initial request included swaps, which were later canceled.",
+      "packet_assertion_mode": "historical",
+      "critical_error": "false_merge",
+      "expected": "reject_without_regrade"
+    }
+  ],
+  "typesafe_shadow_probe": {
+    "status": "proposal_only_not_enabled_no_calls_authorized",
+    "primitive": "Choice",
+    "independent_questions": [
+      "Does the exact delivered-answer witness support this required fact in its stated current/historical/reported scope?",
+      "Does the entire selected answer sentence affirm the forbidden conclusion, preserving negation, attribution and time?"
+    ],
+    "options": [
+      "supported",
+      "contradicted",
+      "unsupported",
+      "uncertain"
+    ],
+    "state": [
+      "Frozen delivered answer",
+      "Exact code-resolved answer witness",
+      "Canonical source witness with role and code-computed visibility",
+      "One gold fact or forbidden inference for evaluator only"
+    ],
+    "policy": "Record raw distributions/version/latency and compare with these human labels. No gate, score change, retry or adjudication. Domain thresholds require a separately authorized validation budget.",
+    "sources": [
+      "https://docs.typesafe.ai/cookbooks/citation_check",
+      "https://docs.typesafe.ai/confidence"
+    ]
+  }
+}

@@ -1,0 +1,2850 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "hold_1201",
+      "project_keys": [
+        "reedworks",
+        "maple_stage"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1201_0a",
+          "project_key": "reedworks",
+          "events": [
+            {
+              "id": "hold_1201_brief",
+              "type": "user",
+              "text": "Reedworks needs a repair to the seed-tray label exporter, ticket RW-18. Keep the tray IDs stable, preserve blank variety names, and do not send labels to a printer until the greenhouse lead approves. A blank name means an unclassified tray, not a bad record."
+            },
+            {
+              "id": "hold_1201_old",
+              "type": "user",
+              "text": "The retired bench chart says bench seven can accept printed labels without approval. I used it to plan an unattended print run."
+            },
+            {
+              "id": "hold_1201_first",
+              "type": "tool",
+              "text": "RW-18 export check failed. Three blank variety names became the word Unknown. No printer jobs were created.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1201_first"
+                },
+                "tool_response": {
+                  "output": "RW-18 export check failed. Three blank variety names became the word Unknown. No printer jobs were created.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1201_note",
+              "type": "assistant",
+              "text": "I found a fallback string in the preview formatter. I will remove it and check the exported file separately from the preview."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1201_note"
+            }
+          ]
+        },
+        {
+          "id": "hold_1201_1a",
+          "project_key": "maple_stage",
+          "events": [
+            {
+              "id": "hold_1201_other",
+              "type": "user",
+              "text": "Maple Stage ticket MS-18 is a prop-label color study. The designer accepted the blue palette. Archive the study. It has no printer integration and is unrelated to RW-18."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1201_0b",
+          "project_key": "reedworks",
+          "events": [
+            {
+              "id": "hold_1201_continue",
+              "type": "user",
+              "text": "Continue RW-18 in this chat. Drop only the request to color the preview background. The stable IDs, blank names, and printer approval rule still apply."
+            },
+            {
+              "id": "hold_1201_fixed",
+              "type": "tool",
+              "text": "RW-18 export fixture passed 24 rows. Blank variety fields stayed empty and all tray IDs matched the input. This run wrote a local file only.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1201_fixed"
+                },
+                "tool_response": {
+                  "output": "RW-18 export fixture passed 24 rows. Blank variety fields stayed empty and all tray IDs matched the input. This run wrote a local file only.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1201_close",
+              "type": "assistant",
+              "text": "The export bug is fixed in the fixture. I have not tested the greenhouse printer."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1201_close"
+            }
+          ]
+        },
+        {
+          "id": "hold_1201_0c",
+          "project_key": "reedworks",
+          "events": [
+            {
+              "id": "hold_1201_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1201_old"
+            },
+            {
+              "id": "hold_1201_reopen",
+              "type": "user",
+              "text": "Reopen RW-18 to compare the printed sample with the local export. The greenhouse lead has not approved printing yet. Ask for approval before requesting the sample."
+            },
+            {
+              "id": "hold_1201_proof",
+              "type": "tool",
+              "text": "Printer queue audit found zero RW-18 jobs. The local export file exists. No physical sample is recorded.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1201_proof"
+                },
+                "tool_response": {
+                  "output": "Printer queue audit found zero RW-18 jobs. The local export file exists. No physical sample is recorded.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1201_tail",
+              "type": "user",
+              "text": "Do not use the bench chart to authorize anything. The current approval must come from the greenhouse lead."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the next permitted step for RW-18, and what remains untested?",
+          "stage": "final",
+          "project_key": "reedworks"
+        },
+        {
+          "id": "q2",
+          "question": "Which requirements survived the preview change, and why must blank names remain blank?",
+          "stage": "final",
+          "project_key": "reedworks"
+        },
+        {
+          "id": "q3",
+          "question": "What did the repair checks actually establish?",
+          "stage": "final",
+          "project_key": "reedworks"
+        },
+        {
+          "id": "q4",
+          "question": "Compare the status and purpose of RW-18 and MS-18.",
+          "stage": "final",
+          "project_keys": [
+            "reedworks",
+            "maple_stage"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "Did the later chat create a separate export task or resume the original one?",
+          "stage": "final",
+          "project_key": "reedworks"
+        },
+        {
+          "id": "q6",
+          "question": "What authority can be used for a print request now?",
+          "stage": "final",
+          "project_key": "reedworks"
+        }
+      ]
+    },
+    {
+      "id": "hold_1202",
+      "project_keys": [
+        "copper_archive",
+        "lilac_routes"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1202_0a",
+          "project_key": "copper_archive",
+          "events": [
+            {
+              "id": "hold_1202_old",
+              "type": "assistant",
+              "text": "A temporary catalog note says the donor granted worldwide reuse for the amber reel. That note was the only basis for my proposed public download."
+            },
+            {
+              "id": "hold_1202_brief",
+              "type": "user",
+              "text": "For Copper Archive CA-42, prepare a listening-room catalog. Leave the audio private and display an access-request button. We need a rights review before any download link."
+            },
+            {
+              "id": "hold_1202_claim",
+              "type": "assistant",
+              "text": "I finished the access-request button and believe the catalog is ready to release."
+            },
+            {
+              "id": "hold_1202_fail",
+              "type": "tool",
+              "text": "CA-42 access check failed. The detail page exposes a direct audio URL when the button receives keyboard focus. Release bundle was not generated.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1202_fail"
+                },
+                "tool_response": {
+                  "output": "CA-42 access check failed. The detail page exposes a direct audio URL when the button receives keyboard focus. Release bundle was not generated.",
+                  "exit_code": 1
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1202_fail"
+            }
+          ]
+        },
+        {
+          "id": "hold_1202_0b",
+          "project_key": "copper_archive",
+          "events": [
+            {
+              "id": "hold_1202_resume",
+              "type": "user",
+              "text": "This is the same CA-42 work from yesterday. Fix the focus leak, and retain the access-request button. Cancel the optional waveform animation because the listening room uses old terminals."
+            },
+            {
+              "id": "hold_1202_pass",
+              "type": "tool",
+              "text": "CA-42 keyboard test passed on the detail page after removing the URL attribute. The search results page was excluded from this test.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1202_pass"
+                },
+                "tool_response": {
+                  "output": "CA-42 keyboard test passed on the detail page after removing the URL attribute. The search results page was excluded from this test.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1202_1a",
+          "project_key": "lilac_routes",
+          "events": [
+            {
+              "id": "hold_1202_other",
+              "type": "user",
+              "text": "Lilac Routes LR-42 is a bus-stop audio guide. Public downloads are approved for its commissioned recordings. The route editor still needs a pronunciation review."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1202_0b2",
+          "project_key": "copper_archive",
+          "events": [
+            {
+              "id": "hold_1202_checkpoint",
+              "type": "user",
+              "text": "Hold Copper Archive release. I want a search-results access check too. The successful detail-page test does not cover it."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1202_checkpoint"
+            }
+          ]
+        },
+        {
+          "id": "hold_1202_0c",
+          "project_key": "copper_archive",
+          "events": [
+            {
+              "id": "hold_1202_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1202_old"
+            },
+            {
+              "id": "hold_1202_rights",
+              "type": "user",
+              "text": "The amber reel rights review is unresolved. Use a fresh donor agreement before deciding its reuse scope. Do not treat the removed temporary note as evidence."
+            },
+            {
+              "id": "hold_1202_last",
+              "type": "tool",
+              "text": "CA-42 search-results inspection found no audio URL in the generated cards. This was a local build inspection, not a rights review or a deployed-site test.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1202_last"
+                },
+                "tool_response": {
+                  "output": "CA-42 search-results inspection found no audio URL in the generated cards. This was a local build inspection, not a rights review or a deployed-site test.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1202_tail",
+              "type": "user",
+              "text": "Next, get the rights reviewer to assess the new agreement. We can discuss release after that review and a deployed-site access check."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must happen before Copper Archive release?",
+          "stage": "final",
+          "project_key": "copper_archive"
+        },
+        {
+          "id": "q2",
+          "question": "What was cancelled in CA-42 and what must remain?",
+          "stage": "final",
+          "project_key": "copper_archive"
+        },
+        {
+          "id": "q3",
+          "question": "Was the assistant release claim supported by the tests, and what did the later checks cover?",
+          "stage": "final",
+          "project_key": "copper_archive"
+        },
+        {
+          "id": "q4",
+          "question": "How do the download permissions differ between Copper Archive and Lilac Routes?",
+          "stage": "final",
+          "project_keys": [
+            "copper_archive",
+            "lilac_routes"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "What identifies the later focus repair as a continuation, and what new gate did the user add?",
+          "stage": "final",
+          "project_key": "copper_archive"
+        },
+        {
+          "id": "q6",
+          "question": "What is the current basis for deciding reuse of the amber reel?",
+          "stage": "final",
+          "project_key": "copper_archive"
+        }
+      ]
+    },
+    {
+      "id": "hold_1203",
+      "project_keys": [
+        "kite_quay",
+        "moss_fair"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1203_0a",
+          "project_key": "kite_quay",
+          "events": [
+            {
+              "id": "hold_1203_brief",
+              "type": "user",
+              "text": "Kite Quay KQ-9 is a ferry boarding simulation. Reserve two wheelchair spaces on every simulated sailing. Do not change the live timetable. Keep a written reason for rejected groups so dispatchers can audit the model."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1203_1a",
+          "project_key": "moss_fair",
+          "events": [
+            {
+              "id": "hold_1203_other",
+              "type": "user",
+              "text": "Moss Fair MF-9 concerns seats in a puppet tent. There are no reserved ferry spaces here. We cancelled the seating optimizer and will use the manual plan."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1203_0a2",
+          "project_key": "kite_quay",
+          "events": [
+            {
+              "id": "hold_1203_old",
+              "type": "user",
+              "text": "An old load survey lists the north ramp at 900 kilograms. The simulation draft used that value to accept a large equipment group."
+            },
+            {
+              "id": "hold_1203_run",
+              "type": "tool",
+              "text": "KQ-9 draft simulation completed for six sailings. The report lists group rejections, but the wheelchair reserve column is missing.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1203_run"
+                },
+                "tool_response": {
+                  "output": "KQ-9 draft simulation completed for six sailings. The report lists group rejections, but the wheelchair reserve column is missing.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1203_run"
+            }
+          ]
+        },
+        {
+          "id": "hold_1203_0b",
+          "project_key": "kite_quay",
+          "events": [
+            {
+              "id": "hold_1203_repair",
+              "type": "user",
+              "text": "Resume KQ-9 here for the reserve-column omission. Keep the rejection reasons. Also compare the manual dispatch plan, but only within the simulator."
+            },
+            {
+              "id": "hold_1203_claim",
+              "type": "assistant",
+              "text": "I added the column and marked this repair done. The model still uses the draft ramp input until we replace it."
+            },
+            {
+              "id": "hold_1203_check",
+              "type": "tool",
+              "text": "KQ-9 fixture comparison passed. Two wheelchair spaces remain reserved on all six simulated sailings. Rejection reasons are retained. No live timetable access occurred.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1203_check"
+                },
+                "tool_response": {
+                  "output": "KQ-9 fixture comparison passed. Two wheelchair spaces remain reserved on all six simulated sailings. Rejection reasons are retained. No live timetable access occurred.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1203_done",
+              "type": "user",
+              "text": "Accept the reserve-column repair as finished. The manual-plan comparison is still open, and it is part of KQ-9, not a new task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1203_done"
+            }
+          ]
+        },
+        {
+          "id": "hold_1203_0c",
+          "project_key": "kite_quay",
+          "events": [
+            {
+              "id": "hold_1203_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1203_old"
+            },
+            {
+              "id": "hold_1203_capacity",
+              "type": "user",
+              "text": "Leave the ramp capacity unset until the facilities team supplies a new measurement. Do not approve equipment groups from the old load survey."
+            },
+            {
+              "id": "hold_1203_last",
+              "type": "tool",
+              "text": "KQ-9 manual-plan comparison stopped before scoring because ramp capacity is unset. No equipment acceptance decision was produced.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1203_last"
+                },
+                "tool_response": {
+                  "output": "KQ-9 manual-plan comparison stopped before scoring because ramp capacity is unset. No equipment acceptance decision was produced.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1203_tail",
+              "type": "user",
+              "text": "Request the new ramp measurement next. Do not reopen the completed reserve-column repair unless the new measurement changes its behavior."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which parts of KQ-9 are finished and which still require work?",
+          "stage": "final",
+          "project_key": "kite_quay"
+        },
+        {
+          "id": "q2",
+          "question": "What limits apply to the simulation and its audit output?",
+          "stage": "final",
+          "project_key": "kite_quay"
+        },
+        {
+          "id": "q3",
+          "question": "How do the two seating-related tasks differ in status?",
+          "stage": "final",
+          "project_keys": [
+            "kite_quay",
+            "moss_fair"
+          ]
+        },
+        {
+          "id": "q4",
+          "question": "What evidence supports the reserve-column repair, and what stopped later work?",
+          "stage": "final",
+          "project_key": "kite_quay"
+        },
+        {
+          "id": "q5",
+          "question": "Is the manual-plan comparison a new task, and when can the reserve repair reopen?",
+          "stage": "final",
+          "project_key": "kite_quay"
+        },
+        {
+          "id": "q6",
+          "question": "Can the next equipment decision use an existing ramp number? What is needed next?",
+          "stage": "final",
+          "project_key": "kite_quay"
+        }
+      ]
+    },
+    {
+      "id": "hold_1204",
+      "project_keys": [
+        "velvet_press",
+        "orchid_maps"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1204_0a",
+          "project_key": "velvet_press",
+          "events": [
+            {
+              "id": "hold_1204_brief",
+              "type": "user",
+              "text": "Velvet Press VP-31 needs an index of illustrations. Use the artist spelling in the signed proof, preserve page ranges, and leave uncertain credits flagged. The index is for editorial review, not publication."
+            },
+            {
+              "id": "hold_1204_old",
+              "type": "assistant",
+              "text": "A scratch note assigns the unsigned lighthouse drawing to Evin Vale. I used that note to fill the artist index and remove its uncertainty flag."
+            },
+            {
+              "id": "hold_1204_test",
+              "type": "tool",
+              "text": "VP-31 index audit failed. Page range 12-14 became page 12, and two uncertain credits lost their flags.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1204_test"
+                },
+                "tool_response": {
+                  "output": "VP-31 index audit failed. Page range 12-14 became page 12, and two uncertain credits lost their flags.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1204_cp",
+              "type": "user",
+              "text": "Repair the range handling first. Keep a separate list of unresolved credits for the editor."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1204_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1204_1a",
+          "project_key": "orchid_maps",
+          "events": [
+            {
+              "id": "hold_1204_other",
+              "type": "user",
+              "text": "Orchid Maps OM-31 is a street-name index. Its spelling source is the council register. The local index passed review, but the map export is still pending."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1204_0b",
+          "project_key": "velvet_press",
+          "events": [
+            {
+              "id": "hold_1204_resume",
+              "type": "user",
+              "text": "In this new chat, VP-31 still means the illustration index. Cancel only the separate unresolved-credit list. Keep uncertainty flags inside the index, since the editor wants one file."
+            },
+            {
+              "id": "hold_1204_fixed",
+              "type": "tool",
+              "text": "VP-31 range audit passed for 38 entries. All multipage ranges match the proof. Credit attribution was not assessed by this audit.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1204_fixed"
+                },
+                "tool_response": {
+                  "output": "VP-31 range audit passed for 38 entries. All multipage ranges match the proof. Credit attribution was not assessed by this audit.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1204_claim",
+              "type": "assistant",
+              "text": "I produced the single-file index and retained the flags. I have not obtained editorial acceptance."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1204_claim"
+            }
+          ]
+        },
+        {
+          "id": "hold_1204_0c",
+          "project_key": "velvet_press",
+          "events": [
+            {
+              "id": "hold_1204_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1204_old"
+            },
+            {
+              "id": "hold_1204_correction",
+              "type": "user",
+              "text": "Correction to the source rule: use the signed proof for artist names, but use the final layout for page ranges. The earlier proof pagination is obsolete. The lighthouse credit remains unresolved pending a signed attribution."
+            },
+            {
+              "id": "hold_1204_last",
+              "type": "tool",
+              "text": "VP-31 final-layout range comparison found one shifted range in entry 17. The index file has not yet been corrected.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1204_last"
+                },
+                "tool_response": {
+                  "output": "VP-31 final-layout range comparison found one shifted range in entry 17. The index file has not yet been corrected.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1204_tail",
+              "type": "user",
+              "text": "Update entry 17 from the final layout next, then send the single file for editorial review. Keep its uncertain credits visible."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the next edit and review step for VP-31?",
+          "stage": "final",
+          "project_key": "velvet_press"
+        },
+        {
+          "id": "q2",
+          "question": "Which source governs names and ranges after the correction?",
+          "stage": "final",
+          "project_key": "velvet_press"
+        },
+        {
+          "id": "q3",
+          "question": "What did the user cancel, and what credit handling remains required?",
+          "stage": "final",
+          "project_key": "velvet_press"
+        },
+        {
+          "id": "q4",
+          "question": "How far did the successful audit and assistant report establish completion?",
+          "stage": "final",
+          "project_key": "velvet_press"
+        },
+        {
+          "id": "q5",
+          "question": "Which spelling source and acceptance state belong to each index project?",
+          "stage": "final",
+          "project_keys": [
+            "velvet_press",
+            "orchid_maps"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "What can be said about the lighthouse credit now?",
+          "stage": "final",
+          "project_key": "velvet_press"
+        }
+      ]
+    },
+    {
+      "id": "hold_1205",
+      "project_keys": [
+        "pebble_studio",
+        "saffron_hall"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1205_0a",
+          "project_key": "pebble_studio",
+          "events": [
+            {
+              "id": "hold_1205_start",
+              "type": "user",
+              "text": "Pebble Studio PS-6 is an offline sculpture inventory. Export dimensions in millimeters and keep unknown materials empty. Do not merge objects merely because their titles match. Two objects called Rest belong to different shelves."
+            },
+            {
+              "id": "hold_1205_old",
+              "type": "user",
+              "text": "The discarded shipping slip gives crate R a value of 4,800 tokens. I copied that into the insurance worksheet."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1205_1a",
+          "project_key": "saffron_hall",
+          "events": [
+            {
+              "id": "hold_1205_other",
+              "type": "user",
+              "text": "Saffron Hall SH-6 is a room-booking calendar. Combine duplicate titles only when room and start time also match. The calendar cleanup is accepted and finished."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1205_0a2",
+          "project_key": "pebble_studio",
+          "events": [
+            {
+              "id": "hold_1205_first",
+              "type": "tool",
+              "text": "PS-6 sample export failed. Two Rest objects collapsed into one row. The dimension conversion checks passed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1205_first"
+                },
+                "tool_response": {
+                  "output": "PS-6 sample export failed. Two Rest objects collapsed into one row. The dimension conversion checks passed.",
+                  "exit_code": 1
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1205_first"
+            }
+          ]
+        },
+        {
+          "id": "hold_1205_0b",
+          "project_key": "pebble_studio",
+          "events": [
+            {
+              "id": "hold_1205_reply",
+              "type": "assistant",
+              "text": "I changed the grouping key to object ID. I also suggest completing the insurance worksheet from the shipping slip."
+            },
+            {
+              "id": "hold_1205_resume",
+              "type": "user",
+              "text": "Continue the same PS-6 inventory here. Do not work on insurance in this task. I am cancelling the worksheet request, not the inventory export."
+            },
+            {
+              "id": "hold_1205_second",
+              "type": "tool",
+              "text": "PS-6 export now contains both Rest objects under separate IDs. Eight dimension conversions passed. Unknown materials remain empty.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1205_second"
+                },
+                "tool_response": {
+                  "output": "PS-6 export now contains both Rest objects under separate IDs. Eight dimension conversions passed. Unknown materials remain empty.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1205_close",
+              "type": "user",
+              "text": "Accept the inventory export. Close PS-6. Insurance is cancelled, not completed."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1205_close"
+            }
+          ]
+        },
+        {
+          "id": "hold_1205_0c",
+          "project_key": "pebble_studio",
+          "events": [
+            {
+              "id": "hold_1205_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1205_old"
+            },
+            {
+              "id": "hold_1205_third",
+              "type": "tool",
+              "text": "PS-6 saved export checksum matches the accepted file. No insurance worksheet is attached to this artifact.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1205_third"
+                },
+                "tool_response": {
+                  "output": "PS-6 saved export checksum matches the accepted file. No insurance worksheet is attached to this artifact.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1205_tail",
+              "type": "user",
+              "text": "We will start a separate insurance task only if a new valuation arrives. Do not infer a crate value from the removed shipping slip or from the export."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is finished, what was cancelled, and is there an active next step?",
+          "stage": "final",
+          "project_key": "pebble_studio"
+        },
+        {
+          "id": "q2",
+          "question": "How must similarly titled sculptures and unknown material fields be exported?",
+          "stage": "final",
+          "project_key": "pebble_studio"
+        },
+        {
+          "id": "q3",
+          "question": "Do the two projects use the same duplicate rule?",
+          "stage": "final",
+          "project_keys": [
+            "pebble_studio",
+            "saffron_hall"
+          ]
+        },
+        {
+          "id": "q4",
+          "question": "What proves the export repair and what does the final check cover?",
+          "stage": "final",
+          "project_key": "pebble_studio"
+        },
+        {
+          "id": "q5",
+          "question": "Did the later chat replace PS-6 with an insurance task?",
+          "stage": "final",
+          "project_key": "pebble_studio"
+        },
+        {
+          "id": "q6",
+          "question": "What is needed before a future crate-insurance task can use a valuation?",
+          "stage": "final",
+          "project_key": "pebble_studio"
+        }
+      ]
+    },
+    {
+      "id": "hold_1206",
+      "project_keys": [
+        "granite_orbit",
+        "willow_kitchen"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1206_0a",
+          "project_key": "granite_orbit",
+          "events": [
+            {
+              "id": "hold_1206_brief",
+              "type": "user",
+              "text": "Granite Orbit GO-27 tracks fictional observatory shutters. Build a simulator for missed acknowledgments. Never connect it to the physical shutters. Keep every retry in the trace because technicians need to distinguish a timeout from a refusal."
+            },
+            {
+              "id": "hold_1206_first",
+              "type": "tool",
+              "text": "GO-27 simulator test passed the timeout case. Each retry appears in the trace. Refusal behavior was not exercised.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1206_first"
+                },
+                "tool_response": {
+                  "output": "GO-27 simulator test passed the timeout case. Each retry appears in the trace. Refusal behavior was not exercised.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1206_done",
+              "type": "assistant",
+              "text": "The timeout demonstration is ready. I consider the simulator finished, although I have not added a refusal fixture."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1206_done"
+            }
+          ]
+        },
+        {
+          "id": "hold_1206_1a",
+          "project_key": "willow_kitchen",
+          "events": [
+            {
+              "id": "hold_1206_other",
+              "type": "user",
+              "text": "Willow Kitchen WK-27 tracks pantry-door reminders. We approved automatic reminders and completed its refusal-message wording review. There is no equipment control in this project."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1206_0b",
+          "project_key": "granite_orbit",
+          "events": [
+            {
+              "id": "hold_1206_old",
+              "type": "assistant",
+              "text": "A retired maintenance memo says shutter group C retries safely without a limit. I suggested removing the simulator retry cap on that basis."
+            },
+            {
+              "id": "hold_1206_resume",
+              "type": "user",
+              "text": "Reopen GO-27 for the refusal case. This continues the simulator task. Keep the timeout test and the full trace. Cancel the visual animation so we can focus on acknowledgment semantics."
+            },
+            {
+              "id": "hold_1206_fail",
+              "type": "tool",
+              "text": "GO-27 refusal fixture failed. The simulator retried a permanent refusal three times instead of stopping after the first response.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1206_fail"
+                },
+                "tool_response": {
+                  "output": "GO-27 refusal fixture failed. The simulator retried a permanent refusal three times instead of stopping after the first response.",
+                  "exit_code": 1
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1206_fail"
+            }
+          ]
+        },
+        {
+          "id": "hold_1206_0c",
+          "project_key": "granite_orbit",
+          "events": [
+            {
+              "id": "hold_1206_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1206_old"
+            },
+            {
+              "id": "hold_1206_policy",
+              "type": "user",
+              "text": "Use a fresh technician decision for any retry-limit change. The removed maintenance memo must not justify an unlimited retry policy. For this repair, stop immediately on permanent refusal."
+            },
+            {
+              "id": "hold_1206_fixed",
+              "type": "tool",
+              "text": "GO-27 refusal fixture passed after the repair. Permanent refusal stops after one response. The timeout fixture still passes with its existing retry cap. Tests ran only in the simulator.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1206_fixed"
+                },
+                "tool_response": {
+                  "output": "GO-27 refusal fixture passed after the repair. Permanent refusal stops after one response. The timeout fixture still passes with its existing retry cap. Tests ran only in the simulator.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1206_tail",
+              "type": "user",
+              "text": "Accept the simulator repair and close GO-27. Physical-shutter deployment was never part of this task, and is not authorized by this acceptance."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Is GO-27 still reopened, and what exactly was accepted?",
+          "stage": "final",
+          "project_key": "granite_orbit"
+        },
+        {
+          "id": "q2",
+          "question": "Which requirements survived cancellation of the animation?",
+          "stage": "final",
+          "project_key": "granite_orbit"
+        },
+        {
+          "id": "q3",
+          "question": "How did the refusal behavior change across the captured tests?",
+          "stage": "final",
+          "project_key": "granite_orbit"
+        },
+        {
+          "id": "q4",
+          "question": "What did each project accept, and can one acceptance authorize work in the other?",
+          "stage": "final",
+          "project_keys": [
+            "granite_orbit",
+            "willow_kitchen"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "Why was GO-27 reopened after the assistant called it finished?",
+          "stage": "final",
+          "project_key": "granite_orbit"
+        },
+        {
+          "id": "q6",
+          "question": "What retry behavior and decision source are valid now?",
+          "stage": "final",
+          "project_key": "granite_orbit"
+        }
+      ]
+    },
+    {
+      "id": "hold_1207",
+      "project_keys": [
+        "azurite_library",
+        "fern_cinema"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1207_1a",
+          "project_key": "fern_cinema",
+          "events": [
+            {
+              "id": "hold_1207_other",
+              "type": "user",
+              "text": "Fern Cinema FC-12 uses a seven-day loan period for projection lenses. Its overdue notice rewrite is finished. This is separate from book lending."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1207_0a",
+          "project_key": "azurite_library",
+          "events": [
+            {
+              "id": "hold_1207_brief",
+              "type": "user",
+              "text": "Azurite Library AL-12 needs a reminder draft for overdue books. Keep the tone neutral and include an appeal route. Do not send any reminder. The appeal route matters because returns are sometimes entered a day late."
+            },
+            {
+              "id": "hold_1207_old",
+              "type": "user",
+              "text": "An obsolete policy sheet says rare folios incur a ten-token daily fee. The draft fee paragraph relies entirely on that sheet."
+            },
+            {
+              "id": "hold_1207_scan",
+              "type": "tool",
+              "text": "AL-12 draft inspection found an appeal link and no send job. The draft also contains a fee paragraph. This inspection did not validate fee policy.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1207_scan"
+                },
+                "tool_response": {
+                  "output": "AL-12 draft inspection found an appeal link and no send job. The draft also contains a fee paragraph. This inspection did not validate fee policy.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1207_scan"
+            }
+          ]
+        },
+        {
+          "id": "hold_1207_0b",
+          "project_key": "azurite_library",
+          "events": [
+            {
+              "id": "hold_1207_revise",
+              "type": "user",
+              "text": "Continue AL-12 from the earlier chat. Cancel the fee paragraph. Keep the appeal route and neutral language. We need a draft that explains the overdue state without demanding payment."
+            },
+            {
+              "id": "hold_1207_claim",
+              "type": "assistant",
+              "text": "I removed the fee paragraph and believe the draft now meets the brief."
+            },
+            {
+              "id": "hold_1207_fail",
+              "type": "tool",
+              "text": "AL-12 text check failed. The phrase careless borrower remains in the first paragraph. The fee paragraph is absent and the appeal link is present.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1207_fail"
+                },
+                "tool_response": {
+                  "output": "AL-12 text check failed. The phrase careless borrower remains in the first paragraph. The fee paragraph is absent and the appeal link is present.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1207_cp",
+              "type": "user",
+              "text": "That phrase violates the neutral-tone requirement. Replace it before requesting review. Sending remains prohibited."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1207_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1207_0c",
+          "project_key": "azurite_library",
+          "events": [
+            {
+              "id": "hold_1207_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1207_old"
+            },
+            {
+              "id": "hold_1207_policy",
+              "type": "user",
+              "text": "Any later fee proposal needs a newly approved policy. Do not reconstruct a folio fee from the removed sheet."
+            },
+            {
+              "id": "hold_1207_fixed",
+              "type": "tool",
+              "text": "AL-12 text check passed. The first paragraph now says our records show this book is overdue. Appeal link is present. No fee paragraph or send job exists.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1207_fixed"
+                },
+                "tool_response": {
+                  "output": "AL-12 text check passed. The first paragraph now says our records show this book is overdue. Appeal link is present. No fee paragraph or send job exists.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1207_tail",
+              "type": "user",
+              "text": "The wording repair is finished. Editorial approval of the whole reminder is still pending. Next, ask the editor to review the draft, without sending it to borrowers."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the next step for AL-12, and which part is already finished?",
+          "stage": "final",
+          "project_key": "azurite_library"
+        },
+        {
+          "id": "q2",
+          "question": "Why is the appeal route required, and did removing the fee change that requirement?",
+          "stage": "final",
+          "project_key": "azurite_library"
+        },
+        {
+          "id": "q3",
+          "question": "What contradicted the assistant assessment, and what later passed?",
+          "stage": "final",
+          "project_key": "azurite_library"
+        },
+        {
+          "id": "q4",
+          "question": "What is finished in Fern Cinema versus Azurite Library?",
+          "stage": "final",
+          "project_keys": [
+            "azurite_library",
+            "fern_cinema"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "What did the second chat change within the original reminder task?",
+          "stage": "final",
+          "project_key": "azurite_library"
+        },
+        {
+          "id": "q6",
+          "question": "Can a later fee proposal use the existing folio fee?",
+          "stage": "final",
+          "project_key": "azurite_library"
+        }
+      ]
+    },
+    {
+      "id": "hold_1208",
+      "project_keys": [
+        "harbor_glass",
+        "violet_trails"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1208_0a",
+          "project_key": "harbor_glass",
+          "events": [
+            {
+              "id": "hold_1208_old",
+              "type": "assistant",
+              "text": "A supplier draft rates glass batch Q for outdoor frost. I used that rating to propose batch Q for the plaza installation."
+            },
+            {
+              "id": "hold_1208_brief",
+              "type": "user",
+              "text": "Harbor Glass HG-5 is a sample-board task. Record surface texture and edge finish separately. Use indoor mockups only until the conservator signs off. The plaza installation is a different, unapproved task."
+            },
+            {
+              "id": "hold_1208_check",
+              "type": "tool",
+              "text": "HG-5 sample board has six indoor swatches. Each lists texture and edge finish separately. No conservator signature is attached.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1208_check"
+                },
+                "tool_response": {
+                  "output": "HG-5 sample board has six indoor swatches. Each lists texture and edge finish separately. No conservator signature is attached.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1208_done",
+              "type": "user",
+              "text": "Accept HG-5 as a finished indoor sample board. Do not infer plaza approval."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1208_done"
+            }
+          ]
+        },
+        {
+          "id": "hold_1208_1a",
+          "project_key": "violet_trails",
+          "events": [
+            {
+              "id": "hold_1208_other",
+              "type": "user",
+              "text": "Violet Trails VT-5 is an outdoor wayfinding trial. Its weatherproof board material is approved, but the route markings need another walkthrough."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1208_0b",
+          "project_key": "harbor_glass",
+          "events": [
+            {
+              "id": "hold_1208_resume",
+              "type": "user",
+              "text": "Reopen HG-5 because swatch three has a sharp edge. Keep the indoor-only restriction. Cancel the extra texture photography, but still record the edge finish after repair."
+            },
+            {
+              "id": "hold_1208_fail",
+              "type": "tool",
+              "text": "HG-5 edge inspection failed on swatch three. The repaired edge still catches the cotton test strip. Other five swatches passed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1208_fail"
+                },
+                "tool_response": {
+                  "output": "HG-5 edge inspection failed on swatch three. The repaired edge still catches the cotton test strip. Other five swatches passed.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1208_plan",
+              "type": "assistant",
+              "text": "I will smooth swatch three again and retest its edge. The accepted texture notes do not need a rewrite."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1208_plan"
+            }
+          ]
+        },
+        {
+          "id": "hold_1208_0c",
+          "project_key": "harbor_glass",
+          "events": [
+            {
+              "id": "hold_1208_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1208_old"
+            },
+            {
+              "id": "hold_1208_material",
+              "type": "user",
+              "text": "Outdoor suitability of batch Q is unresolved. Obtain a current supplier certificate before considering it for the plaza. The removed draft cannot support that choice."
+            },
+            {
+              "id": "hold_1208_pass",
+              "type": "tool",
+              "text": "HG-5 swatch-three cotton test passed after the second repair. Six edge-finish records are present. The inspection occurred indoors and did not test frost resistance.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1208_pass"
+                },
+                "tool_response": {
+                  "output": "HG-5 swatch-three cotton test passed after the second repair. Six edge-finish records are present. The inspection occurred indoors and did not test frost resistance.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1208_tail",
+              "type": "user",
+              "text": "Close the swatch repair and HG-5 again. Keep the plaza decision separate and pending the conservator and current material evidence."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is closed now, and what decision remains separate and pending?",
+          "stage": "final",
+          "project_key": "harbor_glass"
+        },
+        {
+          "id": "q2",
+          "question": "Which requirements survived the reopened repair and cancelled photography?",
+          "stage": "final",
+          "project_key": "harbor_glass"
+        },
+        {
+          "id": "q3",
+          "question": "What did the two edge tests establish, and what did they not test?",
+          "stage": "final",
+          "project_key": "harbor_glass"
+        },
+        {
+          "id": "q4",
+          "question": "Compare outdoor-material approval in the two projects.",
+          "stage": "final",
+          "project_keys": [
+            "harbor_glass",
+            "violet_trails"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "Why was a finished task reopened, and did that include the plaza installation?",
+          "stage": "final",
+          "project_key": "harbor_glass"
+        },
+        {
+          "id": "q6",
+          "question": "What evidence is needed before batch Q can be considered for the plaza?",
+          "stage": "final",
+          "project_key": "harbor_glass"
+        }
+      ]
+    },
+    {
+      "id": "hold_1209",
+      "project_keys": [
+        "ochre_forge",
+        "silver_pond"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1209_0a",
+          "project_key": "ochre_forge",
+          "events": [
+            {
+              "id": "hold_1209_brief",
+              "type": "user",
+              "text": "Ochre Forge OF-63 is a training checklist for a fictional kiln. Use Celsius, keep the cooldown warning, and require an instructor to review it. Do not run the kiln from this checklist. We are correcting the document only."
+            },
+            {
+              "id": "hold_1209_draft",
+              "type": "assistant",
+              "text": "I converted the draft numbers to Celsius. I also shortened the cooldown section, and I think the handout is ready."
+            },
+            {
+              "id": "hold_1209_first",
+              "type": "tool",
+              "text": "OF-63 document audit failed. One Fahrenheit label remains, and the cooldown warning is missing from page two. No equipment commands were issued.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1209_first"
+                },
+                "tool_response": {
+                  "output": "OF-63 document audit failed. One Fahrenheit label remains, and the cooldown warning is missing from page two. No equipment commands were issued.",
+                  "exit_code": 1
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1209_first"
+            }
+          ]
+        },
+        {
+          "id": "hold_1209_1a",
+          "project_key": "silver_pond",
+          "events": [
+            {
+              "id": "hold_1209_other",
+              "type": "user",
+              "text": "Silver Pond SP-63 is a water-temperature display. Its Fahrenheit option is required for visiting anglers. The display patch is complete and accepted."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1209_0b",
+          "project_key": "ochre_forge",
+          "events": [
+            {
+              "id": "hold_1209_old",
+              "type": "user",
+              "text": "A handwritten kiln note gives a safe opening threshold of 70 degrees Celsius. The draft opening instruction came from that note."
+            },
+            {
+              "id": "hold_1209_resume",
+              "type": "user",
+              "text": "Carry OF-63 into this chat. Cancel only the laminated-copy request. The Celsius labels, cooldown warning, and instructor review remain required."
+            },
+            {
+              "id": "hold_1209_second",
+              "type": "tool",
+              "text": "OF-63 labels audit passed. All temperature labels now say Celsius. Page two contains the cooldown warning. The audit did not assess opening thresholds.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1209_second"
+                },
+                "tool_response": {
+                  "output": "OF-63 labels audit passed. All temperature labels now say Celsius. Page two contains the cooldown warning. The audit did not assess opening thresholds.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1209_cp",
+              "type": "user",
+              "text": "The labels repair is complete. Keep the handout in review because the opening instruction still needs an authoritative source."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1209_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1209_0c",
+          "project_key": "ochre_forge",
+          "events": [
+            {
+              "id": "hold_1209_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1209_old"
+            },
+            {
+              "id": "hold_1209_source",
+              "type": "user",
+              "text": "Leave the opening threshold unspecified until the instructor supplies the current manual. Do not recover a value from the removed handwritten note."
+            },
+            {
+              "id": "hold_1209_third",
+              "type": "tool",
+              "text": "OF-63 final draft contains an unspecified opening threshold and a request for instructor review. No approval signature or kiln run is recorded.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1209_third"
+                },
+                "tool_response": {
+                  "output": "OF-63 final draft contains an unspecified opening threshold and a request for instructor review. No approval signature or kiln run is recorded.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1209_tail",
+              "type": "user",
+              "text": "Next, request the manual and instructor review. The laminated copy remains cancelled even if review succeeds."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What should happen next for the handout, and what remains cancelled?",
+          "stage": "final",
+          "project_key": "ochre_forge"
+        },
+        {
+          "id": "q2",
+          "question": "Which original obligations still apply after the second chat?",
+          "stage": "final",
+          "project_key": "ochre_forge"
+        },
+        {
+          "id": "q3",
+          "question": "What did the actual audits show compared with the assistant readiness claim?",
+          "stage": "final",
+          "project_key": "ochre_forge"
+        },
+        {
+          "id": "q4",
+          "question": "How do the temperature-unit requirements differ between the projects?",
+          "stage": "final",
+          "project_keys": [
+            "ochre_forge",
+            "silver_pond"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "Is OF-63 entirely complete or only partly complete?",
+          "stage": "final",
+          "project_key": "ochre_forge"
+        },
+        {
+          "id": "q6",
+          "question": "What can be stated about the kiln opening threshold now?",
+          "stage": "final",
+          "project_key": "ochre_forge"
+        }
+      ]
+    },
+    {
+      "id": "hold_1210",
+      "project_keys": [
+        "raven_courier",
+        "marigold_club"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1210_1a",
+          "project_key": "marigold_club",
+          "events": [
+            {
+              "id": "hold_1210_other",
+              "type": "user",
+              "text": "Marigold Club MC-8 is a volunteer schedule. Duplicate nicknames are allowed. The rota is approved, and volunteers can exchange slots directly."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1210_0a",
+          "project_key": "raven_courier",
+          "events": [
+            {
+              "id": "hold_1210_brief",
+              "type": "user",
+              "text": "Raven Courier RC-8 needs a parcel exception queue prototype. Keep parcels separate by tracking ID, redact recipient names from the demo, and require dispatcher approval before reassignment. Nicknames are not stable parcel identifiers."
+            },
+            {
+              "id": "hold_1210_old",
+              "type": "assistant",
+              "text": "An outdated depot card says night parcels may be reassigned without approval. I applied that exception to the demo plan."
+            },
+            {
+              "id": "hold_1210_first",
+              "type": "tool",
+              "text": "RC-8 demo contains twelve distinct tracking IDs and no recipient names. The reassignment control is disabled for all parcels. Approval flow was not tested.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1210_first"
+                },
+                "tool_response": {
+                  "output": "RC-8 demo contains twelve distinct tracking IDs and no recipient names. The reassignment control is disabled for all parcels. Approval flow was not tested.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1210_first"
+            }
+          ]
+        },
+        {
+          "id": "hold_1210_0b",
+          "project_key": "raven_courier",
+          "events": [
+            {
+              "id": "hold_1210_done",
+              "type": "user",
+              "text": "Accept the static demo. The approval flow is still a separate RC-8 subtask. Do not label the full prototype complete."
+            },
+            {
+              "id": "hold_1210_resume",
+              "type": "user",
+              "text": "In this chat, continue that approval-flow subtask. Cancel SMS notifications only. A dispatcher must still approve every reassignment, and the demo must remain redacted."
+            },
+            {
+              "id": "hold_1210_second",
+              "type": "tool",
+              "text": "RC-8 approval test failed. A rejected request was reassigned after retry. The static demo checks still pass.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1210_second"
+                },
+                "tool_response": {
+                  "output": "RC-8 approval test failed. A rejected request was reassigned after retry. The static demo checks still pass.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1210_cp",
+              "type": "assistant",
+              "text": "I traced the failure to a stale approval flag. I will clear the flag on rejection and test retry again."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1210_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1210_0c",
+          "project_key": "raven_courier",
+          "events": [
+            {
+              "id": "hold_1210_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1210_old"
+            },
+            {
+              "id": "hold_1210_policy",
+              "type": "user",
+              "text": "No night-parcel exemption is authorized. Use the current dispatcher rule for the prototype. A future exception needs a new explicit decision."
+            },
+            {
+              "id": "hold_1210_third",
+              "type": "tool",
+              "text": "RC-8 rejection-retry test passed after clearing the flag. A rejected request remains unassigned. The successful-approval path was excluded from this run.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1210_third"
+                },
+                "tool_response": {
+                  "output": "RC-8 rejection-retry test passed after clearing the flag. A rejected request remains unassigned. The successful-approval path was excluded from this run.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1210_tail",
+              "type": "user",
+              "text": "Next test successful approval. Keep the approval-flow subtask open until that path passes. The accepted static demo does not need another acceptance round."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What is the next RC-8 test, and what part stays open?",
+          "stage": "final",
+          "project_key": "raven_courier"
+        },
+        {
+          "id": "q2",
+          "question": "What must remain after SMS cancellation, and how are parcels distinguished?",
+          "stage": "final",
+          "project_key": "raven_courier"
+        },
+        {
+          "id": "q3",
+          "question": "What is proven about static display and reassignment behavior?",
+          "stage": "final",
+          "project_key": "raven_courier"
+        },
+        {
+          "id": "q4",
+          "question": "Can club slot-exchange rules govern parcel reassignment?",
+          "stage": "final",
+          "project_keys": [
+            "raven_courier",
+            "marigold_club"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "How does the later chat relate to the accepted static demo?",
+          "stage": "final",
+          "project_key": "raven_courier"
+        },
+        {
+          "id": "q6",
+          "question": "Does the current approval rule contain a night-parcel exception?",
+          "stage": "final",
+          "project_key": "raven_courier"
+        }
+      ]
+    },
+    {
+      "id": "hold_1211",
+      "project_keys": [
+        "opal_weather",
+        "cedar_museum"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1211_0a",
+          "project_key": "opal_weather",
+          "events": [
+            {
+              "id": "hold_1211_brief",
+              "type": "user",
+              "text": "Opal Weather OW-14 needs a classroom rain-chart generator. Show missing days as gaps, keep measured zeros as zeros, and do not smooth the series. Students must see the difference between no reading and no rain."
+            },
+            {
+              "id": "hold_1211_first",
+              "type": "tool",
+              "text": "OW-14 chart test failed. Missing days were filled with zeros. Actual zero readings remained zero.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1211_first"
+                },
+                "tool_response": {
+                  "output": "OW-14 chart test failed. Missing days were filled with zeros. Actual zero readings remained zero.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1211_old",
+              "type": "user",
+              "text": "A discarded station sheet lists the April 6 reading as 18 millimeters. I used that number to close the gap in a presentation draft."
+            },
+            {
+              "id": "hold_1211_cp",
+              "type": "assistant",
+              "text": "I will distinguish missing values from zero in the parser. The presentation is not an authoritative data source."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1211_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1211_0b",
+          "project_key": "opal_weather",
+          "events": [
+            {
+              "id": "hold_1211_continue",
+              "type": "user",
+              "text": "Resume OW-14 here. Cancel the presentation slide export but keep the chart generator. Use gaps for missing days and retain measured zeros. No smoothing is allowed."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1211_1a",
+          "project_key": "cedar_museum",
+          "events": [
+            {
+              "id": "hold_1211_other",
+              "type": "user",
+              "text": "Cedar Museum CM-14 is an attendance chart. Smoothing is approved for its monthly trend display. Its data import is still blocked by a missing file."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1211_0b2",
+          "project_key": "opal_weather",
+          "events": [
+            {
+              "id": "hold_1211_second",
+              "type": "tool",
+              "text": "OW-14 chart test passed for the supplied fixture. Missing days render as gaps and measured zeros remain at zero. No smoothing is applied.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1211_second"
+                },
+                "tool_response": {
+                  "output": "OW-14 chart test passed for the supplied fixture. Missing days render as gaps and measured zeros remain at zero. No smoothing is applied.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1211_done",
+              "type": "user",
+              "text": "Accept the parser repair. The live classroom dataset still needs a source audit before we call OW-14 complete."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1211_done"
+            }
+          ]
+        },
+        {
+          "id": "hold_1211_0c",
+          "project_key": "opal_weather",
+          "events": [
+            {
+              "id": "hold_1211_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1211_old"
+            },
+            {
+              "id": "hold_1211_current",
+              "type": "user",
+              "text": "Leave April 6 missing until a new station record arrives. Do not use the old station sheet or the slide draft to fill that gap."
+            },
+            {
+              "id": "hold_1211_third",
+              "type": "tool",
+              "text": "OW-14 source audit stopped with April 6 missing. The generator rendered a gap. No replacement station record is attached.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1211_third"
+                },
+                "tool_response": {
+                  "output": "OW-14 source audit stopped with April 6 missing. The generator rendered a gap. No replacement station record is attached.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1211_tail",
+              "type": "user",
+              "text": "Request the replacement record next. The generator behavior is accepted; the dataset audit remains unresolved."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What remains to be done for OW-14 after the parser repair?",
+          "stage": "final",
+          "project_key": "opal_weather"
+        },
+        {
+          "id": "q2",
+          "question": "Why distinguish gaps from zeros, and what restrictions survived the slide cancellation?",
+          "stage": "final",
+          "project_key": "opal_weather"
+        },
+        {
+          "id": "q3",
+          "question": "What changed between the chart tests and what did the source audit find?",
+          "stage": "final",
+          "project_key": "opal_weather"
+        },
+        {
+          "id": "q4",
+          "question": "What is the smoothing policy in each project?",
+          "stage": "final",
+          "project_keys": [
+            "opal_weather",
+            "cedar_museum"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "Did the later chat cancel the generator or just a deliverable?",
+          "stage": "final",
+          "project_key": "opal_weather"
+        },
+        {
+          "id": "q6",
+          "question": "What value can the current chart use for April 6?",
+          "stage": "final",
+          "project_key": "opal_weather"
+        }
+      ]
+    },
+    {
+      "id": "hold_1212",
+      "project_keys": [
+        "birch_tower",
+        "plum_market"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1212_0a",
+          "project_key": "birch_tower",
+          "events": [
+            {
+              "id": "hold_1212_brief",
+              "type": "user",
+              "text": "Birch Tower BT-22 is a visitor-badge prototype. Display initials only, require desk confirmation for reprints, and keep expired badges visibly expired. Do not connect the prototype to the building doors."
+            },
+            {
+              "id": "hold_1212_old",
+              "type": "assistant",
+              "text": "A retired desk memo says guests of the east studio can reprint badges themselves. I used that rule to add a self-service reprint button."
+            },
+            {
+              "id": "hold_1212_first",
+              "type": "tool",
+              "text": "BT-22 prototype check failed. Expired badges appear active after a reprint. The door connector is absent.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1212_first"
+                },
+                "tool_response": {
+                  "output": "BT-22 prototype check failed. Expired badges appear active after a reprint. The door connector is absent.",
+                  "exit_code": 1
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1212_first"
+            }
+          ]
+        },
+        {
+          "id": "hold_1212_1a",
+          "project_key": "plum_market",
+          "events": [
+            {
+              "id": "hold_1212_other",
+              "type": "user",
+              "text": "Plum Market PM-22 is a vendor name-card generator. Full business names are required, and self-service reprints are approved. Its generator passed acceptance."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1212_0b",
+          "project_key": "birch_tower",
+          "events": [
+            {
+              "id": "hold_1212_resume",
+              "type": "user",
+              "text": "This chat resumes BT-22. Remove the optional badge-color selector, but keep initials, desk confirmation, and the visible expiry state. The privacy goal still matters in screenshots."
+            },
+            {
+              "id": "hold_1212_second",
+              "type": "tool",
+              "text": "BT-22 expiry test passed. Reprinted expired badges remain marked expired. Initials-only rendering passed. Desk confirmation was mocked, not exercised.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1212_second"
+                },
+                "tool_response": {
+                  "output": "BT-22 expiry test passed. Reprinted expired badges remain marked expired. Initials-only rendering passed. Desk confirmation was mocked, not exercised.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1212_claim",
+              "type": "assistant",
+              "text": "The prototype looks ready. I would call it done based on the expiry and initials tests."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1212_claim"
+            }
+          ]
+        },
+        {
+          "id": "hold_1212_0c",
+          "project_key": "birch_tower",
+          "events": [
+            {
+              "id": "hold_1212_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1212_old"
+            },
+            {
+              "id": "hold_1212_rule",
+              "type": "user",
+              "text": "All prototype reprints require desk confirmation. No studio exception is current. A removed memo cannot establish one."
+            },
+            {
+              "id": "hold_1212_third",
+              "type": "tool",
+              "text": "BT-22 desk-confirmation test failed. Clicking reprint before confirmation still creates a badge preview. No door action occurred.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1212_third"
+                },
+                "tool_response": {
+                  "output": "BT-22 desk-confirmation test failed. Clicking reprint before confirmation still creates a badge preview. No door action occurred.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1212_tail",
+              "type": "user",
+              "text": "Keep BT-22 open. Next disable preview creation until desk confirmation succeeds. Do not redo the accepted expiry rendering unless that change affects it."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What should be repaired next in BT-22, and is it complete?",
+          "stage": "final",
+          "project_key": "birch_tower"
+        },
+        {
+          "id": "q2",
+          "question": "Which requirements survived removal of the color selector, and why use initials?",
+          "stage": "final",
+          "project_key": "birch_tower"
+        },
+        {
+          "id": "q3",
+          "question": "Which parts passed and what was only mocked?",
+          "stage": "final",
+          "project_key": "birch_tower"
+        },
+        {
+          "id": "q4",
+          "question": "How do name display and reprint permission differ between the projects?",
+          "stage": "final",
+          "project_keys": [
+            "birch_tower",
+            "plum_market"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "What connects the new chat to the original badge work and limits the next repair?",
+          "stage": "final",
+          "project_key": "birch_tower"
+        },
+        {
+          "id": "q6",
+          "question": "Is there a studio-specific reprint exception in the current prototype rules?",
+          "stage": "final",
+          "project_key": "birch_tower"
+        }
+      ]
+    },
+    {
+      "id": "hold_1213",
+      "project_keys": [
+        "quartz_theater"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1213_0a",
+          "project_key": "quartz_theater",
+          "events": [
+            {
+              "id": "hold_1213_brief",
+              "type": "user",
+              "text": "Quartz Theater has two cue-card jobs. QT-40 is a backstage evacuation rehearsal card. QT-41 is a stage-light blackout cue card. Similar words do not make them one job. QT-40 needs large text, both exit routes, and stage-manager review. QT-41 must not mention evacuation."
+            },
+            {
+              "id": "hold_1213_old",
+              "type": "user",
+              "text": "A superseded floor sketch shows the west corridor as always unlocked. The rehearsal draft sends everyone there because of that sketch."
+            },
+            {
+              "id": "hold_1213_first",
+              "type": "tool",
+              "text": "QT-41 lighting cue preview passed. It contains only the blackout timing and recovery cue. No evacuation text appears.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1213_first"
+                },
+                "tool_response": {
+                  "output": "QT-41 lighting cue preview passed. It contains only the blackout timing and recovery cue. No evacuation text appears.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1213_accept",
+              "type": "user",
+              "text": "Accept and close QT-41. QT-40 is still in progress. The lighting preview says nothing about evacuation routes."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1213_accept"
+            }
+          ]
+        },
+        {
+          "id": "hold_1213_0b",
+          "project_key": "quartz_theater",
+          "events": [
+            {
+              "id": "hold_1213_resume",
+              "type": "user",
+              "text": "Continue the evacuation card, QT-40, in this chat. Keep large text and stage-manager review. Cancel the fold-out format, but keep both exit routes. A single blocked route must not leave the rehearsal without an alternative."
+            },
+            {
+              "id": "hold_1213_fail",
+              "type": "tool",
+              "text": "QT-40 card inspection failed. The font meets the large-text rule, but the east route is missing. No stage-manager approval is attached.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1213_fail"
+                },
+                "tool_response": {
+                  "output": "QT-40 card inspection failed. The font meets the large-text rule, but the east route is missing. No stage-manager approval is attached.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1213_plan",
+              "type": "assistant",
+              "text": "I will add the east route to the single-sheet card. I mistakenly referred to this as QT-41 in my working notes; the repair is for QT-40."
+            },
+            {
+              "id": "hold_1213_cp",
+              "type": "user",
+              "text": "Correct that task label in your notes. Do not reopen the accepted lighting card. The evacuation route review is a different job."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1213_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1213_0c",
+          "project_key": "quartz_theater",
+          "events": [
+            {
+              "id": "hold_1213_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1213_old"
+            },
+            {
+              "id": "hold_1213_route",
+              "type": "user",
+              "text": "Treat west-corridor availability as unknown until a new venue inspection. Do not rely on the removed sketch or its one-route draft. Both candidate routes still need review."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1213_0d",
+          "project_key": "quartz_theater",
+          "events": [
+            {
+              "id": "hold_1213_last",
+              "type": "tool",
+              "text": "QT-40 single-sheet preview contains both east and west candidate routes in large text. Both routes carry pending-review labels. No venue inspection or stage-manager approval is attached.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1213_last"
+                },
+                "tool_response": {
+                  "output": "QT-40 single-sheet preview contains both east and west candidate routes in large text. Both routes carry pending-review labels. No venue inspection or stage-manager approval is attached.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1213_tail",
+              "type": "user",
+              "text": "Next arrange the venue inspection and stage-manager review for QT-40. QT-41 stays closed. Do not use the rehearsal card for an actual event before review."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which cue-card job needs action next, and what action?",
+          "stage": "final",
+          "project_key": "quartz_theater"
+        },
+        {
+          "id": "q2",
+          "question": "How should the two jobs and the mistaken task label be understood?",
+          "stage": "final",
+          "project_key": "quartz_theater"
+        },
+        {
+          "id": "q3",
+          "question": "What survived cancellation of the fold-out format, and why are two routes required?",
+          "stage": "final",
+          "project_key": "quartz_theater"
+        },
+        {
+          "id": "q4",
+          "question": "What do the captured previews establish for each job?",
+          "stage": "final",
+          "project_key": "quartz_theater"
+        },
+        {
+          "id": "q5",
+          "question": "Which job is closed and which still awaits review after the final chat?",
+          "stage": "final",
+          "project_key": "quartz_theater"
+        },
+        {
+          "id": "q6",
+          "question": "What can be assumed about the west corridor before the next inspection?",
+          "stage": "final",
+          "project_key": "quartz_theater"
+        }
+      ]
+    },
+    {
+      "id": "hold_1214",
+      "project_keys": [
+        "cobalt_workshop"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1214_0a",
+          "project_key": "cobalt_workshop",
+          "events": [
+            {
+              "id": "hold_1214_brief",
+              "type": "user",
+              "text": "Cobalt Workshop CW-17 asks for a tool-lending kiosk proposal. Compare paper sign-out with a kiosk. Keep member names out of the prototype, keep lending periods configurable, and estimate maintenance effort before recommending a purchase."
+            },
+            {
+              "id": "hold_1214_old",
+              "type": "assistant",
+              "text": "A withdrawn vendor quote promises lifetime support at no charge. I used it to estimate zero maintenance cost and recommend the kiosk."
+            },
+            {
+              "id": "hold_1214_claim",
+              "type": "assistant",
+              "text": "The kiosk looks like the cheaper option. I have not completed the maintenance comparison."
+            },
+            {
+              "id": "hold_1214_first",
+              "type": "tool",
+              "text": "CW-17 prototype inspection found configurable lending periods and synthetic member labels only. The prototype stores no real member names. No purchase order exists.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1214_first"
+                },
+                "tool_response": {
+                  "output": "CW-17 prototype inspection found configurable lending periods and synthetic member labels only. The prototype stores no real member names. No purchase order exists.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1214_first"
+            }
+          ]
+        },
+        {
+          "id": "hold_1214_0b",
+          "project_key": "cobalt_workshop",
+          "events": [
+            {
+              "id": "hold_1214_resume",
+              "type": "user",
+              "text": "Resume the same comparison here. Cancel the touchscreen enclosure mockup, not the maintenance estimate. We still need the paper process as a comparator."
+            },
+            {
+              "id": "hold_1214_second",
+              "type": "tool",
+              "text": "CW-17 comparison audit failed. Paper-process staff time is listed, but kiosk maintenance effort is blank. Cost ranking cannot be computed from this worksheet.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1214_second"
+                },
+                "tool_response": {
+                  "output": "CW-17 comparison audit failed. Paper-process staff time is listed, but kiosk maintenance effort is blank. Cost ranking cannot be computed from this worksheet.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1214_decision",
+              "type": "user",
+              "text": "Stop the kiosk procurement work. The workshop has decided to retain paper sign-out for this season. Mark the proposal cancelled, not delivered. Keep the incomplete worksheet only as a draft."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1214_decision"
+            }
+          ]
+        },
+        {
+          "id": "hold_1214_0c",
+          "project_key": "cobalt_workshop",
+          "events": [
+            {
+              "id": "hold_1214_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1214_old"
+            },
+            {
+              "id": "hold_1214_basis",
+              "type": "user",
+              "text": "The withdrawn quote is not a basis for future maintenance costs. If we revisit procurement, obtain a new support offer and estimate staff time again."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1214_0d",
+          "project_key": "cobalt_workshop",
+          "events": [
+            {
+              "id": "hold_1214_new",
+              "type": "user",
+              "text": "Separate task CW-18 is a paper sign-out wording cleanup. It is not a reopening of CW-17. Keep the cancellation intact. In CW-18, shorten the return instruction without changing lending periods."
+            },
+            {
+              "id": "hold_1214_third",
+              "type": "tool",
+              "text": "CW-18 wording preview passed. The return instruction is shorter and lending-period fields are unchanged. The preview contains synthetic labels only.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1214_third"
+                },
+                "tool_response": {
+                  "output": "CW-18 wording preview passed. The return instruction is shorter and lending-period fields are unchanged. The preview contains synthetic labels only.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1214_tail",
+              "type": "user",
+              "text": "Accept CW-18 and close it. There is no active kiosk purchase task. A new seasonal decision would be needed to start one."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What are the final states of CW-17 and CW-18?",
+          "stage": "final",
+          "project_key": "cobalt_workshop"
+        },
+        {
+          "id": "q2",
+          "question": "Why did the proposal stop, and what does its worksheet represent?",
+          "stage": "final",
+          "project_key": "cobalt_workshop"
+        },
+        {
+          "id": "q3",
+          "question": "Before cancellation, what did removing the enclosure mockup leave in scope?",
+          "stage": "final",
+          "project_key": "cobalt_workshop"
+        },
+        {
+          "id": "q4",
+          "question": "What was actually shown about the prototype and the comparison?",
+          "stage": "final",
+          "project_key": "cobalt_workshop"
+        },
+        {
+          "id": "q5",
+          "question": "Did the paper wording cleanup reopen the procurement proposal? What would permit new procurement work?",
+          "stage": "final",
+          "project_key": "cobalt_workshop"
+        },
+        {
+          "id": "q6",
+          "question": "What would be needed to estimate maintenance if procurement returns?",
+          "stage": "final",
+          "project_key": "cobalt_workshop"
+        }
+      ]
+    },
+    {
+      "id": "hold_1215",
+      "project_keys": [
+        "indigo_garden"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1215_0a",
+          "project_key": "indigo_garden",
+          "events": [
+            {
+              "id": "hold_1215_brief",
+              "type": "user",
+              "text": "Indigo Garden IG-25 is a seed-sharing ledger. Preserve batch IDs, distinguish donated from purchased stock, and leave uncertain germination rates blank. Never substitute an average rate, since gardeners use the ledger to choose planting quantities."
+            },
+            {
+              "id": "hold_1215_first",
+              "type": "tool",
+              "text": "IG-25 import failed. Donated stock was marked purchased when the price field was blank. Batch IDs were preserved.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1215_first"
+                },
+                "tool_response": {
+                  "output": "IG-25 import failed. Donated stock was marked purchased when the price field was blank. Batch IDs were preserved.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1215_old",
+              "type": "user",
+              "text": "A discarded packet note claims batch L germinates at 92 percent. That was copied into the planning worksheet as a reliable rate."
+            },
+            {
+              "id": "hold_1215_cp",
+              "type": "user",
+              "text": "Repair the donation classification first. The planting-quantity worksheet is a separate task, IG-26, and remains paused. Do not use the import repair to restart it."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1215_cp"
+            }
+          ]
+        },
+        {
+          "id": "hold_1215_0b",
+          "project_key": "indigo_garden",
+          "events": [
+            {
+              "id": "hold_1215_resume",
+              "type": "user",
+              "text": "Continue IG-25 in this new chat. Remove the optional color icons but retain separate donated and purchased labels. Keep batch IDs and blank uncertain rates."
+            },
+            {
+              "id": "hold_1215_second",
+              "type": "tool",
+              "text": "IG-25 import repair passed 31 rows. Donated and purchased labels match the source records. Batch IDs are unchanged. Uncertain rates remain empty in the tested fixture.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1215_second"
+                },
+                "tool_response": {
+                  "output": "IG-25 import repair passed 31 rows. Donated and purchased labels match the source records. Batch IDs are unchanged. Uncertain rates remain empty in the tested fixture.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1215_done",
+              "type": "user",
+              "text": "Accept the donation-classification repair as finished. The ledger still needs a duplicate-batch review before final acceptance."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1215_0c",
+          "project_key": "indigo_garden",
+          "events": [
+            {
+              "id": "hold_1215_report",
+              "type": "assistant",
+              "text": "I reviewed the duplicates and think the ledger is ready. I did not inspect the handwritten correction attached to batch M."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1215_report"
+            }
+          ]
+        },
+        {
+          "id": "hold_1215_0d",
+          "project_key": "indigo_garden",
+          "events": [
+            {
+              "id": "hold_1215_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1215_old"
+            },
+            {
+              "id": "hold_1215_rates",
+              "type": "user",
+              "text": "Leave batch L germination unknown until a new assay is recorded. The removed packet note and its copied planning value must not guide planting quantities. IG-26 stays paused."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1215_0e",
+          "project_key": "indigo_garden",
+          "events": [
+            {
+              "id": "hold_1215_third",
+              "type": "tool",
+              "text": "IG-25 duplicate review failed on batch M. Two rows share the same ID but disagree on donated versus purchased status. The handwritten correction has not been applied.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1215_third"
+                },
+                "tool_response": {
+                  "output": "IG-25 duplicate review failed on batch M. Two rows share the same ID but disagree on donated versus purchased status. The handwritten correction has not been applied.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1215_tail",
+              "type": "user",
+              "text": "Reopen the duplicate review for IG-25 because the conflicting rows remain. Read the handwritten correction before choosing a label. Do not reopen the finished import repair without evidence that its classifier caused the conflict."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What should happen next for IG-25, and what remains paused?",
+          "stage": "final",
+          "project_key": "indigo_garden"
+        },
+        {
+          "id": "q2",
+          "question": "What data rules survive the icon removal and why must uncertain rates stay blank?",
+          "stage": "final",
+          "project_key": "indigo_garden"
+        },
+        {
+          "id": "q3",
+          "question": "What did the passing import test prove, and what later contradicted readiness?",
+          "stage": "final",
+          "project_key": "indigo_garden"
+        },
+        {
+          "id": "q4",
+          "question": "How are IG-25, its finished repair, and IG-26 related?",
+          "stage": "final",
+          "project_key": "indigo_garden"
+        },
+        {
+          "id": "q5",
+          "question": "Why did the user reopen the duplicate review, and what evidence must be read first?",
+          "stage": "final",
+          "project_key": "indigo_garden"
+        },
+        {
+          "id": "q6",
+          "question": "Can the old batch L planning value guide planting quantities now?",
+          "stage": "final",
+          "project_key": "indigo_garden"
+        }
+      ]
+    },
+    {
+      "id": "hold_1216",
+      "project_keys": [
+        "sienna_gallery"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1216_0a",
+          "project_key": "sienna_gallery",
+          "events": [
+            {
+              "id": "hold_1216_brief",
+              "type": "user",
+              "text": "Sienna Gallery SG-33 is an audio-tour transcript. Keep spoken hesitations where they change meaning, identify invented quotations as dramatizations, and obtain curator approval before printing. The educational tour must not present fictional dialogue as archival speech."
+            },
+            {
+              "id": "hold_1216_old",
+              "type": "assistant",
+              "text": "A withdrawn research card attributes the line stone remembers every hand to sculptor Neral. I used it as an authentic quotation in the transcript notes."
+            },
+            {
+              "id": "hold_1216_first",
+              "type": "tool",
+              "text": "SG-33 transcript audit passed the hesitation checks. Three dramatized lines carry labels. The audit did not compare every quotation against archival sources.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1216_first"
+                },
+                "tool_response": {
+                  "output": "SG-33 transcript audit passed the hesitation checks. Three dramatized lines carry labels. The audit did not compare every quotation against archival sources.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1216_accept",
+              "type": "user",
+              "text": "Accept the hesitation edit. Quotation review and curator approval are still pending. Do not close the whole transcript."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1216_accept"
+            }
+          ]
+        },
+        {
+          "id": "hold_1216_0b",
+          "project_key": "sienna_gallery",
+          "events": [
+            {
+              "id": "hold_1216_resume",
+              "type": "user",
+              "text": "Continue SG-33 here. Cancel the bilingual print layout only. Keep the dramatization labels and approval gate. The audio script and its quotation review remain in scope."
+            },
+            {
+              "id": "hold_1216_claim",
+              "type": "assistant",
+              "text": "I think every quotation is now sourced. I marked the transcript ready in my draft notes, but I have not received curator approval."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1216_0c",
+          "project_key": "sienna_gallery",
+          "events": [
+            {
+              "id": "hold_1216_second",
+              "type": "tool",
+              "text": "SG-33 quotation audit failed. The stone-remembers line has no archival citation. The three labeled dramatizations remain labeled. No print job exists.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1216_second"
+                },
+                "tool_response": {
+                  "output": "SG-33 quotation audit failed. The stone-remembers line has no archival citation. The three labeled dramatizations remain labeled. No print job exists.",
+                  "exit_code": 1
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1216_second"
+            }
+          ]
+        },
+        {
+          "id": "hold_1216_0d",
+          "project_key": "sienna_gallery",
+          "events": [
+            {
+              "id": "hold_1216_delete",
+              "type": "delete_observation",
+              "text": "Remove this earlier observation and knowledge that depends only on it.",
+              "observation_event_id": "hold_1216_old"
+            },
+            {
+              "id": "hold_1216_correction",
+              "type": "user",
+              "text": "Correction: the stone-remembers line is an invented line for this tour. Label it as a dramatization and remove its attribution. Do not recover attribution from the withdrawn research card."
+            },
+            {
+              "id": "hold_1216_request",
+              "type": "user",
+              "text": "Reopen quotation review to make that correction. This is still SG-33, not a new audio-tour project. Keep the accepted hesitation edits."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1216_0e",
+          "project_key": "sienna_gallery",
+          "events": [
+            {
+              "id": "hold_1216_third",
+              "type": "tool",
+              "text": "SG-33 revised transcript marks the stone-remembers line as a dramatization with no named speaker attribution. The earlier three dramatization labels remain. No curator approval is attached.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-audit --record hold_1216_third"
+                },
+                "tool_response": {
+                  "output": "SG-33 revised transcript marks the stone-remembers line as a dramatization with no named speaker attribution. The earlier three dramatization labels remain. No curator approval is attached.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1216_tail",
+              "type": "user",
+              "text": "Accept the quotation correction. Next request curator approval of the full transcript. The bilingual layout stays cancelled, and printing remains blocked until approval."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What remains before SG-33 can print, and what has been accepted?",
+          "stage": "final",
+          "project_key": "sienna_gallery"
+        },
+        {
+          "id": "q2",
+          "question": "What obligations survived cancellation of the bilingual layout, and why label invented dialogue?",
+          "stage": "final",
+          "project_key": "sienna_gallery"
+        },
+        {
+          "id": "q3",
+          "question": "How did actual quotation evidence differ from the assistant report?",
+          "stage": "final",
+          "project_key": "sienna_gallery"
+        },
+        {
+          "id": "q4",
+          "question": "What was reopened and what accepted work stayed intact?",
+          "stage": "final",
+          "project_key": "sienna_gallery"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current treatment of the stone-remembers line?",
+          "stage": "final",
+          "project_key": "sienna_gallery"
+        },
+        {
+          "id": "q6",
+          "question": "Can the transcript name an archival speaker for the stone-remembers line?",
+          "stage": "final",
+          "project_key": "sienna_gallery"
+        }
+      ]
+    }
+  ]
+}

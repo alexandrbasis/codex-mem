@@ -1,0 +1,86 @@
+{
+  "status": "test_fixture_only_correction_held_36_verified_green_no_actual_R21_audit",
+  "prior_preparation_preserved_sha256": "6acffffd3befc54d3a90e5f7a006d77e69622c15e2048b7d2046489fb0c19ca7",
+  "prior_preparation_claim_correction": "The old36PASSclaim was wrong. Saved binding-green.log already contains KeyError public_calls at actualR21main line432. Other commands in a combined shell continued and final successful compile exit masked the intermediate test failure; I failed to inspect that log before reporting.",
+  "old_source_default_hypothesis": "Not supported: old log explicitly names r21-audit/audit-final-export.py line432 and test uses required--source. It did not silently default to oldR20source.",
+  "minimal_change": "Syntheticbinding now includes explicitpublic_calls=10/public_tokens=1000; syntheticpublicIDs and finishedusage rows both10. Main/release/auditor sources untouched.",
+  "preserved_oldtest_sha256": "33d888c7828a1ae3968ba48b53ea963297d3c613a96db313d66fcba20c85eab6",
+  "red_log_sha256": "14fe7469fb93fa0d7f23ddf169263626c89d2532b9b58a22c1e0ee36453c93ea",
+  "corrected_test_sha256": "25d3e7b6ca9e2132b30a44e30155df6e3f5820114b344d01a07535b7ae05b0bd",
+  "held_source_sha256": {
+    "audit-final-export.py": "0cf2f20876f41806d193daeef0cf36ff2042e838cace46815338e2b6a38e1303",
+    "release_schema.py": "f8c4ccc5b2bc8b130092830e5b4a1bd077edfd8423c11c4047b52b4439eb06f5",
+    "audit-archive-supplement.py": "45e440752c244bd18d41441673ca15e7f9af74e67814f2dfb5979c192eef87b3",
+    "held-helper-preparation.py": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102"
+  },
+  "all_commands_and_log_pins": {
+    "commands": [
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-audit-contracts.py"
+        ],
+        "returncode": 0,
+        "log": "correction-v002-test-1.log",
+        "log_sha256": "19ce4c3fe936ba5a289b545d890b7ffce48ced29d4b7b20a8c6b10a871321dd4"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-release-schema.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "log": "correction-v002-test-2.log",
+        "log_sha256": "833af8ba6fd734ac45299e0d9055beaf978ada37598f7c54df8d6ea27b95c9f1"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-improvement-path.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "log": "correction-v002-test-3.log",
+        "log_sha256": "a60e0d2d66e445b0734c0563e528ca7eae6f1b838b35a48522a62ef5a010522e"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-binding-path.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export.py"
+        ],
+        "returncode": 0,
+        "log": "correction-v002-test-4.log",
+        "log_sha256": "e92b0ffd03bb5447a0dbd23d6627ba8b9193e54e2b435416328ff01c3080cf06"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-r21-contracts.py"
+        ],
+        "returncode": 0,
+        "log": "correction-v002-test-5.log",
+        "log_sha256": "9d654695c0a90577e252109954dd749137ace81d33f39cf1a31990e7f48cf31d"
+      }
+    ],
+    "compile_without_bytecode_writes": "passed"
+  },
+  "verified_test_counts": [
+    13,
+    8,
+    10,
+    1,
+    4
+  ],
+  "verified_total": 36,
+  "actual_R21_source_paths": "Threeconsumer suites explicitly use --source r21-audit/audit-final-export.py. Accounting/ownership suite uses R21heldhelper snapshot; fidelitybudget suite loads same snapshot and actualR21auditor source via its own fixedBpath.",
+  "actual_R21_private_protocol_clock_release_inputs_audit_native_model_network_or_Store_access": false,
+  "limits": [
+    "These36green tests validate syntheticcontracts and owningconsumer seams; not actualR21quality or completedactualaudit.",
+    "EarlierfullclosedR20reference result remains preserved separately; no rerun or oldscorechange."
+  ]
+}

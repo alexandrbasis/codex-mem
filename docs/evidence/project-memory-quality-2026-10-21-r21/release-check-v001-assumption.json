@@ -1,0 +1,17 @@
+{
+  "status": "parent_release_prerequisite_alias_check_corrected_before_case_parse",
+  "initial_error": "AssertionError at stdin line20",
+  "initial_assertion": "release.prerequisite_pins == expected four durable basenames",
+  "actual_prerequisite_names": [
+    "actual-freeze.json",
+    "freeze.json",
+    "protocol.json",
+    "public-gate-verification.json",
+    "release-prerequisites.json"
+  ],
+  "cause": "Author also pinned the actual run freeze basename freeze.json. It has exactly the same bytes/hash as durable actual-freeze.json; initial parent expected only four preregistered basenames.",
+  "fix": "Preserve the flat release unchanged. Create durable freeze.json byte-identical to the already verified actual freeze, then verify all five prerequisite pins. No source-validator fallback or field repair.",
+  "parent_fixture_gold_rationale_fullreview_parsed": false,
+  "actual_native_calls": 10,
+  "runtime_helper_protocol_or_clock_changed": false
+}

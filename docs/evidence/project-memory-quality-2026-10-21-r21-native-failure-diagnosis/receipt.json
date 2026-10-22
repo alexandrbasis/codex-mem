@@ -1,0 +1,418 @@
+{
+  "schema_version": 1,
+  "status": "read_only_failure_stage_and_observability_audit_complete",
+  "causal_reproduction": {
+    "performed": false,
+    "possible_from_retained_artifacts": false,
+    "reason": "The failed-turn protocol payload, exact error tag/status and remote diagnostic reference were not retained. Retrying the native call is forbidden for this audit.",
+    "mock_limit": "The synthetic classification probe proves mapping and privacy behavior only. It does not reproduce call0055 or prove its remote root cause."
+  },
+  "failure": {
+    "call_rows": [
+      {
+        "phase": "generation",
+        "variant": "baseline",
+        "history_id": "h12",
+        "run_id": "primary",
+        "repeat": 0,
+        "prompt_version": "role-attribution-shared-union-v2",
+        "protocol_sha256": "92fd138f425fbf6b81f58fd06a6f25c7fae5b237f6823cacb58e1c87324361dd",
+        "helper_sha256": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "medium",
+        "shared_generation_runtime": "candidate",
+        "producer_runtime_source": "candidate",
+        "common_prefix_attribution": "shared_by_both_reader_arms",
+        "call_id": "call-0055",
+        "status": "started",
+        "at": 1792653204.404338,
+        "prompt_chars": 16258,
+        "request_sha256": "6ade871c959b6d2110b3ec4fbe9a79a0ef4aeef805d30ca5a15a57acb0dac695"
+      },
+      {
+        "phase": "generation",
+        "variant": "baseline",
+        "history_id": "h12",
+        "run_id": "primary",
+        "repeat": 0,
+        "prompt_version": "role-attribution-shared-union-v2",
+        "protocol_sha256": "92fd138f425fbf6b81f58fd06a6f25c7fae5b237f6823cacb58e1c87324361dd",
+        "helper_sha256": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "medium",
+        "shared_generation_runtime": "candidate",
+        "producer_runtime_source": "candidate",
+        "common_prefix_attribution": "shared_by_both_reader_arms",
+        "call_id": "call-0055",
+        "status": "failed",
+        "error_type": "ProcessorFailure",
+        "error_code": "runner_failure",
+        "reason_code": "native_server_error",
+        "metrics": {
+          "duration_ms": 3737,
+          "usage": {
+            "status": "unavailable",
+            "source": "app_server_thread_total",
+            "updates": 0,
+            "tokens": null
+          }
+        },
+        "wall_ms": 3746
+      }
+    ],
+    "request_metadata": {
+      "processor_id": "codex-mem-project-episode-v2",
+      "output_schema_version": "project-memory-output-v12",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "timeout": 180.0
+    },
+    "prompt_characters": 16258,
+    "request_file_sha256": "9ff2b1c209f55e4b9b711c3bd333795be35c3553bc198dfa55379041d5ae2c9c",
+    "request_canonical_digest_matches_started_ledger": true,
+    "response_file_present": false,
+    "actual_runner_class": "codex_mem.processor.NativeProcessorRunner",
+    "phase": "generation of the shared common prefix, stored under baseline/h12, using candidate runtime",
+    "stage_established_from_recorded_code": "A matching turn/completed notification was classified as native_server_error after a valid turn/start response supplied a turn ID. A successful final-output read/validation was not reached.",
+    "stage_not_established": [
+      "The exact turn status value is absent. The failed-turn branch also accepts other non-completed states, so literal status=failed is not separately proved.",
+      "A separate turn/started notification is not proved. The error can be buffered before turn/start returns, then applied after its ID is set.",
+      "There is no retained proof that model token generation began or how much provider work ran.",
+      "The client classification does not identify an internal Codex app-server fault versus an upstream service fault."
+    ],
+    "mapped_routes": {
+      "enum_tags": [
+        "internalServerError",
+        "serverOverloaded"
+      ],
+      "singleton_http_variants": [
+        "httpConnectionFailed",
+        "responseStreamConnectionFailed",
+        "responseStreamDisconnected",
+        "responseTooManyFailedAttempts"
+      ],
+      "integer_http_status_range": [
+        500,
+        599
+      ]
+    },
+    "different_local_errors": "JSON-RPC error responses, malformed transport and local deadline expiration use protocol_error/timeout, not this mapped reason. An upstream HTTP504 remains one possible shape within the recorded server-error category, not an observed cause."
+  },
+  "timeline": {
+    "original_started_at": 1792651854.4362519,
+    "original_started_at_utc": "2026-10-22T06:50:54.436252+00:00",
+    "call_started_at": 1792653204.404338,
+    "driver_stopped_at": 1792653208.169934,
+    "elapsed_to_call_start_seconds": 1349.9680860042572,
+    "elapsed_to_stop_seconds": 1353.7336821556091,
+    "native_metrics_duration_ms": 3737,
+    "capture_wall_ms": 3746,
+    "episode_processor_duration_ms": 3758,
+    "duration_limit": "Native metrics include local setup and failure-handling/interrupt work. They are not isolated model-compute or provider latency."
+  },
+  "queue_checkpoint_metadata": {
+    "attempt": {
+      "attempt_id": "pma_44042fe5595d4060880cc3ff29d9d70f",
+      "project": "/private/tmp/codex-mem-quality-20261021-r21-experiment/projects/h12/saffronpier",
+      "session_id": "h12_s2",
+      "job_id": "pmj_fe67ef5fdd74f3619f8cbeb7ae8945468d27d902",
+      "processor_id": "codex-mem-project-episode-v2",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "medium",
+      "started_at": "2026-10-22T07:13:24.399+00:00",
+      "updated_at": "2026-10-22T07:13:28.153+00:00",
+      "finished_at": "2026-10-22T07:13:28.153+00:00",
+      "outcome": "failed",
+      "error_code": "runner_failure",
+      "worker_thread_id": "01a16275-1c64-7b80-8589-7032e23204e1",
+      "worker_turn_id": "01a16275-1ce2-71b2-a7ec-45182203ccb2",
+      "duration_ms": 3758,
+      "usage_status": "unknown",
+      "usage_source": "app_server_thread_total",
+      "usage_updates": 0,
+      "input_tokens": null,
+      "cached_input_tokens": null,
+      "cache_write_tokens": null,
+      "output_tokens": null,
+      "reasoning_tokens": null,
+      "total_tokens": null
+    },
+    "job": {
+      "id": "pmj_fe67ef5fdd74f3619f8cbeb7ae8945468d27d902",
+      "project": "/private/tmp/codex-mem-quality-20261021-r21-experiment/projects/h12/saffronpier",
+      "session_id": "h12_s2",
+      "status": "failed",
+      "lease_until": 1792653424.396668,
+      "retry_after": 1792653210.152632,
+      "attempts": 1,
+      "revision": 3,
+      "generation": 1,
+      "error": "runner_failure",
+      "input_json_chars": 2,
+      "receipt": {
+        "duration_ms": 3757,
+        "historical_sources_omitted": 0,
+        "job_kind": "events",
+        "model": "gpt-6-luna",
+        "output_schema_version": "project-memory-output-v12",
+        "processor_id": "codex-mem-project-episode-v2",
+        "reasoning_effort": "medium",
+        "worker_thread_id": "01a16275-1c64-7b80-8589-7032e23204e1",
+        "worker_turn_id": "01a16275-1ce2-71b2-a7ec-45182203ccb2"
+      }
+    },
+    "queue_status_counts": [
+      {
+        "status": "failed",
+        "count": 1
+      }
+    ],
+    "event_done_counts": [
+      {
+        "done": 0,
+        "count": 2
+      },
+      {
+        "done": 1,
+        "count": 6
+      }
+    ],
+    "attempt_summaries": [
+      {
+        "attempt_id": "pma_b7642ab7371949a6a4d72e22a85e2cd7",
+        "outcome": "processed",
+        "error_code": null,
+        "usage_status": "reported",
+        "usage_updates": 1,
+        "finished_at": "2026-10-22T07:13:19.148+00:00"
+      },
+      {
+        "attempt_id": "pma_cbd01b3a0b4f4631925419ba56e127bb",
+        "outcome": "processed",
+        "error_code": null,
+        "usage_status": "reported",
+        "usage_updates": 1,
+        "finished_at": "2026-10-22T07:13:24.383+00:00"
+      },
+      {
+        "attempt_id": "pma_44042fe5595d4060880cc3ff29d9d70f",
+        "outcome": "failed",
+        "error_code": "runner_failure",
+        "usage_status": "unknown",
+        "usage_updates": 0,
+        "finished_at": "2026-10-22T07:13:28.153+00:00"
+      }
+    ],
+    "incremental_checkpoint_limit": "The experiment injects Capture as the runner. Capture creates its inner NativeProcessorRunner without forwarding episode_processor checkpoint. No native usage update or intermediate native progression record is retained for this failed call. The final exception contributes worker IDs and unavailable usage.",
+    "reason_retention": "calls.jsonl retains native_server_error. The episode generation receipt and pm_jobs/pm_usage_attempts retain only runner_failure and do not retain the specific mapped reason.",
+    "queue_recovery_state_not_retry_authorization": "The failed job retains attempts1 and a retry_after value. The experiment stopped before another native call; this metadata does not authorize an R21 retry."
+  },
+  "experiment": {
+    "last_journal_entries": [
+      {
+        "phase": "generate",
+        "history_id": "h12",
+        "variant": "baseline",
+        "replicate": null,
+        "status": "started",
+        "at": 1792653189.7875168,
+        "command": [
+          "/Users/alexandrbasis/.browser-use-env/bin/python3",
+          "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/scripts/project_memory_consolidation_experiment.py",
+          "generate",
+          "--run",
+          "/private/tmp/codex-mem-quality-20261021-r21-experiment",
+          "--runtime-root",
+          "/Users/alexandrbasis/Desktop/Coding/codex-mem-public",
+          "--protocol",
+          "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/protocol.json",
+          "--fixture",
+          "/private/tmp/codex-mem-quality-20261021-r21-sealed/holdout-fixture.json",
+          "--history",
+          "h12",
+          "--variant",
+          "baseline",
+          "--live"
+        ]
+      },
+      {
+        "phase": "generate",
+        "history_id": "h12",
+        "variant": "baseline",
+        "replicate": null,
+        "status": "finished",
+        "at": 1792653208.1679301,
+        "returncode": 0
+      },
+      {
+        "status": "driver_stopped",
+        "at": 1792653208.169934,
+        "error_type": "RuntimeError",
+        "error": "unknown_usage_stop",
+        "automatic_retry": false
+      }
+    ],
+    "run_clock_unchanged": true,
+    "automatic_retry": false,
+    "shared_prefix_attribution": "Both future reader arms would share this generation result; this failure is before h12 candidate cloning/reading/judging.",
+    "primary_decision": "incomplete",
+    "pilot_gate": "incomplete",
+    "primary_complete": false,
+    "questions_graded_by_arm": {
+      "baseline": 0,
+      "candidate": 0
+    },
+    "missing_evaluations_protocol_derived": 216,
+    "phase_attempts": {
+      "judge": 2,
+      "reader": 8,
+      "generation": 45
+    },
+    "phase_count_limit": "The8 reader and2 judge calls belong to preflight/calibration, not completed sealed primary answers. Zero graded answers does not mean zero earlier native activity."
+  },
+  "cost_and_usage": {
+    "hypothetical_api_equivalent_usd": {
+      "standard": "1.0242094",
+      "fast": "2.0484188"
+    },
+    "pricing_snapshot": "openai-2026-10-07.1",
+    "attempted_calls": 55,
+    "finished_calls": 55,
+    "failed_calls": 1,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 54,
+    "calls_with_unknown_or_partial_tokens": 1,
+    "calls_with_partial_tokens": 0,
+    "partial_total_tokens_lower_bound": 0,
+    "reported_tokens_lower_bound": {
+      "input_tokens": 749927,
+      "cached_input_tokens": 0,
+      "output_tokens": 20728,
+      "total_tokens": 770655
+    },
+    "tokens": {
+      "input_tokens": null,
+      "cached_input_tokens": null,
+      "output_tokens": null,
+      "total_tokens": null
+    },
+    "pricing_complete": false,
+    "token_accounting_complete": false,
+    "cost_usd": null
+  },
+  "cost_limit": "770655 reported tokens are a lower bound over54 calls. The failed call may consume tokens despite updates0. Total tokens, actual cost and complete hypothetical cost remain unknown. Stored API-equivalent amounts are dated estimates over observed usage, not billed dollars.",
+  "evidence_gaps": [
+    "Raw native failed-turn error tag, integer status and exact turn status were not retained.",
+    "No call0055 response envelope, app-server protocol trace, server request ID or safe remote diagnostic ID is retained.",
+    "Stderr is deliberately drained without retention, because it can contain prompt/configuration data.",
+    "No usage notification was recorded for call0055. Null token fields cannot prove zero usage.",
+    "The wrapper does not persist a native stage timeline, separate turn-started boolean, completed-item count or per-stage durations.",
+    "Account/model flags are not part of this audit and cannot establish the cause of this earlier failure."
+  ],
+  "future_bounded_telemetry_proposal": {
+    "implementation_performed": false,
+    "scope": "A future authorized development task and new run only; do not retry or rewrite R21.",
+    "minimum_failure_tuple": [
+      "allowlisted native stage enum",
+      "allowlisted codexErrorInfo tag or singleton variant",
+      "integer HTTP status if present",
+      "separate turn-started-observed boolean",
+      "existing usage status/update count"
+    ],
+    "retention": "Attach this bounded content-free tuple to ProcessorFailure and the failed Capture ledger row, together with existing worker IDs for joining to the attempt. Keep raw messages, stderr, prompts, configuration, auth and URLs excluded.",
+    "followup_validation": "Use synthetic enum/status/phase controls to prove sanitization and lossless forwarding. A later newly authorized native failure would be needed for causal diagnosis; the mock cannot supply one.",
+    "optional_checkpoint_note": "If experimental crash-checkpoint recovery is required, separately design forwarding of the bounded usage callback through Capture. That is not necessary merely to preserve the error tag/status and is not a fix for this remote failure."
+  },
+  "source_quotes": [
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 1089,
+      "end_line": 1096,
+      "quote": "def _native_failure_reason(turn: object) -> str:\n    \"\"\"Classify the local app-server protocol without retaining remote prose.\n\n    Enum and tagged HTTP shapes follow the installed CLI's generated\n    TurnCompletedNotification schema. Unknown shapes stay unknown.\n    \"\"\"\n    if not isinstance(turn, Mapping):\n        return \"native_turn_failed\""
+    },
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 1110,
+      "end_line": 1111,
+      "quote": "        \"internalServerError\": \"native_server_error\",\n        \"serverOverloaded\": \"native_server_error\","
+    },
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 1116,
+      "end_line": 1130,
+      "quote": "        for variant in (\"httpConnectionFailed\", \"responseStreamConnectionFailed\",\n                        \"responseStreamDisconnected\", \"responseTooManyFailedAttempts\"):\n            details = info.get(variant)\n            if not isinstance(details, Mapping):\n                continue\n            status = details.get(\"httpStatusCode\")\n            if status is None:\n                return \"native_connection_error\"\n            if isinstance(status, int) and not isinstance(status, bool):\n                if status in {401, 403}:\n                    return \"native_auth\"\n                if status == 429:\n                    return \"native_rate_limit\"\n                if 500 <= status <= 599:\n                    return \"native_server_error\""
+    },
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 1235,
+      "end_line": 1240,
+      "quote": "        if method.endswith(\"turn/completed\"):\n            turn = params.get(\"turn\")\n            if not isinstance(turn, Mapping) or turn.get(\"status\") != \"completed\":\n                raise ProcessorFailure(\"runner_failure\", reason_code=_native_failure_reason(turn),\n                                       worker_thread_id=self.thread_id, worker_turn_id=self.turn_id)\n            # Ephemeral threads cannot be queried through thread/items/list."
+    },
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 1004,
+      "end_line": 1005,
+      "quote": "                # Stderr is drained but deliberately never retained: Codex may\n                # include prompt or configuration context in diagnostics."
+    },
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 792,
+      "end_line": 795,
+      "quote": "                        turn_id = _turn_id_from_response(turn_started, thread_id)\n                        monitor.set_turn(turn_id)\n                        checkpoint(force=True)\n                        _wait_for_turn_completion(client, monitor)"
+    },
+    {
+      "path": "codex_mem/processor.py",
+      "start_line": 836,
+      "end_line": 845,
+      "quote": "                    failed_thread = exc.worker_thread_id or thread_id\n                    failed_turn = exc.worker_turn_id or turn_id\n                    if failed_thread is not None and failed_turn is not None:\n                        client.interrupt(failed_thread, failed_turn)\n                    raise ProcessorFailure(\n                        exc.code,\n                        reason_code=exc.reason_code,\n                        worker_thread_id=failed_thread,\n                        worker_turn_id=failed_turn,\n                        metrics=metrics(),"
+    },
+    {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r21/frozen-helper.py",
+      "start_line": 490,
+      "end_line": 491,
+      "quote": "            result = NativeProcessorRunner(timeout=self.protocol['limits']['call_seconds'])(request)\n            write(self.home / 'receipts' / f'{call_id}-response.json', result)"
+    },
+    {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r21/frozen-helper.py",
+      "start_line": 507,
+      "end_line": 514,
+      "quote": "        except Exception as exc:\n            from codex_mem.observation_diagnostics import safe_failure_reason\n            append(ledger, {**base, 'status': 'failed', 'error_type': type(exc).__name__,\n                            'error_code': getattr(exc, 'code', None),\n                            'reason_code': safe_failure_reason(getattr(exc, 'code', None), getattr(exc, 'reason_code', None)),\n                            'metrics': getattr(exc, 'metrics', None) or {},\n                            'wall_ms': round((time.monotonic() - started) * 1000)})\n            raise"
+    },
+    {
+      "path": "codex_mem/project_memory.py",
+      "start_line": 578,
+      "end_line": 588,
+      "quote": "                status = \"quarantined\" if reason == \"invalid_response\" or job[\"attempts\"] >= 5 else \"failed\"\n                # Do not persist arbitrary model/runner errors: they may contain\n                # sensitive inputs. Only a bounded error category is durable.\n                category = reason if reason in {\"invalid_response\", \"timeout\", \"runner_failure\", \"unavailable\"} else \"processing_failed\"\n                retry_after = time.time()+min(300, 2**job[\"attempts\"])\n                if status == \"quarantined\":\n                    durable = json.loads(job[\"input_json\"])\n                    for source in durable.get(\"sources\", []):\n                        self.store._connection.execute(\"UPDATE pm_events SET blocked_job_id=? WHERE project=? AND source_id=? AND done=0\", (job[\"id\"], job[\"project\"], source[\"id\"]))\n                self.store._connection.execute(\"UPDATE pm_jobs SET status=?,error=?,retry_after=?,input_json='{}',receipt_json=? WHERE id=?\", (status, category, retry_after, _json(_safe_receipt(receipt)), job[\"id\"]))\n                return {\"status\": status, \"job_id\": job[\"id\"], \"attempts\": job[\"attempts\"], \"retry_after\": retry_after}"
+    }
+  ],
+  "input_sha256": {
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/run.json": "9e66a07cf007910782b78a8338f7f7d418f633a1b4fc2a45dda98fb6237413eb",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/calls.jsonl": "6d77af7da99ae6ccf12a44eb9a14f3857f8bc59dc1109401b9c1ecdb48c122a4",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/holdout-phase-execution.jsonl": "8d8480cb3b6558f59038edef6ccbf020872597da5ac226b6666dce792632217f",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/h12/generation.json": "667367f59276e77dda4f23eee7fe50bd96ebf29afdb5fef8a64a495ef669d84e",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/receipts/call-0055-request.json": "9ff2b1c209f55e4b9b711c3bd333795be35c3553bc198dfa55379041d5ae2c9c",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/holdout-report.json": "945747db507fb1e02740d92adcdd81f39ad1071fc4b8686c555e89fbf915b76d",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/processor.py": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/episode_processor.py": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/frozen-helper.py": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/run-experiment.py": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/holdout/report.json": "945747db507fb1e02740d92adcdd81f39ad1071fc4b8686c555e89fbf915b76d",
+    "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/protocol.json": "c379c34e3d4daffb9c963271efde3f747d42c5443b067f9564a12d5f87f140a1",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/h12/data/memory.sqlite3": "43822302828b52655613258751b5f4ce414f9f35d3d0896cf1803ca5c980884b",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/h12/data/memory.sqlite3-shm": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+    "/private/tmp/codex-mem-quality-20261021-r21-experiment/baseline/h12/data/memory.sqlite3-wal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "classification_probe": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21-native-failure-diagnosis/classification-probe.json",
+    "sha256": "7ac5dec31161b7144946ee01d453a4b4970e2df8ecfd371e3009c5ff34037863"
+  },
+  "native_calls": 0,
+  "model_calls": 0,
+  "network_calls": 0,
+  "original_store_constructors": 0,
+  "global_logs_or_user_history_or_auth_read": false,
+  "original_sqlite_access": "mode=ro plus PRAGMA query_only=ON",
+  "source_or_old_receipt_changes": 0,
+  "all_pinned_inputs_unchanged": true
+}

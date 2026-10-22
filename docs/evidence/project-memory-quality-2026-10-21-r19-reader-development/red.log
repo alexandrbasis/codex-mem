@@ -1,0 +1,256 @@
+EEEEEEEEEEEEEEEEEEEEE
+======================================================================
+ERROR: test_checklist_refs_never_flatten_into_delivered_citations (__main__.OwnershipTests.test_checklist_refs_never_flatten_into_delivered_citations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 21, in test_checklist_refs_never_flatten_into_delivered_citations
+    p=packet();out=self.resolve(p)['answers'][0]
+                   ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_extra_delivered_status_allowed_and_owned (__main__.OwnershipTests.test_extra_delivered_status_allowed_and_owned)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 27, in test_extra_delivered_status_allowed_and_owned
+    out=self.resolve(p)['answers'][0]
+        ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_new_prompt_schema_is_opt_in (__main__.OwnershipTests.test_new_prompt_schema_is_opt_in)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 51, in test_new_prompt_schema_is_opt_in
+    self.assertEqual(h.reader_prompt_version(PROTOCOL),'role-attribution-per-question-assertions-v1')
+                     ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/helper.py", line 858, in reader_prompt_version
+    raise ValueError('reader_evidence_contract requires clause-support-v2 with typed per-question isolation')
+ValueError: reader_evidence_contract requires clause-support-v2 with typed per-question isolation
+
+======================================================================
+ERROR: test_order_and_dedup_keep_each_owner (__main__.OwnershipTests.test_order_and_dedup_keep_each_owner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 34, in test_order_and_dedup_keep_each_owner
+    self.assertEqual(len(self.resolve(p)['answers'][0]['citations']),1)
+                         ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=3)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=4)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=6)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=7)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=8)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=9)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=10)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=11)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets) (mutation=12)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 44, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(p)
+                                       ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_reject_invalid_whole_packets (__main__.OwnershipTests.test_reject_invalid_whole_packets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 46, in test_reject_invalid_whole_packets
+    with self.assertRaises(ValueError):self.resolve(missing)
+                                       ~~~~~~~~~~~~^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_structural_ownership_does_not_establish_entailment (__main__.OwnershipTests.test_structural_ownership_does_not_establish_entailment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 49, in test_structural_ownership_does_not_establish_entailment
+    self.assertIn('linen',self.resolve(p)['answers'][0]['answer'])
+                          ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_unknown_branch_has_no_invented_citations (__main__.OwnershipTests.test_unknown_branch_has_no_invented_citations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 38, in test_unknown_branch_has_no_invented_citations
+    out=self.resolve(p)['answers'][0];self.assertEqual(out['answer'],'Unknown from supplied memory.');self.assertEqual(out['citations'],[])
+        ~~~~~~~~~~~~^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_v2_behavior_unchanged (__main__.OwnershipTests.test_v2_behavior_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 62, in test_v2_behavior_unchanged
+    self.assertEqual(h.reader_answer_for_judge({**self.resolve(packet())['answers'][0],'assertion_ownership':['private']},PROTOCOL),self.resolve(packet())['answers'][0])
+                                                  ~~~~~~~~~~~~^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/test_reader_assertion_ownership.py", line 19, in resolve
+    def resolve(self,p):return h.resolve_reader_output(p,CONTEXT,CAT,evidence_contract=NEW)
+                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: resolve_reader_output() got an unexpected keyword argument 'evidence_contract'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.003s
+
+FAILED (errors=21)

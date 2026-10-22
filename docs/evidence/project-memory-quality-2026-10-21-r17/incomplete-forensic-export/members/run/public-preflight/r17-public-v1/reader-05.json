@@ -1,0 +1,145 @@
+{
+  "status": "validated",
+  "case_id": "public-reader-05",
+  "attempt": {
+    "phase": "reader",
+    "variant": "public-reader-probe",
+    "history_id": "public-reader-r17-public-v1-public-reader-05",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "public-reader-05"
+  },
+  "response": {
+    "output": {
+      "answers": {
+        "q1": {
+          "evidence_check": {
+            "accepted_results": "The sandbox retained local-only notes; the local simulation reported all survived.",
+            "open_work_and_reasons": "Field rollout remains requested; field device sync was not run and reported rollout executions were 0.",
+            "source_role_distinctions": "User requirements and tool-record results are distinct; assistant reports and production validation are not evidenced."
+          },
+          "answer": "Snowdrop sync must preserve local-only notes, including notes absent from the server: field workers can remain offline for days, so missing notes may simply not have uploaded yet. The later user instruction retains this requirement, requests reopening sync to finish the field rollout, and says to skip the summary chart.\n\nLocal validation is limited: `inert-fictional-hold_1016-t1` exited 0 and reported that the Snowdrop sandbox retained local-only notes and drafted a summary chart; field device sync was not run. Separately, `inert-fictional-hold_1016-t2` exited 0 and reported that all local-only notes survived a local simulation, with field rollout executions at 0. These results do not establish completed field rollout.",
+          "citation_refs": [
+            "R0001",
+            "R0002",
+            "R0003",
+            "R0004",
+            "R0005",
+            "R0006"
+          ],
+          "uncertainties": [
+            "The simulation execution's association with the requested task is unresolved in the supplied memory.",
+            "The memory has coverage gaps and unreconciled user sources; successful field or production sync is not evidenced."
+          ]
+        }
+      }
+    },
+    "metrics": {
+      "duration_ms": 13609,
+      "usage": {
+        "status": "reported",
+        "source": "app_server_thread_total",
+        "updates": 1,
+        "tokens": {
+          "input_tokens": 12517,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 476,
+          "reasoning_output_tokens": 159,
+          "total_tokens": 12993
+        }
+      }
+    },
+    "evidence": {
+      "thread_start": {
+        "thread_id": "diagnostic-thread-f89ee41de1a16b22774a",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium",
+        "model_provider": "openai"
+      },
+      "turn_started": {
+        "thread_id": "diagnostic-thread-f89ee41de1a16b22774a",
+        "turn_id": "diagnostic-turn-4797d241d257bb4ad53e"
+      },
+      "turn_completed": true,
+      "no_tools": true,
+      "rerouted": false
+    }
+  },
+  "resolved": {
+    "answers": [
+      {
+        "id": "q1",
+        "answer": "Snowdrop sync must preserve local-only notes, including notes absent from the server: field workers can remain offline for days, so missing notes may simply not have uploaded yet. The later user instruction retains this requirement, requests reopening sync to finish the field rollout, and says to skip the summary chart.\n\nLocal validation is limited: `inert-fictional-hold_1016-t1` exited 0 and reported that the Snowdrop sandbox retained local-only notes and drafted a summary chart; field device sync was not run. Separately, `inert-fictional-hold_1016-t2` exited 0 and reported that all local-only notes survived a local simulation, with field rollout executions at 0. These results do not establish completed field rollout.",
+        "uncertainties": [
+          "The simulation execution's association with the requested task is unresolved in the supplied memory.",
+          "The memory has coverage gaps and unreconciled user sources; successful field or production sync is not evidenced."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "c43c53c07f484524b6ee360c712bdd2b",
+            "source_field": "body",
+            "start": 0,
+            "end": 175,
+            "source_role": "user_intent",
+            "quote": "Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "48a70799c5e545f98631f58550d00a86",
+            "source_field": "body",
+            "start": 0,
+            "end": 104,
+            "source_role": "user_intent",
+            "quote": "Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "4c389ddf2a384db1923f203ab6026680",
+            "source_field": "body",
+            "start": 0,
+            "end": 85,
+            "source_role": "tool_record",
+            "quote": "Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "4c389ddf2a384db1923f203ab6026680",
+            "source_field": "tool_input.command",
+            "start": 0,
+            "end": 28,
+            "source_role": "tool_record",
+            "quote": "inert-fictional-hold_1016-t2",
+            "tool_use_id": "hold_1016_t2"
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "a11f2ef7a598462897191528835ae562",
+            "source_field": "tool_response.output",
+            "start": 0,
+            "end": 94,
+            "source_role": "tool_record",
+            "quote": "Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.",
+            "tool_use_id": "hold_1016_t1"
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "a11f2ef7a598462897191528835ae562",
+            "source_field": "tool_input.command",
+            "start": 0,
+            "end": 28,
+            "source_role": "tool_record",
+            "quote": "inert-fictional-hold_1016-t1",
+            "tool_use_id": "hold_1016_t1"
+          }
+        ]
+      }
+    ]
+  }
+}

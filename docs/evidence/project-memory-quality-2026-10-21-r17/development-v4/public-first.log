@@ -1,0 +1,17 @@
+.F.........
+======================================================================
+FAIL: test_native_output_is_not_replaced_by_a_body_field_mirror (test_project_memory_single_source_packing.NativeOriginalPackingTests.test_native_output_is_not_replaced_by_a_body_field_mirror)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 255, in test_native_output_is_not_replaced_by_a_body_field_mirror
+    self.assertEqual({'body', 'tool_response.output'},
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     {pointer.get('source_field') for pointer in pointers}, xml)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the first set but not the second:
+'body' : <project-memory trust="untrusted" freshness="not_verified" capture_order_basis="local_capture_sequence_not_event_time"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="175b02bada6f4f7387827f689e045895" lane="source_evidence" source_role="tool_record" signal_kind="observed_execution_result" selection_basis="captured_execution_shape" source_capture_seq="1" field_association="original_execution_capture"><execution tool_use_id="capture-71" tool_name="functions.exec_command" command="python check.py ORB-27 --run 71" exit_code="1" exit_field="tool_response.exit_code"/><source source_id="175b02bada6f4f7387827f689e045895" start="0" end="102" source_role="tool_record" tool_use_id="capture-71" source_field="tool_response.output" quote_truncated="False" excerpt_status="complete_capture_field" id="s1"><quote_excerpt>Instrument fixture: sample rows matched. Remote delivery was not attempted. Labels were not inspected.</quote_excerpt></source><source source_id="175b02bada6f4f7387827f689e045895" start="0" end="31" source_role="tool_record" tool_use_id="capture-71" source_field="tool_input.cmd" quote_truncated="False" excerpt_status="complete_capture_field" id="s2"><quote_excerpt>python check.py ORB-27 --run 71</quote_excerpt></source></item><item id="canonical-material" lane="episode" field_associations_omitted="1" fields_omitted="1"></item><omitted records="1" fields="1"/></project-memory>
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.040s
+
+FAILED (failures=1)

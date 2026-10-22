@@ -1,0 +1,31 @@
+--- before/test_project_memory_source_evidence.py
++++ approved/test_project_memory_source_evidence.py
+@@ -65,11 +65,27 @@
+         self.assertIn(report['body'], ''.join(tree.itertext()))
+         self.assertIn(tool['body'], ''.join(tree.itertext()))
+         assistant = tree.find(".//item[@lane='source_evidence'][@source_role='assistant_report']")
+-        execution = tree.find(".//item[@lane='source_evidence'][@source_role='tool_record']")
++        execution = tree.find(".//item[@lane='source_evidence'][execution]")
+         self.assertIsNotNone(assistant, startup)
+         self.assertIsNotNone(execution, startup)
+         self.assertEqual(execution.find('execution').get('exit_code'), '1')
+         self.assertEqual(execution.find('execution').get('command'), 'python check.py QA-42')
++        self.assertIn(execution.get('source_role'), (None, 'tool_record'))
++        self.assertEqual(execution.get('field_association'), 'original_execution_capture')
++        self.assertEqual(execution.find('execution').get('exit_field'), 'tool_response.exit_code')
++        self.assertTrue(execution.find('execution').get('tool_use_id'))
++        pointers = {source.get('source_field'): source for source in execution.findall('source')}
++        self.assertEqual({'tool_response.output', 'tool_input.cmd'}, set(pointers))
++        for field, value in [('tool_response.output', tool['body']), ('tool_input.cmd', 'python check.py QA-42')]:
++            source = pointers[field]
++            self.assertEqual(tool['id'], source.get('source_id'))
++            self.assertEqual('tool_record', source.get('source_role'))
++            self.assertEqual(execution.find('execution').get('tool_use_id'), source.get('tool_use_id'))
++            self.assertEqual(('0', str(len(value))), (source.get('start'), source.get('end')))
++            self.assertEqual(value, source.findtext('quote_excerpt'))
++            self.assertIn(source.get('quote_truncated'), (None, 'False'))
++            if source.get('quote_truncated') is None:
++                self.assertEqual('true', execution.get('complete_capture_fields'))
+         self.assertIsNotNone(execution.find("./source[@source_field='tool_response.output']"))
+         self.assertNotIn('workflow_state="completed"', startup)
+         self.assertEqual(brief['claims'], [])

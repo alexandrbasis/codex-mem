@@ -1,0 +1,52 @@
+--- a/scripts/consolidation_experiment/test_reader_assertion_ownership.py
++++ b/scripts/consolidation_experiment/test_reader_assertion_ownership.py
+@@ -1,5 +1,7 @@
+ """Public invented structural contract tests. No native calls or semantic grades."""
+ import copy
++import hashlib
++from xml.sax.saxutils import escape
+ import importlib.util
+ import os
+ from pathlib import Path
+@@ -89,16 +91,36 @@
+         self.assertEqual(len(h.resolve_reader_output(p,CONTEXT,CAT)['answers'][0]['citations']),2)
+         self.assertEqual(h.reader_answer_for_judge({**self.resolve(packet())['answers'][0],'assertion_ownership':['private']},PROTOCOL),self.resolve(packet())['answers'][0])
+     def test_old_requests_and_resolver_match_unmodified_helper(self):
+-        base_path=Path(__file__).with_name('helper-base.py')
+-        if not base_path.exists():
+-            self.skipTest('base comparison source is an isolated development artifact')
++        base_path=ROOT/'docs/evidence/project-memory-quality-2026-10-21-r18/frozen-helper.py'
++        self.assertEqual(hashlib.sha256(base_path.read_bytes()).hexdigest(),
++                         'd935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388')
+         spec=importlib.util.spec_from_file_location('reader_unchanged_base',base_path)
+         base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base)
++        public_catalog=[{**entry,'end':len(entry['quote'])} for entry in CAT]
++        memory='<project-memory>'+''.join(
++            '<source source_id="'+entry['source_id']+'" source_field="'+entry['source_field']+
++            '" source_role="'+entry['source_role']+'" start="0" end="'+str(entry['end'])+
++            '"><quote_excerpt>'+escape(entry['quote'])+'</quote_excerpt></source>'
++            for entry in public_catalog)+'</project-memory>'
++        public_context=[{**CONTEXT[0],'memory':memory,'context_chars':len(memory)}]
++        originals={entry['source_id']:{'source_role':entry['source_role'],
++                   'fields':{entry['source_field']:entry['quote']}} for entry in public_catalog}
++        self.assertEqual([{k:v for k,v in entry.items() if k!='ref'}
++                          for entry in h.reader_citation_catalog(public_context,originals)],
++                         [{k:v for k,v in entry.items() if k!='ref'} for entry in public_catalog])
++        old_packet={'answers':{'P1':{'answer':'Keep amber markers intact.',
++            'citation_refs':['R0001','R0002'],'uncertainties':[],
++            'evidence_check':{k:'not evidenced' for k in ('accepted_results','open_work_and_reasons','source_role_distinctions')}}}}
++        self.assertEqual(h.resolve_reader_output(old_packet,public_context,public_catalog),
++                         base.resolve_reader_output(old_packet,public_context,public_catalog))
+         for evidence in (None,'clause-support-v2'):
+             protocol={**PROTOCOL};protocol.pop('reader_evidence_contract')
+             if evidence:protocol['reader_evidence_contract']=evidence
+-            for catalog in (CAT,[]):
+-                self.assertEqual(h.typed_reader_request(CONTEXT,catalog,protocol),base.typed_reader_request(CONTEXT,catalog,protocol))
++            for contexts,catalog in ((public_context,public_catalog),(CONTEXT,[])):
++                actual=h.typed_reader_request(contexts,catalog,protocol)
++                original=base.typed_reader_request(contexts,catalog,protocol)
++                self.assertEqual(json.dumps(actual,ensure_ascii=False,separators=(',',':')).encode(),
++                                 json.dumps(original,ensure_ascii=False,separators=(',',':')).encode())
+     def test_whole_text_bound_and_context_budget_reject_without_clipping(self):
+         p=packet();p['answers']['P1']['assertions']=[{'text':'a'*1600,'citation_refs':['R0001']} for _ in range(4)]
+         with self.assertRaises(ValueError):self.resolve(p)

@@ -9,6 +9,7 @@ from codex_mem.episode_processor import process_project_memory
 from codex_mem.project_memory import ProjectMemory
 from codex_mem.store import Store
 from test_episode_processor import receipt
+from source_transport_assertions import SourceRegistry, omitted_field_count
 
 
 class ConsolidationTests(unittest.TestCase):
@@ -342,7 +343,8 @@ class ConsolidationTests(unittest.TestCase):
             result['output']['claims'] = [{'text': 'Keep deployment open completed.', 'kind': 'task',
                 'workflow_state': 'completed', 'rationale': '', 'scope': {'environment': '', 'version': '', 'worktree': ''},
                 'evidence': {'text': [spans[1]['ref']], 'workflow_state': [spans[1]['ref']], 'rationale': []}}]
-            result['output']['relations'] = [{'type': 'closes', 'from_claim_index': 0,
+            result['output'].pop('relations')
+            result['output']['claims'][0]['outgoing_relations'] = [{'type': 'closes',
                 'to_claim_id': supplied['current_state']['claims'][0]['id'], 'evidence': [spans[1]['ref']]}]
             return result
         result = self.process(close)
@@ -407,7 +409,8 @@ class ConsolidationTests(unittest.TestCase):
             result['output']['claims'] = [{'text': 'Preserve manual approval completed.', 'kind': 'task',
                 'workflow_state': 'completed', 'rationale': '', 'scope': {'environment': '', 'version': '', 'worktree': ''},
                 'evidence': {'text': [spans[1]['ref']], 'workflow_state': [spans[1]['ref']], 'rationale': []}}]
-            result['output']['relations'] = [{'type': 'closes', 'from_claim_index': 0,
+            result['output'].pop('relations')
+            result['output']['claims'][0]['outgoing_relations'] = [{'type': 'closes',
                 'to_claim_id': supplied['current_state']['claims'][0]['id'], 'evidence': [spans[1]['ref']]}]
             return result
         self.assertEqual(self.process(close)['status'], 'processed')
@@ -667,18 +670,23 @@ class ConsolidationTests(unittest.TestCase):
         field = rendered.find(".//field[@name='summary']")
         self.assertIsNotNone(field)
         self.assertIsNone(field.find('derived_text'))
-        self.assertEqual(field.find('source/quote_excerpt').text, body)
-        self.assertEqual(field.find('source').attrib['source_role'], 'assistant_report')
-        self.assertEqual(field.find('source').attrib['quote_truncated'], 'False')
+        resolved = SourceRegistry(rendered).field_sources(field)
+        self.assertEqual(len(resolved), 1)
+        self.assertEqual(resolved[0]['quote'], body)
+        self.assertEqual(resolved[0]['source_role'], 'assistant_report')
+        self.assertFalse(resolved[0]['quote_truncated'])
         self.assertEqual(field.attrib['basis'], 'attributed_source_excerpts')
         self.assertEqual(field.attrib['field_association'], 'model_inference')
         small = ET.fromstring(render_project_brief(brief, budget=1700))
         small_field = small.find(".//field[@name='summary']")
         if small_field is not None:
             self.assertIsNone(small_field.find('derived_text'))
-            self.assertEqual(small_field.find('source/quote_excerpt').text, body)
+            resolved = SourceRegistry(small).field_sources(small_field)
+            self.assertEqual(len(resolved), 1)
+            self.assertEqual(resolved[0]['quote'], body)
+            self.assertEqual(resolved[0]['source_role'], 'assistant_report')
         else:
-            self.assertTrue(any(int(item.attrib.get('fields_omitted', 0)) > 0 for item in small.findall('item')))
+            self.assertGreater(omitted_field_count(small), 0)
 
     def test_grounded_field_keeps_all_exact_sources_together_in_projection_and_budget(self):
         import xml.etree.ElementTree as ET
@@ -701,19 +709,19 @@ class ConsolidationTests(unittest.TestCase):
                 rendered = ET.fromstring(xml)
                 field = rendered.find(f".//field[@name='{summary['name']}']")
                 if field is None:
-                    self.assertTrue(any(int(item.attrib.get('fields_omitted', 0)) > 0
-                                        for item in rendered.findall('item')))
+                    self.assertGreater(omitted_field_count(rendered), 0)
                     continue
                 self.assertIsNone(field.find('derived_text'))
-                sources = field.findall('source')
+                sources = SourceRegistry(rendered).field_sources(field)
                 self.assertEqual(len(sources), 2)
                 for source, ref in zip(sources, stored):
-                    self.assertEqual(source.attrib['source_id'], original['id'])
-                    self.assertEqual(source.attrib['source_role'], 'assistant_report')
-                    self.assertEqual(int(source.attrib['start']), ref['start'])
-                    self.assertEqual(int(source.attrib['end']), ref['end'])
-                    self.assertEqual(source.find('quote_excerpt').text, body[ref['start']:ref['end']])
-                    self.assertEqual(source.attrib['quote_truncated'], 'False')
+                    self.assertEqual(source['source_id'], original['id'])
+                    self.assertEqual(source['source_role'], 'assistant_report')
+                    self.assertEqual(source['source_field'], 'body')
+                    self.assertEqual(source['start'], ref['start'])
+                    self.assertEqual(source['end'], ref['end'])
+                    self.assertEqual(source['quote'], body[ref['start']:ref['end']])
+                    self.assertFalse(source['quote_truncated'])
 
     def test_negated_reopen_cannot_bypass_through_same_task_marker(self):
         result = self.named_identity_reconsideration('LUX-54', 'Task LUX-54: another exporter. Do not reopen LUX-54 as the same task.')

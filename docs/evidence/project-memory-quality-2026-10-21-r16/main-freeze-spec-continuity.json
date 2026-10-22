@@ -1,0 +1,79 @@
+{
+  "status": "source_continuity_clear_for_main_freeze_only",
+  "axis": "Spec",
+  "findings": [],
+  "review_manifest_sha256": "effc5b8fb07773b48093786568637996b4355f7735e4b7349c49376d7dc5af23",
+  "source_review_sha256": "190280c06932ada53940f67906d7f851e02ad5e79b859ae794ff5c185ea5c4d6",
+  "protocol_file_sha256": "94b2cb4c826762af984099d8a7b653dba72e3296fe27540dfbc2046a0653bfa8",
+  "driver_sha256": "e2945793f3a107db5c037133b5ef8733c44e23cffe66cf7876918e3a231a6325",
+  "public_export_audit_sha256": "e9f5ce18c155628117aead08dc850a176bf35de2c96283f87c221de5334e00ef",
+  "verified": {
+    "reviewed_owned_file_hashes": 1160,
+    "public_pins": 82,
+    "hash_mismatches": 0,
+    "public_archive_members": 33,
+    "public_archive_member_hash_mismatches": 0,
+    "available_original_public_member_hash_mismatches": 0,
+    "original_run_metadata_sha256": "853ec0f6f532de9ba1d703ece197150f681d3954e37d84119a21183e15f47baf",
+    "original_started_at": 1792616262.0582342,
+    "elapsed_seconds_at_review": 317.83126187324524,
+    "freeze_exists_at_review": false
+  },
+  "public_gate": {
+    "status": "passed",
+    "fully_supported": 6,
+    "questions": 6,
+    "required_facts_recalled_from_fact_recall_entries": 8,
+    "required_facts_total_from_fact_recall_entries": 8,
+    "citations_supported": 6,
+    "critical_errors": 0,
+    "known_controls_matched": 6,
+    "grade_semantics_not_reassessed": true
+  },
+  "public_usage": {
+    "attempted_calls": 8,
+    "finished_calls": 8,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "tokens": {
+      "input_tokens": 134566,
+      "output_tokens": 5080,
+      "cached_input_tokens": 0,
+      "total_tokens": 139646
+    },
+    "actual_cost_usd": null,
+    "hypothetical_api_equivalent_usd": {
+      "standard": "0.909612",
+      "fast": "1.819224"
+    },
+    "pricing_complete": false
+  },
+  "initial_cli_refusal": {
+    "receipt_sha256": "0a1c7bba21a248390964b8b98b3c1638216e5e25e5972ef8ee6b6fdbb1e472ee",
+    "initial_log_sha256": "0c372d6edd5a4fc8eb80ff69147d11b575e6dae9f46fb3a6f58898c5fe0a0d49",
+    "dispatch_log_sha256": "67163054396d50cb2f2423c9dd9618b45aeb25a3ad0824e9f6f8c73e184d2484",
+    "argparse_exit": 2,
+    "native_calls": 0,
+    "namespace_created": false,
+    "not_native_retry": true,
+    "original_clock_retained": true
+  },
+  "clearance": {
+    "main_source_freeze": true,
+    "conditions": [
+      "Central readiness rechecks unchanged protocol/source pins and available original-clock budgets.",
+      "Freeze must precede independent author release and opening sealed input content.",
+      "Keep all eight public attempts in the existing ledger and retain original started_at.",
+      "Prospective input validation must pass before any main phase dispatch; failures remain incomplete without repair or retry."
+    ],
+    "independent_quality": false,
+    "production_release": false,
+    "final_commit_or_task_completion": false
+  },
+  "narrative": "All reviewed source hashes and protocol pins remain unchanged. The public export audit passes with stated limits; the exported archive matches all 33 member hashes. The original run clock is preserved. Six disclosed reader questions passed with eight recalled facts, supported citations and no critical errors; six known judge controls matched. The initial missing --live CLI rejection occurred before dispatch and is retained separately, so it is not a ninth native attempt. No source or contract change is indicated. This clears only the source-freeze and subsequent authorized release sequence, conditional on central checks. Known controls do not establish independent quality.",
+  "restrictions_observed": [
+    "No private R16 fixture/gold/author content read.",
+    "No model, native, Jev, Store or service calls.",
+    "No prior artifact or reviewed input changed."
+  ]
+}

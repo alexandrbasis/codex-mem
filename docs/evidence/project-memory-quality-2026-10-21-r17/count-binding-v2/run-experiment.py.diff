@@ -1,0 +1,24 @@
+--- V1/run-experiment.py
++++ V2/run-experiment.py
+@@ -104,6 +104,21 @@
+             or any(coverage[key] is not True for key in ("all_questions_reviewed", "all_required_facts_reviewed", "negative_cases_reviewed"))
+             or any(metadata[key] != hashes[key] for key in bindings)):
+         raise ValueError("independent_review_not_accepted_or_incomplete")
++    # Count the same pinned bytes, without importing author code or reading
++    # detailed review findings. Positive coverage attestations cannot replace
++    # the actual question and required-fact denominators.
++    input_bytes = {key: paths[key].read_bytes() for key in ("fixture_sha256", "gold_sha256")}
++    if any(hashlib.sha256(raw).hexdigest() != hashes[key] for key, raw in input_bytes.items()):
++        raise ValueError("independent_review_inputs_changed_before_count")
++    fixture = json.loads(input_bytes["fixture_sha256"])
++    gold = json.loads(input_bytes["gold_sha256"])
++    try:
++        actual_questions = sum(len(history["questions"]) for history in fixture["histories"])
++        actual_facts = sum(len(question["required_facts"]) for question in gold["questions"].values())
++    except (KeyError, TypeError, AttributeError):
++        raise ValueError("invalid_independent_review_input_count_shape") from None
++    if coverage["questions"] != actual_questions or coverage["required_facts"] != actual_facts:
++        raise ValueError("independent_review_counts_differ_from_pinned_inputs")
+     receipt = {"status": "independent_review_metadata_validated", **hashes,
+                "questions_reviewed": coverage["questions"], "required_facts_reviewed": coverage["required_facts"]}
+     receipt_path = run / "independent-review-validation.json"

@@ -1,0 +1,3253 @@
+{
+  "schema_version": 1,
+  "questions": {
+    "hold_301/q1": {
+      "required_facts": [
+        {
+          "text": "Change the deliverable to an indoor readability comparison because the curator moved the exhibition inside.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 0,
+              "event_id": "hold_301_change",
+              "fragment": "Change the deliverable to an indoor readability comparison because the curator moved the exhibition inside."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prepare adhesive crate labels for the harbor exhibition. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Change the deliverable to an indoor readability comparison because the curator moved the exhibition inside."
+    },
+    "hold_301/q2": {
+      "required_facts": [
+        {
+          "text": "Keep every label in plain text and omit personal telephone numbers.",
+          "support": [
+            {
+              "session_id": "hold_301_early",
+              "event_index": 0,
+              "event_id": "hold_301_initial",
+              "fragment": "Keep every label in plain text and omit personal telephone numbers."
+            }
+          ]
+        },
+        {
+          "text": "Drop the QR experiment, but keep the printable fallback and both original content restrictions.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 0,
+              "event_id": "hold_301_change",
+              "fragment": "Drop the QR experiment, but keep the printable fallback and both original content restrictions."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Drop the QR experiment, but keep the printable fallback and both original content restrictions."
+    },
+    "hold_301/q3": {
+      "required_facts": [
+        {
+          "text": "Fresh bench sheet: six indoor labels were readable at two meters.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 2,
+              "event_id": "hold_301_fresh",
+              "fragment": "Fresh bench sheet: six indoor labels were readable at two meters."
+            }
+          ]
+        },
+        {
+          "text": "No adhesive durability test was performed.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 2,
+              "event_id": "hold_301_fresh",
+              "fragment": "No adhesive durability test was performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The labeling system is ready for outdoor deployment.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_301/q4": {
+      "required_facts": [
+        {
+          "text": "Inez owns the remaining font decision.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 3,
+              "event_id": "hold_301_pending",
+              "fragment": "Inez owns the remaining font decision."
+            }
+          ]
+        },
+        {
+          "text": "Ask her to choose after the curator supplies the wall-color sample; no sample has arrived.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 3,
+              "event_id": "hold_301_pending",
+              "fragment": "Ask her to choose after the curator supplies the wall-color sample; no sample has arrived."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Inez owns the remaining font decision. Ask her to choose after the curator supplies the wall-color sample; no sample has arrived."
+    },
+    "hold_301/q5": {
+      "required_facts": [
+        {
+          "text": "For the pier demonstration only, you may email its sponsor a draft.",
+          "support": [
+            {
+              "session_id": "hold_301_adjacent",
+              "event_index": 0,
+              "event_id": "hold_301_permission",
+              "fragment": "For the pier demonstration only, you may email its sponsor a draft."
+            }
+          ]
+        },
+        {
+          "text": "That permission does not cover the harbor exhibition.",
+          "support": [
+            {
+              "session_id": "hold_301_adjacent",
+              "event_index": 0,
+              "event_id": "hold_301_permission",
+              "fragment": "That permission does not cover the harbor exhibition."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in harbor_labels.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to pier_demo."
+    },
+    "hold_301/q6": {
+      "required_facts": [
+        {
+          "text": "Fresh bench sheet: six indoor labels were readable at two meters.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 2,
+              "event_id": "hold_301_fresh",
+              "fragment": "Fresh bench sheet: six indoor labels were readable at two meters."
+            }
+          ]
+        },
+        {
+          "text": "No adhesive durability test was performed.",
+          "support": [
+            {
+              "session_id": "hold_301_later",
+              "event_index": 2,
+              "event_id": "hold_301_fresh",
+              "fragment": "No adhesive durability test was performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Legacy sample scan: all twenty crate labels survived a salt-spray trial; the scan includes a claim that the adhesive is suitable for outdoor use.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The labeling system is ready for outdoor deployment.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_302/q1": {
+      "required_facts": [
+        {
+          "text": "Focus on a duplicate-code report because two cabinets were assigned overlapping numbers.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 0,
+              "event_id": "hold_302_change",
+              "fragment": "Focus on a duplicate-code report because two cabinets were assigned overlapping numbers."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Build a searchable moss specimen index. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Focus on a duplicate-code report because two cabinets were assigned overlapping numbers."
+    },
+    "hold_302/q2": {
+      "required_facts": [
+        {
+          "text": "Use specimen codes instead of donor names, keep the raw scans local, and include both search and a public gallery.",
+          "support": [
+            {
+              "session_id": "hold_302_early",
+              "event_index": 0,
+              "event_id": "hold_302_initial",
+              "fragment": "Use specimen codes instead of donor names, keep the raw scans local, and include both search and a public gallery."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the public gallery; retain search, coded identities, and local-only raw scans.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 0,
+              "event_id": "hold_302_change",
+              "fragment": "Cancel the public gallery; retain search, coded identities, and local-only raw scans."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the public gallery; retain search, coded identities, and local-only raw scans."
+    },
+    "hold_302/q3": {
+      "required_facts": [
+        {
+          "text": "Recount sheet: 37 specimen codes from cabinet C were compared; four duplicate codes were found.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 2,
+              "event_id": "hold_302_fresh",
+              "fragment": "Recount sheet: 37 specimen codes from cabinet C were compared; four duplicate codes were found."
+            }
+          ]
+        },
+        {
+          "text": "Locality fields were not inspected.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 2,
+              "event_id": "hold_302_fresh",
+              "fragment": "Locality fields were not inspected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All locality data is reliable enough for public release.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_302/q4": {
+      "required_facts": [
+        {
+          "text": "Tomas will resolve the cabinet naming convention when the registrar returns the shelf map.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 3,
+              "event_id": "hold_302_pending",
+              "fragment": "Tomas will resolve the cabinet naming convention when the registrar returns the shelf map."
+            }
+          ]
+        },
+        {
+          "text": "The map is still outstanding.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 3,
+              "event_id": "hold_302_pending",
+              "fragment": "The map is still outstanding."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Tomas will resolve the cabinet naming convention when the registrar returns the shelf map. The map is still outstanding."
+    },
+    "hold_302/q5": {
+      "required_facts": [
+        {
+          "text": "You may publish the seed newsletter preview in the seed-news project.",
+          "support": [
+            {
+              "session_id": "hold_302_adjacent",
+              "event_index": 0,
+              "event_id": "hold_302_permission",
+              "fragment": "You may publish the seed newsletter preview in the seed-news project."
+            }
+          ]
+        },
+        {
+          "text": "This is not permission to publish moss archive material.",
+          "support": [
+            {
+              "session_id": "hold_302_adjacent",
+              "event_index": 0,
+              "event_id": "hold_302_permission",
+              "fragment": "This is not permission to publish moss archive material."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in moss_archive.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to seed_news."
+    },
+    "hold_302/q6": {
+      "required_facts": [
+        {
+          "text": "Recount sheet: 37 specimen codes from cabinet C were compared; four duplicate codes were found.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 2,
+              "event_id": "hold_302_fresh",
+              "fragment": "Recount sheet: 37 specimen codes from cabinet C were compared; four duplicate codes were found."
+            }
+          ]
+        },
+        {
+          "text": "Locality fields were not inspected.",
+          "support": [
+            {
+              "session_id": "hold_302_later",
+              "event_index": 2,
+              "event_id": "hold_302_fresh",
+              "fragment": "Locality fields were not inspected."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Old curator inventory: the archive has 480 verified specimens and every locality field has been checked.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "All locality data is reliable enough for public release.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_303/q1": {
+      "required_facts": [
+        {
+          "text": "Switch to a crossing-gap list because the accessibility board needs repair priorities first.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 0,
+              "event_id": "hold_303_change",
+              "fragment": "Switch to a crossing-gap list because the accessibility board needs repair priorities first."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Plan a walking-route booklet for the copper district. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Switch to a crossing-gap list because the accessibility board needs repair priorities first."
+    },
+    "hold_303/q2": {
+      "required_facts": [
+        {
+          "text": "Keep accessibility notes verbatim, never include residents’ names, and prepare a map plus an audio guide.",
+          "support": [
+            {
+              "session_id": "hold_303_early",
+              "event_index": 0,
+              "event_id": "hold_303_initial",
+              "fragment": "Keep accessibility notes verbatim, never include residents’ names, and prepare a map plus an audio guide."
+            }
+          ]
+        },
+        {
+          "text": "Stop the audio guide, but keep the map and the original wording and anonymity rules.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 0,
+              "event_id": "hold_303_change",
+              "fragment": "Stop the audio guide, but keep the map and the original wording and anonymity rules."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Stop the audio guide, but keep the map and the original wording and anonymity rules."
+    },
+    "hold_303/q3": {
+      "required_facts": [
+        {
+          "text": "New walk log: three crossings on route B were visited; one audible signal failed.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 2,
+              "event_id": "hold_303_fresh",
+              "fragment": "New walk log: three crossings on route B were visited; one audible signal failed."
+            }
+          ]
+        },
+        {
+          "text": "No other routes were visited.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 2,
+              "event_id": "hold_303_fresh",
+              "fragment": "No other routes were visited."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The district is fully accessible for independent walking.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_303/q4": {
+      "required_facts": [
+        {
+          "text": "Leah owns prioritization after the maintenance team sends repair estimates.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 3,
+              "event_id": "hold_303_pending",
+              "fragment": "Leah owns prioritization after the maintenance team sends repair estimates."
+            }
+          ]
+        },
+        {
+          "text": "We have no estimates yet.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 3,
+              "event_id": "hold_303_pending",
+              "fragment": "We have no estimates yet."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Leah owns prioritization after the maintenance team sends repair estimates. We have no estimates yet."
+    },
+    "hold_303/q5": {
+      "required_facts": [
+        {
+          "text": "In the tram-fair task, booking a rehearsal room is allowed.",
+          "support": [
+            {
+              "session_id": "hold_303_adjacent",
+              "event_index": 0,
+              "event_id": "hold_303_permission",
+              "fragment": "In the tram-fair task, booking a rehearsal room is allowed."
+            }
+          ]
+        },
+        {
+          "text": "Do not treat that as authorization to book anything for copper paths.",
+          "support": [
+            {
+              "session_id": "hold_303_adjacent",
+              "event_index": 0,
+              "event_id": "hold_303_permission",
+              "fragment": "Do not treat that as authorization to book anything for copper paths."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in copper_paths.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to tram_fair."
+    },
+    "hold_303/q6": {
+      "required_facts": [
+        {
+          "text": "New walk log: three crossings on route B were visited; one audible signal failed.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 2,
+              "event_id": "hold_303_fresh",
+              "fragment": "New walk log: three crossings on route B were visited; one audible signal failed."
+            }
+          ]
+        },
+        {
+          "text": "No other routes were visited.",
+          "support": [
+            {
+              "session_id": "hold_303_later",
+              "event_index": 2,
+              "event_id": "hold_303_fresh",
+              "fragment": "No other routes were visited."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Archived route audit: every crossing on all five routes has a working audible signal.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The district is fully accessible for independent walking.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_304/q1": {
+      "required_facts": [
+        {
+          "text": "Now prepare a shelf reconciliation because the balance readings disagree with the imported totals.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 0,
+              "event_id": "hold_304_change",
+              "fragment": "Now prepare a shelf reconciliation because the balance readings disagree with the imported totals."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Create a glass-studio stock ledger. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Now prepare a shelf reconciliation because the balance readings disagree with the imported totals."
+    },
+    "hold_304/q2": {
+      "required_facts": [
+        {
+          "text": "Record quantities in grams, exclude supplier bank details, and include a reorder forecast and a manual count form.",
+          "support": [
+            {
+              "session_id": "hold_304_early",
+              "event_index": 0,
+              "event_id": "hold_304_initial",
+              "fragment": "Record quantities in grams, exclude supplier bank details, and include a reorder forecast and a manual count form."
+            }
+          ]
+        },
+        {
+          "text": "Abandon the reorder forecast; retain the manual count form, gram units, and bank-detail exclusion.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 0,
+              "event_id": "hold_304_change",
+              "fragment": "Abandon the reorder forecast; retain the manual count form, gram units, and bank-detail exclusion."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Abandon the reorder forecast; retain the manual count form, gram units, and bank-detail exclusion."
+    },
+    "hold_304/q3": {
+      "required_facts": [
+        {
+          "text": "Local weigh-in: shelves 2 and 3 contain 81,400 grams combined.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 2,
+              "event_id": "hold_304_fresh",
+              "fragment": "Local weigh-in: shelves 2 and 3 contain 81,400 grams combined."
+            }
+          ]
+        },
+        {
+          "text": "Composition was not tested and the remaining shelves were not weighed.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 2,
+              "event_id": "hold_304_fresh",
+              "fragment": "Composition was not tested and the remaining shelves were not weighed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Every shelf can safely be sold as lead-free.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_304/q4": {
+      "required_facts": [
+        {
+          "text": "Omar must pick a calibration vendor once the studio manager approves the instrument budget.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 3,
+              "event_id": "hold_304_pending",
+              "fragment": "Omar must pick a calibration vendor once the studio manager approves the instrument budget."
+            }
+          ]
+        },
+        {
+          "text": "Approval is still pending.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 3,
+              "event_id": "hold_304_pending",
+              "fragment": "Approval is still pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Omar must pick a calibration vendor once the studio manager approves the instrument budget. Approval is still pending."
+    },
+    "hold_304/q5": {
+      "required_facts": [
+        {
+          "text": "You may post the kiln-social invitation to its community page.",
+          "support": [
+            {
+              "session_id": "hold_304_adjacent",
+              "event_index": 0,
+              "event_id": "hold_304_permission",
+              "fragment": "You may post the kiln-social invitation to its community page."
+            }
+          ]
+        },
+        {
+          "text": "This approval applies only to that invitation, not to the glass ledger.",
+          "support": [
+            {
+              "session_id": "hold_304_adjacent",
+              "event_index": 0,
+              "event_id": "hold_304_permission",
+              "fragment": "This approval applies only to that invitation, not to the glass ledger."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in glass_ledger.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to kiln_social."
+    },
+    "hold_304/q6": {
+      "required_facts": [
+        {
+          "text": "Local weigh-in: shelves 2 and 3 contain 81,400 grams combined.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 2,
+              "event_id": "hold_304_fresh",
+              "fragment": "Local weigh-in: shelves 2 and 3 contain 81,400 grams combined."
+            }
+          ]
+        },
+        {
+          "text": "Composition was not tested and the remaining shelves were not weighed.",
+          "support": [
+            {
+              "session_id": "hold_304_later",
+              "event_index": 2,
+              "event_id": "hold_304_fresh",
+              "fragment": "Composition was not tested and the remaining shelves were not weighed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Imported stock certificate: all shelves have certified lead-free glass and the total usable stock is 920 kilograms.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "Every shelf can safely be sold as lead-free.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_305/q1": {
+      "required_facts": [
+        {
+          "text": "Produce a bottleneck sketch instead because construction narrowed the entrance.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 0,
+              "event_id": "hold_305_change",
+              "fragment": "Produce a bottleneck sketch instead because construction narrowed the entrance."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Design a visitor queue for the violet conservatory. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Produce a bottleneck sketch instead because construction narrowed the entrance."
+    },
+    "hold_305/q2": {
+      "required_facts": [
+        {
+          "text": "Avoid recording visitor ages, use ten-minute time slots, and include a kiosk prototype and paper tickets.",
+          "support": [
+            {
+              "session_id": "hold_305_early",
+              "event_index": 0,
+              "event_id": "hold_305_initial",
+              "fragment": "Avoid recording visitor ages, use ten-minute time slots, and include a kiosk prototype and paper tickets."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the kiosk prototype, while retaining paper tickets, ten-minute slots, and the restriction on ages.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 0,
+              "event_id": "hold_305_change",
+              "fragment": "Cancel the kiosk prototype, while retaining paper tickets, ten-minute slots, and the restriction on ages."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the kiosk prototype, while retaining paper tickets, ten-minute slots, and the restriction on ages."
+    },
+    "hold_305/q3": {
+      "required_facts": [
+        {
+          "text": "Observed rehearsal: twelve volunteers passed the temporary entrance in nine minutes.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 2,
+              "event_id": "hold_305_fresh",
+              "fragment": "Observed rehearsal: twelve volunteers passed the temporary entrance in nine minutes."
+            }
+          ]
+        },
+        {
+          "text": "Peak-season capacity was not measured.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 2,
+              "event_id": "hold_305_fresh",
+              "fragment": "Peak-season capacity was not measured."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The new entrance flow is ready for peak-season crowds.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_305/q4": {
+      "required_facts": [
+        {
+          "text": "Nadia owns the revised staffing count after facilities confirms the usable doorway width.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 3,
+              "event_id": "hold_305_pending",
+              "fragment": "Nadia owns the revised staffing count after facilities confirms the usable doorway width."
+            }
+          ]
+        },
+        {
+          "text": "Facilities has not answered.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 3,
+              "event_id": "hold_305_pending",
+              "fragment": "Facilities has not answered."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Nadia owns the revised staffing count after facilities confirms the usable doorway width. Facilities has not answered."
+    },
+    "hold_305/q5": {
+      "required_facts": [
+        {
+          "text": "For the orchid trial only, you may invite the volunteer group to a test.",
+          "support": [
+            {
+              "session_id": "hold_305_adjacent",
+              "event_index": 0,
+              "event_id": "hold_305_permission",
+              "fragment": "For the orchid trial only, you may invite the volunteer group to a test."
+            }
+          ]
+        },
+        {
+          "text": "Do not send invitations for the violet queue under this approval.",
+          "support": [
+            {
+              "session_id": "hold_305_adjacent",
+              "event_index": 0,
+              "event_id": "hold_305_permission",
+              "fragment": "Do not send invitations for the violet queue under this approval."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in violet_queue.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to orchid_trial."
+    },
+    "hold_305/q6": {
+      "required_facts": [
+        {
+          "text": "Observed rehearsal: twelve volunteers passed the temporary entrance in nine minutes.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 2,
+              "event_id": "hold_305_fresh",
+              "fragment": "Observed rehearsal: twelve volunteers passed the temporary entrance in nine minutes."
+            }
+          ]
+        },
+        {
+          "text": "Peak-season capacity was not measured.",
+          "support": [
+            {
+              "session_id": "hold_305_later",
+              "event_index": 2,
+              "event_id": "hold_305_fresh",
+              "fragment": "Peak-season capacity was not measured."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Old operations note: the entrance can process 300 visitors per hour with no queue longer than four minutes.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The new entrance flow is ready for peak-season crowds.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_306/q1": {
+      "required_facts": [
+        {
+          "text": "Make a pronunciation review because the artist corrected three names.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 0,
+              "event_id": "hold_306_change",
+              "fragment": "Make a pronunciation review because the artist corrected three names."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prepare audio descriptions for the aster mural. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Make a pronunciation review because the artist corrected three names."
+    },
+    "hold_306/q2": {
+      "required_facts": [
+        {
+          "text": "Keep recordings offline, use the artist’s approved names, and develop a long tour and short captions.",
+          "support": [
+            {
+              "session_id": "hold_306_early",
+              "event_index": 0,
+              "event_id": "hold_306_initial",
+              "fragment": "Keep recordings offline, use the artist’s approved names, and develop a long tour and short captions."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the long tour, but keep short captions, offline recordings, and the approved-name requirement.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 0,
+              "event_id": "hold_306_change",
+              "fragment": "Cancel the long tour, but keep short captions, offline recordings, and the approved-name requirement."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the long tour, but keep short captions, offline recordings, and the approved-name requirement."
+    },
+    "hold_306/q3": {
+      "required_facts": [
+        {
+          "text": "Fresh listening note: two caption clips were checked by one reviewer; one corrected name was still mispronounced.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 2,
+              "event_id": "hold_306_fresh",
+              "fragment": "Fresh listening note: two caption clips were checked by one reviewer; one corrected name was still mispronounced."
+            }
+          ]
+        },
+        {
+          "text": "Accessibility compliance was not assessed.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 2,
+              "event_id": "hold_306_fresh",
+              "fragment": "Accessibility compliance was not assessed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire audio experience meets the accessibility target.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_306/q4": {
+      "required_facts": [
+        {
+          "text": "Pavel owns rerecording after the artist delivers a pronunciation sample.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 3,
+              "event_id": "hold_306_pending",
+              "fragment": "Pavel owns rerecording after the artist delivers a pronunciation sample."
+            }
+          ]
+        },
+        {
+          "text": "The sample has not been delivered.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 3,
+              "event_id": "hold_306_pending",
+              "fragment": "The sample has not been delivered."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Pavel owns rerecording after the artist delivers a pronunciation sample. The sample has not been delivered."
+    },
+    "hold_306/q5": {
+      "required_facts": [
+        {
+          "text": "The marigold mailing task may send a preview to its editor.",
+          "support": [
+            {
+              "session_id": "hold_306_adjacent",
+              "event_index": 0,
+              "event_id": "hold_306_permission",
+              "fragment": "The marigold mailing task may send a preview to its editor."
+            }
+          ]
+        },
+        {
+          "text": "That sending approval is limited to marigold and does not include aster audio.",
+          "support": [
+            {
+              "session_id": "hold_306_adjacent",
+              "event_index": 0,
+              "event_id": "hold_306_permission",
+              "fragment": "That sending approval is limited to marigold and does not include aster audio."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in aster_audio.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to marigold_mail."
+    },
+    "hold_306/q6": {
+      "required_facts": [
+        {
+          "text": "Fresh listening note: two caption clips were checked by one reviewer; one corrected name was still mispronounced.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 2,
+              "event_id": "hold_306_fresh",
+              "fragment": "Fresh listening note: two caption clips were checked by one reviewer; one corrected name was still mispronounced."
+            }
+          ]
+        },
+        {
+          "text": "Accessibility compliance was not assessed.",
+          "support": [
+            {
+              "session_id": "hold_306_later",
+              "event_index": 2,
+              "event_id": "hold_306_fresh",
+              "fragment": "Accessibility compliance was not assessed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Legacy listening survey: all 64 participants understood every caption and the long tour met the museum accessibility target.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The entire audio experience meets the accessibility target.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_307/q1": {
+      "required_facts": [
+        {
+          "text": "Concentrate on a fabric compatibility table because the donated cloth includes unfamiliar blends.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 0,
+              "event_id": "hold_307_change",
+              "fragment": "Concentrate on a fabric compatibility table because the donated cloth includes unfamiliar blends."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Plan a linen repair workshop. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Concentrate on a fabric compatibility table because the donated cloth includes unfamiliar blends."
+    },
+    "hold_307/q2": {
+      "required_facts": [
+        {
+          "text": "Limit classes to eight seats, avoid collecting home addresses, and prepare a video lesson and printed stitch cards.",
+          "support": [
+            {
+              "session_id": "hold_307_early",
+              "event_index": 0,
+              "event_id": "hold_307_initial",
+              "fragment": "Limit classes to eight seats, avoid collecting home addresses, and prepare a video lesson and printed stitch cards."
+            }
+          ]
+        },
+        {
+          "text": "Stop the video lesson; keep stitch cards, the seat limit, and the address restriction.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 0,
+              "event_id": "hold_307_change",
+              "fragment": "Stop the video lesson; keep stitch cards, the seat limit, and the address restriction."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Stop the video lesson; keep stitch cards, the seat limit, and the address restriction."
+    },
+    "hold_307/q3": {
+      "required_facts": [
+        {
+          "text": "New swatch log: one pure-linen patch survived three hand washes.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 2,
+              "event_id": "hold_307_fresh",
+              "fragment": "New swatch log: one pure-linen patch survived three hand washes."
+            }
+          ]
+        },
+        {
+          "text": "No blended fabric was tested.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 2,
+              "event_id": "hold_307_fresh",
+              "fragment": "No blended fabric was tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The repair method is proven durable across all workshop fabrics.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_307/q4": {
+      "required_facts": [
+        {
+          "text": "Esme will choose the demonstration cloth after the donor sends blend percentages.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 3,
+              "event_id": "hold_307_pending",
+              "fragment": "Esme will choose the demonstration cloth after the donor sends blend percentages."
+            }
+          ]
+        },
+        {
+          "text": "Those percentages are still missing.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 3,
+              "event_id": "hold_307_pending",
+              "fragment": "Those percentages are still missing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Esme will choose the demonstration cloth after the donor sends blend percentages. Those percentages are still missing."
+    },
+    "hold_307/q5": {
+      "required_facts": [
+        {
+          "text": "You may buy sample buttons for button club with its allocated voucher.",
+          "support": [
+            {
+              "session_id": "hold_307_adjacent",
+              "event_index": 0,
+              "event_id": "hold_307_permission",
+              "fragment": "You may buy sample buttons for button club with its allocated voucher."
+            }
+          ]
+        },
+        {
+          "text": "This does not approve purchases for linen repair.",
+          "support": [
+            {
+              "session_id": "hold_307_adjacent",
+              "event_index": 0,
+              "event_id": "hold_307_permission",
+              "fragment": "This does not approve purchases for linen repair."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in linen_repair.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to button_club."
+    },
+    "hold_307/q6": {
+      "required_facts": [
+        {
+          "text": "New swatch log: one pure-linen patch survived three hand washes.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 2,
+              "event_id": "hold_307_fresh",
+              "fragment": "New swatch log: one pure-linen patch survived three hand washes."
+            }
+          ]
+        },
+        {
+          "text": "No blended fabric was tested.",
+          "support": [
+            {
+              "session_id": "hold_307_later",
+              "event_index": 2,
+              "event_id": "hold_307_fresh",
+              "fragment": "No blended fabric was tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Previous fabric report: the repair method survived fifty wash cycles on every linen blend used in the workshop.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The repair method is proven durable across all workshop fabrics.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_308/q1": {
+      "required_facts": [
+        {
+          "text": "Prepare a drift comparison because the gallery lost its synchronization feed.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 0,
+              "event_id": "hold_308_change",
+              "fragment": "Prepare a drift comparison because the gallery lost its synchronization feed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Build an exhibit guide for the quartz clock collection. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Prepare a drift comparison because the gallery lost its synchronization feed."
+    },
+    "hold_308/q2": {
+      "required_facts": [
+        {
+          "text": "Express times in UTC, exclude lender contact details, and include an animated timeline and static labels.",
+          "support": [
+            {
+              "session_id": "hold_308_early",
+              "event_index": 0,
+              "event_id": "hold_308_initial",
+              "fragment": "Express times in UTC, exclude lender contact details, and include an animated timeline and static labels."
+            }
+          ]
+        },
+        {
+          "text": "Drop the animated timeline, but keep static labels, UTC notation, and the lender privacy restriction.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 0,
+              "event_id": "hold_308_change",
+              "fragment": "Drop the animated timeline, but keep static labels, UTC notation, and the lender privacy restriction."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Drop the animated timeline, but keep static labels, UTC notation, and the lender privacy restriction."
+    },
+    "hold_308/q3": {
+      "required_facts": [
+        {
+          "text": "Bench reading: clocks Q2 and Q4 were compared over one hour; Q4 lost five seconds.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 2,
+              "event_id": "hold_308_fresh",
+              "fragment": "Bench reading: clocks Q2 and Q4 were compared over one hour; Q4 lost five seconds."
+            }
+          ]
+        },
+        {
+          "text": "The other sixteen clocks were not measured.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 2,
+              "event_id": "hold_308_fresh",
+              "fragment": "The other sixteen clocks were not measured."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Every clock is accurate enough for the live synchronized exhibit.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_308/q4": {
+      "required_facts": [
+        {
+          "text": "Bryn owns the display order once the conservator signs off on moving Q4.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 3,
+              "event_id": "hold_308_pending",
+              "fragment": "Bryn owns the display order once the conservator signs off on moving Q4."
+            }
+          ]
+        },
+        {
+          "text": "Sign-off has not arrived.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 3,
+              "event_id": "hold_308_pending",
+              "fragment": "Sign-off has not arrived."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Bryn owns the display order once the conservator signs off on moving Q4. Sign-off has not arrived."
+    },
+    "hold_308/q5": {
+      "required_facts": [
+        {
+          "text": "For sundial day, you may reserve the courtyard.",
+          "support": [
+            {
+              "session_id": "hold_308_adjacent",
+              "event_index": 0,
+              "event_id": "hold_308_permission",
+              "fragment": "For sundial day, you may reserve the courtyard."
+            }
+          ]
+        },
+        {
+          "text": "This approval has no effect on reservations for the quartz clock exhibit.",
+          "support": [
+            {
+              "session_id": "hold_308_adjacent",
+              "event_index": 0,
+              "event_id": "hold_308_permission",
+              "fragment": "This approval has no effect on reservations for the quartz clock exhibit."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in quartz_clock.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to sundial_day."
+    },
+    "hold_308/q6": {
+      "required_facts": [
+        {
+          "text": "Bench reading: clocks Q2 and Q4 were compared over one hour; Q4 lost five seconds.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 2,
+              "event_id": "hold_308_fresh",
+              "fragment": "Bench reading: clocks Q2 and Q4 were compared over one hour; Q4 lost five seconds."
+            }
+          ]
+        },
+        {
+          "text": "The other sixteen clocks were not measured.",
+          "support": [
+            {
+              "session_id": "hold_308_later",
+              "event_index": 2,
+              "event_id": "hold_308_fresh",
+              "fragment": "The other sixteen clocks were not measured."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Former timing certificate: all eighteen clocks keep time within two seconds per day.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "Every clock is accurate enough for the live synchronized exhibit.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_309/q1": {
+      "required_facts": [
+        {
+          "text": "Write a lighting observation protocol because a new warehouse installed floodlights.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 0,
+              "event_id": "hold_309_change",
+              "fragment": "Write a lighting observation protocol because a new warehouse installed floodlights."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Create a raven observation handbook. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Write a lighting observation protocol because a new warehouse installed floodlights."
+    },
+    "hold_309/q2": {
+      "required_facts": [
+        {
+          "text": "Round locations to the nearest kilometer, keep observer identities private, and include a live map and field worksheets.",
+          "support": [
+            {
+              "session_id": "hold_309_early",
+              "event_index": 0,
+              "event_id": "hold_309_initial",
+              "fragment": "Round locations to the nearest kilometer, keep observer identities private, and include a live map and field worksheets."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the live map; retain worksheets, rounded locations, and observer privacy.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 0,
+              "event_id": "hold_309_change",
+              "fragment": "Cancel the live map; retain worksheets, rounded locations, and observer privacy."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the live map; retain worksheets, rounded locations, and observer privacy."
+    },
+    "hold_309/q3": {
+      "required_facts": [
+        {
+          "text": "Night log: roost R3 was watched for twenty minutes on one evening; seven birds departed when a floodlight came on.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 2,
+              "event_id": "hold_309_fresh",
+              "fragment": "Night log: roost R3 was watched for twenty minutes on one evening; seven birds departed when a floodlight came on."
+            }
+          ]
+        },
+        {
+          "text": "Other roosts and seasons were not observed.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 2,
+              "event_id": "hold_309_fresh",
+              "fragment": "Other roosts and seasons were not observed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The whole monitoring area is stable and unaffected by artificial light.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_309/q4": {
+      "required_facts": [
+        {
+          "text": "Jun will set the repeat-visit schedule after the landowner confirms evening access.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 3,
+              "event_id": "hold_309_pending",
+              "fragment": "Jun will set the repeat-visit schedule after the landowner confirms evening access."
+            }
+          ]
+        },
+        {
+          "text": "Access is not confirmed.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 3,
+              "event_id": "hold_309_pending",
+              "fragment": "Access is not confirmed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Jun will set the repeat-visit schedule after the landowner confirms evening access. Access is not confirmed."
+    },
+    "hold_309/q5": {
+      "required_facts": [
+        {
+          "text": "You may contact donors for the finch fund campaign.",
+          "support": [
+            {
+              "session_id": "hold_309_adjacent",
+              "event_index": 0,
+              "event_id": "hold_309_permission",
+              "fragment": "You may contact donors for the finch fund campaign."
+            }
+          ]
+        },
+        {
+          "text": "This is permission for finch fund only, not raven handbook outreach.",
+          "support": [
+            {
+              "session_id": "hold_309_adjacent",
+              "event_index": 0,
+              "event_id": "hold_309_permission",
+              "fragment": "This is permission for finch fund only, not raven handbook outreach."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in raven_roost.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to finch_fund."
+    },
+    "hold_309/q6": {
+      "required_facts": [
+        {
+          "text": "Night log: roost R3 was watched for twenty minutes on one evening; seven birds departed when a floodlight came on.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 2,
+              "event_id": "hold_309_fresh",
+              "fragment": "Night log: roost R3 was watched for twenty minutes on one evening; seven birds departed when a floodlight came on."
+            }
+          ]
+        },
+        {
+          "text": "Other roosts and seasons were not observed.",
+          "support": [
+            {
+              "session_id": "hold_309_later",
+              "event_index": 2,
+              "event_id": "hold_309_fresh",
+              "fragment": "Other roosts and seasons were not observed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Old roost census: each of the nine known roosts is occupied year-round and none is disturbed by nearby lighting.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The whole monitoring area is stable and unaffected by artificial light.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_310/q1": {
+      "required_facts": [
+        {
+          "text": "Make a batch-color comparison because the latest firing looks darker.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 0,
+              "event_id": "hold_310_change",
+              "fragment": "Make a batch-color comparison because the latest firing looks darker."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Design an amber tile catalog. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Make a batch-color comparison because the latest firing looks darker."
+    },
+    "hold_310/q2": {
+      "required_facts": [
+        {
+          "text": "Keep measurements in millimeters, hide customer order numbers, and prepare a room simulator and a printable swatch sheet.",
+          "support": [
+            {
+              "session_id": "hold_310_early",
+              "event_index": 0,
+              "event_id": "hold_310_initial",
+              "fragment": "Keep measurements in millimeters, hide customer order numbers, and prepare a room simulator and a printable swatch sheet."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the room simulator, but keep the swatch sheet, millimeter units, and order-number privacy.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 0,
+              "event_id": "hold_310_change",
+              "fragment": "Cancel the room simulator, but keep the swatch sheet, millimeter units, and order-number privacy."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the room simulator, but keep the swatch sheet, millimeter units, and order-number privacy."
+    },
+    "hold_310/q3": {
+      "required_facts": [
+        {
+          "text": "Current photo log: batches A7 and A8 were photographed under one daylight lamp; A8 appeared darker.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 2,
+              "event_id": "hold_310_fresh",
+              "fragment": "Current photo log: batches A7 and A8 were photographed under one daylight lamp; A8 appeared darker."
+            }
+          ]
+        },
+        {
+          "text": "No chemical resistance test was done.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 2,
+              "event_id": "hold_310_fresh",
+              "fragment": "No chemical resistance test was done."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The full catalog is ready to be marketed as acid-resistant and color-consistent.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_310/q4": {
+      "required_facts": [
+        {
+          "text": "Zoya owns sample selection after the kiln team provides firing temperatures.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 3,
+              "event_id": "hold_310_pending",
+              "fragment": "Zoya owns sample selection after the kiln team provides firing temperatures."
+            }
+          ]
+        },
+        {
+          "text": "The temperature record is still absent.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 3,
+              "event_id": "hold_310_pending",
+              "fragment": "The temperature record is still absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Zoya owns sample selection after the kiln team provides firing temperatures. The temperature record is still absent."
+    },
+    "hold_310/q5": {
+      "required_facts": [
+        {
+          "text": "For the opal opening, you may upload the event poster to the venue site.",
+          "support": [
+            {
+              "session_id": "hold_310_adjacent",
+              "event_index": 0,
+              "event_id": "hold_310_permission",
+              "fragment": "For the opal opening, you may upload the event poster to the venue site."
+            }
+          ]
+        },
+        {
+          "text": "That approval does not cover amber catalog uploads.",
+          "support": [
+            {
+              "session_id": "hold_310_adjacent",
+              "event_index": 0,
+              "event_id": "hold_310_permission",
+              "fragment": "That approval does not cover amber catalog uploads."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in amber_tiles.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to opal_opening."
+    },
+    "hold_310/q6": {
+      "required_facts": [
+        {
+          "text": "Current photo log: batches A7 and A8 were photographed under one daylight lamp; A8 appeared darker.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 2,
+              "event_id": "hold_310_fresh",
+              "fragment": "Current photo log: batches A7 and A8 were photographed under one daylight lamp; A8 appeared darker."
+            }
+          ]
+        },
+        {
+          "text": "No chemical resistance test was done.",
+          "support": [
+            {
+              "session_id": "hold_310_later",
+              "event_index": 2,
+              "event_id": "hold_310_fresh",
+              "fragment": "No chemical resistance test was done."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Historic finish audit: all tile batches resist common kitchen acids and have identical color under daylight.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The full catalog is ready to be marketed as acid-resistant and color-consistent.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_311/q1": {
+      "required_facts": [
+        {
+          "text": "Prepare a sightline survey because the venue added two support columns.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 0,
+              "event_id": "hold_311_change",
+              "fragment": "Prepare a sightline survey because the venue added two support columns."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prepare cedar stage setup instructions. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Prepare a sightline survey because the venue added two support columns."
+    },
+    "hold_311/q2": {
+      "required_facts": [
+        {
+          "text": "Use metric dimensions, omit crew phone numbers, and include a rigging animation and a printed placement plan.",
+          "support": [
+            {
+              "session_id": "hold_311_early",
+              "event_index": 0,
+              "event_id": "hold_311_initial",
+              "fragment": "Use metric dimensions, omit crew phone numbers, and include a rigging animation and a printed placement plan."
+            }
+          ]
+        },
+        {
+          "text": "Stop the rigging animation; preserve the printed plan, metric dimensions, and phone-number exclusion.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 0,
+              "event_id": "hold_311_change",
+              "fragment": "Stop the rigging animation; preserve the printed plan, metric dimensions, and phone-number exclusion."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Stop the rigging animation; preserve the printed plan, metric dimensions, and phone-number exclusion."
+    },
+    "hold_311/q3": {
+      "required_facts": [
+        {
+          "text": "New seating check: views from seats C1 through C6 were photographed; C4 and C5 were partly blocked.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 2,
+              "event_id": "hold_311_fresh",
+              "fragment": "New seating check: views from seats C1 through C6 were photographed; C4 and C5 were partly blocked."
+            }
+          ]
+        },
+        {
+          "text": "No load-bearing checks were performed.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 2,
+              "event_id": "hold_311_fresh",
+              "fragment": "No load-bearing checks were performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The stage is cleared for the proposed suspended installation.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_311/q4": {
+      "required_facts": [
+        {
+          "text": "Milo owns the revised seating arrangement after the venue returns the column drawing.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 3,
+              "event_id": "hold_311_pending",
+              "fragment": "Milo owns the revised seating arrangement after the venue returns the column drawing."
+            }
+          ]
+        },
+        {
+          "text": "We are still waiting for it.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 3,
+              "event_id": "hold_311_pending",
+              "fragment": "We are still waiting for it."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Milo owns the revised seating arrangement after the venue returns the column drawing. We are still waiting for it."
+    },
+    "hold_311/q5": {
+      "required_facts": [
+        {
+          "text": "You may request a quote for willow week catering.",
+          "support": [
+            {
+              "session_id": "hold_311_adjacent",
+              "event_index": 0,
+              "event_id": "hold_311_permission",
+              "fragment": "You may request a quote for willow week catering."
+            }
+          ]
+        },
+        {
+          "text": "This does not authorize quote requests for cedar stage equipment.",
+          "support": [
+            {
+              "session_id": "hold_311_adjacent",
+              "event_index": 0,
+              "event_id": "hold_311_permission",
+              "fragment": "This does not authorize quote requests for cedar stage equipment."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in cedar_stage.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to willow_week."
+    },
+    "hold_311/q6": {
+      "required_facts": [
+        {
+          "text": "New seating check: views from seats C1 through C6 were photographed; C4 and C5 were partly blocked.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 2,
+              "event_id": "hold_311_fresh",
+              "fragment": "New seating check: views from seats C1 through C6 were photographed; C4 and C5 were partly blocked."
+            }
+          ]
+        },
+        {
+          "text": "No load-bearing checks were performed.",
+          "support": [
+            {
+              "session_id": "hold_311_later",
+              "event_index": 2,
+              "event_id": "hold_311_fresh",
+              "fragment": "No load-bearing checks were performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Legacy venue certificate: every hanging point supports 200 kilograms and all sightlines are unobstructed.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The stage is cleared for the proposed suspended installation.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_312/q1": {
+      "required_facts": [
+        {
+          "text": "Produce an identification uncertainty list because two accession labels were swapped.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 0,
+              "event_id": "hold_312_change",
+              "fragment": "Produce an identification uncertainty list because two accession labels were swapped."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Create a pearl collection index. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Produce an identification uncertainty list because two accession labels were swapped."
+    },
+    "hold_312/q2": {
+      "required_facts": [
+        {
+          "text": "Keep ownership anonymous, use internal accession codes, and include a valuation panel and descriptive cards.",
+          "support": [
+            {
+              "session_id": "hold_312_early",
+              "event_index": 0,
+              "event_id": "hold_312_initial",
+              "fragment": "Keep ownership anonymous, use internal accession codes, and include a valuation panel and descriptive cards."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the valuation panel; retain descriptive cards, accession codes, and anonymous ownership.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 0,
+              "event_id": "hold_312_change",
+              "fragment": "Cancel the valuation panel; retain descriptive cards, accession codes, and anonymous ownership."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the valuation panel; retain descriptive cards, accession codes, and anonymous ownership."
+    },
+    "hold_312/q3": {
+      "required_facts": [
+        {
+          "text": "New examination note: items P11 and P12 were visually compared; their labels conflict with the photographs.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 2,
+              "event_id": "hold_312_fresh",
+              "fragment": "New examination note: items P11 and P12 were visually compared; their labels conflict with the photographs."
+            }
+          ]
+        },
+        {
+          "text": "Origin and value were not assessed.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 2,
+              "event_id": "hold_312_fresh",
+              "fragment": "Origin and value were not assessed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The whole collection can be advertised as natural pearls at the appraised value.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_312/q4": {
+      "required_facts": [
+        {
+          "text": "Ada owns relabeling once the custodian locates the intake envelopes.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 3,
+              "event_id": "hold_312_pending",
+              "fragment": "Ada owns relabeling once the custodian locates the intake envelopes."
+            }
+          ]
+        },
+        {
+          "text": "The envelopes have not been found.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 3,
+              "event_id": "hold_312_pending",
+              "fragment": "The envelopes have not been found."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Ada owns relabeling once the custodian locates the intake envelopes. The envelopes have not been found."
+    },
+    "hold_312/q5": {
+      "required_facts": [
+        {
+          "text": "The shell-show task may send its catalog to a printer.",
+          "support": [
+            {
+              "session_id": "hold_312_adjacent",
+              "event_index": 0,
+              "event_id": "hold_312_permission",
+              "fragment": "The shell-show task may send its catalog to a printer."
+            }
+          ]
+        },
+        {
+          "text": "This approval does not include the pearl index.",
+          "support": [
+            {
+              "session_id": "hold_312_adjacent",
+              "event_index": 0,
+              "event_id": "hold_312_permission",
+              "fragment": "This approval does not include the pearl index."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in pearl_index.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to shell_show."
+    },
+    "hold_312/q6": {
+      "required_facts": [
+        {
+          "text": "New examination note: items P11 and P12 were visually compared; their labels conflict with the photographs.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 2,
+              "event_id": "hold_312_fresh",
+              "fragment": "New examination note: items P11 and P12 were visually compared; their labels conflict with the photographs."
+            }
+          ]
+        },
+        {
+          "text": "Origin and value were not assessed.",
+          "support": [
+            {
+              "session_id": "hold_312_later",
+              "event_index": 2,
+              "event_id": "hold_312_fresh",
+              "fragment": "Origin and value were not assessed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Former appraisal: all sixty pearls are naturally formed and the collection value is 72,000 tokens.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The whole collection can be advertised as natural pearls at the appraised value.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_313/q1": {
+      "required_facts": [
+        {
+          "text": "Write a disruption FAQ because the western dock closed for repairs.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 0,
+              "event_id": "hold_313_change",
+              "fragment": "Write a disruption FAQ because the western dock closed for repairs."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prepare a cobalt ferry information sheet. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Write a disruption FAQ because the western dock closed for repairs."
+    },
+    "hold_313/q2": {
+      "required_facts": [
+        {
+          "text": "Use the 24-hour clock, omit passenger names, and include a fare calculator and printed departure cards.",
+          "support": [
+            {
+              "session_id": "hold_313_early",
+              "event_index": 0,
+              "event_id": "hold_313_initial",
+              "fragment": "Use the 24-hour clock, omit passenger names, and include a fare calculator and printed departure cards."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the fare calculator; retain departure cards, 24-hour times, and passenger anonymity.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 0,
+              "event_id": "hold_313_change",
+              "fragment": "Cancel the fare calculator; retain departure cards, 24-hour times, and passenger anonymity."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the fare calculator; retain departure cards, 24-hour times, and passenger anonymity."
+    },
+    "hold_313/q3": {
+      "required_facts": [
+        {
+          "text": "Fresh dock note: the eastern 09:20 departure left at 09:31; boarding on that vessel used two steps.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 2,
+              "event_id": "hold_313_fresh",
+              "fragment": "Fresh dock note: the eastern 09:20 departure left at 09:31; boarding on that vessel used two steps."
+            }
+          ]
+        },
+        {
+          "text": "No other departure was checked.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 2,
+              "event_id": "hold_313_fresh",
+              "fragment": "No other departure was checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The full ferry service is reliable and accessible.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_313/q4": {
+      "required_facts": [
+        {
+          "text": "Suri owns the alternate-dock wording after the operator confirms the temporary landing location.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 3,
+              "event_id": "hold_313_pending",
+              "fragment": "Suri owns the alternate-dock wording after the operator confirms the temporary landing location."
+            }
+          ]
+        },
+        {
+          "text": "Confirmation is pending.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 3,
+              "event_id": "hold_313_pending",
+              "fragment": "Confirmation is pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Suri owns the alternate-dock wording after the operator confirms the temporary landing location. Confirmation is pending."
+    },
+    "hold_313/q5": {
+      "required_facts": [
+        {
+          "text": "You may book a performer for coral fest within its approved allowance.",
+          "support": [
+            {
+              "session_id": "hold_313_adjacent",
+              "event_index": 0,
+              "event_id": "hold_313_permission",
+              "fragment": "You may book a performer for coral fest within its approved allowance."
+            }
+          ]
+        },
+        {
+          "text": "This does not approve any booking for cobalt ferry work.",
+          "support": [
+            {
+              "session_id": "hold_313_adjacent",
+              "event_index": 0,
+              "event_id": "hold_313_permission",
+              "fragment": "This does not approve any booking for cobalt ferry work."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in cobalt_ferry.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to coral_fest."
+    },
+    "hold_313/q6": {
+      "required_facts": [
+        {
+          "text": "Fresh dock note: the eastern 09:20 departure left at 09:31; boarding on that vessel used two steps.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 2,
+              "event_id": "hold_313_fresh",
+              "fragment": "Fresh dock note: the eastern 09:20 departure left at 09:31; boarding on that vessel used two steps."
+            }
+          ]
+        },
+        {
+          "text": "No other departure was checked.",
+          "support": [
+            {
+              "session_id": "hold_313_later",
+              "event_index": 2,
+              "event_id": "hold_313_fresh",
+              "fragment": "No other departure was checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Old service bulletin: every weekday departure operates on time and all vessels have step-free boarding.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The full ferry service is reliable and accessible.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_314/q1": {
+      "required_facts": [
+        {
+          "text": "Prepare an ingredient ambiguity checklist because the syrup supplier changed its recipe.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 0,
+              "event_id": "hold_314_change",
+              "fragment": "Prepare an ingredient ambiguity checklist because the syrup supplier changed its recipe."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Design a maple tasting menu. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Prepare an ingredient ambiguity checklist because the syrup supplier changed its recipe."
+    },
+    "hold_314/q2": {
+      "required_facts": [
+        {
+          "text": "List ingredients explicitly, keep supplier personal details out, and include a pairing quiz and a printed menu.",
+          "support": [
+            {
+              "session_id": "hold_314_early",
+              "event_index": 0,
+              "event_id": "hold_314_initial",
+              "fragment": "List ingredients explicitly, keep supplier personal details out, and include a pairing quiz and a printed menu."
+            }
+          ]
+        },
+        {
+          "text": "Drop the pairing quiz; retain the printed menu, explicit ingredients, and supplier privacy.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 0,
+              "event_id": "hold_314_change",
+              "fragment": "Drop the pairing quiz; retain the printed menu, explicit ingredients, and supplier privacy."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Drop the pairing quiz; retain the printed menu, explicit ingredients, and supplier privacy."
+    },
+    "hold_314/q3": {
+      "required_facts": [
+        {
+          "text": "Current package check: the syrup used in dish M3 lists almond extract.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 2,
+              "event_id": "hold_314_fresh",
+              "fragment": "Current package check: the syrup used in dish M3 lists almond extract."
+            }
+          ]
+        },
+        {
+          "text": "The other eleven dishes and holding times were not checked.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 2,
+              "event_id": "hold_314_fresh",
+              "fragment": "The other eleven dishes and holding times were not checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The complete menu is cleared for nut-free service throughout the event.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_314/q4": {
+      "required_facts": [
+        {
+          "text": "Rafi owns the final dish wording once the supplier answers the extract-composition question.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 3,
+              "event_id": "hold_314_pending",
+              "fragment": "Rafi owns the final dish wording once the supplier answers the extract-composition question."
+            }
+          ]
+        },
+        {
+          "text": "No answer has arrived.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 3,
+              "event_id": "hold_314_pending",
+              "fragment": "No answer has arrived."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Rafi owns the final dish wording once the supplier answers the extract-composition question. No answer has arrived."
+    },
+    "hold_314/q5": {
+      "required_facts": [
+        {
+          "text": "You may email stall assignments for birch bazaar.",
+          "support": [
+            {
+              "session_id": "hold_314_adjacent",
+              "event_index": 0,
+              "event_id": "hold_314_permission",
+              "fragment": "You may email stall assignments for birch bazaar."
+            }
+          ]
+        },
+        {
+          "text": "That permission is limited to the bazaar and does not cover maple menu messages.",
+          "support": [
+            {
+              "session_id": "hold_314_adjacent",
+              "event_index": 0,
+              "event_id": "hold_314_permission",
+              "fragment": "That permission is limited to the bazaar and does not cover maple menu messages."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in maple_menu.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to birch_bazaar."
+    },
+    "hold_314/q6": {
+      "required_facts": [
+        {
+          "text": "Current package check: the syrup used in dish M3 lists almond extract.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 2,
+              "event_id": "hold_314_fresh",
+              "fragment": "Current package check: the syrup used in dish M3 lists almond extract."
+            }
+          ]
+        },
+        {
+          "text": "The other eleven dishes and holding times were not checked.",
+          "support": [
+            {
+              "session_id": "hold_314_later",
+              "event_index": 2,
+              "event_id": "hold_314_fresh",
+              "fragment": "The other eleven dishes and holding times were not checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Previous kitchen sheet: all twelve dishes are nut-free and remain suitable for service for four hours.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The complete menu is cleared for nut-free service throughout the event.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_315/q1": {
+      "required_facts": [
+        {
+          "text": "Prepare a near-focus distortion comparison because the team noticed curved lines in close shots.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 0,
+              "event_id": "hold_315_change",
+              "fragment": "Prepare a near-focus distortion comparison because the team noticed curved lines in close shots."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Create an indigo lens comparison guide. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Prepare a near-focus distortion comparison because the team noticed curved lines in close shots."
+    },
+    "hold_315/q2": {
+      "required_facts": [
+        {
+          "text": "Keep test images on the local drive, conceal model serial numbers, and include a recommendation wizard and side-by-side plates.",
+          "support": [
+            {
+              "session_id": "hold_315_early",
+              "event_index": 0,
+              "event_id": "hold_315_initial",
+              "fragment": "Keep test images on the local drive, conceal model serial numbers, and include a recommendation wizard and side-by-side plates."
+            }
+          ]
+        },
+        {
+          "text": "Cancel the recommendation wizard; retain comparison plates, local images, and serial-number concealment.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 0,
+              "event_id": "hold_315_change",
+              "fragment": "Cancel the recommendation wizard; retain comparison plates, local images, and serial-number concealment."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Cancel the recommendation wizard; retain comparison plates, local images, and serial-number concealment."
+    },
+    "hold_315/q3": {
+      "required_facts": [
+        {
+          "text": "New chart capture: lenses I2 and I5 were photographed at forty centimeters; I5 showed curved edge lines.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 2,
+              "event_id": "hold_315_fresh",
+              "fragment": "New chart capture: lenses I2 and I5 were photographed at forty centimeters; I5 showed curved edge lines."
+            }
+          ]
+        },
+        {
+          "text": "Weather sealing was not tested.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 2,
+              "event_id": "hold_315_fresh",
+              "fragment": "Weather sealing was not tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The whole set is certified for distortion-free outdoor photography.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_315/q4": {
+      "required_facts": [
+        {
+          "text": "Nell owns the next focus distance after the photographer supplies the available studio depth.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 3,
+              "event_id": "hold_315_pending",
+              "fragment": "Nell owns the next focus distance after the photographer supplies the available studio depth."
+            }
+          ]
+        },
+        {
+          "text": "That measurement is missing.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 3,
+              "event_id": "hold_315_pending",
+              "fragment": "That measurement is missing."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Nell owns the next focus distance after the photographer supplies the available studio depth. That measurement is missing."
+    },
+    "hold_315/q5": {
+      "required_facts": [
+        {
+          "text": "For saffron screen, you may submit its trailer to the screening committee.",
+          "support": [
+            {
+              "session_id": "hold_315_adjacent",
+              "event_index": 0,
+              "event_id": "hold_315_permission",
+              "fragment": "For saffron screen, you may submit its trailer to the screening committee."
+            }
+          ]
+        },
+        {
+          "text": "This does not authorize sharing indigo lens images.",
+          "support": [
+            {
+              "session_id": "hold_315_adjacent",
+              "event_index": 0,
+              "event_id": "hold_315_permission",
+              "fragment": "This does not authorize sharing indigo lens images."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in indigo_lens.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to saffron_screen."
+    },
+    "hold_315/q6": {
+      "required_facts": [
+        {
+          "text": "New chart capture: lenses I2 and I5 were photographed at forty centimeters; I5 showed curved edge lines.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 2,
+              "event_id": "hold_315_fresh",
+              "fragment": "New chart capture: lenses I2 and I5 were photographed at forty centimeters; I5 showed curved edge lines."
+            }
+          ]
+        },
+        {
+          "text": "Weather sealing was not tested.",
+          "support": [
+            {
+              "session_id": "hold_315_later",
+              "event_index": 2,
+              "event_id": "hold_315_fresh",
+              "fragment": "Weather sealing was not tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prior optics report: all eight lenses are distortion-free at every focal distance and fully weather sealed.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The whole set is certified for distortion-free outdoor photography.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    },
+    "hold_316/q1": {
+      "required_facts": [
+        {
+          "text": "Make a handrail exception list because a resident reported a loose rail.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 0,
+              "event_id": "hold_316_change",
+              "fragment": "Make a handrail exception list because a resident reported a loose rail."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Prepare a silver steps maintenance guide. remains the current deliverable without the later change.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "current_goal",
+      "expected_actionability": "Make a handrail exception list because a resident reported a loose rail."
+    },
+    "hold_316/q2": {
+      "required_facts": [
+        {
+          "text": "Describe locations by stair number, exclude tenant identities, and include a predictive wear model and inspection checklist.",
+          "support": [
+            {
+              "session_id": "hold_316_early",
+              "event_index": 0,
+              "event_id": "hold_316_initial",
+              "fragment": "Describe locations by stair number, exclude tenant identities, and include a predictive wear model and inspection checklist."
+            }
+          ]
+        },
+        {
+          "text": "Stop the predictive wear model; keep the checklist, stair-number references, and tenant privacy.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 0,
+              "event_id": "hold_316_change",
+              "fragment": "Stop the predictive wear model; keep the checklist, stair-number references, and tenant privacy."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The change cancels the entire original project and all its constraints.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "retained_constraints",
+      "expected_actionability": "Stop the predictive wear model; keep the checklist, stair-number references, and tenant privacy."
+    },
+    "hold_316/q3": {
+      "required_facts": [
+        {
+          "text": "Fresh inspection: flights S6 and S7 were visited; S6 had a loose upper handrail bracket.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 2,
+              "event_id": "hold_316_fresh",
+              "fragment": "Fresh inspection: flights S6 and S7 were visited; S6 had a loose upper handrail bracket."
+            }
+          ]
+        },
+        {
+          "text": "Surface friction and other flights were not tested.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 2,
+              "event_id": "hold_316_fresh",
+              "fragment": "Surface friction and other flights were not tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The building stairs are cleared as safe throughout.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "execution_evidence",
+      "expected_actionability": "Limit observed results to the fresh record; do not treat the assistant report as verified execution."
+    },
+    "hold_316/q4": {
+      "required_facts": [
+        {
+          "text": "Kira owns repair sequencing when the contractor supplies access dates.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 3,
+              "event_id": "hold_316_pending",
+              "fragment": "Kira owns repair sequencing when the contractor supplies access dates."
+            }
+          ]
+        },
+        {
+          "text": "The dates are still unavailable.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 3,
+              "event_id": "hold_316_pending",
+              "fragment": "The dates are still unavailable."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The pending input has arrived and the assigned follow-up is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_followup",
+      "expected_actionability": "Kira owns repair sequencing when the contractor supplies access dates. The dates are still unavailable."
+    },
+    "hold_316/q5": {
+      "required_facts": [
+        {
+          "text": "You may authorize a paint sample order for golden gate.",
+          "support": [
+            {
+              "session_id": "hold_316_adjacent",
+              "event_index": 0,
+              "event_id": "hold_316_permission",
+              "fragment": "You may authorize a paint sample order for golden gate."
+            }
+          ]
+        },
+        {
+          "text": "That permission is not valid for silver steps orders.",
+          "support": [
+            {
+              "session_id": "hold_316_adjacent",
+              "event_index": 0,
+              "event_id": "hold_316_permission",
+              "fragment": "That permission is not valid for silver steps orders."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The neighboring project authorization permits the corresponding action in silver_steps.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_boundary",
+      "expected_actionability": "Keep the explicit approval limited to golden_gate."
+    },
+    "hold_316/q6": {
+      "required_facts": [
+        {
+          "text": "Fresh inspection: flights S6 and S7 were visited; S6 had a loose upper handrail bracket.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 2,
+              "event_id": "hold_316_fresh",
+              "fragment": "Fresh inspection: flights S6 and S7 were visited; S6 had a loose upper handrail bracket."
+            }
+          ]
+        },
+        {
+          "text": "Surface friction and other flights were not tested.",
+          "support": [
+            {
+              "session_id": "hold_316_later",
+              "event_index": 2,
+              "event_id": "hold_316_fresh",
+              "fragment": "Surface friction and other flights were not tested."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Old building survey: all forty stair flights have intact handrails and non-slip surfaces.",
+          "error_type": "deleted_resurrection"
+        },
+        {
+          "text": "The building stairs are cleared as safe throughout.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "source_deletion",
+      "expected_actionability": "Use only the retained replacement observation for present evidence; do not revive the deleted observation or its dependent assistant conclusion."
+    }
+  }
+}

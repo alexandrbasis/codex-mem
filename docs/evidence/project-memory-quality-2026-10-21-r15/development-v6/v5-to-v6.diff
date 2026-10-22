@@ -1,0 +1,24 @@
+--- held-v5
++++ candidate-v6
+@@ -950,6 +950,7 @@
+     expanded_evidence = bool(brief.get('source_evidence_requested'))
+     protected = {}
+     protected_roles = set()
++    execution_allowance = min(1800, budget // 3)
+     protection_pool = records if expanded_evidence else [*records, *(brief.get('unassociated_role_context') or [])]
+     for record in protection_pool:
+         size = _whole_execution_size(record, brief.get('projection'))
+@@ -958,9 +959,13 @@
+             size = _reserved_record_size(record, brief.get('projection'), set(), min(900, budget // 6))
+         if not size or (not expanded_evidence and role in protected_roles):
+             continue
++        if not expanded_evidence and role == 'execution' and size > execution_allowance:
++            continue
+         if size + sum(protected.values()) <= remaining:
+             protected[record['id']] = size
+             protected_roles.add(role)
++            if not expanded_evidence and role == 'execution':
++                execution_allowance -= size
+     available = max(0, remaining - sum(protected.values()))
+     source_nodes, source_pointers, neutral_selected, neutral_omitted = _plan_original_source_transport(
+         brief, records, budget, available)

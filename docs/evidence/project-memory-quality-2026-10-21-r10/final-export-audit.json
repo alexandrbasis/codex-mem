@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "passed_with_limits",
+  "decision_verified": "complete_failed",
+  "audit_scope": "Independent immutable frozen R10 export audit; no native calls, new grades, changes to receipts/scores/report/runtime/helper, or global private-data reads.",
+  "concrete_gaps": [],
+  "source_sha256": {
+    "result-summary.json": "a4495dccc56085bf9b45e786669a27416b328f2ebcae6ee56d0729fa6368a6dd",
+    "frozen-helper.py": "6e56d64bcf1c26e219eef97af705fefab4d15fbd85d3f7d1a3c147e93f226a79",
+    "freeze.json": "7d1f64e9b9589d4e851d2a5738a064f419b7455c8ab7275d8ef7ce345093d735",
+    "protocol.json": "9c05497bdc4948e1a86100a4b50bddad77fef786d80d00f30ff6272cd5914549",
+    "report.md": "7ef80b0dc75b74ef84f7d47cf5ffe7e5bbcf1eb016f68bda79288000b5b3462e",
+    "holdout/export-manifest.json": "936eb0b770e4cf94320b093b6474b58ccac21b6f89b63331e7cd0106e455543a",
+    "holdout/fictional-run-evidence.tar.gz": "13241f89dbbcd0ab2617270de9c359f50095cc36ae9e45042fcb55f36ef73a71",
+    "holdout/per-question.json": "691434c54a5e48823fb6fc6c889ad3afba5ddfd85cd8f1e45f95c4dcc705ae90",
+    "holdout/report.json": "438cfbdf7e19f296ac93c2edca670f61608db7e5d3356760a67d5874e5f89468",
+    "holdout/sanitization.json": "e3070ba574cfed211218ec653599224c00bfd1d336b795ff9184c6592f9ae759"
+  },
+  "integrity": {
+    "export_manifest_file_hashes_checked": 12,
+    "archive_members": 1161,
+    "all_export_manifest_hashes_match": true,
+    "frozen_helper_matches_export": true,
+    "frozen_protocol_matches_export": true,
+    "sanitized_member_hashes_checked": 344,
+    "all_sanitized_hashes_match": true,
+    "representative_request_ledger_response_metrics_checked": [
+      "call-0001",
+      "call-0155",
+      "call-0310"
+    ],
+    "all_216_logical_answers_match_their_exported_reader_artifacts": true
+  },
+  "coverage": {
+    "per_question_records": 96,
+    "logical_attempts": 216,
+    "primary_per_arm": 96,
+    "reader_repeat_per_arm": 6,
+    "regeneration_repeat_per_arm": 6,
+    "all_attempts_graded": true,
+    "duplicate_logical_attempts": 0,
+    "missing_planned_attempts": 0
+  },
+  "verified_results": {
+    "baseline_primary_fully_supported": 48,
+    "candidate_primary_fully_supported": 59,
+    "denominator_per_arm": 96,
+    "baseline_primary_critical": 5,
+    "candidate_primary_critical": 2,
+    "candidate_reader_repeat_critical": 2,
+    "candidate_regeneration_critical": 0,
+    "paired_fact_losses": 8,
+    "distinct_questions_with_paired_fact_losses": 7
+  },
+  "verified_usage": {
+    "actual_started_calls": 310,
+    "actual_finished_calls": 310,
+    "actual_total_tokens": 4836616,
+    "exact_cross_arm_reuses": 2,
+    "cumulative_actual_calls": 1593,
+    "cumulative_total_tokens": 25901264,
+    "prior_actual_calls": 1283,
+    "prior_tokens": 21064648
+  },
+  "context_boundary": {
+    "actual_native_reader_requests_checked": 214,
+    "request_contexts_each": 1,
+    "max_annotated_native_reader_memory_chars": 5847,
+    "limit_chars_per_question": 6000,
+    "native_reader_payload_keys": [
+      "contexts"
+    ],
+    "report_explains_sum_of_six_views_is_not_one_context": true,
+    "scope_note": "Source-memory character cap is per independent question call, including inline citation annotations. Prompt instructions, question text and response schema are additional metadata. No full source catalog is serialized outside the memory."
+  },
+  "publication_privacy_scan": {
+    "scanned_all_export_text_and_archive_members": true,
+    "private_key_matches": 0,
+    "openai_key_matches": 0,
+    "aws_key_matches": 0,
+    "jwt_matches": 0,
+    "access_bearing_url_matches": 0,
+    "raw_native_worker_or_turn_uuid_matches": 0,
+    "observed_url_hosts": [
+      "learn.chatgpt.com"
+    ],
+    "fictional_ids_preserved": true
+  },
+  "limits": [
+    "Pattern scans and representative receipt checks do not prove absence of every possible sensitive string or independently validate model judgments.",
+    "Fictional authored data is allowed; no production or global private data was retrieved.",
+    "Scores are model judgments on this frozen synthetic trial, not evidence of production quality.",
+    "No grading, semantic repair, retry or native execution was performed by this auditor."
+  ]
+}

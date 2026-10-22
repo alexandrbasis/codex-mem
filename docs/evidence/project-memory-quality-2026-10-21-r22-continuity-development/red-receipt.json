@@ -1,0 +1,80 @@
+{
+  "schema_version": "r22-continuation-red-v1",
+  "status": "tests_only_red_confirmed_awaiting_explicit_source_hold_release",
+  "public_seams": [
+    "episode_processor.process_project_memory injected native runner",
+    "Store.remember in fresh temporary stores",
+    "ProjectMemory.snapshot(include_episode_history=True)",
+    "ProjectMemory.forget for deletion guard"
+  ],
+  "command": "python3 -m unittest discover -s docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development -p 'test_*.py' -v",
+  "result": {
+    "tests": 12,
+    "pass": 9,
+    "fail": 3,
+    "errors": 0,
+    "exit_code": 1,
+    "unittest_seconds": 0.375
+  },
+  "expected_red": [
+    "test_two_unsupported_requests_do_not_consume_a_continuation_slot",
+    "test_supported_then_unsupported_uses_only_one_slot",
+    "test_unsupported_then_supported_uses_only_one_slot"
+  ],
+  "existing_guard_controls_pass": [
+    "single supported continuation preserves logical identity",
+    "single unsupported requested continuation is standalone with explicit omission",
+    "two supported requests for same root reject whole batch",
+    "distinct supported roots succeed",
+    "valid reconsideration consolidates two roots",
+    "reconsideration cross-record continuation/consolidation overlap rejects whole batch",
+    "foreign head undisclosed and rejected",
+    "deleted head not resurrected",
+    "superseded non-current head rejected"
+  ],
+  "atomic_assertions": "Failed batches keep domain revision/episodes/claims/relations and pending source-event watermark unchanged. Failure/usage/job accounting legitimately changes; this is not a claim the entire Store is byte-identical. Quarantined failures are not reexecuted.",
+  "scaffold_correction": {
+    "preserved": [
+      "scaffold-v1.py",
+      "scaffold-v1-red.log"
+    ],
+    "initial_result": "10 tests,4 failures:3 expected bug failures plus invalid positive consolidation fixture missing retained goal.",
+    "correction": "Positive and overlap reconsideration fixtures now retain nonempty exact-evidenced goal; valid reconsideration passes unchanged product. No product change or weakened consolidation guard. Added independent single supported/unsupported controls."
+  },
+  "prospective_minimal_fix": "After explicit source hold release only: move one-root reservation/check inside the proven supported-continuity branch. Existing unsupported-to-standalone omission remains; duplicate supported successors and consolidation overlap still whole-batch reject.",
+  "prohibitions_respected": [
+    "No product/helper/harness/shared-test modifications",
+    "No old trial files or original DB opened by these tests",
+    "No native/model/network calls",
+    "No old response repair/retry/regrade",
+    "No source freeze release inferred from tests"
+  ],
+  "inputs": [
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory.py",
+      "sha256": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/episode_processor.py",
+      "sha256": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py",
+      "sha256": "a2073039e2a33933dfbe1175e6772322d7b1f34d672c27bafee5077047da832f"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/red.log",
+      "sha256": "1217a05218f92f97c48d3ade367500c9d1bf22e2c122cfa488b0b3c080f08c6a"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/scaffold-v1.py",
+      "sha256": "bcbaace9eb5615ac83a1c3ef6c3e3289fc5d129a502d51e26837bb760a3b08de"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/scaffold-v1-red.log",
+      "sha256": "228a388c67975cb4654d2f91990760c26db59ff21f0a61759e650a64c82d376e"
+    }
+  ]
+}

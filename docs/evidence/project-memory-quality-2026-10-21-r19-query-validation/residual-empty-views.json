@@ -1,0 +1,1003 @@
+{
+  "schema_version": 1,
+  "status": "five_residual_empty_views_preserved_no_further_retrieval",
+  "query_sha256": "120b3fe635bdd5c5d400b1586419eb04352f6ce22bf4ee42a480971aa2358eb2",
+  "plan_module_source": "/private/tmp/r19-query-offline-mbx3ef4a/new-runtime/codex_mem/project_memory_query.py",
+  "rendered_contexts_source_sha256": "7cff644499fca23dbb12a36754738a17634c6bad504419fa53eb167fc53f270e",
+  "disclosed_source_audit_sha256": "c8537ac57c7408b0c75e4b6925f100ead9b7a968f3629e5e93775b2e36716899",
+  "residuals": [
+    {
+      "history_id": "E04",
+      "question_id": "Q3",
+      "question": "For JuniperBookings, compare the initial server claim with both observed staging states.",
+      "selected_project_scopes": [
+        "/private/tmp/codex-mem-quality-20261021-r18-experiment/projects/E04/JuniperBookings"
+      ],
+      "plan": {
+        "natural": false,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "juniperbookings"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [
+          "staging"
+        ],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "For JuniperBookings, compare the initial server claim with both observed staging states."
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "content_query": "For JuniperBookings, compare the initial server claim with both observed staging states.",
+        "scope_aliases": [],
+        "requirement_subject": null,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "juniperbookings"
+          ],
+          "versions": [],
+          "minimum": 0
+        },
+        "answer_subject": null,
+        "answer_facets": [],
+        "source_order": null,
+        "complete_subject": false
+      },
+      "public_render_project_views": [
+        {
+          "project_key": "JuniperBookings",
+          "budget": 5900,
+          "xml_chars": 474,
+          "skip_reason": null,
+          "enabled": true,
+          "quoted_spans": 0,
+          "validation_error": null
+        }
+      ],
+      "context_chars": 498,
+      "context_sha256": "25f52ea9f0db940da1ab2ea9f3248563aa8105fd5fe7e66163c4dd9e365ef536",
+      "catalog_spans": 0,
+      "gold_support_anchor_checks": [
+        {
+          "fact_index": 0,
+          "support_index": 0,
+          "event_id": "report",
+          "source_id": "c35e77facbd14e4486ef19a50b4e7702",
+          "source_field": "body",
+          "start": 0,
+          "end": 64,
+          "quote": "The booking visibility change is on the shared reception server.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 1,
+          "support_index": 0,
+          "event_id": "two",
+          "source_id": "ccf63ba459f640eda4fe6e6e6f680abd",
+          "source_field": "body",
+          "start": 0,
+          "end": 95,
+          "quote": "Reception staging server: artifact digest is previous release; visibility patch absent; exit 1.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 2,
+          "support_index": 0,
+          "event_id": "three",
+          "source_id": "e2eefac3740f41e0ac7842e29595efbf",
+          "source_field": "body",
+          "start": 0,
+          "end": 122,
+          "quote": "Reception staging deploy: test slot ended at 16:00; new artifact installed at 16:12; canceled booking row visible; exit 0.",
+          "fully_visible_in_one_grounded_span": false
+        }
+      ],
+      "original_event_excerpts": [
+        {
+          "event_id": "report",
+          "event_type": "assistant",
+          "source_id": "c35e77facbd14e4486ef19a50b4e7702",
+          "text": "The booking visibility change is on the shared reception server."
+        },
+        {
+          "event_id": "three",
+          "event_type": "tool",
+          "source_id": "e2eefac3740f41e0ac7842e29595efbf",
+          "text": "Reception staging deploy: test slot ended at 16:00; new artifact installed at 16:12; canceled booking row visible; exit 0."
+        },
+        {
+          "event_id": "two",
+          "event_type": "tool",
+          "source_id": "ccf63ba459f640eda4fe6e6e6f680abd",
+          "text": "Reception staging server: artifact digest is previous release; visibility patch absent; exit 1."
+        }
+      ],
+      "stored_episode_fields_from_disclosed_audit": [
+        {
+          "episode_id": "pm_5403a1531b66448f397120057c5d6208a86d4280",
+          "field": "goal",
+          "stored_value": "Assistant report: The booking visibility change is on the shared reception server.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 64,
+              "quote": "The booking visibility change is on the shared reception server.",
+              "source_id": "c35e77facbd14e4486ef19a50b4e7702",
+              "source_role": "assistant_report",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_5403a1531b66448f397120057c5d6208a86d4280",
+          "field": "outcome",
+          "stored_value": "Tool record: Reception staging server: artifact digest is previous release; visibility patch absent; exit 1.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 95,
+              "quote": "Reception staging server: artifact digest is previous release; visibility patch absent; exit 1.",
+              "source_id": "ccf63ba459f640eda4fe6e6e6f680abd",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_5403a1531b66448f397120057c5d6208a86d4280",
+          "field": "summary",
+          "stored_value": "Assistant report: The booking visibility change is on the shared reception server.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 64,
+              "quote": "The booking visibility change is on the shared reception server.",
+              "source_id": "c35e77facbd14e4486ef19a50b4e7702",
+              "source_role": "assistant_report",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_cdb2a1d35e6dac68690f7a9fdad63a4beaee085c",
+          "field": "outcome",
+          "stored_value": "Tool record: Reception staging deploy: test slot ended at 16:00; new artifact installed at 16:12; canceled booking row visible; exit 0.\nUser intent: Staging verification is accepted and that delivery is closed.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 122,
+              "quote": "Reception staging deploy: test slot ended at 16:00; new artifact installed at 16:12; canceled booking row visible; exit 0.",
+              "source_id": "e2eefac3740f41e0ac7842e29595efbf",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "history_id": "E06",
+      "question_id": "Q5",
+      "question": "For LumenStage, contrast the assistant’s first upload report with the first upload result and the later retry result.",
+      "selected_project_scopes": [
+        "/private/tmp/codex-mem-quality-20261021-r18-experiment/projects/E06/LumenStage"
+      ],
+      "plan": {
+        "natural": false,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "lumenstage"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "For LumenStage, contrast the assistant’s first upload report with the first upload result and the later retry result."
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "content_query": "For LumenStage, contrast the assistant’s first upload report with the first upload result and the later retry result.",
+        "scope_aliases": [],
+        "requirement_subject": null,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "lumenstage"
+          ],
+          "versions": [],
+          "minimum": 0
+        },
+        "answer_subject": null,
+        "answer_facets": [],
+        "source_order": null,
+        "complete_subject": false
+      },
+      "public_render_project_views": [
+        {
+          "project_key": "LumenStage",
+          "budget": 5900,
+          "xml_chars": 474,
+          "skip_reason": null,
+          "enabled": true,
+          "quoted_spans": 0,
+          "validation_error": null
+        }
+      ],
+      "context_chars": 493,
+      "context_sha256": "3e11bde0dcb5c12a82deaef6641d340d620b171f13838cc69883003b44ac2346",
+      "catalog_spans": 0,
+      "gold_support_anchor_checks": [
+        {
+          "fact_index": 0,
+          "support_index": 0,
+          "event_id": "report",
+          "source_id": "94c0a2fb9ee549ebad54f46f7794bc30",
+          "source_field": "body",
+          "start": 0,
+          "end": 61,
+          "quote": "The stage console has loaded the converted cues successfully.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 1,
+          "support_index": 0,
+          "event_id": "two",
+          "source_id": "a4dd98a544f74821820c75ca9e8c5823",
+          "source_field": "body",
+          "start": 0,
+          "end": 64,
+          "quote": "Stage console upload: device busy; no file transferred; exit 16.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 2,
+          "support_index": 0,
+          "event_id": "three",
+          "source_id": "0005734789ec4971b4f2837d16d09e40",
+          "source_field": "body",
+          "start": 0,
+          "end": 91,
+          "quote": "Rehearsal console retry: pause token present; 12 cues loaded; decimal 0.4 retained; exit 0.",
+          "fully_visible_in_one_grounded_span": false
+        }
+      ],
+      "original_event_excerpts": [
+        {
+          "event_id": "report",
+          "event_type": "assistant",
+          "source_id": "94c0a2fb9ee549ebad54f46f7794bc30",
+          "text": "The stage console has loaded the converted cues successfully."
+        },
+        {
+          "event_id": "three",
+          "event_type": "tool",
+          "source_id": "0005734789ec4971b4f2837d16d09e40",
+          "text": "Rehearsal console retry: pause token present; 12 cues loaded; decimal 0.4 retained; exit 0."
+        },
+        {
+          "event_id": "two",
+          "event_type": "tool",
+          "source_id": "a4dd98a544f74821820c75ca9e8c5823",
+          "text": "Stage console upload: device busy; no file transferred; exit 16."
+        }
+      ],
+      "stored_episode_fields_from_disclosed_audit": [
+        {
+          "episode_id": "pm_c0b43044900df5596ae3e0f75dde67d82e67fcdf",
+          "field": "outcome",
+          "stored_value": "Tool record: Stage console upload: device busy; no file transferred; exit 16.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 64,
+              "quote": "Stage console upload: device busy; no file transferred; exit 16.",
+              "source_id": "a4dd98a544f74821820c75ca9e8c5823",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_c0b43044900df5596ae3e0f75dde67d82e67fcdf",
+          "field": "summary",
+          "stored_value": "Tool record: Stage console upload: device busy; no file transferred; exit 16.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 64,
+              "quote": "Stage console upload: device busy; no file transferred; exit 16.",
+              "source_id": "a4dd98a544f74821820c75ca9e8c5823",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_33c93182663127c1c3fe36e2eb4b6ddfdd666138",
+          "field": "outcome",
+          "stored_value": "Tool record: Rehearsal console retry: pause token present; 12 cues loaded; decimal 0.4 retained; exit 0.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 91,
+              "quote": "Rehearsal console retry: pause token present; 12 cues loaded; decimal 0.4 retained; exit 0.",
+              "source_id": "0005734789ec4971b4f2837d16d09e40",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_33c93182663127c1c3fe36e2eb4b6ddfdd666138",
+          "field": "summary",
+          "stored_value": "Tool record: Rehearsal console retry: pause token present; 12 cues loaded; decimal 0.4 retained; exit 0.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 91,
+              "quote": "Rehearsal console retry: pause token present; 12 cues loaded; decimal 0.4 retained; exit 0.",
+              "source_id": "0005734789ec4971b4f2837d16d09e40",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "history_id": "E11",
+      "question_id": "Q3",
+      "question": "For ElmWater, compare the portal availability report with the two staging export observations.",
+      "selected_project_scopes": [
+        "/private/tmp/codex-mem-quality-20261021-r18-experiment/projects/E11/ElmWater"
+      ],
+      "plan": {
+        "natural": false,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "elmwater"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [
+          "staging"
+        ],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "For ElmWater, compare the portal availability report with the two staging export observations."
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "content_query": "For ElmWater, compare the portal availability report with the two staging export observations.",
+        "scope_aliases": [],
+        "requirement_subject": null,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "elmwater"
+          ],
+          "versions": [],
+          "minimum": 0
+        },
+        "answer_subject": null,
+        "answer_facets": [],
+        "source_order": null,
+        "complete_subject": false
+      },
+      "public_render_project_views": [
+        {
+          "project_key": "ElmWater",
+          "budget": 5900,
+          "xml_chars": 474,
+          "skip_reason": null,
+          "enabled": true,
+          "quoted_spans": 0,
+          "validation_error": null
+        }
+      ],
+      "context_chars": 491,
+      "context_sha256": "67220852a525afa04010dae18f47b318e048a68ff1543e3b4f20e46800c226c2",
+      "catalog_spans": 0,
+      "gold_support_anchor_checks": [
+        {
+          "fact_index": 0,
+          "support_index": 0,
+          "event_id": "report",
+          "source_id": "5d7918a4b681414aa6785d8627b7b933",
+          "source_field": "body",
+          "start": 0,
+          "end": 52,
+          "quote": "The customer portal now serves the corrected export.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 1,
+          "support_index": 0,
+          "event_id": "two",
+          "source_id": "de5998fede5b4210b5b7a100b18c0929",
+          "source_field": "body",
+          "start": 0,
+          "end": 83,
+          "quote": "Customer portal staging download: legacy CSV header; estimate flag missing; exit 1.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 2,
+          "support_index": 0,
+          "event_id": "three",
+          "source_id": "f052c6bfbeb94453a2ab938a6c4ac2c4",
+          "source_field": "body",
+          "start": 0,
+          "end": 127,
+          "quote": "Water staging export: approved header loaded; estimate flag present on 14 rows; billing calculation checksum unchanged; exit 0.",
+          "fully_visible_in_one_grounded_span": false
+        }
+      ],
+      "original_event_excerpts": [
+        {
+          "event_id": "report",
+          "event_type": "assistant",
+          "source_id": "5d7918a4b681414aa6785d8627b7b933",
+          "text": "The customer portal now serves the corrected export."
+        },
+        {
+          "event_id": "three",
+          "event_type": "tool",
+          "source_id": "f052c6bfbeb94453a2ab938a6c4ac2c4",
+          "text": "Water staging export: approved header loaded; estimate flag present on 14 rows; billing calculation checksum unchanged; exit 0."
+        },
+        {
+          "event_id": "two",
+          "event_type": "tool",
+          "source_id": "de5998fede5b4210b5b7a100b18c0929",
+          "text": "Customer portal staging download: legacy CSV header; estimate flag missing; exit 1."
+        }
+      ],
+      "stored_episode_fields_from_disclosed_audit": [
+        {
+          "episode_id": "pm_74f550c1759d3a49105820bd55202d41790383a9",
+          "field": "goal",
+          "stored_value": "Assistant report: The customer portal now serves the corrected export.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 52,
+              "quote": "The customer portal now serves the corrected export.",
+              "source_id": "5d7918a4b681414aa6785d8627b7b933",
+              "source_role": "assistant_report",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_74f550c1759d3a49105820bd55202d41790383a9",
+          "field": "open_work",
+          "stored_value": "Tool record: Customer portal staging download: legacy CSV header; estimate flag missing; exit 1.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 83,
+              "quote": "Customer portal staging download: legacy CSV header; estimate flag missing; exit 1.",
+              "source_id": "de5998fede5b4210b5b7a100b18c0929",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_74f550c1759d3a49105820bd55202d41790383a9",
+          "field": "outcome",
+          "stored_value": "Assistant report: The customer portal now serves the corrected export.\nTool record: Customer portal staging download: legacy CSV header; estimate flag missing; exit 1.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 52,
+              "quote": "The customer portal now serves the corrected export.",
+              "source_id": "5d7918a4b681414aa6785d8627b7b933",
+              "source_role": "assistant_report",
+              "start": 0
+            },
+            {
+              "end": 83,
+              "quote": "Customer portal staging download: legacy CSV header; estimate flag missing; exit 1.",
+              "source_id": "de5998fede5b4210b5b7a100b18c0929",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_74f550c1759d3a49105820bd55202d41790383a9",
+          "field": "rationale",
+          "stored_value": "Assistant report: The customer portal now serves the corrected export.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 52,
+              "quote": "The customer portal now serves the corrected export.",
+              "source_id": "5d7918a4b681414aa6785d8627b7b933",
+              "source_role": "assistant_report",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_74f550c1759d3a49105820bd55202d41790383a9",
+          "field": "summary",
+          "stored_value": "Assistant report: The customer portal now serves the corrected export.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 52,
+              "quote": "The customer portal now serves the corrected export.",
+              "source_id": "5d7918a4b681414aa6785d8627b7b933",
+              "source_role": "assistant_report",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_7fef17788c6eb5d93747fa31a0d8c7c0b59be163",
+          "field": "outcome",
+          "stored_value": "Tool record: Water staging export: approved header loaded; estimate flag present on 14 rows; billing calculation checksum unchanged; exit 0.\nUser intent: The staging CSV correction is accepted; close this ticket.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 127,
+              "quote": "Water staging export: approved header loaded; estimate flag present on 14 rows; billing calculation checksum unchanged; exit 0.",
+              "source_id": "f052c6bfbeb94453a2ab938a6c4ac2c4",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_7fef17788c6eb5d93747fa31a0d8c7c0b59be163",
+          "field": "summary",
+          "stored_value": "User intent: Continue the water-meter CSV correction here.\nUser intent: The staging CSV correction is accepted; close this ticket.\nTool record: Water staging export: approved header loaded; estimate flag present on 14 rows; billing calculation checksum unchanged; exit 0.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 127,
+              "quote": "Water staging export: approved header loaded; estimate flag present on 14 rows; billing calculation checksum unchanged; exit 0.",
+              "source_id": "f052c6bfbeb94453a2ab938a6c4ac2c4",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "history_id": "E14",
+      "question_id": "Q3",
+      "question": "For CopperRepair, compare the assistant’s customer-facing claim with staging behavior before and after deployment.",
+      "selected_project_scopes": [
+        "/private/tmp/codex-mem-quality-20261021-r18-experiment/projects/E14/CopperRepair"
+      ],
+      "plan": {
+        "natural": false,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "copperrepair",
+          "customer-facing"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [
+          "staging"
+        ],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "For CopperRepair, compare the assistant’s customer-facing claim with staging behavior before and after deployment."
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "content_query": "For CopperRepair, compare the assistant’s customer-facing claim with staging behavior before and after deployment.",
+        "scope_aliases": [],
+        "requirement_subject": null,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "copperrepair",
+            "customer-facing"
+          ],
+          "versions": [],
+          "minimum": 0
+        },
+        "answer_subject": null,
+        "answer_facets": [],
+        "source_order": null,
+        "complete_subject": false
+      },
+      "public_render_project_views": [
+        {
+          "project_key": "CopperRepair",
+          "budget": 5900,
+          "xml_chars": 474,
+          "skip_reason": null,
+          "enabled": true,
+          "quoted_spans": 0,
+          "validation_error": null
+        }
+      ],
+      "context_chars": 495,
+      "context_sha256": "65b4dc055cb5334e0568f4856bf39b32cc0e7914481ee521bb2fdd66b0d046bb",
+      "catalog_spans": 0,
+      "gold_support_anchor_checks": [
+        {
+          "fact_index": 0,
+          "support_index": 0,
+          "event_id": "report",
+          "source_id": "adc07eb75af047bb9f2ccccccc8d8411",
+          "source_field": "body",
+          "start": 0,
+          "end": 59,
+          "quote": "The customer-facing form now allows photo-free submissions.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 1,
+          "support_index": 0,
+          "event_id": "two",
+          "source_id": "78412ac83ce34291abcc4aef2f375f20",
+          "source_field": "body",
+          "start": 0,
+          "end": 79,
+          "quote": "Customer staging form: submit without photo returns 422 photo_required; exit 1.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 2,
+          "support_index": 0,
+          "event_id": "three",
+          "source_id": "172c88d5a48b4a8799c7052702756786",
+          "source_field": "body",
+          "start": 0,
+          "end": 107,
+          "quote": "Staging intake deploy: wording approval present; photo-free submit returns 201; no serial accepted; exit 0.",
+          "fully_visible_in_one_grounded_span": false
+        }
+      ],
+      "original_event_excerpts": [
+        {
+          "event_id": "report",
+          "event_type": "assistant",
+          "source_id": "adc07eb75af047bb9f2ccccccc8d8411",
+          "text": "The customer-facing form now allows photo-free submissions."
+        },
+        {
+          "event_id": "three",
+          "event_type": "tool",
+          "source_id": "172c88d5a48b4a8799c7052702756786",
+          "text": "Staging intake deploy: wording approval present; photo-free submit returns 201; no serial accepted; exit 0."
+        },
+        {
+          "event_id": "two",
+          "event_type": "tool",
+          "source_id": "78412ac83ce34291abcc4aef2f375f20",
+          "text": "Customer staging form: submit without photo returns 422 photo_required; exit 1."
+        }
+      ],
+      "stored_episode_fields_from_disclosed_audit": [
+        {
+          "episode_id": "pm_2271f23b61f230a926e7c275ff8acf458afbc6e8",
+          "field": "goal",
+          "stored_value": "Assistant report: The customer-facing form now allows photo-free submissions.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 59,
+              "quote": "The customer-facing form now allows photo-free submissions.",
+              "source_id": "adc07eb75af047bb9f2ccccccc8d8411",
+              "source_role": "assistant_report",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_2271f23b61f230a926e7c275ff8acf458afbc6e8",
+          "field": "outcome",
+          "stored_value": "Tool record: Customer staging form: submit without photo returns 422 photo_required; exit 1.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 79,
+              "quote": "Customer staging form: submit without photo returns 422 photo_required; exit 1.",
+              "source_id": "78412ac83ce34291abcc4aef2f375f20",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_2271f23b61f230a926e7c275ff8acf458afbc6e8",
+          "field": "summary",
+          "stored_value": "Tool record: Customer staging form: submit without photo returns 422 photo_required; exit 1.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 79,
+              "quote": "Customer staging form: submit without photo returns 422 photo_required; exit 1.",
+              "source_id": "78412ac83ce34291abcc4aef2f375f20",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_680bfc5ca1890f0556b4f4b7c17b09fee98b9594",
+          "field": "outcome",
+          "stored_value": "Tool record: Staging intake deploy: wording approval present; photo-free submit returns 201; no serial accepted; exit 0.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 107,
+              "quote": "Staging intake deploy: wording approval present; photo-free submit returns 201; no serial accepted; exit 0.",
+              "source_id": "172c88d5a48b4a8799c7052702756786",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_680bfc5ca1890f0556b4f4b7c17b09fee98b9594",
+          "field": "summary",
+          "stored_value": "Tool record: Staging intake deploy: wording approval present; photo-free submit returns 201; no serial accepted; exit 0.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 107,
+              "quote": "Staging intake deploy: wording approval present; photo-free submit returns 201; no serial accepted; exit 0.",
+              "source_id": "172c88d5a48b4a8799c7052702756786",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "history_id": "E16",
+      "question_id": "Q2",
+      "question": "For SilverHives, compare the assistant’s local-readiness report and tablet uncertainty with the tablet test and later print result.",
+      "selected_project_scopes": [
+        "/private/tmp/codex-mem-quality-20261021-r18-experiment/projects/E16/SilverHives"
+      ],
+      "plan": {
+        "natural": false,
+        "historical": false,
+        "continuation": false,
+        "projection": "state",
+        "task_ids": [],
+        "identifiers": [
+          "silverhives",
+          "local-readiness"
+        ],
+        "versions": [],
+        "excluded_versions": [],
+        "environments": [],
+        "excluded_environments": [],
+        "candidate_queries": [
+          "For SilverHives, compare the assistant’s local-readiness report and tablet uncertainty with the tablet test and later print result."
+        ],
+        "topic_query": false,
+        "generic_project_state": false,
+        "assesses_current_evidence": false,
+        "content_query": "For SilverHives, compare the assistant’s local-readiness report and tablet uncertainty with the tablet test and later print result.",
+        "scope_aliases": [],
+        "requirement_subject": null,
+        "exact": {
+          "terms": [],
+          "identifiers": [
+            "silverhives",
+            "local-readiness"
+          ],
+          "versions": [],
+          "minimum": 0
+        },
+        "answer_subject": null,
+        "answer_facets": [],
+        "source_order": null,
+        "complete_subject": false
+      },
+      "public_render_project_views": [
+        {
+          "project_key": "SilverHives",
+          "budget": 5900,
+          "xml_chars": 474,
+          "skip_reason": null,
+          "enabled": true,
+          "quoted_spans": 0,
+          "validation_error": null
+        }
+      ],
+      "context_chars": 494,
+      "context_sha256": "b0adc05e1e1913a34d8cd288588051fff412f9ac0911d7695b2ad1ae3909b418",
+      "catalog_spans": 0,
+      "gold_support_anchor_checks": [
+        {
+          "fact_index": 0,
+          "support_index": 0,
+          "event_id": "report",
+          "source_id": "93052b8a8a934f71908d6a53984ac329",
+          "source_field": "body",
+          "start": 0,
+          "end": 36,
+          "quote": "The printable form is ready locally;",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 1,
+          "support_index": 0,
+          "event_id": "report",
+          "source_id": "93052b8a8a934f71908d6a53984ac329",
+          "source_field": "body",
+          "start": 0,
+          "end": 92,
+          "quote": "The printable form is ready locally; I cannot yet say whether the field tablets received it.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 2,
+          "support_index": 0,
+          "event_id": "two",
+          "source_id": "c5f382ad91f84c2991e587709efc710d",
+          "source_field": "body",
+          "start": 0,
+          "end": 73,
+          "quote": "Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+          "fully_visible_in_one_grounded_span": false
+        },
+        {
+          "fact_index": 3,
+          "support_index": 0,
+          "event_id": "three",
+          "source_id": "c77491f6e5104587a3e0621116ee3fb3",
+          "source_field": "body",
+          "start": 0,
+          "end": 113,
+          "quote": "Local print spool: beekeeper-checked legend; 10 inspection sheets spooled; printer acknowledged 10 pages; exit 0.",
+          "fully_visible_in_one_grounded_span": false
+        }
+      ],
+      "original_event_excerpts": [
+        {
+          "event_id": "report",
+          "event_type": "assistant",
+          "source_id": "93052b8a8a934f71908d6a53984ac329",
+          "text": "The printable form is ready locally; I cannot yet say whether the field tablets received it."
+        },
+        {
+          "event_id": "three",
+          "event_type": "tool",
+          "source_id": "c77491f6e5104587a3e0621116ee3fb3",
+          "text": "Local print spool: beekeeper-checked legend; 10 inspection sheets spooled; printer acknowledged 10 pages; exit 0."
+        },
+        {
+          "event_id": "two",
+          "event_type": "tool",
+          "source_id": "c5f382ad91f84c2991e587709efc710d",
+          "text": "Field-tablet sync test: tablet offline; no form receipt recorded; exit 8."
+        }
+      ],
+      "stored_episode_fields_from_disclosed_audit": [
+        {
+          "episode_id": "pm_c4e833bca0986cbf16288db9889fb091287c9ef3",
+          "field": "open_work",
+          "stored_value": "Tool record: Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 73,
+              "quote": "Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+              "source_id": "c5f382ad91f84c2991e587709efc710d",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_c4e833bca0986cbf16288db9889fb091287c9ef3",
+          "field": "outcome",
+          "stored_value": "Assistant report: The printable form is ready locally; I cannot yet say whether the field tablets received it.\nTool record: Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 92,
+              "quote": "The printable form is ready locally; I cannot yet say whether the field tablets received it.",
+              "source_id": "93052b8a8a934f71908d6a53984ac329",
+              "source_role": "assistant_report",
+              "start": 0
+            },
+            {
+              "end": 73,
+              "quote": "Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+              "source_id": "c5f382ad91f84c2991e587709efc710d",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_c4e833bca0986cbf16288db9889fb091287c9ef3",
+          "field": "summary",
+          "stored_value": "Assistant report: The printable form is ready locally; I cannot yet say whether the field tablets received it.\nTool record: Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 92,
+              "quote": "The printable form is ready locally; I cannot yet say whether the field tablets received it.",
+              "source_id": "93052b8a8a934f71908d6a53984ac329",
+              "source_role": "assistant_report",
+              "start": 0
+            },
+            {
+              "end": 73,
+              "quote": "Field-tablet sync test: tablet offline; no form receipt recorded; exit 8.",
+              "source_id": "c5f382ad91f84c2991e587709efc710d",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_f47d3317f048b2d2eabeb93898201f214ca9812f",
+          "field": "outcome",
+          "stored_value": "Tool record: Local print spool: beekeeper-checked legend; 10 inspection sheets spooled; printer acknowledged 10 pages; exit 0.\nUser intent: Accept the printed sheets and close the notebook delivery; tablet sync stays canceled.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 113,
+              "quote": "Local print spool: beekeeper-checked legend; 10 inspection sheets spooled; printer acknowledged 10 pages; exit 0.",
+              "source_id": "c77491f6e5104587a3e0621116ee3fb3",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        },
+        {
+          "episode_id": "pm_f47d3317f048b2d2eabeb93898201f214ca9812f",
+          "field": "summary",
+          "stored_value": "User intent: Carry on with the queen-status notebook job in this chat.\nUser intent: Cancel tablet synchronization for this delivery, but finish printed sheets.\nTool record: Local print spool: beekeeper-checked legend; 10 inspection sheets spooled; printer acknowledged 10 pages; exit 0.\nUser intent: Accept the printed sheets and close the notebook delivery; tablet sync stays canceled.\nUser intent: Reopen the same notebook job for a rainproof layout, to be proofed on paper before any bulk order.",
+          "scope": null,
+          "evidence": [
+            {
+              "end": 113,
+              "quote": "Local print spool: beekeeper-checked legend; 10 inspection sheets spooled; printer acknowledged 10 pages; exit 0.",
+              "source_id": "c77491f6e5104587a3e0621116ee3fb3",
+              "source_role": "tool_record",
+              "start": 0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "additional_build_or_render_calls": 0,
+  "additional_store_or_model_calls": 0,
+  "limits": [
+    "Pure plans describe parsing/constraints only. They do not prove the cause of empty rendered output.",
+    "Stored episode fields are derived representations; original event excerpts retain their roles. No source statement or grade is repaired."
+  ]
+}

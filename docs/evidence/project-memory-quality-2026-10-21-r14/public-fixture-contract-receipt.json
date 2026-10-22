@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "status": "verified_standalone_public_contract",
+  "helper_path": "scripts/project_memory_consolidation_experiment.py",
+  "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "public_module": "docs/evidence/project-memory-quality-2026-10-21-r14/public-fixture-contract.py",
+  "public_module_sha256": "56a223a0d3997f92e1f32dc1017d546756f3eb981a4d8f123203c2280900527a",
+  "required_imports": [
+    "from pathlib import Path",
+    "import json",
+    "from typing import Any"
+  ],
+  "function_source_segments": {
+    "read": {
+      "sha256": "e3faf3e0b1adaadec08633e65f00a6793b65d50073785671a8198dd427b0589d",
+      "verbatim_ast_source_segment_equal": true
+    },
+    "identifier": {
+      "sha256": "abe825ddf49d3c4fb4707ba63617a2a4a255f5b71fbacb61caef52750a86ac38",
+      "verbatim_ast_source_segment_equal": true
+    },
+    "validate_tool_capture": {
+      "sha256": "e58ac428f71d10a4c4e6dc8b63caec133e1060d82d1f083bab8f30898f624088",
+      "verbatim_ast_source_segment_equal": true
+    },
+    "fixture": {
+      "sha256": "f4836ec7ae9fc31988f6ab5a8b5623691ae7f69539a6aa2dee34116bc12f469b",
+      "verbatim_ast_source_segment_equal": true
+    }
+  },
+  "verification": {
+    "compile_empty_initial_globals": "passed",
+    "independent_import": "passed",
+    "four_history_development_full_sample": "passed",
+    "six_questions_per_history": true,
+    "sixteen_history_holdout_cardinality_sample": "passed",
+    "tool_capture_sample": {
+      "tool_name": "exec_command",
+      "tool_input": {
+        "command": "inert nonempty string; never executed"
+      },
+      "tool_response": {
+        "output": "complete event text in sample",
+        "exit_code": 0
+      }
+    },
+    "negative_samples": {
+      "missing_fictional": "rejected",
+      "missing_command": "rejected",
+      "missing_output": "rejected",
+      "boolean_exit_code": "rejected"
+    },
+    "models": 0,
+    "runtime_store_calls": 0,
+    "commands_in_fixture_executed": false
+  },
+  "minimal_fixture_contract": {
+    "root": {
+      "fictional": true,
+      "schema_version": 1,
+      "split": "dev/development: exactly4 histories; holdout: exactly16 histories"
+    },
+    "history": "id, project_keys with one or two unique valid IDs, sessions, exactly six questions",
+    "session": "id, optional project_key within history, events; optional checkpoints each after_event_id refers to an event seen in this history",
+    "event": "unique id within history; type user/assistant/tool/delete_observation; text string <=60000 chars",
+    "question": "six unique valid IDs, optional stage defaults final and must be final, optional project_key/project_keys must belong to history",
+    "identifier": "1..100 ASCII letters/digits/underscore/hyphen",
+    "tool_capture": "optional only on tool event; exactly tool_name/tool_input/tool_response; name length1..160; tool_input.command nonempty string; tool_response.output string and exit_code integer excluding bool; serialized complete capture <=60000 bytes"
+  },
+  "author_read_constraints": {
+    "allowed": [
+      "this public module",
+      "this public receipt",
+      "newly authored fixture/gold/author/manifest outputs"
+    ],
+    "forbidden": [
+      "product implementation",
+      "helper implementation beyond this public module",
+      "prior private or sealed fixtures/gold/answers",
+      "native model or Store calls"
+    ],
+    "must_execute": "Run this standalone fixture validator against the complete authored fixture before sealing. Preserve result and hashes.",
+    "separate_author_checks": [
+      "Gold exact offsets and required-fact coverage",
+      "Gold scope and no deleted source support",
+      "Delete target appears earlier in same project",
+      "Checkpoint same-session target and event order",
+      "exec_command capture output equals complete corresponding event text; command inert and never executed"
+    ]
+  },
+  "limitations": [
+    "Exact extraction verifies identical validator code, not a correct fictional narrative or gold.",
+    "The public validator accepts generic tool_name strings; known execution provenance requires the documented exec_command shape and later runtime checks.",
+    "The validator checks capture output type but not equality to event text; the author must check equality separately.",
+    "Schema and self-checks do not establish semantic truth, independent grading, or production quality."
+  ],
+  "R14_schema_provenance": "Verbatim standalone validator; helper and every complete AST function rechecked. Prior fictional content is absent."
+}

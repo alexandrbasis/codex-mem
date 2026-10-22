@@ -1,0 +1,684 @@
+{
+  "status": "negative_source_assessment_no_clearance",
+  "kind": "qualitative_source_sufficiency_not_new_answer_score",
+  "comparison_sha256": "6f1822cc59fa59ac0b354a9482b8b032d528f4fde1c93b5617ef79d56c37f1dd",
+  "retrieval_sha256": "41ecec90a4de1ee632d1403d415156fcad59c5efca60229b3d288c5713420c16",
+  "all_new_complete_user_losses": [],
+  "old_user_counts": {
+    "complete": 259,
+    "eligible_source_question_pairs": 298,
+    "missing": 38,
+    "partial": 1
+  },
+  "new_user_counts": {
+    "complete": 285,
+    "eligible_source_question_pairs": 298,
+    "missing": 13
+  },
+  "prior_v2_fifteen_losses": "All restored per ledger; 1011/q6 exact histogram withdrawal directly verified in own view alongside earlier request. No cancellation inferred from capture order.",
+  "gold_source_losses": [
+    {
+      "case": "hold_1003/q4",
+      "question": "What should the next session do after the dry-run validation?",
+      "lost_fact": {
+        "case": "hold_1003/q4",
+        "fact_index": 0,
+        "text": "Validation reports independently balanced simulated depot totals, with zero service accounts created.",
+        "support": [
+          {
+            "event_id": "hold_1003_t2",
+            "start": 0,
+            "end": 93,
+            "quote": "Copper validation: simulated depot totals balance independently. Service accounts created: 0.",
+            "source_id": "53e1e811c4de45be9de65c4bbd054375"
+          }
+        ],
+        "old_strict_body_visible": true,
+        "new_strict_body_visible": false,
+        "old_exact_field_mirror_visible": true,
+        "new_exact_field_mirror_visible": false
+      },
+      "actual_visible_primary_alternatives": [
+        {
+          "source_id": "ce40524987e94f9b9aaf02cb339a7973",
+          "source_field": "body",
+          "start": "0",
+          "end": "145",
+          "source_role": "user_intent",
+          "quote": "Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due."
+        },
+        {
+          "source_id": "c209f18eff3c40c2946a3603898165be",
+          "source_field": "body",
+          "start": "0",
+          "end": "162",
+          "source_role": "user_intent",
+          "quote": "For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account."
+        },
+        {
+          "source_id": "08d62075f16c4912ac2085ec9ed46f00",
+          "source_field": "body",
+          "start": "0",
+          "end": "116",
+          "source_role": "user_intent",
+          "quote": "This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope."
+        },
+        {
+          "source_id": "59ed811ced9a46a9856295a0b7199a17",
+          "source_field": "body",
+          "start": "0",
+          "end": "41",
+          "source_role": "assistant_report",
+          "quote": "All copper depot accounts are now active."
+        },
+        {
+          "source_id": "336c6c1b7f644387a18f27fea18a3bfa",
+          "source_field": "tool_response.output",
+          "start": "0",
+          "end": "118",
+          "source_role": "tool_record",
+          "quote": "Copper dry run: three depot accounts simulated; booklet draft produced. Account creation against the service disabled."
+        },
+        {
+          "source_id": "336c6c1b7f644387a18f27fea18a3bfa",
+          "source_field": "tool_input.command",
+          "start": "0",
+          "end": "28",
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1003-t1"
+        },
+        {
+          "source_id": "08d62075f16c4912ac2085ec9ed46f00",
+          "source_field": "body",
+          "start": "41",
+          "end": "116",
+          "source_role": "user_intent",
+          "quote": " Omit the printed booklet now; the separate depot accounts remain in scope."
+        },
+        {
+          "source_id": "53e1e811c4de45be9de65c4bbd054375",
+          "source_field": "body",
+          "start": "64",
+          "end": "93",
+          "source_role": "tool_record",
+          "quote": " Service accounts created: 0."
+        }
+      ],
+      "assessment": "The zero-created clause remains as a partial original quote. Earlier dry run simulates three accounts but does not establish independently balanced totals. Next action approval-before-creation remains visible; the specific validation result is lost.",
+      "planner_flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "requests_source_evidence": false,
+        "user_source_coverage_requested": true,
+        "policy_first": true
+      }
+    },
+    {
+      "case": "hold_1004/q4",
+      "question": "What does the local check settle, and what is still required?",
+      "lost_fact": {
+        "case": "hold_1004/q4",
+        "fact_index": 0,
+        "text": "The local check reports an identity filename mapping for the sample; no server import ran.",
+        "support": [
+          {
+            "event_id": "hold_1004_t2",
+            "start": 0,
+            "end": 91,
+            "quote": "Clay local check: filename mapping is identity for all sample items. Server import not run.",
+            "source_id": "f55609cba28146d0b31c41fc9f4b09a5"
+          }
+        ],
+        "old_strict_body_visible": true,
+        "new_strict_body_visible": false,
+        "old_exact_field_mirror_visible": true,
+        "new_exact_field_mirror_visible": false
+      },
+      "actual_visible_primary_alternatives": [
+        {
+          "source_id": "c72f8a5b3d89410095dce9474c16e4be",
+          "source_field": "body",
+          "start": "0",
+          "end": "127",
+          "source_role": "user_intent",
+          "quote": "The curator must sign off on the sample inventory before the server import. Keep both that sign-off and the import outstanding."
+        },
+        {
+          "source_id": "c6699437c2eb46c692c74369008dffaf",
+          "source_field": "body",
+          "start": "0",
+          "end": "167",
+          "source_role": "user_intent",
+          "quote": "In the clay archive, retain original filenames and generate thumbnail sheets. Curators cite those names in handwritten notes, so renaming would break their references."
+        },
+        {
+          "source_id": "8895dc6d65664112999cc4fd4b529810",
+          "source_field": "body",
+          "start": "0",
+          "end": "112",
+          "source_role": "user_intent",
+          "quote": "Resume the clay archive import. Skip thumbnail sheets for now, but leave original filenames exactly as supplied."
+        },
+        {
+          "source_id": "84cd8b156c8a43fc9893b9b135bfc640",
+          "source_field": "body",
+          "start": "0",
+          "end": "40",
+          "source_role": "assistant_report",
+          "quote": "The archive server import has completed."
+        },
+        {
+          "source_id": "4c698004996a48b08c77a76f942a64a2",
+          "source_field": "tool_response.output",
+          "start": "0",
+          "end": "116",
+          "source_role": "tool_record",
+          "quote": "Clay import rehearsal: original filenames retained; thumbnail sheet preview available. Archive server not contacted."
+        },
+        {
+          "source_id": "4c698004996a48b08c77a76f942a64a2",
+          "source_field": "tool_input.command",
+          "start": "0",
+          "end": "28",
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1004-t1"
+        },
+        {
+          "source_id": "8895dc6d65664112999cc4fd4b529810",
+          "source_field": "body",
+          "start": "0",
+          "end": "31",
+          "source_role": "user_intent",
+          "quote": "Resume the clay archive import."
+        },
+        {
+          "source_id": "f55609cba28146d0b31c41fc9f4b09a5",
+          "source_field": "body",
+          "start": "0",
+          "end": "68",
+          "source_role": "tool_record",
+          "quote": "Clay local check: filename mapping is identity for all sample items."
+        }
+      ],
+      "assessment": "Identity filename mapping remains as a partial original quote. Server-import-not-run clause from that check disappears; user says import outstanding and earlier rehearsal says server not contacted. Those support pending import, but are different sources/events and cannot silently substitute for the exact check statement. Full-group transport remains lost.",
+      "planner_flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "requests_source_evidence": false,
+        "user_source_coverage_requested": true,
+        "policy_first": true
+      }
+    },
+    {
+      "case": "hold_1005/q4",
+      "question": "Where do saffron validation and rollout stand?",
+      "lost_fact": {
+        "case": "hold_1005/q4",
+        "fact_index": 0,
+        "text": "The local test accepted a blank middle name; the package was not copied to the kiosk.",
+        "support": [
+          {
+            "event_id": "hold_1005_t2",
+            "start": 0,
+            "end": 76,
+            "quote": "Saffron local test: blank middle name accepted. Kiosk package copied: false.",
+            "source_id": "d4ec03c05c7e428fa3033b630ba71e97"
+          }
+        ],
+        "old_strict_body_visible": false,
+        "new_strict_body_visible": false,
+        "old_exact_field_mirror_visible": true,
+        "new_exact_field_mirror_visible": false
+      },
+      "actual_visible_primary_alternatives": [
+        {
+          "source_id": "43507b55d37640d69fe6859625d67457",
+          "source_field": "body",
+          "start": "0",
+          "end": "139",
+          "source_role": "user_intent",
+          "quote": "Before copying a package to the kiosk, get the desk supervisor’s approval of the blank-name example. Approval and copying are both pending."
+        },
+        {
+          "source_id": "0c78219d530f4df093c100746a7030f1",
+          "source_field": "body",
+          "start": "0",
+          "end": "163",
+          "source_role": "user_intent",
+          "quote": "On the saffron intake form, keep the middle-name field optional and add a progress indicator. Some visitors have no middle name; they must still be able to finish."
+        },
+        {
+          "source_id": "5a3c1c163ef24a77a4ffcf50c705254a",
+          "source_field": "body",
+          "start": "0",
+          "end": "105",
+          "source_role": "user_intent",
+          "quote": "Back to that same saffron form: remove the progress indicator request, not the optional middle-name rule."
+        },
+        {
+          "source_id": "949eeb7a0a3746409aa47cbc14ea31f8",
+          "source_field": "body",
+          "start": "0",
+          "end": "32",
+          "source_role": "assistant_report",
+          "quote": "The kiosk has the finished form."
+        }
+      ],
+      "assessment": "No visible tool quote establishes blank-middle-name acceptance. User optional-name requirement is not an observed test result. User approval/copying pending survives, but validation status lacks its primary witness.",
+      "planner_flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "requests_source_evidence": false,
+        "user_source_coverage_requested": true,
+        "policy_first": true
+      }
+    },
+    {
+      "case": "hold_1009/q6",
+      "question": "Do we have evidence that the tickets were printed?",
+      "lost_fact": {
+        "case": "hold_1009/q6",
+        "fact_index": 0,
+        "text": "The assistant said tickets were printed and ready at the gate.",
+        "support": [
+          {
+            "event_id": "hold_1009_claim",
+            "start": 0,
+            "end": 56,
+            "quote": "The tickets have been printed and are ready at the gate.",
+            "source_id": "4b722f0af48f488d981e9ac8bf3af4c6"
+          }
+        ],
+        "old_strict_body_visible": true,
+        "new_strict_body_visible": false,
+        "old_exact_field_mirror_visible": true,
+        "new_exact_field_mirror_visible": false
+      },
+      "actual_visible_primary_alternatives": [
+        {
+          "source_id": "ac667debdbba4939b054b705b49abaac",
+          "source_field": "body",
+          "start": "0",
+          "end": "131",
+          "source_role": "user_intent",
+          "quote": "The gate coordinator must approve the code sample before printing. Approval has not happened; printing is still required afterward."
+        },
+        {
+          "source_id": "8433177d9473475d89aa56ddf621d525",
+          "source_field": "body",
+          "start": "0",
+          "end": "160",
+          "source_role": "user_intent",
+          "quote": "Give every dune ticket a distinct code, and prepare a folded ticket design. The gate checks individuals, so group codes would prevent separate admission checks."
+        },
+        {
+          "source_id": "261458cc65ef49d5949b67bffb163a76",
+          "source_field": "body",
+          "start": "0",
+          "end": "113",
+          "source_role": "user_intent",
+          "quote": "This session continues dune tickets. Stop work on the folded design, but retain a distinct code for every ticket."
+        },
+        {
+          "source_id": "36aebba25d9c40c1be638e761059fc34",
+          "source_field": "body",
+          "start": "0",
+          "end": "68",
+          "source_role": "tool_record",
+          "quote": "Dune fixture audit: no duplicate ticket codes. Printer jobs sent: 0."
+        },
+        {
+          "source_id": "43cbff871cc14968bf0ad0b97bb54b51",
+          "source_field": "body",
+          "start": "0",
+          "end": "90",
+          "source_role": "tool_record",
+          "quote": "Dune rehearsal: individual codes unique; folded design preview saved. Ticket printer idle."
+        },
+        {
+          "source_id": "36aebba25d9c40c1be638e761059fc34",
+          "source_field": "tool_input.command",
+          "start": "0",
+          "end": "28",
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1009-t2"
+        },
+        {
+          "source_id": "43cbff871cc14968bf0ad0b97bb54b51",
+          "source_field": "tool_input.command",
+          "start": "0",
+          "end": "28",
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1009-t1"
+        }
+      ],
+      "assessment": "No visible original states the assistant claimed printed tickets. Two tools and user pending-print instruction still support a narrow not-established answer. The required contrasting assistant attribution is lost; its claim cannot be reconstructed from question wording.",
+      "planner_flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "requests_source_evidence": false,
+        "user_source_coverage_requested": true,
+        "policy_first": true
+      }
+    }
+  ],
+  "R12_new_fact_losses": [],
+  "allocation_finding": {
+    "file": "codex_mem/project_memory_retrieval.py",
+    "line": 950,
+    "trigger": "policy_first = user_source_coverage_requested and not source_evidence_requested; unrecognized natural questions also set user coverage, so absence of recognized evidence grammar is promoted to policy-first allocation. protected stays empty; report_reservations and execution_reservations require membership.",
+    "question_types": "1003 mixed continuation-after-validation;1004 explicit local-check outcome plus remaining work;1005 validation/rollout status;1009 evidence-of-printing. None explicitly establishes a policy-only question.",
+    "contract_assessment": "Hard guards unchanged. Allocation intent of preserving complete requested evidence conflicts with treating unknown grammar as proof no evidence protection is needed. Report loss is consistent with unprotected late emission after user originals and tool groups consume budget. No lexical heuristic proposed or changed."
+  },
+  "remaining_known_extra_gaps": [
+    {
+      "case": "hold_1007/q3",
+      "status": "tail restored",
+      "quote": "The dispatch steward still must approve the household-to-envelope mapping before queue submission. Keep approval and submission on the todo list."
+    },
+    {
+      "case": "hold_1016/q1",
+      "status": "tail still missing",
+      "quote": "A field coordinator must approve the offline-note example before rollout. That approval is absent, and rollout remains an obligation.",
+      "assessment": "Existing gap, not new whole-source regression. Asked local-only-note retention is supported; no permission/rollout-next-action claim can omit the approval dependency."
+    }
+  ],
+  "scope_limit": "Parent narrowed task after confirmed V4 negative. Did not exhaustively reassess all preexisting13 missing user pairs; every new user loss (none), all four new R13 fact losses, R12 losses(none), prior1011blocker and two named fixed-six gaps checked.",
+  "transport_review": "Compact execution serializer preserves direct original source pointers and execution metadata; unchanged catalog compatibility test inspected. Smaller wrappers do not resolve allocation-trigger defect.",
+  "restrictions": "No model/native/Jev calls, sealed R14/R15 content reads, gold/grade/source modifications or regrading. Only own new evidence artifact. No source/quality/public-call clearance.",
+  "v2_fifteen_query_flags": [
+    {
+      "case": "hold_1001/q5",
+      "event_id": "hold_1001_start",
+      "question": "Do the mosaic labels relax the catalog font rule?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1001/q5",
+      "event_id": "hold_1001_follow",
+      "question": "Do the mosaic labels relax the catalog font rule?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1002/q5",
+      "event_id": "hold_1002_start",
+      "question": "Can the greenhouse unit choice be reused for the canal?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1002/q5",
+      "event_id": "hold_1002_follow",
+      "question": "Can the greenhouse unit choice be reused for the canal?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1003/q5",
+      "event_id": "hold_1003_follow",
+      "question": "Does the linen instruction replace the copper account arrangement?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1003/q5",
+      "event_id": "hold_1003_tail",
+      "question": "Does the linen instruction replace the copper account arrangement?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1004/q5",
+      "event_id": "hold_1004_start",
+      "question": "Should reed gallery numbering be applied to the clay archive?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1004/q5",
+      "event_id": "hold_1004_follow",
+      "question": "Should reed gallery numbering be applied to the clay archive?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1006/q5",
+      "event_id": "hold_1006_start",
+      "question": "Can pollen’s overnight permission be used for basalt?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1007/q5",
+      "event_id": "hold_1007_start",
+      "question": "Can the willow input format determine pebble output grouping?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1007/q5",
+      "event_id": "hold_1007_follow",
+      "question": "Can the willow input format determine pebble output grouping?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1008/q5",
+      "event_id": "hold_1008_start",
+      "question": "Is fern’s draft inclusion an exception for quartz?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1009/q5",
+      "event_id": "hold_1009_follow",
+      "question": "May brook’s group codes be reused as a dune policy?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1010/q5",
+      "event_id": "hold_1010_start",
+      "question": "Does harbor permit audio-only orbit instructions?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": false,
+        "answer_subject": null,
+        "answer_facets": [],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": false,
+        "v3_user_source_coverage_requested": true
+      }
+    },
+    {
+      "case": "hold_1011/q6",
+      "event_id": "hold_1011_follow",
+      "question": "Does the assistant’s completion report prove a shared queue write?",
+      "flags": {
+        "natural": true,
+        "continuation": false,
+        "source_order": null,
+        "assesses_current_evidence": true,
+        "answer_subject": "a shared queue write",
+        "answer_facets": [
+          "execution_assessment"
+        ],
+        "generic_project_state": false,
+        "projection": "state",
+        "requirement_subject": null,
+        "requests_source_evidence": true,
+        "v3_user_source_coverage_requested": false
+      }
+    }
+  ],
+  "discriminator_conclusion": "Not sufficient. Fourteen q5 source-loss rows have no recognized facets, subject=None and projection=state, exactly like the four V4 fact-loss questions. Explicit policy facets cannot distinguish these sets. 1011/q6 is different: execution_assessment recognized, evidence requested, user coverage false. Its withdrawal is needed alongside evidence and must survive non-policy allocation too. Restricting exclusive policy-first avoids treating unknown grammar as policy-only, but needs structural role allocation to preserve both groups."
+}

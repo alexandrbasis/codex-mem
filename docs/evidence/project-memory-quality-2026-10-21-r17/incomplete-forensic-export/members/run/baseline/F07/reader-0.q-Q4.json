@@ -1,0 +1,132 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q4",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "5e705d7f2d0b2d58097cddc6dabf79a2df61f4028412978bf9227017fd29cba8",
+  "context_sha256": "cd33e32948ca139875f6a4439e330fd999dac0e4235e72be75ae13198e2c65c6",
+  "raw_output_sha256": "bc284ff7fb9f5c84b9600f96ae9d4deb68d63d1f823fcaf293016d8c026e28ea",
+  "native_receipt": {
+    "source_call_id": "call-0123",
+    "request_sha256": "943c4308672491fdaca0b0e35300d6aa07a3d1751f26de8f05ad847ca671d482",
+    "response_sha256": "edce33f2310323a2b099653f71e97378431d9497c12bfcab9db809bac48aafc0",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q4",
+        "answer": "The opening serving count was 32, as explicitly identified in the user's correction: “use serving count of 24, replacing my initial value of 32.” The applicable count is therefore 24. The correction changes the recorded value while preserving the rota's closed status. At the opening meeting, the rota was “waiting for review.”",
+        "uncertainties": [],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "388a3e096fe641d9802baa699878f261",
+            "source_field": "body",
+            "start": 0,
+            "end": 91,
+            "source_role": "user_intent",
+            "quote": "Correction for Linden meal rota: use serving count of 24, replacing my initial value of 32."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "388a3e096fe641d9802baa699878f261",
+            "source_field": "body",
+            "start": 91,
+            "end": 178,
+            "source_role": "user_intent",
+            "quote": " This correction changes the recorded value, not the closed status of Linden meal rota."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "83e6acf2ebbd4fec9eccc17c0a84e230",
+            "source_field": "body",
+            "start": 154,
+            "end": 219,
+            "source_role": "user_intent",
+            "quote": " At this opening meeting, Linden meal rota is waiting for review."
+          },
+          {
+            "catalog_ref": "R0007",
+            "source_id": "83e6acf2ebbd4fec9eccc17c0a84e230",
+            "source_field": "body",
+            "start": 289,
+            "end": 351,
+            "source_role": "user_intent",
+            "quote": " The allergy card is a separate follow-up to Linden meal rota."
+          },
+          {
+            "catalog_ref": "R0009",
+            "source_id": "1c084d68d83f4595a4f77b541609e19d",
+            "source_field": "body",
+            "start": 99,
+            "end": 140,
+            "source_role": "tool_record",
+            "quote": " This record covers a local preview only."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 8587,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12543,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 299,
+        "reasoning_output_tokens": 115,
+        "total_tokens": 12842
+      }
+    }
+  },
+  "latency_ms": 8632,
+  "native_dispatch": {
+    "key": "e85ebddcb8e98b5c51cb22893772fc35956888c6202b1f13fdd6394d291d5ed0",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F07",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q4",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0123",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "4ee500db3daf89684ce04b3d56d49268abc3ce36e300955332df5e7a64a6ba60",
+    "request_file_sha256": "e1669ba42ec5a6a75fee74a38854fcd86e70feacccf921fcd29443f7e6c6d04c",
+    "response_file_sha256": "8f58fb942cae6208e13cbf6a1b42fd2bcdec8d0e47e05686359a13df9fd793a6",
+    "reused": false,
+    "native_wall_ms": 8632
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F07",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q4"
+  },
+  "evidence_checks": {
+    "Q4": {
+      "accepted_results": "The user explicitly corrected the initial serving count of 32 to 24.",
+      "open_work_and_reasons": "At opening, the rota awaited review; the allergy card was a separate follow-up.",
+      "source_role_distinctions": "These are user statements; the cited tool records cover local previews only."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

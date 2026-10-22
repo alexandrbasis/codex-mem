@@ -1,0 +1,86 @@
+FFFFFFFFF
+======================================================================
+FAIL: test_actual_aggregate_and_export_keep_selected_cumulative_history_all216slots (__main__.CanonicalHistoricalConsumerTests.test_actual_aggregate_and_export_keep_selected_cumulative_history_all216slots)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 93, in test_actual_aggregate_and_export_keep_selected_cumulative_history_all216slots
+    self.assertEqual(report['cumulative_pilot_usage']['attempted_calls'],3410)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 296 != 3410
+
+======================================================================
+FAIL: test_canonical_report_selector_preserves_inherited_unknown_without_doublecount (__main__.CanonicalHistoricalConsumerTests.test_canonical_report_selector_preserves_inherited_unknown_without_doublecount)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 45, in test_canonical_report_selector_preserves_inherited_unknown_without_doublecount
+    self.assertEqual(cumulative['attempted_calls'],3)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 3
+
+======================================================================
+FAIL: test_exact_r19_report_is_cumulative_not_current_only (__main__.CanonicalHistoricalConsumerTests.test_exact_r19_report_is_cumulative_not_current_only)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 75, in test_exact_r19_report_is_cumulative_not_current_only
+    self.assertEqual(result['attempted_calls'],3410)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 296 != 3410
+
+======================================================================
+FAIL: test_unknown_or_missing_selected_usage_field_fails_closed (__main__.CanonicalHistoricalConsumerTests.test_unknown_or_missing_selected_usage_field_fails_closed) (field='other')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 61, in test_unknown_or_missing_selected_usage_field_fails_closed
+    with self.subTest(field=field),self.assertRaises(ValueError):
+                                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_or_missing_selected_usage_field_fails_closed (__main__.CanonicalHistoricalConsumerTests.test_unknown_or_missing_selected_usage_field_fails_closed) (field='')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 61, in test_unknown_or_missing_selected_usage_field_fails_closed
+    with self.subTest(field=field),self.assertRaises(ValueError):
+                                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_or_missing_selected_usage_field_fails_closed (__main__.CanonicalHistoricalConsumerTests.test_unknown_or_missing_selected_usage_field_fails_closed) (field=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 61, in test_unknown_or_missing_selected_usage_field_fails_closed
+    with self.subTest(field=field),self.assertRaises(ValueError):
+                                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_or_missing_selected_usage_field_fails_closed (__main__.CanonicalHistoricalConsumerTests.test_unknown_or_missing_selected_usage_field_fails_closed) (field=[])
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 61, in test_unknown_or_missing_selected_usage_field_fails_closed
+    with self.subTest(field=field),self.assertRaises(ValueError):
+                                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_or_missing_selected_usage_field_fails_closed (__main__.CanonicalHistoricalConsumerTests.test_unknown_or_missing_selected_usage_field_fails_closed) (field=None)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 61, in test_unknown_or_missing_selected_usage_field_fails_closed
+    with self.subTest(field=field),self.assertRaises(ValueError):
+                                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_unknown_or_missing_selected_usage_field_fails_closed (__main__.CanonicalHistoricalConsumerTests.test_unknown_or_missing_selected_usage_field_fails_closed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20/test-canonical-history-consumer.py", line 63, in test_unknown_or_missing_selected_usage_field_fails_closed
+    with self.assertRaises((ValueError,KeyError)):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: (<class 'ValueError'>, <class 'KeyError'>) not raised
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.023s
+
+FAILED (failures=9)

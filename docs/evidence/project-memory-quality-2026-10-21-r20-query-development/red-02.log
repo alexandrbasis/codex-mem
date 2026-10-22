@@ -1,0 +1,37 @@
+test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) ... 
+  test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) (quote='`') ... FAIL
+  test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) (quote='"') ... FAIL
+  test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) (quote="'") ... FAIL
+test_topical_compound_modifier_accepts_spaced_source_words (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_topical_compound_modifier_accepts_spaced_source_words) ... ok
+
+======================================================================
+FAIL: test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) (quote='`')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_compound_contract.py", line 26, in test_quoted_modifier_phrase_keeps_literal_identity
+    self.assertFalse(plan.matches({'summary': 'The amber line export is pending.'}))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) (quote='"')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_compound_contract.py", line 26, in test_quoted_modifier_phrase_keeps_literal_identity
+    self.assertFalse(plan.matches({'summary': 'The amber line export is pending.'}))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_quoted_modifier_phrase_keeps_literal_identity (test_project_memory_query_compound_contract.QueryCompoundContractTests.test_quoted_modifier_phrase_keeps_literal_identity) (quote="'")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_compound_contract.py", line 26, in test_quoted_modifier_phrase_keeps_literal_identity
+    self.assertFalse(plan.matches({'summary': 'The amber line export is pending.'}))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.009s
+
+FAILED (failures=3)

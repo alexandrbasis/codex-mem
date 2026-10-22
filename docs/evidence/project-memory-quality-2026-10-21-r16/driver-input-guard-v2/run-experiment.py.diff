@@ -1,0 +1,32 @@
+--- v1/run-experiment.py
++++ v2/run-experiment.py
+@@ -55,7 +55,8 @@
+     return baseline if variant == "baseline" else repo
+ 
+ 
+-def validate_author_inputs(fixture_path: Path, gold_path: Path, run: Path) -> dict:
++def validate_author_inputs(fixture_path: Path, gold_path: Path, run: Path, *,
++                           expected_contract_sha256: str) -> dict:
+     """Validate newly opened pinned inputs before any experiment phase starts.
+ 
+     The caller first asks the frozen helper to validate its input pins. This
+@@ -63,6 +64,9 @@
+     or answer quality. A rejected packet is never repaired or dispatched.
+     """
+     contract_path = Path(__file__).with_name("public-fixture-contract.py")
++    observed_contract_sha256 = hashlib.sha256(contract_path.read_bytes()).hexdigest()
++    if observed_contract_sha256 != expected_contract_sha256:
++        raise RuntimeError("author_contract_differs_from_protocol")
+     paths = {"fixture_sha256": fixture_path, "gold_sha256": gold_path,
+              "contract_sha256": contract_path}
+     hashes = {key: hashlib.sha256(path.read_bytes()).hexdigest() for key, path in paths.items()}
+@@ -116,7 +120,8 @@
+         "--protocol", str(protocol_path), "--fixture", str(args.fixture),
+         "--gold", str(args.gold),
+     ], cwd=repo, check=True)
+-    validate_author_inputs(args.fixture, args.gold, run)
++    validate_author_inputs(args.fixture, args.gold, run,
++                           expected_contract_sha256=protocol["prospective_author_contract"]["sha256"])
+     fixture = experiment.fixture(args.fixture)
+     split = fixture["split"]
+     journal = run / "baseline" / f"{split}-phase-execution.jsonl"

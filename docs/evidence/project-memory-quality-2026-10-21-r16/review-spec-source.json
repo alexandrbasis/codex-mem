@@ -1,0 +1,60 @@
+{
+  "axis": "Spec",
+  "status": "no_actionable_findings_source_clear_for_eight_public_calls_conditionally",
+  "manifest_sha256": "effc5b8fb07773b48093786568637996b4355f7735e4b7349c49376d7dc5af23",
+  "complete_patch_sha256": "c5fa102deac1de0e0c9688f8f98d635620df4fd44ac1e345445f59c470b21de5",
+  "base_sha": "2ca7445139805243c1d30a1ff7fd15be2b2dd85a",
+  "protocol_sha256": "94b2cb4c826762af984099d8a7b653dba72e3296fe27540dfbc2046a0653bfa8",
+  "findings": [],
+  "verified": {
+    "owned_file_hashes": 1160,
+    "exact_prior_hash_carry": 1060,
+    "new_or_changed_paths": 100,
+    "public_pins": 82,
+    "current_candidate_runtime_files": 47,
+    "candidate_archive_members": 47,
+    "baseline_runtime_files": 47,
+    "hash_mismatches": 0
+  },
+  "review_scope": [
+    "Full owned manifest; prior conclusions carried only for exact hash matches.",
+    "New driver and tests compared with R15, including staged guard versions and retained red/green receipts.",
+    "Prospective author contract v3 and exact unchanged public runner/library/probe inputs.",
+    "R15 closure, source-anchor diagnosis and additive question-key diagnosis; exported evidence schemas, provenance and accounting.",
+    "R16 protocol, contents-free author metadata and opaque pins; validation and source continuity receipts."
+  ],
+  "requirements": [
+    {
+      "path": "docs/handoffs/project-memory-quality-2026-10-21.md",
+      "line": 76,
+      "quote": "Готовность этапа означает, что известные расхождения контрактов воспроизводимо устранены, а отказы учитываются без ручного ремонта оценок."
+    },
+    {
+      "path": "docs/handoffs/project-memory-quality-2026-10-21.md",
+      "line": 82,
+      "quote": "Критерий здесь состоит в правильном ответе и следующем действии при прежнем бюджете. Наличие строки в базе недостаточно."
+    }
+  ],
+  "validation_evidence": {
+    "central_targeted_driver_tests": 10,
+    "central_contract_tests": 14,
+    "central_public_offline_tests": 7,
+    "carried_exact_runtime_unit_tests": 1800,
+    "carried_exact_helper_protocol_tests": 82,
+    "independent_execution_this_review": "Read-only source/hash/archive inspection; no trial scripts or native calls executed. Earlier v3 contract review independently ran fourteen toy tests."
+  },
+  "narrative": "No actionable Spec findings. The driver checks the already pinned protocol contract hash before importing the prospective validator, validates the entire opened fixture/gold before phase dispatch, preserves an exact success receipt, and refuses conflicting receipts or invalid inputs. The new contract addresses canonical source observability and the actual question field without weakening semantic scoring or deletion-negative coverage. R15 remains incomplete: its eight public calls are counted once, all main questions and repeats remain missing, and its additional question-field incompatibility is recorded without rewriting the original audit or inputs. Runtime, helper, reader/judge contracts and baseline are unchanged. Strict quality, critical-error, individual-recall and improvement gates remain unchanged. Author metadata discloses shared-author gold and injected-summary limits. Clearance is only for eight fresh disclosed public calls after central readiness checks; it does not clear main freeze, independent quality, installation, production release or final completion. Actual R16 inputs and their semantic validity remain unexamined until authorized release.",
+  "limits": [
+    "No private R16 fixture, gold, author or validation-detail content read.",
+    "No native calls, model calls, scoring, regrading or reviewed-input edits.",
+    "Archive hashes and contents-free metadata do not establish semantic validity.",
+    "Full quality goal remains pending."
+  ],
+  "clearance": {
+    "public_calls_max": 8,
+    "conditional_on": "Central readiness, unchanged pins/protocol and original trial clock/budget enforcement.",
+    "main_freeze": false,
+    "quality_acceptance": false,
+    "production_release": false
+  }
+}

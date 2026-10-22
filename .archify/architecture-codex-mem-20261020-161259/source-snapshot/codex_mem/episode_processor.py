@@ -25,7 +25,7 @@ from .processor import (
 from .store import Store, StoreError, project_key
 
 PROCESSOR_ID = "codex-mem-project-episode-v2"
-OUTPUT_SCHEMA_VERSION = "project-memory-output-v11"
+OUTPUT_SCHEMA_VERSION = "project-memory-output-v12"
 MAX_EVENTS = 32
 MAX_SOURCE_CHARS = 24_000
 MAX_PROMPT_CHARS = 400_000
@@ -45,7 +45,7 @@ def output_schema(*, canonical: bool = False, source_ids: list[str] | None = Non
                   existing_claim_ids: list[str] | None = None, span_refs: list[str] | None = None,
                   existing_episode_ids: list[str] | None = None,
                   reconsideration: bool = False) -> dict[str, Any]:
-    """Pinned generative contract; the storage validator remains authoritative."""
+    """Native v12 nests relations under claims; canonical storage is unchanged."""
     text = {"type": "string", "maxLength": 3000}
     key = {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9_.:-]{1,100}$"}
     source_id = dict(key, enum=list(source_ids)) if source_ids is not None else dict(key)
@@ -120,16 +120,18 @@ def output_schema(*, canonical: bool = False, source_ids: list[str] | None = Non
         if existing_claim_ids:
             relation = _object({
                 "type": {"type": "string", "enum": ["contradicts", "replaces", "closes"]},
-                "from_claim_index": {"type": "integer", "minimum": 0, "maximum": MAX_RECORDS - 1},
                 "to_claim_id": {"type": "string", "enum": list(existing_claim_ids)},
                 "evidence": dict(spans, minItems=1),
             })
             relation_list = {"type": "array", "items": relation, "maxItems": MAX_RECORDS}
         else:
             relation_list = {"type": "array", "items": {"type": "null"}, "maxItems": 0}
+    if not canonical:
+        claim["properties"]["outgoing_relations"] = relation_list
+        claim["required"].append("outgoing_relations")
     schema = _object({"episodes": {"type": "array", "items": episode, "maxItems": MAX_RECORDS},
                       "claims": {"type": "array", "items": claim, "maxItems": MAX_RECORDS},
-                      "relations": relation_list})
+                      **({"relations": relation_list} if canonical else {})})
     if not canonical:
         if reconsideration and len(existing_episode_ids or []) < 2:
             schema["properties"]["episodes"]["maxItems"] = 0
@@ -352,10 +354,13 @@ def runner_request(snapshot: Mapping[str, Any], timeout: float) -> dict[str, Any
         "Source support belongs only in the evidence fields, never a relation. Native objects "
         "have no key field; code assigns their identity by zero-based array position. "
         "Reconciliation relations may only contradict, replace or close an existing claim "
-        "provided in current_state.claims. Use from_claim_index for an actual returned "
-        "claims array index and to_claim_id for its exact existing target ID. Never put "
-        "raw source IDs in relation endpoints. If no existing claims are provided, return "
-        "relations: []. Omit uncertain relationships. In ordinary event jobs, continuation_of "
+        "provided in current_state.claims. Put each reconciliation in the originating returned "
+        "claim's outgoing_relations array, with to_claim_id for its exact existing target ID. "
+        "Code binds the from endpoint to that owning claim; never author a from endpoint or index. "
+        "Never put raw source IDs in relation endpoints. There is no top-level relations field. "
+        "If no reconciliation is supported or no existing claims are supplied, use "
+        "outgoing_relations: [] on every claim. Empty claims means no new relations. "
+        "Omit uncertain relationships. In ordinary event jobs, continuation_of "
         "must be null unless NEW non-historical observations explicitly concern the same named task as "
         "one supplied CURRENT episode head. Explicit continue/resume/same-task wording "
         "needs a shared stable task ID or the whole prior goal phrase. A user-authored "
@@ -405,18 +410,22 @@ def runner_request(snapshot: Mapping[str, Any], timeout: float) -> dict[str, Any
 
 
 def _resolve_object_references(output: Mapping[str, Any], snapshot: Mapping[str, Any]) -> dict[str, Any]:
-    """Bind typed native array indices without guessing or repairing endpoints.
+    """Flatten native v12 claim-owned relations without guessing their origin.
 
-    Explicit canonical injected runners retain their keys and endpoints exactly.
-    Unknown indices and IDs fail before any semantic check or persistence.
+    Canonical injected runners retain the existing top-level relations format.
+    Stored canonical memory needs no migration. Mixed shapes and native v11
+    from_claim_index endpoints are rejected, never repaired or salvaged.
     """
     resolved = json.loads(json.dumps(output))
+    native = "relations" not in resolved
+    if native and set(resolved) != {"episodes", "claims"}:
+        raise ValueError("invalid native output")
     for kind, prefix in (("episodes", "episode"), ("claims", "claim")):
         records = resolved.get(kind)
         if not isinstance(records, list) or len(records) > MAX_RECORDS:
             raise ValueError("invalid object list")
         for index, record in enumerate(records):
-            if not isinstance(record, dict):
+            if not isinstance(record, dict) or (native and "key" in record):
                 raise ValueError("invalid object")
             if "key" not in record:
                 record["key"] = f"{prefix}_{index}"
@@ -424,24 +433,32 @@ def _resolve_object_references(output: Mapping[str, Any], snapshot: Mapping[str,
                 # Bind only an omitted trusted field. Explicit canonical runner
                 # values remain intact and foreign values fail validation.
                 record["scope"].setdefault("worktree", snapshot["project"])
-    allowed = {claim["id"] for claim in _bounded_state(snapshot)["claims"]}
-    relations = resolved.get("relations")
+    if native:
+        allowed = {claim["id"] for claim in _bounded_state(snapshot)["claims"]}
+        relations = []
+        for claim in resolved["claims"]:
+            outgoing = claim.pop("outgoing_relations", None)
+            if not isinstance(outgoing, list) or len(outgoing) > MAX_RECORDS:
+                raise ValueError("invalid outgoing relations")
+            for relation in outgoing:
+                if (not isinstance(relation, dict)
+                        or set(relation) != {"type", "to_claim_id", "evidence"}):
+                    raise ValueError("invalid native relation")
+                if (relation["to_claim_id"] not in allowed
+                        or relation["type"] not in {"contradicts", "replaces", "closes"}):
+                    raise ValueError("unknown reconciliation target or type")
+                relations.append({"type": relation["type"], "from": claim["key"],
+                                  "to": relation["to_claim_id"], "evidence": relation["evidence"]})
+        resolved["relations"] = relations
+    else:
+        if any("outgoing_relations" in claim for claim in resolved["claims"]):
+            raise ValueError("mixed native and canonical relations")
+        relations = resolved["relations"]
     if not isinstance(relations, list) or len(relations) > MAX_RECORDS:
         raise ValueError("invalid relations")
-    for index, relation in enumerate(relations):
-        if not isinstance(relation, dict):
-            raise ValueError("invalid relation")
-        if set(relation) == {"type", "from", "to", "evidence"}:
-            continue
-        if set(relation) != {"type", "from_claim_index", "to_claim_id", "evidence"}:
-            raise ValueError("invalid native relation")
-        source_index = relation["from_claim_index"]
-        if type(source_index) is not int or not 0 <= source_index < len(resolved["claims"]):
-            raise ValueError("unknown claim index")
-        if relation["to_claim_id"] not in allowed or relation["type"] not in {"contradicts", "replaces", "closes"}:
-            raise ValueError("unknown reconciliation target or type")
-        relations[index] = {"type": relation["type"], "from": resolved["claims"][source_index]["key"],
-                            "to": relation["to_claim_id"], "evidence": relation["evidence"]}
+    if any(not isinstance(relation, dict) or set(relation) != {"type", "from", "to", "evidence"}
+           for relation in relations):
+        raise ValueError("invalid canonical relation")
     return resolved
 
 

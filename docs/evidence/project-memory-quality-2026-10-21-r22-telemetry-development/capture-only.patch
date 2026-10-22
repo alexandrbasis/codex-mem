@@ -1,0 +1,76 @@
+--- held-helper.py
++++ scripts/project_memory_consolidation_experiment.py
+@@ -409,6 +409,63 @@
+                          'helper_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+         if 'judge_profile' in protocol or 'reader_profile' in protocol:
+             self.identity.update(phase_profile(protocol, phase))
++
++    def _save_checkpoint(self, base: dict, snapshot: Any) -> None:
++        """Retain bounded diagnostics separately from authoritative final usage."""
++        from codex_mem.pricing import token_counts
++        if not isinstance(snapshot, dict):
++            return
++        identifiers = {}
++        for key in ('worker_thread_id', 'worker_turn_id'):
++            value = snapshot.get(key)
++            if value is None and key == 'worker_turn_id':
++                identifiers[key] = None
++            elif isinstance(value, str) and re.fullmatch(r'[A-Za-z0-9._:-]{1,256}', value):
++                identifiers[key] = value
++            else:
++                return
++        metrics = snapshot.get('metrics')
++        if not isinstance(metrics, dict):
++            return
++        duration, usage = metrics.get('duration_ms'), metrics.get('usage')
++        if type(duration) is not int or not 0 <= duration <= 2**63-1 or not isinstance(usage, dict):
++            return
++        status, updates = usage.get('status'), usage.get('updates')
++        if (status not in ('unavailable', 'invalid', 'partial', 'reported')
++                or usage.get('source') != 'app_server_thread_total'
++                or type(updates) is not int or not 0 <= updates <= 2**63-1):
++            return
++        tokens = usage.get('tokens')
++        if status in ('unavailable', 'invalid'):
++            if tokens is not None:
++                return
++        else:
++            tokens = token_counts(tokens) if isinstance(tokens, dict) else None
++            if tokens is None:
++                return
++        value = {**base, 'schema_version': 'native-usage-checkpoint-v1', **identifiers,
++            'metrics': {'duration_ms': duration, 'usage': {'status': status,
++                'source': 'app_server_thread_total', 'updates': updates, 'tokens': tokens}}}
++        path = self.home / 'receipts' / (base['call_id'] + '-checkpoint.json')
++        temporary = path.with_suffix('.json.tmp')
++        try:
++            with temporary.open('w') as stream:
++                json.dump(value, stream, ensure_ascii=False, separators=(',', ':'))
++                stream.write('\n')
++                stream.flush()
++                os.fsync(stream.fileno())
++            temporary.replace(path)
++            directory = os.open(path.parent, os.O_RDONLY)
++            try:
++                os.fsync(directory)
++            finally:
++                os.close(directory)
++        except Exception:
++            # Diagnostic storage cannot change the native result or its accounting.
++            try:
++                temporary.unlink(missing_ok=True)
++            except OSError:
++                pass
+ 
+     def __call__(self, request: dict) -> dict:
+         # Serialize native calls and reservations across separate phase processes.
+@@ -487,7 +544,8 @@
+         # Only fictional prompts and outputs are retained. No configuration or raw errors.
+         write(self.home / 'receipts' / f'{call_id}-request.json', request)
+         try:
+-            result = NativeProcessorRunner(timeout=self.protocol['limits']['call_seconds'])(request)
++            result = NativeProcessorRunner(timeout=self.protocol['limits']['call_seconds'],
++                usage_checkpoint=lambda snapshot: self._save_checkpoint(base, snapshot))(request)
+             write(self.home / 'receipts' / f'{call_id}-response.json', result)
+             if self.identity['phase'] in ('reader', 'judge') and self.identity['phase'] + '_profile' in self.protocol:
+                 validate_native_profile(result, expected)

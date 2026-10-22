@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "purpose": "Pre-repair public counterexample only. No fixture/gold/model data, native calls, trial changes or rescoring.",
+  "frozen_r8_freeze_sha256": "fc620781fc405ca2682ae2dfe111ca427432020a3b401deaa3ac34029c990a8a",
+  "frozen_r8_source_hashes": {
+    "codex_mem/project_memory_query.py": "367a46ff38e43a36d6c1a2bce26a552b32b271fe5922faee8f31a4637b624c1c",
+    "codex_mem/project_memory_retrieval.py": "50e2cb540324d18fb75f1e56267916c29608f2774980150236673f996e29507b",
+    "codex_mem/store.py": "8e38683a5549a9dd11ec0422d9495c9ad9e44841a7c9dfcac27b72829657339d"
+  },
+  "current_source_hashes_before_repair": {
+    "codex_mem/project_memory_query.py": "367a46ff38e43a36d6c1a2bce26a552b32b271fe5922faee8f31a4637b624c1c",
+    "codex_mem/project_memory_retrieval.py": "50e2cb540324d18fb75f1e56267916c29608f2774980150236673f996e29507b",
+    "codex_mem/store.py": "8e38683a5549a9dd11ec0422d9495c9ad9e44841a7c9dfcac27b72829657339d"
+  },
+  "current_hashes_match_r8_freeze": true,
+  "probe_script_sha256": "f19b8fb667148c372649e373d85ef44bf37c65a635cfd13417182dab1341ec87",
+  "command": "PYTHONPATH=. python3 docs/evidence/project-memory-quality-2026-10-21-r8/public-environment-constraint-probe.py",
+  "before_repair_results": [
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    },
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    },
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    },
+    {
+      "body": "Do not deploy to production; local validation only.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        51
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "Do not deploy to production; local validation only.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        51
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    },
+    {
+      "body": "Production deployment completed.",
+      "source_role": "tool_record",
+      "source_field": "body",
+      "span": [
+        0,
+        32
+      ],
+      "declared_environment": "production",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    },
+    {
+      "body": "Production deployment completed.",
+      "source_role": "tool_record",
+      "source_field": "body",
+      "span": [
+        0,
+        32
+      ],
+      "declared_environment": "production",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    }
+  ],
+  "finding": "A locally scoped user constraint passes canonical scope validation but raw production-word exclusion removes it. Unscoped project-wide user constraints also disappear from local reads. The controls distinguish this false negative from a correctly rejected production-scoped tool result.",
+  "execution_control_test_correction": {
+    "test_path": "tests/test_project_scope_queries.py",
+    "before_sha256": "5a203b6d98bc72108385f3c64af222073df5887e0037c20f3ab7c36a53411a8c",
+    "reason": "The existing control created a hook:UserPromptSubmit source with no declared environment and treated prose saying passed in production as observed execution. It will use actual hook:PostToolUse evidence instead. Separate R9 tests preserve unscoped user reports as attributed unknown-scope material, while explicitly scoped user claims and actual tool/assistant reports retain environment guards. No trial fixture, baseline or gold changes."
+  },
+  "after_repair_results": [
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "No production deployment.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        25
+      ],
+      "declared_environment": "",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "Do not deploy to production; local validation only.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        51
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "Do not deploy to production; local validation only.",
+      "source_role": "user_intent",
+      "source_field": "body",
+      "span": [
+        0,
+        51
+      ],
+      "declared_environment": "local",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": true,
+      "store_context_source_visible": true
+    },
+    {
+      "body": "Production deployment completed.",
+      "source_role": "tool_record",
+      "source_field": "body",
+      "span": [
+        0,
+        32
+      ],
+      "declared_environment": "production",
+      "query": "Which constraints remain active in local?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    },
+    {
+      "body": "Production deployment completed.",
+      "source_role": "tool_record",
+      "source_field": "body",
+      "span": [
+        0,
+        32
+      ],
+      "declared_environment": "production",
+      "query": "Which constraints remain active in local, excluding production?",
+      "builder_source_visible": false,
+      "store_context_source_visible": false
+    }
+  ],
+  "after_repair_source_hashes": {
+    "codex_mem/project_memory_retrieval.py": "d5f88c7dd0e6b771fabf7897b56a4f327d9370903029d9d7be9f30dc928f5b25",
+    "tests/test_environment_constraint_queries.py": "368bbfd370799e62497c16d9089bc406e425c959e9bbb49b2e24b65755a02d4c",
+    "tests/test_project_scope_queries.py": "d9475a2403507176d4f7ed5cf183116863935853d67d5ead9565625f12a16b84"
+  },
+  "repair_scope": "Role and declared-scope handling only; no prohibition keyword classifier. Unscoped user records remain attributed unknown-scope quotations. Actual tool/assistant report evidence and explicit opposite scopes keep environment guards. Mixed grounded episode groups cannot resurface an excluded execution via another eligible user pointer."
+}

@@ -1,0 +1,16 @@
+{
+  "recorded_at": "2026-10-22T10:43:45.171459+00:00",
+  "status": "source_inventory_v001_superseded_before_reviews",
+  "superseded_manifest": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r23/review-source-manifest.superseded-v001.json",
+    "sha256": "e68e26974e2f4516abc366e133ea0f0f7fa2e5abe52f3c738104c769ca3375eb"
+  },
+  "detected_drift": [
+    "docs/evidence/project-memory-quality-2026-10-21-r23/source-inventory.v001.log"
+  ],
+  "cause": "Shell opened the inventory stdout log before collection, so inventory hashed its empty bytes and then wrote its own result into it. All other4355pins match.",
+  "repair": "Preserve original manifest,map,patch,log. Exclude current output containers and stdout log explicitly, then create v002 before any source review or protocol.",
+  "native_calls": 0,
+  "clock_started": false,
+  "private_case_content_opened": false
+}

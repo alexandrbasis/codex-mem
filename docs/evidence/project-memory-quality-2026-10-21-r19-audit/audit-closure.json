@@ -1,0 +1,139 @@
+{
+  "status": "complete_integrity_audit_fail_quality_preserved",
+  "primary_audit_sha256": "fd014126b9c745d9c8299e847090bd92661230d2852563e1a2eb8b9df61f1db7",
+  "archive_supplement_authoritative": "archive-integrity-supplement-v2.json",
+  "archive_supplement_sha256": "dbc310f0a92b80f98eee4423c6e650cf7a24a5ca53c13535c30ed7cd6f68759c",
+  "checks": 7390,
+  "gaps": [],
+  "auditor_only_development_issues": [
+    {
+      "type": "reuse_scope_path_prefix",
+      "details": "Initial auditor doubled replicates/ prefix. Fixed auditor only; no trial data changed."
+    },
+    {
+      "type": "relative_cli_export_path",
+      "details": "Resolved export path before relative_to at output serialization. No audit receipt produced in failed invocation."
+    },
+    {
+      "type": "release_frozen_root_interpretation",
+      "retained_first_receipt": "archive-integrity-supplement.json",
+      "details": "Initial supplement treated frozen_root_file_hashes basenames as repo evidence files; formal release field means sealed private root files. v2 checks exact private root bytes; all20 matched. No source/input/export repair."
+    }
+  ],
+  "native_usage": {
+    "hypothetical_api_equivalent_usd": {
+      "standard": "21.7548368",
+      "fast": "43.5096736"
+    },
+    "pricing_snapshot": "openai-2026-10-07.1",
+    "attempted_calls": 296,
+    "finished_calls": 296,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 296,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "calls_with_partial_tokens": 0,
+    "partial_total_tokens_lower_bound": 0,
+    "reported_tokens_lower_bound": {
+      "input_tokens": 4547228,
+      "cached_input_tokens": 72832,
+      "output_tokens": 139008,
+      "total_tokens": 4686236
+    },
+    "tokens": {
+      "input_tokens": 4547228,
+      "cached_input_tokens": 72832,
+      "output_tokens": 139008,
+      "total_tokens": 4686236
+    },
+    "pricing_complete": false,
+    "token_accounting_complete": true,
+    "cost_usd": null
+  },
+  "cumulative_usage": {
+    "attempted_calls": 3410,
+    "finished_calls": 3410,
+    "failed_calls": 1,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 3409,
+    "calls_with_unknown_or_partial_tokens": 1,
+    "tokens": {
+      "input_tokens": null,
+      "cached_input_tokens": null,
+      "output_tokens": null,
+      "total_tokens": null
+    },
+    "reported_tokens_lower_bound": {
+      "input_tokens": 52484432,
+      "cached_input_tokens": 2531328,
+      "output_tokens": 1893734,
+      "total_tokens": 54378166
+    },
+    "reported_tokens_lower_bound_scope": "known_reported_receipts_only_not_total_usage",
+    "reported_tokens_lower_bound_coverage_complete": true,
+    "reported_tokens_lower_bound_missing_components": 0,
+    "token_accounting_complete": false,
+    "hypothetical_api_equivalent_usd": {
+      "standard": "140.29743490",
+      "fast": "280.59486980"
+    },
+    "pricing_complete": false,
+    "hypothetical_api_equivalent_scope": "known_reported_priced_receipts_only_not_billing",
+    "cost_usd": null,
+    "scope": "Previous pilot ledgers, including incomplete attempts, plus every native attempt in this iteration. Current iteration limits apply only to its own ledger."
+  },
+  "quality_decision": "fail",
+  "quality_recount": {
+    "baseline_primary_full": 77,
+    "candidate_primary_full": 88,
+    "primary_denominator_each": 96,
+    "critical_baseline": 2,
+    "critical_candidate": 1,
+    "paired_fact_losses": [
+      [
+        "R19H11",
+        "q3",
+        0
+      ]
+    ],
+    "paired_coarse_recall_losses": [
+      [
+        "R19H11",
+        "q3"
+      ],
+      [
+        "R19H12",
+        "q6"
+      ]
+    ],
+    "grades_all_slots": 216,
+    "missing_slots": 0
+  },
+  "privacy": {
+    "pattern_counts": {
+      "private_key": 0,
+      "openai_key": 0,
+      "aws_key": 0,
+      "jwt": 0,
+      "access_url": 0
+    },
+    "url_hosts": [
+      "learn.chatgpt.com"
+    ],
+    "second_sanitizer_changes": 0
+  },
+  "ownership": {
+    "parts_checked": 216,
+    "aggregates_checked": 36,
+    "structural_only": true,
+    "auxiliary_refs_no_answer_credit": true
+  },
+  "reuse_scopes": "6 exact-request allocations, primary and regeneration separately verified; see primary checks",
+  "no_regrades_models_store_writes_or_trial_source_edits": true,
+  "limits": [
+    "Integrity success preserves FAIL and is not quality success.",
+    "Current usage is complete; cumulative full usage/pricing stay unknown from one inherited unknown receipt. Known reported cumulative subtotal is not full total.",
+    "Pattern privacy scans cannot prove all possible private strings absent.",
+    "Two coarse recall flags remain frozen; the independent audit recounts them without semantic reinterpretation."
+  ]
+}

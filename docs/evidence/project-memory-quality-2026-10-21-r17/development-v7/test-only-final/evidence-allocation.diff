@@ -1,0 +1,89 @@
+--- before/test_project_memory_evidence_allocation.py
++++ approved/test_project_memory_evidence_allocation.py
+@@ -80,14 +80,30 @@
+         for expected in (saved, unchecked.strip(), reason,
+                          'Use case numbers, not room numbers, on the paper cards.'):
+             self.assertIn(expected, text, brief['xml'])
+-        execution = tree.find("./item[@lane='source_evidence'][@source_role='tool_record']/execution")
+-        self.assertIsNotNone(execution, brief['xml'])
++        item = tree.find("./item[@lane='source_evidence'][execution]")
++        self.assertIsNotNone(item, brief['xml'])
++        execution = item.find('execution')
+         self.assertEqual(execution.get('command'), 'exhibit inspect --cards')
+         self.assertEqual(execution.get('exit_code'), '0')
+-        result = tree.find("./item[@lane='source_evidence'][@source_role='tool_record']/source[@source_field='tool_response.output']")
+-        self.assertIsNotNone(result, brief['xml'])
+-        self.assertEqual(result.findtext('quote_excerpt'), tool['body'])
+-        self.assertEqual(result.get('excerpt_status'), 'complete_capture_field')
++        self.assertEqual(execution.get('exit_field'), 'tool_response.exit_code')
++        self.assertEqual(execution.get('tool_use_id'), 'inspect-cards')
++        self.assertIn(item.get('source_role'), (None, 'tool_record'))
++        self.assertEqual(item.get('field_association'), 'original_execution_capture')
++        sources = {source.get('source_field'): source for source in item.findall('source')}
++        self.assertEqual({'tool_input.cmd', 'tool_response.output'}, set(sources))
++        for field, value in [('tool_input.cmd', 'exhibit inspect --cards'),
++                             ('tool_response.output', tool['body'])]:
++            source = sources[field]
++            self.assertEqual(source.get('source_id'), tool['id'])
++            self.assertEqual(source.get('source_role'), 'tool_record')
++            self.assertEqual(source.get('tool_use_id'), execution.get('tool_use_id'))
++            self.assertEqual((source.get('start'), source.get('end')), ('0', str(len(value))))
++            self.assertEqual(source.findtext('quote_excerpt'), value)
++            self.assertIn(source.get('quote_truncated'), (None, 'False'))
++            if source.get('excerpt_status') is None:
++                self.assertEqual(item.get('complete_capture_fields'), 'true')
++            else:
++                self.assertEqual(source.get('excerpt_status'), 'complete_capture_field')
+         self.assertLessEqual(len(brief['xml']), 6000)
+         self.assertGreater(brief['render_omissions']['fields'], 0)
+         self.assertNotIn('workflow_state="completed"', brief['xml'])
+@@ -125,14 +141,45 @@
+ 
+     def test_execution_group_fits_its_exact_serialized_boundary(self):
+         brief = self.execution_only_brief()
+-        full = render_project_brief(brief, budget=6000)
+-        exact = render_project_brief(brief, budget=len(full))
+-        self.assertEqual(exact, full)
+-        item = ElementTree.fromstring(exact).find('item')
++        # Conservative primary admission can cost more than compact output.
++        # Find its observable threshold without reproducing the price function.
++        observations = [(budget, render_project_brief(brief, budget=budget))
++                        for budget in range(128, 1801)]
++        threshold, exact = next((budget, xml) for budget, xml in observations
++                               if ElementTree.fromstring(xml).find('.//execution') is not None)
++        self.assertLessEqual(len(exact), threshold)
++        item = ElementTree.fromstring(exact).find('item[execution]')
+         self.assertEqual(len(item.findall('source')), 2)
+         self.assertEqual(item.findall('field'), [])
++        self.assertEqual(item.get('lane'), 'source_evidence')
++        self.assertIn(item.get('source_role'), (None, 'tool_record'))
+         self.assertEqual(item.get('field_association'), 'original_execution_capture')
+         self.assertNotIn('fields_omitted', item.attrib)
++        record = brief['records'][0]
++        execution = item.find('execution')
++        for key in ('command', 'exit_code', 'exit_field', 'tool_use_id', 'tool_name'):
++            self.assertEqual(execution.get(key), str(record['execution'][key]))
++        expected = {pointer['source_field']: pointer for field in record['fields']
++                    for pointer in field['evidence']}
++        sources = {source.get('source_field'): source for source in item.findall('source')}
++        self.assertEqual(set(expected), set(sources))
++        for field, pointer in expected.items():
++            source = sources[field]
++            for key in ('source_id', 'source_role', 'tool_use_id', 'start', 'end'):
++                self.assertEqual(source.get(key), str(pointer[key]))
++            self.assertEqual(source.findtext('quote_excerpt'), pointer['quote_excerpt'])
++            self.assertIn(source.get('quote_truncated'), (None, 'False'))
++            if source.get('excerpt_status') is None:
++                self.assertEqual(item.get('complete_capture_fields'), 'true')
++            else:
++                self.assertEqual(source.get('excerpt_status'), 'complete_capture_field')
++        below = render_project_brief(brief, budget=threshold - 1)
++        tree = ElementTree.fromstring(below)
++        self.assertLessEqual(len(below), threshold - 1)
++        self.assertIsNone(tree.find('.//execution'), below)
++        self.assertEqual([], list(tree.iter('source')), below)
++        self.assertEqual(tree.find('omitted').get('records'), '1')
++        self.assertEqual(tree.find('omitted').get('fields'), '2')
+ 
+     def test_execution_group_is_omitted_one_character_below_boundary(self):
+         brief = self.execution_only_brief()

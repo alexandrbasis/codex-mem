@@ -1,0 +1,3301 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "questions": {
+    "h01/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "Lantern label printing requires Mira to approve the contrast sample.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 25,
+              "end": 93,
+              "quote": "print the large labels only after Mira approves the contrast sample."
+            }
+          ]
+        },
+        {
+          "text": "The sample gate is required because the hall lighting is dim.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 94,
+              "end": 155,
+              "quote": "The sample gate is required because the hall lighting is dim."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h01/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "Audio narration recording was canceled.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 44,
+              "end": 80,
+              "quote": "Cancel the audio narration recording"
+            }
+          ]
+        },
+        {
+          "text": "Audio script review remains open.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 86,
+              "end": 120,
+              "quote": "keep the audio script review open."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The entire audio guide is complete or canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The entire audio guide is complete or canceled."
+        }
+      ]
+    },
+    "h01/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The floor guide is reopened to correct the west-door arrow.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 54,
+              "quote": "Reopen the floor guide to correct the west-door arrow."
+            }
+          ]
+        },
+        {
+          "text": "The accepted room names must stay.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 55,
+              "end": 92,
+              "quote": "Keep the already accepted room names."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The floor guide is still closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The floor guide is still closed."
+        }
+      ]
+    },
+    "h01/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The deliverables are separate, so floor-guide acceptance does not accept the audio guide.",
+          "support": [
+            {
+              "event_id": "e2",
+              "source_field": "body",
+              "start": 0,
+              "end": 63,
+              "quote": "Make a floor guide and an audio guide as separate deliverables."
+            }
+          ]
+        },
+        {
+          "text": "The assistant said it thought the audio guide could be called finished.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 34,
+              "end": 85,
+              "quote": "I think the audio guide can be called finished too."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Floor-guide acceptance establishes audio-guide completion."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Floor-guide acceptance establishes audio-guide completion."
+        }
+      ]
+    },
+    "h01/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Lantern requires Mira to approve the contrast sample before printing.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 25,
+              "end": 93,
+              "quote": "print the large labels only after Mira approves the contrast sample."
+            }
+          ]
+        },
+        {
+          "text": "Tess can approve printing for Harbor only.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 95,
+              "quote": "For the Harbor exhibit, Tess can approve label printing. This authority applies only to Harbor."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Tess can approve Lantern printing."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Tess can approve Lantern printing."
+        }
+      ]
+    },
+    "h01/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Use the coordinator named in the signed dispatch sheet for Lantern deliveries.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 79,
+              "quote": "For Lantern deliveries, use the coordinator named in the signed dispatch sheet."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Nilo is the current Lantern courier based on the removed delivery note."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Nilo is the current Lantern courier based on the removed delivery note."
+        }
+      ]
+    },
+    "h02/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "Alder plot C may be watered only when the morning sensor reads below 18 percent.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 26,
+              "end": 89,
+              "quote": "water plot C only if the morning sensor reads below 18 percent."
+            }
+          ]
+        },
+        {
+          "text": "The condition avoids washing seeds out of saturated soil.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 90,
+              "end": 138,
+              "quote": "This avoids washing seeds out of saturated soil."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h02/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The morning moisture reading remains required.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 39,
+              "end": 63,
+              "quote": "Keep the morning reading"
+            }
+          ]
+        },
+        {
+          "text": "The morning reading controls whether plot C is watered.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 65,
+              "end": 111,
+              "quote": "because it controls whether plot C is watered."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h02/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "The user accepted and closed the shade-frame repair.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 0,
+              "end": 67,
+              "quote": "I inspected and accepted the shade-frame repair. Close that repair."
+            }
+          ]
+        },
+        {
+          "text": "Watering is separate and remains pending.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 68,
+              "end": 116,
+              "quote": "Watering is a separate task and remains pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Accepting the shade-frame repair completes watering.",
+        "Watering is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Accepting the shade-frame repair completes watering."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Watering is complete."
+        }
+      ]
+    },
+    "h02/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant assumed watering was done because the shade frame looked repaired.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 0,
+              "end": 75,
+              "quote": "The shade frame looks repaired to me, so I assume watering is done as well."
+            }
+          ]
+        },
+        {
+          "text": "The tool recorded plot C moisture at 21 percent.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 50,
+              "quote": "Morning sensor record: plot C moisture 21 percent."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The assistant assumption proves that watering occurred."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The assistant assumption proves that watering occurred."
+        }
+      ]
+    },
+    "h02/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Alder permits watering only below 18 percent on the morning sensor.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 26,
+              "end": 89,
+              "quote": "water plot C only if the morning sensor reads below 18 percent."
+            }
+          ]
+        },
+        {
+          "text": "Birch requires watering every morning without the Alder gate.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 97,
+              "quote": "For the Birch seed trial, water plot C every morning. Birch does not use the Alder moisture gate."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Alder plot C must be watered every morning regardless of moisture."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Alder plot C must be watered every morning regardless of moisture."
+        }
+      ]
+    },
+    "h02/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The current purchase order determines the Alder supplier.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 77,
+              "quote": "Use only the supplier on the current purchase order for the Alder seed trial."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Vela Nursery is the authorized supplier based on the deleted provisional source."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Vela Nursery is the authorized supplier based on the deleted provisional source."
+        }
+      ]
+    },
+    "h03/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "Both actors must sign the voice-use form before Copper episode two is released.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 27,
+              "end": 93,
+              "quote": "release episode two only when both actors sign the voice-use form."
+            }
+          ]
+        },
+        {
+          "text": "Both signatures are needed because the episode includes both performances.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 94,
+              "end": 165,
+              "quote": "We need both signatures because the episode includes both performances."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h03/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "Checking the drum cue remains required.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 52,
+              "end": 81,
+              "quote": "finish checking the drum cue."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "All music-cue work was canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "All music-cue work was canceled."
+        }
+      ]
+    },
+    "h03/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The dialogue edit was reopened because its final line names the wrong station.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 72,
+              "quote": "Reopen the dialogue edit because the final line names the wrong station."
+            }
+          ]
+        },
+        {
+          "text": "Only that station name must be fixed.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 73,
+              "end": 100,
+              "quote": "Fix only that station name."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The dialogue edit remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The dialogue edit remains closed."
+        }
+      ]
+    },
+    "h03/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant reported exporting a preview of Copper episode two.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 43,
+              "quote": "I exported a preview of Copper episode two."
+            }
+          ]
+        },
+        {
+          "text": "The assistant reported that it did not release Copper episode two.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 44,
+              "end": 65,
+              "quote": "I did not release it."
+            }
+          ]
+        },
+        {
+          "text": "The cue sheet and dialogue edit are separate tasks, so cue-sheet review does not accept dialogue.",
+          "support": [
+            {
+              "event_id": "e2",
+              "source_field": "body",
+              "start": 0,
+              "end": 62,
+              "quote": "Treat the music cue sheet and dialogue edit as separate tasks."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Cue-sheet review accepts the dialogue edit.",
+        "Copper episode two was released."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Cue-sheet review accepts the dialogue edit."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Copper episode two was released."
+        }
+      ]
+    },
+    "h03/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Copper requires both actors to sign the voice-use form before release.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 27,
+              "end": 93,
+              "quote": "release episode two only when both actors sign the voice-use form."
+            }
+          ]
+        },
+        {
+          "text": "Silver allows its producer alone to approve release.",
+          "support": [
+            {
+              "event_id": "e5",
+              "source_field": "body",
+              "start": 0,
+              "end": 63,
+              "quote": "For the Silver radio play, the producer alone approves release."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Producer approval alone authorizes Copper release."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Producer approval alone authorizes Copper release."
+        }
+      ]
+    },
+    "h03/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "To the reviewer listed in the active rights register.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 83,
+              "quote": "Route Copper rights questions to the reviewer listed in the active rights register."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Oren is the current rights reviewer based on the removed contact card."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Oren is the current rights reviewer based on the removed contact card."
+        }
+      ]
+    },
+    "h04/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The ranger must confirm nesting has ended before east-bank entry.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 34,
+              "end": 108,
+              "quote": "enter the east bank only after the ranger confirms that nesting has ended."
+            }
+          ]
+        },
+        {
+          "text": "Survey traffic disturbs the birds.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 109,
+              "end": 173,
+              "quote": "Keep that restriction because survey traffic disturbs the birds."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h04/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The hand-drawn bank sketch is still required.",
+          "support": [
+            {
+              "event_id": "e5",
+              "source_field": "body",
+              "start": 30,
+              "end": 73,
+              "quote": "The hand-drawn bank sketch is still needed."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "All visual records were canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "All visual records were canceled."
+        }
+      ]
+    },
+    "h04/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "The west-bank measurements remain closed.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 39,
+              "quote": "Keep the west-bank measurements closed."
+            }
+          ]
+        },
+        {
+          "text": "The inspected permit does not yet authorize east-bank access.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 58,
+              "quote": "Permit inspection: east-bank access is not authorized yet."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The pending east-bank visit reopens the west-bank measurement task.",
+        "The east-bank visit is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "The pending east-bank visit reopens the west-bank measurement task."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "The east-bank visit is complete."
+        }
+      ]
+    },
+    "h04/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant suggested marking the whole survey complete after west-bank measurements.",
+          "support": [
+            {
+              "event_id": "e2",
+              "source_field": "body",
+              "start": 0,
+              "end": 79,
+              "quote": "I completed the west-bank measurements. I would mark the whole survey complete."
+            }
+          ]
+        },
+        {
+          "text": "The user accepted and closed only the west-bank measurements.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 0,
+              "end": 49,
+              "quote": "Accept and close the west-bank measurements only."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The user accepted the entire survey as complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The user accepted the entire survey as complete."
+        }
+      ]
+    },
+    "h04/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Meadow requires ranger confirmation that nesting ended.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 34,
+              "end": 108,
+              "quote": "enter the east bank only after the ranger confirms that nesting has ended."
+            }
+          ]
+        },
+        {
+          "text": "Ridge requires landowner permission.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 115,
+              "quote": "For the Ridge culvert survey, east-bank access needs the landowner's permission, not a ranger nesting confirmation."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Landowner permission alone satisfies Meadow's entry requirement."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Landowner permission alone satisfies Meadow's entry requirement."
+        }
+      ]
+    },
+    "h04/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Use the meeting point on the ranger's dated visit permit.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 60,
+              "quote": "Take the meeting point from the ranger's dated visit permit."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Red Mill remains the meeting point based on the deleted route card."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Red Mill remains the meeting point based on the deleted route card."
+        }
+      ]
+    },
+    "h05/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "Sada must sign the paper pattern before Juniper velvet is cut.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 33,
+              "end": 88,
+              "quote": "cut the velvet only after Sada signs the paper pattern."
+            }
+          ]
+        },
+        {
+          "text": "Velvet is scarce and a mistaken cut cannot be replaced.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 89,
+              "end": 143,
+              "quote": "Velvet is scarce, so we cannot replace a mistaken cut."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h05/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The coat's silver trim was canceled.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 30,
+              "quote": "Cancel the coat's silver trim."
+            }
+          ]
+        },
+        {
+          "text": "The coat fitting remains on the task list.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 31,
+              "end": 65,
+              "quote": "Keep its fitting on the task list."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The coat order is fully canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The coat order is fully canceled."
+        }
+      ]
+    },
+    "h05/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The cape pattern is reopened for a shorter collar.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 44,
+              "quote": "Reopen the cape pattern for a shorter collar"
+            }
+          ]
+        },
+        {
+          "text": "The actor cannot turn their head.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 46,
+              "end": 87,
+              "quote": "because the actor cannot turn their head."
+            }
+          ]
+        },
+        {
+          "text": "The cape hem must not change.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 88,
+              "end": 110,
+              "quote": "Do not change its hem."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The cape pattern remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The cape pattern remains closed."
+        }
+      ]
+    },
+    "h05/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant thought cape acceptance meant the coat could skip fitting.",
+          "support": [
+            {
+              "event_id": "e5",
+              "source_field": "body",
+              "start": 0,
+              "end": 66,
+              "quote": "Since the cape is accepted, I think the coat can skip its fitting."
+            }
+          ]
+        },
+        {
+          "text": "The user still requires the coat fitting.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 31,
+              "end": 65,
+              "quote": "Keep its fitting on the task list."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Cape acceptance authorizes skipping the separate coat fitting."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Cape acceptance authorizes skipping the separate coat fitting."
+        }
+      ]
+    },
+    "h05/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Sada signs the Juniper paper pattern before cutting.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 33,
+              "end": 88,
+              "quote": "cut the velvet only after Sada signs the paper pattern."
+            }
+          ]
+        },
+        {
+          "text": "Ivo signs paper patterns for Marigold only.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 90,
+              "quote": "In the Marigold workshop, Ivo signs paper patterns. That appointment covers Marigold only."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Ivo is authorized to sign Juniper patterns."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Ivo is authorized to sign Juniper patterns."
+        }
+      ]
+    },
+    "h05/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Use the current stock ledger to find the reserve roll.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 53,
+              "quote": "Find the reserve roll using the current stock ledger."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The reserve roll is in cupboard nine based on the removed stock note."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "The reserve roll is in cupboard nine based on the removed stock note."
+        }
+      ]
+    },
+    "h06/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "Pebble's clear fan guard must be latched before the fan test.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 28,
+              "end": 79,
+              "quote": "run the fan test only with the clear guard latched."
+            }
+          ]
+        },
+        {
+          "text": "The guard keeps loose rigging away from fan blades.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 80,
+              "end": 135,
+              "quote": "The guard keeps loose rigging away from the fan blades."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h06/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "Painting the display stand was canceled.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 34,
+              "quote": "Cancel painting the display stand."
+            }
+          ]
+        },
+        {
+          "text": "The model's identification plate must still be attached.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 35,
+              "end": 81,
+              "quote": "Still attach the model's identification plate."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h06/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "Hull sealing remains accepted and must not reopen.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 47,
+              "quote": "Do not reopen hull sealing. It remains accepted"
+            }
+          ]
+        },
+        {
+          "text": "Fan testing remains unstarted.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 49,
+              "end": 79,
+              "quote": "Fan testing remains unstarted."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Fan testing is complete.",
+        "Waiting for fan testing reopens hull sealing."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Fan testing is complete."
+        },
+        {
+          "error_type": "false_merge",
+          "text": "Waiting for fan testing reopens hull sealing."
+        }
+      ]
+    },
+    "h06/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant assumed the model was ready to sail after sealing the hull.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 0,
+              "end": 55,
+              "quote": "I sealed the hull. I assume the model is ready to sail."
+            }
+          ]
+        },
+        {
+          "text": "The bench observation showed that the clear-guard latch was open.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 41,
+              "quote": "Bench observation: clear guard latch open"
+            }
+          ]
+        },
+        {
+          "text": "The bench observation showed a stationary fan.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 43,
+              "end": 58,
+              "quote": "fan stationary."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The model's readiness to sail is established by the assistant assumption."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The model's readiness to sail is established by the assistant assumption."
+        }
+      ]
+    },
+    "h06/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Pebble specifies a clear guard that must be latched for testing.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 28,
+              "end": 79,
+              "quote": "run the fan test only with the clear guard latched."
+            }
+          ]
+        },
+        {
+          "text": "Slate specifies a mesh fan guard.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 48,
+              "quote": "For the Slate ferry model, use a mesh fan guard."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "A mesh guard is the specified Pebble guard."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "A mesh guard is the specified Pebble guard."
+        }
+      ]
+    },
+    "h06/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The approved power list must determine the test battery.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 53,
+              "quote": "Choose the test battery from the approved power list."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Battery pack K4 is the approved choice based on the deleted plan."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Battery pack K4 is the approved choice based on the deleted plan."
+        }
+      ]
+    },
+    "h07/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The speaker must approve redactions before a Willow transcript is published.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 40,
+              "end": 108,
+              "quote": "publish a transcript only after its speaker approves the redactions."
+            }
+          ]
+        },
+        {
+          "text": "A recording can mention neighbors, so speakers need this control.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 109,
+              "end": 178,
+              "quote": "Speakers need this control because a recording can mention neighbors."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h07/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The full transcript consent review continues.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 38,
+              "end": 82,
+              "quote": "Continue the full transcript consent review."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Canceling the excerpt cancels consent review."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Canceling the excerpt cancels consent review."
+        }
+      ]
+    },
+    "h07/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "Cleanup of interview seven is reopened to restore a missing pause marker.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 68,
+              "quote": "Reopen cleanup of interview seven to restore a missing pause marker."
+            }
+          ]
+        },
+        {
+          "text": "The speaker's wording must stay exactly as accepted.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 69,
+              "end": 116,
+              "quote": "Keep the speaker's wording exactly as accepted."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Interview seven cleanup remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Interview seven cleanup remains closed."
+        }
+      ]
+    },
+    "h07/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant believed cleanup acceptance meant the interview could go online.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 0,
+              "end": 67,
+              "quote": "I believe the interview can go online now that cleanup is accepted."
+            }
+          ]
+        },
+        {
+          "text": "The consent register records interview seven redaction approval as pending.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 61,
+              "quote": "Consent register: interview seven redaction approval pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Cleanup acceptance is consent approval.",
+        "Interview seven consent approval is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Cleanup acceptance is consent approval."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Interview seven consent approval is complete."
+        }
+      ]
+    },
+    "h07/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Willow requires the speaker to approve redactions.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 40,
+              "end": 108,
+              "quote": "publish a transcript only after its speaker approves the redactions."
+            }
+          ]
+        },
+        {
+          "text": "Ash uses archive-editor approval under its donated-rights agreement.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 111,
+              "quote": "For the Ash oral-history collection, the archive editor approves redactions under its donated-rights agreement."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Willow can substitute archive-editor approval for speaker approval."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Willow can substitute archive-editor approval for speaker approval."
+        }
+      ]
+    },
+    "h07/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The signed catalog allocation sheet selects the shelf group.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 66,
+              "quote": "Use the signed catalog allocation sheet to select the shelf group."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Interview seven belongs in shelf group D based on the removed early catalog note."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Interview seven belongs in shelf group D based on the removed early catalog note."
+        }
+      ]
+    },
+    "h08/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The wind marshal must record a speed below 20 knots before the lane opens.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 28,
+              "end": 111,
+              "quote": "open the large-kite lane only when the wind marshal records a speed below 20 knots."
+            }
+          ]
+        },
+        {
+          "text": "The wind limit protects the adjacent small-kite lane.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 112,
+              "end": 161,
+              "quote": "The limit protects the small-kite lane beside it."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h08/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The afternoon safety briefing remains scheduled.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 36,
+              "end": 71,
+              "quote": "keep the afternoon safety briefing."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h08/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "Fence placement stays closed despite the locked lane gate.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 82,
+              "quote": "Fence placement stays closed. The locked lane gate does not reopen the fence task."
+            }
+          ]
+        },
+        {
+          "text": "The wind marshal log records that the lane gate remains locked.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 28,
+              "end": 53,
+              "quote": "Lane gate remains locked."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The locked gate reopens fence placement.",
+        "The lane has opened."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "The locked gate reopens fence placement."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "The lane has opened."
+        }
+      ]
+    },
+    "h08/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant thought the lane was open because the fence was ready.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 0,
+              "end": 59,
+              "quote": "The fence is ready, so I think the large-kite lane is open."
+            }
+          ]
+        },
+        {
+          "text": "The marshal recorded 23 knots.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 27,
+              "quote": "Wind marshal log: 23 knots."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The assistant assumption establishes that the lane is open."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The assistant assumption establishes that the lane is open."
+        }
+      ]
+    },
+    "h08/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Lark requires a marshal-recorded speed below 20 knots.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 28,
+              "end": 111,
+              "quote": "open the large-kite lane only when the wind marshal records a speed below 20 knots."
+            }
+          ]
+        },
+        {
+          "text": "Wren uses a 15-knot limit.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 66,
+              "quote": "For the Wren kite festival, the large-kite lane limit is 15 knots."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Lark uses Wren's 15-knot limit."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Lark uses Wren's 15-knot limit."
+        }
+      ]
+    },
+    "h08/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Select the steward from the signed morning roster.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 55,
+              "quote": "Assign the lane steward from the signed morning roster."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Pavi is the steward based on the deleted draft roster."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Pavi is the steward based on the deleted draft roster."
+        }
+      ]
+    },
+    "h09/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The kiln operator must approve the test tile before the blue glaze sample is fired.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 33,
+              "end": 112,
+              "quote": "fire the blue glaze sample only after the kiln operator approves the test tile."
+            }
+          ]
+        },
+        {
+          "text": "The test tile needs approval because the clay body is new.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 113,
+              "end": 169,
+              "quote": "We need the tile approval because this clay body is new."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h09/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "Testing the blue glaze continues.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 31,
+              "end": 63,
+              "quote": "Continue testing the blue glaze."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "All glaze work was canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "All glaze work was canceled."
+        }
+      ]
+    },
+    "h09/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The silhouette is reopened to widen the base.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 39,
+              "quote": "Reopen the silhouette to widen the base"
+            }
+          ]
+        },
+        {
+          "text": "The base must be widened for stability.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 25,
+              "end": 54,
+              "quote": "widen the base for stability."
+            }
+          ]
+        },
+        {
+          "text": "The neck profile must stay unchanged.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 55,
+              "end": 88,
+              "quote": "Leave its neck profile unchanged."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The silhouette remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The silhouette remains closed."
+        }
+      ]
+    },
+    "h09/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant suspected silhouette acceptance also meant glaze approval.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 0,
+              "end": 87,
+              "quote": "I photographed the accepted silhouette. I suspect that means the glaze is approved too."
+            }
+          ]
+        },
+        {
+          "text": "The blue test tile is awaiting kiln-operator approval.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 60,
+              "quote": "Glaze board: blue test tile awaiting kiln-operator approval."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Silhouette acceptance constitutes glaze approval.",
+        "The blue test tile is approved."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Silhouette acceptance constitutes glaze approval."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "The blue test tile is approved."
+        }
+      ]
+    },
+    "h09/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Moss requires kiln-operator test-tile approval.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 33,
+              "end": 112,
+              "quote": "fire the blue glaze sample only after the kiln operator approves the test tile."
+            }
+          ]
+        },
+        {
+          "text": "Fern requires the client to approve its test tile.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 67,
+              "quote": "For the Fern ceramic commission, the client approves the test tile."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Client approval is the specified Moss test-tile gate."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Client approval is the specified Moss test-tile gate."
+        }
+      ]
+    },
+    "h09/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The final packing slip specifies the Moss delivery crate.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 59,
+              "quote": "Use the crate specified on the final packing slip for Moss."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Moss must use crate Z8 based on the removed packing note."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Moss must use crate Z8 based on the removed packing note."
+        }
+      ]
+    },
+    "h10/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The puzzle editor must check every solution before answer pages are printed.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 31,
+              "end": 101,
+              "quote": "print answer pages only after the puzzle editor checks every solution."
+            }
+          ]
+        },
+        {
+          "text": "A single wrong answer can make the booklet unusable.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 102,
+              "end": 154,
+              "quote": "A single wrong answer can make the booklet unusable."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h10/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The crossword solution check remains required.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 23,
+              "end": 57,
+              "quote": "Keep the crossword solution check."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Removing the bonus maze cancels all solution checks."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Removing the bonus maze cancels all solution checks."
+        }
+      ]
+    },
+    "h10/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "The cover proof remains closed.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 28,
+              "quote": "Keep the cover proof closed."
+            }
+          ]
+        },
+        {
+          "text": "Answer-proof acceptance remains pending.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 39,
+              "end": 80,
+              "quote": "Answer-proof acceptance is still pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Both proofs are accepted.",
+        "The missing solution check reopens the cover proof."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Both proofs are accepted."
+        },
+        {
+          "error_type": "false_merge",
+          "text": "The missing solution check reopens the cover proof."
+        }
+      ]
+    },
+    "h10/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant expected both proofs were effectively approved.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 24,
+              "end": 70,
+              "quote": "I expect both proofs are effectively approved."
+            }
+          ]
+        },
+        {
+          "text": "The answer audit found crossword solution 12 had not been checked.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 63,
+              "quote": "Answer proof audit: crossword solution 12 has not been checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The assistant's expectation proves both proofs were accepted."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The assistant's expectation proves both proofs were accepted."
+        }
+      ]
+    },
+    "h10/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Quartz requires its puzzle editor to check every solution before printing.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 31,
+              "end": 101,
+              "quote": "print answer pages only after the puzzle editor checks every solution."
+            }
+          ]
+        },
+        {
+          "text": "Opal uses a guest solver to approve answer pages.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 70,
+              "quote": "For the Opal puzzle booklet, a guest solver approves the answer pages."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "A guest solver replaces the Quartz puzzle editor requirement."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "A guest solver replaces the Quartz puzzle editor requirement."
+        }
+      ]
+    },
+    "h10/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The current production ticket determines the press room.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 61,
+              "quote": "Use the press room assigned on the current production ticket."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Press room six is the current assignment based on the deleted print note."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Press room six is the current assignment based on the deleted print note."
+        }
+      ]
+    },
+    "h11/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The fire steward must approve spacing before hanging lanterns are lit.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 27,
+              "end": 103,
+              "quote": "light the hanging lanterns only after the fire steward approves the spacing."
+            }
+          ]
+        },
+        {
+          "text": "The spacing keeps hot lanterns away from fabric banners.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 104,
+              "end": 160,
+              "quote": "The spacing keeps hot lanterns away from fabric banners."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h11/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The opening safety talk remains required.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 38,
+              "end": 67,
+              "quote": "keep the opening safety talk."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h11/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "Route marking is reopened to move the turn marker away from the well.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 64,
+              "quote": "Reopen route marking to move the turn marker away from the well."
+            }
+          ]
+        },
+        {
+          "text": "The route itself must stay unchanged.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 65,
+              "end": 97,
+              "quote": "Keep the route itself unchanged."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Route marking remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Route marking remains closed."
+        }
+      ]
+    },
+    "h11/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant thought the walk was ready to start because route markers were finished.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 84,
+              "quote": "I see the route markers are finished, so I think the lantern walk is ready to start."
+            }
+          ]
+        },
+        {
+          "text": "Spacing approval was withheld for the north banner section.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 67,
+              "quote": "Spacing inspection: approval withheld for the north banner section."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Route-marker completion supplies lantern-lighting approval.",
+        "Lantern spacing is fully approved."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Route-marker completion supplies lantern-lighting approval."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Lantern spacing is fully approved."
+        }
+      ]
+    },
+    "h11/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Dune requires its fire steward to approve spacing.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 27,
+              "end": 103,
+              "quote": "light the hanging lanterns only after the fire steward approves the spacing."
+            }
+          ]
+        },
+        {
+          "text": "Reef uses venue-manager spacing approval.",
+          "support": [
+            {
+              "event_id": "e5",
+              "source_field": "body",
+              "start": 0,
+              "end": 70,
+              "quote": "For the Reef lantern walk, the venue manager approves lantern spacing."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Venue-manager approval replaces Dune's fire-steward approval."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Venue-manager approval replaces Dune's fire-steward approval."
+        }
+      ]
+    },
+    "h11/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The final volunteer sign-in sheet identifies the spare lantern keeper.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 68,
+              "quote": "Get the spare lantern keeper from the final volunteer sign-in sheet."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Yara is the spare lantern keeper based on the deleted temporary list."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Yara is the spare lantern keeper based on the deleted temporary list."
+        }
+      ]
+    },
+    "h12/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The arbiter must resolve all disputed scores before final standings are posted.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 26,
+              "end": 103,
+              "quote": "post the final standings only after the arbiter resolves all disputed scores."
+            }
+          ]
+        },
+        {
+          "text": "A disputed score can change a qualifying place.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 104,
+              "end": 151,
+              "quote": "A disputed score can change a qualifying place."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h12/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The score-dispute hearing remains scheduled.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 33,
+              "end": 66,
+              "quote": "retain the score-dispute hearing."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The score-dispute hearing was canceled with the exhibition match."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The score-dispute hearing was canceled with the exhibition match."
+        }
+      ]
+    },
+    "h12/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "The venue booking stays closed during the hearing.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 64,
+              "quote": "The venue booking stays closed while the score hearing proceeds."
+            }
+          ]
+        },
+        {
+          "text": "Standings publication is blocked by disputed scores.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 42,
+              "end": 103,
+              "quote": "Standings publication remains blocked by the disputed scores."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Standings publication is complete.",
+        "Score disputes reopen venue booking."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Standings publication is complete."
+        },
+        {
+          "error_type": "false_merge",
+          "text": "Score disputes reopen venue booking."
+        }
+      ]
+    },
+    "h12/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant assumed league administration was finished after confirming venue booking.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 0,
+              "end": 78,
+              "quote": "I confirmed the venue booking. I assume the league administration is finished."
+            }
+          ]
+        },
+        {
+          "text": "The arbiter docket shows two unresolved disputed scores.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 54,
+              "quote": "Arbiter docket: two disputed scores remain unresolved."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "All league administration is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "All league administration is complete."
+        }
+      ]
+    },
+    "h12/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Elm requires the arbiter to resolve all disputed scores.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 26,
+              "end": 103,
+              "quote": "post the final standings only after the arbiter resolves all disputed scores."
+            }
+          ]
+        },
+        {
+          "text": "Pine assigns score disputes to its league secretary only for Pine.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 110,
+              "quote": "For the Pine chess league, the league secretary resolves score disputes. This assignment applies only to Pine."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The league secretary is Elm's assigned score-dispute authority."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "The league secretary is Elm's assigned score-dispute authority."
+        }
+      ]
+    },
+    "h12/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Select the trophy collector from the signed duty roster.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 56,
+              "quote": "Choose the trophy collector from the signed duty roster."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Beto is the trophy collector based on the removed assignment sheet."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Beto is the trophy collector based on the removed assignment sheet."
+        }
+      ]
+    },
+    "h13/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The stage rigger must sign the load sheet before overhead scenery is raised.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 28,
+              "end": 104,
+              "quote": "raise the overhead scenery only after the stage rigger signs the load sheet."
+            }
+          ]
+        },
+        {
+          "text": "The signature is required because children perform underneath.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 105,
+              "end": 167,
+              "quote": "The signature is required because children perform underneath."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h13/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The overhead scenery inspection must still be finished.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 35,
+              "end": 80,
+              "quote": "Still finish the overhead scenery inspection."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "All scenery work was canceled."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "All scenery work was canceled."
+        }
+      ]
+    },
+    "h13/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The puppet repair was reopened to loosen its left wrist.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 0,
+              "end": 49,
+              "quote": "Reopen the puppet repair to loosen its left wrist"
+            }
+          ]
+        },
+        {
+          "text": "The puppet repair was reopened because the puppet could not hold the cup.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 51,
+              "end": 82,
+              "quote": "because it cannot hold the cup."
+            }
+          ]
+        },
+        {
+          "text": "The new paint must remain untouched.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 83,
+              "end": 112,
+              "quote": "Keep the new paint untouched."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Puppet repair remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Puppet repair remains closed."
+        }
+      ]
+    },
+    "h13/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant would count scenery setup as done because the repaired puppet looked good.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 0,
+              "end": 72,
+              "quote": "The repaired puppet looks good. I would count scenery setup as done too."
+            }
+          ]
+        },
+        {
+          "text": "The load-sheet reader found no stage-rigger signature.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 49,
+              "quote": "Load-sheet reader: stage-rigger signature absent."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Puppet repair completion establishes scenery setup completion.",
+        "Scenery authorization is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Puppet repair completion establishes scenery setup completion."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Scenery authorization is complete."
+        }
+      ]
+    },
+    "h13/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Garnet requires the stage rigger to sign the load sheet.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 28,
+              "end": 104,
+              "quote": "raise the overhead scenery only after the stage rigger signs the load sheet."
+            }
+          ]
+        },
+        {
+          "text": "Ruby requires its venue engineer to sign the load sheet.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 74,
+              "quote": "For the Ruby puppet show, the venue engineer signs the scenery load sheet."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The venue engineer is Garnet's specified load-sheet signer."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "The venue engineer is Garnet's specified load-sheet signer."
+        }
+      ]
+    },
+    "h13/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Use the current prop inventory to locate the spare crown.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 58,
+              "quote": "Locate the spare crown through the current prop inventory."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The spare crown is in trunk L2 based on the deleted preliminary note."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "The spare crown is in trunk L2 based on the deleted preliminary note."
+        }
+      ]
+    },
+    "h14/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The land custodian must approve the marked entrances before the cave map is shared.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 26,
+              "end": 105,
+              "quote": "share the cave map only after the land custodian approves the marked entrances."
+            }
+          ]
+        },
+        {
+          "text": "The approval protects access points that must stay private.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 106,
+              "end": 165,
+              "quote": "The approval protects access points that must stay private."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h14/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The entrance review remains required.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 36,
+              "end": 61,
+              "quote": "Keep the entrance review."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Canceling the compass rose cancels entrance review."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Canceling the compass rose cancels entrance review."
+        }
+      ]
+    },
+    "h14/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "The scale-bar correction remains closed.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 39,
+              "quote": "The scale-bar correction remains closed"
+            }
+          ]
+        },
+        {
+          "text": "Entrance review remains open.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 45,
+              "end": 74,
+              "quote": "Entrance review remains open."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Entrance review reopens the scale-bar correction.",
+        "Entrance review is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Entrance review reopens the scale-bar correction."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Entrance review is complete."
+        }
+      ]
+    },
+    "h14/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant thought the whole map was cleared for sharing after fixing the scale bar.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 0,
+              "end": 68,
+              "quote": "I fixed the scale bar. I think the whole map is cleared for sharing."
+            }
+          ]
+        },
+        {
+          "text": "Entrance E3 is not approved for sharing in the review ledger.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 52,
+              "quote": "Review ledger: entrance E3 not approved for sharing."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The map is fully cleared for sharing."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The map is fully cleared for sharing."
+        }
+      ]
+    },
+    "h14/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Kestrel requires the land custodian to approve marked entrances.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 26,
+              "end": 105,
+              "quote": "share the cave map only after the land custodian approves the marked entrances."
+            }
+          ]
+        },
+        {
+          "text": "Osprey uses park-surveyor approval.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 69,
+              "quote": "For the Osprey map club, the park surveyor approves marked entrances."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Park-surveyor approval satisfies Kestrel's specified gate."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "Park-surveyor approval satisfies Kestrel's specified gate."
+        }
+      ]
+    },
+    "h14/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Use the controlled map index to find the backup sheet.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 53,
+              "quote": "Find the backup sheet using the controlled map index."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The backup sheet is in drawer Q based on the deleted temporary index."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "The backup sheet is in drawer Q based on the deleted temporary index."
+        }
+      ]
+    },
+    "h15/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The conservator must approve the mounting bracket before the pendulum starts.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 31,
+              "end": 107,
+              "quote": "start the pendulum only after the conservator approves the mounting bracket."
+            }
+          ]
+        },
+        {
+          "text": "The old case cannot bear an unchecked load.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 108,
+              "end": 151,
+              "quote": "The old case cannot bear an unchecked load."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h15/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The mounting-bracket inspection remains required.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 33,
+              "end": 70,
+              "quote": "Keep the mounting-bracket inspection."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Canceling rear-panel polishing cancels the bracket inspection."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Canceling rear-panel polishing cancels the bracket inspection."
+        }
+      ]
+    },
+    "h15/q3": {
+      "category": "reopening",
+      "required_facts": [
+        {
+          "text": "The reopened dial-cleaning task must remove one fingerprint near twelve.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 59,
+              "quote": "Reopen dial cleaning to remove one fingerprint near twelve."
+            }
+          ]
+        },
+        {
+          "text": "The remaining patina must be preserved.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 60,
+              "end": 90,
+              "quote": "Preserve the remaining patina."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Dial cleaning remains closed."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "Dial cleaning remains closed."
+        }
+      ]
+    },
+    "h15/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant assumed the clock could run because the dial was clean.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 0,
+              "end": 53,
+              "quote": "The dial is clean, so I assume the clock can run now."
+            }
+          ]
+        },
+        {
+          "text": "The bracket inspection record says the conservator decision is deferred.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 0,
+              "end": 57,
+              "quote": "Bracket inspection record: conservator decision deferred."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Dial-cleaning acceptance gives bracket approval.",
+        "The conservator approved the bracket."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Dial-cleaning acceptance gives bracket approval."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "The conservator approved the bracket."
+        }
+      ]
+    },
+    "h15/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Citrine requires conservator approval of the bracket.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 31,
+              "end": 107,
+              "quote": "start the pendulum only after the conservator approves the mounting bracket."
+            }
+          ]
+        },
+        {
+          "text": "Amber requires mechanical-curator approval limited to Amber.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 119,
+              "quote": "For the Amber clock exhibit, the mechanical curator approves the mounting bracket. That permission is limited to Amber."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The mechanical curator can replace Citrine's conservator approval."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "The mechanical curator can replace Citrine's conservator approval."
+        }
+      ]
+    },
+    "h15/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "Obtain the winding key from the custodian named in the signed equipment register.",
+          "support": [
+            {
+              "event_id": "e7",
+              "source_field": "body",
+              "start": 0,
+              "end": 81,
+              "quote": "Obtain the winding key from the custodian named in the signed equipment register."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Leto is the authorized key holder based on the deleted early equipment card."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "Leto is the authorized key holder based on the deleted early equipment card."
+        }
+      ]
+    },
+    "h16/q1": {
+      "category": "conditional_requirement",
+      "required_facts": [
+        {
+          "text": "The instrument lead must verify the solar filter lock before the public telescope is uncovered.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 30,
+              "end": 121,
+              "quote": "uncover the public telescope only after the instrument lead verifies the solar filter lock."
+            }
+          ]
+        },
+        {
+          "text": "The lock prevents the filter from slipping during daytime viewing.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 122,
+              "end": 188,
+              "quote": "The lock prevents the filter from slipping during daytime viewing."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h16/q2": {
+      "category": "partial_cancellation",
+      "required_facts": [
+        {
+          "text": "The daytime filter-lock demonstration remains required.",
+          "support": [
+            {
+              "event_id": "e9",
+              "source_field": "body",
+              "start": 39,
+              "end": 84,
+              "quote": "Retain the daytime filter-lock demonstration."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [],
+      "forbidden_inferences": []
+    },
+    "h16/q3": {
+      "category": "genuine_closure",
+      "required_facts": [
+        {
+          "text": "Tent setup remains closed while telescope readiness is pending.",
+          "support": [
+            {
+              "event_id": "e11",
+              "source_field": "body",
+              "start": 0,
+              "end": 60,
+              "quote": "Keep tent setup closed while telescope readiness is pending."
+            }
+          ]
+        },
+        {
+          "text": "Telescope readiness is blocked until the filter-lock check.",
+          "support": [
+            {
+              "event_id": "e4",
+              "source_field": "body",
+              "start": 35,
+              "end": 99,
+              "quote": "Telescope readiness remains blocked until the filter-lock check."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "Pending telescope readiness reopens tent setup.",
+        "Telescope readiness is complete."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_merge",
+          "text": "Pending telescope readiness reopens tent setup."
+        },
+        {
+          "error_type": "false_closure",
+          "text": "Telescope readiness is complete."
+        }
+      ]
+    },
+    "h16/q4": {
+      "category": "source_roles",
+      "required_facts": [
+        {
+          "text": "The assistant expected the whole camp was ready for observers after the tents were up.",
+          "support": [
+            {
+              "event_id": "e3",
+              "source_field": "body",
+              "start": 0,
+              "end": 65,
+              "quote": "The tents are up. I expect the camp is fully ready for observers."
+            }
+          ]
+        },
+        {
+          "text": "The public telescope remains covered in the instrument log.",
+          "support": [
+            {
+              "event_id": "e10",
+              "source_field": "body",
+              "start": 49,
+              "end": 82,
+              "quote": "public telescope remains covered."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The camp is fully ready for observers based on the assistant expectation."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "false_closure",
+          "text": "The camp is fully ready for observers based on the assistant expectation."
+        }
+      ]
+    },
+    "h16/q5": {
+      "category": "project_isolation",
+      "required_facts": [
+        {
+          "text": "Brook assigns the solar-filter-lock verification to the instrument lead.",
+          "support": [
+            {
+              "event_id": "e1",
+              "source_field": "body",
+              "start": 30,
+              "end": 121,
+              "quote": "uncover the public telescope only after the instrument lead verifies the solar filter lock."
+            }
+          ]
+        },
+        {
+          "text": "Lake assigns the verification to the optics technician for Lake only.",
+          "support": [
+            {
+              "event_id": "e6",
+              "source_field": "body",
+              "start": 0,
+              "end": 117,
+              "quote": "For the Lake astronomy camp, the optics technician verifies the solar filter lock. This appointment is for Lake only."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The optics technician replaces Brook's instrument-lead requirement."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "project_mixing",
+          "text": "The optics technician replaces Brook's instrument-lead requirement."
+        }
+      ]
+    },
+    "h16/q6": {
+      "category": "deletion",
+      "required_facts": [
+        {
+          "text": "The current equipment checkout ledger locates the spare eyepiece.",
+          "support": [
+            {
+              "event_id": "e8",
+              "source_field": "body",
+              "start": 0,
+              "end": 69,
+              "quote": "Locate the spare eyepiece from the current equipment checkout ledger."
+            }
+          ]
+        }
+      ],
+      "forbidden_conclusions": [
+        "The spare eyepiece is in case M based on the deleted draft route."
+      ],
+      "forbidden_inferences": [
+        {
+          "error_type": "deleted_resurrection",
+          "text": "The spare eyepiece is in case M based on the deleted draft route."
+        }
+      ]
+    }
+  }
+}

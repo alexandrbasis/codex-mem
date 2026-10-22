@@ -1,0 +1,22 @@
+.........EF......
+======================================================================
+ERROR: test_postselection_native_compaction_preserves_atomic_identity_and_unknown_metadata (test_project_memory_single_source_packing.SingleSourcePackingTests.test_postselection_native_compaction_preserves_atomic_identity_and_unknown_metadata)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 37, in test_postselection_native_compaction_preserves_atomic_identity_and_unknown_metadata
+    from codex_mem.project_memory_source_transport import compact_selected_xml
+ImportError: cannot import name 'compact_selected_xml' from 'codex_mem.project_memory_source_transport' (/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py)
+
+======================================================================
+FAIL: test_quote_reference_meaning_is_explicit_and_association_context_stays_local (test_project_memory_single_source_packing.SingleSourcePackingTests.test_quote_reference_meaning_is_explicit_and_association_context_stays_local)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 32, in test_quote_reference_meaning_is_explicit_and_association_context_stays_local
+    self.assertEqual('provenance_only', tree.get('quote_refs'), xml)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'provenance_only' != None : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="selected-source-1" lane="source_excerpts" uncertainty="pending"><field basis="attributed_source_excerpts" field_association="not_assessed"><source source_id="public-source" source_role="user_intent" source_field="body" start="0" end="32" id="s1"><quote_excerpt>Review &lt;raw&gt; &amp; baseline samples.</quote_excerpt></source></field></item><item id="canonical-a" lane="episode" uncertainty="pending"><field name="goal" basis="attributed_source_excerpts" field_association="model_selected"><quote_ref ref="s1"/></field></item><item id="canonical-b" lane="episode" uncertainty="historical"><field name="goal" basis="attributed_source_excerpts" field_association="model_selected"><quote_ref ref="s1"/></field></item></project-memory>
+
+----------------------------------------------------------------------
+Ran 17 tests in 0.064s
+
+FAILED (failures=1, errors=1)

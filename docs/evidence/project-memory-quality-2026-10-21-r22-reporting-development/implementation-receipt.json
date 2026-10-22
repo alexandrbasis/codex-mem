@@ -1,0 +1,29 @@
+{
+  "status": "source_stable_reporting_contract_green",
+  "contract": "pipeline_receipt_contract=complete-shared-pipeline-v1",
+  "helper_sha256": "9e555332205828540cd7c44b3ac2becbc408bbc813ff5279b03726a720801d87",
+  "test_sha256": "8aae3289b19c324bbac96365dc3b4d622bbd785eb6d136ecca66699081281255",
+  "final_tests": {
+    "count": 8,
+    "exit_code": 0,
+    "log_sha256": "bdd364aab14926d3f4c7f86e20adb957569d4caf08bdd96123289662065c0c3c"
+  },
+  "red_logs": {
+    "shared-generation-red.log": "36ff004e6e30fbfff322a8b27f0ffb8492d9f661088a0e7fa61b09d9ed2a87e7",
+    "regeneration-stages-red.log": "82e92df52b61ceab774d7d8d384ba09860527dd0462a3edb1245307c5825ee00",
+    "stale-successful-clone-red.log": "0cd9d77bec1ccd02caca7e191140b67b547b64e231792f7584c8c2c4529050d9",
+    "preparation-stage-red.log": "e4db03e02cbbb18a2692ebbe167178be1e17ef33caf6d38a364d17197683badf"
+  },
+  "behavior": [
+    "Required physical shared generation is reported once, with explicit candidate preparation and required regeneration stage identities, including missing stages.",
+    "Failed physical baseline generation excludes both arms stale grades, including a stale candidate clone, for primary and regeneration.",
+    "Unknown/invalid/independent opt-in rejects before run metadata creation. Legacy absent opt-in behavior remains.",
+    "Grade criteria, planned denominator, profiles, native request bytes and accounting are unchanged by reporting opt-in."
+  ],
+  "native_calls": 0,
+  "historical_artifacts_modified": false,
+  "limits": [
+    "Checkpoint persistence changes the future native constructor callback only; reporting code does not recover historical unknown usage.",
+    "R21 remains immutable incomplete. New independent quality comparison remains pending."
+  ]
+}

@@ -1,0 +1,59 @@
+--- held-v1/project_memory_query.py
++++ scoped-preface-v2/project_memory_query.py
+@@ -15,8 +15,8 @@
+ from .retrieval import historical_query, prompt_match_score, prompt_query_plan, resume_topic_plan
+ 
+ _TASK = re.compile(r'(?<![\w-])[A-Za-z][A-Za-z0-9]{1,15}-[0-9]{1,10}(?![\w-])')
+-_NATURAL = re.compile(r'\?|^(?:resume|continue|summari[sz]e|compare|explain|show|which|what|how|why|when|where|tell|list|describe|какой|какие|что|как|почему|продолж|сравни|покажи|расскажи)', re.I)
+-_COMPARE = re.compile(r'\b(?:compar(?:e[ds]?|ing|isons?)|versus|vs|changed|evolved|difference|then)\b|сравн|изменил|отлич', re.I)
++_NATURAL = re.compile(r'\?|^(?:resume|continue|summari[sz]e|compare|contrast\b|explain|show|which|what|how|why|when|where|tell|list|describe|какой|какие|что|как|почему|продолж|сравни|покажи|расскажи)', re.I)
++_COMPARE = re.compile(r'\b(?:compar(?:e[ds]?|ing|isons?)|contrast(?:s|ed|ing)?|versus|vs|changed|evolved|difference|then)\b|сравн|изменил|отлич', re.I)
+ _CONTINUE = re.compile(r'\b(?:resume|continue|continuing|continuation)\b|pick\s+up|продолж[а-яё]*', re.I)
+ _HISTORY = re.compile(r'\b(?:originally|as[- ]of|historical|history)\b|первоначаль|истори|по состоянию на', re.I)
+ _ENVS = re.compile(r'(?<![\w.-])(?:production|prod|staging|development|dev|local(?:ly)?|локальн[а-яё]*|стейджинг[а-яё]*|продакш(?:е|ё)?н[а-яё]*)(?![\w-]|\.[\w])', re.I)
+@@ -99,7 +99,14 @@
+     syntax because metadata alone cannot resolve a content-noun collision.
+     Basename collisions never normalize. This never changes a read owner.
+     """
+-    if not _NATURAL.search(query.strip()):
++    preface = re.fullmatch(r'\s*(?:for|in|within|across)\s+([^,\n]+),\s*(.+)', query, re.I)
++    body = preface.group(2).strip() if preface else ''
++    first = re.match(r'[\w./:-]+', body)
++    code_start = bool(first and (re.search(r'[_./:-]|\d', first.group()) or
++                                re.search(r'[a-z][A-Z]', first.group()) or
++                                re.match(r'\s*\(', body[first.end():])))
++    request_preface = bool(preface and not code_start and _NATURAL.match(body))
++    if not _NATURAL.search(query.strip()) and not request_preface:
+         return query, ()
+     if selected_project_scopes is not None and (
+             isinstance(selected_project_scopes, (str, bytes)) or
+@@ -110,13 +117,24 @@
+     aliases: dict[str, set[str]] = {}
+     for scope in scopes:
+         aliases.setdefault(Path(scope).name.casefold(), set()).add(scope)
++    eligible = {alias: owners for alias, owners in aliases.items()
++                if alias and len(owners) == 1 and not _ENVS.fullmatch(alias) and
++                not _TASK.fullmatch(alias) and not re.fullmatch(r'v?\d+(?:\.\d+)+', alias, re.I)}
++    used_prefix = []
++    if request_preface:
++        names = preface.group(1).casefold().strip()
++        names = [names] if names in eligible else re.split(r'\s+(?:and|with)\s+', names)
++        if all(name in eligible for name in names):
++            # A trusted scope prefix does not itself make text natural. Only
++            # a recognized request body can authorize this normalization.
++            query = body
++            used_prefix = names
++    if not _NATURAL.search(query.strip()):
++        return query, ()
+     quoted = [match.span() for match in re.finditer(r'`[^`\n]*`|"[^"\n]*"|\'[^\'\n]*\'', query)]
+     literal_spans = [match.span(1) for match in _CONTENT_LABEL.finditer(query)]
+-    changes, used, candidates = [], [], []
+-    for alias, owners in aliases.items():
+-        if (not alias or len(owners) != 1 or _ENVS.fullmatch(alias) or _TASK.fullmatch(alias)
+-                or re.fullmatch(r'v?\d+(?:\.\d+)+', alias, re.I)):
+-            continue
++    changes, used, candidates = [], used_prefix, []
++    for alias, owners in eligible.items():
+         for match in re.finditer(r'(?<![\w./:-])' + re.escape(alias) + r'(?![\w./:-])', query, re.I):
+             candidates.append((match.start(), match.end(), alias))
+     for left, right, alias in sorted(candidates):

@@ -1,0 +1,1152 @@
+--- held-r19/build-protocol.py
++++ prospective-r20/build-protocol.py
+@@ -1,4 +1,4 @@
+-"""Build prospective R19 pins from final contents-free evidence. Never run/freeze."""
++"""Build prospective R20 pins from final contents-free evidence. Never run/freeze."""
+ from __future__ import annotations
+ 
+ import argparse
+@@ -11,9 +11,11 @@
+ # The final prospective helper must be explicitly pinned after source reviews.
+ DRIVER_SHA = '46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c'
+ PRODUCER_SHA = 'e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a'
++HISTORICAL_REPORT = 'docs/evidence/project-memory-quality-2026-10-21-r19/holdout/report.json'
++HISTORICAL_REPORT_SHA = 'e3681ede54fdb23e4c5342b09a42f597e9494a603526981ad5e2b95d19e7056a'
+ GUIDE_SHA = '94b2cb4c826762af984099d8a7b653dba72e3296fe27540dfbc2046a0653bfa8'
+ HERE = Path(__file__).resolve().parent
+-PREFIX = 'docs/evidence/project-memory-quality-2026-10-21-r19/'
++PREFIX = 'docs/evidence/project-memory-quality-2026-10-21-r20/'
+ PUBLIC = ('run-experiment.py', 'test-driver.py', 'run-public-preflight.py', 'test-public-preflight.py',
+           'prepare-reader-probe.py', 'public-calibration-library.py', 'public-reader-regressions.json',
+           'judge-contract-controls.json', 'public-fixture-contract.py', 'public-fixture-contract-receipt.json',
+@@ -22,7 +24,8 @@
+           'public-contract-spec-review-v2.json', 'public-contract-standards-review-v2.json',
+           'build-protocol.py', 'test-protocol-builder.py', 'protocol-builder-input-contract.json',
+           'test_public_fixture_contract_v2.py', 'test-consumer-compatibility.py',
+-          'consumer-smoke.py', 'protocol-consumer-contract.json', 'test-reader-contract-compatibility.py')
++          'consumer-smoke.py', 'protocol-consumer-contract.json', 'test-reader-contract-compatibility.py', 'test-canonical-history-consumer.py',
++          'test-generation-compatibility.py', 'request-byte-compatibility.py')
+ SEALED_CONTENT = {'holdout-fixture.json', 'holdout-gold.json', 'sealed-semantic-review.json',
+                   'author-fact-rationale.json', 'author.py'}
+ STABLE = ('schema_version', 'baseline_commit', 'model', 'reasoning_effort', 'jev', 'data_policy', 'histories',
+@@ -199,14 +202,14 @@
+     result = {key: deepcopy(guide[key]) for key in STABLE}
+     # These descriptions identify the current trial, not historical outcomes.
+     for key in ('reader', 'grouped_reader_dependence'):
+-        result[key] = result[key].replace('R16', 'R19')
+-    result.update(reader_evidence_contract=reader_contract, native_capacity_observation=config['native_capacity'], experiment='project-memory-quality-20261021-r19', driver_sha256=DRIVER_SHA,
++        result[key] = result[key].replace('R16', 'R20')
++    result.update(reader_evidence_contract=reader_contract, native_capacity_observation=config['native_capacity'], experiment='project-memory-quality-20261021-r20', driver_sha256=DRIVER_SHA,
+         baseline_runtime_root=str(baseline), baseline_runtime_hashes=guide['baseline_runtime_hashes'],
+         repeat_history_ids=[regen, reader], regeneration_repeat_history_ids=[regen], reader_repeat_history_ids=[reader],
+-        blind_shuffle_seed='project-memory-quality-r19-fixed-before-native',
++        blind_shuffle_seed='project-memory-quality-r20-fixed-before-native',
+         repeats='Regenerate one fresh shared prefix for '+regen+' and repeat isolated readers for '+reader+'. All primary and repeated questions remain required.',
+         budget_note='All public, primary and repeat attempts share one original clock and ledger. No retry, grade repair or post-freeze edits. Actual billing remains unknown.',
+-        historical_spend={'report':config['historical_spend']['path'], 'sha256':config['historical_spend']['sha256']},
++        historical_spend={'report':config['historical_spend']['path'], 'sha256':config['historical_spend']['sha256'], 'usage_field':'cumulative_pilot_usage'},
+         source_repairs={'status':'final_source_candidate_not_quality_acceptance', 'runtime_receipt':config['runtime_receipt'],
+                         'runtime_files':runtime, 'common_producer_sha256':PRODUCER_SHA},
+         prospective_author_contract={'module':PREFIX+'public-fixture-contract.py','sha256':metadata['mechanical_contract_sha256']},
+@@ -231,12 +234,12 @@
+         'metadata_schema_sha256':harness[PREFIX+'sealed-semantic-review-metadata.schema.json'],
+         **{key:metadata[key] for key in ('fixture_sha256','gold_sha256','mechanical_contract_sha256','semantic_guidance_sha256','sealed_review_receipt_sha256')}}
+     result['public_preflight'] = deepcopy(guide['public_preflight'])
+-    result['public_preflight'].update(reader_contract=reader_contract, attempt_id='r19-public-v1', file_sha256={**runtime, **harness})
++    result['public_preflight'].update(reader_contract=reader_contract, attempt_id='r20-public-v1', file_sha256={**runtime, **harness})
+     result['public_preflight']['independence_limit'] = ('Selected disclosed regressions and a fresh known-control packet only, not independent quality evidence. Prospective helper/reader bytes require fresh public validation. No native success is carried forward.')
+     if reader_contract == 'assertion-owned-citations-v1':
+         result['reader'] = result['reader'].replace('The optional clause-support-v2 contract requires a cited basis for every factual clause and causal or event-identity relation.', 'The assertion-owned-citations-v1 contract requires each delivered assertion to own exact visible source refs. Code joins only assertion text and resolves only those refs; auxiliary check text and refs never enter the answer or earn credit. Citation ownership is structural and does not prove semantic support; every factual clause and causal or event-identity relation still requires evidence.')
+     result['judge_calibration'] = deepcopy(guide['judge_calibration'])
+-    result['judge_calibration'].update(attempt_id='r19-public-v1', controls=PREFIX+'judge-contract-controls.json',
++    result['judge_calibration'].update(attempt_id='r20-public-v1', controls=PREFIX+'judge-contract-controls.json',
+         library=PREFIX+'public-calibration-library.py')
+     result['protocol_preparation'] = {'status':'pins_only_not_clock_freeze_or_trial_readiness',
+         'builder_sha256':sha(Path(__file__).read_bytes()), 'input_pins':pins.files,
+@@ -267,7 +270,13 @@
+     guide_path = repo / 'docs/evidence/project-memory-quality-2026-10-21-r16/protocol.json'
+     guide_raw = guide_path.read_bytes()
+     require(sha(guide_raw) == GUIDE_SHA, 'historical_protocol_guide_changed')
+-    protocol = build_protocol(json.loads(raw), repo, json.loads(guide_raw))
++    config = json.loads(raw)
++    historical = config['historical_spend']
++    report_path = Path(historical['path'])
++    report_path = (report_path if report_path.is_absolute() else repo / report_path).resolve()
++    require(report_path == (repo / HISTORICAL_REPORT).resolve()
++            and historical['sha256'] == HISTORICAL_REPORT_SHA, 'R20_requires_exact_R19_canonical_history')
++    protocol = build_protocol(config, repo, json.loads(guide_raw))
+     protocol['protocol_preparation']['builder_inputs'] = {'path':str(args.inputs.resolve()), 'sha256':args.inputs_sha256}
+     with args.output.open('x') as target:
+         target.write(json.dumps(protocol, indent=2) + '\n')
+--- held-r19/test-protocol-builder.py
++++ prospective-r20/test-protocol-builder.py
+@@ -101,6 +101,7 @@
+         result=self.build()
+         self.assertEqual(result['reader_evidence_contract'],'assertion-owned-citations-v1')
+         self.assertEqual(result['public_preflight']['reader_contract'],'assertion-owned-citations-v1')
++        self.assertEqual(result['historical_spend']['usage_field'],'cumulative_pilot_usage')
+         self.assertNotIn('optional clause-support-v2',result['reader'])
+         self.assertEqual(result['public_preflight']['file_sha256']['scripts/project_memory_consolidation_experiment.py'],self.config['helper_sha256'])
+         self.assertEqual(result['native_capacity_observation'],self.config['native_capacity'])
+@@ -204,6 +205,13 @@
+         self.config['runtime_receipt']=self.save('runtime-rebound.json', {'status':'final_source_candidate','runtime_files':runtime})
+         with self.assertRaisesRegex(ValueError,'common_producer_changed'):self.build()
+ 
++    def test_cli_refuses_noncanonical_history_before_protocol_creation(self):
++        wrong=self.save('wrong-history-input.json',{'historical_spend':{'path':'not-canonical.json','sha256':builder.sha(b'wrong report')}})
++        output=self.repo/'must-not-create-protocol.json'
++        argv=['builder','--inputs',wrong['path'],'--inputs-sha256',wrong['sha256'],'--output',str(output)]
++        with patch('sys.argv',argv),self.assertRaisesRegex(ValueError,'R20_requires_exact_R19_canonical_history'):builder.main()
++        self.assertFalse(output.exists())
++
+     def test_cli_never_overwrites_existing_protocol_or_reads_inputs_on_that_path(self):
+         output=self.repo/'protocol.json';output.write_text('preserve original')
+         argv=['builder','--inputs',str(self.repo/'nonexistent.json'),'--inputs-sha256','0'*64,'--output',str(output)]
+--- held-r19/protocol-builder-input-contract.json
++++ prospective-r20/protocol-builder-input-contract.json
+@@ -1,6 +1,6 @@
+ {
+   "schema_version": 1,
+-  "status": "R19_protocol_builder_input_contract_not_an_actual_protocol",
++  "status": "R20_protocol_builder_input_contract_not_an_actual_protocol",
+   "purpose": "Generate final pins only after independent source reviews and central checks. Does not start a clock, freeze, release or dispatch. No sealed fixture/gold/rationale/full-findings file is read.",
+   "invocation": [
+     "Prepare a new contents-free builder-inputs.json meeting this contract after final source checks. Do not use placeholders.",
+@@ -27,7 +27,7 @@
+     "sealed_pins": "Pinned contents-free sealed files manifest copy only; basename\u2192SHA256. Does not cause reading those sealed files.",
+     "review_metadata": "Pinned public copy of strict sealed-semantic-review-metadata schema object; bytes match sealed metadata pin. Accepted/zero unresolved/complete coverage and exact contracts required.",
+     "review_readiness": "Pinned parent metadata-only readiness receipt; accepted metadata-not-trial-readiness status, matching metadata/pins/author-manifest SHA and zero unresolved review findings.",
+-    "historical_spend": "Pinned R19 historical native-spend report derived from closed audited R18 + prior chain. Input path/SHA; emitted historical_spend.report/SHA. Full totals null, known reported lower bound preserved, billing unknown.",
++    "historical_spend": "Exact pinned canonical docs/evidence/project-memory-quality-2026-10-21-r19/holdout/report.json SHA e3681ede54fdb23e4c5342b09a42f597e9494a603526981ad5e2b95d19e7056a. Input ref path/SHA unchanged. Output pointer report/SHA plus usage_field cumulative_pilot_usage. CLI rejects a different canonical source. Never use flat custom accounting or current-only usage.",
+     "repeats": {
+       "regeneration": "Required explicit fresh-author-reported history ID; no inherited/default R17 ID.",
+       "reader": "Required distinct fresh-author-reported history ID; no inherited/default R17 ID.",
+@@ -101,15 +101,17 @@
+     "Additional sealed receipt pins can be frozen with unchanged helper. Accepted metadata remains an attestation, not proof of truth, independence or scenario difficulty.",
+     "This builder does not call the helper, import the runtime, make native calls, start or reset a clock, create run.json/freeze.json, repair old inputs, or mark the trial ready.",
+     "The pure build_protocol unit seam accepts a toy guide only for synthetic tests. CLI pins exact historical R16 public protocol SHA; no configurable alternative guide.",
+-    "Copied R17 historical pointer bug remains immutable; new R19 output/report pointer is tested against exact unchanged helper accounting, aggregate and canonical export.",
++    "Copied R17 historical pointer bug remains immutable; new R20 output/report pointer is tested against exact unchanged helper accounting, aggregate and canonical export.",
+     "All actual source/review/test/author pins are required before protocol creation. This pack produces no actual protocol/clock/native readiness.",
+     "Prospective reader contract text and citation refs resolve through actual helper; checks remain auxiliary and earn no fact credit. Invalid raw packet rejects without salvage/retry.",
+-    "R18 remains immutable CLOSED INCOMPLETE. No old call retry, regrade or new holdout content access."
++    "R18 remains immutable CLOSED INCOMPLETE. No old call retry, regrade or new holdout content access.",
++    "Only the historical accounting selector changes in the core helper; native request bytes are compared to frozen R19 helper for eight deterministic public builders.",
++    "A future actual protocol smoke must consume the exact emitted pointer and retain all216missing synthetic answer records before any real clock/native call. No actual protocol or capacity permission is created by this pack."
+   ],
+   "consumer_compatibility": {
+-    "active_history_pointer": "historical_spend.report, not historical_spend.path",
++    "active_history_pointer": "historical_spend.report plus exact sha256 and usage_field=cumulative_pilot_usage; absent usage_field retains old usage semantics only for legacy protocols.",
+     "other_path_refs": "Generic builder/provenance path/SHA records remain path/SHA. Translate only active consumer field, not every sibling mapping.",
+-    "required_before_clock": "After final actual protocol is emitted, run consumer-smoke.py with exact file SHA and new output docs/evidence/project-memory-quality-2026-10-21-r19/preclock-consumer-smoke. CLI refuses outputs outside R19 evidence, including actual-run/sealed paths, before mkdir/input reads. Verify machine receipt and all216missing synthetic slots before real clock/native dispatch.",
++    "required_before_clock": "After final actual protocol is emitted, run consumer-smoke.py with exact file SHA and new output docs/evidence/project-memory-quality-2026-10-21-r20/preclock-consumer-smoke. CLI refuses outputs outside R20 evidence, including actual-run/sealed paths, before mkdir/input reads. Verify machine receipt and all216missing synthetic slots before real clock/native dispatch.",
+     "no_protocol_now": "Final author/source/test/review pins remain required; tooling tests do not create actual protocol or establish trial readiness."
+   }
+ }
+--- held-r19/test-consumer-compatibility.py
++++ prospective-r20/test-consumer-compatibility.py
+@@ -19,9 +19,13 @@
+     spec.loader.exec_module(module)
+     return module
+ 
+-builder_tests=load('r19_builder_toys',HERE/'test-protocol-builder.py')
+-helper=load('r19_unchanged_helper',REPO/'scripts/project_memory_consolidation_experiment.py')
+-toy_author=load('r19_public_toy_author',HERE/'test_public_fixture_contract_v2.py')
++builder_tests=load('r20_builder_toys',HERE/'test-protocol-builder.py')
++helper=load('r20_unchanged_helper',REPO/'scripts/project_memory_consolidation_experiment.py')
++toy_author=load('r20_public_toy_author',HERE/'test_public_fixture_contract_v2.py')
++
++
++def canonical_usage(value):
++    return {'usage':value,'cumulative_pilot_usage':value}
+ 
+ 
+ def protocol_accesses(path):
+@@ -53,7 +57,7 @@
+     def setUp(self):
+         builder_tests.ProtocolBuilderTests.setUp(self)
+         self.config['repeats']={'regeneration':'toy_0','reader':'toy_1'}
+-        self.history=self.save('synthetic-historical-usage.json',{'usage':helper.usage([])})
++        self.history=self.save('synthetic-historical-usage.json',canonical_usage(helper.usage([])))
+         self.config['historical_spend']=self.history
+ 
+     def protocol(self):
+@@ -61,7 +65,7 @@
+ 
+     def test_emitted_history_pointer_is_actual_consumer_report_key(self):
+         protocol=self.protocol()
+-        self.assertEqual(protocol['historical_spend'],{'report':self.history['path'],'sha256':self.history['sha256']})
++        self.assertEqual(protocol['historical_spend'],{'report':self.history['path'],'sha256':self.history['sha256'],'usage_field':'cumulative_pilot_usage'})
+         accounting=helper.historical_accounting(protocol,helper.usage([]))
+         self.assertTrue(accounting['cumulative_pilot_usage']['token_accounting_complete'])
+         self.assertEqual(accounting['cumulative_pilot_usage']['attempted_calls'],0)
+@@ -82,7 +86,7 @@
+         return [start,{'call_id':identifier,'status':'completed','metrics':{'usage':{'status':'reported','tokens':tokens}}}]
+ 
+     def test_real_accounting_preserves_cumulative_known_and_unknown_usage(self):
+-        self.config['historical_spend']=self.save('synthetic-known-history.json',{'usage':helper.usage(self.calls('old'))})
++        self.config['historical_spend']=self.save('synthetic-known-history.json',canonical_usage(helper.usage(self.calls('old'))))
+         protocol=self.protocol()
+         total=helper.historical_accounting(protocol,helper.usage(self.calls('new')))['cumulative_pilot_usage']
+         self.assertEqual(total['attempted_calls'],2)
+@@ -95,18 +99,18 @@
+         self.assertIsNone(unknown['cost_usd'])
+ 
+     def test_actual_unknown_prior_chain_preserves_known_lower_bound_and_all_missing_export_slots(self):
+-        self.config['historical_spend']=self.save('unknown-prior.json',{'usage':helper.usage(self.calls('old')+self.calls('unknown',False))})
++        self.config['historical_spend']=self.save('unknown-prior.json',canonical_usage(helper.usage(self.calls('old')+self.calls('unknown',False))))
+         protocol=self.protocol()
+         first=helper.historical_accounting(protocol,helper.usage(self.calls('new')))['cumulative_pilot_usage']
+         self.assertEqual(first['reported_tokens_lower_bound']['total_tokens'],30)
+         self.assertIsNone(first['tokens']['total_tokens'])
+         self.assertFalse(first['token_accounting_complete'])
+         self.assertFalse(first['pricing_complete'])
+-        self.config['historical_spend']=self.save('second-prior.json',{'usage':first})
++        self.config['historical_spend']=self.save('second-prior.json',canonical_usage(first))
+         second=helper.historical_accounting(self.protocol(),helper.usage(self.calls('next')))['cumulative_pilot_usage']
+         self.assertEqual(second['reported_tokens_lower_bound']['total_tokens'],45)
+         self.assertIsNone(second['tokens']['total_tokens'])
+-        result=load('r19_unknown_smoke',HERE/'consumer-smoke.py').smoke(self.protocol(),self.repo/'unknown-smoke',source_root=self.repo)
++        result=load('r20_unknown_smoke',HERE/'consumer-smoke.py').smoke(self.protocol(),self.repo/'unknown-smoke',source_root=self.repo)
+         self.assertEqual(result['planned_missing_answer_records'],216)
+         self.assertEqual(result['historical_accounting']['cumulative_pilot_usage']['reported_tokens_lower_bound']['total_tokens'],30)
+ 
+@@ -145,7 +149,7 @@
+         self.assertFalse((run/'calls.jsonl').exists())
+ 
+     def test_reusable_smoke_uses_real_consumers_with_only_temporary_synthetic_run(self):
+-        smoke=load('r19_smoke_tool',HERE/'consumer-smoke.py')
++        smoke=load('r20_smoke_tool',HERE/'consumer-smoke.py')
+         output=self.repo/'smoke-output'
+         result=smoke.smoke(self.protocol(),output,source_root=self.repo)
+         self.assertEqual(result['planned_missing_answer_records'],216)
+@@ -158,8 +162,8 @@
+             smoke.smoke(self.protocol(),output,source_root=self.repo)
+ 
+     def test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir(self):
+-        smoke=load('r19_smoke_output_guard',HERE/'consumer-smoke.py')
+-        targets=[Path('/private/tmp/codex-mem-quality-20261021-r19-experiment'),
++        smoke=load('r20_smoke_output_guard',HERE/'consumer-smoke.py')
++        targets=[Path('/private/tmp/codex-mem-quality-20261021-r20-experiment'),
+                  self.repo/'never-open-sealed'/'consumer-output']
+         for target in targets:
+             with self.subTest(target=target):
+@@ -170,30 +174,19 @@
+                     smoke.main()
+                 self.assertFalse(target.exists())
+ 
+-    def test_root_final_history_receipt_is_accepted_by_unchanged_actual_consumer(self):
+-        history=HERE/'historical-spend.json'
+-        expected=__import__('hashlib').sha256(history.read_bytes()).hexdigest()
++    def test_exact_canonical_r19_history_and_cumulative_arithmetic(self):
++        history=REPO/'docs/evidence/project-memory-quality-2026-10-21-r19/holdout/report.json'
++        expected='e3681ede54fdb23e4c5342b09a42f597e9494a603526981ad5e2b95d19e7056a'
+         import hashlib
+         self.assertEqual(hashlib.sha256(history.read_bytes()).hexdigest(),expected)
+-        protocol={'historical_spend':{'report':str(history.resolve()),'sha256':expected}}
+-        accounting=helper.historical_accounting(protocol,helper.usage([]))
+-        self.assertEqual(accounting['cumulative_pilot_usage']['attempted_calls'],3114)
+-        self.assertIsNone(accounting['cumulative_pilot_usage']['tokens']['total_tokens'])
+-        self.assertEqual(accounting['cumulative_pilot_usage']['reported_tokens_lower_bound']['total_tokens'],49691930)
+-        self.assertFalse(accounting['cumulative_pilot_usage']['token_accounting_complete'])
+-        self.assertIsNone(accounting['cumulative_pilot_usage']['cost_usd'])
+-
+-    def test_proposed_history_binds_audited_source_maps_and_all_underlier_hashes(self):
+-        import hashlib
+-        history=json.loads((HERE/'historical-spend.json').read_text())
+-        for name,pin in history['derivation']['source_pins'].items():
+-            self.assertEqual(hashlib.sha256((REPO/name).read_bytes()).hexdigest(),pin)
+-        bound=history['usage']['reported_tokens_lower_bound']
+-        self.assertEqual(bound,{'input_tokens':47937204,'cached_input_tokens':2458496,'output_tokens':1754726,'total_tokens':49691930})
+-        self.assertEqual(history['usage']['calls_with_unknown_or_partial_tokens'],1)
+-        self.assertFalse(history['usage']['token_accounting_complete'])
+-        self.assertFalse(history['usage']['pricing_complete'])
+-        self.assertIsNone(history['usage']['cost_usd'])
++        protocol={'historical_spend':{'report':str(history),'sha256':expected,'usage_field':'cumulative_pilot_usage'}}
++        accounting=helper.historical_accounting(protocol,helper.usage([]))['cumulative_pilot_usage']
++        self.assertEqual(accounting['attempted_calls'],3410)
++        self.assertEqual(accounting['reported_tokens_lower_bound'],{'input_tokens':52484432,'cached_input_tokens':2531328,'output_tokens':1893734,'total_tokens':54378166})
++        self.assertIsNone(accounting['tokens']['total_tokens'])
++        self.assertFalse(accounting['token_accounting_complete'])
++        self.assertFalse(accounting['pricing_complete'])
++        self.assertIsNone(accounting['cost_usd'])
+ 
+     def test_all_literal_required_protocol_accesses_resolve_without_renaming(self):
+         protocol=self.protocol()
+@@ -206,7 +199,7 @@
+                     for key in access['path']:value=value[key]
+         # Historical alias pointer is not a direct protocol AST subscript.
+         # Exercise that owning consumer separately, rather than trusting AST.
+-        self.assertEqual(set(protocol['historical_spend']),{'report','sha256'})
++        self.assertEqual(set(protocol['historical_spend']),{'report','sha256','usage_field'})
+         helper.historical_accounting(protocol,helper.usage([]))
+ 
+     def test_actual_profile_and_contract_consumers_accept_generated_sibling_fields(self):
+--- held-r19/consumer-smoke.py
++++ prospective-r20/consumer-smoke.py
+@@ -30,7 +30,7 @@
+ 
+ def cli_output_path(output):
+     path=Path(output).resolve()
+-    require(path!=HERE and path.is_relative_to(HERE),'smoke_cli_output_must_be_inside_R19_evidence')
++    require(path!=HERE and path.is_relative_to(HERE),'smoke_cli_output_must_be_inside_R20_evidence')
+     return path
+ 
+ 
+@@ -61,6 +61,7 @@
+         require(path.name not in FORBIDDEN and not path.is_relative_to(sealed),'smoke_must_not_open_sealed_content')
+         require(digest(path)==expected,'source_pin_changed:'+name)
+         observed[str(path)]=expected
++    require(protocol['historical_spend'].get('usage_field') == 'cumulative_pilot_usage', 'canonical_cumulative_history_required')
+     report_path=helper.ROOT/protocol['historical_spend']['report']
+     require(report_path.name not in FORBIDDEN and not report_path.resolve().is_relative_to(sealed),
+             'historical_pointer_must_not_open_sealed_content')
+--- held-r19/protocol-consumer-contract.json
++++ prospective-r20/protocol-consumer-contract.json
+@@ -1,5 +1,5 @@
+ {
+-  "status": "prospective_R19_consumer_compatibility_not_actual_protocol",
++  "status": "prospective_R20_consumer_compatibility_not_actual_protocol",
+   "historical_spend": {
+     "builder_input_ref": [
+       "path",
+@@ -7,14 +7,16 @@
+     ],
+     "emitted_protocol_pointer": [
+       "report",
+-      "sha256"
++      "sha256",
++      "usage_field"
+     ],
+     "consumers": [
+       "helper.historical_accounting",
+       "helper.aggregate",
+       "helper.export_evidence historical-report copy"
+     ],
+-    "no_fallback": "The unchanged helper never accepts path in place of report."
++    "no_fallback": "Absent selector retains legacy usage. Explicit cumulative selection never silently falls back to current-only usage. Unknown selectors or missing selected field reject.",
++    "selected_usage_field": "cumulative_pilot_usage"
+   },
+   "consumer_smoke": {
+     "command": "python3 consumer-smoke.py --protocol EMITTED_PROTOCOL_JSON --protocol-sha256 EXACT_SHA256 --output NEW_SMOKE_OUTPUT_DIRECTORY",
+@@ -27,12 +29,12 @@
+       "Export historical copy,manifest hashes,archive,0native/noStore/noactualclock"
+     ],
+     "scope": "Compatibility proof only, never independent trial evidence or rescoring.",
+-    "output_scope": "CLI output must resolve to a new child directory inside R19 evidence folder. Actual-run/private sealed paths reject before protocol reading or mkdir. Unit seam permits output only inside its separate toy source root. Sealed directory overlap always rejects."
++    "output_scope": "CLI output must resolve to a new child directory inside R20 evidence folder. Actual-run/private sealed paths reject before protocol reading or mkdir. Unit seam permits output only inside its separate toy source root. Sealed directory overlap always rejects."
+   },
+   "input_privacy": "Actual sealed fixture/gold/rationale/full findings remain closed. Opaque repeat IDs only are borrowed from protocol into separate public toy histories.",
+   "consumer_inventory": {
+     "scripts/project_memory_consolidation_experiment.py": {
+-      "observed_sha256": "b17404758778d297bc0f78b756c53fb20665e7f84212ff633ef061749a05f740",
++      "observed_sha256": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+       "literal_protocol_accesses": [
+         {
+           "path": [
+@@ -46,42 +48,42 @@
+             "paired_native_request_reuse"
+           ],
+           "kind": "optional",
+-          "line": 280
++          "line": 283
+         },
+         {
+           "path": [
+             "model"
+           ],
+           "kind": "required",
+-          "line": 360
++          "line": 363
+         },
+         {
+           "path": [
+             "reasoning_effort"
+           ],
+           "kind": "required",
+-          "line": 360
++          "line": 363
+         },
+         {
+           "path": [
+             "model"
+           ],
+           "kind": "required",
+-          "line": 374
++          "line": 377
+         },
+         {
+           "path": [
+             "reasoning_effort"
+           ],
+           "kind": "required",
+-          "line": 374
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 449
++          "line": 377
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 452
+         },
+         {
+           "path": [
+@@ -89,14 +91,14 @@
+             "wall_seconds"
+           ],
+           "kind": "required",
+-          "line": 449
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 464
++          "line": 452
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 467
+         },
+         {
+           "path": [
+@@ -104,21 +106,21 @@
+             "max_calls"
+           ],
+           "kind": "required",
+-          "line": 464
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 466
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 466
++          "line": 467
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 469
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 469
+         },
+         {
+           "path": [
+@@ -126,7 +128,7 @@
+             "max_observed_tokens"
+           ],
+           "kind": "required",
+-          "line": 466
++          "line": 469
+         },
+         {
+           "path": [
+@@ -134,21 +136,21 @@
+             "per_call_token_reservation"
+           ],
+           "kind": "required",
+-          "line": 466
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 471
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 471
++          "line": 469
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 474
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 474
+         },
+         {
+           "path": [
+@@ -156,7 +158,7 @@
+             "call_seconds"
+           ],
+           "kind": "required",
+-          "line": 471
++          "line": 474
+         },
+         {
+           "path": [
+@@ -164,14 +166,14 @@
+             "wall_seconds"
+           ],
+           "kind": "required",
+-          "line": 471
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 485
++          "line": 474
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 488
+         },
+         {
+           "path": [
+@@ -179,14 +181,14 @@
+             "call_seconds"
+           ],
+           "kind": "required",
+-          "line": 485
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 546
++          "line": 488
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 549
+         },
+         {
+           "path": [
+@@ -194,70 +196,70 @@
+             "call_seconds"
+           ],
+           "kind": "required",
+-          "line": 546
++          "line": 549
+         },
+         {
+           "path": [
+             "shared_generation_runtime"
+           ],
+           "kind": "optional",
+-          "line": 595
++          "line": 598
+         },
+         {
+           "path": [
+             "comparison_mode"
+           ],
+           "kind": "optional",
+-          "line": 597
++          "line": 600
+         },
+         {
+           "path": [
+             "baseline_runtime_hashes"
+           ],
+           "kind": "optional",
+-          "line": 601
++          "line": 604
+         },
+         {
+           "path": [
+             "baseline_runtime_root"
+           ],
+           "kind": "optional",
+-          "line": 601
++          "line": 604
+         },
+         {
+           "path": [
+             "baseline_runtime_hashes"
+           ],
+           "kind": "required",
+-          "line": 614
++          "line": 617
+         },
+         {
+           "path": [
+             "baseline_runtime_root"
+           ],
+           "kind": "required",
+-          "line": 614
++          "line": 617
+         },
+         {
+           "path": [
+             "baseline_commit"
+           ],
+           "kind": "required",
+-          "line": 619
++          "line": 622
+         },
+         {
+           "path": [
+             "comparison_mode"
+           ],
+           "kind": "optional",
+-          "line": 660
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 711
++          "line": 663
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 714
+         },
+         {
+           "path": [
+@@ -265,14 +267,14 @@
+             "jobs_per_checkpoint"
+           ],
+           "kind": "required",
+-          "line": 711
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 717
++          "line": 714
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 720
+         },
+         {
+           "path": [
+@@ -280,21 +282,21 @@
+             "jobs_per_checkpoint"
+           ],
+           "kind": "required",
+-          "line": 717
++          "line": 720
+         },
+         {
+           "path": [
+             "candidate_processing_mode"
+           ],
+           "kind": "optional",
+-          "line": 755
+-        },
+-        {
+-          "path": [
+-            "limits"
+-          ],
+-          "kind": "required",
+-          "line": 797
++          "line": 758
++        },
++        {
++          "path": [
++            "limits"
++          ],
++          "kind": "required",
++          "line": 800
+         },
+         {
+           "path": [
+@@ -302,203 +304,203 @@
+             "jobs_per_consolidation"
+           ],
+           "kind": "required",
+-          "line": 797
++          "line": 800
+         },
+         {
+           "path": [
+             "reader_context_isolation"
+           ],
+           "kind": "optional",
+-          "line": 890
++          "line": 893
+         },
+         {
+           "path": [
+             "reader_citation_contract"
+           ],
+           "kind": "optional",
+-          "line": 893
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 899
++          "line": 896
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
++          "line": 902
+         },
+         {
+           "path": [
+             "reader_citation_contract"
+           ],
+           "kind": "optional",
+-          "line": 902
++          "line": 905
+         },
+         {
+           "path": [
+             "context_chars"
+           ],
+           "kind": "optional",
+-          "line": 1048
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 1192
++          "line": 1051
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
++          "line": 1195
+         },
+         {
+           "path": [
+             "context_chars"
+           ],
+           "kind": "optional",
+-          "line": 1195
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 1285
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 1296
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 1298
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "required",
++          "line": 1198
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
++          "line": 1288
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
+           "line": 1299
+         },
+         {
+           "path": [
+             "reader_evidence_contract"
+           ],
+-          "kind": "required",
+-          "line": 1317
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 1318
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
++          "kind": "optional",
++          "line": 1301
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "required",
++          "line": 1302
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "required",
+           "line": 1320
+         },
+         {
+           "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
++          "line": 1321
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
++          "line": 1323
++        },
++        {
++          "path": [
+             "reader_repeat_history_ids"
+           ],
+           "kind": "required",
+-          "line": 1391
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "optional",
+-          "line": 1395
+-        },
+-        {
+-          "path": [
+-            "reader_evidence_contract"
+-          ],
+-          "kind": "required",
+-          "line": 1396
++          "line": 1394
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "optional",
++          "line": 1398
++        },
++        {
++          "path": [
++            "reader_evidence_contract"
++          ],
++          "kind": "required",
++          "line": 1399
+         },
+         {
+           "path": [
+             "context_chars"
+           ],
+           "kind": "required",
+-          "line": 1404
++          "line": 1407
+         },
+         {
+           "path": [
+             "explicit_project_scope_context"
+           ],
+           "kind": "optional",
+-          "line": 1405
++          "line": 1408
+         },
+         {
+           "path": [
+             "judge_evidence_contract"
+           ],
+           "kind": "optional",
+-          "line": 1499
++          "line": 1502
+         },
+         {
+           "path": [
+             "blind_shuffle_seed"
+           ],
+           "kind": "required",
+-          "line": 1854
++          "line": 1857
+         },
+         {
+           "path": [
+             "regeneration_repeat_history_ids"
+           ],
+           "kind": "required",
+-          "line": 2086
++          "line": 2089
+         },
+         {
+           "path": [
+             "reader_repeat_history_ids"
+           ],
+           "kind": "optional",
+-          "line": 2112
++          "line": 2115
+         },
+         {
+           "path": [
+             "regeneration_repeat_history_ids"
+           ],
+           "kind": "required",
+-          "line": 2113
++          "line": 2116
+         },
+         {
+           "path": [
+             "improvement_policy"
+           ],
+           "kind": "optional",
+-          "line": 2121
++          "line": 2124
+         },
+         {
+           "path": [
+             "comparison_mode"
+           ],
+           "kind": "optional",
+-          "line": 2133
++          "line": 2136
+         },
+         {
+           "path": [
+             "historical_spend"
+           ],
+           "kind": "optional",
+-          "line": 2270
++          "line": 2273
+         },
+         {
+           "path": [
+             "historical_spend"
+           ],
+           "kind": "required",
+-          "line": 2272
++          "line": 2275
+         },
+         {
+           "path": [
+@@ -506,46 +508,46 @@
+             "report"
+           ],
+           "kind": "required",
+-          "line": 2272
++          "line": 2275
+         },
+         {
+           "path": [
+             "reader_repeat_history_ids"
+           ],
+           "kind": "required",
+-          "line": 2316
++          "line": 2319
+         },
+         {
+           "path": [
+             "regeneration_repeat_history_ids"
+           ],
+           "kind": "required",
+-          "line": 2318
++          "line": 2321
+         },
+         {
+           "path": [
+             "explicit_project_scope_context"
+           ],
+           "kind": "required",
+-          "line": 2555
++          "line": 2558
+         },
+         {
+           "path": [
+             "baseline_runtime_root"
+           ],
+           "kind": "required",
+-          "line": 2576
++          "line": 2579
+         },
+         {
+           "path": [
+             "regeneration_repeat_history_ids"
+           ],
+           "kind": "required",
+-          "line": 2607
++          "line": 2610
+         }
+       ]
+     },
+-    "docs/evidence/project-memory-quality-2026-10-21-r19/run-experiment.py": {
++    "docs/evidence/project-memory-quality-2026-10-21-r20/run-experiment.py": {
+       "observed_sha256": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+       "literal_protocol_accesses": [
+         {
+@@ -635,7 +637,7 @@
+         }
+       ]
+     },
+-    "docs/evidence/project-memory-quality-2026-10-21-r19/run-public-preflight.py": {
++    "docs/evidence/project-memory-quality-2026-10-21-r20/run-public-preflight.py": {
+       "observed_sha256": "6e9d5dba0f5f310e0749c29d00b3783b209567605e3928616787bde90d32c3ec",
+       "literal_protocol_accesses": [
+         {
+@@ -702,7 +704,7 @@
+     "source_repairs"
+   ],
+   "dynamic_or_aliased_consumers": {
+-    "historical_spend": "helper alias pointer[report]/[sha256], tested with actual accounting/aggregate/export; no alias/path fallback.",
++    "historical_spend": "helper alias pointer[report]/[sha256]/get(usage_field,usage), exercised by actual accounting/aggregate/export; explicit cumulative selection has no fallback.",
+     "reader_profile_and_judge_profile": "Actual helper.phase_profile exercised for each phase; no native dispatch.",
+     "independent_review_contract": "Held generic driver validates fixed metadata path/schema/pins; copied20actualguard unit tests cover concrete metadata keys/counts and stop ordering.",
+     "public_preflight": "Copied runner consumes file_sha256 and attempt_id plus judge_calibration; byte pins checked, public offline/native gate not rerun before final protocol.",
+@@ -723,12 +725,15 @@
+     "billing_unknown": true,
+     "unknown_native_attempts_not_zero": true
+   },
+-  "offline_evidence": "test-consumer-compatibility.py exercises actual historical_accounting, aggregate and canonical export, no consumer mocks. test-reader-contract-compatibility.py exercises actual Capture/decoders with only external native runner stubbed. No native pass claimed.",
+-  "proposed_R19_historical_receipt": {
+-    "status": "proposed_root_review_required_not_trial_readiness",
+-    "path": "historical-spend.json",
+-    "accounting_scope": "Every R1\u2013R18 attempt:3114attempts/3113reported/1failed/0unresolved,known reported subtotal49,691,930; full usage null. No R19 call cost.",
+-    "pin_policy": "Root reviews exact report bytes, then final config pins hash."
+-  },
+-  "inventory_limit": "Literal AST inventory only; dynamic aliases are covered separately by actual consumer tests. Observed hashes are tooling evidence, not final frozen source pins."
++  "offline_evidence": "Actual helper historical_accounting/aggregate/export and public producer commit are exercised with scratch-only fictional Stores. Actual Capture/reader/judge validators run with only external native runner stubbed; raw assertion ownership retained. No native success or quality acceptance claimed.",
++  "inventory_limit": "Literal AST inventory only; dynamic aliases are covered separately by actual consumer tests. Observed hashes are tooling evidence, not final frozen source pins.",
++  "canonical_R19_historical_source": {
++    "path": "docs/evidence/project-memory-quality-2026-10-21-r19/holdout/report.json",
++    "sha256": "e3681ede54fdb23e4c5342b09a42f597e9494a603526981ad5e2b95d19e7056a",
++    "usage_field": "cumulative_pilot_usage",
++    "attempted_calls": 3410,
++    "reported_tokens_lower_bound": 54378166,
++    "full_usage": "unknown",
++    "actual_billing": "unknown"
++  }
+ }
+--- held-r19/test-reader-contract-compatibility.py
++++ prospective-r20/test-reader-contract-compatibility.py
+@@ -13,8 +13,8 @@
+ def load(name,path):
+     spec=importlib.util.spec_from_file_location(name,path)
+     mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod);return mod
+-helper=load('r19_actual_helper',ROOT/'scripts/project_memory_consolidation_experiment.py')
+-probe=load('r19_probe',HERE/'prepare-reader-probe.py')
++helper=load('r20_actual_helper',ROOT/'scripts/project_memory_consolidation_experiment.py')
++probe=load('r20_probe',HERE/'prepare-reader-probe.py')
+ 
+ 
+ def native_readers(prepared, assertion=True):
+@@ -84,12 +84,12 @@
+         self.public_runner_case(invalid=True)
+ 
+     def public_runner_case(self,invalid=False):
+-        runner=load('r19_runner_e2e',HERE/'run-public-preflight.py')
+-        library=load('r19_calibration_e2e',HERE/'public-calibration-library.py')
++        runner=load('r20_runner_e2e',HERE/'run-public-preflight.py')
++        library=load('r20_calibration_e2e',HERE/'public-calibration-library.py')
+         protocol=json.loads((ROOT/'docs/evidence/project-memory-quality-2026-10-21-r16/protocol.json').read_text())
+         protocol.update(self.protocol)
+-        protocol['public_preflight']['attempt_id']='synthetic-r19-offline'
+-        protocol['judge_calibration']['attempt_id']='synthetic-r19-offline'
++        protocol['public_preflight']['attempt_id']='synthetic-r20-offline'
++        protocol['judge_calibration']['attempt_id']='synthetic-r20-offline'
+         paths=list((ROOT/'codex_mem').glob('*.py'))+[ROOT/'scripts/project_memory_consolidation_experiment.py']
+         paths += [HERE/name for name in ('run-public-preflight.py','prepare-reader-probe.py','public-reader-regressions.json','public-calibration-library.py','judge-contract-controls.json')]
+         protocol['public_preflight']['file_sha256']={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+@@ -117,7 +117,7 @@
+                     return native
+                 module.native_phase_adapter=adapter
+             return module
+-        with tempfile.TemporaryDirectory(prefix='r19-NONEXPERIMENT-') as directory:
++        with tempfile.TemporaryDirectory(prefix='r20-NONEXPERIMENT-') as directory:
+             run=Path(directory)
+             protocol_path=run/'synthetic-protocol.json';helper.write(protocol_path,protocol)
+             helper.write(run/'run.json',{'budget_run':str(run),'started_at':helper.time.time(),'protocol_sha256':helper.digest(protocol)})
+@@ -128,11 +128,18 @@
+             if invalid:
+                 self.assertEqual(len(observed),2)
+                 self.assertEqual(helper.read(run/'receipts/call-0002-response.json')['output'],outputs[0])
+-                self.assertTrue((run/'public-preflight/synthetic-r19-offline/stopped.json').exists())
+-                self.assertFalse((run/'public-preflight/synthetic-r19-offline/summary.json').exists())
++                self.assertTrue((run/'public-preflight/synthetic-r20-offline/stopped.json').exists())
++                self.assertFalse((run/'public-preflight/synthetic-r20-offline/summary.json').exists())
+                 self.assertEqual(helper.usage(helper.ledger_calls(run/'calls.jsonl'))['attempted_calls'],2)
+                 return
+-            summary=helper.read(run/'public-preflight/synthetic-r19-offline/summary.json')
++            summary=helper.read(run/'public-preflight/synthetic-r20-offline/summary.json')
++            first=helper.read(run/'public-preflight/synthetic-r20-offline/reader-01.json')
++            owners=helper.reader_assertion_ownership(first['response']['output'])
++            delivered=first['resolved']['answers'][0]['answer']
++            for owner in next(iter(owners.values())):
++                self.assertEqual(delivered[owner['start']:owner['end']],owner['text'])
++                self.assertTrue(owner['citation_refs'])
++            self.assertEqual(first['response']['output'],outputs[0])
+             self.assertEqual(summary['status'],'passed')
+             self.assertEqual(summary['native_usage']['attempted_calls'],8)
+             self.assertEqual(len(list((run/'receipts').glob('*-request.json'))),8)

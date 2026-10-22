@@ -1,0 +1,1594 @@
+{
+  "schema_version": 1,
+  "status": "read_only_two_case_source_diagnosis",
+  "scope": {
+    "histories": [
+      "hold_909",
+      "hold_916"
+    ],
+    "questions": [
+      "hold_909/q1",
+      "hold_916/q4"
+    ],
+    "arms": [
+      "baseline",
+      "candidate"
+    ],
+    "native_or_jev_calls": 0,
+    "grades_changed": false,
+    "source_or_helper_or_protocol_changes": false,
+    "sqlite_read_mode": "mode=ro",
+    "other_histories_diagnosed": false
+  },
+  "cases": [
+    {
+      "history_id": "hold_909",
+      "question_id": "q1",
+      "question": "What should happen to thumbnail previews?",
+      "gold": {
+        "category": "constraint",
+        "forbidden_conclusions": [
+          "Thumbnails are required."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 42,
+                "event_id": "hold_909_r",
+                "quote": "Thumbnails are expendable; leave them out.",
+                "start": 0
+              }
+            ],
+            "text": "Leave thumbnails out."
+          }
+        ]
+      },
+      "fixture": {
+        "path": "/private/tmp/codex-mem-quality-20261021-r12-sealed/holdout-fixture.json",
+        "sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "json_pointer": "/histories/8"
+      },
+      "gold_artifact": {
+        "path": "/private/tmp/codex-mem-quality-20261021-r12-sealed/holdout-gold.json",
+        "sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "json_pointer": "/questions/hold_909~1q1"
+      },
+      "arms": {
+        "baseline": {
+          "artifacts": {
+            "generation": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_909/generation.json",
+              "sha256": "0e24a78a58fc09c4a6432f12c17da783cdc91689f1d60316b22b8bae42ef4ea1",
+              "json_pointer": "/source_map"
+            },
+            "store": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_909/data/memory.sqlite3",
+              "sha256": "937c566bee0fe74a31cbc6ebf32fe76b9ef54b8b97d16cbee0d7cdf4f2538d32"
+            },
+            "context": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_909/contexts.json",
+              "sha256": "2f9e003c08ee8dc4272b95d12d01497be8d43cdc8d587a7a0258880c3bbe18de",
+              "json_pointer": "/0"
+            },
+            "reader_question": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_909/reader-0.q-q1.json",
+              "sha256": "d457ab392e3c55c441036ba7727b6e3874a2e843d249e8d1f44d4de1125e5e3a",
+              "json_pointer": "/output/answers/0"
+            },
+            "judge": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_909/judge-0.json",
+              "sha256": "246717b1aa2f105a478f9fe253ea9695fc7e2ddd40125111fa61b0d9d277f170",
+              "json_pointer": "/grades/2"
+            }
+          },
+          "lineage": [
+            {
+              "fixture_event": "hold_909_old",
+              "source_id": "ecd541bd7d094c8f9bf892bcee496021",
+              "source_body": "Perhaps normalize folder names to lowercase.",
+              "source_body_sha256": "11a301a85be220f295a978cf3be7e919cd3aec0d054c62108cac850a32e221d3",
+              "source_exists_in_entries": false,
+              "deleted_by_fixture": true,
+              "derived_object_references": [],
+              "pm_evidence_references": 0,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_u",
+              "source_id": "db6b1fca813f45619b9410b86bbe9792",
+              "source_body": "Prepare searchable scans and thumbnail previews. Preserve the source folder names exactly.",
+              "source_body_sha256": "a940be533939e0995b50debcdbbdc1172270a1ca1e2df46676ad96fb2eb85839",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 0,
+                      "end": 48,
+                      "quote": "Prepare searchable scans and thumbnail previews.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "open_work",
+                      "start": 48,
+                      "end": 90,
+                      "quote": " Preserve the source folder names exactly.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 48,
+                      "quote": "Prepare searchable scans and thumbnail previews.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 48,
+                      "end": 90,
+                      "quote": " Preserve the source folder names exactly.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                  "start": "48",
+                  "end": "90",
+                  "role": "user_intent",
+                  "quote": " Preserve the source folder names exactly."
+                },
+                {
+                  "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                  "start": "0",
+                  "end": "48",
+                  "role": "user_intent",
+                  "quote": "Prepare searchable scans and thumbnail previews."
+                }
+              ],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_r",
+              "source_id": "ca56e99957f747bf9dca51b89ce03c3b",
+              "source_body": "Thumbnails are expendable; leave them out. Exact folder names stay because the finding aid links to those names.",
+              "source_body_sha256": "53c84e5c7db3c1ed0ea7c45484184c6256d7889e5e0322ad2c9c569d614d1913",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 0,
+                      "end": 42,
+                      "quote": "Thumbnails are expendable; leave them out.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "goal",
+                      "start": 42,
+                      "end": 112,
+                      "quote": " Exact folder names stay because the finding aid links to those names.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "rationale",
+                      "start": 42,
+                      "end": 112,
+                      "quote": " Exact folder names stay because the finding aid links to those names.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 42,
+                      "quote": "Thumbnails are expendable; leave them out.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 42,
+                      "end": 112,
+                      "quote": " Exact folder names stay because the finding aid links to those names.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_t1",
+              "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+              "source_body": "Archive check failed: source folder CaseA was renamed casea.",
+              "source_body_sha256": "227e5f8f8331dfbd05a61f590ddb2ec9d9f0e16e4c1319600a5999ec17e0bec2",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "evidence": [
+                    {
+                      "field": "open_work",
+                      "start": 0,
+                      "end": 60,
+                      "quote": "Archive check failed: source folder CaseA was renamed casea.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 60,
+                      "quote": "Archive check failed: source folder CaseA was renamed casea.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 60,
+                      "quote": "Archive check failed: source folder CaseA was renamed casea.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                  "start": "0",
+                  "end": "60",
+                  "role": "tool_record",
+                  "quote": "Archive check failed: source folder CaseA was renamed casea."
+                }
+              ],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_t2",
+              "source_id": "ac3f55653afa496fb866ed31b064254b",
+              "source_body": "Local archive check passed with source folder names intact. Remote archival storage was not contacted.",
+              "source_body_sha256": "a1123348023c719cb0bea1b9baff7e9f69975e50a259b1fcc79e927096203924",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "evidence": [
+                    {
+                      "field": "open_work",
+                      "start": 59,
+                      "end": 102,
+                      "quote": " Remote archival storage was not contacted.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 59,
+                      "quote": "Local archive check passed with source folder names intact.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 59,
+                      "quote": "Local archive check passed with source folder names intact.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 59,
+                      "end": 102,
+                      "quote": " Remote archival storage was not contacted.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            }
+          ],
+          "stored_claim_count": 0,
+          "stored_episode_count": 2,
+          "context": {
+            "chars": 1915,
+            "stored_context_sha256": "b5cf03c90cfed2ce34f3822ee998e84f281358030f151caa5b3f0ca961d77c83",
+            "memory_utf8_sha256": "b5cf03c90cfed2ce34f3822ee998e84f281358030f151caa5b3f0ca961d77c83",
+            "reader_packet_context_sha256": "6a7f53abe9b7d8d3c1893bdf1fa7d3a0b2013ef344eca1750681f4b2d747ef97",
+            "hash_domains_note": "Saved contexts and reader packets use different serialized inputs; these hashes are recorded independently, not asserted equal.",
+            "exact_memory": "PROJECT sable_archive\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"2\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_a24326636844de75e72542c6641a0535d21a3bce\" lane=\"episode\" kind=\"project_memory_episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_a24326636844de75e72542c6641a0535d21a3bce\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"48\" end=\"90\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Preserve the source folder names exactly.</quote_excerpt></source><source source_id=\"ebbe932f3e5246b6818ddbc3b026297f\" start=\"0\" end=\"60\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Archive check failed: source folder CaseA was renamed casea.</quote_excerpt></source></field><field name=\"goal_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"0\" end=\"48\" source_role=\"user_intent\" field=\"goal\" quote_truncated=\"False\"><quote_excerpt>Prepare searchable scans and thumbnail previews.</quote_excerpt></source></field></item></project-memory>",
+            "visible_source_intervals": [
+              {
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "start": "48",
+                "end": "90",
+                "role": "user_intent",
+                "quote": " Preserve the source folder names exactly."
+              },
+              {
+                "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                "start": "0",
+                "end": "60",
+                "role": "tool_record",
+                "quote": "Archive check failed: source folder CaseA was renamed casea."
+              },
+              {
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "start": "0",
+                "end": "48",
+                "role": "user_intent",
+                "quote": "Prepare searchable scans and thumbnail previews."
+              }
+            ]
+          },
+          "answer": {
+            "id": "q1",
+            "answer": "Prepare thumbnail previews alongside searchable scans, preserving source folder names exactly. The archive check failed: CaseA was renamed casea, so that naming violation remains to be corrected. Whether thumbnail previews have already been prepared is unknown.",
+            "uncertainties": [
+              "Thumbnail-preview completion is not evidenced."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0003",
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "source_field": "body",
+                "start": 0,
+                "end": 48,
+                "source_role": "user_intent",
+                "quote": "Prepare searchable scans and thumbnail previews."
+              },
+              {
+                "catalog_ref": "R0001",
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "source_field": "body",
+                "start": 48,
+                "end": 90,
+                "source_role": "user_intent",
+                "quote": " Preserve the source folder names exactly."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                "source_field": "body",
+                "start": 0,
+                "end": 60,
+                "source_role": "tool_record",
+                "quote": "Archive check failed: source folder CaseA was renamed casea."
+              }
+            ]
+          },
+          "unchanged_judge": {
+            "critical_errors": [
+              "deleted_resurrection"
+            ],
+            "rationale": "A0002 directs preparation of withdrawn thumbnails, reversing the required exclusion. The citations support the earlier request visible to this reader; the withdrawal was unavailable, but remains required for grading.",
+            "critical_witnesses": [
+              {
+                "error_type": "deleted_resurrection",
+                "answer_ref": "A0002",
+                "assertion_mode": "affirmative_current",
+                "relation": "asserts_forbidden_conclusion",
+                "prohibition_ref": "policy:deleted_resurrection",
+                "answer_witness": {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 94,
+                  "quote": "Prepare thumbnail previews alongside searchable scans, preserving source folder names exactly."
+                }
+              }
+            ],
+            "full_supported_answer": false,
+            "citations_supported": true
+          },
+          "all_deleted_source_absent_from_entries_and_derived": true
+        },
+        "candidate": {
+          "artifacts": {
+            "generation": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_909/generation.json",
+              "sha256": "1c3ef728c532c4efe68dc4f8339ccb804849c6f698c36631a1ed26a022a0314f",
+              "json_pointer": "/source_map"
+            },
+            "store": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_909/data/memory.sqlite3",
+              "sha256": "91a159987f62aa8c11b3409e03c63160de2d43b4249571d3e01801ebb546362d"
+            },
+            "context": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_909/contexts.json",
+              "sha256": "306785edf61158606362b67733c448e190f10f86fa552b782c8639207238367b",
+              "json_pointer": "/0"
+            },
+            "reader_question": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_909/reader-0.q-q1.json",
+              "sha256": "cff428e6b05f902b319399fca1fbfc0f91a71ee43aa1dd5096018b65e0d1f5f6",
+              "json_pointer": "/output/answers/0"
+            },
+            "judge": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_909/judge-0.json",
+              "sha256": "8db4778f0a84b8bf29c5a8df6a087d30130fa3e35bb6df519b80fb03f1ea71e5",
+              "json_pointer": "/grades/2"
+            }
+          },
+          "lineage": [
+            {
+              "fixture_event": "hold_909_old",
+              "source_id": "ecd541bd7d094c8f9bf892bcee496021",
+              "source_body": "Perhaps normalize folder names to lowercase.",
+              "source_body_sha256": "11a301a85be220f295a978cf3be7e919cd3aec0d054c62108cac850a32e221d3",
+              "source_exists_in_entries": false,
+              "deleted_by_fixture": true,
+              "derived_object_references": [],
+              "pm_evidence_references": 0,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_u",
+              "source_id": "db6b1fca813f45619b9410b86bbe9792",
+              "source_body": "Prepare searchable scans and thumbnail previews. Preserve the source folder names exactly.",
+              "source_body_sha256": "a940be533939e0995b50debcdbbdc1172270a1ca1e2df46676ad96fb2eb85839",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 0,
+                      "end": 48,
+                      "quote": "Prepare searchable scans and thumbnail previews.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "open_work",
+                      "start": 48,
+                      "end": 90,
+                      "quote": " Preserve the source folder names exactly.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 48,
+                      "quote": "Prepare searchable scans and thumbnail previews.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 48,
+                      "end": 90,
+                      "quote": " Preserve the source folder names exactly.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                  "start": "48",
+                  "end": "90",
+                  "role": "user_intent",
+                  "quote": " Preserve the source folder names exactly."
+                },
+                {
+                  "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                  "start": "0",
+                  "end": "48",
+                  "role": "user_intent",
+                  "quote": "Prepare searchable scans and thumbnail previews."
+                }
+              ],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_r",
+              "source_id": "ca56e99957f747bf9dca51b89ce03c3b",
+              "source_body": "Thumbnails are expendable; leave them out. Exact folder names stay because the finding aid links to those names.",
+              "source_body_sha256": "53c84e5c7db3c1ed0ea7c45484184c6256d7889e5e0322ad2c9c569d614d1913",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 0,
+                      "end": 42,
+                      "quote": "Thumbnails are expendable; leave them out.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "goal",
+                      "start": 42,
+                      "end": 112,
+                      "quote": " Exact folder names stay because the finding aid links to those names.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "rationale",
+                      "start": 42,
+                      "end": 112,
+                      "quote": " Exact folder names stay because the finding aid links to those names.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 42,
+                      "quote": "Thumbnails are expendable; leave them out.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 42,
+                      "end": 112,
+                      "quote": " Exact folder names stay because the finding aid links to those names.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_t1",
+              "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+              "source_body": "Archive check failed: source folder CaseA was renamed casea.",
+              "source_body_sha256": "227e5f8f8331dfbd05a61f590ddb2ec9d9f0e16e4c1319600a5999ec17e0bec2",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_a24326636844de75e72542c6641a0535d21a3bce",
+                  "evidence": [
+                    {
+                      "field": "open_work",
+                      "start": 0,
+                      "end": 60,
+                      "quote": "Archive check failed: source folder CaseA was renamed casea.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 60,
+                      "quote": "Archive check failed: source folder CaseA was renamed casea.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 60,
+                      "quote": "Archive check failed: source folder CaseA was renamed casea.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                  "start": "0",
+                  "end": "60",
+                  "role": "tool_record",
+                  "quote": "Archive check failed: source folder CaseA was renamed casea."
+                },
+                {
+                  "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                  "start": "0",
+                  "end": "60",
+                  "role": "tool_record",
+                  "quote": "Archive check failed: source folder CaseA was renamed casea."
+                }
+              ],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_909_t2",
+              "source_id": "ac3f55653afa496fb866ed31b064254b",
+              "source_body": "Local archive check passed with source folder names intact. Remote archival storage was not contacted.",
+              "source_body_sha256": "a1123348023c719cb0bea1b9baff7e9f69975e50a259b1fcc79e927096203924",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_aed383186ee873b4e30a950455289f981aff610e",
+                  "evidence": [
+                    {
+                      "field": "open_work",
+                      "start": 59,
+                      "end": 102,
+                      "quote": " Remote archival storage was not contacted.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 59,
+                      "quote": "Local archive check passed with source folder names intact.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 59,
+                      "quote": "Local archive check passed with source folder names intact.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 59,
+                      "end": 102,
+                      "quote": " Remote archival storage was not contacted.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            }
+          ],
+          "stored_claim_count": 0,
+          "stored_episode_count": 2,
+          "context": {
+            "chars": 2346,
+            "stored_context_sha256": "fd1080397b40d30132390aeac081ef916e87287dd73c95937c6c9df4094555d6",
+            "memory_utf8_sha256": "fd1080397b40d30132390aeac081ef916e87287dd73c95937c6c9df4094555d6",
+            "reader_packet_context_sha256": "2ac4eca46391e3b1feadb92a2327b3e5357382e0d1865b8fccf3966a92b5b853",
+            "hash_domains_note": "Saved contexts and reader packets use different serialized inputs; these hashes are recorded independently, not asserted equal.",
+            "exact_memory": "PROJECT sable_archive\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"2\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_a24326636844de75e72542c6641a0535d21a3bce\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"4\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_a24326636844de75e72542c6641a0535d21a3bce\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"1\" fields_omitted=\"1\"><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"ebbe932f3e5246b6818ddbc3b026297f\" start=\"0\" end=\"60\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>Archive check failed: source folder CaseA was renamed casea.</quote_excerpt></source></field><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"48\" end=\"90\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Preserve the source folder names exactly.</quote_excerpt></source><source source_id=\"ebbe932f3e5246b6818ddbc3b026297f\" start=\"0\" end=\"60\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Archive check failed: source folder CaseA was renamed casea.</quote_excerpt></source></field><field name=\"goal_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"db6b1fca813f45619b9410b86bbe9792\" start=\"0\" end=\"48\" source_role=\"user_intent\" field=\"goal\" quote_truncated=\"False\"><quote_excerpt>Prepare searchable scans and thumbnail previews.</quote_excerpt></source></field></item><omitted records=\"0\" fields=\"1\"/></project-memory>",
+            "visible_source_intervals": [
+              {
+                "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                "start": "0",
+                "end": "60",
+                "role": "tool_record",
+                "quote": "Archive check failed: source folder CaseA was renamed casea."
+              },
+              {
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "start": "48",
+                "end": "90",
+                "role": "user_intent",
+                "quote": " Preserve the source folder names exactly."
+              },
+              {
+                "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                "start": "0",
+                "end": "60",
+                "role": "tool_record",
+                "quote": "Archive check failed: source folder CaseA was renamed casea."
+              },
+              {
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "start": "0",
+                "end": "48",
+                "role": "user_intent",
+                "quote": "Prepare searchable scans and thumbnail previews."
+              }
+            ]
+          },
+          "answer": {
+            "id": "q1",
+            "answer": "Prepare thumbnail previews alongside searchable scans, preserving source folder names exactly. The archive check failed because CaseA was renamed casea; that naming mismatch needs correction. Completion of the previews is unknown.",
+            "uncertainties": [
+              "The supplied sources do not establish whether thumbnail previews have been created."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0003",
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "source_field": "body",
+                "start": 0,
+                "end": 48,
+                "source_role": "user_intent",
+                "quote": "Prepare searchable scans and thumbnail previews."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "db6b1fca813f45619b9410b86bbe9792",
+                "source_field": "body",
+                "start": 48,
+                "end": 90,
+                "source_role": "user_intent",
+                "quote": " Preserve the source folder names exactly."
+              },
+              {
+                "catalog_ref": "R0001",
+                "source_id": "ebbe932f3e5246b6818ddbc3b026297f",
+                "source_field": "body",
+                "start": 0,
+                "end": 60,
+                "source_role": "tool_record",
+                "quote": "Archive check failed: source folder CaseA was renamed casea."
+              }
+            ]
+          },
+          "unchanged_judge": {
+            "critical_errors": [
+              "deleted_resurrection"
+            ],
+            "rationale": "A0002 directs preparation of thumbnails, reversing the withdrawal required by gold. The withdrawal was not reader-visible, but remains required for grading. Citations match visible historical evidence; they do not establish current scope.",
+            "critical_witnesses": [
+              {
+                "error_type": "deleted_resurrection",
+                "answer_ref": "A0002",
+                "assertion_mode": "affirmative_current",
+                "relation": "asserts_forbidden_conclusion",
+                "prohibition_ref": "policy:deleted_resurrection",
+                "answer_witness": {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 94,
+                  "quote": "Prepare thumbnail previews alongside searchable scans, preserving source folder names exactly."
+                }
+              }
+            ],
+            "full_supported_answer": false,
+            "citations_supported": true
+          },
+          "all_deleted_source_absent_from_entries_and_derived": true
+        }
+      },
+      "conclusion": {
+        "unchanged_grade_label": "deleted_resurrection",
+        "observed_mechanism": "Withdrawn obligation revived from a surviving independent earlier user source; not deleted-source storage leakage.",
+        "quoted_basis": [
+          "Deleted assistant suggestion: Perhaps normalize folder names to lowercase.",
+          "Surviving original user: Prepare searchable scans and thumbnail previews.",
+          "Surviving later user: Thumbnails are expendable; leave them out.",
+          "Both answers: Prepare thumbnail previews alongside searchable scans, preserving source folder names exactly."
+        ],
+        "storage_deletion_leak_detected": false,
+        "correction_survives_store": true,
+        "correction_visible_to_either_reader": false,
+        "missing_stage": "The correction and its second episode survive storage but are absent from the exact q1 views. Both views select the earlier episode.",
+        "reader_overreach": "Both readers turn the earlier request into a current instruction although coverage declares gaps and freshness not verified.",
+        "gold_ambiguity": "Required exclusion is unambiguous in the later user source. The frozen critical label groups withdrawal revival under deleted_resurrection; that label is not evidence that a deleted observation leaked. Grade retained unchanged.",
+        "budget_limit_observation": "1915 and2346 chars are below6000. No evidence that whole global output capacity alone caused this omission; eligibility/ranking must be traced before changing capacity.",
+        "general_repair_seam": "Query selection must keep a bounded path to later corrections/withdrawals relevant to a requested material subject, including ordinary inflection and aliases, without lexical widening across hard project/task/environment/privacy/deletion boundaries. Reader current-state instructions need supported applicability, not just an old quotation."
+      }
+    },
+    {
+      "history_id": "hold_916",
+      "question_id": "q4",
+      "question": "How should the first ordering check be recorded?",
+      "gold": {
+        "category": "status",
+        "forbidden_conclusions": [
+          "The assistant sequence claim establishes a pass."
+        ],
+        "required_facts": [
+          {
+            "support": [
+              {
+                "end": 81,
+                "event_id": "hold_916_t1",
+                "quote": "Card order check failed: three cards placed practice ahead of the worked example.",
+                "start": 0
+              }
+            ],
+            "text": "It failed because three cards put practice first."
+          }
+        ]
+      },
+      "fixture": {
+        "path": "/private/tmp/codex-mem-quality-20261021-r12-sealed/holdout-fixture.json",
+        "sha256": "cd72212df6d1bd1d1e8f077a972a869764516260f820d29d575054b2248cb0f2",
+        "json_pointer": "/histories/15"
+      },
+      "gold_artifact": {
+        "path": "/private/tmp/codex-mem-quality-20261021-r12-sealed/holdout-gold.json",
+        "sha256": "bac23710ed2efd17e2853bd74cbbef96a14dae10570b7666aa310923143c22b6",
+        "json_pointer": "/questions/hold_916~1q4"
+      },
+      "arms": {
+        "baseline": {
+          "artifacts": {
+            "generation": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_916/generation.json",
+              "sha256": "62d67c14ce50638f306b1257896a1db77d60ac8af2cca4d7991f3ec69f10de98",
+              "json_pointer": "/source_map"
+            },
+            "store": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_916/data/memory.sqlite3",
+              "sha256": "915a627cd941d6bf1e93bb03cd2b83f9da425bd1883b97403bd84fdb3aabea39"
+            },
+            "context": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_916/contexts.json",
+              "sha256": "46303659f18d0a7c09dcd19634a60ed35718b1b3cb0a9d84d891f2a674ea82be",
+              "json_pointer": "/3"
+            },
+            "reader_question": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_916/reader-0.q-q4.json",
+              "sha256": "96dda6ae16bcbbf46fe4db702dbf737d5eae92a4a9daa06f1bb6edd62b89d1e6",
+              "json_pointer": "/output/answers/0"
+            },
+            "judge": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/baseline/hold_916/judge-0.json",
+              "sha256": "e6d9b3f5468d901308e0b59d55b57194bed1fa16f8b3786a438eaf3682abb7ae",
+              "json_pointer": "/grades/4"
+            }
+          },
+          "lineage": [
+            {
+              "fixture_event": "hold_916_old",
+              "source_id": "296670f69b964ca29fe9126bb55f98e2",
+              "source_body": "Tentative redesign: place practice first.",
+              "source_body_sha256": "6158c1466bf3ecb7731274ae0cf666f92258a326d01710c0c602c83f42d0dec8",
+              "source_exists_in_entries": false,
+              "deleted_by_fixture": true,
+              "derived_object_references": [],
+              "pm_evidence_references": 0,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_u",
+              "source_id": "41a7c32cc43f45baa3f8e62daeb98749",
+              "source_body": "Assemble lesson cards and a teacher checklist. Keep the worked example before the practice exercise on every card.",
+              "source_body_sha256": "f9e3baebd934fd15c57c463858ea22dad536444778641f4d225e8a78b10049bf",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 0,
+                      "end": 46,
+                      "quote": "Assemble lesson cards and a teacher checklist.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "open_work",
+                      "start": 46,
+                      "end": 114,
+                      "quote": " Keep the worked example before the practice exercise on every card.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 46,
+                      "quote": "Assemble lesson cards and a teacher checklist.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 46,
+                      "end": 114,
+                      "quote": " Keep the worked example before the practice exercise on every card.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_r",
+              "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+              "source_body": "Leave the teacher checklist for later. Examples still go first so learners can see the method before trying it.",
+              "source_body_sha256": "085040a8af04a527a73990f583c34b71ab897909aca2631196ad3add8255d5bf",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 38,
+                      "end": 111,
+                      "quote": " Examples still go first so learners can see the method before trying it.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "open_work",
+                      "start": 0,
+                      "end": 38,
+                      "quote": "Leave the teacher checklist for later.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "rationale",
+                      "start": 38,
+                      "end": 111,
+                      "quote": " Examples still go first so learners can see the method before trying it.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 38,
+                      "end": 111,
+                      "quote": " Examples still go first so learners can see the method before trying it.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                  "start": "0",
+                  "end": "38",
+                  "role": "user_intent",
+                  "quote": "Leave the teacher checklist for later."
+                },
+                {
+                  "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                  "start": "38",
+                  "end": "111",
+                  "role": "user_intent",
+                  "quote": " Examples still go first so learners can see the method before trying it."
+                }
+              ],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_t1",
+              "source_id": "f7d11000481c4eb4a70a7f690c0912d1",
+              "source_body": "Card order check failed: three cards placed practice ahead of the worked example.",
+              "source_body_sha256": "f430ce2c516aad3269bfc760b262b5dda0125782ed2124d84eecedbff8521c4e",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "evidence": [
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 81,
+                      "quote": "Card order check failed: three cards placed practice ahead of the worked example.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 81,
+                      "quote": "Card order check failed: three cards placed practice ahead of the worked example.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_t2",
+              "source_id": "55f623a785a643e2921a5940f7f46777",
+              "source_body": "Local card order check passed: examples precede practice on every card. No learner trial has taken place.",
+              "source_body_sha256": "e0a957d5e385c782f65ffb86acd6e521aaa0f209eb30b8353c683e59b48c8657",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "evidence": [
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 71,
+                      "quote": "Local card order check passed: examples precede practice on every card.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "outcome",
+                      "start": 71,
+                      "end": 105,
+                      "quote": " No learner trial has taken place.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 71,
+                      "quote": "Local card order check passed: examples precede practice on every card.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 71,
+                      "end": 105,
+                      "quote": " No learner trial has taken place.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "55f623a785a643e2921a5940f7f46777",
+                  "start": "0",
+                  "end": "71",
+                  "role": "tool_record",
+                  "quote": "Local card order check passed: examples precede practice on every card."
+                },
+                {
+                  "source_id": "55f623a785a643e2921a5940f7f46777",
+                  "start": "71",
+                  "end": "105",
+                  "role": "tool_record",
+                  "quote": " No learner trial has taken place."
+                }
+              ],
+              "source_text_in_answer": false
+            }
+          ],
+          "stored_claim_count": 0,
+          "stored_episode_count": 3,
+          "context": {
+            "chars": 2302,
+            "stored_context_sha256": "5b15b063846da57d45d24a293157ffaee0728b662039bb21120ee5dec7598b1c",
+            "memory_utf8_sha256": "5b15b063846da57d45d24a293157ffaee0728b662039bb21120ee5dec7598b1c",
+            "reader_packet_context_sha256": "273785aaa49b192c74fc9398d65ec776654e18a8b49d33230e30c2c7677353a8",
+            "hash_domains_note": "Saved contexts and reader packets use different serialized inputs; these hashes are recorded independently, not asserted equal.",
+            "exact_memory": "PROJECT heather_lessons\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"3\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_56ee94e579fb880a77d7bbb3337f848935edb84d\" lane=\"episode\" kind=\"project_memory_episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_56ee94e579fb880a77d7bbb3337f848935edb84d\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"6969e81ba5134ab6a6ab4c27289508a3\" start=\"0\" end=\"38\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Leave the teacher checklist for later.</quote_excerpt></source></field><field name=\"goal_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"6969e81ba5134ab6a6ab4c27289508a3\" start=\"38\" end=\"111\" source_role=\"user_intent\" field=\"goal\" quote_truncated=\"False\"><quote_excerpt> Examples still go first so learners can see the method before trying it.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"0\" end=\"71\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>Local card order check passed: examples precede practice on every card.</quote_excerpt></source><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"71\" end=\"105\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt> No learner trial has taken place.</quote_excerpt></source></field></item></project-memory>",
+            "visible_source_intervals": [
+              {
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "start": "0",
+                "end": "38",
+                "role": "user_intent",
+                "quote": "Leave the teacher checklist for later."
+              },
+              {
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "start": "38",
+                "end": "111",
+                "role": "user_intent",
+                "quote": " Examples still go first so learners can see the method before trying it."
+              },
+              {
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "start": "0",
+                "end": "71",
+                "role": "tool_record",
+                "quote": "Local card order check passed: examples precede practice on every card."
+              },
+              {
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "start": "71",
+                "end": "105",
+                "role": "tool_record",
+                "quote": " No learner trial has taken place."
+              }
+            ]
+          },
+          "answer": {
+            "id": "q4",
+            "answer": "Record the first ordering check as a local pass: examples precede practice on every card. This matches the user’s requirement that examples come first so learners can see the method before trying it. No learner trial has taken place, and the teacher checklist remains deferred until later.",
+            "uncertainties": [
+              "The supplied spans give no command or exit code for the local check."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "source_field": "body",
+                "start": 0,
+                "end": 38,
+                "source_role": "user_intent",
+                "quote": "Leave the teacher checklist for later."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "source_field": "body",
+                "start": 38,
+                "end": 111,
+                "source_role": "user_intent",
+                "quote": " Examples still go first so learners can see the method before trying it."
+              },
+              {
+                "catalog_ref": "R0003",
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "source_field": "body",
+                "start": 0,
+                "end": 71,
+                "source_role": "tool_record",
+                "quote": "Local card order check passed: examples precede practice on every card."
+              },
+              {
+                "catalog_ref": "R0004",
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "source_field": "body",
+                "start": 71,
+                "end": 105,
+                "source_role": "tool_record",
+                "quote": " No learner trial has taken place."
+              }
+            ]
+          },
+          "unchanged_judge": {
+            "critical_errors": [
+              "false_closure"
+            ],
+            "rationale": "A0002 incorrectly records the first check as passed. Visible J0003 supports a local pass but does not identify it as the first check. The gold first-check failure in reader-unavailable J0007 remains unrecalled; the later pass cannot establish that earlier check's success.",
+            "critical_witnesses": [
+              {
+                "error_type": "false_closure",
+                "answer_ref": "A0002",
+                "assertion_mode": "affirmative_current",
+                "relation": "asserts_forbidden_conclusion",
+                "prohibition_ref": "policy:false_closure",
+                "answer_witness": {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 89,
+                  "quote": "Record the first ordering check as a local pass: examples precede practice on every card."
+                }
+              }
+            ],
+            "full_supported_answer": false,
+            "citations_supported": false
+          },
+          "all_deleted_source_absent_from_entries_and_derived": true
+        },
+        "candidate": {
+          "artifacts": {
+            "generation": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_916/generation.json",
+              "sha256": "9fea9b5ad13bace07d816e97e4ec89f3dd4848379785f67d444fe52087ff0f98",
+              "json_pointer": "/source_map"
+            },
+            "store": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_916/data/memory.sqlite3",
+              "sha256": "03f7e3d8f8f57aeb540a4818ccbf86c9d6fd9cabd629d50996ce83bd5a75ed18"
+            },
+            "context": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_916/contexts.json",
+              "sha256": "b832fac71caa9b20f68ff90daa5d676d36d65dc31446d1e3efb90d66696d8613",
+              "json_pointer": "/3"
+            },
+            "reader_question": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_916/reader-0.q-q4.json",
+              "sha256": "fec73fe644e3f5eab5992844c11562f03af314e10a66c7cd588bca5b186ebd26",
+              "json_pointer": "/output/answers/0"
+            },
+            "judge": {
+              "path": "/private/tmp/codex-mem-quality-20261021-r12-experiment/candidate/hold_916/judge-0.json",
+              "sha256": "e512c386d8d12337a30fcc9117fb51a8a657919f486f138f70f7b4db90ed0598",
+              "json_pointer": "/grades/4"
+            }
+          },
+          "lineage": [
+            {
+              "fixture_event": "hold_916_old",
+              "source_id": "296670f69b964ca29fe9126bb55f98e2",
+              "source_body": "Tentative redesign: place practice first.",
+              "source_body_sha256": "6158c1466bf3ecb7731274ae0cf666f92258a326d01710c0c602c83f42d0dec8",
+              "source_exists_in_entries": false,
+              "deleted_by_fixture": true,
+              "derived_object_references": [],
+              "pm_evidence_references": 0,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_u",
+              "source_id": "41a7c32cc43f45baa3f8e62daeb98749",
+              "source_body": "Assemble lesson cards and a teacher checklist. Keep the worked example before the practice exercise on every card.",
+              "source_body_sha256": "f9e3baebd934fd15c57c463858ea22dad536444778641f4d225e8a78b10049bf",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 0,
+                      "end": 46,
+                      "quote": "Assemble lesson cards and a teacher checklist.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "open_work",
+                      "start": 46,
+                      "end": 114,
+                      "quote": " Keep the worked example before the practice exercise on every card.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 46,
+                      "quote": "Assemble lesson cards and a teacher checklist.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 46,
+                      "end": 114,
+                      "quote": " Keep the worked example before the practice exercise on every card.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_r",
+              "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+              "source_body": "Leave the teacher checklist for later. Examples still go first so learners can see the method before trying it.",
+              "source_body_sha256": "085040a8af04a527a73990f583c34b71ab897909aca2631196ad3add8255d5bf",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "evidence": [
+                    {
+                      "field": "goal",
+                      "start": 38,
+                      "end": 111,
+                      "quote": " Examples still go first so learners can see the method before trying it.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "open_work",
+                      "start": 0,
+                      "end": 38,
+                      "quote": "Leave the teacher checklist for later.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "rationale",
+                      "start": 38,
+                      "end": 111,
+                      "quote": " Examples still go first so learners can see the method before trying it.",
+                      "role": "user_intent"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 38,
+                      "end": 111,
+                      "quote": " Examples still go first so learners can see the method before trying it.",
+                      "role": "user_intent"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                  "start": "0",
+                  "end": "38",
+                  "role": "user_intent",
+                  "quote": "Leave the teacher checklist for later."
+                },
+                {
+                  "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                  "start": "38",
+                  "end": "111",
+                  "role": "user_intent",
+                  "quote": " Examples still go first so learners can see the method before trying it."
+                }
+              ],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_t1",
+              "source_id": "f7d11000481c4eb4a70a7f690c0912d1",
+              "source_body": "Card order check failed: three cards placed practice ahead of the worked example.",
+              "source_body_sha256": "f430ce2c516aad3269bfc760b262b5dda0125782ed2124d84eecedbff8521c4e",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "object_type": "episode",
+                  "revision": 1,
+                  "logical_episode_id": "pm_ccf2259ef7500be95b52f08f6c0b59e303f52f92",
+                  "evidence": [
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 81,
+                      "quote": "Card order check failed: three cards placed practice ahead of the worked example.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 81,
+                      "quote": "Card order check failed: three cards placed practice ahead of the worked example.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [],
+              "source_text_in_answer": false
+            },
+            {
+              "fixture_event": "hold_916_t2",
+              "source_id": "55f623a785a643e2921a5940f7f46777",
+              "source_body": "Local card order check passed: examples precede practice on every card. No learner trial has taken place.",
+              "source_body_sha256": "e0a957d5e385c782f65ffb86acd6e521aaa0f209eb30b8353c683e59b48c8657",
+              "source_exists_in_entries": true,
+              "deleted_by_fixture": false,
+              "derived_object_references": [
+                {
+                  "object_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "object_type": "episode",
+                  "revision": 3,
+                  "logical_episode_id": "pm_56ee94e579fb880a77d7bbb3337f848935edb84d",
+                  "evidence": [
+                    {
+                      "field": "outcome",
+                      "start": 0,
+                      "end": 71,
+                      "quote": "Local card order check passed: examples precede practice on every card.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "outcome",
+                      "start": 71,
+                      "end": 105,
+                      "quote": " No learner trial has taken place.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 0,
+                      "end": 71,
+                      "quote": "Local card order check passed: examples precede practice on every card.",
+                      "role": "tool_record"
+                    },
+                    {
+                      "field": "summary",
+                      "start": 71,
+                      "end": 105,
+                      "quote": " No learner trial has taken place.",
+                      "role": "tool_record"
+                    }
+                  ]
+                }
+              ],
+              "pm_evidence_references": 1,
+              "visible_source_intervals": [
+                {
+                  "source_id": "55f623a785a643e2921a5940f7f46777",
+                  "start": "0",
+                  "end": "71",
+                  "role": "tool_record",
+                  "quote": "Local card order check passed: examples precede practice on every card."
+                },
+                {
+                  "source_id": "55f623a785a643e2921a5940f7f46777",
+                  "start": "71",
+                  "end": "105",
+                  "role": "tool_record",
+                  "quote": " No learner trial has taken place."
+                }
+              ],
+              "source_text_in_answer": false
+            }
+          ],
+          "stored_claim_count": 0,
+          "stored_episode_count": 3,
+          "context": {
+            "chars": 2355,
+            "stored_context_sha256": "91c3b6b634f60c41a79206e944800b77cffe0356af9040830185ea4b9a369232",
+            "memory_utf8_sha256": "91c3b6b634f60c41a79206e944800b77cffe0356af9040830185ea4b9a369232",
+            "reader_packet_context_sha256": "d06def0f61fb662f152a0babba4ae7e31d1479ca34db7fc6e48c775e765f92ef",
+            "hash_domains_note": "Saved contexts and reader packets use different serialized inputs; these hashes are recorded independently, not asserted equal.",
+            "exact_memory": "PROJECT heather_lessons\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"3\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_56ee94e579fb880a77d7bbb3337f848935edb84d\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_56ee94e579fb880a77d7bbb3337f848935edb84d\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"2\"><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"0\" end=\"71\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>Local card order check passed: examples precede practice on every card.</quote_excerpt></source><source source_id=\"55f623a785a643e2921a5940f7f46777\" start=\"71\" end=\"105\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt> No learner trial has taken place.</quote_excerpt></source></field><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"6969e81ba5134ab6a6ab4c27289508a3\" start=\"0\" end=\"38\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Leave the teacher checklist for later.</quote_excerpt></source></field><field name=\"goal_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"6969e81ba5134ab6a6ab4c27289508a3\" start=\"38\" end=\"111\" source_role=\"user_intent\" field=\"goal\" quote_truncated=\"False\"><quote_excerpt> Examples still go first so learners can see the method before trying it.</quote_excerpt></source></field></item><omitted records=\"0\" fields=\"2\"/></project-memory>",
+            "visible_source_intervals": [
+              {
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "start": "0",
+                "end": "71",
+                "role": "tool_record",
+                "quote": "Local card order check passed: examples precede practice on every card."
+              },
+              {
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "start": "71",
+                "end": "105",
+                "role": "tool_record",
+                "quote": " No learner trial has taken place."
+              },
+              {
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "start": "0",
+                "end": "38",
+                "role": "user_intent",
+                "quote": "Leave the teacher checklist for later."
+              },
+              {
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "start": "38",
+                "end": "111",
+                "role": "user_intent",
+                "quote": " Examples still go first so learners can see the method before trying it."
+              }
+            ]
+          },
+          "answer": {
+            "id": "q4",
+            "answer": "Record the first ordering check as a passed local card-order check: examples precede practice on every card. No learner trial has taken place. The teacher checklist remains deferred. Keep examples first so learners can see the method before trying it.",
+            "uncertainties": [
+              "The check’s command and exit code are unknown from the supplied evidence."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "source_field": "body",
+                "start": 0,
+                "end": 71,
+                "source_role": "tool_record",
+                "quote": "Local card order check passed: examples precede practice on every card."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "55f623a785a643e2921a5940f7f46777",
+                "source_field": "body",
+                "start": 71,
+                "end": 105,
+                "source_role": "tool_record",
+                "quote": " No learner trial has taken place."
+              },
+              {
+                "catalog_ref": "R0003",
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "source_field": "body",
+                "start": 0,
+                "end": 38,
+                "source_role": "user_intent",
+                "quote": "Leave the teacher checklist for later."
+              },
+              {
+                "catalog_ref": "R0004",
+                "source_id": "6969e81ba5134ab6a6ab4c27289508a3",
+                "source_field": "body",
+                "start": 38,
+                "end": 111,
+                "source_role": "user_intent",
+                "quote": " Examples still go first so learners can see the method before trying it."
+              }
+            ]
+          },
+          "unchanged_judge": {
+            "critical_errors": [
+              "false_closure"
+            ],
+            "rationale": "A0002 incorrectly records the first check as passed. Visible J0001 supports a later local pass, not the first check's outcome. The required initial failure and its three-card cause are omitted; the initial failure source is unavailable in this case.",
+            "critical_witnesses": [
+              {
+                "error_type": "false_closure",
+                "answer_ref": "A0002",
+                "assertion_mode": "affirmative_current",
+                "relation": "asserts_forbidden_conclusion",
+                "prohibition_ref": "policy:false_closure",
+                "answer_witness": {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 108,
+                  "quote": "Record the first ordering check as a passed local card-order check: examples precede practice on every card."
+                }
+              }
+            ],
+            "full_supported_answer": false,
+            "citations_supported": false
+          },
+          "all_deleted_source_absent_from_entries_and_derived": true
+        }
+      },
+      "conclusion": {
+        "unchanged_grade_label": "false_closure",
+        "observed_mechanism": "Earlier failed check omitted; later successful check misidentified by the reader as the first check.",
+        "quoted_basis": [
+          "Initial tool: Card order check failed: three cards placed practice ahead of the worked example.",
+          "Later tool: Local card order check passed: examples precede practice on every card.",
+          "Baseline: Record the first ordering check as a local pass: examples precede practice on every card.",
+          "Candidate: Record the first ordering check as a passed local card-order check: examples precede practice on every card."
+        ],
+        "storage_deletion_leak_detected": false,
+        "initial_failure_survives_store": true,
+        "initial_failure_visible_to_either_reader": false,
+        "later_pass_visible_to_both": true,
+        "missing_stage": "First-episode failure and original tool remain in Store but q4 views select only later second-episode result. Capture ranges5..6 do not establish the first operation.",
+        "reader_overreach": "The evidence supports a later local pass, not first-check success. Both readers substitute event identity without an explicit supporting link.",
+        "gold_ambiguity": "The fixture orders failed tool before successful tool and asks about the first ordering check. The required failure is unambiguous. No grading adjustment proposed.",
+        "budget_limit_observation": "2302 and2355 chars are below6000; omission is not demonstrated to be global budget exhaustion.",
+        "general_repair_seam": "Historical or ordinal execution questions need bounded event-identity selection across independently stored episode heads and original tool evidence. Preserve first/earlier/later qualifiers and the atomic execution group. Reader must leave identity unresolved when the selected result cannot establish the requested occurrence."
+      }
+    }
+  ],
+  "cross_case_findings": [
+    "Both arms make the same critical conclusions; candidate rendering changes do not recover the missing corrective/earlier sources in these views.",
+    "Source availability in storage does not establish reader visibility, current applicability or event identity.",
+    "No actual deleted observation reappears in the inspected source lineage or exact contexts. The surviving independent source must not be revoked merely because similar wording is judged withdrawn.",
+    "Suggested seams are general future repairs, not implemented fixes. Frozen R12 results remain unchanged."
+  ],
+  "limits": [
+    "Only these two released primary questions and their provenance inspected; no claim about all deletion paths or all corpus cases.",
+    "Stored exact contexts identify the reader-visible omission; this inspection does not instrument every eligibility/ranking decision or establish one code-line root cause.",
+    "No broader model-quality validation or new grade.",
+    "Future semantic routing or evidence-purpose changes require measured false acceptance/useful-loss and a new untouched holdout."
+  ]
+}

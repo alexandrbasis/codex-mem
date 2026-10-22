@@ -1,0 +1,144 @@
+--- docs/evidence/project-memory-quality-2026-10-21-r21-packing-development/retrieval-before.py	2026-10-22 08:59:31
++++ docs/evidence/project-memory-quality-2026-10-21-r21-packing-development/retrieval-after.py	2026-10-22 09:19:39
+@@ -19,7 +19,6 @@
+ from .tool_io import is_private_prompt
+ 
+ _MAX_ITEMS = 100
+-_NEUTRAL_SOURCE_LIMIT = 3
+ _CLOSED = frozenset({'closed', 'completed', 'resolved', 'replaced', 'superseded', 'retracted', 'deleted'})
+ _OBLIGATIONS = frozenset({'obligation', 'requirement', 'task', 'open_question', 'question', 'constraint'})
+ 
+@@ -728,6 +727,33 @@
+         content += '<field name=' + _attr(field['name']) + metadata + '>' + ''.join(
+             _source_xml(ref, complete=True) for ref in refs) + '</field>'
+     return '<item' + _item_attrs(record, projection) + '>' + content + '</item>' if content else ''
++
++
++def _quoted_claim_association_xml(record: Mapping[str, Any], plan: OriginalSourcePlan,
++                                  projection: str | None, identifiers: set[str]) -> str:
++    """Price a complete typed association whose exact originals already fit.
++
++    This preserves recorded state and scope. It does not infer currentness or
++    replace independent prose with quotations that merely resemble it.
++    """
++    if record.get('lane') != 'claim' or 'workflow_state' not in record:
++        return ''
++    fields = []
++    for field in record.get('fields', []):
++        refs = field.get('evidence') or []
++        value = str(field.get('text') or '')
++        if (not refs or field.get('basis') != 'attributed_source_excerpts' and
++                value and not _source_value_repeated(value, refs)):
++            return ''
++        resolved = [plan.find(ref, source_qualifiers(record), same_context=False) for ref in refs]
++        if not all(match and match[2].get('id') in identifiers for match in resolved):
++            return ''
++        metadata = ''.join(' ' + key + '=' + _attr(field[key]) for key in
++                           ('basis', 'field_association', 'partial_context') if key in field)
++        fields.append('<field name=' + _attr(field['name']) + metadata + '>' + ''.join(
++            _source_reference_xml(match, ref, association_field=field['name'])
++            for ref, match in zip(refs, resolved)) + '</field>')
++    return '<item' + _item_attrs(record, projection) + '>' + ''.join(fields) + '</item>' if fields else ''
+ 
+ 
+ def _role_quote_ids(record: Mapping[str, Any], plan: OriginalSourcePlan) -> dict[str, Any]:
+@@ -908,29 +934,16 @@
+             continue
+         metadata = source_qualifiers(record)
+         neutral_groups.append({'qualifiers': metadata, 'refs': refs, 'neutral': True})
+-    # Merge the already ordered material and neutral streams. Neutral boundary
+-    # diversity remains bounded, but lexical association does not buy an older
+-    # source an unconditional turn before a later eligible original.
+-    def source_sequence(group: Mapping[str, Any]) -> int:
+-        return max((capture_order.get(ref.get('source_id'), ref.get('source_capture_seq') or 0)
+-                    for ref in group['refs']), default=0)
+-    shared_users = []
+-    material, supplemental = list(user_groups), list(neutral_groups)
+-    while material or supplemental:
+-        reason_first = bool(material and material[0].get('fallback_only') and brief.get('projection') == 'rationale')
+-        if material and (not supplemental or reason_first or source_sequence(material[0]) >= source_sequence(supplemental[0])):
+-            shared_users.append(material.pop(0))
+-        else:
+-            shared_users.append(supplemental.pop(0))
+-    pending_groups = shared_users + other_groups
++    # Selected material retains its existing capture/reason order. Optional
++    # unassociated originals use only the room left by those admitted sources.
++    # Neither chronology nor lexical association asserts source applicability.
++    pending_groups = user_groups + neutral_groups + other_groups
+     neutral_selected, neutral_spent = 0, 0
+     neutral_limit = min(1800, budget // 3)
+     for group in pending_groups:
+         if not group.get('neutral') and all(plan.find(ref, group['qualifiers'], same_context=False) for ref in group['refs']):
+             continue
+         is_neutral = group.get('neutral', False)
+-        if is_neutral and neutral_selected == _NEUTRAL_SOURCE_LIMIT:
+-            continue
+         key = json.dumps((is_neutral, group.get('custody', False), group['qualifiers']), sort_keys=True)
+         container = source_containers.setdefault(key, {
+             'id': ('unassociated-user-sources-' if is_neutral else 'selected-source-') + str(plan.container_count + len(source_containers) + 1),
+@@ -1500,6 +1513,7 @@
+     omitted canonical associations, so their omission counters remain intact.
+     """
+     from xml.etree import ElementTree as ET
++    import re
+ 
+     omissions = dict(omissions or {})
+     declaration = ' quote_refs="provenance_only"'
+@@ -1535,7 +1549,12 @@
+         pointer = dict(source.attrib)
+         pointer.update(start=int(pointer['start']), end=int(pointer['end']), quote_excerpt=quote,
+                        quote_truncated=pointer.get('quote_truncated') not in {None, 'False'})
+-        registry.add(pointer, {})
++        identifier = source.get('id')
++        if not identifier:
++            identifier = 'unlabelled-' + str(len(registry.entries))
++            while identifier in used:
++                identifier += '-'
++        registry.add(pointer, {}, identifier=identifier)
+     next_id = 1
+     for group in _complete_source_groups(list(brief.get('records') or [])):
+         refs = group['refs']
+@@ -1560,7 +1579,34 @@
+             continue
+         wire = wire.removesuffix('</project-memory>') + node + '</project-memory>'
+         for ref in displayed:
+-            registry.add(ref, qualifiers)
++            registry.add(ref, qualifiers, identifier=ref['id'])
++    # Refill complete typed associations only from displayed exact originals.
++    # A provenance reference keeps this association's own workflow and scope.
++    # The primary source selection never changes or pays for an inferred link.
++    represented = {item.get('id') for item in tree.findall('item') if item.get('id')}
++    for record in brief.get('records') or []:
++        if not record.get('id') or record['id'] in represented:
++            continue
++        displayed = dict(record)
++        scope = dict(record.get('scope') or {})
++        if tree.get('worktree') and scope.get('worktree') == tree.get('worktree'):
++            displayed['scope'] = {key: value for key, value in scope.items() if key != 'worktree'}
++        if tree.get('capture_order_basis') == record.get('capture_order_basis'):
++            displayed['capture_order_basis'] = None
++        node = _quoted_claim_association_xml(displayed, registry, brief.get('projection'), used)
++        if not node:
++            continue
++        revised = dict(omissions, records=max(0, omissions.get('records', 0) - 1),
++                       fields=max(0, omissions.get('fields', 0) - len(record.get('fields') or [])))
++        marker = _omissions_xml(revised)
++        trial = re.sub(r'<omitted\b[^>]*/>', lambda _: marker, wire)
++        trial = trial.removesuffix('</project-memory>') + node + '</project-memory>'
++        if ' quote_refs="provenance_only"' not in trial.split('>', 1)[0]:
++            trial = trial.replace('<project-memory', '<project-memory' + declaration, 1)
++        if len(trial) > budget:
++            continue
++        wire, omissions = trial, revised
++        represented.add(record['id'])
+     assert len(wire) <= budget
+     return wire, omissions
+ 
+@@ -2051,6 +2097,6 @@
+     count = len(unassociated)
+     omitted = brief['render_omissions'].get('unassociated_user_sources', 0)
+     brief['unassociated_user_context_coverage'] = {'eligible': count, 'selected_source_count': count - omitted,
+-        'omitted': omitted, 'returned_source_limit': _NEUTRAL_SOURCE_LIMIT, 'render_allowance': min(1800, budget // 3),
++        'omitted': omitted, 'returned_source_limit': count, 'render_allowance': min(1800, budget // 3),
+         'relationship_to_query': 'unresolved', 'verification': 'not_assessed'}
+     return brief

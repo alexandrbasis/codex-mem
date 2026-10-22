@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "status": "confirmed_additional_latent_question_field_contract_incompatibility",
+  "closure_status_unchanged": "incomplete_pre_main_observability_contract_incompatibility",
+  "independent_check": {
+    "frozen_public_fixture_parser_called_offline": true,
+    "parser_accepts": true,
+    "fixture_question_objects": 96,
+    "nonempty_text_keys": 96,
+    "question_keys_present": 0,
+    "consumer_direct_subscript_lines": [
+      824,
+      835,
+      1682
+    ],
+    "reader_passes_question_object_without_adapter_line": 1237,
+    "question_field_normalization_found": false,
+    "scope": "Shape and frozen code contract only; no Store, model, runtime retrieval, scoring or failure reproduction."
+  },
+  "finding": "The frozen parser accepts these text-only question objects, but retrieval and judge consumers require question[\"question\"] or q[\"question\"]. The reader passes the original question object directly. This is an additional latent runtime contract incompatibility, not an observed main pipeline or native failure.",
+  "source_sha256": {
+    "input-question-field-diagnosis.json": "5902ed6c3ed4ff60ea2fd0dd06064dafb4f5ecb0703eb3f08e07459201663b37",
+    "frozen-helper.py": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "holdout/fixture.json": "de5279ec13d2b5a4632874d228deb61001acd96666e25abeb9eebd5f3028bb44",
+    "holdout/gold.json": "a8962aa3bcfe33c96d2936da8727b7f4bbf2902d24e98bedb1c2535527473873",
+    "export-audit.json": "78e3b5f7c2a1cd7b2f1e48958c33ea9db98a74f287d6cb5c9e28409021e281b4",
+    "holdout/export-manifest.json": "9591ccf30d714af4fc103b03dcfb35999b3964b81b8e3b8b630117c406a8fdc2",
+    "holdout/report.json": "deadc33bfe88e8d6556eb0357c43072f1c79093b33f2d7722eb5e829127de54a",
+    "holdout/fictional-run-evidence.tar.gz": "dd9b507bec32cc8586df585d81e3be50ee5ea5d80c415356c99171822f1fba67",
+    "closing-evidence.tar.gz": "5b1fa6159057742c2022d71ea40f7c57950de30903cdeae8082fd2715ae8b03d",
+    "closing-evidence-manifest.json": "ba9d8c20486d47d7ad696e75e1502f5532015cb4840efeeadc7bb91da42021b2"
+  },
+  "unchanged_outcome": {
+    "main_calls": 0,
+    "main_grades": 0,
+    "planned_primary_per_arm": 96,
+    "missing_primary_per_arm": 96,
+    "reader_repeat_missing_per_arm": 6,
+    "regeneration_repeat_missing_per_arm": 6,
+    "public_calls": 8,
+    "public_tokens": 140535,
+    "pipeline_failures": 0,
+    "quality_scores": null
+  },
+  "preservation": {
+    "prior_primary_audit_and_archives_unchanged": true,
+    "no_source_helper_protocol_fixture_gold_answer_grade_changes": true,
+    "no_regrade_retry_native_or_store_calls": true,
+    "this_supplement_does_not_reexport_prior_archives": true
+  },
+  "limitations": [
+    "This check identifies a latent code/data contract mismatch; main phases never executed.",
+    "The original positive-deletion-anchor stop remains unchanged. No independent quality outcome is inferred."
+  ]
+}

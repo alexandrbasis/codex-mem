@@ -1,0 +1,121 @@
+{
+  "schema_version": "r22-native-usage-checkpoint-implementation-v1",
+  "status": "HELPER_TELEMETRY_SOURCE_HELD_FOR_SEQUENTIAL_PARENT_SUMMARY_WORK",
+  "authorization": "Root source-hold release after R21 closing-status SHA d2d08c6777282b2cc066821e694027af0a19719053987109601b39385f06b08b; root separately authorized only obsolete constructor assertion update.",
+  "owned_source_sha256": {
+    "scripts/project_memory_consolidation_experiment.py": "1ac66fcbd8971a93252607a0304238d2334e61d3d050fcf3a9e0e12494c00a60",
+    "scripts/consolidation_experiment/test_native_usage_checkpoints.py": "57d2accacfe2d2c2cae1d524c94c3ed380433484acd29dd637c7582dd59fd560",
+    "scripts/consolidation_experiment/test_protocol.py": "bbefec6f80756a27fefc642299744f768d663c550b156ddeffa1d097ce123068"
+  },
+  "unchanged_prior_pins": {
+    "codex_mem/processor.py": true,
+    "codex_mem/episode_processor.py": true,
+    "docs/evidence/project-memory-quality-2026-10-21-r21/frozen-helper.py": true
+  },
+  "red_green": {
+    "initial_red": {
+      "log": "red-01.log",
+      "exit_code": 1,
+      "tests": 1,
+      "failure": "Capture discarded the native usage checkpoint callback"
+    },
+    "first_green": {
+      "log": "green-01.log",
+      "exit_code": 0,
+      "tests": 1
+    },
+    "controls": {
+      "log": "green-02-controls.log",
+      "exit_code": 0,
+      "tests": 4
+    },
+    "initial_existing_contract_mismatch": {
+      "log": "focused-tests.log",
+      "exit_code": 1,
+      "tests": 99,
+      "failures": 1,
+      "reason": "Old exact constructor assertion excluded the newly required callback. Raw log preserved."
+    }
+  },
+  "final_individual_results": [
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "scripts.consolidation_experiment.test_native_usage_checkpoints",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "checkpoint-held.log",
+      "log_sha256": "28cb1e428682fe31b197b1aac68aaae83e48da61f5656d7a1b4ff100fbaa55cc",
+      "tail": "s.consolidation_experiment.test_native_usage_checkpoints.CaptureCheckpointContract.test_malformed_checkpoint_cannot_replace_last_valid_snapshot) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.028s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "scripts.consolidation_experiment.test_protocol",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "protocol-held.log",
+      "log_sha256": "992bf172e6f3b4b1f114bcc4f483b9b7d0f1f93307b6a6aadc42330e4c59ad9f",
+      "tail": "_salvage (scripts.consolidation_experiment.test_protocol.ProtocolTests.test_witness_public_cli_rejection_keeps_native_receipts_without_salvage) ... ok\n\n----------------------------------------------------------------------\nRan 90 tests in 4.615s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "scripts.consolidation_experiment.test_reader_fidelity_contract",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "reader-fidelity-held.log",
+      "log_sha256": "37c8fdca758a0d4e2610218e3e2b5bfc228a64f8459526c2f5e6af45a4c30411",
+      "tail": "dation_experiment.test_reader_fidelity_contract.ReaderFidelityContractTests.test_unknown_and_incompatible_mode_reject_before_capture_or_request) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 0.080s\n\nOK\n"
+    }
+  ],
+  "final_unique_tests": 99,
+  "diff_check_exit_code": 0,
+  "behavior": "Actual Capture passes its per-call sanitized snapshot callback to NativeProcessorRunner. Latest bounded checkpoint artifact uses atomic replacement, file fsync and directory fsync. Checkpoints stay outside canonical calls.jsonl and do not affect final usage, budget, reuse, or retry behavior.",
+  "controls": [
+    "reported terminal100 counts once; unavailable terminal remains null with partial25 checkpoint",
+    "reported150 checkpoint remains diagnostic only when terminal unavailable",
+    "new Capture refuses another dispatch after unknown final",
+    "malformed IDs/status/source/updates/duration/counters cannot create or overwrite valid checkpoint",
+    "unknown raw fields stripped; absent/unavailable token data remains null",
+    "write fsync failure preserves native success and exact original ProcessorFailure object",
+    "one latest artifact per call; four file/directory sync observations for two replacements"
+  ],
+  "implementation_limits": [
+    "No episode_processor or processor source/API changes. Helper does not restore episode SQLite incremental checkpoints.",
+    "No h12 remote cause proof or native failure reproduction.",
+    "No native/model/network/original DB/global history/auth access. No old R21 mutation or retry.",
+    "No new stage/tag/status tuple. Discarded native error fields cannot be recovered in helper.",
+    "Full suite, independent review, architecture and aggregate/protocol changes are parent-owned."
+  ],
+  "parent_next_contract": "pipeline_receipt_contract=complete-shared-pipeline-v1 (correct key supersedes initial prospective design key; implementation remains parent-owned)",
+  "artifacts_sha256": {
+    "before-helper.py": "8df540bc2813166a9b69c22a6b599f6aad81483cfdd4b6b5c68be52d7804d102",
+    "before-protocol-test.py": "100c6bb021ba6c93bd636a60054cc2758f648182770620a501fa8635324ec8cb",
+    "capture-only.patch": "4bfd3e124f89fe1c9e6d25d46c6b5e08e386919ef2c5b20c708210757cbd9e7d",
+    "checkpoint-final.log": "1e1a11474907c4955f78485b40df53e7c74909d9e6ca72212e4fb283e521707d",
+    "checkpoint-held.log": "28cb1e428682fe31b197b1aac68aaae83e48da61f5656d7a1b4ff100fbaa55cc",
+    "design.json": "97e3ad01519f96688f53eeeac43b1bd16ac7d56c6ccee90eebf69996765b0179",
+    "focused-tests.log": "33fab79405f57fc560532f709cf57dd0bac2640736f5aa6c0d67e05e74400dcb",
+    "green-01.log": "8f77d48d8b14b08ecd046b07fa4a06fd64f43567b8393ab855aea936009fb458",
+    "green-02-controls.log": "3221fee6c6ec1bc2a09a5fccb45e8b9af9537e6689ec7dddb8386bd27bbcd280",
+    "held-individual-test-results.json": "1f7e7d68775d7c9d0a00688edf048382afe74c251a84845e12e0548dbf81190a",
+    "individual-test-results.json": "e4f2deaa5964a884a300e964ea564a915c6875d7ae7afa2d143cb9fee895507b",
+    "protocol-assertion-only.patch": "f0d5ed385d6968c496d93adc033b40fc1ddd6d2205824b18af9f2b6ed48bc008",
+    "protocol-held.log": "992bf172e6f3b4b1f114bcc4f483b9b7d0f1f93307b6a6aadc42330e4c59ad9f",
+    "reader-fidelity-final.log": "2a606496089ecaa4225bb8c2cb318cd4c984882eebe60c7400e45b1e2a123c28",
+    "reader-fidelity-held.log": "37c8fdca758a0d4e2610218e3e2b5bfc228a64f8459526c2f5e6af45a4c30411",
+    "receipt.json": "7262db56ce17ccaa424903c2eb2304f59647cc1198c61338902878b98d7739d0",
+    "red-01.log": "2809f0fe05b01251e17638ab8ab4ce8060194d349486c07d2ee504dfd159a0ae",
+    "test_capture_checkpoint.py": "569ba8701416ea5dd45bdd1b6af237e1a29dc55983c98bd7bc8605bf7c274220"
+  }
+}

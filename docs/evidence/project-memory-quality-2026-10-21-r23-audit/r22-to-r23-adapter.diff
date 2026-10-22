@@ -1,0 +1,145 @@
+--- R22/author_counts.py
++++ R23/author_counts.py
+@@ -1,14 +1,13 @@
+-"""Strict selected R22 contents-free resource-count schema. No case reads."""
++"""Strict selected R23 contents-free resource-count schema. No case reads."""
+ KINDS=('false_merge','false_closure','project_mixing','deleted_resurrection')
+ ROW_KEYS={'history_id','questions','required_facts','positive_anchors','typed_negatives','deletion_controls','observations','sessions','checkpoints'}
+-COUNT_KEYS={'histories','questions','required_facts','positive_anchors','typed_negatives','deletion_controls','observations','sessions','checkpoints','typed_negative_counts','maximum_event_characters','per_history'}
+-def validate_resource_shape(counts):
++COUNT_KEYS={'histories','questions','required_facts','positive_anchors','typed_negatives','deletion_controls','observations','sessions','checkpoints','typed_negative_counts','maximum_event_characters'}
++def validate_resource_shape(counts,rows):
+  if not isinstance(counts,dict) or set(counts)!=COUNT_KEYS:raise ValueError('author resource-count keys differ')
+- for key in COUNT_KEYS-{'typed_negative_counts','per_history'}:
++ for key in COUNT_KEYS-{'typed_negative_counts'}:
+   if type(counts[key]) is not int or counts[key]<0:raise ValueError('invalid author resource scalar:'+key)
+  negative=counts['typed_negative_counts']
+  if not isinstance(negative,dict) or set(negative)!=set(KINDS) or any(type(v) is not int or v<0 for v in negative.values()):raise ValueError('invalid author typed-negative counts')
+- rows=counts['per_history']
+  if not isinstance(rows,list) or not rows:raise ValueError('author per_history must be nonempty list')
+  identities=[]
+  for row in rows:
+@@ -27,7 +26,7 @@
+  rows=[];negative=Counter();texts=[]
+  for history in fixture['histories']:
+   events=[e for session in history['sessions'] for e in session['events']]
+-  if any(not isinstance(e.get('text'),str) for e in events):raise ValueError('selected R22 event requires string text')
++  if any(not isinstance(e.get('text'),str) for e in events):raise ValueError('selected R23 event requires string text')
+   texts.extend(e['text'] for e in events)
+   entries=[gold['questions'][history['id']+'/'+q['id']] for q in history['questions']]
+   inferences=[x for entry in entries for x in entry['forbidden_inferences']]
+@@ -35,7 +34,8 @@
+    if item['error_type'] not in KINDS:raise ValueError('unknown typed negative')
+    negative[item['error_type']]+=1
+   rows.append(dict(history_id=history['id'],questions=len(entries),required_facts=sum(len(e['required_facts']) for e in entries),positive_anchors=sum(len(f['support']) for e in entries for f in e['required_facts']),typed_negatives=len(inferences),deletion_controls=sum(e['type']=='delete_observation' for e in events),observations=sum(e['type']!='delete_observation' for e in events),sessions=len(history['sessions']),checkpoints=sum(len(s['checkpoints']) for s in history['sessions'])))
+- if not texts:raise ValueError('selected R22 history requires events')
++ if not texts:raise ValueError('selected R23 history requires events')
+  result={key:sum(row[key] for row in rows) for key in ROW_KEYS-{'history_id'}}
+- result.update(histories=len(rows),typed_negative_counts={key:negative[key] for key in KINDS},maximum_event_characters=max(map(len,texts)),per_history=rows)
+- return validate_resource_shape(result)
++ result.update(histories=len(rows),typed_negative_counts={key:negative[key] for key in KINDS},maximum_event_characters=max(map(len,texts)))
++ validate_resource_shape(result,rows)
++ return result,rows
+--- R22/count_contract.py
++++ R23/count_contract.py
+@@ -27,11 +27,12 @@
+  slots=sum(len(h['questions'])*2*(1+int(h['id'] in protocol['reader_repeat_history_ids'])+int(h['id'] in protocol['regeneration_repeat_history_ids'])) for h in histories)
+  counts=dict(histories=len(histories),questions=sum(len(h['questions']) for h in histories),planned_answer_slots=slots,sessions=sum(len(h['sessions']) for h in histories),events=sum(observations(h) for h in histories),deletions=roles['delete_observation'],checkpoints=sum(checkpoints(h) for h in histories),max_history_events=max(map(observations,histories)),max_history_checkpoints=max(map(checkpoints,histories)),required_facts=facts,source_roles=dict(roles))
+  if 'author_count_contract' in contract:
+-  require(contract['author_count_contract']=='r22-resource-counts-v1','author_count_contract_selected')
++  require(contract['author_count_contract']=='r23-resource-counts-v1','author_count_contract_selected')
+   from author_counts import derive_resources,validate_resource_shape
+-  validate_resource_shape(manifest['counts'])
+-  resources=derive_resources(fixture,gold)
++  validate_resource_shape(manifest['counts'],manifest['per_history'])
++  resources,resource_rows=derive_resources(fixture,gold)
+   require(resources==manifest['counts']==release['counts'],'independent_complete_author_resource_counts')
++  require(resource_rows==manifest['per_history'],'independent_author_per_history_rows')
+   counts['max_history_sessions']=max(len(h['sessions']) for h in histories)
+  require(counts==parent['counts'],'independent_all_parent_counts')
+  require(facts==manifest['counts']['required_facts']==release['counts']['required_facts'],'independent_fact_count_bindings')
+--- R22/test-author-metadata.py
++++ R23/test-author-metadata.py
+@@ -2,19 +2,25 @@
+ import copy,hashlib,json,unittest
+ from pathlib import Path
+ from author_counts import validate_resource_shape
+-P=Path(__file__).resolve().parent.parent/'project-memory-quality-2026-10-21-r22-preparation/author-manifest.v002.json'
++P=Path(__file__).resolve().parent.parent/'project-memory-quality-2026-10-21-r23-preparation/author-manifest.v002.json'
+ class AuthorMetadata(unittest.TestCase):
+  def metadata(self):
+-  self.assertEqual(hashlib.sha256(P.read_bytes()).hexdigest(),'c2604b0705cf5108fcec490b842c3a384df29e29cf23a6ea4df2a3d7521c61f2');return json.loads(P.read_bytes())
++  self.assertEqual(hashlib.sha256(P.read_bytes()).hexdigest(),'7a5b4a4d6dc48d78b4f1e8695385ac89c81849871b873f0aeb782096e6bc219c');return json.loads(P.read_bytes())
+  def test_actual_contents_free_shape(self):
+-  m=self.metadata();self.assertNotIn('root',m);self.assertNotIn('formal_release',m);self.assertEqual(validate_resource_shape(m['counts']),m['counts'])
++  m=self.metadata();self.assertNotIn('root',m);self.assertNotIn('formal_release',m);self.assertEqual(validate_resource_shape(m['counts'],m['per_history']),m['counts'])
++ def test_nested_rows_or_extra_keys_rejected(self):
++  m=self.metadata();c=m['counts'];c['per_history']=m['per_history']
++  with self.assertRaises(ValueError):validate_resource_shape(c,m['per_history'])
++ def test_missing_top_rows_rejected(self):
++  m=self.metadata()
++  with self.assertRaises(TypeError):validate_resource_shape(m['counts'])
+  def test_missing_field_rejected(self):
+-  c=self.metadata()['counts'];del c['maximum_event_characters']
+-  with self.assertRaises(ValueError):validate_resource_shape(c)
++  m=self.metadata();c=m['counts'];del c['maximum_event_characters']
++  with self.assertRaises(ValueError):validate_resource_shape(c,m['per_history'])
+  def test_perhistory_field_or_aggregate_change_rejected(self):
+-  c=self.metadata()['counts'];c['per_history'][0]['required_facts']+=1
+-  with self.assertRaises(ValueError):validate_resource_shape(c)
++  m=self.metadata();c=m['counts'];m['per_history'][0]['required_facts']+=1
++  with self.assertRaises(ValueError):validate_resource_shape(c,m['per_history'])
+  def test_negative_map_change_rejected(self):
+-  c=self.metadata()['counts'];c['typed_negative_counts']['false_merge']+=1
+-  with self.assertRaises(ValueError):validate_resource_shape(c)
++  m=self.metadata();c=m['counts'];c['typed_negative_counts']['false_merge']+=1
++  with self.assertRaises(ValueError):validate_resource_shape(c,m['per_history'])
+ if __name__=='__main__':unittest.main()
+--- R22/test-count-contract.py
++++ R23/test-count-contract.py
+@@ -14,12 +14,12 @@
+   args=list(self.toy());base,f,g,protocol,release,manifest,c=args
+   f['histories'][0]['sessions'][0]['events'][0]['text']='é';g['questions']['toy/q']['forbidden_inferences']=[]
+   from author_counts import derive_resources
+-  resources=derive_resources(f,g);manifest['counts']=resources;release['counts']=resources
++  resources,rows=derive_resources(f,g);manifest['counts']=resources;manifest['per_history']=rows;release['counts']=resources
+   (base/'formal-release.json').write_text(json.dumps(release));(base/'holdout/fixture.json').write_text(json.dumps(f));(base/'holdout/gold.json').write_text(json.dumps(g))
+   parent=json.loads((base/'release-verification.json').read_bytes());parent['counts']['max_history_sessions']=1;parent['formal_release_sha256']=sha((base/'formal-release.json').read_bytes());(base/'release-verification.json').write_text(json.dumps(parent))
+-  c.update(author_count_contract='r22-resource-counts-v1',release_verification_sha256=sha((base/'release-verification.json').read_bytes()),fixture_sha256=sha((base/'holdout/fixture.json').read_bytes()),gold_sha256=sha((base/'holdout/gold.json').read_bytes()))
++  c.update(author_count_contract='r23-resource-counts-v1',release_verification_sha256=sha((base/'release-verification.json').read_bytes()),fixture_sha256=sha((base/'holdout/fixture.json').read_bytes()),gold_sha256=sha((base/'holdout/gold.json').read_bytes()))
+   return args
+- def test_selected_r22_complete_count_consumer(self):
++ def test_selected_r23_complete_count_consumer(self):
+   checks=[];out=validate_counts(*self.selected(),lambda v,k:checks.append(v));self.assertTrue(all(checks));self.assertEqual(out['counts']['max_history_sessions'],1)
+  def test_selected_null_rejected(self):
+   args=self.selected();args[-1]['author_count_contract']=None
+--- R22/test-pipeline-contract.py
++++ R23/test-pipeline-contract.py
+@@ -3,7 +3,7 @@
+ import ast,collections,copy,importlib.util,json,tempfile,types,unittest,sys
+ from pathlib import Path
+ from pipeline_contract import validate_pipeline,grade_ready,validate_checkpoints
+-B=Path(__file__).resolve().parent;sys.path.insert(0,str(B.parents[2]));spec=importlib.util.spec_from_file_location('r22_helper_toy',B/'held-helper-source.py');h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
++B=Path(__file__).resolve().parent;sys.path.insert(0,str(B.parents[2]));spec=importlib.util.spec_from_file_location('r23_helper_toy',B/'held-helper-source.py');h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
+ class PipelineContract(unittest.TestCase):
+  def toy(self):
+   t=tempfile.TemporaryDirectory();self.addCleanup(t.cleanup);run=Path(t.name);(run/'receipts').mkdir();h.write(run/'run.json',{'budget_run':str(run)})
+--- R22/test-resource-derivation.py
++++ R23/test-resource-derivation.py
+@@ -1,13 +1,13 @@
+-"""Public toy explicit R22 event-length/count contract; no actual cases."""
++"""Public toy explicit R23 event-length/count contract; no actual cases."""
+ import unittest
+ from author_counts import derive_resources
+ class ResourceDerivation(unittest.TestCase):
+  def fixture(self):
+   f={'histories':[{'id':'toy','questions':[{'id':'q'}],'sessions':[{'events':[{'type':'user','text':'é','tool_capture':{'payload':{'raw':'x'*1000}}},{'type':'delete_observation','text':'longest deletion text'}],'checkpoints':[]}]}]};g={'questions':{'toy/q':{'required_facts':[{'support':[{}]}],'forbidden_inferences':[{'error_type':'deleted_resurrection'}]}}};return f,g
+  def test_all_events_python_characters_nested_excluded(self):
+-  f,g=self.fixture();r=derive_resources(f,g);self.assertEqual(r['maximum_event_characters'],len('longest deletion text'));self.assertEqual(r['deletion_controls'],1);self.assertEqual(r['observations'],1);self.assertEqual(r['typed_negative_counts']['deleted_resurrection'],1)
++  f,g=self.fixture();r,rows=derive_resources(f,g);self.assertEqual(r['maximum_event_characters'],len('longest deletion text'));self.assertEqual(r['deletion_controls'],1);self.assertEqual(r['observations'],1);self.assertEqual(r['typed_negative_counts']['deleted_resurrection'],1)
+  def test_python_characters_not_utf8_bytes(self):
+-  f,g=self.fixture();f['histories'][0]['sessions'][0]['events'][1]['text']='';r=derive_resources(f,g);self.assertEqual(r['maximum_event_characters'],1)
++  f,g=self.fixture();f['histories'][0]['sessions'][0]['events'][1]['text']='';r,rows=derive_resources(f,g);self.assertEqual(r['maximum_event_characters'],1)
+  def test_missing_text_fails_closed(self):
+   f,g=self.fixture();del f['histories'][0]['sessions'][0]['events'][1]['text']
+   with self.assertRaises(ValueError):derive_resources(f,g)

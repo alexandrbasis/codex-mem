@@ -1,0 +1,134 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q6",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "8f4f57c969cd6fe91cf2dd8e69c39bdd25fa9287112de1d969b2d90372b8343e",
+  "context_sha256": "f2332a447f1dca87a3881143d66400566c9dda2588ebe7da0ef3f051d756d07a",
+  "raw_output_sha256": "f70507cdd2c016815339dd4bb683b5931895c8eaba208bdf1f925df836173e50",
+  "native_receipt": {
+    "source_call_id": "call-0105",
+    "request_sha256": "47b965ea9a56461425ed3c92b52da8e63d3fe6b712a75cac65bd3104109a6657",
+    "response_sha256": "c8a91262d866bda92570888e8e9e5be64756e9f65a6a4ba4b57cc1b7b3af0fdc",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q6",
+        "answer": "Marigold stage cue sheet: the prescribed next action is unknown because no source statement for it is supplied. Cinder stage loan list: record borrower initials on the loan list and keep it in planning until its own review. The user explicitly states that Cinder’s list is independent of Marigold’s cue sheet. The tool record says Cinder remains in planning and that the status query wrote no acceptance entry.",
+        "uncertainties": [
+          "The supplied Marigold memory contains no source statement establishing its prescribed next action."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "109f106824c048728b094d1a4133d25d",
+            "source_field": "body",
+            "start": 78,
+            "end": 149,
+            "source_role": "user_intent",
+            "quote": " For Cinder stage loan list, record borrower initials on the loan list."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "109f106824c048728b094d1a4133d25d",
+            "source_field": "body",
+            "start": 149,
+            "end": 222,
+            "source_role": "user_intent",
+            "quote": " I want the Cinder stage loan list kept in planning until its own review."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "8f3b8821a13e441d8d2913ca30533e46",
+            "source_field": "body",
+            "start": 51,
+            "end": 95,
+            "source_role": "tool_record",
+            "quote": " Cinder stage loan list remains in planning."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "8f3b8821a13e441d8d2913ca30533e46",
+            "source_field": "body",
+            "start": 95,
+            "end": 149,
+            "source_role": "tool_record",
+            "quote": " No acceptance entry was written by this status query."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "109f106824c048728b094d1a4133d25d",
+            "source_field": "body",
+            "start": 0,
+            "end": 78,
+            "source_role": "user_intent",
+            "quote": "In Cinder, the stage loan list is independent of the Marigold stage cue sheet."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 9766,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 11788,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 287,
+        "reasoning_output_tokens": 60,
+        "total_tokens": 12075
+      }
+    }
+  },
+  "latency_ms": 9812,
+  "native_dispatch": {
+    "key": "8aa8225265eb67ad2936b684a4f5f2db0f62bf446c8c82aeff3847ebeacf5895",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F04",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q6",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0105",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "ebfd63ff34f660de9629faa3d82640501c15f8771d80e8e980fbc1382896e5f3",
+    "request_file_sha256": "a394fb49bbbcaa537fa3f2d49dc3a6d9c5e5ac8488538c7f9d5cfe66a2984e21",
+    "response_file_sha256": "9d4fa889d65e6e55020f0fe2ec2a69b128bf1f4ab6040f8d0f8b1c1834421136",
+    "reused": false,
+    "native_wall_ms": 9812
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F04",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q6"
+  },
+  "evidence_checks": {
+    "Q6": {
+      "accepted_results": "No acceptance is evidenced; the status-query record says it wrote no acceptance entry.",
+      "open_work_and_reasons": "Cinder must record borrower initials and remain in planning until its own review; Marigold’s next action is not evidenced.",
+      "source_role_distinctions": "User instructions and a tool-record status are supplied; assistant reports are not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

@@ -1,5 +1,6 @@
 """General query planning uses fictional subjects unrelated to evaluation data."""
 from pathlib import Path
+import tempfile
 import unittest
 
 from codex_mem.project_memory_query import plan_query
@@ -50,6 +51,68 @@ class ProjectMemoryQueryTests(unittest.TestCase):
         plan = plan_query('Explain NEX-418, excluding MAP-112.', self.project)
         self.assertEqual(('nex-418',), plan.task_ids)
         self.assertFalse(plan.matches({'text': 'MAP-112 unrelated result'}))
+
+    def test_comparison_inflections_do_not_turn_earlier_evidence_into_a_history_only_lookup(self):
+        for wording in ('Compare', 'Compared with', 'Comparing', 'A comparison of',
+                        'How it compares with', 'Two comparisons of'):
+            with self.subTest(wording=wording):
+                plan = plan_query(wording + ' earlier NEX-418 results with current results?', self.project)
+                self.assertFalse(plan.historical)
+                self.assertEqual('history', plan.projection)
+                self.assertEqual(('`nex-418`',), plan.candidate_queries)
+                self.assertFalse(plan.matches({'text': 'MAP-112 earlier results'}))
+        for query in ('What earlier results exist for NEX-418?',
+                      'What was the state of NEX-418 as-of version 2.8.4?',
+                      'What originally governed NEX-418?'):
+            with self.subTest(query=query):
+                self.assertTrue(plan_query(query, self.project).historical)
+
+    def test_comparison_inflections_preserve_exact_and_excluded_scope(self):
+        plan = plan_query('How do NEX-418 results for `bundle_rule` version 2.8.4 in production '
+                          'look compared with earlier evidence, excluding staging?', self.project)
+        self.assertFalse(plan.historical)
+        self.assertEqual(('production',), plan.environments)
+        self.assertEqual(('staging',), plan.excluded_environments)
+        self.assertTrue(plan.matches({'text': 'NEX-418 bundle_rule 2.8.4',
+                                      'scope': {'environment': 'production'}}))
+        for text in ('NEX-419 bundle_rule 2.8.4', 'NEX-418 other_rule 2.8.4',
+                     'NEX-418 bundle_rule 2.8.40'):
+            self.assertFalse(plan.matches({'text': text}))
+        self.assertFalse(plan.matches({'text': 'NEX-418 bundle_rule 2.8.4',
+                                       'scope': {'environment': 'staging'}}))
+
+    def test_compared_with_reads_attributed_execution_through_the_public_brief(self):
+        from codex_mem.project_memory import ProjectMemory
+        from codex_mem.project_memory_retrieval import build_project_brief
+        from codex_mem.store import Store
+        from codex_mem.config import configure
+
+        with tempfile.TemporaryDirectory() as directory:
+            project = str(Path(directory, 'project').resolve())
+            with Store(Path(directory, 'data')) as store:
+                configure(store.data_dir, project_memory_mode='pilot',
+                          project_memory_projects=[project], capture_scope='all')
+                observed = 'NEX-418 local check passed. Deployment was not attempted.'
+                report = 'NEX-418 deployment is finished.'
+                tool = store.remember(project, 'Execution', observed,
+                                      source='hook:PostToolUse', session_id='trial')
+                assistant = store.remember(project, 'Report', report,
+                                           source='hook:Stop', session_id='trial')
+                memory = ProjectMemory(store)
+                job = memory.claim(project)
+                refs = [{'source_id': source['id'], 'start': 0, 'end': len(text), 'quote': text}
+                        for source, text in ((tool, observed), (assistant, report))]
+                memory.commit(job, {'episodes': [{'key': 'trial', 'summary': observed,
+                    'outcome': observed + ' ' + report,
+                    'evidence': {'summary': [refs[0]], 'outcome': refs}}]})
+                brief = build_project_brief(store, project,
+                    query='What does observed execution establish for NEX-418, compared with the earlier report?',
+                    budget=6000)
+                self.assertNotEqual('historical_query', brief.get('skip_reason'))
+                self.assertIn(observed, brief['xml'])
+                self.assertIn(report, brief['xml'])
+                self.assertIn('source_role="tool_record"', brief['xml'])
+                self.assertIn('source_role="assistant_report"', brief['xml'])
 
     def test_continuity_projection_requests_bounded_supported_history(self):
         plan = plan_query('Which sessions explicitly continue NEX-418? Explain the link using recorded user statements.', self.project)
@@ -126,6 +189,47 @@ class ProjectMemoryQueryTests(unittest.TestCase):
             self.assertFalse(plan_query(query, self.project).generic_project_state)
         exact = plan_query('What is the status of the assistant estimate for QA-42 version 2.8.4?', self.project)
         self.assertFalse(exact.matches({'text': 'QA-42 version 2.8.40'}))
+
+    def test_compositional_evidence_questions_are_project_facets_only_without_subjects(self):
+        for query in ('What output does the evidence establish?', 'What delivery does the record support?',
+                      'Which completed evidence can be retained?', 'What does the current evidence show?',
+                      'What evidence supports the delivery?', 'What does the evidence establish about completion?'):
+            with self.subTest(query=query):
+                plan = plan_query(query, self.project)
+                self.assertTrue(plan.generic_project_state)
+                self.assertEqual(('',), plan.candidate_queries)
+                self.assertFalse(plan.topic_query)
+        for query in ('What telescope output does the evidence establish?',
+                      'What delivery does the cobalt monitor support?',
+                      'Which completed telescope evidence can be retained?'):
+            self.assertFalse(plan_query(query, self.project).generic_project_state)
+        environment = plan_query('What output does the evidence establish in production?', self.project)
+        self.assertTrue(environment.generic_project_state)
+        self.assertEqual(('production',), environment.environments)
+        scoped = plan_query('What output does the evidence establish for QA-42 version 2.8.4?', self.project)
+        self.assertFalse(scoped.matches({'text': 'QA-42 version 2.8.40'}))
+
+    def test_assessing_earlier_report_against_current_evidence_is_not_as_of_history(self):
+        for query in ('Does the earlier assistant assessment remain credible?',
+                      'Was the previous assistant completion claim accurate?',
+                      'How does the original assistant report compare with current evidence?',
+                      'Does the earlier assistant assessment still hold up?'):
+            with self.subTest(query=query):
+                plan = plan_query(query, self.project)
+                self.assertFalse(plan.historical)
+                self.assertTrue(plan.assesses_current_evidence)
+                self.assertTrue(plan.generic_project_state)
+        topical = plan_query('Did the earlier assistant statement establish both alignment charts existed?', self.project)
+        self.assertFalse(topical.historical)
+        self.assertTrue(topical.assesses_current_evidence)
+        self.assertFalse(topical.generic_project_state)
+        self.assertIn('alignment', topical.candidate_queries[0])
+        unknown = plan_query('Was the earlier assistant estimate about cobalt mirrors accurate?', self.project)
+        self.assertFalse(unknown.generic_project_state)
+        self.assertIn('cobalt', unknown.candidate_queries[0])
+        for query in ('What originally governed QA-42?',
+                      'What did the assistant report say as of 2031-02-03?'):
+            self.assertTrue(plan_query(query, self.project).historical)
 
     def test_rationale_and_inflected_russian_environment_queries_select_fields_not_domain_words(self):
         rationale = plan_query('Why was the editable vector format chosen and when should it be reconsidered?', self.project)

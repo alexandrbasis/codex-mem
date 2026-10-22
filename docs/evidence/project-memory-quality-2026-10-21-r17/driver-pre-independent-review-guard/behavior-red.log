@@ -1,0 +1,21 @@
+{"phase": "report", "history_id": null, "variant": null, "replicate": null, "status": "phase_complete", "calls": 0, "tokens": 0}
+F
+======================================================================
+FAIL: runTest (__main__.MissingGuard.runTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/r17-missing-review-guard-replay.py", line 26, in runTest
+    self.assertEqual(journal, [], 'pre-guard main starts phase journal despite rejected declared review')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [{'phase': 'report', 'history_id': None, '[809 chars]: 0}] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+{'phase': 'report', 'history_id': None, 'variant': None, 'replicate': None, 'status': 'started', 'at': 1792622189.58361, 'command': ['/Users/alexandrbasis/.browser-use-env/bin/python3', '/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/scripts/project_memory_consolidation_experiment.py', 'report', '--run', '/private/tmp/tmpul05yot7', '--runtime-root', '/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs', '--protocol', '/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/driver-pre-independent-review-guard/protocol.json', '--fixture', '/private/tmp/tmpul05yot7/holdout-fixture.json', '--gold', '/private/tmp/tmpul05yot7/holdout-gold.json']}
+
+Diff is 1107 characters long. Set self.maxDiff to None to see it. : pre-guard main starts phase journal despite rejected declared review
+
+----------------------------------------------------------------------
+Ran 1 test in 0.005s
+
+FAILED (failures=1)

@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "experiment": "project-memory-quality-20261021-r4",
+  "baseline_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "medium",
+  "model_selection": "The production native runner fixes gpt-6-luna medium, verifies model/list and rejects fallback. All generator, reader and judge calls use that profile.",
+  "jev": {
+    "filter": false,
+    "quality": false,
+    "retrieval": false
+  },
+  "data_policy": "Fictional histories in isolated temporary Stores only. Never change global configuration or the installed service.",
+  "histories": {
+    "development": 0,
+    "holdout": 16,
+    "questions_per_history": 6
+  },
+  "context_chars": 6000,
+  "retrieval": "build_project_brief plus render_project_brief with include_shadow=True, identical query and character budget for both versions; questions spanning two projects divide the same total 6000-character budget across project contexts",
+  "comparison": "The baseline is the complete first repair iteration dd60f1c, including final-field preparation, user custody and original source evidence. Generate one common fictional Store per history under baseline, then clone that Store for candidate. Both therefore have exactly the same captured IDs, custody and generated objects. Candidate preparation is read-only and asserts identical logical database hashes before/after; it cannot run a processor/model. Only query planning and rendered source selection differ in product code. This isolates retrieval changes from generation variance; it does not measure a new consolidation effect.",
+  "reader": "One fresh reader per history, view set and repeat answers six questions from the shared union. Each annotated view remains at most 6000 characters. Both variants use the same contract. Only the actual answer earns credit; the auxiliary checklist is excluded from judging. Typed inline refs resolve to canonical exact original source spans. Source aliases pay annotation overhead without duplicating source text. Gold, original history and variant never enter the reader. When the complete serialized native request and schema are byte-identical across arms in the same history, run and repeat, both arms use one validated response. Any changed input or different repeat gets a fresh call.",
+  "judge": "Draft pending tested helper: blinded same-profile evaluator uses exact delivered-answer/source witnesses per fact and asserted-conclusion witnesses per critical error; code computes source visibility and rejects inconsistent receipts without retry or rescoring. Positive witness existence is not proof of semantic entailment. No blocking second semantic model is enabled.",
+  "repeat_history_ids": [
+    "hold_301",
+    "hold_302"
+  ],
+  "repeats": "hold_301 regenerates one shared prefix and reruns BOTH arms readers/judges. hold_302 repeats readers/judges only. Primary excludes repeats; all development/control/repeat spend uses one trial ledger and original root clock.",
+  "limits": {
+    "max_calls": 180,
+    "max_observed_tokens": 3500000,
+    "wall_seconds": 3600,
+    "call_seconds": 180,
+    "jobs_per_checkpoint": 5,
+    "jobs_per_consolidation": 6,
+    "per_call_token_reservation": 100000
+  },
+  "budget_note": "Distinct R4 trial:180nativeattempts,3500000reportedtokens,3600wallseconds,180seconds percall,100000token reservation. Up to8public grader-calibration attempts/200000tokens are included in these totals before freeze; no live memory development is planned. All96controlquestions plus reader/regeneration repeats/failures share one append-only ledger and original clock. Unknown usage stops dispatch. No budget reset or raise. All954priornativeattempts16,667,090tokens retained. Actual billed and coding/research/orchestration costs unknown or separate.",
+  "planned_call_allocation": {
+    "common_prefix_generation_and_possible_processing": 70,
+    "readers": 36,
+    "judges": 36,
+    "public_judge_calibration": 8,
+    "explicit_reserve": 30
+  },
+  "pass_criteria": {
+    "critical_errors_max": 0,
+    "candidate_fully_supported_min": 0.9,
+    "gain_min_percentage_points_if_baseline_below_90": 10,
+    "constraint_obligation_reason_recall_regression_max": 0,
+    "all_questions_must_be_graded": true,
+    "measured_improvement_required": true,
+    "baseline_at_or_above_90": "Require measurable quality gain or lower fully observed processing-plus-reader token use without worse supported quality. Passing safety/quality gate alone is not evidence of improvement.",
+    "paired_constraint_retention": "No individual question can lose constraint, obligation or reason recall that the baseline retained. Aggregate gains cannot cancel such a loss."
+  },
+  "critical_errors": [
+    "false_merge",
+    "false_closure",
+    "project_mixing",
+    "deleted_resurrection"
+  ],
+  "full_supported_answer": "All gold required facts recalled, current status and action scope correct, citations support the claims, no forbidden conclusion, no empty or evasive abstention.",
+  "metrics": [
+    "fully_supported_answer",
+    "current_state_actionability",
+    "constraint_obligation_reason_recall",
+    "citation_support",
+    "critical_error_types",
+    "empty_abstention",
+    "context_characters",
+    "latency_ms",
+    "reported_tokens",
+    "cost_usd_or_unknown"
+  ],
+  "failure_policy": "Record all started, failed and completed calls durably. Keep failed or missing answers in the planned denominator. A rejected consolidation remains an explicit pipeline failure, but the reader still receives its actual unchanged committed memory. Grade all six answers without retrying or replacing the failed job. A pipeline failure prevents a pilot pass even if answer scores happen to improve. Do not retry failed extraction silently or tune code after holdout release. Any post-freeze repair requires a new experiment and untouched holdout.",
+  "freeze_policy": "Freeze protocol, helper hash and candidate product hashes before opening sealed holdout. Root must disclose any subsequent code change and cannot claim a clean holdout pass.",
+  "limitations": [
+    "Blinded model grading remains fallible.",
+    "This comparison isolates read selection with a shared generated Store. It does not establish consolidation benefit or production behavior.",
+    "The source-fate and field-purpose limits from the first iteration remain; no blocking semantic gate is enabled.",
+    "Six questions share one reader and up to36000characters; history is the sampling unit.",
+    "Exact-request coupling removes between-arm variation only for identical complete requests. It does not establish independent-run consistency.",
+    "The new author inherited platform-injected memory containing historical evaluation summaries. No prior fixtures, gold, reports or product algorithms were retrieved. Zero exposure to historical summaries cannot be certified.",
+    "Exact answer/source witness existence does not guarantee semantic entailment or a correct judge. No historical result is rescored by the new opt-in contract."
+  ],
+  "reader_repeat_history_ids": [
+    "hold_302"
+  ],
+  "regeneration_repeat_history_ids": [
+    "hold_301"
+  ],
+  "blind_shuffle_seed": "project-memory-quality-blind-20261021-1",
+  "holdout_primary_questions": 96,
+  "grouped_reader_dependence": "Six questions in one fresh reader share context and are statistically dependent. Each question has its own independently selected memory capped at 6000 characters. Across six questions the combined memory can reach 36000 characters. Treat history as the sampling unit.",
+  "evidence_roles": "Assistant results require explicit reported attribution. They do not independently prove execution. User intent, assistant reports, actual tool results, local validation, deployment and production remain distinct.",
+  "capture_fidelity": "Baseline captures identical inert fictional events through normalize_capture and Store.remember. Candidate is an SQLite-backup clone AFTER baseline generation; this is valid now because both product versions already include user custody. Source IDs, observations, derived records and custody are shared. No hypothetical command is executed. Read-only preparation rejects state or watermark drift; no candidate processor runs.",
+  "retrieval_timing": "Measure local Store-open plus build_project_brief/render_project_brief per project and total per-question retrieval wall time. Save append-only retrieval-timings.jsonl separately. Timing data never enters reader or judge prompts and never changes retrieval character budgets.",
+  "export_privacy": "Export pseudonymizes real native diagnostic worker/thread/turn UUIDs deterministically, including equivalent evidence spellings. Preserve fictional provenance IDs, answers, grades, token and latency totals, and original private run files. Publish exact transformation and original/public hashes without a raw ID mapping.",
+  "historical_spend": {
+    "report": "docs/evidence/project-memory-quality-2026-10-21-r4/historical-spend.json",
+    "sha256": "0108039f54c310064ef7df42ad021239ea31b41e4f490262764b8b197d7330ba"
+  },
+  "criteria_source": {
+    "protocol": "docs/evidence/consolidation-retention-2026-10-20/protocol.json",
+    "sha256": "fc6f4ce1e2563688370ffca7e5949e7fc722c16b0ab10104d1cc34877e0424ca",
+    "unchanged_fields": [
+      "pass_criteria",
+      "critical_errors",
+      "full_supported_answer",
+      "context_chars",
+      "model",
+      "reasoning_effort",
+      "holdout_primary_questions"
+    ],
+    "comparison_change_reason": "The complete first candidate already has source custody. Both variants can now share one generated Store, so this iteration isolates retrieval changes without generation variance. Candidate preparation cannot process or change the Store."
+  },
+  "implementation_base_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+  "separate_semantic_assessment": "Jev gates remain off in both arms. New purpose filter was not justified by the separate24-case probe; its8 useful uncertain cases would be lost under blocking. It is not part of the primary effect.",
+  "previous_holdouts": "All earlier released histories, including R3, are disclosed regressions only. R4 separately authored with no parent history, prior fixture/gold/report or algorithm reads. Platform-injected historical-result summaries may be present and will be disclosed in author manifest and final protocol. Freeze before parent opens new data.",
+  "dispatch_wall_reservation": "Under the shared budget lock, every native dispatch reserves its full call_seconds allowance against the remaining wall_seconds, including later calls within one phase.",
+  "experiment_id": "project-memory-quality-20261021-r4",
+  "comparison_mode": "shared-prefix",
+  "baseline_runtime": "Exact isolated Git archive of dd60f1c, reused as read-only code runtime; no Store or generated history is reused.",
+  "driver_sha256": "5cb9c23e23458abd1a2c6816dc4d864d5545dd07b89c8510f1a597f15cd2fd47",
+  "candidate_processing_mode": "read_only_snapshot",
+  "reader_citation_contract": "visible-span-refs-v1",
+  "new_iteration_reason": "R3 completed all96questions perarm and both repeats but failed: candidate71/96vsbaseline67/96, critical labels and individual fact losses. All954priorattempts and16,667,090tokens retained. Disclosed diagnosis found comparison-inflection query skip, original source-budget losses and independently evidenced judge errors. Product and opt-in evaluator repairs will be tested before this new freeze; no old scores are changed.",
+  "paired_native_request_reuse": "exact-request-v1",
+  "improvement_policy": "quality-or-cost-v1",
+  "paired_reuse_policy": {
+    "key": "Complete serialized native request and output schema; protocol/native profile, phase, history, run and repeat namespace. Exact equality only; no semantic matching.",
+    "registration": "Only after reader or judge contract validation. Invalid outputs and unknown usage cannot enter the reuse index.",
+    "accounting": "One actual native ledger attempt and raw receipt. Reuse provenance records request/response hashes, original call ID and recipient. Equivalent per-arm reader token use includes the reused original metrics in BOTH arms. Actual total usage counts the original once. Cache latency cannot establish a performance gain.",
+    "independence_limit": "Equivalent inputs share one random draw. This measures paired product differences, not independent-run reader variability. The planned reader and regeneration repeats use fresh namespaces."
+  },
+  "judge_evidence_contract": "answer-source-witnesses-v1",
+  "calibration": {
+    "purpose": "Public fixed-answer judge contract calibration; not a reader-quality experiment and not part of primary96question scores.",
+    "max_native_calls": 8,
+    "max_reported_tokens": 200000,
+    "clock": "All attempts, failures and revisions share original R4 trial clock and ledger, inside overall180calls/3500000tokens/3600seconds. No silent retry or score repair.",
+    "reader_gold_boundary": "Fixed synthetic answers are independently labeled controls. Actual holdout gold never enters a reader request.",
+    "status": "planned; offline tests/review before any dispatch"
+  },
+  "authorship": {
+    "manifest": "docs/evidence/project-memory-quality-2026-10-21-r4/sealed-manifest.json",
+    "historical_summary_exposure": true,
+    "limitation": "The platform injected MEMORY_SUMMARY containing historical evaluation-result summaries and other project history. That exposure occurred before authoring and is disclosed; those facts and results were not used to author this set. No prior fixture, gold, report, result file, runtime algorithm, or memory file was read. The parent supplied only requested fixture deletion and gold schema details.",
+    "fixture_gold_opened_by_parent": false
+  },
+  "source_repairs": "General comparison inflections; bounded neutral whole original user-source allocation with capture order and full-source expansion from already eligible source references. No lexical cancellation classifier, semantic runtime gate or extra retrieval model call. Exact scopes/deletion and same6000character budget remain mandatory. Implementation final proof/test pins will be recorded before freeze.",
+  "judge_calibration": {
+    "controls": "docs/evidence/project-memory-quality-2026-10-21-r3/judge-contract-controls.json",
+    "controls_sha256": "d1c04e3e75d75d8a635472b416387db25d5989d5f5b0e88d38804ee982b12026",
+    "runner": "docs/evidence/project-memory-quality-2026-10-21-r3/native-judge-calibration.py",
+    "runner_sha256": "28f6e9a3f2b4c4b2581bf5fccc78a8f1f402e0f12d753cbe850a8adf4e32d95b",
+    "max_calls": 8,
+    "max_observed_tokens": 200000,
+    "actual_control_packets": 7,
+    "fixed_answers": true,
+    "shadow_semantic_gate": false,
+    "all_usage_inside_overall_trial_limits": true,
+    "grouped_six_question_packet": true,
+    "freeze_guard": "Every native calibration dispatch checks exact original metadata bytes and freeze absence under the shared budget lock before dispatch."
+  }
+}

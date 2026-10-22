@@ -1,0 +1,38 @@
+{
+  "axis": "Spec",
+  "status": "changes_requested_before_author_handoff",
+  "reviewed_hashes": {
+    "public-fixture-contract.py": "18dd227387d50f6496e2969bf5b661bc7c08f6571f71b4edb913d6442daa0a32",
+    "public-fixture-contract-receipt.json": "6f951821696e325215acd61ed74dc403b559a9a170c7d55d8e76fd834ad72952",
+    "test_public_fixture_contract_v2.py": "4d9b0a874448964a220380ec154b85ba6b4ee6b770f5de174da6a56672c68095"
+  },
+  "approved_aspects": [
+    "Prospective positive anchors restrict to surviving captured user/assistant/tool sources and canonical string fields, exact offsets/quotes, selected final question scope.",
+    "Same-source mirror cannot change event and must exactly reproduce quote; final tail accepted without requiring nonexistent checkpoint stage.",
+    "Delete operation itself cannot be positive citation; deleted original cannot support positive fact. This does not retroactively invalidate R15.",
+    "Standalone module imports only standard library and reads only supplied files; no helper/runtime/private history dependence."
+  ],
+  "findings": [
+    {
+      "priority": "P2",
+      "title": "Checkpoint provenance can claim an opportunity that capture never executes",
+      "file": "public-fixture-contract.py",
+      "location": "validate_gold checkpoint accumulation",
+      "repro": "Generic toy first session checkpoints removed; add empty second session with checkpoint after_event_id=tail from first session. validate_gold accepts and reports capture_sequence6 as first_processing_opportunity for tail. Frozen capture only triggers after current-session events, so this checkpoint never runs.",
+      "fix": "Validate each checkpoint target belongs to that session before using it as provenance, with a cross-session negative test. Keep final_settle acceptance for late valid sources."
+    },
+    {
+      "priority": "P2",
+      "title": "Preserve author requirements for execution fidelity and deletion coverage explicitly",
+      "file": "public-fixture-contract-receipt.json",
+      "location": "author_usage/negative_contract",
+      "evidence": "Prior public receipt expressly required same-session checkpoints, inert exec_command output==event.text and deletion checks. New receipt drops these separate checks; new gold validator accepts unknown_tool with differing raw output. Negative contract only says16 deletions are accepted in toy, not required for authored set or meaningful negative questions.",
+      "fix": "Restore explicit author requirements and distinguish checks enforced by validator from author semantic checks. Ensure the new set retains requested deletion-negative coverage and recognized inert captures with exact raw output; add mechanical checks where appropriate. Do not claim generic anchor representability alone proves these properties."
+    }
+  ],
+  "limits": [
+    "Unknown tool/differing text is not itself a canonical-field representability failure; the gap concerns promised author execution/deletion coverage, not blanket old schema invalidity.",
+    "Negative forbidden conclusion semantics remain manual; no thresholds/critical labels or source eligibility need change.",
+    "No private fixture/gold/author reads, native/model calls, runtime calls, or edits outside this new artifact."
+  ]
+}

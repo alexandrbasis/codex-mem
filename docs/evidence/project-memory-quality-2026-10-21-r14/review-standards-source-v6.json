@@ -1,0 +1,43 @@
+{
+  "axis": "Standards",
+  "status": "source_clearance_for_declared_eight_public_calls_only",
+  "base": "2ca7445139805243c1d30a1ff7fd15be2b2dd85a",
+  "manifest_sha256": "e2d51bbffddbc78660ffcb029d30a34b01d83dcf2b157ae13856e043fd4636e0",
+  "protocol_sha256": "37a884a5d5c6a4d1a45187b6168b9f74ae1a439fd93262128f23bf697f876b5e",
+  "owned_path_count": 842,
+  "public_pin_count": 68,
+  "prior_finding_receipt": "review-standards-source.json",
+  "prior_receipt_preserved": true,
+  "findings": [],
+  "heuristic_smells": [],
+  "resolved_findings": [
+    {
+      "priority": "P2",
+      "path": "codex_mem/project_memory_retrieval.py",
+      "line": 1550,
+      "resolution": "original now copies scoped_original, preserving checked representation scope through _record and metadata-keyed neutral grouping. No query-derived scope or applicability is added.",
+      "evidence": "Eight real-Store subcases: stored/completed, local-version vs production-version and unknown vs local-version, both insertion orders; each source retains distinct XML qualifiers and neutral state."
+    }
+  ],
+  "reviewed_hashes": {
+    "codex_mem/project_memory_retrieval.py": "5bf690a619719f411a8bd1fe3021484e139a3e5155470aea960a47a8859f7b1a",
+    "tests/test_project_memory_neutral_scope_transport.py": "3401bfb3bb2c9c62dca36a6bf622187b69db0392c11196fcef713e2452badab5",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/preflight-validation-v6.json": "b8a3e552962df7b5afe60fd4b550cda67ac107c24ebd2d21877a421ee6f96b27",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/source-release-v6.json": "950b8512409d2f5c94e16b065bb3913900b0e163bef14cc39d0c65a4df906af3",
+    "docs/evidence/project-memory-quality-2026-10-21-r14/v6-source-receipt/replay-comparison.json": "bad3a3f2161995c3e2f34f37a81634a18e4b33fc084054fb8483f94e145d36de"
+  },
+  "verification": [
+    "All842 owned manifest hashes match",
+    "All68 public pins match",
+    "Only product delta from preserved V5 archive is scoped_original copy at1550",
+    "New2tests/8subcases independently pass",
+    "V6 archive all47 product hashes equal current manifest",
+    "Architecture maintain.py check hashes_match, no issues",
+    "Central1777-test full pass and initial unchanged timing failure/isolated pass retained as distinct evidence"
+  ],
+  "review_context": "V5 complete review retained for exact unchanged hashes only; newly added scope tests, source-release, replay summaries, validation and architecture receipts inspected. Large preserved context/archive evidence assessed by hashes and provenance summaries.",
+  "limits": [
+    "No native/Jev/model calls, sealed R14 author/fixture/gold contents, source writes or old artifact modifications. Only this new review receipt written.",
+    "Clearance is for declared8publiccalls after central readiness, not main quality acceptance or final metadata/service/package acceptance."
+  ]
+}

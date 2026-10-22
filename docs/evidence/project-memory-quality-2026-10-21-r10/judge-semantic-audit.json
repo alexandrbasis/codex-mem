@@ -1,0 +1,2218 @@
+{
+  "schema_version": 1,
+  "status": "diagnosis_only_original_complete_fail_preserved",
+  "scope": "All four candidate criticals plus four purposively selected primary non-full answers; not a random judge-error estimate or all-failure availability audit.",
+  "unchanged_result": {
+    "decision": "fail",
+    "baseline_full": 48,
+    "candidate_full": 59,
+    "primary_questions_per_arm": 96,
+    "candidate_primary_critical": 2,
+    "candidate_reader_repeat_critical": 2,
+    "native_calls": 310,
+    "reported_tokens": 4836616,
+    "cumulative_calls": 1593,
+    "cumulative_tokens": 25901264
+  },
+  "cases": [
+    {
+      "history_id": "hold_702",
+      "question_id": "q5",
+      "repeat": 0,
+      "variant": "candidate",
+      "evidence": {
+        "question": "For Cedar ferry queue, what did the later captured check establish, and what should still remain open after the last user instruction?",
+        "actual_answer": {
+          "id": "q5",
+          "answer": "The later captured local check established that a replay of 42 boarding groups preserved family adjacency, and that the local marshal packet sample contained group boundaries in JSON. These are local results only; they do not establish that the physical ramp marshal received the boundaries or that the route is in live dock use. Keep open the rain-route drill with the marshal, including the umbrella-storage stop before the ramp, and keep dock cutover closed until the marshal observes the new route. The physical ramp drill has no recorded result. [R0004, R0005, R0006, R0007, R0009]",
+          "uncertainties": [
+            "The original user source bundle is marked unresolved, and the memory is incomplete; additional omitted records may affect the full history. [R0002, R0005]"
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0004",
+              "source_id": "931ce67e25b141d3a46995b96b0db017",
+              "source_field": "body",
+              "start": 0,
+              "end": 180,
+              "source_role": "user_intent",
+              "quote": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "c96e980342614df09571234d9858df62",
+              "source_field": "body",
+              "start": 0,
+              "end": 110,
+              "source_role": "user_intent",
+              "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "start": 62,
+              "end": 106,
+              "source_role": "tool_record",
+              "quote": " Physical ramp drill has no recorded result."
+            },
+            {
+              "catalog_ref": "R0007",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "start": 0,
+              "end": 62,
+              "source_role": "tool_record",
+              "quote": "LOCAL marshal packet sample: group boundaries present in JSON."
+            },
+            {
+              "catalog_ref": "R0009",
+              "source_id": "dcde771d527043f4b75cf6bab2daeddb",
+              "source_field": "body",
+              "start": 0,
+              "end": 63,
+              "source_role": "tool_record",
+              "quote": "LOCAL replay of 42 boarding groups: family adjacency preserved."
+            }
+          ]
+        },
+        "gold": {
+          "category": "evidence_scope",
+          "required_facts": [
+            {
+              "text": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result.",
+              "support": [
+                {
+                  "event_id": "hold_702_e09",
+                  "quote": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result.",
+                  "start": 0,
+                  "end": 106
+                }
+              ]
+            },
+            {
+              "text": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+              "support": [
+                {
+                  "event_id": "hold_702_e12",
+                  "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+                  "start": 0,
+                  "end": 110
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The missing external check succeeded.",
+            "The deleted scratch observation supplies positive evidence.",
+            "Scratch observation: the dock supervisor approved splitting families on busy days."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_702_e01",
+            "role": "user",
+            "text": "For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them."
+          },
+          {
+            "event_id": "hold_702_e02",
+            "role": "assistant",
+            "text": "The new queue order is active at the dock."
+          },
+          {
+            "event_id": "hold_702_e03",
+            "role": "tool",
+            "text": "LOCAL replay of 42 boarding groups: family adjacency preserved. Dock dispatcher connection disabled."
+          },
+          {
+            "event_id": "hold_702_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the dock supervisor approved splitting families on busy days."
+          },
+          {
+            "event_id": "hold_702_e08",
+            "role": "user",
+            "text": "Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill."
+          },
+          {
+            "event_id": "hold_702_e09",
+            "role": "tool",
+            "text": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result."
+          },
+          {
+            "event_id": "hold_702_e10",
+            "role": "user",
+            "text": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route."
+          },
+          {
+            "event_id": "hold_702_e11",
+            "role": "assistant",
+            "text": "I can prepare route cards next; I have not run the rain drill."
+          },
+          {
+            "event_id": "hold_702_e12",
+            "role": "user",
+            "text": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay."
+          }
+        ],
+        "actual_own_context": "PROJECT cedar_ferry\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"9\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"3bdd33cd7fdb43cd8a67191daf70420b\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"2\" source_capture_seq_max=\"2\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"3bdd33cd7fdb43cd8a67191daf70420b\" start=\"0\" end=\"42\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"42\"><quote_excerpt>The new queue order is active at the dock.</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"4\"><field name=\"source_custody\"><source source_id=\"199c99ce90944fe9a6668bbd566420b1\" start=\"0\" end=\"158\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them.</quote_excerpt></source><source source_id=\"ca36f6607e8c4c0395b5b5428adbf885\" start=\"0\" end=\"161\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill.</quote_excerpt></source><source source_id=\"931ce67e25b141d3a46995b96b0db017\" start=\"0\" end=\"180\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.</quote_excerpt></source><source source_id=\"c96e980342614df09571234d9858df62\" start=\"0\" end=\"110\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.</quote_excerpt></source></field></item><item id=\"pm_3f52368b7414eb8138e0d9695008870a94a1f896\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"7\" source_capture_seq_max=\"9\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_3f52368b7414eb8138e0d9695008870a94a1f896\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"4\" fields_omitted=\"4\"></item><item id=\"pm_652241bb00a5c939a335ad678f0db7a92c240b6e\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_652241bb00a5c939a335ad678f0db7a92c240b6e\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"1\" fields_omitted=\"2\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"73f0d097a2c142e7af22248b23858f7f\" start=\"62\" end=\"106\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Physical ramp drill has no recorded result.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"73f0d097a2c142e7af22248b23858f7f\" start=\"0\" end=\"62\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL marshal packet sample: group boundaries present in JSON.</quote_excerpt></source></field></item><item id=\"pm_81f1877d0596b4e091236e85e1fdd018b709aa10\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_81f1877d0596b4e091236e85e1fdd018b709aa10\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"dcde771d527043f4b75cf6bab2daeddb\" start=\"63\" end=\"100\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Dock dispatcher connection disabled.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"dcde771d527043f4b75cf6bab2daeddb\" start=\"0\" end=\"63\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL replay of 42 boarding groups: family adjacency preserved.</quote_excerpt></source></field></item><omitted records=\"1\" fields=\"9\"/></project-memory>",
+        "actual_own_view_chars": 5741,
+        "actual_own_view_sha256": "fd63570488634e92f8cfbb6407a77ddf934b51c1223a806f1d44a6134b5e5b4c",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [
+            "false_merge"
+          ],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 183,
+                  "quote": "The later captured local check established that a replay of 42 boarding groups preserved family adjacency, and that the local marshal packet sample contained group boundaries in JSON."
+                },
+                {
+                  "ref": "A0005",
+                  "start": 503,
+                  "end": 550,
+                  "quote": "The physical ramp drill has no recorded result."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0007",
+                  "source_id": "73f0d097a2c142e7af22248b23858f7f",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 0,
+                  "end": 62,
+                  "quote": "LOCAL marshal packet sample: group boundaries present in JSON.",
+                  "reader_visible": true
+                },
+                {
+                  "ref": "J0006",
+                  "source_id": "73f0d097a2c142e7af22248b23858f7f",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 62,
+                  "end": 106,
+                  "quote": " Physical ramp drill has no recorded result.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            },
+            {
+              "fact_index": 1,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0003",
+                  "start": 184,
+                  "end": 329,
+                  "quote": "These are local results only; they do not establish that the physical ramp marshal received the boundaries or that the route is in live dock use."
+                },
+                {
+                  "ref": "A0004",
+                  "start": 330,
+                  "end": 502,
+                  "quote": "Keep open the rain-route drill with the marshal, including the umbrella-storage stop before the ramp, and keep dock cutover closed until the marshal observes the new route."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0005",
+                  "source_id": "c96e980342614df09571234d9858df62",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 110,
+                  "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "Recalls the packet contents, missing physical-drill result, and pending rain-route drill. However, A0002 attributes the earlier 42-group replay result to the later captured check. The cited records describe separate checks and do not support that merged attribution, despite the correct denial of live-use verification.",
+          "critical_witnesses": [
+            {
+              "error_type": "false_merge",
+              "answer_ref": "A0002",
+              "assertion_mode": "affirmative_current",
+              "relation": "asserts_forbidden_conclusion",
+              "prohibition_ref": "policy:false_merge",
+              "answer_witness": {
+                "ref": "A0002",
+                "start": 0,
+                "end": 183,
+                "quote": "The later captured local check established that a replay of 42 boarding groups preserved family adjacency, and that the local marshal packet sample contained group boundaries in JSON."
+              }
+            }
+          ],
+          "id": "q5",
+          "required_facts_total": 2,
+          "required_facts_recalled": 2,
+          "context_chars": 5741,
+          "reader_shared_latency_ms": 64592,
+          "reader_shared_metrics": {
+            "duration_ms": 64410,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "input_tokens": 69129,
+                "output_tokens": 2207,
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 8320,
+                "reasoning_output_tokens": 277,
+                "total_tokens": 71336
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 23443,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11596,
+                "cached_input_tokens": 8320,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 338,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11934
+              }
+            }
+          },
+          "reader_question_latency_ms": 23483,
+          "reader_context_isolation": "per-question-v1",
+          "category": "evidence_scope"
+        },
+        "judge_request_sha256": "8e9d1c52d93e37c35855ae5197b8a942f11437ec034aa4433ed4a05725e3148d",
+        "reader_sha256": "99aab8206af2f54dfafac60fe5f63a0d837c8aa6eff1ea6cc138be8283879583",
+        "judge_sha256": "eb8408eefa210239c8f53dff4040e8c40039898f26ef24356662ada458ddb0ac",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Actual attribution error: earlier 42-group replay and later marshal packet sample are assigned to the later captured check. Distinct original events and visible episode ranges do not support the merger. Correct denial of live dock use does not cure it.",
+      "replacement_grade": null,
+      "visible_material_boundary": {
+        "unsupported_edge_already_visible": false,
+        "reader_adds_edge": true,
+        "limit": "Only actually displayed material can explain this reader response. Unrendered generated text is not asserted absent from storage and cannot itself have been read.",
+        "proof": "Packet source 73f0d097a2c142e7af22248b23858f7f appears in episode pm_652241bb00a5c939a335ad678f0db7a92c240b6e capture 5..6. Replay source dcde771d527043f4b75cf6bab2daeddb appears in episode pm_81f1877d0596b4e091236e85e1fdd018b709aa10 capture 1..3. These separate outcome/open-work fields do not identify both checks as one. q4 displays only the earlier disabled-dispatcher clause; JSON is still explicitly a packet sample."
+      }
+    },
+    {
+      "history_id": "hold_702",
+      "question_id": "q4",
+      "repeat": 1,
+      "variant": "candidate",
+      "evidence": {
+        "question": "How did the rain-drill continuation change the work?",
+        "actual_answer": {
+          "id": "q4",
+          "answer": "The continuation added an umbrella-storage stop before the ramp, retained the requirement to keep families together and arrival order within each wheelchair group, and left dock cutover closed until the marshal observes the new route. The local replay only showed group boundaries in the JSON sample; the physical rain-route drill with the marshal remained unfinished, and live dock use could not be inferred from the replay. The earlier queue order was reported active at the dock, while the assistant said it had not run the rain drill. [R0001, R0002, R0003, R0004, R0005, R0006, R0007, R0008]",
+          "uncertainties": [
+            "The original user sources are flagged as unresolved, with their extracted representation completeness uncertain. [R0003, R0004, R0005, R0006]"
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0001",
+              "source_id": "aff38a1d7f944b539a818bc6916ec72d",
+              "source_field": "body",
+              "start": 0,
+              "end": 62,
+              "source_role": "assistant_report",
+              "quote": "I can prepare route cards next; I have not run the rain drill."
+            },
+            {
+              "catalog_ref": "R0002",
+              "source_id": "3bdd33cd7fdb43cd8a67191daf70420b",
+              "source_field": "body",
+              "start": 0,
+              "end": 42,
+              "source_role": "assistant_report",
+              "quote": "The new queue order is active at the dock."
+            },
+            {
+              "catalog_ref": "R0003",
+              "source_id": "199c99ce90944fe9a6668bbd566420b1",
+              "source_field": "body",
+              "start": 0,
+              "end": 158,
+              "source_role": "user_intent",
+              "quote": "For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them."
+            },
+            {
+              "catalog_ref": "R0004",
+              "source_id": "ca36f6607e8c4c0395b5b5428adbf885",
+              "source_field": "body",
+              "start": 0,
+              "end": 161,
+              "source_role": "user_intent",
+              "quote": "Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "931ce67e25b141d3a46995b96b0db017",
+              "source_field": "body",
+              "start": 0,
+              "end": 180,
+              "source_role": "user_intent",
+              "quote": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "c96e980342614df09571234d9858df62",
+              "source_field": "body",
+              "start": 0,
+              "end": 110,
+              "source_role": "user_intent",
+              "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay."
+            },
+            {
+              "catalog_ref": "R0007",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "start": 62,
+              "end": 106,
+              "source_role": "tool_record",
+              "quote": " Physical ramp drill has no recorded result."
+            },
+            {
+              "catalog_ref": "R0008",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "start": 0,
+              "end": 62,
+              "source_role": "tool_record",
+              "quote": "LOCAL marshal packet sample: group boundaries present in JSON."
+            }
+          ]
+        },
+        "gold": {
+          "category": "late_continuation",
+          "required_facts": [
+            {
+              "text": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.",
+              "support": [
+                {
+                  "event_id": "hold_702_e10",
+                  "quote": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.",
+                  "start": 0,
+                  "end": 180
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The late continuation removed the preserved constraint.",
+            "Scratch observation: the dock supervisor approved splitting families on busy days."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_702_e01",
+            "role": "user",
+            "text": "For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them."
+          },
+          {
+            "event_id": "hold_702_e02",
+            "role": "assistant",
+            "text": "The new queue order is active at the dock."
+          },
+          {
+            "event_id": "hold_702_e03",
+            "role": "tool",
+            "text": "LOCAL replay of 42 boarding groups: family adjacency preserved. Dock dispatcher connection disabled."
+          },
+          {
+            "event_id": "hold_702_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the dock supervisor approved splitting families on busy days."
+          },
+          {
+            "event_id": "hold_702_e08",
+            "role": "user",
+            "text": "Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill."
+          },
+          {
+            "event_id": "hold_702_e09",
+            "role": "tool",
+            "text": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result."
+          },
+          {
+            "event_id": "hold_702_e10",
+            "role": "user",
+            "text": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route."
+          },
+          {
+            "event_id": "hold_702_e11",
+            "role": "assistant",
+            "text": "I can prepare route cards next; I have not run the rain drill."
+          },
+          {
+            "event_id": "hold_702_e12",
+            "role": "user",
+            "text": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay."
+          }
+        ],
+        "actual_own_context": "PROJECT cedar_ferry\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"0\" source_evidence_omitted=\"2\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"9\" pending_events=\"0\"/><item id=\"aff38a1d7f944b539a818bc6916ec72d\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"8\" source_capture_seq_max=\"8\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"aff38a1d7f944b539a818bc6916ec72d\" start=\"0\" end=\"62\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"62\"><quote_excerpt>I can prepare route cards next; I have not run the rain drill.</quote_excerpt></source></field></item><item id=\"3bdd33cd7fdb43cd8a67191daf70420b\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"2\" source_capture_seq_max=\"2\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"3bdd33cd7fdb43cd8a67191daf70420b\" start=\"0\" end=\"42\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"42\"><quote_excerpt>The new queue order is active at the dock.</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"4\"><field name=\"source_custody\"><source source_id=\"199c99ce90944fe9a6668bbd566420b1\" start=\"0\" end=\"158\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them.</quote_excerpt></source><source source_id=\"ca36f6607e8c4c0395b5b5428adbf885\" start=\"0\" end=\"161\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill.</quote_excerpt></source><source source_id=\"931ce67e25b141d3a46995b96b0db017\" start=\"0\" end=\"180\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.</quote_excerpt></source><source source_id=\"c96e980342614df09571234d9858df62\" start=\"0\" end=\"110\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.</quote_excerpt></source></field></item><item id=\"pm_3f52368b7414eb8138e0d9695008870a94a1f896\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"7\" source_capture_seq_max=\"9\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_3f52368b7414eb8138e0d9695008870a94a1f896\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"4\" fields_omitted=\"4\"></item><item id=\"pm_652241bb00a5c939a335ad678f0db7a92c240b6e\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_652241bb00a5c939a335ad678f0db7a92c240b6e\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"1\" fields_omitted=\"2\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"73f0d097a2c142e7af22248b23858f7f\" start=\"62\" end=\"106\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Physical ramp drill has no recorded result.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"73f0d097a2c142e7af22248b23858f7f\" start=\"0\" end=\"62\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL marshal packet sample: group boundaries present in JSON.</quote_excerpt></source></field></item><item id=\"pm_81f1877d0596b4e091236e85e1fdd018b709aa10\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_81f1877d0596b4e091236e85e1fdd018b709aa10\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"4\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"dcde771d527043f4b75cf6bab2daeddb\" start=\"63\" end=\"100\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Dock dispatcher connection disabled.</quote_excerpt></source></field></item><omitted records=\"1\" fields=\"10\"/></project-memory>",
+        "actual_own_view_chars": 5897,
+        "actual_own_view_sha256": "fdfd077c1977158e56fe68f8d5c308ad3b16cffaa972f291d263332e657aa0cf",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [
+            "false_merge"
+          ],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 234,
+                  "quote": "The continuation added an umbrella-storage stop before the ramp, retained the requirement to keep families together and arrival order within each wheelchair group, and left dock cutover closed until the marshal observes the new route."
+                },
+                {
+                  "ref": "A0003",
+                  "start": 235,
+                  "end": 425,
+                  "quote": "The local replay only showed group boundaries in the JSON sample; the physical rain-route drill with the marshal remained unfinished, and live dock use could not be inferred from the replay."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0005",
+                  "source_id": "931ce67e25b141d3a46995b96b0db017",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 180,
+                  "quote": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "Recalls the continuation and preserves the pending drill. However, A0003 incorrectly assigns the JSON packet finding to the local replay; J0008 establishes a separate marshal packet sample.",
+          "critical_witnesses": [
+            {
+              "error_type": "false_merge",
+              "answer_ref": "A0003",
+              "assertion_mode": "affirmative_current",
+              "relation": "asserts_forbidden_conclusion",
+              "prohibition_ref": "policy:false_merge",
+              "answer_witness": {
+                "ref": "A0003",
+                "start": 235,
+                "end": 425,
+                "quote": "The local replay only showed group boundaries in the JSON sample; the physical rain-route drill with the marshal remained unfinished, and live dock use could not be inferred from the replay."
+              }
+            }
+          ],
+          "id": "q4",
+          "required_facts_total": 1,
+          "required_facts_recalled": 1,
+          "context_chars": 5897,
+          "reader_shared_latency_ms": 71347,
+          "reader_shared_metrics": {
+            "duration_ms": 71201,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "input_tokens": 69129,
+                "output_tokens": 1852,
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 16512,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 70981
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 23432,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11627,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 361,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11988
+              }
+            }
+          },
+          "reader_question_latency_ms": 23470,
+          "reader_context_isolation": "per-question-v1",
+          "category": "late_continuation"
+        },
+        "judge_request_sha256": "139a1f813571809ddfef0cbf73b44b4ce85676532008ca9719a0f2d996f8ece5",
+        "reader_sha256": "d8f31a1b72cf3ee782fff413680c0ab85c267d06608c023beccb97aa05b9bbcd",
+        "judge_sha256": "b1d93ccdf7b5dc7a1de1fce8474770680d285b82ddc5020c4f4d62343c22d9b5",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Actual attribution error: JSON group boundaries are called a local replay result. The visible later source says marshal packet sample; the original earlier replay reports family adjacency. Both being local does not establish one check.",
+      "replacement_grade": null,
+      "visible_material_boundary": {
+        "unsupported_edge_already_visible": false,
+        "reader_adds_edge": true,
+        "limit": "Only actually displayed material can explain this reader response. Unrendered generated text is not asserted absent from storage and cannot itself have been read.",
+        "proof": "Packet source 73f0d097a2c142e7af22248b23858f7f appears in episode pm_652241bb00a5c939a335ad678f0db7a92c240b6e capture 5..6. Replay source dcde771d527043f4b75cf6bab2daeddb appears in episode pm_81f1877d0596b4e091236e85e1fdd018b709aa10 capture 1..3. These separate outcome/open-work fields do not identify both checks as one. q4 displays only the earlier disabled-dispatcher clause; JSON is still explicitly a packet sample."
+      }
+    },
+    {
+      "history_id": "hold_702",
+      "question_id": "q5",
+      "repeat": 1,
+      "variant": "candidate",
+      "evidence": {
+        "question": "For Cedar ferry queue, what did the later captured check establish, and what should still remain open after the last user instruction?",
+        "actual_answer": {
+          "id": "q5",
+          "answer": "The later captured local check recorded that a replay of 42 boarding groups preserved family adjacency, and a local marshal packet sample contained group boundaries in JSON. These are local results only; the later user instruction explicitly says not to infer live dock use from the replay. Keep open the rain-route drill with the marshal, including the umbrella-storage stop before the ramp and keeping families together. Dock cutover should remain closed until the marshal observes the new route; the physical ramp drill has no recorded result.",
+          "uncertainties": [
+            "The captured sources do not establish whether an observed rain-route or physical ramp drill later occurred."
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0005",
+              "source_id": "c96e980342614df09571234d9858df62",
+              "source_field": "body",
+              "start": 0,
+              "end": 110,
+              "source_role": "user_intent",
+              "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "start": 62,
+              "end": 106,
+              "source_role": "tool_record",
+              "quote": " Physical ramp drill has no recorded result."
+            },
+            {
+              "catalog_ref": "R0007",
+              "source_id": "73f0d097a2c142e7af22248b23858f7f",
+              "source_field": "body",
+              "start": 0,
+              "end": 62,
+              "source_role": "tool_record",
+              "quote": "LOCAL marshal packet sample: group boundaries present in JSON."
+            },
+            {
+              "catalog_ref": "R0009",
+              "source_id": "dcde771d527043f4b75cf6bab2daeddb",
+              "source_field": "body",
+              "start": 0,
+              "end": 63,
+              "source_role": "tool_record",
+              "quote": "LOCAL replay of 42 boarding groups: family adjacency preserved."
+            }
+          ]
+        },
+        "gold": {
+          "category": "evidence_scope",
+          "required_facts": [
+            {
+              "text": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result.",
+              "support": [
+                {
+                  "event_id": "hold_702_e09",
+                  "quote": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result.",
+                  "start": 0,
+                  "end": 106
+                }
+              ]
+            },
+            {
+              "text": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+              "support": [
+                {
+                  "event_id": "hold_702_e12",
+                  "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+                  "start": 0,
+                  "end": 110
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The missing external check succeeded.",
+            "The deleted scratch observation supplies positive evidence.",
+            "Scratch observation: the dock supervisor approved splitting families on busy days."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_702_e01",
+            "role": "user",
+            "text": "For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them."
+          },
+          {
+            "event_id": "hold_702_e02",
+            "role": "assistant",
+            "text": "The new queue order is active at the dock."
+          },
+          {
+            "event_id": "hold_702_e03",
+            "role": "tool",
+            "text": "LOCAL replay of 42 boarding groups: family adjacency preserved. Dock dispatcher connection disabled."
+          },
+          {
+            "event_id": "hold_702_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the dock supervisor approved splitting families on busy days."
+          },
+          {
+            "event_id": "hold_702_e08",
+            "role": "user",
+            "text": "Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill."
+          },
+          {
+            "event_id": "hold_702_e09",
+            "role": "tool",
+            "text": "LOCAL marshal packet sample: group boundaries present in JSON. Physical ramp drill has no recorded result."
+          },
+          {
+            "event_id": "hold_702_e10",
+            "role": "user",
+            "text": "Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route."
+          },
+          {
+            "event_id": "hold_702_e11",
+            "role": "assistant",
+            "text": "I can prepare route cards next; I have not run the rain drill."
+          },
+          {
+            "event_id": "hold_702_e12",
+            "role": "user",
+            "text": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay."
+          }
+        ],
+        "actual_own_context": "PROJECT cedar_ferry\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"9\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"3bdd33cd7fdb43cd8a67191daf70420b\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"2\" source_capture_seq_max=\"2\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"3bdd33cd7fdb43cd8a67191daf70420b\" start=\"0\" end=\"42\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"42\"><quote_excerpt>The new queue order is active at the dock.</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"4\"><field name=\"source_custody\"><source source_id=\"199c99ce90944fe9a6668bbd566420b1\" start=\"0\" end=\"158\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>For Cedar ferry queues, retain arrival order within each wheelchair group. Families board together and a shorter queue estimate is not a reason to split them.</quote_excerpt></source><source source_id=\"ca36f6607e8c4c0395b5b5428adbf885\" start=\"0\" end=\"161\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Keep the dispatcher cutover closed. A replay cannot establish that the physical ramp marshal receives group boundaries, and that handoff needs an observed drill.</quote_excerpt></source><source source_id=\"931ce67e25b141d3a46995b96b0db017\" start=\"0\" end=\"180\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Pick this up again for the rain drill. Add an umbrella-storage stop before the ramp, keep families together, and leave dock cutover closed until the marshal observes the new route.</quote_excerpt></source><source source_id=\"c96e980342614df09571234d9858df62\" start=\"0\" end=\"110\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.</quote_excerpt></source></field></item><item id=\"pm_3f52368b7414eb8138e0d9695008870a94a1f896\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"7\" source_capture_seq_max=\"9\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_3f52368b7414eb8138e0d9695008870a94a1f896\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"4\" fields_omitted=\"4\"></item><item id=\"pm_652241bb00a5c939a335ad678f0db7a92c240b6e\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_652241bb00a5c939a335ad678f0db7a92c240b6e\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"1\" fields_omitted=\"2\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"73f0d097a2c142e7af22248b23858f7f\" start=\"62\" end=\"106\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Physical ramp drill has no recorded result.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"73f0d097a2c142e7af22248b23858f7f\" start=\"0\" end=\"62\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL marshal packet sample: group boundaries present in JSON.</quote_excerpt></source></field></item><item id=\"pm_81f1877d0596b4e091236e85e1fdd018b709aa10\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_81f1877d0596b4e091236e85e1fdd018b709aa10\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"dcde771d527043f4b75cf6bab2daeddb\" start=\"63\" end=\"100\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Dock dispatcher connection disabled.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"dcde771d527043f4b75cf6bab2daeddb\" start=\"0\" end=\"63\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL replay of 42 boarding groups: family adjacency preserved.</quote_excerpt></source></field></item><omitted records=\"1\" fields=\"9\"/></project-memory>",
+        "actual_own_view_chars": 5741,
+        "actual_own_view_sha256": "fd63570488634e92f8cfbb6407a77ddf934b51c1223a806f1d44a6134b5e5b4c",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [
+            "false_merge"
+          ],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 173,
+                  "quote": "The later captured local check recorded that a replay of 42 boarding groups preserved family adjacency, and a local marshal packet sample contained group boundaries in JSON."
+                },
+                {
+                  "ref": "A0005",
+                  "start": 423,
+                  "end": 546,
+                  "quote": "Dock cutover should remain closed until the marshal observes the new route; the physical ramp drill has no recorded result."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0007",
+                  "source_id": "73f0d097a2c142e7af22248b23858f7f",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 0,
+                  "end": 62,
+                  "quote": "LOCAL marshal packet sample: group boundaries present in JSON.",
+                  "reader_visible": true
+                },
+                {
+                  "ref": "J0006",
+                  "source_id": "73f0d097a2c142e7af22248b23858f7f",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 62,
+                  "end": 106,
+                  "quote": " Physical ramp drill has no recorded result.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            },
+            {
+              "fact_index": 1,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0003",
+                  "start": 174,
+                  "end": 290,
+                  "quote": "These are local results only; the later user instruction explicitly says not to infer live dock use from the replay."
+                },
+                {
+                  "ref": "A0004",
+                  "start": 291,
+                  "end": 422,
+                  "quote": "Keep open the rain-route drill with the marshal, including the umbrella-storage stop before the ramp and keeping families together."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0005",
+                  "source_id": "c96e980342614df09571234d9858df62",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 110,
+                  "quote": "The remaining work is the rain-route drill with the marshal. Do not infer live dock use from the local replay.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "Recalls the JSON boundaries, absent physical drill result, and remaining rain drill. However, A0002 merges the earlier replay into the later captured check; the cited records establish separate checks.",
+          "critical_witnesses": [
+            {
+              "error_type": "false_merge",
+              "answer_ref": "A0002",
+              "assertion_mode": "affirmative_current",
+              "relation": "asserts_forbidden_conclusion",
+              "prohibition_ref": "policy:false_merge",
+              "answer_witness": {
+                "ref": "A0002",
+                "start": 0,
+                "end": 173,
+                "quote": "The later captured local check recorded that a replay of 42 boarding groups preserved family adjacency, and a local marshal packet sample contained group boundaries in JSON."
+              }
+            }
+          ],
+          "id": "q5",
+          "required_facts_total": 2,
+          "required_facts_recalled": 2,
+          "context_chars": 5741,
+          "reader_shared_latency_ms": 71347,
+          "reader_shared_metrics": {
+            "duration_ms": 71201,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "input_tokens": 69129,
+                "output_tokens": 1852,
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 16512,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 70981
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 9902,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11596,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 257,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11853
+              }
+            }
+          },
+          "reader_question_latency_ms": 9922,
+          "reader_context_isolation": "per-question-v1",
+          "category": "evidence_scope"
+        },
+        "judge_request_sha256": "139a1f813571809ddfef0cbf73b44b4ce85676532008ca9719a0f2d996f8ece5",
+        "reader_sha256": "d8f31a1b72cf3ee782fff413680c0ab85c267d06608c023beccb97aa05b9bbcd",
+        "judge_sha256": "b1d93ccdf7b5dc7a1de1fce8474770680d285b82ddc5020c4f4d62343c22d9b5",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Actual attribution error, as in primary q5: earlier replay is assigned to later captured check. Correct pending drill status does not support merged check identity.",
+      "replacement_grade": null,
+      "visible_material_boundary": {
+        "unsupported_edge_already_visible": false,
+        "reader_adds_edge": true,
+        "limit": "Only actually displayed material can explain this reader response. Unrendered generated text is not asserted absent from storage and cannot itself have been read.",
+        "proof": "Packet source 73f0d097a2c142e7af22248b23858f7f appears in episode pm_652241bb00a5c939a335ad678f0db7a92c240b6e capture 5..6. Replay source dcde771d527043f4b75cf6bab2daeddb appears in episode pm_81f1877d0596b4e091236e85e1fdd018b709aa10 capture 1..3. These separate outcome/open-work fields do not identify both checks as one. q4 displays only the earlier disabled-dispatcher clause; JSON is still explicitly a packet sample."
+      }
+    },
+    {
+      "history_id": "hold_706",
+      "question_id": "q1",
+      "repeat": 0,
+      "variant": "candidate",
+      "evidence": {
+        "question": "What blackout timing is fixed and what is the reason?",
+        "actual_answer": {
+          "id": "q1",
+          "answer": "The blackout transition is fixed at three seconds. The dancer needs that interval to leave a narrow platform without seeing its edge. A local cue simulation reported 3.0 seconds, but the console upload remains open because console network access was not configured; the front-row prop visibility check is also still open. [R0001, R0002, R0004, R0005, R0006]",
+          "uncertainties": [],
+          "citations": [
+            {
+              "catalog_ref": "R0001",
+              "source_id": "8b9c9dfb17af458494542ff8ae5c4ad3",
+              "source_field": "body",
+              "start": 0,
+              "end": 72,
+              "source_role": "user_intent",
+              "quote": "For Lumen rehearsal cues, keep the blackout transition at three seconds."
+            },
+            {
+              "catalog_ref": "R0002",
+              "source_id": "8b9c9dfb17af458494542ff8ae5c4ad3",
+              "source_field": "body",
+              "start": 72,
+              "end": 154,
+              "source_role": "user_intent",
+              "quote": " The dancer uses that interval to leave a narrow platform without seeing the edge."
+            },
+            {
+              "catalog_ref": "R0004",
+              "source_id": "0e70ee28e3b84e6d855fd3884be1a611",
+              "source_field": "body",
+              "start": 0,
+              "end": 108,
+              "source_role": "user_intent",
+              "quote": "The front-row visibility check and the console upload are still open. Approval covers the revised plot only."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "e46b422fbe9c42479dfeae46bcd3f10d",
+              "source_field": "body",
+              "start": 54,
+              "end": 93,
+              "source_role": "tool_record",
+              "quote": " Console network access not configured."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "e46b422fbe9c42479dfeae46bcd3f10d",
+              "source_field": "body",
+              "start": 0,
+              "end": 54,
+              "source_role": "tool_record",
+              "quote": "LOCAL cue simulation: blackout transition 3.0 seconds."
+            }
+          ]
+        },
+        "gold": {
+          "category": "constraint",
+          "required_facts": [
+            {
+              "text": "For Lumen rehearsal cues, keep the blackout transition at three seconds. The dancer uses that interval to leave a narrow platform without seeing the edge.",
+              "support": [
+                {
+                  "event_id": "hold_706_e01",
+                  "quote": "For Lumen rehearsal cues, keep the blackout transition at three seconds. The dancer uses that interval to leave a narrow platform without seeing the edge.",
+                  "start": 0,
+                  "end": 154
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The initial user constraint was waived.",
+            "Scratch observation: the dancer approved an instantaneous blackout."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_706_e01",
+            "role": "user",
+            "text": "For Lumen rehearsal cues, keep the blackout transition at three seconds. The dancer uses that interval to leave a narrow platform without seeing the edge."
+          },
+          {
+            "event_id": "hold_706_e02",
+            "role": "assistant",
+            "text": "I sent the revised cue list to the theater console."
+          },
+          {
+            "event_id": "hold_706_e03",
+            "role": "tool",
+            "text": "LOCAL cue simulation: blackout transition 3.0 seconds. Console network access not configured."
+          },
+          {
+            "event_id": "hold_706_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the dancer approved an instantaneous blackout."
+          },
+          {
+            "event_id": "hold_706_e08",
+            "role": "user",
+            "text": "Use the amber sidelight for the rehearsal preview, but defer show approval until the stage manager checks that it does not reveal the hidden prop."
+          },
+          {
+            "event_id": "hold_706_e09",
+            "role": "tool",
+            "text": "LOCAL fixture plot: amber sidelight overlaps prop zone by 20 cm. No on-stage visibility check logged."
+          },
+          {
+            "event_id": "hold_706_e10",
+            "role": "user",
+            "text": "Resume after the platform move. Shift the amber fixture one meter upstage, retain the three-second blackout, and repeat the prop visibility check from the front row."
+          },
+          {
+            "event_id": "hold_706_e11",
+            "role": "assistant",
+            "text": "I will revise the plot next; this is not a console upload."
+          },
+          {
+            "event_id": "hold_706_e12",
+            "role": "user",
+            "text": "The front-row visibility check and the console upload are still open. Approval covers the revised plot only."
+          }
+        ],
+        "actual_own_context": "PROJECT lumen_rehearsal\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r10-experiment/projects/hold_706/lumen_rehearsal\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"1\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"9\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_8946b9d30bc0275b49a53e546cad594f34a4ef3c\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq=\"1\"><field name=\"text\"><derived_text>Keep the blackout transition at three seconds for Lumen rehearsal cues.</derived_text><source source_id=\"8b9c9dfb17af458494542ff8ae5c4ad3\" start=\"0\" end=\"72\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt>For Lumen rehearsal cues, keep the blackout transition at three seconds.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"8b9c9dfb17af458494542ff8ae5c4ad3\" start=\"72\" end=\"154\" source_role=\"user_intent\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt> The dancer uses that interval to leave a narrow platform without seeing the edge.</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"3\"><field name=\"source_custody\"><source source_id=\"559778df276248e3b801bae4eebcd80f\" start=\"0\" end=\"165\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Resume after the platform move. Shift the amber fixture one meter upstage, retain the three-second blackout, and repeat the prop visibility check from the front row.</quote_excerpt></source><source source_id=\"0e70ee28e3b84e6d855fd3884be1a611\" start=\"0\" end=\"108\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>The front-row visibility check and the console upload are still open. Approval covers the revised plot only.</quote_excerpt></source></field></item><item id=\"pm_bfb0c0066bb46ed33dd9fe97f13c0ae1f642b6fa\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"7\" source_capture_seq_max=\"9\" logical_episode_id=\"pm_bfb0c0066bb46ed33dd9fe97f13c0ae1f642b6fa\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"3\"></item><item id=\"pm_7c348b0b7eed8f7627e3b5a26877c0d2fc14572f\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" logical_episode_id=\"pm_7c348b0b7eed8f7627e3b5a26877c0d2fc14572f\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"2\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"e46b422fbe9c42479dfeae46bcd3f10d\" start=\"54\" end=\"93\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Console network access not configured.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"e46b422fbe9c42479dfeae46bcd3f10d\" start=\"0\" end=\"54\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL cue simulation: blackout transition 3.0 seconds.</quote_excerpt></source></field><field name=\"summary_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"8b9c9dfb17af458494542ff8ae5c4ad3\" start=\"0\" end=\"72\" source_role=\"user_intent\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt>For Lumen rehearsal cues, keep the blackout transition at three seconds.</quote_excerpt></source><source source_id=\"8b9c9dfb17af458494542ff8ae5c4ad3\" start=\"72\" end=\"154\" source_role=\"user_intent\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt> The dancer uses that interval to leave a narrow platform without seeing the edge.</quote_excerpt></source><source source_id=\"e46b422fbe9c42479dfeae46bcd3f10d\" start=\"0\" end=\"54\" source_role=\"tool_record\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt>LOCAL cue simulation: blackout transition 3.0 seconds.</quote_excerpt></source><source source_id=\"e46b422fbe9c42479dfeae46bcd3f10d\" start=\"54\" end=\"93\" source_role=\"tool_record\" field=\"summary\" quote_truncated=\"False\"><quote_excerpt> Console network access not configured.</quote_excerpt></source></field></item><omitted records=\"1\" fields=\"5\"/></project-memory>",
+        "actual_own_view_chars": 5355,
+        "actual_own_view_sha256": "df3ff0f224daf693bd4e89412c15a77611b72e13a95338491f815048652e8323",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [
+            "false_merge"
+          ],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 50,
+                  "quote": "The blackout transition is fixed at three seconds."
+                },
+                {
+                  "ref": "A0003",
+                  "start": 51,
+                  "end": 133,
+                  "quote": "The dancer needs that interval to leave a narrow platform without seeing its edge."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "8b9c9dfb17af458494542ff8ae5c4ad3",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 72,
+                  "quote": "For Lumen rehearsal cues, keep the blackout transition at three seconds.",
+                  "reader_visible": true
+                },
+                {
+                  "ref": "J0002",
+                  "source_id": "8b9c9dfb17af458494542ff8ae5c4ad3",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 72,
+                  "end": 154,
+                  "quote": " The dancer uses that interval to leave a narrow platform without seeing the edge.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "Recalls the fixed timing and dancer's reason. However, it asserts that the upload remains open because network access was unconfigured. The separate local-tool limitation and later open-work instruction do not establish that causal relationship.",
+          "critical_witnesses": [
+            {
+              "error_type": "false_merge",
+              "answer_ref": "A0004",
+              "assertion_mode": "affirmative_current",
+              "relation": "asserts_forbidden_conclusion",
+              "prohibition_ref": "policy:false_merge",
+              "answer_witness": {
+                "ref": "A0004",
+                "start": 134,
+                "end": 321,
+                "quote": "A local cue simulation reported 3.0 seconds, but the console upload remains open because console network access was not configured; the front-row prop visibility check is also still open."
+              }
+            }
+          ],
+          "id": "q1",
+          "required_facts_total": 1,
+          "required_facts_recalled": 1,
+          "context_chars": 5355,
+          "reader_shared_latency_ms": 67020,
+          "reader_shared_metrics": {
+            "duration_ms": 66908,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "reasoning_output_tokens": 310,
+                "output_tokens": 1890,
+                "input_tokens": 67678,
+                "cached_input_tokens": 24704,
+                "total_tokens": 69568,
+                "cache_write_input_tokens": 0
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 7559,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11495,
+                "cached_input_tokens": 8192,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 251,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11746
+              }
+            }
+          },
+          "reader_question_latency_ms": 7580,
+          "reader_context_isolation": "per-question-v1",
+          "category": "constraint"
+        },
+        "judge_request_sha256": "bba3c6c5a4ab5ab1406b9c411532e64fe3642d16ad0687307c9683075b766bcf",
+        "reader_sha256": "1eedbe1085ee1da7acd436b98b9174c21279f087cf439ca6a4bcb2d54fa0e727",
+        "judge_sha256": "d1f53767621e2098b5f9d6927ddd49c313790a822c61563bb6ef4e00fcce5502",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Actual unsupported cause: earlier tool says network access not configured; later user says upload remains open. No visible source says the upload is open BECAUSE of that condition or confirms the condition remains current. Plausible operational explanation is weaker than source-established cause.",
+      "replacement_grade": null,
+      "visible_material_boundary": {
+        "unsupported_edge_already_visible": false,
+        "reader_adds_edge": true,
+        "limit": "Only actually displayed material can explain this reader response. Unrendered generated text is not asserted absent from storage and cannot itself have been read.",
+        "proof": "Upload-open source 0e70ee28e3b84e6d855fd3884be1a611 is user custody capture 9. Network-disabled source e46b422fbe9c42479dfeae46bcd3f10d appears in earlier episode pm_7c348b0b7eed8f7627e3b5a26877c0d2fc14572f capture 1..3 as open_work and summary excerpts. These associations do not say because or connect the current upload-open instruction causally. The only displayed derived_text is the three-second-blackout requirement."
+      }
+    },
+    {
+      "history_id": "hold_708",
+      "question_id": "q2",
+      "repeat": 0,
+      "variant": "candidate",
+      "evidence": {
+        "question": "Does the captured test prove deployment at repair desks?",
+        "actual_answer": {
+          "id": "q2",
+          "answer": "No. The captured test only reports a local form check showing owner text and mechanic summary in separate fields. The tool record says repair desk endpoints were not contacted, and no desk acceptance run was recorded. Although an assistant reported that the form had been deployed to all repair desks, that report does not prove deployment. The later user instructions say only the postal sample is authorized and desk rollout remains open pending a postal-desk acceptance run; whether that run has since occurred is unknown from the supplied memory.",
+          "uncertainties": [
+            "The memory is incomplete and omits sources and fields; it does not establish whether a postal-desk acceptance run occurred after the cited records."
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0001",
+              "source_id": "86924ad00aa640aba84a6ad4dece593e",
+              "source_field": "body",
+              "start": 0,
+              "end": 58,
+              "source_role": "assistant_report",
+              "quote": "The new intake form has been deployed to all repair desks."
+            },
+            {
+              "catalog_ref": "R0003",
+              "source_id": "02cb0fbcac7d409da49800ecf768398e",
+              "source_field": "body",
+              "start": 0,
+              "end": 162,
+              "source_role": "user_intent",
+              "quote": "Use a separate accessories checklist instead of appending accessories to the symptom text. Technicians must tell a missing charger from a reported charging fault."
+            },
+            {
+              "catalog_ref": "R0004",
+              "source_id": "a21e9adf1ee9440899b9bdd456adf876",
+              "source_field": "body",
+              "start": 0,
+              "end": 145,
+              "source_role": "user_intent",
+              "quote": "Resume for postal repairs. Add a parcel-damage field outside the symptom description, and keep desk rollout pending a postal-desk acceptance run."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "8ddeb59146ea49c78f69341837c73d7b",
+              "source_field": "body",
+              "start": 0,
+              "end": 100,
+              "source_role": "user_intent",
+              "quote": "Only the postal sample is authorized. Keep the original symptom wording and leave desk rollout open."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "243708c424284226a3d64ce0be802b80",
+              "source_field": "body",
+              "start": 75,
+              "end": 112,
+              "source_role": "tool_record",
+              "quote": " Repair desk endpoints not contacted."
+            },
+            {
+              "catalog_ref": "R0007",
+              "source_id": "243708c424284226a3d64ce0be802b80",
+              "source_field": "body",
+              "start": 0,
+              "end": 75,
+              "source_role": "tool_record",
+              "quote": "LOCAL form test: owner text and mechanic summary appear in separate fields."
+            },
+            {
+              "catalog_ref": "R0008",
+              "source_id": "88e1bb86575b439783d27b6abe509669",
+              "source_field": "body",
+              "start": 87,
+              "end": 120,
+              "source_role": "tool_record",
+              "quote": " No desk acceptance run recorded."
+            }
+          ]
+        },
+        "gold": {
+          "category": "execution_attribution",
+          "required_facts": [
+            {
+              "text": "The assistant reported: The new intake form has been deployed to all repair desks.",
+              "support": [
+                {
+                  "event_id": "hold_708_e02",
+                  "quote": "The new intake form has been deployed to all repair desks.",
+                  "start": 0,
+                  "end": 58
+                }
+              ]
+            },
+            {
+              "text": "LOCAL form test: owner text and mechanic summary appear in separate fields. Repair desk endpoints not contacted.",
+              "support": [
+                {
+                  "event_id": "hold_708_e03",
+                  "quote": "LOCAL form test: owner text and mechanic summary appear in separate fields. Repair desk endpoints not contacted.",
+                  "start": 0,
+                  "end": 112
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The assistant report proves execution or deployment.",
+            "A local check verifies the external destination.",
+            "Scratch observation: the workshop manager approved replacing owner descriptions with mechanic summaries."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_708_e01",
+            "role": "user",
+            "text": "For Aster repair intake, keep the owner-written symptom description visible beside the mechanic summary. Intermittent faults often disappear on the bench, so the original wording remains useful."
+          },
+          {
+            "event_id": "hold_708_e02",
+            "role": "assistant",
+            "text": "The new intake form has been deployed to all repair desks."
+          },
+          {
+            "event_id": "hold_708_e03",
+            "role": "tool",
+            "text": "LOCAL form test: owner text and mechanic summary appear in separate fields. Repair desk endpoints not contacted."
+          },
+          {
+            "event_id": "hold_708_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the workshop manager approved replacing owner descriptions with mechanic summaries."
+          },
+          {
+            "event_id": "hold_708_e08",
+            "role": "user",
+            "text": "Use a separate accessories checklist instead of appending accessories to the symptom text. Technicians must tell a missing charger from a reported charging fault."
+          },
+          {
+            "event_id": "hold_708_e09",
+            "role": "tool",
+            "text": "LOCAL sample ticket: charger accessory unchecked; charging fault remains in owner text. No desk acceptance run recorded."
+          },
+          {
+            "event_id": "hold_708_e10",
+            "role": "user",
+            "text": "Resume for postal repairs. Add a parcel-damage field outside the symptom description, and keep desk rollout pending a postal-desk acceptance run."
+          },
+          {
+            "event_id": "hold_708_e11",
+            "role": "assistant",
+            "text": "I can prepare the postal sample next; no acceptance run has happened."
+          },
+          {
+            "event_id": "hold_708_e12",
+            "role": "user",
+            "text": "Only the postal sample is authorized. Keep the original symptom wording and leave desk rollout open."
+          }
+        ],
+        "actual_own_context": "PROJECT aster_repair\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"1\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"9\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"86924ad00aa640aba84a6ad4dece593e\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"2\" source_capture_seq_max=\"2\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"86924ad00aa640aba84a6ad4dece593e\" start=\"0\" end=\"58\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"58\"><quote_excerpt>The new intake form has been deployed to all repair desks.</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"4\"><field name=\"source_custody\"><source source_id=\"d01df38caf844b3aa40f5a17dfbd12e7\" start=\"0\" end=\"194\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>For Aster repair intake, keep the owner-written symptom description visible beside the mechanic summary. Intermittent faults often disappear on the bench, so the original wording remains useful.</quote_excerpt></source><source source_id=\"02cb0fbcac7d409da49800ecf768398e\" start=\"0\" end=\"162\" source_role=\"user_intent\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>Use a separate accessories checklist instead of appending accessories to the symptom text. Technicians must tell a missing charger from a reported charging fault.</quote_excerpt></source><source source_id=\"a21e9adf1ee9440899b9bdd456adf876\" start=\"0\" end=\"145\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Resume for postal repairs. Add a parcel-damage field outside the symptom description, and keep desk rollout pending a postal-desk acceptance run.</quote_excerpt></source><source source_id=\"8ddeb59146ea49c78f69341837c73d7b\" start=\"0\" end=\"100\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>Only the postal sample is authorized. Keep the original symptom wording and leave desk rollout open.</quote_excerpt></source></field></item><item id=\"pm_0730a1c9f319d0daf8719aec50979cfcf97e5367\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_0730a1c9f319d0daf8719aec50979cfcf97e5367\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"243708c424284226a3d64ce0be802b80\" start=\"75\" end=\"112\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Repair desk endpoints not contacted.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"243708c424284226a3d64ce0be802b80\" start=\"0\" end=\"75\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL form test: owner text and mechanic summary appear in separate fields.</quote_excerpt></source><source source_id=\"243708c424284226a3d64ce0be802b80\" start=\"75\" end=\"112\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt> Repair desk endpoints not contacted.</quote_excerpt></source></field></item><item id=\"pm_664bd315ad27e2879fc5303ab71e07d2c602defd\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"7\" source_capture_seq_max=\"9\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_664bd315ad27e2879fc5303ab71e07d2c602defd\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"4\" fields_omitted=\"5\"></item><item id=\"pm_5aa9d865537a45e000ab9cfd9ca5b8bf484c5d42\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"5\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_5aa9d865537a45e000ab9cfd9ca5b8bf484c5d42\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"88e1bb86575b439783d27b6abe509669\" start=\"87\" end=\"120\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> No desk acceptance run recorded.</quote_excerpt></source></field></item><omitted records=\"2\" fields=\"13\"/></project-memory>",
+        "actual_own_view_chars": 5589,
+        "actual_own_view_sha256": "621a4f715ef391c278c5557afe4c51ab9efdddcbafa4eb18c0edaeac2072985a",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0005",
+                  "start": 218,
+                  "end": 340,
+                  "quote": "Although an assistant reported that the form had been deployed to all repair desks, that report does not prove deployment."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "86924ad00aa640aba84a6ad4dece593e",
+                  "source_field": "body",
+                  "source_role": "assistant_report",
+                  "start": 0,
+                  "end": 58,
+                  "quote": "The new intake form has been deployed to all repair desks.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            },
+            {
+              "fact_index": 1,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0003",
+                  "start": 4,
+                  "end": 113,
+                  "quote": "The captured test only reports a local form check showing owner text and mechanic summary in separate fields."
+                },
+                {
+                  "ref": "A0004",
+                  "start": 114,
+                  "end": 217,
+                  "quote": "The tool record says repair desk endpoints were not contacted, and no desk acceptance run was recorded."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0007",
+                  "source_id": "243708c424284226a3d64ce0be802b80",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 0,
+                  "end": 75,
+                  "quote": "LOCAL form test: owner text and mechanic summary appear in separate fields.",
+                  "reader_visible": true
+                },
+                {
+                  "ref": "J0006",
+                  "source_id": "243708c424284226a3d64ce0be802b80",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 75,
+                  "end": 112,
+                  "quote": " Repair desk endpoints not contacted.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "Both required facts are recalled with correct attribution and local-test limits. However, citation R0003 concerns accessories and supports no delivered-answer statement, so the requirement that every cited quote support the answer is unmet. No forbidden deployment conclusion is asserted.",
+          "critical_witnesses": [],
+          "id": "q2",
+          "required_facts_total": 2,
+          "required_facts_recalled": 2,
+          "context_chars": 5589,
+          "reader_shared_latency_ms": 58902,
+          "reader_shared_metrics": {
+            "duration_ms": 58718,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "reasoning_output_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 16384,
+                "output_tokens": 1394,
+                "input_tokens": 68059,
+                "total_tokens": 69453
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 8698,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11537,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 272,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11809
+              }
+            }
+          },
+          "reader_question_latency_ms": 8743,
+          "reader_context_isolation": "per-question-v1",
+          "category": "execution_attribution"
+        },
+        "judge_request_sha256": "2c44cdd703e730f4de9ecd20d0a2a6817fd98b7e98c320c5b2494aef93a87f6c",
+        "reader_sha256": "82ef0032fda6a26014ccffee3c74ed9f63518c719dc554f4bc7a599a812488ab",
+        "judge_sha256": "7a7195479236c55afb71b7cbbf9898ed6f164d7dbe6fe212af98cc9df1424c58",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Both required facts are recalled. Extra citation R0003 discusses accessories, but no delivered assertion concerns accessories. Real citation-precision failure under frozen every-citation-support rule; not a false deployment conclusion.",
+      "replacement_grade": null
+    },
+    {
+      "history_id": "hold_711",
+      "question_id": "q3",
+      "repeat": 0,
+      "variant": "candidate",
+      "evidence": {
+        "question": "Why are the bilingual names kept in separate clips?",
+        "actual_answer": {
+          "id": "q3",
+          "answer": "The names are kept in separate language clips because the old player truncates one long combined clip. Spare-player hardware playback still needs to be checked, and fleet installation remains pending acceptance. [R0002] [R0004]",
+          "uncertainties": [],
+          "citations": [
+            {
+              "catalog_ref": "R0002",
+              "source_id": "afbf14091b054539b3bd475d8b307d43",
+              "source_field": "body",
+              "start": 0,
+              "end": 166,
+              "source_role": "user_intent",
+              "quote": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player."
+            },
+            {
+              "catalog_ref": "R0004",
+              "source_id": "f963b2c27041402ca91c86ba97507f01",
+              "source_field": "body",
+              "start": 0,
+              "end": 136,
+              "source_role": "user_intent",
+              "quote": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "aefa0dd3d93d4d4ca0ae95b207156bbb",
+              "source_field": "body",
+              "start": 0,
+              "end": 46,
+              "source_role": "tool_record",
+              "quote": "LOCAL export: longest single clip 7.2 seconds."
+            },
+            {
+              "catalog_ref": "R0007",
+              "source_id": "aefa0dd3d93d4d4ca0ae95b207156bbb",
+              "source_field": "body",
+              "start": 46,
+              "end": 93,
+              "source_role": "tool_record",
+              "quote": " Spare-player playback has no recorded outcome."
+            }
+          ]
+        },
+        "gold": {
+          "category": "decision_reason",
+          "required_facts": [
+            {
+              "text": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player.",
+              "support": [
+                {
+                  "event_id": "hold_711_e08",
+                  "quote": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player.",
+                  "start": 0,
+                  "end": 166
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The named review or acceptance dependency was completed.",
+            "Scratch observation: the transit group approved omitting spoken stop numbers."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_711_e01",
+            "role": "user",
+            "text": "For Juniper bus announcements, keep the stop number spoken before the stop name. Riders with limited vision identify request stops by number on the route card."
+          },
+          {
+            "event_id": "hold_711_e02",
+            "role": "assistant",
+            "text": "The announcement pack is installed across the bus fleet."
+          },
+          {
+            "event_id": "hold_711_e03",
+            "role": "tool",
+            "text": "LOCAL audio sequence: 51 stops speak number before name. Fleet units not queried."
+          },
+          {
+            "event_id": "hold_711_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the transit group approved omitting spoken stop numbers."
+          },
+          {
+            "event_id": "hold_711_e05",
+            "role": "user",
+            "text": "Juniper walking-tour audio uses landmark names only; it is a separate tour with no numbered request stops."
+          },
+          {
+            "event_id": "hold_711_e06",
+            "role": "assistant",
+            "text": "Understood. I will keep this instruction within this separate project."
+          },
+          {
+            "event_id": "hold_711_e08",
+            "role": "user",
+            "text": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player."
+          },
+          {
+            "event_id": "hold_711_e09",
+            "role": "tool",
+            "text": "LOCAL export: longest single clip 7.2 seconds. Spare-player playback has no recorded outcome."
+          },
+          {
+            "event_id": "hold_711_e10",
+            "role": "user",
+            "text": "Return for the market-day diversion. Add temporary stop 52 with its number first, retain separate language clips, and test the diversion sequence on the spare player."
+          },
+          {
+            "event_id": "hold_711_e11",
+            "role": "assistant",
+            "text": "I will assemble the diversion test pack next; it has not been loaded onto a bus."
+          },
+          {
+            "event_id": "hold_711_e12",
+            "role": "user",
+            "text": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops."
+          }
+        ],
+        "actual_own_context": "PROJECT juniper_bus\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"11\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"4\"><field name=\"source_custody\"><source source_id=\"158f055a22734e57b30bfad575af1d88\" start=\"0\" end=\"159\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>For Juniper bus announcements, keep the stop number spoken before the stop name. Riders with limited vision identify request stops by number on the route card.</quote_excerpt></source><source source_id=\"afbf14091b054539b3bd475d8b307d43\" start=\"0\" end=\"166\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player.</quote_excerpt></source><source source_id=\"2cfb44fe71d344c0a2d14e7c6fd958f3\" start=\"0\" end=\"166\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>Return for the market-day diversion. Add temporary stop 52 with its number first, retain separate language clips, and test the diversion sequence on the spare player.</quote_excerpt></source><source source_id=\"f963b2c27041402ca91c86ba97507f01\" start=\"0\" end=\"136\" source_role=\"user_intent\" source_capture_seq=\"11\" quote_truncated=\"False\"><quote_excerpt>Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops.</quote_excerpt></source></field></item><item id=\"pm_bfe2ff4f41989bcc29c5de329bba096e04843e24\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"7\" source_capture_seq_max=\"8\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_bfe2ff4f41989bcc29c5de329bba096e04843e24\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"2\"><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"aefa0dd3d93d4d4ca0ae95b207156bbb\" start=\"0\" end=\"46\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL export: longest single clip 7.2 seconds.</quote_excerpt></source></field><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"afbf14091b054539b3bd475d8b307d43\" start=\"103\" end=\"166\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Hardware playback still needs to be checked on a spare player.</quote_excerpt></source><source source_id=\"aefa0dd3d93d4d4ca0ae95b207156bbb\" start=\"46\" end=\"93\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Spare-player playback has no recorded outcome.</quote_excerpt></source></field></item><item id=\"pm_0f3b28a5fef7bb13a596c012a7f4bdffbe45a9aa\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"9\" source_capture_seq_max=\"11\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_0f3b28a5fef7bb13a596c012a7f4bdffbe45a9aa\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"f963b2c27041402ca91c86ba97507f01\" start=\"0\" end=\"64\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>Fleet installation remains pending hardware playback acceptance.</quote_excerpt></source><source source_id=\"2660c1924d754fd684a18bb9e5fc860e\" start=\"0\" end=\"80\" source_role=\"assistant_report\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>I will assemble the diversion test pack next; it has not been loaded onto a bus.</quote_excerpt></source></field></item><item id=\"pm_e12f969ecb4886fbac803d0cf572f0fec6572673\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_e12f969ecb4886fbac803d0cf572f0fec6572673\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"4\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"de23445d4e3c4bd2a4c3a2481b68939c\" start=\"56\" end=\"81\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Fleet units not queried.</quote_excerpt></source></field></item><omitted records=\"0\" fields=\"9\"/></project-memory>",
+        "actual_own_view_chars": 5706,
+        "actual_own_view_sha256": "e31b966aa4f748d1b3c6aac64da0d715f229b0113d68151add0db3de0f8197d3",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 102,
+                  "quote": "The names are kept in separate language clips because the old player truncates one long combined clip."
+                },
+                {
+                  "ref": "A0003",
+                  "start": 103,
+                  "end": 211,
+                  "quote": "Spare-player hardware playback still needs to be checked, and fleet installation remains pending acceptance."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0002",
+                  "source_id": "afbf14091b054539b3bd475d8b307d43",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 166,
+                  "quote": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "two"
+            }
+          ],
+          "rationale": "Recalls the truncation reason, separate language clips, and outstanding spare-player check. It omits the specified count of two clips; that detail appears only in the citation quotation. Acceptance remains open.",
+          "critical_witnesses": [],
+          "id": "q3",
+          "required_facts_total": 1,
+          "required_facts_recalled": 0,
+          "context_chars": 5706,
+          "reader_shared_latency_ms": 66522,
+          "reader_shared_metrics": {
+            "duration_ms": 66327,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "input_tokens": 67511,
+                "cached_input_tokens": 8192,
+                "output_tokens": 1621,
+                "cache_write_input_tokens": 0,
+                "total_tokens": 69132,
+                "reasoning_output_tokens": 95
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 6719,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11566,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 207,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11773
+              }
+            }
+          },
+          "reader_question_latency_ms": 6765,
+          "reader_context_isolation": "per-question-v1",
+          "category": "decision_reason"
+        },
+        "judge_request_sha256": "d7b801b7fad040872f9c4d131e74eb9eea097f7125f7262befcfe17d861d1b4a",
+        "reader_sha256": "31e9ae475d6cdf88545981c8db921ec3c28349177581b6d2792b2d5889168fba",
+        "judge_sha256": "1d9a7b1f528215375b2c09baac3fc33f9e6a8e8febf6fd959b47033f03803c48",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Answer keeps separate language clips, truncation reason and spare-player checking, but omits explicit count two. Source and citation contain two. Granularity-sensitive: bilingual question and separate language clips may suggest two conversationally. No conclusive grader mismatch or replacement grade.",
+      "replacement_grade": null
+    },
+    {
+      "history_id": "hold_711",
+      "question_id": "q5",
+      "repeat": 0,
+      "variant": "candidate",
+      "evidence": {
+        "question": "For Juniper bus audio, what did the later captured check establish, and what should still remain open after the last user instruction?",
+        "actual_answer": {
+          "id": "q5",
+          "answer": "The later captured check established only that a local export’s longest single clip was 7.2 seconds; it does not establish that the diversion pack was loaded or that hardware playback passed. After the last user instruction, keep hardware playback acceptance open for the fleet installation. Also keep the market-day diversion work open: add temporary stop 52 as an addition, with its number spoken first; retain separate language clips; and test the diversion sequence on a spare player. The earlier fleetwide installation statement was an assistant report, and the user’s later instruction makes clear that installation remains pending hardware playback acceptance.",
+          "uncertainties": [
+            "The memory view does not show whether the diversion pack was subsequently assembled or loaded, or whether spare-player testing occurred."
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0007",
+              "source_id": "aefa0dd3d93d4d4ca0ae95b207156bbb",
+              "source_field": "body",
+              "start": 0,
+              "end": 46,
+              "source_role": "tool_record",
+              "quote": "LOCAL export: longest single clip 7.2 seconds."
+            },
+            {
+              "catalog_ref": "R0001",
+              "source_id": "5ce19dd4f06143fe811892b0fe949157",
+              "source_field": "body",
+              "start": 0,
+              "end": 56,
+              "source_role": "assistant_report",
+              "quote": "The announcement pack is installed across the bus fleet."
+            },
+            {
+              "catalog_ref": "R0002",
+              "source_id": "2660c1924d754fd684a18bb9e5fc860e",
+              "source_field": "body",
+              "start": 0,
+              "end": 80,
+              "source_role": "assistant_report",
+              "quote": "I will assemble the diversion test pack next; it has not been loaded onto a bus."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "2cfb44fe71d344c0a2d14e7c6fd958f3",
+              "source_field": "body",
+              "start": 0,
+              "end": 166,
+              "source_role": "user_intent",
+              "quote": "Return for the market-day diversion. Add temporary stop 52 with its number first, retain separate language clips, and test the diversion sequence on the spare player."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "f963b2c27041402ca91c86ba97507f01",
+              "source_field": "body",
+              "start": 0,
+              "end": 136,
+              "source_role": "user_intent",
+              "quote": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops."
+            }
+          ]
+        },
+        "gold": {
+          "category": "evidence_scope",
+          "required_facts": [
+            {
+              "text": "LOCAL export: longest single clip 7.2 seconds. Spare-player playback has no recorded outcome.",
+              "support": [
+                {
+                  "event_id": "hold_711_e09",
+                  "quote": "LOCAL export: longest single clip 7.2 seconds. Spare-player playback has no recorded outcome.",
+                  "start": 0,
+                  "end": 93
+                }
+              ]
+            },
+            {
+              "text": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops.",
+              "support": [
+                {
+                  "event_id": "hold_711_e12",
+                  "quote": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops.",
+                  "start": 0,
+                  "end": 136
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "The missing external check succeeded.",
+            "The deleted scratch observation supplies positive evidence.",
+            "Scratch observation: the transit group approved omitting spoken stop numbers."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_711_e01",
+            "role": "user",
+            "text": "For Juniper bus announcements, keep the stop number spoken before the stop name. Riders with limited vision identify request stops by number on the route card."
+          },
+          {
+            "event_id": "hold_711_e02",
+            "role": "assistant",
+            "text": "The announcement pack is installed across the bus fleet."
+          },
+          {
+            "event_id": "hold_711_e03",
+            "role": "tool",
+            "text": "LOCAL audio sequence: 51 stops speak number before name. Fleet units not queried."
+          },
+          {
+            "event_id": "hold_711_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the transit group approved omitting spoken stop numbers."
+          },
+          {
+            "event_id": "hold_711_e05",
+            "role": "user",
+            "text": "Juniper walking-tour audio uses landmark names only; it is a separate tour with no numbered request stops."
+          },
+          {
+            "event_id": "hold_711_e06",
+            "role": "assistant",
+            "text": "Understood. I will keep this instruction within this separate project."
+          },
+          {
+            "event_id": "hold_711_e08",
+            "role": "user",
+            "text": "Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player."
+          },
+          {
+            "event_id": "hold_711_e09",
+            "role": "tool",
+            "text": "LOCAL export: longest single clip 7.2 seconds. Spare-player playback has no recorded outcome."
+          },
+          {
+            "event_id": "hold_711_e10",
+            "role": "user",
+            "text": "Return for the market-day diversion. Add temporary stop 52 with its number first, retain separate language clips, and test the diversion sequence on the spare player."
+          },
+          {
+            "event_id": "hold_711_e11",
+            "role": "assistant",
+            "text": "I will assemble the diversion test pack next; it has not been loaded onto a bus."
+          },
+          {
+            "event_id": "hold_711_e12",
+            "role": "user",
+            "text": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops."
+          }
+        ],
+        "actual_own_context": "PROJECT juniper_bus\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"1\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"11\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"5ce19dd4f06143fe811892b0fe949157\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"2\" source_capture_seq_max=\"2\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"5ce19dd4f06143fe811892b0fe949157\" start=\"0\" end=\"56\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"56\"><quote_excerpt>The announcement pack is installed across the bus fleet.</quote_excerpt></source></field></item><item id=\"2660c1924d754fd684a18bb9e5fc860e\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"10\" source_capture_seq_max=\"10\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"2660c1924d754fd684a18bb9e5fc860e\" start=\"0\" end=\"80\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"80\"><quote_excerpt>I will assemble the diversion test pack next; it has not been loaded onto a bus.</quote_excerpt></source></field></item><item id=\"original-user-sources\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"4\"><field name=\"source_custody\"><source source_id=\"158f055a22734e57b30bfad575af1d88\" start=\"0\" end=\"159\" source_role=\"user_intent\" source_capture_seq=\"1\" quote_truncated=\"False\"><quote_excerpt>For Juniper bus announcements, keep the stop number spoken before the stop name. Riders with limited vision identify request stops by number on the route card.</quote_excerpt></source><source source_id=\"afbf14091b054539b3bd475d8b307d43\" start=\"0\" end=\"166\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>Keep the bilingual names in two separate clips because the old player truncates one long combined clip. Hardware playback still needs to be checked on a spare player.</quote_excerpt></source><source source_id=\"2cfb44fe71d344c0a2d14e7c6fd958f3\" start=\"0\" end=\"166\" source_role=\"user_intent\" source_capture_seq=\"9\" quote_truncated=\"False\"><quote_excerpt>Return for the market-day diversion. Add temporary stop 52 with its number first, retain separate language clips, and test the diversion sequence on the spare player.</quote_excerpt></source><source source_id=\"f963b2c27041402ca91c86ba97507f01\" start=\"0\" end=\"136\" source_role=\"user_intent\" source_capture_seq=\"11\" quote_truncated=\"False\"><quote_excerpt>Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops.</quote_excerpt></source></field></item><item id=\"pm_0f3b28a5fef7bb13a596c012a7f4bdffbe45a9aa\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"9\" source_capture_seq_max=\"11\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_0f3b28a5fef7bb13a596c012a7f4bdffbe45a9aa\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"4\"></item><item id=\"pm_bfe2ff4f41989bcc29c5de329bba096e04843e24\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"3\" source_capture_seq_min=\"7\" source_capture_seq_max=\"8\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_bfe2ff4f41989bcc29c5de329bba096e04843e24\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"3\"><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"aefa0dd3d93d4d4ca0ae95b207156bbb\" start=\"0\" end=\"46\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL export: longest single clip 7.2 seconds.</quote_excerpt></source></field></item><omitted records=\"2\" fields=\"12\"/></project-memory>",
+        "actual_own_view_chars": 4762,
+        "actual_own_view_sha256": "8a9aadeef8dcb4f02e3c1ded0e4c301785e655dbf7ffb31500393d541a2608c8",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 191,
+                  "quote": "The later captured check established only that a local export’s longest single clip was 7.2 seconds; it does not establish that the diversion pack was loaded or that hardware playback passed."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0007",
+                  "source_id": "aefa0dd3d93d4d4ca0ae95b207156bbb",
+                  "source_field": "body",
+                  "source_role": "tool_record",
+                  "start": 0,
+                  "end": 46,
+                  "quote": "LOCAL export: longest single clip 7.2 seconds.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "no recorded"
+            },
+            {
+              "fact_index": 1,
+              "recalled": false,
+              "answer_witnesses": [
+                {
+                  "ref": "A0004",
+                  "start": 292,
+                  "end": 488,
+                  "quote": "Also keep the market-day diversion work open: add temporary stop 52 as an addition, with its number spoken first; retain separate language clips; and test the diversion sequence on a spare player."
+                },
+                {
+                  "ref": "A0005",
+                  "start": 489,
+                  "end": 667,
+                  "quote": "The earlier fleetwide installation statement was an assistant report, and the user’s later instruction makes clear that installation remains pending hardware playback acceptance."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0006",
+                  "source_id": "f963b2c27041402ca91c86ba97507f01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 136,
+                  "quote": "Fleet installation remains pending hardware playback acceptance. The temporary stop is an addition, not a renumbering of existing stops.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "renumbering"
+            }
+          ],
+          "rationale": "Recalls the 7.2-second local export and pending hardware acceptance. Saying playback was not established as passed does not recall that no outcome was recorded. Calling stop 52 an addition also leaves the explicit prohibition on renumbering existing stops unstated. No successful test or completed installation is asserted.",
+          "critical_witnesses": [],
+          "id": "q5",
+          "required_facts_total": 2,
+          "required_facts_recalled": 0,
+          "context_chars": 4762,
+          "reader_shared_latency_ms": 66522,
+          "reader_shared_metrics": {
+            "duration_ms": 66327,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "input_tokens": 67511,
+                "cached_input_tokens": 8192,
+                "output_tokens": 1621,
+                "cache_write_input_tokens": 0,
+                "total_tokens": 69132,
+                "reasoning_output_tokens": 95
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 6973,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11335,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 292,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 11627
+              }
+            }
+          },
+          "reader_question_latency_ms": 7014,
+          "reader_context_isolation": "per-question-v1",
+          "category": "evidence_scope"
+        },
+        "judge_request_sha256": "d7b801b7fad040872f9c4d131e74eb9eea097f7125f7262befcfe17d861d1b4a",
+        "reader_sha256": "31e9ae475d6cdf88545981c8db921ec3c28349177581b6d2792b2d5889168fba",
+        "judge_sha256": "1d9a7b1f528215375b2c09baac3fc33f9e6a8e8febf6fd959b47033f03803c48",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Own view lacks the tool clause saying playback has no recorded outcome. Not established as passed is weaker: it could include a recorded failure. Answer calls stop 52 an addition without explicitly forbidding renumbering other stops. That may suggest retention but does not necessarily entail it. Mixed visibility/explicitness failure; no demonstrated label mismatch.",
+      "replacement_grade": null
+    },
+    {
+      "history_id": "hold_705",
+      "question_id": "q6",
+      "repeat": 0,
+      "variant": "candidate",
+      "evidence": {
+        "question": "How do street-name rules differ between archive search and event posters?",
+        "actual_answer": {
+          "id": "q6",
+          "answer": "For archive search, preserve obsolete street names as searchable aliases so people using older addresses can find records; a local search snapshot reports 27 such aliases returning linked boxes. The reading-room server was not accessed. For event posters, use only modern street names so current attendees can find the entrance. The event source explicitly says the poster rule is separate from the archive alias policy. The memory has coverage gaps and unresolved source custody, so the supplied excerpts may not capture the full history.",
+          "uncertainties": [
+            "The memory says coverage is incomplete and source custody remains unresolved; additional context may be missing."
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0001",
+              "source_id": "0024fc1ee2fb4615b1c2a43d202227aa",
+              "source_field": "body",
+              "start": 0,
+              "end": 84,
+              "source_role": "user_intent",
+              "quote": "For the Bracken archive index, preserve obsolete street names as searchable aliases."
+            },
+            {
+              "catalog_ref": "R0002",
+              "source_id": "0024fc1ee2fb4615b1c2a43d202227aa",
+              "source_field": "body",
+              "start": 84,
+              "end": 178,
+              "source_role": "user_intent",
+              "quote": " Family researchers bring addresses from old letters and may not know the modern street names."
+            },
+            {
+              "catalog_ref": "R0003",
+              "source_id": "ae8c83804aaa49a4b0eb54c44d558681",
+              "source_field": "body",
+              "start": 76,
+              "end": 114,
+              "source_role": "tool_record",
+              "quote": " Reading-room server was not accessed."
+            },
+            {
+              "catalog_ref": "R0004",
+              "source_id": "ae8c83804aaa49a4b0eb54c44d558681",
+              "source_field": "body",
+              "start": 0,
+              "end": 76,
+              "source_role": "tool_record",
+              "quote": "LOCAL search snapshot: 27 obsolete street aliases return their linked boxes."
+            },
+            {
+              "catalog_ref": "R0005",
+              "source_id": "27fb40794f6949edae1a74814a54fb45",
+              "source_field": "body",
+              "start": 0,
+              "end": 99,
+              "source_role": "user_intent",
+              "quote": "For Bracken event posters, use only modern street names so current attendees can find the entrance."
+            },
+            {
+              "catalog_ref": "R0006",
+              "source_id": "27fb40794f6949edae1a74814a54fb45",
+              "source_field": "body",
+              "start": 0,
+              "end": 144,
+              "source_role": "user_intent",
+              "quote": "For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate."
+            }
+          ]
+        },
+        "gold": {
+          "category": "project_boundary",
+          "required_facts": [
+            {
+              "text": "For the Bracken archive index, preserve obsolete street names as searchable aliases. Family researchers bring addresses from old letters and may not know the modern street names.",
+              "support": [
+                {
+                  "event_id": "hold_705_e01",
+                  "quote": "For the Bracken archive index, preserve obsolete street names as searchable aliases. Family researchers bring addresses from old letters and may not know the modern street names.",
+                  "start": 0,
+                  "end": 178
+                }
+              ]
+            },
+            {
+              "text": "For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate.",
+              "support": [
+                {
+                  "event_id": "hold_705_e05",
+                  "quote": "For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate.",
+                  "start": 0,
+                  "end": 144
+                }
+              ]
+            }
+          ],
+          "forbidden_conclusions": [
+            "Permission from a different project overrides the main project constraint.",
+            "Scratch observation: the archivist approved deleting all obsolete street aliases."
+          ]
+        },
+        "original_events": [
+          {
+            "event_id": "hold_705_e01",
+            "role": "user",
+            "text": "For the Bracken archive index, preserve obsolete street names as searchable aliases. Family researchers bring addresses from old letters and may not know the modern street names."
+          },
+          {
+            "event_id": "hold_705_e02",
+            "role": "assistant",
+            "text": "The refreshed index is live in the reading room."
+          },
+          {
+            "event_id": "hold_705_e03",
+            "role": "tool",
+            "text": "LOCAL search snapshot: 27 obsolete street aliases return their linked boxes. Reading-room server was not accessed."
+          },
+          {
+            "event_id": "hold_705_e04",
+            "role": "assistant",
+            "text": "Scratch observation: the archivist approved deleting all obsolete street aliases."
+          },
+          {
+            "event_id": "hold_705_e05",
+            "role": "user",
+            "text": "For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate."
+          },
+          {
+            "event_id": "hold_705_e06",
+            "role": "assistant",
+            "text": "Understood. I will keep this instruction within this separate project."
+          },
+          {
+            "event_id": "hold_705_e08",
+            "role": "user",
+            "text": "Select an alias warning rather than redirecting silently. Two old streets share a modern name, so researchers need to see which historical district matched."
+          },
+          {
+            "event_id": "hold_705_e09",
+            "role": "tool",
+            "text": "LOCAL warning mockup: historical district displayed for both ambiguous streets. Server deployment status unknown."
+          },
+          {
+            "event_id": "hold_705_e10",
+            "role": "user",
+            "text": "Continue with the annex collection. Add the annex district to the warning, retain every old-name alias, and wait for an archivist to check the two ambiguous examples."
+          },
+          {
+            "event_id": "hold_705_e11",
+            "role": "assistant",
+            "text": "The annex mockup can be prepared next. I have not obtained archivist approval."
+          },
+          {
+            "event_id": "hold_705_e12",
+            "role": "user",
+            "text": "Only local mockups are approved for now; reading-room publication still depends on the ambiguous-example review."
+          }
+        ],
+        "actual_own_context": "PROJECT bracken_archive\n<project-memory trust=\"untrusted\" freshness=\"not_verified\" worktree=\"/private/tmp/codex-mem-quality-20261021-r10-experiment/projects/hold_705/bracken_archive\" capture_order_basis=\"local_capture_sequence_not_event_time\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"4\" user_sources_omitted=\"4\" source_evidence_omitted=\"1\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"11\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_f851a54f611fe267438a405edb56943d10092ed1\" lane=\"claim\" project_memory_kind=\"requirement\" workflow_state=\"open\" source_role=\"model_inference\" evidence_basis=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq=\"1\"><field name=\"text\"><derived_text>Preserve obsolete street names as searchable aliases in the Bracken archive index.</derived_text><source source_id=\"0024fc1ee2fb4615b1c2a43d202227aa\" start=\"0\" end=\"84\" source_role=\"user_intent\" field=\"text\" quote_truncated=\"False\"><quote_excerpt>For the Bracken archive index, preserve obsolete street names as searchable aliases.</quote_excerpt></source></field><field name=\"rationale\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"0024fc1ee2fb4615b1c2a43d202227aa\" start=\"84\" end=\"178\" source_role=\"user_intent\" field=\"rationale\" quote_truncated=\"False\"><quote_excerpt> Family researchers bring addresses from old letters and may not know the modern street names.</quote_excerpt></source></field></item><item id=\"pm_e63e2e1f5b805e78d4d1b254082c86f09f0d33e3\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"1\" source_capture_seq_max=\"3\" logical_episode_id=\"pm_e63e2e1f5b805e78d4d1b254082c86f09f0d33e3\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"ae8c83804aaa49a4b0eb54c44d558681\" start=\"76\" end=\"114\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Reading-room server was not accessed.</quote_excerpt></source></field><field name=\"outcome_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"ae8c83804aaa49a4b0eb54c44d558681\" start=\"0\" end=\"76\" source_role=\"tool_record\" field=\"outcome\" quote_truncated=\"False\"><quote_excerpt>LOCAL search snapshot: 27 obsolete street aliases return their linked boxes.</quote_excerpt></source></field></item><omitted records=\"0\" fields=\"3\"/></project-memory>\n\nPROJECT bracken_events\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"1\" user_sources_omitted=\"1\" source_evidence_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"6\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"pm_5a13cbea9d2b479a9cddb8e9d707e7c905faa383\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"5\" source_capture_seq_max=\"5\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_5a13cbea9d2b479a9cddb8e9d707e7c905faa383\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"3\" fields_omitted=\"3\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"27fb40794f6949edae1a74814a54fb45\" start=\"0\" end=\"99\" source_role=\"user_intent\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt>For Bracken event posters, use only modern street names so current attendees can find the entrance.</quote_excerpt></source></field></item><item id=\"pmc_74b27baad0ed621b6fb87d7212f1fdf1069a1add\" lane=\"intent_custody\" source_role=\"user_intent\" source_capture_seq_min=\"5\" source_capture_seq_max=\"5\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\"><field name=\"source_custody\" basis=\"attributed_source_excerpts\" field_association=\"verbatim_user_source\"><source source_id=\"27fb40794f6949edae1a74814a54fb45\" start=\"0\" end=\"144\" source_role=\"user_intent\" field=\"source_custody\" source_capture_seq=\"5\" quote_truncated=\"False\"><quote_excerpt>For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate.</quote_excerpt></source></field></item><omitted records=\"0\" fields=\"3\"/></project-memory>",
+        "actual_own_view_chars": 5207,
+        "actual_own_view_sha256": "83bb40398d9215eaf24a2b6ed7425f0474d13e56f8e93004ecf61bcdabe71abf",
+        "original_grade": {
+          "full_supported_answer": false,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 194,
+                  "quote": "For archive search, preserve obsolete street names as searchable aliases so people using older addresses can find records; a local search snapshot reports 27 such aliases returning linked boxes."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "0024fc1ee2fb4615b1c2a43d202227aa",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 84,
+                  "quote": "For the Bracken archive index, preserve obsolete street names as searchable aliases.",
+                  "reader_visible": true
+                },
+                {
+                  "ref": "J0002",
+                  "source_id": "0024fc1ee2fb4615b1c2a43d202227aa",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 84,
+                  "end": 178,
+                  "quote": " Family researchers bring addresses from old letters and may not know the modern street names.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "letters"
+            },
+            {
+              "fact_index": 1,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0004",
+                  "start": 237,
+                  "end": 328,
+                  "quote": "For event posters, use only modern street names so current attendees can find the entrance."
+                },
+                {
+                  "ref": "A0005",
+                  "start": 329,
+                  "end": 420,
+                  "quote": "The event source explicitly says the poster rule is separate from the archive alias policy."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0006",
+                  "source_id": "27fb40794f6949edae1a74814a54fb45",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 144,
+                  "quote": "For Bracken event posters, use only modern street names so current attendees can find the entrance. The archive search alias policy is separate.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "Correctly separates archive aliases from modern-only posters and explains the entrance requirement. The archive explanation mentions older addresses but omits family researchers using old letters and potentially not knowing modern names. The cited rationale cannot supply missing answer content.",
+          "critical_witnesses": [],
+          "id": "q6",
+          "required_facts_total": 2,
+          "required_facts_recalled": 1,
+          "context_chars": 5207,
+          "reader_shared_latency_ms": 61061,
+          "reader_shared_metrics": {
+            "duration_ms": 60913,
+            "usage": {
+              "status": "reported",
+              "source": "per_question_native_receipts",
+              "updates": 6,
+              "tokens": {
+                "input_tokens": 67660,
+                "output_tokens": 1867,
+                "cached_input_tokens": 8192,
+                "reasoning_output_tokens": 209,
+                "total_tokens": 69527,
+                "cache_write_input_tokens": 0
+              }
+            }
+          },
+          "reader_question_metrics": {
+            "duration_ms": 6119,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 11461,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 378,
+                "reasoning_output_tokens": 80,
+                "total_tokens": 11839
+              }
+            }
+          },
+          "reader_question_latency_ms": 6159,
+          "reader_context_isolation": "per-question-v1",
+          "category": "project_boundary"
+        },
+        "judge_request_sha256": "38085712a6280005467093907fa81826200c0405e7692c98e523ebab67ec206a",
+        "reader_sha256": "608f0864492628dcf6a0095ccb92e0ce43217793694faa2e66f703d5fff4f4bc",
+        "judge_sha256": "f0851c5c7bf558fa188d5d18a7c0ea5ac54bba4dc76ad5fd46665b22b97f4459",
+        "receipt_checks": "PASS: actual answer equals judge case; own view byte-identical; all positive answer/source and critical answer witnesses resolve exactly through dispatched catalogs and actual answer offsets."
+      },
+      "diagnosis": "Answer preserves aliases for people using older addresses, but omits old-letter audience and lack of knowledge of modern names. Both source details are visible. Strict completeness decision with paraphrase-granularity ambiguity: absent letters alone is not proof of semantic omission; the weaker stated reason is the substantive difference.",
+      "replacement_grade": null
+    }
+  ],
+  "conclusions": {
+    "demonstrable_critical_label_mismatches": 0,
+    "replacement_grades": 0,
+    "proven_boundary": "Reader adds unsupported event-identity/current-cause edges despite distinct visible sources. A sampled answer attaches an irrelevant valid citation. Exact-span mechanics do not establish semantic support.",
+    "granularity_limit": "Literal anchor absence does not establish absent equivalent meaning. Sample omissions have completeness-granularity sensitivity; no conclusive false omission demonstrated.",
+    "supported_next_step": "Keep disclosed cases as public regressions for event identity, causal attribution and citation relevance. Any future reader/representation experiment needs a separately declared contract and fresh evaluation. No specific product-code repair is proven here.",
+    "goal": "Unmet independently: 59/96 is below 90%, criticals remain, paired losses separately reported."
+  },
+  "actions": {
+    "new_native_calls": 0,
+    "rubric_or_score_edits": false,
+    "product_or_helper_edits": false,
+    "only_artifact_written": "docs/evidence/project-memory-quality-2026-10-21-r10/judge-semantic-audit.json"
+  }
+}

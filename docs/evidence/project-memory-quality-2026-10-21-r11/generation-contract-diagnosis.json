@@ -1,0 +1,139 @@
+{
+  "status": "offline_reproduced_producer_contract_failure_no_repair",
+  "scope": {
+    "history_id": "hold_813",
+    "gold_read": false,
+    "other_histories_explored": false,
+    "new_native_calls": 0,
+    "code_changes": false,
+    "grades_changed": false,
+    "trial_result_unchanged": true
+  },
+  "frozen_helper_sha256": "2a7fd8c70817738db3200e2da721ae866b2a0e53eee80901b025433bf19b0dc3",
+  "artifacts": [
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r11-experiment/baseline/hold_813/generation.json",
+      "sha256": "c54937bfad5430fbce3a7cf879b85e9031d8655f5b577fbe582e8dcebb2bfcd5"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r11-experiment/receipts/call-0060-request.json",
+      "sha256": "03bc36ee58a0068e92bece5581780b788ea8dc1a6da844840361b140acfc2188"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r11-experiment/receipts/call-0060-response.json",
+      "sha256": "be36dc724ef0bf2662a720b169a742302a0b3eacad1be683e9dbaf2dd3be6581"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r2-baseline/codex_mem/episode_processor.py",
+      "sha256": "cac557930c82ee5b69e1658403cc2e4d7bbc71689744edfe4e2d272496b5784f"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r2-baseline/codex_mem/processor.py",
+      "sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    {
+      "path": "docs/evidence/project-memory-quality-2026-10-21-r11/frozen-helper.py",
+      "sha256": "2a7fd8c70817738db3200e2da721ae866b2a0e53eee80901b025433bf19b0dc3"
+    }
+  ],
+  "native_call": {
+    "call_id": "call-0060",
+    "phase": "generation",
+    "variant": "baseline",
+    "model": "gpt-6-luna",
+    "reasoning_effort": "medium",
+    "native_completed": true,
+    "raw_receipt_valid": true,
+    "native_schema_valid": true,
+    "usage": {
+      "duration_ms": 24400,
+      "usage": {
+        "status": "reported",
+        "source": "app_server_thread_total",
+        "updates": 1,
+        "tokens": {
+          "input_tokens": 15611,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 380,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 15991
+        }
+      }
+    },
+    "raw_output_preserved": true
+  },
+  "job": {
+    "id": "pmj_e9817efe4d17e4a9efaba4dfffa1b51f10f8e838",
+    "status": "quarantined",
+    "error": "invalid_response",
+    "attempts": 1,
+    "session_id": "hold_813_chat2",
+    "revision": 2,
+    "generation": 1,
+    "store_read_mode": "sqlite URI mode=ro",
+    "input_json": "{} after failed job; snapshot replay reconstructed exclusively from saved native request"
+  },
+  "exact_failure": {
+    "owner": "codex_mem.episode_processor._resolve_object_references",
+    "runtime_path": "/private/tmp/codex-mem-quality-20261021-r2-baseline/codex_mem/episode_processor.py",
+    "predicate_line": 439,
+    "raise_line": 440,
+    "predicate": "type(source_index) is not int or not 0 <= source_index < len(resolved[\"claims\"])",
+    "exception": "ValueError: unknown claim index",
+    "actual_claims": [],
+    "actual_relations": [
+      {
+        "type": "contradicts",
+        "from_claim_index": 0,
+        "to_claim_id": "pm_70753805aec5a148361f2515f56b42bc55970f43",
+        "evidence": [
+          "r17c336a808"
+        ]
+      }
+    ],
+    "position_in_pipeline": "First object-reference resolution at line 883, before evidence refs, quote resolution, optional omission, canonical validation, prepare, quality gate or commit.",
+    "job_error_mapping": "episode_processor.py925-926 maps this ValueError to invalid_response."
+  },
+  "causal_classification": {
+    "output": "Native schema-valid, runtime-relationally-invalid model output. A relation cites index 0 but no returned claim exists.",
+    "prompt_requirement": "Use from_claim_index for an actual returned claims array index and to_claim_id for its exact existing target ID.",
+    "native_schema_gap": "relations.items.from_claim_index permits integers 0..7 independently of the returned claims array length. With existing claim targets in input, relations may be nonempty even when output claims is empty.",
+    "decoder_assessment": "Correct fail-closed boundary, not an overly strict or contradictory predicate. No endpoint is inferred, synthesized or repaired.",
+    "unassessed": "The semantic correctness of the requested contradiction/target and the remaining episode fields was not reached or adjudicated; no salvage performed."
+  },
+  "replay": {
+    "workdir": "/private/tmp",
+    "command": "python3 - <<'PY'\nimport sys,json\nfrom pathlib import Path\nsys.path.insert(0,'/private/tmp/codex-mem-quality-20261021-r2-baseline')\nfrom codex_mem import episode_processor as ep\nfrom codex_mem.processor import _validate_runner_receipt\nimport jsonschema\nroot=Path('/private/tmp/codex-mem-quality-20261021-r11-experiment')\nrequest=json.loads((root/'receipts/call-0060-request.json').read_text())\nresponse=json.loads((root/'receipts/call-0060-response.json').read_text())\npayload=json.loads(request['prompt'].split('\\n',1)[1])\nsnapshot={'project':payload['project'],'state':payload['current_state'],'session_id':payload['session_id'],'job_kind':payload['job_kind'],'sources':[{**{k:v for k,v in source.items() if k!='spans'},'body':''.join(span['text'] for span in source['spans'])} for source in payload['events']]}\noutput,*_=_validate_runner_receipt(response)\njsonschema.validate(output,request['output_schema'])\nassert output['claims']==[] and output['relations'][0]['from_claim_index']==0\ntry:\n    ep._resolve_object_references(output,snapshot)\nexcept ValueError as exc:\n    assert str(exc)=='unknown claim index'\n    print(type(exc).__name__, str(exc))\nelse:\n    raise AssertionError('expected dangling claim index rejection')\nPY",
+    "observed_stdout": [
+      "ValueError unknown claim index"
+    ],
+    "uses_model": false,
+    "writes_store": false
+  },
+  "minimal_general_repair_proposal": {
+    "status": "proposal_only_for_explicit_future_revision",
+    "preferred": "Native wire representation places outgoing reconciliation proposals inside each returned claim, with existing target ID enum and supplied evidence refs. Code binds the from endpoint to that enclosing claim position. No free sibling-array from_claim_index remains; an empty claims array cannot express a relation. Keep canonical storage/public relation format unchanged after trusted resolution.",
+    "alternative": "A bounded native-schema union for exact claims lengths 0..8 and legal index range per length, including relations maxItems=0 for length zero, if supported by native structured-output schema and acceptable request size. Must be checked against actual provider schema support before adoption.",
+    "do_not_do": [
+      "Do not synthesize a claim for missing index 0.",
+      "Do not drop only the bad relation and commit the rest.",
+      "Do not retry, repair, regrade or mutate this frozen run.",
+      "Do not relax scoped reconciliation or evidence checks."
+    ],
+    "future_public_tests": [
+      "claims=[] cannot represent nonempty relations in new native schema",
+      "One returned claim resolves its nested relation to that exact claim and an allowed existing target",
+      "Unknown existing targets, unsupported evidence refs, and invalid scoped transitions still reject whole batch",
+      "Multiple returned claims resolve without cross-claim endpoint confusion",
+      "Saved failed response remains rejected under frozen v11 replay; no changed historical output"
+    ],
+    "observability": "A future bounded safe reason code such as unknown_claim_index could be retained in processor failure receipts while preserving native raw output and usage. Current receipt collapses it to invalid_response."
+  },
+  "limits": [
+    "No new calls or semantic verification.",
+    "No gold or unreleased corpus reads.",
+    "This diagnosis does not establish that a future schema design improves answer quality.",
+    "The Store was queried read-only; native receipts and all original usage remain unchanged."
+  ]
+}

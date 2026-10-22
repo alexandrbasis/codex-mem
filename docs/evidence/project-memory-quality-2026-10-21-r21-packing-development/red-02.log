@@ -1,0 +1,22 @@
+test_four_independent_neutral_sources_fit_without_a_count_cutoff (test_project_memory_whole_source_allocation.WholeSourceAllocationTests.test_four_independent_neutral_sources_fit_without_a_count_cutoff) ... ok
+test_selected_current_original_precedes_optional_neutral_groups_at_owner_budget (test_project_memory_whole_source_allocation.WholeSourceAllocationTests.test_selected_current_original_precedes_optional_neutral_groups_at_owner_budget) ... FAIL
+
+======================================================================
+FAIL: test_selected_current_original_precedes_optional_neutral_groups_at_owner_budget (test_project_memory_whole_source_allocation.WholeSourceAllocationTests.test_selected_current_original_precedes_optional_neutral_groups_at_owner_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_whole_source_allocation.py", line 73, in test_selected_current_original_precedes_optional_neutral_groups_at_owner_budget
+    self.assertTrue(any(node.get('source_id') == 'authority-source' and
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        node.findtext('quote_excerpt') == body and node.get('source_role') == 'user_intent' and
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        node.get('source_field') == 'body' and node.get('start') == '0' and
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        node.get('end') == str(len(body)) for node in tree.iter('source')), xml)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="sample-report" lane="source_evidence" source_role="assistant_report"><field name="body"><source source_id="sample-report" source_role="assistant_report" source_field="body" start="0" end="55" source_capture_seq="2" id="s1"><quote_excerpt>The local sample is recorded. No authority was granted.</quote_excerpt></source></field></item><item lane="intent_custody" source_role="user_intent" capture_order_basis="local_capture_sequence_not_event_time" selection_basis="unassociated_user_context" relationship_to_query="unresolved" disposition="stored" is_requirement_claim="False" meaning="original_user_observation" uncertainty="current_applicability_unresolved" source_bundle="True"><field><source source_id="other-3" source_role="user_intent" source_field="body" start="0" end="54" source_capture_seq="6" id="s2"><quote_excerpt>Keep this independent item available for inspection. 3</quote_excerpt></source><source source_id="other-0" source_role="user_intent" source_field="body" start="0" end="54" source_capture_seq="3" id="s3"><quote_excerpt>Keep this independent item available for inspection. 0</quote_excerpt></source></field></item><source-context-coverage selected_source_count="2" omitted="2"/><item id="authority-episode" lane="episode" episode_version="2" is_current_head="True" fields_omitted="1"></item><omitted records="1" fields="1" unassociated_user_sources="2"/></project-memory>
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+FAILED (failures=1)

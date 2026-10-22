@@ -1,0 +1,69 @@
+test_deleted_head_is_not_resurrected (test_continuation_slots.ContinuationSlotTests.test_deleted_head_is_not_resurrected) ... ok
+test_distinct_supported_roots_succeed (test_continuation_slots.ContinuationSlotTests.test_distinct_supported_roots_succeed) ... ok
+test_foreign_head_is_not_disclosed_or_accepted (test_continuation_slots.ContinuationSlotTests.test_foreign_head_is_not_disclosed_or_accepted) ... ok
+test_reconsideration_overlap_rejects_whole_batch (test_continuation_slots.ContinuationSlotTests.test_reconsideration_overlap_rejects_whole_batch) ... ok
+test_superseded_head_is_not_accepted_as_current (test_continuation_slots.ContinuationSlotTests.test_superseded_head_is_not_accepted_as_current) ... ok
+test_supported_then_unsupported_uses_only_one_slot (test_continuation_slots.ContinuationSlotTests.test_supported_then_unsupported_uses_only_one_slot) ... FAIL
+test_two_supported_same_root_reject_whole_batch (test_continuation_slots.ContinuationSlotTests.test_two_supported_same_root_reject_whole_batch) ... ok
+test_two_unsupported_requests_do_not_consume_a_continuation_slot (test_continuation_slots.ContinuationSlotTests.test_two_unsupported_requests_do_not_consume_a_continuation_slot) ... FAIL
+test_unsupported_then_supported_uses_only_one_slot (test_continuation_slots.ContinuationSlotTests.test_unsupported_then_supported_uses_only_one_slot) ... FAIL
+test_valid_reconsideration_still_consolidates_two_heads (test_continuation_slots.ContinuationSlotTests.test_valid_reconsideration_still_consolidates_two_heads) ... FAIL
+
+======================================================================
+FAIL: test_supported_then_unsupported_uses_only_one_slot (test_continuation_slots.ContinuationSlotTests.test_supported_then_unsupported_uses_only_one_slot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py", line 137, in test_supported_then_unsupported_uses_only_one_slot
+    self.mixed(False)
+    ~~~~~~~~~~^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py", line 126, in mixed
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v12', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_9365fa83fdba26606aa17852d5d3ee7f28988bce', 'job_kind': 'events', 'historical_context': {'disclosed_sources': 1, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'omitted_heads': 0, 'complete_history': False, 'source_char_limit': 24000, 'source_limit': 32}, 'historical_sources_omitted': 0, 'usage_attempt_id': 'pma_abb5c7b469fe429c81fad37e3d59de2a', 'usage_status': 'reported', 'runner_duration_ms': 1, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'public-worker', 'worker_turn_id': 'public-turn', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792654132.326599, 'usage_recording_status': 'recorded', 'duration_ms': 9}
+
+======================================================================
+FAIL: test_two_unsupported_requests_do_not_consume_a_continuation_slot (test_continuation_slots.ContinuationSlotTests.test_two_unsupported_requests_do_not_consume_a_continuation_slot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py", line 111, in test_two_unsupported_requests_do_not_consume_a_continuation_slot
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v12', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_e7d60f82259247c0c47014922c7dbf8796142765', 'job_kind': 'events', 'historical_context': {'disclosed_sources': 0, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'omitted_heads': 0, 'complete_history': False, 'source_char_limit': 24000, 'source_limit': 32}, 'historical_sources_omitted': 0, 'usage_attempt_id': 'pma_009d387f5160481da5cb25b43c6c8dd2', 'usage_status': 'reported', 'runner_duration_ms': 1, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'public-worker', 'worker_turn_id': 'public-turn', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792654132.388722, 'usage_recording_status': 'recorded', 'duration_ms': 5}
+
+======================================================================
+FAIL: test_unsupported_then_supported_uses_only_one_slot (test_continuation_slots.ContinuationSlotTests.test_unsupported_then_supported_uses_only_one_slot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py", line 140, in test_unsupported_then_supported_uses_only_one_slot
+    self.mixed(True)
+    ~~~~~~~~~~^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py", line 126, in mixed
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v12', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_7ffb7ace0224ee65a755e6a32e69ae936c4eaa0f', 'job_kind': 'events', 'historical_context': {'disclosed_sources': 1, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'omitted_heads': 0, 'complete_history': False, 'source_char_limit': 24000, 'source_limit': 32}, 'historical_sources_omitted': 0, 'usage_attempt_id': 'pma_5132731de84d4af0a30711e34e1fb73f', 'usage_status': 'reported', 'runner_duration_ms': 1, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'public-worker', 'worker_turn_id': 'public-turn', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792654132.411042, 'usage_recording_status': 'recorded', 'duration_ms': 6}
+
+======================================================================
+FAIL: test_valid_reconsideration_still_consolidates_two_heads (test_continuation_slots.ContinuationSlotTests.test_valid_reconsideration_still_consolidates_two_heads)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-continuity-development/test_continuation_slots.py", line 183, in test_valid_reconsideration_still_consolidates_two_heads
+    self.assertEqual(result['status'], 'processed', result)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'failed' != 'processed'
+- failed
++ processed
+ : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v12', 'model': 'gpt-6-luna', 'reasoning_effort': 'medium', 'mode': 'shadow', 'job_id': 'pmj_ca33e975c3aea9c41edfb3598398981fa9a6030b', 'job_kind': 'reconsideration', 'reconsideration': {'task_id': 'task-281', 'candidate_head_ids': ['pm_c17090914283351ca654e8b34303f653c5951471', 'pm_d826cdc53c26e098d25538051492a242669e22eb'], 'candidate_window_bounded': True, 'head_limit': 100, 'ancestor_limit_per_head': 8, 'omitted_heads': 0, 'source_limit': 32, 'source_char_limit': 24000, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'complete_history': False, 'identity_source_limit': 64, 'identity_char_limit': 24000, 'identity_sources_omitted': 0, 'ambiguous_heads': 0}, 'reconsideration_sources_omitted': 0, 'usage_attempt_id': 'pma_41343d687da84454a6cad5d7ba0bf497', 'usage_status': 'reported', 'runner_duration_ms': 1, 'tokens': {'input_tokens': 100, 'output_tokens': 10}, 'input_tokens': 100, 'output_tokens': 10, 'worker_thread_id': 'public-worker', 'worker_turn_id': 'public-turn', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792654132.437742, 'usage_recording_status': 'recorded', 'duration_ms': 7}
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.363s
+
+FAILED (failures=4)

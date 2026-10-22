@@ -1,0 +1,125 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q4",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "743ad962a4f7be60694d807cabedc006d9e3402643b34b3f969ae17aaf7a4e7d",
+  "context_sha256": "6dfa35f7cfb44a3f4f0666f1e1e64335e85b1933b22a5507eea84e9d0fc54e21",
+  "raw_output_sha256": "60491eda93a235b2bb70546d88e22087c3bd43708cdd0b7c1fd693968f535fb1",
+  "native_receipt": {
+    "source_call_id": "call-0147",
+    "request_sha256": "27e8865957685d9f83c59f461b105328d7070a3955255dc4c914566b44611e5a",
+    "response_sha256": "45227e69e15f4ecaa1a2fda15a1e5d85b3ffecccdf2d3cbe659ce61d58b36def",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q4",
+        "answer": "The initial user instruction was 7 units; the user then explicitly replaced it with 5 units, which is the applicable value now. The correction leaves the manual’s closed status unchanged. The review state recorded at the opening is unknown: the supplied excerpts do not show that opening or explicitly establish its review state.",
+        "uncertainties": [
+          "The review state at the opening is not evidenced; the later reference to an unchanged closed status does not establish when closure occurred."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "e37caa3ab9e24e1c87e0026d42778eb9",
+            "source_field": "body",
+            "start": 50,
+            "end": 125,
+            "source_role": "tool_record",
+            "quote": " The recorded command assembled a local manual draft for Hazel loom manual."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "e37caa3ab9e24e1c87e0026d42778eb9",
+            "source_field": "body",
+            "start": 125,
+            "end": 194,
+            "source_role": "tool_record",
+            "quote": " The recorded command did not perform issuance for Hazel loom manual."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "a3efbba6c2114005acf5c5fe6b97b449",
+            "source_field": "body",
+            "start": 0,
+            "end": 103,
+            "source_role": "user_intent",
+            "quote": "Correction for Hazel loom manual: use thread tension of 5 units, replacing my initial value of 7 units."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "a3efbba6c2114005acf5c5fe6b97b449",
+            "source_field": "body",
+            "start": 103,
+            "end": 191,
+            "source_role": "user_intent",
+            "quote": " This correction changes the recorded value, not the closed status of Hazel loom manual."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 9892,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 11598,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 250,
+        "reasoning_output_tokens": 52,
+        "total_tokens": 11848
+      }
+    }
+  },
+  "latency_ms": 9918,
+  "native_dispatch": {
+    "key": "0739f11f4eb37268d3c58535196dab2198eda07495cb34148b6a9f6ead9eed1d",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F11",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q4",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0147",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "8f30397d148ade0e2fd9f9b575218b12a25f31b5cbf288716d4a5bec48d78456",
+    "request_file_sha256": "5403d9f39defd51b13b64dbc754576b169ae294f4b8701886ab72553b6753b38",
+    "response_file_sha256": "bee7fe5998cdfcd402ee3b763921593243ff7d95cbe174f0c3a3265d6b2b96d7",
+    "reused": false,
+    "native_wall_ms": 9918
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F11",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q4"
+  },
+  "evidence_checks": {
+    "Q4": {
+      "accepted_results": "The user corrected thread tension from 7 to 5 units and preserved the manual’s closed status.",
+      "open_work_and_reasons": "Open work and its reasons are not evidenced.",
+      "source_role_distinctions": "The user supplied the correction; tool records describe local draft assembly without issuance."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

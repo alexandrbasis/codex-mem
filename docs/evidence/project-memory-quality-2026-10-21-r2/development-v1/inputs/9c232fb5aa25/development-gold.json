@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "questions": {
+    "dev_101/q1": {
+      "required_facts": [
+        {
+          "text": "Use large type.",
+          "support": [
+            {
+              "session_id": "dev_101_s1",
+              "event_index": 0,
+              "event_id": "dev_101_a",
+              "fragment": "use large type"
+            }
+          ]
+        },
+        {
+          "text": "The cabinet is dim.",
+          "support": [
+            {
+              "session_id": "dev_101_s1",
+              "event_index": 0,
+              "event_id": "dev_101_a",
+              "fragment": "because the cabinet is dim"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "actionable"
+    },
+    "dev_101/q2": {
+      "required_facts": [
+        {
+          "text": "The screen preview was dropped.",
+          "support": [
+            {
+              "session_id": "dev_101_s2",
+              "event_index": 0,
+              "event_id": "dev_101_c",
+              "fragment": "Drop only the screen preview."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The entire seed shelf index was cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "actionable"
+    },
+    "dev_101/q3": {
+      "required_facts": [
+        {
+          "text": "The paper label sheet needs a spacing check.",
+          "support": [
+            {
+              "session_id": "dev_101_s2",
+              "event_index": 0,
+              "event_id": "dev_101_c",
+              "fragment": "The paper label sheet still needs a spacing check."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "dev_101/q4": {
+      "required_facts": [
+        {
+          "text": "Use tray numbers on the paper sheet.",
+          "support": [
+            {
+              "session_id": "dev_101_s3",
+              "event_index": 0,
+              "event_id": "dev_101_e",
+              "fragment": "use tray numbers, not shelf numbers, on the paper sheet"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "dev_101/q5": {
+      "required_facts": [
+        {
+          "text": "The paper label sheet was saved.",
+          "support": [
+            {
+              "session_id": "dev_101_s2",
+              "event_index": 1,
+              "event_id": "dev_101_d",
+              "fragment": "Paper label sheet: saved."
+            }
+          ]
+        },
+        {
+          "text": "The spacing check had not run.",
+          "support": [
+            {
+              "session_id": "dev_101_s2",
+              "event_index": 1,
+              "event_id": "dev_101_d",
+              "fragment": "Spacing check: not run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All verification was complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "dev_101/q6": {
+      "required_facts": [
+        {
+          "text": "The large-type requirement still applies.",
+          "support": [
+            {
+              "session_id": "dev_101_s3",
+              "event_index": 0,
+              "event_id": "dev_101_e",
+              "fragment": "The large-type requirement still applies."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "actionable"
+    },
+    "dev_102/q1": {
+      "required_facts": [
+        {
+          "text": "It continues the kite club Falcon roster.",
+          "support": [
+            {
+              "session_id": "dev_102_s3",
+              "event_index": 0,
+              "event_id": "dev_102_d",
+              "fragment": "Continue the kite club Falcon roster from the earlier chat."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "actionable"
+    },
+    "dev_102/q2": {
+      "required_facts": [
+        {
+          "text": "It is a separate model club roster.",
+          "support": [
+            {
+              "session_id": "dev_102_s2",
+              "event_index": 0,
+              "event_id": "dev_102_c",
+              "fragment": "This is a separate Falcon roster for the model club."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The two Falcon rosters are one task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "separate_work",
+      "expected_actionability": "informational"
+    },
+    "dev_102/q3": {
+      "required_facts": [
+        {
+          "text": "The blank row is for walk-ins.",
+          "support": [
+            {
+              "session_id": "dev_102_s1",
+              "event_index": 0,
+              "event_id": "dev_102_a",
+              "fragment": "Keep a blank row at the end for walk-ins."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The kite club roster must have no blank rows.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "actionable"
+    },
+    "dev_102/q4": {
+      "required_facts": [
+        {
+          "text": "The model club roster must have no blank rows.",
+          "support": [
+            {
+              "session_id": "dev_102_s2",
+              "event_index": 0,
+              "event_id": "dev_102_c",
+              "fragment": "It must have no blank rows."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The model club needs a walk-in row.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_scope",
+      "expected_actionability": "actionable"
+    },
+    "dev_102/q5": {
+      "required_facts": [
+        {
+          "text": "The print margin check is pending.",
+          "support": [
+            {
+              "session_id": "dev_102_s3",
+              "event_index": 0,
+              "event_id": "dev_102_d",
+              "fragment": "the margin check is still pending"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The margin check has passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "dev_102/q6": {
+      "required_facts": [
+        {
+          "text": "No printing checks were requested there.",
+          "support": [
+            {
+              "session_id": "dev_102_s2",
+              "event_index": 0,
+              "event_id": "dev_102_c",
+              "fragment": "We have not asked for printing checks here."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The kite club margin check also applies to the model club.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_scope",
+      "expected_actionability": "informational"
+    },
+    "dev_103/q1": {
+      "required_facts": [
+        {
+          "text": "Sort by hook number.",
+          "support": [
+            {
+              "session_id": "dev_103_s1",
+              "event_index": 0,
+              "event_id": "dev_103_a",
+              "fragment": "keep the display sorted by hook number"
+            }
+          ]
+        },
+        {
+          "text": "It matches the storage rack.",
+          "support": [
+            {
+              "session_id": "dev_103_s1",
+              "event_index": 0,
+              "event_id": "dev_103_a",
+              "fragment": "This matches the storage rack."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "actionable"
+    },
+    "dev_103/q2": {
+      "required_facts": [
+        {
+          "text": "The saved sort was color.",
+          "support": [
+            {
+              "session_id": "dev_103_s2",
+              "event_index": 1,
+              "event_id": "dev_103_d",
+              "fragment": "Saved list sort: color."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "dev_103/q3": {
+      "required_facts": [
+        {
+          "text": "The rack comparison was not performed.",
+          "support": [
+            {
+              "session_id": "dev_103_s2",
+              "event_index": 1,
+              "event_id": "dev_103_d",
+              "fragment": "Rack comparison: not performed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The rack comparison passed because the assistant said it was ready.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "false_completion",
+      "expected_actionability": "actionable"
+    },
+    "dev_103/q4": {
+      "required_facts": [
+        {
+          "text": "Change the saved sort to hook number.",
+          "support": [
+            {
+              "session_id": "dev_103_s3",
+              "event_index": 0,
+              "event_id": "dev_103_e",
+              "fragment": "Change the saved sort to hook number"
+            }
+          ]
+        },
+        {
+          "text": "Then compare the list with the rack.",
+          "support": [
+            {
+              "session_id": "dev_103_s3",
+              "event_index": 0,
+              "event_id": "dev_103_e",
+              "fragment": "then compare it with the rack"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "dev_103/q5": {
+      "required_facts": [
+        {
+          "text": "The help output does not inspect a saved list.",
+          "support": [
+            {
+              "session_id": "dev_103_s1",
+              "event_index": 1,
+              "event_id": "dev_103_b",
+              "fragment": "This help output does not inspect a saved list."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The help example was a completed change to the list.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "help_scope",
+      "expected_actionability": "informational"
+    },
+    "dev_103/q6": {
+      "required_facts": [
+        {
+          "text": "The festival note was a quotation from last year.",
+          "support": [
+            {
+              "session_id": "dev_103_s3",
+              "event_index": 0,
+              "event_id": "dev_103_e",
+              "fragment": "was a quotation from last year"
+            }
+          ]
+        },
+        {
+          "text": "It was not a request.",
+          "support": [
+            {
+              "session_id": "dev_103_s3",
+              "event_index": 0,
+              "event_id": "dev_103_e",
+              "fragment": "not a request"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The quotation requests a color sort for the current list.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "quoted_text",
+      "expected_actionability": "actionable"
+    },
+    "dev_104/q1": {
+      "required_facts": [
+        {
+          "text": "Use two lines.",
+          "support": [
+            {
+              "session_id": "dev_104_s2",
+              "event_index": 1,
+              "event_id": "dev_104_e",
+              "fragment": "The two-line layout remains required."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "actionable"
+    },
+    "dev_104/q2": {
+      "required_facts": [
+        {
+          "text": "The glaze name goes on the second line.",
+          "support": [
+            {
+              "session_id": "dev_104_s3",
+              "event_index": 0,
+              "event_id": "dev_104_g",
+              "fragment": "Keep the glaze name on the second line."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement",
+      "expected_actionability": "actionable"
+    },
+    "dev_104/q3": {
+      "required_facts": [
+        {
+          "text": "Leave the heading unspecified for now.",
+          "support": [
+            {
+              "session_id": "dev_104_s2",
+              "event_index": 1,
+              "event_id": "dev_104_e",
+              "fragment": "Leave the heading unspecified for now."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Use Cedar batch as the heading.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "actionable"
+    },
+    "dev_104/q4": {
+      "required_facts": [
+        {
+          "text": "Run the print test next.",
+          "support": [
+            {
+              "session_id": "dev_104_s3",
+              "event_index": 0,
+              "event_id": "dev_104_g",
+              "fragment": "Please run the print test next."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The print test is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "dev_104/q5": {
+      "required_facts": [
+        {
+          "text": "No new heading was supplied.",
+          "support": [
+            {
+              "session_id": "dev_104_s3",
+              "event_index": 0,
+              "event_id": "dev_104_g",
+              "fragment": "I have not supplied a new heading."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Cedar batch is still the approved heading.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "informational"
+    },
+    "dev_104/q6": {
+      "required_facts": [
+        {
+          "text": "The print test was pending.",
+          "support": [
+            {
+              "session_id": "dev_104_s1",
+              "event_index": 2,
+              "event_id": "dev_104_c",
+              "fragment": "Print test: pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    }
+  }
+}

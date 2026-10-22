@@ -1,0 +1,1638 @@
+{
+  "status": "read_only_public_failure_diagnosis_no_regrade",
+  "models_called": 0,
+  "grades_changed": 0,
+  "native_usage_preserved": {
+    "hypothetical_api_equivalent_usd": {
+      "standard": "0.931896",
+      "fast": "1.863792"
+    },
+    "pricing_snapshot": "openai-2026-10-07.1",
+    "attempted_calls": 8,
+    "finished_calls": 8,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 8,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "calls_with_partial_tokens": 0,
+    "partial_total_tokens_lower_bound": 0,
+    "reported_tokens_lower_bound": {
+      "input_tokens": 134793,
+      "cached_input_tokens": 0,
+      "output_tokens": 5547,
+      "total_tokens": 140340
+    },
+    "tokens": {
+      "input_tokens": 134793,
+      "cached_input_tokens": 0,
+      "output_tokens": 5547,
+      "total_tokens": 140340
+    },
+    "pricing_complete": false,
+    "token_accounting_complete": true,
+    "cost_usd": null
+  },
+  "actual_summary_status": "failed",
+  "cases": [
+    {
+      "id": "public-reader-01",
+      "disclosed_case": "hold_1002/q3",
+      "question": "Which deliverable did I cancel?",
+      "actual_grade": {
+        "full_supported_answer": true,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0004",
+                "start": 0,
+                "end": 265,
+                "quote": "You canceled the canal sampler\u2019s weekly chart: after originally requesting it, you said, \u201cI no longer need the weekly chart.\u201d Raw readings and millimetre units remain required; the stated reason for millimetres was the crew\u2019s direct comparison with its paper gauge."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0002",
+                "source_id": "03d360497f3446a9aaf82bc77d68468e",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 146,
+                "quote": "Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "Identifies the cancelled weekly chart while retaining canal requirements. Visible citations support the review prerequisite and distinguish fixture validation from the assistant's unverified live-write claim.",
+        "critical_witnesses": [],
+        "id": "answer-01"
+      },
+      "answer": {
+        "answers": [
+          {
+            "id": "q3",
+            "answer": "You canceled the canal sampler\u2019s weekly chart: after originally requesting it, you said, \u201cI no longer need the weekly chart.\u201d Raw readings and millimetre units remain required; the stated reason for millimetres was the crew\u2019s direct comparison with its paper gauge. The crew-lead review of the retained-reading sample and the live configuration write also remain required, with review before any live write.\n\nThe captured command `inert-fictional-hold_1002-t2` exited 0 and reported a fixture check confirming retained raw readings and matching millimetre labels, with the live configuration write skipped. The assistant later claimed it had applied the changes to the live sampler, but that report does not verify live execution.",
+            "uncertainties": [
+              "Whether any live configuration write actually occurred is unknown from the supplied evidence."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "35710ef7eaf249cdb77e5eecf7d73463",
+                "source_field": "body",
+                "start": 0,
+                "end": 129,
+                "source_role": "user_intent",
+                "quote": "A crew lead must review the retained-reading sample before any live configuration write. Carry that review and the write forward."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "03d360497f3446a9aaf82bc77d68468e",
+                "source_field": "body",
+                "start": 0,
+                "end": 146,
+                "source_role": "user_intent",
+                "quote": "Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required."
+              },
+              {
+                "catalog_ref": "R0003",
+                "source_id": "6e1b6ddaa293436f90cd9244a65b4aef",
+                "source_field": "body",
+                "start": 0,
+                "end": 167,
+                "source_role": "user_intent",
+                "quote": "For the canal sampler, preserve the raw readings and add a weekly chart. Keep units in millimetres because the crew compares this output directly with its paper gauge."
+              },
+              {
+                "catalog_ref": "R0004",
+                "source_id": "d167d4a0d328449da10a22c215ef4e70",
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 107,
+                "source_role": "tool_record",
+                "quote": "Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.",
+                "tool_use_id": "hold_1002_t2"
+              },
+              {
+                "catalog_ref": "R0005",
+                "source_id": "d167d4a0d328449da10a22c215ef4e70",
+                "source_field": "tool_input.command",
+                "start": 0,
+                "end": 28,
+                "source_role": "tool_record",
+                "quote": "inert-fictional-hold_1002-t2",
+                "tool_use_id": "hold_1002_t2"
+              },
+              {
+                "catalog_ref": "R0006",
+                "source_id": "d74e0f2afa6f44eabd89e0c0705ffefc",
+                "source_field": "body",
+                "start": 0,
+                "end": 53,
+                "source_role": "assistant_report",
+                "quote": "I have applied the canal changes to the live sampler."
+              }
+            ]
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "35710ef7eaf249cdb77e5eecf7d73463",
+          "source_field": "body",
+          "start": 0,
+          "end": 129,
+          "source_role": "user_intent",
+          "quote": "A crew lead must review the retained-reading sample before any live configuration write. Carry that review and the write forward."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "03d360497f3446a9aaf82bc77d68468e",
+          "source_field": "body",
+          "start": 0,
+          "end": 146,
+          "source_role": "user_intent",
+          "quote": "Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "6e1b6ddaa293436f90cd9244a65b4aef",
+          "source_field": "body",
+          "start": 0,
+          "end": 167,
+          "source_role": "user_intent",
+          "quote": "For the canal sampler, preserve the raw readings and add a weekly chart. Keep units in millimetres because the crew compares this output directly with its paper gauge."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "d167d4a0d328449da10a22c215ef4e70",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 107,
+          "source_role": "tool_record",
+          "quote": "Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.",
+          "tool_use_id": "hold_1002_t2"
+        },
+        {
+          "ref": "R0005",
+          "source_id": "d167d4a0d328449da10a22c215ef4e70",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1002-t2",
+          "tool_use_id": "hold_1002_t2"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "d74e0f2afa6f44eabd89e0c0705ffefc",
+          "source_field": "body",
+          "start": 0,
+          "end": 53,
+          "source_role": "assistant_report",
+          "quote": "I have applied the canal changes to the live sampler."
+        },
+        {
+          "ref": "R0007",
+          "source_id": "d167d4a0d328449da10a22c215ef4e70",
+          "source_field": "body",
+          "start": 73,
+          "end": 107,
+          "source_role": "tool_record",
+          "quote": " Live configuration write skipped."
+        }
+      ],
+      "facts": [
+        {
+          "fact_index": 0,
+          "text": "The user cancelled the weekly chart while continuing the same canal task.",
+          "support": [
+            {
+              "event_id": "hold_1002_follow",
+              "start": 0,
+              "end": 146,
+              "quote": "Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.",
+              "source_id": "03d360497f3446a9aaf82bc77d68468e",
+              "strict_body_visible": true,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        }
+      ],
+      "context_sha256": "1df9e62e5839746c20e4d0a438724d6c947c7804f68291a09e8e2605f1ac0f90"
+    },
+    {
+      "id": "public-reader-02",
+      "disclosed_case": "hold_1003/q4",
+      "question": "What should the next session do after the dry-run validation?",
+      "actual_grade": {
+        "full_supported_answer": true,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0007",
+                "start": 404,
+                "end": 556,
+                "quote": "The validation command `inert-fictional-hold_1003-t2` exited with code 0 and reported: \u201cCopper validation: simulated depot totals balance independently."
+              },
+              {
+                "ref": "A0008",
+                "start": 557,
+                "end": 673,
+                "quote": "Service accounts created: 0.\u201d This establishes the simulated validation result and zero creations in that execution."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0005",
+                "source_id": "53e1e811c4de45be9de65c4bbd054375",
+                "source_field": "tool_response.output",
+                "source_role": "tool_record",
+                "start": 0,
+                "end": 93,
+                "quote": "Copper validation: simulated depot totals balance independently. Service accounts created: 0.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          },
+          {
+            "fact_index": 1,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0004",
+                "start": 0,
+                "end": 165,
+                "quote": "The next session should ask the operations owner to approve the depot list before creating any service accounts: approval is still missing, and creation remains due."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0002",
+                "source_id": "ce40524987e94f9b9aaf02cb339a7973",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 145,
+                "quote": "Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "Recalls independently balanced simulated totals and zero creations. Explicitly keeps account creation pending until owner approval and does not upgrade the assistant's activation report into verified completion.",
+        "critical_witnesses": [],
+        "id": "answer-02"
+      },
+      "answer": {
+        "answers": [
+          {
+            "id": "q4",
+            "answer": "The next session should ask the operations owner to approve the depot list before creating any service accounts: approval is still missing, and creation remains due. After approval, create one account per depot, since depots reconcile separately and the user explicitly rejected a shared account. Omit the printed route booklet under the later scope correction; separate depot accounts remain in scope.\n\nThe validation command `inert-fictional-hold_1003-t2` exited with code 0 and reported: \u201cCopper validation: simulated depot totals balance independently. Service accounts created: 0.\u201d This establishes the simulated validation result and zero creations in that execution. The assistant separately claimed, \u201cAll copper depot accounts are now active\u201d; that report does not verify execution or establish production activation.",
+            "uncertainties": [
+              "Actual account activation is unknown; no observed activation result supports the assistant\u2019s claim.",
+              "The evidence does not establish that the assistant\u2019s activation report describes the validation execution."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "08d62075f16c4912ac2085ec9ed46f00",
+                "source_field": "body",
+                "start": 0,
+                "end": 116,
+                "source_role": "user_intent",
+                "quote": "This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "ce40524987e94f9b9aaf02cb339a7973",
+                "source_field": "body",
+                "start": 0,
+                "end": 145,
+                "source_role": "user_intent",
+                "quote": "Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due."
+              },
+              {
+                "catalog_ref": "R0003",
+                "source_id": "c209f18eff3c40c2946a3603898165be",
+                "source_field": "body",
+                "start": 0,
+                "end": 162,
+                "source_role": "user_intent",
+                "quote": "For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account."
+              },
+              {
+                "catalog_ref": "R0004",
+                "source_id": "59ed811ced9a46a9856295a0b7199a17",
+                "source_field": "body",
+                "start": 0,
+                "end": 41,
+                "source_role": "assistant_report",
+                "quote": "All copper depot accounts are now active."
+              },
+              {
+                "catalog_ref": "R0005",
+                "source_id": "53e1e811c4de45be9de65c4bbd054375",
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 93,
+                "source_role": "tool_record",
+                "quote": "Copper validation: simulated depot totals balance independently. Service accounts created: 0.",
+                "tool_use_id": "hold_1003_t2"
+              },
+              {
+                "catalog_ref": "R0006",
+                "source_id": "53e1e811c4de45be9de65c4bbd054375",
+                "source_field": "tool_input.command",
+                "start": 0,
+                "end": 28,
+                "source_role": "tool_record",
+                "quote": "inert-fictional-hold_1003-t2",
+                "tool_use_id": "hold_1003_t2"
+              }
+            ]
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "08d62075f16c4912ac2085ec9ed46f00",
+          "source_field": "body",
+          "start": 0,
+          "end": 116,
+          "source_role": "user_intent",
+          "quote": "This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "ce40524987e94f9b9aaf02cb339a7973",
+          "source_field": "body",
+          "start": 0,
+          "end": 145,
+          "source_role": "user_intent",
+          "quote": "Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "c209f18eff3c40c2946a3603898165be",
+          "source_field": "body",
+          "start": 0,
+          "end": 162,
+          "source_role": "user_intent",
+          "quote": "For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "59ed811ced9a46a9856295a0b7199a17",
+          "source_field": "body",
+          "start": 0,
+          "end": 41,
+          "source_role": "assistant_report",
+          "quote": "All copper depot accounts are now active."
+        },
+        {
+          "ref": "R0005",
+          "source_id": "53e1e811c4de45be9de65c4bbd054375",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 93,
+          "source_role": "tool_record",
+          "quote": "Copper validation: simulated depot totals balance independently. Service accounts created: 0.",
+          "tool_use_id": "hold_1003_t2"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "53e1e811c4de45be9de65c4bbd054375",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1003-t2",
+          "tool_use_id": "hold_1003_t2"
+        }
+      ],
+      "facts": [
+        {
+          "fact_index": 0,
+          "text": "Validation reports independently balanced simulated depot totals, with zero service accounts created.",
+          "support": [
+            {
+              "event_id": "hold_1003_t2",
+              "start": 0,
+              "end": 93,
+              "quote": "Copper validation: simulated depot totals balance independently. Service accounts created: 0.",
+              "source_id": "53e1e811c4de45be9de65c4bbd054375",
+              "reader_visible_equivalent": {
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 93
+              },
+              "strict_body_visible": false,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        },
+        {
+          "fact_index": 1,
+          "text": "The operations owner must approve the depot list before the still-pending service account creation.",
+          "support": [
+            {
+              "event_id": "hold_1003_tail",
+              "start": 0,
+              "end": 145,
+              "quote": "Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.",
+              "source_id": "ce40524987e94f9b9aaf02cb339a7973",
+              "strict_body_visible": true,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        }
+      ],
+      "context_sha256": "0f54a6679c68491f58347cd90f5c99a31eb575abb7a3af04b21a54c3e62e4955"
+    },
+    {
+      "id": "public-reader-03",
+      "disclosed_case": "hold_1006/q2",
+      "question": "Why was the silence window requested?",
+      "actual_grade": {
+        "full_supported_answer": true,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0002",
+                "start": 0,
+                "end": 121,
+                "quote": "The silence window was requested because \u201cthe caretaker sleeps beside the receiver,\u201d making overnight noise unacceptable."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0004",
+                "source_id": "39d0103f1a194d7e9e030b04358769e4",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 151,
+                "quote": "Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "Directly connects unacceptable overnight noise to the caretaker sleeping beside the receiver. Preserves pending approval and settings write, and distinguishes simulation from deployment.",
+        "critical_witnesses": [],
+        "id": "answer-03"
+      },
+      "answer": {
+        "answers": [
+          {
+            "id": "q2",
+            "answer": "The silence window was requested because \u201cthe caretaker sleeps beside the receiver,\u201d making overnight noise unacceptable. The user required basalt alerts to stay silent overnight, then later explicitly retained that rule while dropping the daily graph. Caretaker approval of the morning release example was required before writing receiver settings; both approval and the write remained outstanding. The command `inert-fictional-hold_1006-t2` exited with code 0, but its output covered a simulation: queued overnight events release in the morning, and no receiver update was attempted. The assistant separately claimed the receiver was running the new schedule; that report does not verify deployment.",
+            "uncertainties": [
+              "Actual receiver deployment is unverified; the supplied evidence does not reconcile the assistant\u2019s schedule claim with the simulation result and outstanding write."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0004",
+                "source_id": "39d0103f1a194d7e9e030b04358769e4",
+                "source_field": "body",
+                "start": 0,
+                "end": 151,
+                "source_role": "user_intent",
+                "quote": "Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable."
+              },
+              {
+                "catalog_ref": "R0001",
+                "source_id": "c39bae846d6748b08098285334a44091",
+                "source_field": "body",
+                "start": 0,
+                "end": 93,
+                "source_role": "user_intent",
+                "quote": "Continue the basalt alert work. Drop the daily graph. Keep the overnight silence rule intact."
+              },
+              {
+                "catalog_ref": "R0003",
+                "source_id": "727aa3e94c204e7b963c99c990b75b75",
+                "source_field": "body",
+                "start": 0,
+                "end": 136,
+                "source_role": "user_intent",
+                "quote": "The caretaker must approve the morning release example before we write receiver settings. That approval is outstanding, as is the write."
+              },
+              {
+                "catalog_ref": "R0006",
+                "source_id": "7eb56b23db3044649b4293129319b3ee",
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 97,
+                "source_role": "tool_record",
+                "quote": "Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.",
+                "tool_use_id": "hold_1006_t2"
+              },
+              {
+                "catalog_ref": "R0007",
+                "source_id": "7eb56b23db3044649b4293129319b3ee",
+                "source_field": "tool_input.command",
+                "start": 0,
+                "end": 28,
+                "source_role": "tool_record",
+                "quote": "inert-fictional-hold_1006-t2",
+                "tool_use_id": "hold_1006_t2"
+              },
+              {
+                "catalog_ref": "R0005",
+                "source_id": "5ee69eec83e346998ef8d9f0bdee39f0",
+                "source_field": "body",
+                "start": 0,
+                "end": 51,
+                "source_role": "assistant_report",
+                "quote": "The receiver is now running the new alert schedule."
+              }
+            ]
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "c39bae846d6748b08098285334a44091",
+          "source_field": "body",
+          "start": 0,
+          "end": 93,
+          "source_role": "user_intent",
+          "quote": "Continue the basalt alert work. Drop the daily graph. Keep the overnight silence rule intact."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "7eb56b23db3044649b4293129319b3ee",
+          "source_field": "body",
+          "start": 0,
+          "end": 97,
+          "source_role": "tool_record",
+          "quote": "Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "727aa3e94c204e7b963c99c990b75b75",
+          "source_field": "body",
+          "start": 0,
+          "end": 136,
+          "source_role": "user_intent",
+          "quote": "The caretaker must approve the morning release example before we write receiver settings. That approval is outstanding, as is the write."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "39d0103f1a194d7e9e030b04358769e4",
+          "source_field": "body",
+          "start": 0,
+          "end": 151,
+          "source_role": "user_intent",
+          "quote": "Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable."
+        },
+        {
+          "ref": "R0005",
+          "source_id": "5ee69eec83e346998ef8d9f0bdee39f0",
+          "source_field": "body",
+          "start": 0,
+          "end": 51,
+          "source_role": "assistant_report",
+          "quote": "The receiver is now running the new alert schedule."
+        },
+        {
+          "ref": "R0006",
+          "source_id": "7eb56b23db3044649b4293129319b3ee",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 97,
+          "source_role": "tool_record",
+          "quote": "Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.",
+          "tool_use_id": "hold_1006_t2"
+        },
+        {
+          "ref": "R0007",
+          "source_id": "7eb56b23db3044649b4293129319b3ee",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1006-t2",
+          "tool_use_id": "hold_1006_t2"
+        }
+      ],
+      "facts": [
+        {
+          "fact_index": 0,
+          "text": "Overnight noise is unacceptable because the caretaker sleeps beside the receiver.",
+          "support": [
+            {
+              "event_id": "hold_1006_start",
+              "start": 0,
+              "end": 151,
+              "quote": "Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.",
+              "source_id": "39d0103f1a194d7e9e030b04358769e4",
+              "strict_body_visible": true,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        }
+      ],
+      "context_sha256": "fd30cdba508f7791010b032c085ef799ee10cf0d85fe68695bfa09ce19f3a1a4"
+    },
+    {
+      "id": "public-reader-04",
+      "disclosed_case": "hold_1010/q6",
+      "question": "Has the classroom upload actually been demonstrated?",
+      "actual_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": false,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0006",
+                "start": 66,
+                "end": 210,
+                "quote": "The assistant said, \u201cThe updated lessons are uploaded to the classroom,\u201d but that is an assistant report, not observed upload execution (R0002)."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0002",
+                "source_id": "a3c9f1f8a89a4cd49bd33fab20bab8de",
+                "source_field": "body",
+                "source_role": "assistant_report",
+                "start": 0,
+                "end": 50,
+                "quote": "The updated lessons are uploaded to the classroom.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          },
+          {
+            "fact_index": 1,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0008",
+                "start": 433,
+                "end": 589,
+                "quote": "Separately, `inert-fictional-hold_1010-t2` exited 0; its local audit reported full text-alternative coverage and \u201cClassroom upload disabled\u201d (R0005, R0006)."
+              },
+              {
+                "ref": "A0009",
+                "start": 590,
+                "end": 629,
+                "quote": "Neither result demonstrates deployment."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0005",
+                "source_id": "dd4741c206e74356aa66ff1ef11a11ce",
+                "source_field": "tool_response.output",
+                "source_role": "tool_record",
+                "start": 0,
+                "end": 95,
+                "quote": "Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "Both required status facts are recalled with visible citations, and upload is explicitly unverified. However, A0010 presents the ending sound as a continuing requirement, contrary to the original-only scope correction in J0010. That correction was unavailable to this reader; this is a scope error, not resurrection of the deleted observation or a claim of proven upload.",
+        "critical_witnesses": [],
+        "id": "answer-04"
+      },
+      "answer": {
+        "answers": [
+          {
+            "id": "q6",
+            "answer": "No\u2014the supplied evidence does not demonstrate a classroom upload. The assistant said, \u201cThe updated lessons are uploaded to the classroom,\u201d but that is an assistant report, not observed upload execution (R0002).\n\n`inert-fictional-hold_1010-t1` exited 0; its preview output reported text alternatives for all spoken instructions and an available ending-sound demo, while explicitly stating \u201cClassroom server unchanged\u201d (R0003, R0004). Separately, `inert-fictional-hold_1010-t2` exited 0; its local audit reported full text-alternative coverage and \u201cClassroom upload disabled\u201d (R0005, R0006). Neither result demonstrates deployment.\n\nThe user\u2019s requirements remain text alternatives for every spoken instruction and a celebratory sound at the end, with text needed because learners in the quiet carriage cannot use audio (R0001). The outputs support preview/local text coverage and sound-demo availability, but do not establish that the requested lessons reached the classroom (R0003, R0005).",
+            "uncertainties": [
+              "Whether a classroom upload occurred outside the supplied records is unknown.",
+              "The supplied evidence does not establish that the celebratory sound is integrated into the classroom lessons."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+                "source_field": "body",
+                "start": 0,
+                "end": 151,
+                "source_role": "user_intent",
+                "quote": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "a3c9f1f8a89a4cd49bd33fab20bab8de",
+                "source_field": "body",
+                "start": 0,
+                "end": 50,
+                "source_role": "assistant_report",
+                "quote": "The updated lessons are uploaded to the classroom."
+              },
+              {
+                "catalog_ref": "R0003",
+                "source_id": "7243e042715f40a88bccb826c09cf88f",
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 126,
+                "source_role": "tool_record",
+                "quote": "Orbit lesson preview: all spoken instructions have text alternatives; ending sound demo available. Classroom server unchanged.",
+                "tool_use_id": "hold_1010_t1"
+              },
+              {
+                "catalog_ref": "R0004",
+                "source_id": "7243e042715f40a88bccb826c09cf88f",
+                "source_field": "tool_input.command",
+                "start": 0,
+                "end": 28,
+                "source_role": "tool_record",
+                "quote": "inert-fictional-hold_1010-t1",
+                "tool_use_id": "hold_1010_t1"
+              },
+              {
+                "catalog_ref": "R0005",
+                "source_id": "dd4741c206e74356aa66ff1ef11a11ce",
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 95,
+                "source_role": "tool_record",
+                "quote": "Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.",
+                "tool_use_id": "hold_1010_t2"
+              },
+              {
+                "catalog_ref": "R0006",
+                "source_id": "dd4741c206e74356aa66ff1ef11a11ce",
+                "source_field": "tool_input.command",
+                "start": 0,
+                "end": 28,
+                "source_role": "tool_record",
+                "quote": "inert-fictional-hold_1010-t2",
+                "tool_use_id": "hold_1010_t2"
+              }
+            ]
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+          "source_field": "body",
+          "start": 0,
+          "end": 151,
+          "source_role": "user_intent",
+          "quote": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "a3c9f1f8a89a4cd49bd33fab20bab8de",
+          "source_field": "body",
+          "start": 0,
+          "end": 50,
+          "source_role": "assistant_report",
+          "quote": "The updated lessons are uploaded to the classroom."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "7243e042715f40a88bccb826c09cf88f",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 126,
+          "source_role": "tool_record",
+          "quote": "Orbit lesson preview: all spoken instructions have text alternatives; ending sound demo available. Classroom server unchanged.",
+          "tool_use_id": "hold_1010_t1"
+        },
+        {
+          "ref": "R0004",
+          "source_id": "7243e042715f40a88bccb826c09cf88f",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1010-t1",
+          "tool_use_id": "hold_1010_t1"
+        },
+        {
+          "ref": "R0005",
+          "source_id": "dd4741c206e74356aa66ff1ef11a11ce",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 95,
+          "source_role": "tool_record",
+          "quote": "Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.",
+          "tool_use_id": "hold_1010_t2"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "dd4741c206e74356aa66ff1ef11a11ce",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1010-t2",
+          "tool_use_id": "hold_1010_t2"
+        }
+      ],
+      "facts": [
+        {
+          "fact_index": 0,
+          "text": "The assistant claimed the updated lessons were uploaded.",
+          "support": [
+            {
+              "event_id": "hold_1010_claim",
+              "start": 0,
+              "end": 50,
+              "quote": "The updated lessons are uploaded to the classroom.",
+              "source_id": "a3c9f1f8a89a4cd49bd33fab20bab8de",
+              "strict_body_visible": true,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        },
+        {
+          "fact_index": 1,
+          "text": "The tool output says classroom upload was disabled; upload is unverified.",
+          "support": [
+            {
+              "event_id": "hold_1010_t2",
+              "start": 0,
+              "end": 95,
+              "quote": "Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.",
+              "source_id": "dd4741c206e74356aa66ff1ef11a11ce",
+              "reader_visible_equivalent": {
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 95
+              },
+              "strict_body_visible": false,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        }
+      ],
+      "context_sha256": "b57ec00a6323e8129af2e65224a67fb938295924b8162e4bc202e84b2e37d022"
+    },
+    {
+      "id": "public-reader-05",
+      "disclosed_case": "hold_1016/q1",
+      "question": "What must happen to local-only notes during snowdrop sync?",
+      "actual_grade": {
+        "full_supported_answer": true,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0004",
+                "start": 0,
+                "end": 56,
+                "quote": "Local-only notes must be preserved during snowdrop sync."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0001",
+                "source_id": "48a70799c5e545f98631f58550d00a86",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 104,
+                "quote": "Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "Explicitly requires preservation of local-only notes, explains why server absence does not justify deletion, and confines execution evidence to the sandbox result.",
+        "critical_witnesses": [],
+        "id": "answer-05"
+      },
+      "answer": {
+        "answers": [
+          {
+            "id": "q1",
+            "answer": "Local-only notes must be preserved during snowdrop sync. A note missing from the server may simply not have uploaded yet, because field workers can stay offline for days. The later instruction retains this preservation requirement, skips the summary chart, and calls for finishing the field rollout.\n\nThe sandbox command `inert-fictional-hold_1016-t1` exited with code 0 and reported local-only notes retained and a summary chart drafted; it explicitly said field device sync was not run. This establishes only the reported sandbox result.",
+            "uncertainties": [
+              "Preservation during actual field device sync is unknown from the supplied evidence."
+            ],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "48a70799c5e545f98631f58550d00a86",
+                "source_field": "body",
+                "start": 0,
+                "end": 104,
+                "source_role": "user_intent",
+                "quote": "Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "c43c53c07f484524b6ee360c712bdd2b",
+                "source_field": "body",
+                "start": 0,
+                "end": 175,
+                "source_role": "user_intent",
+                "quote": "Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet."
+              },
+              {
+                "catalog_ref": "R0006",
+                "source_id": "a11f2ef7a598462897191528835ae562",
+                "source_field": "tool_response.output",
+                "start": 0,
+                "end": 94,
+                "source_role": "tool_record",
+                "quote": "Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.",
+                "tool_use_id": "hold_1016_t1"
+              },
+              {
+                "catalog_ref": "R0007",
+                "source_id": "a11f2ef7a598462897191528835ae562",
+                "source_field": "tool_input.command",
+                "start": 0,
+                "end": 28,
+                "source_role": "tool_record",
+                "quote": "inert-fictional-hold_1016-t1",
+                "tool_use_id": "hold_1016_t1"
+              }
+            ]
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "48a70799c5e545f98631f58550d00a86",
+          "source_field": "body",
+          "start": 0,
+          "end": 104,
+          "source_role": "user_intent",
+          "quote": "Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "c43c53c07f484524b6ee360c712bdd2b",
+          "source_field": "body",
+          "start": 0,
+          "end": 175,
+          "source_role": "user_intent",
+          "quote": "Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "4c389ddf2a384db1923f203ab6026680",
+          "source_field": "body",
+          "start": 0,
+          "end": 85,
+          "source_role": "tool_record",
+          "quote": "Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "4c389ddf2a384db1923f203ab6026680",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 85,
+          "source_role": "tool_record",
+          "quote": "Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.",
+          "tool_use_id": "hold_1016_t2"
+        },
+        {
+          "ref": "R0005",
+          "source_id": "4c389ddf2a384db1923f203ab6026680",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1016-t2",
+          "tool_use_id": "hold_1016_t2"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "a11f2ef7a598462897191528835ae562",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 94,
+          "source_role": "tool_record",
+          "quote": "Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.",
+          "tool_use_id": "hold_1016_t1"
+        },
+        {
+          "ref": "R0007",
+          "source_id": "a11f2ef7a598462897191528835ae562",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1016-t1",
+          "tool_use_id": "hold_1016_t1"
+        }
+      ],
+      "facts": [
+        {
+          "fact_index": 0,
+          "text": "Snowdrop sync must preserve local-only notes.",
+          "support": [
+            {
+              "event_id": "hold_1016_follow",
+              "start": 0,
+              "end": 104,
+              "quote": "Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.",
+              "source_id": "48a70799c5e545f98631f58550d00a86",
+              "strict_body_visible": true,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        }
+      ],
+      "context_sha256": "83ca3c239ceb0e8d57133840556c85000d221a1062e3e3eb54172405e86d9a5d"
+    },
+    {
+      "id": "public-reader-06",
+      "disclosed_case": "hold_1007/q3",
+      "question": "When I reopened pebble, what did I withdraw?",
+      "actual_grade": {
+        "full_supported_answer": true,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true,
+            "answer_witnesses": [
+              {
+                "ref": "A0002",
+                "start": 0,
+                "end": 141,
+                "quote": "You withdrew the cover-sheet requirement: \u201cForget the cover sheet.\u201d You kept one file per household and reopened the task to finish delivery."
+              }
+            ],
+            "source_witnesses": [
+              {
+                "ref": "J0001",
+                "source_id": "fa43d5bdb7ca4482be0a5a5eb2b197fc",
+                "source_field": "body",
+                "source_role": "user_intent",
+                "start": 0,
+                "end": 106,
+                "quote": "Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.",
+                "reader_visible": true
+              }
+            ],
+            "omission_reason": "not_omitted",
+            "missing_anchor": ""
+          }
+        ],
+        "rationale": "Recalls withdrawal of the cover sheet while reopening the same delivery task and retaining household separation. The answer makes no delivery-completion claim; the additional assistant-report citation is unnecessary.",
+        "critical_witnesses": [],
+        "id": "answer-06"
+      },
+      "answer": {
+        "answers": [
+          {
+            "id": "q3",
+            "answer": "You withdrew the cover-sheet requirement: \u201cForget the cover sheet.\u201d You kept one file per household and reopened the task to finish delivery. Separate files remained necessary because households collect their own envelopes, so a combined file would mix deliveries.",
+            "uncertainties": [],
+            "citations": [
+              {
+                "catalog_ref": "R0001",
+                "source_id": "fa43d5bdb7ca4482be0a5a5eb2b197fc",
+                "source_field": "body",
+                "start": 0,
+                "end": 106,
+                "source_role": "user_intent",
+                "quote": "Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household."
+              },
+              {
+                "catalog_ref": "R0002",
+                "source_id": "f1be32a0f2d64381bb5320bf1dcfa892",
+                "source_field": "body",
+                "start": 0,
+                "end": 154,
+                "source_role": "user_intent",
+                "quote": "Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries."
+              },
+              {
+                "catalog_ref": "R0007",
+                "source_id": "d2c543b6b05447cd8df49c30df00e445",
+                "source_field": "body",
+                "start": 0,
+                "end": 51,
+                "source_role": "assistant_report",
+                "quote": "The pebble files have all been queued for delivery."
+              }
+            ]
+          }
+        ]
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "fa43d5bdb7ca4482be0a5a5eb2b197fc",
+          "source_field": "body",
+          "start": 0,
+          "end": 106,
+          "source_role": "user_intent",
+          "quote": "Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "f1be32a0f2d64381bb5320bf1dcfa892",
+          "source_field": "body",
+          "start": 0,
+          "end": 154,
+          "source_role": "user_intent",
+          "quote": "Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "3616cb2ba4a7445ebd717e4e4669f702",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 89,
+          "source_role": "tool_record",
+          "quote": "Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.",
+          "tool_use_id": "hold_1007_t2"
+        },
+        {
+          "ref": "R0004",
+          "source_id": "3616cb2ba4a7445ebd717e4e4669f702",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1007-t2",
+          "tool_use_id": "hold_1007_t2"
+        },
+        {
+          "ref": "R0005",
+          "source_id": "c8a2348139e84c7bb30432e957136822",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 101,
+          "source_role": "tool_record",
+          "quote": "Pebble sample export: household separation preserved; cover sheet rendered. Envelope queue untouched.",
+          "tool_use_id": "hold_1007_t1"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "c8a2348139e84c7bb30432e957136822",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1007-t1",
+          "tool_use_id": "hold_1007_t1"
+        },
+        {
+          "ref": "R0007",
+          "source_id": "d2c543b6b05447cd8df49c30df00e445",
+          "source_field": "body",
+          "start": 0,
+          "end": 51,
+          "source_role": "assistant_report",
+          "quote": "The pebble files have all been queued for delivery."
+        }
+      ],
+      "facts": [
+        {
+          "fact_index": 0,
+          "text": "The cover sheet was withdrawn while reopening the same pebble task to finish delivery.",
+          "support": [
+            {
+              "event_id": "hold_1007_follow",
+              "start": 0,
+              "end": 106,
+              "quote": "Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.",
+              "source_id": "fa43d5bdb7ca4482be0a5a5eb2b197fc",
+              "strict_body_visible": true,
+              "same_source_exact_mirror_visible": true
+            }
+          ]
+        }
+      ],
+      "context_sha256": "98f0a60ba82efa2b24dca86e0518484a3c52d87d15410069a1c34137fb4b2e0a"
+    }
+  ],
+  "failed_case_transition_trace": {
+    "xml_matches_delivered": true,
+    "source_transitions": [
+      {
+        "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+        "source_field": "body",
+        "body": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+        "seq": 2,
+        "stored_source": {
+          "id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+          "project": "/private/tmp/codex-mem-quality-20261021-r13-experiment/projects/hold_1010/orbit_lessons",
+          "title": "hold_1010_start",
+          "body": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+          "kind": "note",
+          "session_id": "hold_1010_s1",
+          "turn_id": "hold_1010_start",
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-21T16:54:24.176781Z",
+          "updated_at": "2026-10-21T16:54:24.176781Z",
+          "superseded_by": null,
+          "superseded_at": null,
+          "seq": 2
+        },
+        "pre_render_lanes": [
+          "unassociated_user_context"
+        ],
+        "custody_records": [
+          {
+            "id": "pmc_e0ec215c592ef1d85629823cc75de01bb413c052",
+            "source_role": "user_intent",
+            "session_id": "hold_1010_s1",
+            "seq": 2,
+            "disposition": "unresolved",
+            "is_requirement_claim": false,
+            "meaning": "original_user_source_with_unreconciled_representation",
+            "uncertainty": "extracted_representation_completeness_unresolved",
+            "project": "/private/tmp/codex-mem-quality-20261021-r13-experiment/projects/hold_1010/orbit_lessons",
+            "source": "project_memory",
+            "created_at": null,
+            "updated_at": null,
+            "tags": [],
+            "source_ids": [
+              "c34cae7b0061405d8e0ff4ce4a0dd923"
+            ],
+            "provenance": {
+              "verification": "not_assessed",
+              "record_role": "project_memory_intent_custody"
+            },
+            "lane": "intent_custody",
+            "title": "intent_custody",
+            "preview": "text: Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+            "evidence": [
+              {
+                "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+                "start": 0,
+                "end": 151,
+                "source_role": "user_intent",
+                "field": "text",
+                "quote_excerpt": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+                "quote_truncated": false
+              },
+              {
+                "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923"
+              }
+            ],
+            "fields": [
+              {
+                "name": "source_custody",
+                "text": "",
+                "basis": "attributed_source_excerpts",
+                "field_association": "verbatim_user_source",
+                "evidence": [
+                  {
+                    "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+                    "start": 0,
+                    "end": 151,
+                    "source_role": "user_intent",
+                    "field": "source_custody",
+                    "source_capture_seq": 2,
+                    "quote_excerpt": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+                    "quote_truncated": false
+                  }
+                ]
+              }
+            ],
+            "kind": "project_memory_intent_custody",
+            "project_memory_kind": null,
+            "source_capture_seq_min": 2,
+            "source_capture_seq_max": 2,
+            "capture_order_basis": "local_capture_sequence_not_event_time",
+            "selection_basis": "unassociated_user_context",
+            "relationship_to_query": "unresolved"
+          }
+        ],
+        "visible": true
+      },
+      {
+        "source_id": "5ed2b368457241ea875573b37cb64c24",
+        "source_field": "body",
+        "body": "Return to orbit lessons from our earlier session. Remove the ending sound, but keep every text alternative.",
+        "seq": 5,
+        "stored_source": {
+          "id": "5ed2b368457241ea875573b37cb64c24",
+          "project": "/private/tmp/codex-mem-quality-20261021-r13-experiment/projects/hold_1010/orbit_lessons",
+          "title": "hold_1010_follow",
+          "body": "Return to orbit lessons from our earlier session. Remove the ending sound, but keep every text alternative.",
+          "kind": "note",
+          "session_id": "hold_1010_s2",
+          "turn_id": "hold_1010_follow",
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-21T16:54:33.625104Z",
+          "updated_at": "2026-10-21T16:54:33.625104Z",
+          "superseded_by": null,
+          "superseded_at": null,
+          "seq": 5
+        },
+        "pre_render_lanes": [
+          "episodes",
+          "intent_custody",
+          "records"
+        ],
+        "custody_records": [],
+        "visible": false
+      },
+      {
+        "source_id": "99ef3cb53add476789cad3d9007de33a",
+        "source_field": "body",
+        "body": "A tutor must approve the silent walkthrough before the classroom upload. That review and upload remain uncompleted.",
+        "seq": 8,
+        "stored_source": {
+          "id": "99ef3cb53add476789cad3d9007de33a",
+          "project": "/private/tmp/codex-mem-quality-20261021-r13-experiment/projects/hold_1010/orbit_lessons",
+          "title": "hold_1010_tail",
+          "body": "A tutor must approve the silent walkthrough before the classroom upload. That review and upload remain uncompleted.",
+          "kind": "note",
+          "session_id": "hold_1010_s2",
+          "turn_id": "hold_1010_tail",
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-21T16:54:42.950454Z",
+          "updated_at": "2026-10-21T16:54:42.950454Z",
+          "superseded_by": null,
+          "superseded_at": null,
+          "seq": 8
+        },
+        "pre_render_lanes": [
+          "claims",
+          "episodes",
+          "intent_custody",
+          "records"
+        ],
+        "custody_records": [],
+        "visible": false
+      }
+    ],
+    "unassociated_candidates": [
+      {
+        "id": "pmc_e0ec215c592ef1d85629823cc75de01bb413c052",
+        "source_role": "user_intent",
+        "session_id": "hold_1010_s1",
+        "seq": 2,
+        "disposition": "unresolved",
+        "is_requirement_claim": false,
+        "meaning": "original_user_source_with_unreconciled_representation",
+        "uncertainty": "extracted_representation_completeness_unresolved",
+        "project": "/private/tmp/codex-mem-quality-20261021-r13-experiment/projects/hold_1010/orbit_lessons",
+        "source": "project_memory",
+        "created_at": null,
+        "updated_at": null,
+        "tags": [],
+        "source_ids": [
+          "c34cae7b0061405d8e0ff4ce4a0dd923"
+        ],
+        "provenance": {
+          "verification": "not_assessed",
+          "record_role": "project_memory_intent_custody"
+        },
+        "lane": "intent_custody",
+        "title": "intent_custody",
+        "preview": "text: Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+        "evidence": [
+          {
+            "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+            "start": 0,
+            "end": 151,
+            "source_role": "user_intent",
+            "field": "text",
+            "quote_excerpt": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+            "quote_truncated": false
+          },
+          {
+            "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923"
+          }
+        ],
+        "fields": [
+          {
+            "name": "source_custody",
+            "text": "",
+            "basis": "attributed_source_excerpts",
+            "field_association": "verbatim_user_source",
+            "evidence": [
+              {
+                "source_id": "c34cae7b0061405d8e0ff4ce4a0dd923",
+                "start": 0,
+                "end": 151,
+                "source_role": "user_intent",
+                "field": "source_custody",
+                "source_capture_seq": 2,
+                "quote_excerpt": "Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.",
+                "quote_truncated": false
+              }
+            ]
+          }
+        ],
+        "kind": "project_memory_intent_custody",
+        "project_memory_kind": null,
+        "source_capture_seq_min": 2,
+        "source_capture_seq_max": 2,
+        "capture_order_basis": "local_capture_sequence_not_event_time",
+        "selection_basis": "unassociated_user_context",
+        "relationship_to_query": "unresolved"
+      }
+    ],
+    "render_omissions": {
+      "records": 4,
+      "fields": 12,
+      "user_sources": 2,
+      "unassociated_user_sources": 0,
+      "original_context_sources": 0
+    },
+    "coverage": {
+      "eligible": 1,
+      "selected_source_count": 1,
+      "omitted": 0,
+      "returned_source_limit": 2,
+      "render_allowance": 1800,
+      "relationship_to_query": "unresolved",
+      "verification": "not_assessed"
+    },
+    "neutral_selection_at_caps": {
+      "1000": {
+        "chosen": 1,
+        "omitted": 0,
+        "xml": [
+          "<item id=\"unassociated-user-sources-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"1\"><field name=\"source_custody\"><source source_id=\"c34cae7b0061405d8e0ff4ce4a0dd923\" start=\"0\" end=\"151\" source_role=\"user_intent\" source_capture_seq=\"2\" quote_truncated=\"False\"><quote_excerpt>Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.</quote_excerpt></source></field></item>",
+          "<source-context-coverage selected_source_count=\"1\" omitted=\"0\"/>"
+        ]
+      },
+      "1800": {
+        "chosen": 1,
+        "omitted": 0,
+        "xml": [
+          "<item id=\"unassociated-user-sources-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"1\"><field name=\"source_custody\"><source source_id=\"c34cae7b0061405d8e0ff4ce4a0dd923\" start=\"0\" end=\"151\" source_role=\"user_intent\" source_capture_seq=\"2\" quote_truncated=\"False\"><quote_excerpt>Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.</quote_excerpt></source></field></item>",
+          "<source-context-coverage selected_source_count=\"1\" omitted=\"0\"/>"
+        ]
+      },
+      "3000": {
+        "chosen": 1,
+        "omitted": 0,
+        "xml": [
+          "<item id=\"unassociated-user-sources-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"1\"><field name=\"source_custody\"><source source_id=\"c34cae7b0061405d8e0ff4ce4a0dd923\" start=\"0\" end=\"151\" source_role=\"user_intent\" source_capture_seq=\"2\" quote_truncated=\"False\"><quote_excerpt>Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.</quote_excerpt></source></field></item>",
+          "<source-context-coverage selected_source_count=\"1\" omitted=\"0\"/>"
+        ]
+      }
+    }
+  },
+  "source_hashes": {
+    "codex_mem/__init__.py": "89b3142a99050a98a4e28a4d5483f351e3c65f81481b4b6793bd6388eca14fe3",
+    "codex_mem/__main__.py": "307299fda7b77d22c64cb51430ec75e5f59d78e9c948786afb3b2544fe45e4b7",
+    "codex_mem/cli.py": "485d00cd8e82225f57735afc9dcab68b5031c392a72fa8bd16454036f795917d",
+    "codex_mem/config.py": "10685f1162602d5c6c74b8a93b67ef5031cced53c01548d0dd7ab43f19df8009",
+    "codex_mem/cost_report.py": "37ea568c3cf851f25e7a349a24506f466efc2bc709a819fd0fd32210fdb1a2be",
+    "codex_mem/dashboard.py": "fcae6cfff58e5bc5671de60d06797806686fc145fe31663257a69604def71a3f",
+    "codex_mem/dashboard_data.py": "0e62a5b978ed3193d704ee761dc2f0475aaceab31ad034175569f0b8dfa8b8f8",
+    "codex_mem/episode_processor.py": "e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a",
+    "codex_mem/evidence.py": "1ad35b7659877747cc85d93dcb2a3438125150ddac26984abb8660312a5f3884",
+    "codex_mem/freshness.py": "4d6a32eeb7595d97058784f21eb408da37ffbc847cd0d95ba7e88dcbff9e9330",
+    "codex_mem/hook_diagnostics.py": "a11a7533ffcc37d2fb18e1e2c9ef2ebc5f1ac983ea09d00e3f77ebb2320580ba",
+    "codex_mem/hook_log_reader.py": "e3638d4444aa6939144d06cabe6fca0311e08a8b93fe6c6e60ca11cab4f0c6f0",
+    "codex_mem/hook_process.py": "95c3a662860d60c5607101fafa16d4979f3ec7147760886854fd6dd7a3595f14",
+    "codex_mem/hook_runner.py": "74b744ae68ef9dca9ede26b7ff55ba7ceffd74391079dcd45d9cbf82ca9c9620",
+    "codex_mem/hooks.py": "fe6eb93a32826adcc50df8ee194f4294f40585609a929fde4f87183e896290c5",
+    "codex_mem/importer.py": "28bffc66c0b23dccc90b8588b4453559f56126352106739fc7b898b6b0fb77c2",
+    "codex_mem/integration.py": "121cb19bf16b0a00caa73ee0f1aaed5146292da6e5069a824aab415b528bc3a7",
+    "codex_mem/jev_audit.py": "333685d110cc24e1f35f8281a53f3a1bf79290bb0f98a7cfc4a722fa3f033c20",
+    "codex_mem/jev_cache.py": "a43ab3dad7a64354c7385bcb6890308b9ee946f01820dc67fc67165b5fd9bd8b",
+    "codex_mem/jev_client.py": "55db20ace755f34ee42c249f2f24dc558e8b57f735b088b89f2c08c90f1be6e5",
+    "codex_mem/jev_filter.py": "4f7d4a8c31767c12ae8893f493d03a7a15cc5f082dcb5bc5dd9d9e4d2f36c0d6",
+    "codex_mem/jev_quality.py": "d951a92225b968067d3ddf10057365d89c8e6baa548b03b73aa39988c6e381ce",
+    "codex_mem/jev_retrieval.py": "34fcd24f3d5f0085e9d9872a0bf12706f77b18e740700a821e53cabd365610e5",
+    "codex_mem/mcp.py": "696cd3cff0e6bb854293f82d10b10e923019e457c8446c2d0d3a17566cf71d51",
+    "codex_mem/observation_diagnostics.py": "91772353e4c57881285d41ae5ebab8df6ddca0558368435787459f7d0376a3c4",
+    "codex_mem/observer_usage_store.py": "37d37ddad14a682122b8243efd2cf759a718e9f61b134e54ae0eb570b043a888",
+    "codex_mem/pricing.py": "a120523807e42a839ac86e44899d5f46e11ad2aebbbde2f483ab2e860c7c52b9",
+    "codex_mem/privacy.py": "04f3bb232080b1df6ed0615a121822d3d1ddbd2442d3792627d24e9b509e2a29",
+    "codex_mem/private_gate.py": "cc830949260cf77e4957fbca93faef7e10c0ebb9ca6224a2e03895d08616706c",
+    "codex_mem/processor.py": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39",
+    "codex_mem/project_memory.py": "fac7d1d98eef9048e546fc798b881100aa8d05e07ad50b6e455e35851441fd02",
+    "codex_mem/project_memory_custody.py": "1ee06da47cd8f0783183956ba020e42bd8f3e0244d0020a95ce06623298514d5",
+    "codex_mem/project_memory_query.py": "9d0416f83cac631226bb5b17242c2556d0bba7806f2b329fff3a8c0e18eaf7ac",
+    "codex_mem/project_memory_retrieval.py": "5bf690a619719f411a8bd1fe3021484e139a3e5155470aea960a47a8859f7b1a",
+    "codex_mem/project_scopes.py": "23a5acb8ca90294f577d9c09b85804fa4596dc20fd16ac7546035ea84e2ada03",
+    "codex_mem/quarantine_recovery.py": "67c639cfa6b8a8c800c8a3d6e0569699c3c31d42136caed1025c20fa93f5a8d6",
+    "codex_mem/query.py": "c7fca48750c9f06528a75fe619d4e71e24af9f6595b6ac982e6ba208b86c5354",
+    "codex_mem/request_limits.py": "7b18ecc9aab28e2ac66cb579459ea28863a6438df55aed764cc902cf80467866",
+    "codex_mem/retrieval.py": "de913dfd172a647ef76084e80c9a0b72ded2b5f74ed23bf2f6c00fd4ac6a1b6d",
+    "codex_mem/semantic.py": "65b04f88f4fa59d3bc6850c4a2def3ebba0af08a8b76c077cfcafeec6efc7548",
+    "codex_mem/service.py": "e2027c0f5216c2c83196cad60a4dba22b77477ff1b122549e3054eede47a71bd",
+    "codex_mem/store.py": "8e38683a5549a9dd11ec0422d9495c9ad9e44841a7c9dfcac27b72829657339d",
+    "codex_mem/tool_io.py": "4049943cfdeb5beccd27468ca1482e9a0b65f5dcddfa8026bd83ada93a7d05ae",
+    "codex_mem/ui_autostart.py": "e14a989ccf426ab96182eae0b1a6304c0292ee17f8782ee37eafd160edfdaf2a",
+    "codex_mem/usage.py": "13fea34d4464e8748bcee7290255b50b2b8ab68b054731682161042cb8798db7",
+    "codex_mem/usage_api.py": "c9303ab199d3482c046de8c0d0f9c6733c18b1341fba5f40b6d1d39ea0dd850e",
+    "codex_mem/usage_store.py": "57be55fb2d6887998bb6a7b1960a36eeb1449a948de99a5777de5f89009140a1"
+  },
+  "counts": {
+    "answers": 6,
+    "actual_full_supported": 5,
+    "actual_nonfull": 1,
+    "required_facts": 8,
+    "actual_required_facts_recalled": 8,
+    "actual_critical_errors": 0
+  },
+  "causal_assessment": {
+    "capture_storage": "No source loss: original request(seq2), correction(seq5), and pending-approval instruction(seq8) all present exactly in original R13 Store.",
+    "selection": "Correction source5ed2b368457241ea875573b37cb64c24 is already in episodes,intent_custody,records; pending approval99ef3cb53add476789cad3d9007de33a already in claims,episodes,intent_custody,records. They are not missing from the recent window or rejected as unrelated.",
+    "neutral_boundary": "The neutral pool has only the old initial request c34cae7b0061405d8e0ff4ce4a0dd923. Associated correction/approval sources are handled in material lanes and excluded from that pool. Thus newest+oldest diversity within neutral candidates cannot expose the correction. The sole neutral original is rendered with0neutral omissions.",
+    "allocation": "_render_project_brief protects whole executions/reports, then allocates neutral user context before subsequent material record rendering. Delivered omissions report4records12fields2user sources, while neutral source is included. Both associated correction and approval are absent from own catalog. This is cross-lane priority/budget asymmetry, not source capture or pm_evidence loss.",
+    "reader": "Answer04 correctly distinguishes assistant upload report from disabled-upload tool output, satisfying its2gold required facts. It additionally promotes the visible older sound request to an ongoing requirement. Actual grader marks current_state_actionable/full false, citations true, zero criticals; that label is retained without regrading.",
+    "scope_gap": "The positive-fact visibility replay covered the two status facts but not the later scope correction.121/128 exact positive-fact visibility did not establish current-state completeness."
+  },
+  "source_pointers": {
+    "neutral_candidates": "codex_mem/project_memory_retrieval.py:1490-1573",
+    "neutral_selection": "codex_mem/project_memory_retrieval.py:727-761",
+    "allocation": "codex_mem/project_memory_retrieval.py:868-912",
+    "material_budget_and_omission": "codex_mem/project_memory_retrieval.py:_render_project_brief"
+  },
+  "general_repair_options": [
+    {
+      "option": "One shared user-source allocation plan",
+      "description": "Deduplicate exact source/field/role intervals across associated material and neutral pools, then budget complete bounded user originals together with source-local scope/uncertainty. Prefer later captured user material over an older neutral original when they compete, without claiming an inferred task relation or classifying cancellation text. Preserve protected atomic tool/report budgets and truthful omissions.",
+      "risk": "Capture order is not event time or task identity; selection must remain neutral and independently scoped. Older rationale can be displaced, so retain explicit omissions and measure both ends."
+    },
+    {
+      "option": "Reserve complete already-selected user material before neutral extras",
+      "description": "Pay a bounded share for whole user-source groups from eligible selected records before supplemental unassociated originals. Treat source role and existing selection as structural priority; do not infer normative status from neutral context. Keep exact original scope metadata and all hard fences.",
+      "risk": "May reduce original-only reasons visible through neutral fallback; use public mixed-role/source-order tests and disclosed visibility diagnostics without quality claims."
+    },
+    {
+      "option": "Expose uncertainty when a source-dependent current-state qualification is omitted",
+      "description": "Keep explicit user-source omission markers and avoid presenting extracted/neutral original as verified current requirement. A structural completeness warning can describe omitted selected user material; it cannot invent the missing correction or guarantee reader behavior.",
+      "risk": "Warnings alone may not prevent unsupported current-state assertions."
+    }
+  ],
+  "limits": [
+    "Read-only diagnosis of six new public answers and disclosed R13 hold1010/q6 only; no R14 sealed corpus accessed.",
+    "No answer, grade, fixture, protocol, helper or runtime edit. No model calls or retries.",
+    "Actual5/6 failure remains; all8finished attempts and140340tokens retained.",
+    "No coordination or implementation request sent to code worker before audit-clear instruction."
+  ]
+}

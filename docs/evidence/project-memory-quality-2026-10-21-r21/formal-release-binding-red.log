@@ -1,0 +1,43 @@
+EF
+======================================================================
+ERROR: test_actual_r20_flat_release_and_archive_fields_are_preserved (__main__.SourceAuditBindingTests.test_actual_r20_flat_release_and_archive_fields_are_preserved)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/test-source-audit-bindings.py", line 21, in test_actual_r20_flat_release_and_archive_fields_are_preserved
+    result=self.bind()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/test-source-audit-bindings.py", line 16, in bind
+    return binding.bind_source_metadata(release or self.release,archive or self.archive,
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        evidence_prefix='docs/evidence/project-memory-quality-2026-10-21-r20',
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        archive_path='docs/evidence/project-memory-quality-2026-10-21-r20/frozen-product.tar.gz',
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        helper_path='scripts/project_memory_consolidation_experiment.py')
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/source-audit-bindings.py", line 24, in bind_source_metadata
+    require('files' in release and 'core_files' in release and 'runtime_files' in archive
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and 'runtime_archive_sha256' in archive and 'helper_sha256' in archive,'source_metadata_required_fields_missing')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/source-audit-bindings.py", line 7, in require
+    if not condition:raise ValueError(reason)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: source_metadata_required_fields_missing
+
+======================================================================
+FAIL: test_nested_old_assumptions_and_missing_maps_reject_without_synthesis (__main__.SourceAuditBindingTests.test_nested_old_assumptions_and_missing_maps_reject_without_synthesis)
+----------------------------------------------------------------------
+ValueError: source_metadata_required_fields_missing
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21/test-source-audit-bindings.py", line 40, in test_nested_old_assumptions_and_missing_maps_reject_without_synthesis
+    with self.assertRaisesRegex(ValueError,'flat_sha256_required'):self.bind(value)
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: "flat_sha256_required" does not match "source_metadata_required_fields_missing"
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.003s
+
+FAILED (failures=1, errors=1)

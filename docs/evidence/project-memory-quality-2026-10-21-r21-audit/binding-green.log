@@ -1,0 +1,17 @@
+E
+======================================================================
+ERROR: test_review_gates_do_not_replace_cli_trial_binding (__main__.MainBindingPath.test_review_gates_do_not_replace_cli_trial_binding)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-binding-path.py", line 24, in test_review_gates_do_not_replace_cli_trial_binding
+    exec(compile(path,str(ARGS.source),'exec'),env)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export.py", line 432, in <module>
+    check(len(public) == binding['public_calls'] and sum(finishes[call_id]['metrics']['usage']['tokens']['total_tokens'] for call_id in public) == binding['public_tokens'], 'public_usage_included_once')
+                         ~~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'public_calls'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.019s
+
+FAILED (errors=1)

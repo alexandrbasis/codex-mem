@@ -1,0 +1,91 @@
+.EEEEEE.
+======================================================================
+ERROR: test_checkpoint_reported_never_fills_final_unknown (__main__.PipelineContract.test_checkpoint_reported_never_fills_final_unknown)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 36, in test_checkpoint_reported_never_fills_final_unknown
+    run,value,p,b=self.toy();capture=h.Capture(run,p,'generation','baseline','toy');base={**capture.identity,'call_id':'call-0001'};known={'status':'reported','source':'app_server_thread_total','updates':1,'tokens':{'input_tokens':7,'cached_input_tokens':0,'output_tokens':3,'total_tokens':10}};capture._save_checkpoint(base,{'worker_thread_id':'synthetic-thread','worker_turn_id':None,'metrics':{'duration_ms':10,'usage':known}})
+                                                                                                                                                                                                                                                                                                       ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 415, in _save_checkpoint
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+======================================================================
+ERROR: test_checkpoint_wrong_attempt_metadata_rejected (__main__.PipelineContract.test_checkpoint_wrong_attempt_metadata_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 41, in test_checkpoint_wrong_attempt_metadata_rejected
+    run,value,p,b=self.toy();capture=h.Capture(run,p,'generation','baseline','toy');base={**capture.identity,'call_id':'call-0001'};capture._save_checkpoint(base,{'worker_thread_id':'synthetic','worker_turn_id':None,'metrics':{'duration_ms':1,'usage':{'status':'unavailable','source':'app_server_thread_total','updates':0,'tokens':None}}});path=run/'receipts/call-0001-checkpoint.json';data=json.loads(path.read_text());data['history_id']='other';h.write(path,data);checks=[];validate_checkpoints(run,{'call-0001':base},lambda v,k:checks.append((k,v)));self.assertIn(('checkpoint_attempt_binding:call-0001',False),checks)
+                                                                                                                                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 415, in _save_checkpoint
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+======================================================================
+ERROR: test_deleted_missing_failure_receipt_detected (__main__.PipelineContract.test_deleted_missing_failure_receipt_detected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 24, in test_deleted_missing_failure_receipt_detected
+    run,value,p,b=self.toy();report=self.summary(run,value,p);report['pipeline_failures']=[];self.assertIn(('complete_pipeline_failure_recount',False),self.check_report(run,value,p,b,report))
+                                    ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 12, in summary
+    def summary(self,run,value,p):return h.aggregate(types.SimpleNamespace(run=run),value,p)
+                                         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 2171, in aggregate
+    arm_usage=usage(arm_rows)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 190, in usage
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+======================================================================
+ERROR: test_stale_primary_and_repeat_cannot_hide_physical_failure (__main__.PipelineContract.test_stale_primary_and_repeat_cannot_hide_physical_failure)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 19, in test_stale_primary_and_repeat_cannot_hide_physical_failure
+    run,value,p,b=self.toy();h.write(run/'baseline/toy/generation.json',{'status':'failed'});h.write(run/'candidate/toy/generation.json',{'status':'complete'});h.write(run/'candidate/toy/judge-0.json',{'grades':[{'id':f'q{i}','full_supported_answer':True} for i in range(6)]});h.write(run/'candidate/toy/judge-1.json',{'grades':[{'id':f'q{i}','full_supported_answer':True} for i in range(6)]});report=self.summary(run,value,p)
+                                                                                                                                                                                                                                                                                                                                                                                                                 ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 12, in summary
+    def summary(self,run,value,p):return h.aggregate(types.SimpleNamespace(run=run),value,p)
+                                         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 2171, in aggregate
+    arm_usage=usage(arm_rows)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 190, in usage
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+======================================================================
+ERROR: test_stale_regeneration_rejected (__main__.PipelineContract.test_stale_regeneration_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 22, in test_stale_regeneration_rejected
+    run,value,p,b=self.toy();home=run/'replicates/regeneration-1';h.write(home/'baseline/toy/generation.json',{'status':'failed'});h.write(home/'candidate/toy/generation.json',{'status':'complete'});h.write(home/'candidate/toy/judge-0.json',{'grades':[{'id':'q0','full_supported_answer':True}]});report=self.summary(run,value,p);self.assertEqual(report['regeneration_repeat_results'],[]);self.assertFalse(grade_ready(run,'toy','candidate','regeneration-1',b['pipeline_receipt_contract']))
+                                                                                                                                                                                                                                                                                                               ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 12, in summary
+    def summary(self,run,value,p):return h.aggregate(types.SimpleNamespace(run=run),value,p)
+                                         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 2171, in aggregate
+    arm_usage=usage(arm_rows)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 190, in usage
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+======================================================================
+ERROR: test_summary_physical_once_missing_prep_regen_visible (__main__.PipelineContract.test_summary_physical_once_missing_prep_regen_visible)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 16, in test_summary_physical_once_missing_prep_regen_visible
+    run,value,p,b=self.toy();h.write(run/'baseline/toy/generation.json',{'status':'failed'});report=self.summary(run,value,p)
+                                                                                                    ~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/test-pipeline-contract.py", line 12, in summary
+    def summary(self,run,value,p):return h.aggregate(types.SimpleNamespace(run=run),value,p)
+                                         ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 2171, in aggregate
+    arm_usage=usage(arm_rows)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-audit/held-helper-source.py", line 190, in usage
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.043s
+
+FAILED (errors=6)

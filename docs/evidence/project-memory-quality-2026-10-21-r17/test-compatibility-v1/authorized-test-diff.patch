@@ -1,0 +1,327 @@
+--- before/tests/test_project_memory_consolidation.py
++++ tests/test_project_memory_consolidation.py
+@@ -9,6 +9,7 @@
+ from codex_mem.project_memory import ProjectMemory
+ from codex_mem.store import Store
+ from test_episode_processor import receipt
++from source_transport_assertions import SourceRegistry, omitted_field_count
+ 
+ 
+ class ConsolidationTests(unittest.TestCase):
+@@ -669,18 +670,23 @@
+         field = rendered.find(".//field[@name='summary']")
+         self.assertIsNotNone(field)
+         self.assertIsNone(field.find('derived_text'))
+-        self.assertEqual(field.find('source/quote_excerpt').text, body)
+-        self.assertEqual(field.find('source').attrib['source_role'], 'assistant_report')
+-        self.assertEqual(field.find('source').attrib['quote_truncated'], 'False')
++        resolved = SourceRegistry(rendered).field_sources(field)
++        self.assertEqual(len(resolved), 1)
++        self.assertEqual(resolved[0]['quote'], body)
++        self.assertEqual(resolved[0]['source_role'], 'assistant_report')
++        self.assertFalse(resolved[0]['quote_truncated'])
+         self.assertEqual(field.attrib['basis'], 'attributed_source_excerpts')
+         self.assertEqual(field.attrib['field_association'], 'model_inference')
+         small = ET.fromstring(render_project_brief(brief, budget=1700))
+         small_field = small.find(".//field[@name='summary']")
+         if small_field is not None:
+             self.assertIsNone(small_field.find('derived_text'))
+-            self.assertEqual(small_field.find('source/quote_excerpt').text, body)
++            resolved = SourceRegistry(small).field_sources(small_field)
++            self.assertEqual(len(resolved), 1)
++            self.assertEqual(resolved[0]['quote'], body)
++            self.assertEqual(resolved[0]['source_role'], 'assistant_report')
+         else:
+-            self.assertTrue(any(int(item.attrib.get('fields_omitted', 0)) > 0 for item in small.findall('item')))
++            self.assertGreater(omitted_field_count(small), 0)
+ 
+     def test_grounded_field_keeps_all_exact_sources_together_in_projection_and_budget(self):
+         import xml.etree.ElementTree as ET
+@@ -703,19 +709,19 @@
+                 rendered = ET.fromstring(xml)
+                 field = rendered.find(f".//field[@name='{summary['name']}']")
+                 if field is None:
+-                    self.assertTrue(any(int(item.attrib.get('fields_omitted', 0)) > 0
+-                                        for item in rendered.findall('item')))
++                    self.assertGreater(omitted_field_count(rendered), 0)
+                     continue
+                 self.assertIsNone(field.find('derived_text'))
+-                sources = field.findall('source')
++                sources = SourceRegistry(rendered).field_sources(field)
+                 self.assertEqual(len(sources), 2)
+                 for source, ref in zip(sources, stored):
+-                    self.assertEqual(source.attrib['source_id'], original['id'])
+-                    self.assertEqual(source.attrib['source_role'], 'assistant_report')
+-                    self.assertEqual(int(source.attrib['start']), ref['start'])
+-                    self.assertEqual(int(source.attrib['end']), ref['end'])
+-                    self.assertEqual(source.find('quote_excerpt').text, body[ref['start']:ref['end']])
+-                    self.assertEqual(source.attrib['quote_truncated'], 'False')
++                    self.assertEqual(source['source_id'], original['id'])
++                    self.assertEqual(source['source_role'], 'assistant_report')
++                    self.assertEqual(source['source_field'], 'body')
++                    self.assertEqual(source['start'], ref['start'])
++                    self.assertEqual(source['end'], ref['end'])
++                    self.assertEqual(source['quote'], body[ref['start']:ref['end']])
++                    self.assertFalse(source['quote_truncated'])
+ 
+     def test_negated_reopen_cannot_bypass_through_same_task_marker(self):
+         result = self.named_identity_reconsideration('LUX-54', 'Task LUX-54: another exporter. Do not reopen LUX-54 as the same task.')
+--- before/tests/test_project_memory_retrieval.py
++++ tests/test_project_memory_retrieval.py
+@@ -10,6 +10,7 @@
+ from codex_mem.config import configure
+ from codex_mem.project_memory_retrieval import build_project_brief, render_project_brief
+ from codex_mem.store import Store
++from source_transport_assertions import SourceRegistry, effective_capture_basis
+ 
+ 
+ class ProjectMemoryRetrievalTests(unittest.TestCase):
+@@ -319,22 +320,22 @@
+             'summary': 'Importer passed locally; staging remains 2.0.',
+             'source_capture_seq_min': 10, 'source_capture_seq_max': 12,
+             'capture_order_basis': 'local_capture_sequence_not_event_time', 'revision': 3,
+-            'evidence': {'outcome': [{'source_id': 'local-source', 'start': 0, 'end': 70,
++            'evidence': {'outcome': [{'source_id': 'local-source', 'start': 0, 'end': len('Importer version 2.1 passed locally. No deployment was performed.'),
+                                       'quote': 'Importer version 2.1 passed locally. No deployment was performed.'}],
+-                         'open_work': [{'source_id': 'staging-source', 'start': 0, 'end': 60,
++                         'open_work': [{'source_id': 'staging-source', 'start': 0, 'end': len('Staging is 2.0 and production version is unchecked.'),
+                                        'quote': 'Staging is 2.0 and production version is unchecked.'}],
+                          'summary': [{'source_id': 'local-source'}, {'source_id': 'staging-source'}]}}]
+         brief = build_project_brief(self.store, self.project, query='Resume importer work.', budget=1500)
+         root = ElementTree.fromstring(brief['xml'])
+         for field in root.findall('./item/field'):
+-            ids = [source.attrib['source_id'] for source in field.findall('source')]
++            ids = [source['source_id'] for source in SourceRegistry(root).field_sources(field)]
+             if 'passed locally' in (field.findtext('derived_text') or ''):
+                 self.assertIn('local-source', ids)
+             if field.attrib['name'] == 'outcome':
+                 self.assertNotIn('staging-source', ids)
+         item = root.find('item')
+         self.assertEqual('12', item.attrib['source_capture_seq_max'])
+-        self.assertEqual('local_capture_sequence_not_event_time', item.attrib['capture_order_basis'])
++        self.assertEqual('local_capture_sequence_not_event_time', effective_capture_basis(root, item))
+         self.assertEqual('3', item.attrib['revision'])
+         self.assertNotIn('completed', brief['xml'])
+ 
+@@ -682,10 +683,17 @@
+         self.assertIn('PRE-219 is not a continuation', xml)
+         self.assertNotIn('NEVER_EXPAND_THIS_UNCITED_EVENT', xml)
+         self.assertLessEqual(len(xml), 6000)
+-        sources = ElementTree.fromstring(xml).findall('.//field[@name="source_context"]/source')
++        root = ElementTree.fromstring(xml)
++        fields = root.findall('.//field[@name="source_context"]')
++        self.assertEqual(len(fields), 1)
++        sources = SourceRegistry(root).field_sources(fields[0])
+         self.assertEqual(1, len(sources))
+-        self.assertEqual(entry['id'], sources[0].attrib['source_id'])
+-        self.assertEqual('same_source_adjacent_user_statement', sources[0].attrib['context_basis'])
++        self.assertEqual(entry['id'], sources[0]['source_id'])
++        self.assertEqual('body', sources[0]['source_field'])
++        self.assertEqual('user_intent', sources[0]['source_role'])
++        self.assertEqual((len(lead), len(lead + boundary)), (sources[0]['start'], sources[0]['end']))
++        self.assertEqual(boundary, sources[0]['quote'])
++        self.assertEqual('same_source_adjacent_user_statement', sources[0]['context_basis'])
+         scoped = build_project_brief(self.store, self.project, query=query,
+                                       exclude_session_id='studio-second')
+         self.assertNotIn('PRE-219', scoped['xml'])
+--- before/tests/test_project_memory_rendered_custody.py
++++ tests/test_project_memory_rendered_custody.py
+@@ -8,6 +8,7 @@
+ from codex_mem.project_memory import ProjectMemory
+ from codex_mem.project_memory_retrieval import build_project_brief
+ from codex_mem.store import Store
++from source_transport_assertions import SourceRegistry
+ 
+ 
+ class RenderedCustodyTests(unittest.TestCase):
+@@ -71,7 +72,23 @@
+         brief = build_project_brief(self.store, self.project, query='Why ARC-51?', budget=6000)
+         tree = ElementTree.fromstring(brief['xml'])
+         self.assertIn(reason.strip(), ''.join(tree.itertext()))
+-        self.assertIsNone(tree.find("./item[@lane='intent_custody']"), brief['xml'])
++        registry = SourceRegistry(tree)
++        custody = tree.findall("./item[@lane='intent_custody']")
++        for item in custody:
++            self.assertEqual(item.get('disposition'), 'unresolved')
++            self.assertEqual(item.get('is_requirement_claim'), 'False')
++            self.assertEqual(item.get('uncertainty'), 'extracted_representation_completeness_unresolved')
++            self.assertIsNone(item.get('workflow_state'))
++            self.assertEqual(list(item.iter('source')), [], brief['xml'])
++            pointers = [ref for field in item.findall('field') for ref in registry.field_sources(field)]
++            self.assertTrue(pointers, brief['xml'])
++            for pointer in pointers:
++                self.assertEqual(pointer['source_id'], source['id'])
++                self.assertEqual(pointer['source_role'], 'user_intent')
++                self.assertEqual(pointer['quote'], source['body'][pointer['start']:pointer['end']])
++        literal = [ref for ref in tree.iter('source') if ref.get('source_id') == source['id']
++                   and ref.find('quote_excerpt') is not None]
++        self.assertEqual(len(literal), 1, brief['xml'])
+         self.assertEqual(''.join(tree.itertext()).count(reason.strip()), 1)
+         self.assertTrue(brief['intent_custody'])
+ 
+--- before/tests/test_project_memory_retention.py
++++ tests/test_project_memory_retention.py
+@@ -11,6 +11,7 @@
+ from codex_mem.project_memory_retrieval import build_project_brief
+ from codex_mem.store import Store
+ from test_episode_processor import receipt
++from source_transport_assertions import SourceRegistry
+ 
+ 
+ class ProjectMemoryRetentionTests(unittest.TestCase):
+@@ -72,14 +73,17 @@
+         tree = self.brief()
+         fields = tree.findall("./item/field[@name='open_work_source_excerpt']")
+         self.assertEqual(len(fields), 1, ElementTree.tostring(tree, encoding='unicode'))
+-        quotes = fields[0].findall('./source/quote_excerpt')
+-        self.assertEqual([quote.text for quote in quotes], [ref['quote'] for ref in episode['evidence']['open_work']])
+-        source = fields[0].find('source')
+-        self.assertEqual(source.get('source_role'), 'user_intent')
+-        self.assertEqual(len(quotes), 3)
+-        for pointer, quote in zip(fields[0].findall('source'), quotes):
+-            self.assertEqual(int(pointer.get('end')) - int(pointer.get('start')), len(quote.text))
+-            self.assertEqual(pointer.get('quote_truncated'), 'False')
++        sources = SourceRegistry(tree).field_sources(fields[0])
++        stored = episode['evidence']['open_work']
++        self.assertEqual([source['quote'] for source in sources], [ref['quote'] for ref in stored])
++        self.assertEqual(len(sources), 3)
++        for pointer, ref in zip(sources, stored):
++            self.assertEqual(pointer['source_id'], ref['source_id'])
++            self.assertEqual(pointer['source_role'], 'user_intent')
++            self.assertEqual(pointer['source_field'], 'body')
++            self.assertEqual((pointer['start'], pointer['end']), (ref['start'], ref['end']))
++            self.assertEqual(pointer['end'] - pointer['start'], len(pointer['quote']))
++            self.assertFalse(pointer['quote_truncated'])
+         self.assertIsNone(fields[0].find('derived_text'))
+ 
+     def test_fitting_shared_reference_survives_omission_of_larger_group(self):
+--- before/tests/source_transport_assertions.py
++++ tests/source_transport_assertions.py
+@@ -0,0 +1,74 @@
++"""Strict test-side resolution of rendered original-source provenance.
++
++Only source elements own IDs. References inherit quotation provenance, never
++scope, workflow, custody or other association qualifiers from target wrappers.
++"""
++import re
++
++
++def _bounds(node):
++    values = [node.get(key) for key in ('start', 'end')]
++    if any(value is None or re.fullmatch(r'[0-9]+', value) is None for value in values):
++        raise AssertionError('source bounds must be explicit nonnegative integers')
++    start, end = map(int, values)
++    if not start < end:
++        raise AssertionError('source interval must be nonempty and ordered')
++    return start, end
++
++
++class SourceRegistry:
++    def __init__(self, root):
++        self.sources = {}
++        for source in root.iter('source'):
++            identifier = source.get('id')
++            if identifier is not None:
++                if identifier in self.sources:
++                    raise AssertionError('duplicate source-only ID: ' + identifier)
++                self.sources[identifier] = source
++
++    def resolve(self, pointer):
++        if pointer.tag == 'source':
++            source = pointer
++        elif pointer.tag == 'quote_ref':
++            source = self.sources.get(pointer.get('ref'))
++            if source is None:
++                raise AssertionError('missing source-only reference target')
++        else:
++            raise AssertionError('expected source or quote_ref')
++        left, right = _bounds(source)
++        quote = source.findtext('quote_excerpt')
++        if quote is None or len(quote) != right - left or source.get('quote_truncated') not in (None, 'False'):
++            raise AssertionError('target must contain its complete exact source interval')
++        if not source.get('source_id'):
++            raise AssertionError('source identity is required')
++        start, end = left, right
++        if pointer.tag == 'quote_ref':
++            specified = [pointer.get(key) is not None for key in ('start', 'end')]
++            if any(specified):
++                if not all(specified):
++                    raise AssertionError('reference must give both bounds or neither')
++                start, end = _bounds(pointer)
++            if not left <= start < end <= right:
++                raise AssertionError('reference interval is outside its source target')
++            for key in ('source_id', 'source_role', 'source_field', 'tool_use_id'):
++                expected = source.get(key, 'body' if key == 'source_field' else None)
++                if pointer.get(key) is not None and pointer.get(key) != expected:
++                    raise AssertionError('reference changes original ' + key)
++            if list(pointer):
++                raise AssertionError('reference cannot supply a replacement quotation')
++        return {'source_id': source.get('source_id'), 'source_role': source.get('source_role'),
++                'source_field': source.get('source_field', 'body'), 'tool_use_id': source.get('tool_use_id'),
++                'start': start, 'end': end, 'quote': quote[start-left:end-left],
++                'quote_truncated': False, 'context_basis': pointer.get('context_basis')}
++
++    def field_sources(self, field):
++        return [self.resolve(child) for child in field if child.tag in ('source', 'quote_ref')]
++
++
++def effective_capture_basis(root, item):
++    return item.get('capture_order_basis') or root.get('capture_order_basis')
++
++
++def omitted_field_count(root):
++    return sum(int(item.get('fields_omitted', '0')) for item in root.iter('item')) + sum(
++        int(marker.get('fields', '0')) for marker in root.findall('omitted'))
+--- before/tests/test_source_transport_assertions.py
++++ tests/test_source_transport_assertions.py
+@@ -0,0 +1,50 @@
++"""Malformed XML must not make representation-aware assertions pass."""
++import unittest
++from xml.etree import ElementTree as ET
++from source_transport_assertions import SourceRegistry
++
++
++class SourceTransportAssertionTests(unittest.TestCase):
++    def tree(self, reference='', extra=''):
++        return ET.fromstring('<root><item id="s1" environment="production"><source id="s1" '
++            'source_id="original" source_role="user_intent" source_field="body" start="10" end="16">'
++            '<quote_excerpt>abcdef</quote_excerpt></source></item>' + extra + reference + '</root>')
++
++    def test_exact_and_subinterval_refs_resolve_without_association_inheritance(self):
++        root = self.tree('<field environment="local"><quote_ref ref="s1" start="11" end="14" '
++                         'context_basis="same_source_adjacent_user_statement"/></field>')
++        result = SourceRegistry(root).field_sources(root.find('field'))[0]
++        self.assertEqual((11, 14, 'bcd'), (result['start'], result['end'], result['quote']))
++        self.assertEqual(result['source_id'], 'original')
++        self.assertEqual(result['context_basis'], 'same_source_adjacent_user_statement')
++        self.assertNotIn('environment', result)
++        self.assertEqual(SourceRegistry(root).resolve(root.find('.//source'))['quote'], 'abcdef')
++        root.find('.//source').set('context_basis', 'target_only_must_not_be_inherited')
++        root.find('.//quote_ref').attrib.pop('context_basis')
++        self.assertIsNone(SourceRegistry(root).resolve(root.find('.//quote_ref'))['context_basis'])
++
++    def test_duplicate_source_ids_and_item_only_or_missing_targets_reject(self):
++        duplicate = '<source id="s1" source_id="other" start="0" end="1"><quote_excerpt>x</quote_excerpt></source>'
++        with self.assertRaisesRegex(AssertionError, 'duplicate'):
++            SourceRegistry(self.tree(extra=duplicate))
++        for target in ('missing', 'item-only'):
++            root = self.tree('<quote_ref ref="' + target + '"/>', '<item id="item-only"/>')
++            with self.assertRaisesRegex(AssertionError, 'missing'):
++                SourceRegistry(root).resolve(root.find('quote_ref'))
++
++    def test_ambiguous_out_of_bounds_or_changed_provenance_rejects(self):
++        for attrs in ('start="11"', 'start="9" end="14"', 'start="12" end="17"',
++                      'start="13" end="13"', 'source_role="assistant_report"',
++                      'source_field="tool_response.output"', 'source_id="other"', 'tool_use_id="forged"'):
++            with self.subTest(attrs=attrs):
++                root = self.tree('<quote_ref ref="s1" ' + attrs + '/>')
++                with self.assertRaises(AssertionError):
++                    SourceRegistry(root).resolve(root.find('quote_ref'))
++
++    def test_partial_or_inconsistent_target_cannot_prove_complete_quote(self):
++        for change in ('truncated', 'length'):
++            root = self.tree('<quote_ref ref="s1"/>')
++            if change == 'truncated': root.find('.//source').set('quote_truncated', 'True')
++            else: root.find('.//source').set('end', '17')
++            with self.assertRaisesRegex(AssertionError, 'complete'):
++                SourceRegistry(root).resolve(root.find('quote_ref'))

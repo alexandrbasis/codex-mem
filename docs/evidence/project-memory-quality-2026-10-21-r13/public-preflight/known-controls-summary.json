@@ -1,0 +1,492 @@
+{
+  "status": "completed",
+  "control_count": 6,
+  "packet_count": 1,
+  "planned_native_calls": 1,
+  "interpretation": "Fresh known-control regression.",
+  "results": [
+    {
+      "control_id": "grouped-six",
+      "status": "matched",
+      "expected": {
+        "answer-01": {
+          "fact_recall": [
+            true,
+            true
+          ],
+          "critical_errors": []
+        },
+        "answer-02": {
+          "fact_recall": [
+            false,
+            false
+          ],
+          "critical_errors": []
+        },
+        "answer-03": {
+          "fact_recall": [
+            true
+          ],
+          "critical_errors": []
+        },
+        "answer-04": {
+          "fact_recall": [
+            true,
+            true
+          ],
+          "critical_errors": []
+        },
+        "answer-05": {
+          "fact_recall": [
+            true,
+            false
+          ],
+          "critical_errors": [
+            "false_merge"
+          ],
+          "critical_error_alternative_sets": [
+            [
+              "false_merge"
+            ],
+            [
+              "project_mixing"
+            ],
+            [
+              "false_merge",
+              "project_mixing"
+            ]
+          ]
+        },
+        "answer-06": {
+          "fact_recall": [
+            false,
+            false
+          ],
+          "critical_errors": []
+        }
+      },
+      "actual": {
+        "answer-01": {
+          "fact_recall": [
+            true,
+            true
+          ],
+          "critical_errors": []
+        },
+        "answer-02": {
+          "fact_recall": [
+            false,
+            false
+          ],
+          "critical_errors": []
+        },
+        "answer-03": {
+          "fact_recall": [
+            true
+          ],
+          "critical_errors": []
+        },
+        "answer-04": {
+          "fact_recall": [
+            true,
+            true
+          ],
+          "critical_errors": []
+        },
+        "answer-05": {
+          "fact_recall": [
+            true,
+            false
+          ],
+          "critical_errors": [
+            "project_mixing"
+          ]
+        },
+        "answer-06": {
+          "fact_recall": [
+            false,
+            false
+          ],
+          "critical_errors": []
+        }
+      },
+      "grades": [
+        {
+          "full_supported_answer": true,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0001",
+                  "start": 0,
+                  "end": 83,
+                  "quote": "The review batch must use participant codes and continue to show completion status."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-01-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 74,
+                  "quote": "Use participant codes in the review batch. Keep review completion visible.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            },
+            {
+              "fact_index": 1,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0001",
+                  "start": 0,
+                  "end": 83,
+                  "quote": "The review batch must use participant codes and continue to show completion status."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-01-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 74,
+                  "quote": "Use participant codes in the review batch. Keep review completion visible.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "A0001 preserves both participant-code use and visible completion status. The citation supports both obligations.",
+          "critical_witnesses": [],
+          "id": "answer-01"
+        },
+        {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false,
+              "answer_witnesses": [],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-02-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 62,
+                  "quote": "Cancel automatic duplicate merging. Retain the mapping report.",
+                  "reader_visible": false
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "automatic duplicate"
+            },
+            {
+              "fact_index": 1,
+              "recalled": false,
+              "answer_witnesses": [],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-02-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 62,
+                  "quote": "Cancel automatic duplicate merging. Retain the mapping report.",
+                  "reader_visible": false
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "Retain"
+            }
+          ],
+          "rationale": "Neither required obligation is recalled. J0001 was unavailable to this reader, but both facts remain required. Report existence and zero writes are unsupported, and no citations are supplied. The answer does not affirmatively authorize merging.",
+          "critical_witnesses": [],
+          "id": "answer-02"
+        },
+        {
+          "full_supported_answer": true,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0001",
+                  "start": 0,
+                  "end": 114,
+                  "quote": "Do not carry over dining permission to accept workshop deposits or treat dining completion as workshop completion."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-03-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 71,
+                  "quote": "The separate dining deposit setup does not authorize workshop deposits.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "A0001 explicitly rejects transferring dining permission to workshop deposits, preserving the cited project boundary. It does not assert either project's completion.",
+          "critical_witnesses": [],
+          "id": "answer-03"
+        },
+        {
+          "full_supported_answer": true,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 56,
+                  "quote": "The current goal is a draft rota for coordinator review."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-04-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 91,
+                  "quote": "Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            },
+            {
+              "fact_index": 1,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0003",
+                  "start": 57,
+                  "end": 186,
+                  "quote": "The initial same-task request included automatic swaps; those swaps were later canceled while the printed sheet remains in scope."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-04-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 91,
+                  "quote": "Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            }
+          ],
+          "rationale": "The answer retains the draft-for-review goal, cancels swaps, and keeps the printed sheet. Both cited sources are visible; mentioning the superseded swap request does not restore it.",
+          "critical_witnesses": [],
+          "id": "answer-04"
+        },
+        {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [
+            "project_mixing"
+          ],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true,
+              "answer_witnesses": [
+                {
+                  "ref": "A0002",
+                  "start": 0,
+                  "end": 50,
+                  "quote": "The current goal is a staff-only workshop preview."
+                }
+              ],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-05-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 112,
+                  "quote": "Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "not_omitted",
+              "missing_anchor": ""
+            },
+            {
+              "fact_index": 1,
+              "recalled": false,
+              "answer_witnesses": [],
+              "source_witnesses": [
+                {
+                  "ref": "J0001",
+                  "source_id": "source-05-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 112,
+                  "quote": "Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.",
+                  "reader_visible": true
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "instructor"
+            }
+          ],
+          "rationale": "The preview scope is recalled, but the required seating review before public reservations is omitted. A0003 invents a causal connection to the separate dining setup; neither citation supports that explanation.",
+          "critical_witnesses": [
+            {
+              "error_type": "project_mixing",
+              "answer_ref": "A0003",
+              "assertion_mode": "affirmative_current",
+              "relation": "asserts_forbidden_conclusion",
+              "prohibition_ref": "policy:project_mixing",
+              "answer_witness": {
+                "ref": "A0003",
+                "start": 51,
+                "end": 147,
+                "quote": "The goal changed because the separate dining deposit setup does not authorize workshop deposits."
+              }
+            }
+          ],
+          "id": "answer-05"
+        },
+        {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": true,
+          "empty_or_evasive": true,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false,
+              "answer_witnesses": [],
+              "source_witnesses": [
+                {
+                  "ref": "J0002",
+                  "source_id": "source-06-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 70,
+                  "quote": "Observed dry run produced 12 files and made zero external submissions.",
+                  "reader_visible": false
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "12 files"
+            },
+            {
+              "fact_index": 1,
+              "recalled": false,
+              "answer_witnesses": [],
+              "source_witnesses": [
+                {
+                  "ref": "J0002",
+                  "source_id": "source-06-01",
+                  "source_field": "body",
+                  "source_role": "user_intent",
+                  "start": 0,
+                  "end": 70,
+                  "quote": "Observed dry run produced 12 files and made zero external submissions.",
+                  "reader_visible": false
+                }
+              ],
+              "omission_reason": "literal_omission",
+              "missing_anchor": "zero"
+            }
+          ],
+          "rationale": "The answer correctly limits the visible assistant report to reported completion, but abstains from both required counts. J0002 was not reader-visible; that explains the omission without removing either fact from grading.",
+          "critical_witnesses": [],
+          "id": "answer-06"
+        }
+      ],
+      "attempt": {
+        "phase": "judge",
+        "variant": "calibration",
+        "history_id": "public-judge-calibration-r13-public-v1-grouped-six",
+        "run_id": "primary",
+        "repeat": 0,
+        "prompt_version": "answer-source-span-refs-v4",
+        "protocol_sha256": "df0844d4c4fe6b2af7474af3bf2c35d7ec8b1d9e1ce430ee353569be08b6e4df",
+        "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+        "model": "gpt-6-astra",
+        "reasoning_effort": "medium"
+      },
+      "metrics": {
+        "duration_ms": 34138,
+        "usage": {
+          "status": "reported",
+          "source": "app_server_thread_total",
+          "updates": 1,
+          "tokens": {
+            "input_tokens": 17325,
+            "cached_input_tokens": 0,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1503,
+            "reasoning_output_tokens": 139,
+            "total_tokens": 18828
+          }
+        }
+      },
+      "response_sha256": "461e72151c9569a30eec4376b12a18a90d4526653e9c168c04835e7b6ac9666d",
+      "request_sha256": "1c1958b57fe2ce4889ae517869a875c50d528e7ca94ee264967f41b65d296da0"
+    }
+  ]
+}

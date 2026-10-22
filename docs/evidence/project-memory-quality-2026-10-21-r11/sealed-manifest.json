@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "status": "sealed",
+  "counts": {
+    "histories": 16,
+    "questions": 96,
+    "required_facts": 112,
+    "tool_captures": 32,
+    "checkpoints": 32,
+    "deleted_observations": 16,
+    "two_project_histories": 8,
+    "one_project_histories": 8
+  },
+  "hashes": {
+    "author.py": "099e76d740eeb9b43cbd8312ce1cf2579c0ecea8bf73c0318c8e572ec70f0d6b",
+    "holdout-fixture.json": "33d8910bacea2e86dc7b7baf906990042c4ae8dc386a826d0db56248dbd2daf9",
+    "holdout-gold.json": "ddbe47fd0448cd6c85fc6c02c0fd912a22d92f5d7ebb5d9e09eaba00d6658c23"
+  },
+  "allowed_reads": [
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r11/public-fixture-contract.py",
+      "sha256": "6aaa91082bc8b4b81680af9a3fa3f1a72600f7aba30ec7ea86292d4d3c4b8b2d"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r11/public-fixture-contract-receipt.json",
+      "sha256": "77e49d270a99a9f48eb84bfc8f146629cbf6bf15a2912e12afef63eddddd8897"
+    }
+  ],
+  "validation": {
+    "complete_public_fixture_validator": "passed; corrected standalone source executed unchanged with empty initial globals",
+    "gold_coverage": "96/96; hold_801 through hold_816; q1 through q6",
+    "source_offsets": "all exact Python Unicode substring offsets; no deleted source cited",
+    "scope": "all gold supports in requested scope; deletion target precedes delete in same project",
+    "checkpoints": "two per history, same-session target; final primary instruction follows last checkpoint",
+    "captures": "exec_command only; inert command strings never executed; output equals full event text",
+    "facts": "all required facts are full source quotations; assistant assertions explicitly unverified; open human checks distinct from local checks",
+    "repeatability": "deterministic author; two-run byte equality verified externally before handoff",
+    "public_preparation_issue": "First public extraction omitted typing.Any; parent corrected import before final validation and sealing. No fixture content was changed in response."
+  },
+  "independence": {
+    "new_fictional_authorship": true,
+    "single_author_histories_and_gold": true,
+    "platform_historical_summary_visible": true,
+    "platform_historical_summary_used": false,
+    "private_fixture_gold_report_reads": false,
+    "product_runtime_helper_judge_reads": false,
+    "other_chats_or_memories_read": false,
+    "native_model_store_api_calls": false,
+    "limitations": [
+      "Single author designed both histories and gold.",
+      "Shared public-schema-driven structure can make the cases easier than unconstrained histories.",
+      "Short fictional histories do not establish real-world performance."
+    ]
+  },
+  "read_audit": "Only the two allowed public contract files and newly authored output were read. No other files were inspected. Skill files were not loaded because the author isolation boundary forbids them.",
+  "disclosure": "Fixture and gold contents remain private pending parent freeze and explicit release authorization."
+}

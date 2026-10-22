@@ -1,0 +1,202 @@
+{
+  "status": "read_only_no_identity_inference",
+  "checks": [
+    {
+      "case": "hold_1011/q3",
+      "historical": false,
+      "continuation": false,
+      "projection": "state",
+      "answer_subject": "cleanup",
+      "coverage": {
+        "eligible": 1,
+        "selected_source_count": 1,
+        "omitted": 0,
+        "returned_source_limit": 3,
+        "render_allowance": 1800,
+        "relationship_to_query": "unresolved",
+        "verification": "not_assessed"
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "547bccede88b4b6a987bac23d83f65a1",
+          "source_field": "body",
+          "start": 0,
+          "end": 123,
+          "source_role": "user_intent",
+          "quote": "A queue keeper must approve the proposed changes before any shared queue write. Neither approval nor the write is done yet."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "3b935a9bb96c4c00a949784211846a11",
+          "source_field": "body",
+          "start": 0,
+          "end": 185,
+          "source_role": "user_intent",
+          "quote": "For amber queue cleanup, never close a request just because it is old. Also add an age histogram. Some requests wait for parts for several weeks, so age alone does not mean abandonment."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "602102e81a85456c812e978afd0ffde6",
+          "source_field": "body",
+          "start": 0,
+          "end": 132,
+          "source_role": "user_intent",
+          "quote": "I am continuing amber cleanup, not opening a replacement task. Withdraw the histogram only. Keep the rule against age-based closure."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "d18d34e6d7724ecb92a9692a80d373ba",
+          "source_field": "body",
+          "start": 0,
+          "end": 101,
+          "source_role": "tool_record",
+          "quote": "Amber dry run: old requests remain open; age histogram preview rendered. Shared queue writes blocked."
+        },
+        {
+          "ref": "R0005",
+          "source_id": "7577375aa0064ee6a966575856c68569",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 84,
+          "source_role": "tool_record",
+          "quote": "Amber local check: no requests closed solely by age. Shared queue mutation count: 0.",
+          "tool_use_id": "hold_1011_t2"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "7577375aa0064ee6a966575856c68569",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1011-t2",
+          "tool_use_id": "hold_1011_t2"
+        },
+        {
+          "ref": "R0007",
+          "source_id": "3bdf55e4d3154119a31b14940114ad66",
+          "source_field": "body",
+          "start": 0,
+          "end": 50,
+          "source_role": "assistant_report",
+          "quote": "The shared queue cleanup has already been applied."
+        },
+        {
+          "ref": "R0008",
+          "source_id": "d18d34e6d7724ecb92a9692a80d373ba",
+          "source_field": "body",
+          "start": 72,
+          "end": 101,
+          "source_role": "tool_record",
+          "quote": " Shared queue writes blocked."
+        }
+      ],
+      "xml": "PROJECT amber_queue\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"1\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"unassociated-user-sources-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" selection_basis=\"unassociated_user_context\" relationship_to_query=\"unresolved\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"1\"><field name=\"source_custody\"><source source_id=\"547bccede88b4b6a987bac23d83f65a1\" start=\"0\" end=\"123\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>A queue keeper must approve the proposed changes before any shared queue write. Neither approval nor the write is done yet.</quote_excerpt></source></field></item><item id=\"selected-source-2\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"2\"><field name=\"source_custody\"><source source_id=\"3b935a9bb96c4c00a949784211846a11\" start=\"0\" end=\"185\" source_role=\"user_intent\" source_capture_seq=\"2\" quote_truncated=\"False\"><quote_excerpt>For amber queue cleanup, never close a request just because it is old. Also add an age histogram. Some requests wait for parts for several weeks, so age alone does not mean abandonment.</quote_excerpt></source><source source_id=\"602102e81a85456c812e978afd0ffde6\" start=\"0\" end=\"132\" source_role=\"user_intent\" source_capture_seq=\"4\" quote_truncated=\"False\"><quote_excerpt>I am continuing amber cleanup, not opening a replacement task. Withdraw the histogram only. Keep the rule against age-based closure.</quote_excerpt></source></field></item><item id=\"selected-source-3\" lane=\"source_excerpts\"><field name=\"source_excerpts\" basis=\"attributed_source_excerpts\" field_association=\"not_assessed\"><source source_id=\"d18d34e6d7724ecb92a9692a80d373ba\" start=\"0\" end=\"101\" source_role=\"tool_record\" quote_truncated=\"False\"><quote_excerpt>Amber dry run: old requests remain open; age histogram preview rendered. Shared queue writes blocked.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\"1\" omitted=\"0\"/><item id=\"7577375aa0064ee6a966575856c68569\" lane=\"source_evidence\" source_role=\"tool_record\" source_capture_seq_min=\"5\" source_capture_seq_max=\"5\" capture_order_basis=\"local_capture_sequence_not_event_time\" signal_kind=\"observed_execution_result\" selection_basis=\"unassociated_source_context\" relationship_to_query=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_source_without_task_association\" field_association=\"original_execution_capture\"><execution tool_use_id=\"hold_1011_t2\" tool_name=\"exec_command\" command=\"inert-fictional-hold_1011-t2\" exit_code=\"0\" result_field=\"tool_response.output\" command_field=\"tool_input.command\" exit_field=\"tool_response.exit_code\"/><source source_id=\"7577375aa0064ee6a966575856c68569\" start=\"0\" end=\"84\" source_role=\"tool_record\" tool_use_id=\"hold_1011_t2\" source_field=\"tool_response.output\" field=\"execution_result\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"84\"><quote_excerpt>Amber local check: no requests closed solely by age. Shared queue mutation count: 0.</quote_excerpt></source><source source_id=\"7577375aa0064ee6a966575856c68569\" start=\"0\" end=\"28\" source_role=\"tool_record\" tool_use_id=\"hold_1011_t2\" source_field=\"tool_input.command\" field=\"execution_command\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"28\"><quote_excerpt>inert-fictional-hold_1011-t2</quote_excerpt></source></item><item id=\"3bdf55e4d3154119a31b14940114ad66\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"6\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\"><field name=\"assistant_report\"><source source_id=\"3bdf55e4d3154119a31b14940114ad66\" start=\"0\" end=\"50\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"50\"><quote_excerpt>The shared queue cleanup has already been applied.</quote_excerpt></source></field></item><item id=\"pm_5ee21fe4bdb36ebe243f002e6d0fcc75efe3f020\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"1\" source_capture_seq_min=\"2\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_5ee21fe4bdb36ebe243f002e6d0fcc75efe3f020\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" field_associations_omitted=\"2\" fields_omitted=\"4\"><field name=\"open_work_source_excerpt\" basis=\"attributed_source_excerpts\" field_association=\"model_inference\" partial_context=\"False\"><source source_id=\"d18d34e6d7724ecb92a9692a80d373ba\" start=\"72\" end=\"101\" source_role=\"tool_record\" field=\"open_work\" quote_truncated=\"False\"><quote_excerpt> Shared queue writes blocked.</quote_excerpt></source></field></item><omitted records=\"0\" fields=\"4\" original_context_sources=\"1\"/></project-memory>"
+    },
+    {
+      "case": "hold_1013/q5",
+      "historical": false,
+      "continuation": false,
+      "projection": "continuity",
+      "answer_subject": "roster",
+      "coverage": {
+        "eligible": 0,
+        "selected_source_count": 0,
+        "omitted": 0,
+        "returned_source_limit": 3,
+        "render_allowance": 1800,
+        "relationship_to_query": "unresolved",
+        "verification": "not_assessed"
+      },
+      "catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "a64c49ff7c4a49c19bb4d2f45e7d276b",
+          "source_field": "body",
+          "start": 0,
+          "end": 175,
+          "source_role": "user_intent",
+          "quote": "Keep unassigned shifts visible in the velvet roster and add colour badges for assigned shifts. Empty shifts need cover, and hiding them would make the rota look fully staffed."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "37049b8fdfb94dd5a83ad0e8ed3fcf5b",
+          "source_field": "body",
+          "start": 0,
+          "end": 91,
+          "source_role": "user_intent",
+          "quote": "Continue our velvet roster work. Drop the colour badges, but do not hide unassigned shifts."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "870c7c7af3644eeb8d97de1536447957",
+          "source_field": "body",
+          "start": 0,
+          "end": 139,
+          "source_role": "user_intent",
+          "quote": "The shift steward still needs to approve the uncovered-shift view before we save the shared roster. Carry both steps into the next session."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "d638e88297e64b558237eec599139f92",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 88,
+          "source_role": "tool_record",
+          "quote": "Velvet fixture review: all unassigned shifts remain visible. Shared roster save skipped.",
+          "tool_use_id": "hold_1013_t2"
+        },
+        {
+          "ref": "R0005",
+          "source_id": "d638e88297e64b558237eec599139f92",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1013-t2",
+          "tool_use_id": "hold_1013_t2"
+        },
+        {
+          "ref": "R0006",
+          "source_id": "d806b074ef6540bd93e70f513c38f068",
+          "source_field": "tool_response.output",
+          "start": 0,
+          "end": 91,
+          "source_role": "tool_record",
+          "quote": "Velvet preview: unassigned shifts visible; badge palette rendered. Shared roster not saved.",
+          "tool_use_id": "hold_1013_t1"
+        },
+        {
+          "ref": "R0007",
+          "source_id": "d806b074ef6540bd93e70f513c38f068",
+          "source_field": "tool_input.command",
+          "start": 0,
+          "end": 28,
+          "source_role": "tool_record",
+          "quote": "inert-fictional-hold_1013-t1",
+          "tool_use_id": "hold_1013_t1"
+        },
+        {
+          "ref": "R0008",
+          "source_id": "287d64404c6f45d8bbe1ddbce86e6a08",
+          "source_field": "body",
+          "start": 0,
+          "end": 39,
+          "source_role": "assistant_report",
+          "quote": "The shared roster is updated and ready."
+        },
+        {
+          "ref": "R0009",
+          "source_id": "870c7c7af3644eeb8d97de1536447957",
+          "source_field": "body",
+          "start": 99,
+          "end": 139,
+          "source_role": "user_intent",
+          "quote": " Carry both steps into the next session."
+        }
+      ],
+      "xml": "PROJECT velvet_roster\n<project-memory trust=\"untrusted\" freshness=\"not_verified\"><coverage complete_transcript=\"false\" coverage_gaps=\"true\" unresolved_user_sources=\"3\" user_sources_omitted=\"0\" source_evidence_omitted=\"0\" user_source_order_omitted=\"0\" pending_reconciliation=\"true\" pending=\"false\" observations_only=\"true\" quarantined_events=\"0\" omitted_transitions_count=\"0\" downgraded_states_count=\"0\" partially_processed_events=\"0\" processed_through_seq=\"7\" pending_events=\"0\" historical_context_heads=\"0\"/><item id=\"selected-source-1\" lane=\"intent_custody\" source_role=\"user_intent\" capture_order_basis=\"local_capture_sequence_not_event_time\" disposition=\"unresolved\" is_requirement_claim=\"False\" meaning=\"original_user_source_with_unreconciled_representation\" uncertainty=\"extracted_representation_completeness_unresolved\" source_bundle=\"True\" source_count=\"3\"><field name=\"source_custody\"><source source_id=\"a64c49ff7c4a49c19bb4d2f45e7d276b\" start=\"0\" end=\"175\" source_role=\"user_intent\" source_capture_seq=\"2\" quote_truncated=\"False\"><quote_excerpt>Keep unassigned shifts visible in the velvet roster and add colour badges for assigned shifts. Empty shifts need cover, and hiding them would make the rota look fully staffed.</quote_excerpt></source><source source_id=\"37049b8fdfb94dd5a83ad0e8ed3fcf5b\" start=\"0\" end=\"91\" source_role=\"user_intent\" source_capture_seq=\"4\" quote_truncated=\"False\"><quote_excerpt>Continue our velvet roster work. Drop the colour badges, but do not hide unassigned shifts.</quote_excerpt></source><source source_id=\"870c7c7af3644eeb8d97de1536447957\" start=\"0\" end=\"139\" source_role=\"user_intent\" source_capture_seq=\"7\" quote_truncated=\"False\"><quote_excerpt>The shift steward still needs to approve the uncovered-shift view before we save the shared roster. Carry both steps into the next session.</quote_excerpt></source></field></item><item id=\"d638e88297e64b558237eec599139f92\" lane=\"source_evidence\" source_role=\"tool_record\" source_capture_seq_min=\"5\" source_capture_seq_max=\"5\" capture_order_basis=\"local_capture_sequence_not_event_time\" signal_kind=\"observed_execution_result\" selection_basis=\"captured_execution_shape\" session_id=\"hold_1013_s2\" field_association=\"original_execution_capture\"><execution tool_use_id=\"hold_1013_t2\" tool_name=\"exec_command\" command=\"inert-fictional-hold_1013-t2\" exit_code=\"0\" result_field=\"tool_response.output\" command_field=\"tool_input.command\" exit_field=\"tool_response.exit_code\"/><source source_id=\"d638e88297e64b558237eec599139f92\" start=\"0\" end=\"88\" source_role=\"tool_record\" tool_use_id=\"hold_1013_t2\" source_field=\"tool_response.output\" field=\"execution_result\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"88\"><quote_excerpt>Velvet fixture review: all unassigned shifts remain visible. Shared roster save skipped.</quote_excerpt></source><source source_id=\"d638e88297e64b558237eec599139f92\" start=\"0\" end=\"28\" source_role=\"tool_record\" tool_use_id=\"hold_1013_t2\" source_field=\"tool_input.command\" field=\"execution_command\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"28\"><quote_excerpt>inert-fictional-hold_1013-t2</quote_excerpt></source></item><item id=\"d806b074ef6540bd93e70f513c38f068\" lane=\"source_evidence\" source_role=\"tool_record\" source_capture_seq_min=\"3\" source_capture_seq_max=\"3\" capture_order_basis=\"local_capture_sequence_not_event_time\" signal_kind=\"observed_execution_result\" selection_basis=\"captured_execution_shape\" session_id=\"hold_1013_s1\" field_association=\"original_execution_capture\"><execution tool_use_id=\"hold_1013_t1\" tool_name=\"exec_command\" command=\"inert-fictional-hold_1013-t1\" exit_code=\"0\" result_field=\"tool_response.output\" command_field=\"tool_input.command\" exit_field=\"tool_response.exit_code\"/><source source_id=\"d806b074ef6540bd93e70f513c38f068\" start=\"0\" end=\"91\" source_role=\"tool_record\" tool_use_id=\"hold_1013_t1\" source_field=\"tool_response.output\" field=\"execution_result\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"91\"><quote_excerpt>Velvet preview: unassigned shifts visible; badge palette rendered. Shared roster not saved.</quote_excerpt></source><source source_id=\"d806b074ef6540bd93e70f513c38f068\" start=\"0\" end=\"28\" source_role=\"tool_record\" tool_use_id=\"hold_1013_t1\" source_field=\"tool_input.command\" field=\"execution_command\" quote_truncated=\"False\" excerpt_status=\"complete_capture_field\" source_chars=\"28\"><quote_excerpt>inert-fictional-hold_1013-t1</quote_excerpt></source></item><item id=\"287d64404c6f45d8bbe1ddbce86e6a08\" lane=\"source_evidence\" project_memory_kind=\"note\" source_role=\"assistant_report\" source_capture_seq_min=\"6\" source_capture_seq_max=\"6\" capture_order_basis=\"local_capture_sequence_not_event_time\" session_id=\"hold_1013_s2\"><field name=\"assistant_report\"><source source_id=\"287d64404c6f45d8bbe1ddbce86e6a08\" start=\"0\" end=\"39\" source_role=\"assistant_report\" quote_truncated=\"False\" excerpt_status=\"complete_source\" source_chars=\"39\"><quote_excerpt>The shared roster is updated and ready.</quote_excerpt></source></field></item><item id=\"pm_a889719c64a5d944ae853323c940b3a30b249a52\" lane=\"episode\" source_role=\"model_inference\" inferred=\"True\" revision=\"4\" source_capture_seq_min=\"7\" source_capture_seq_max=\"7\" capture_order_basis=\"local_capture_sequence_not_event_time\" logical_episode_id=\"pm_a889719c64a5d944ae853323c940b3a30b249a52\" episode_version=\"1\" is_current_head=\"True\" continuity_basis=\"standalone\" retained_context_fields_omitted=\"0\" session_id=\"hold_1013_s2\" field_associations_omitted=\"4\" fields_omitted=\"4\"><field name=\"continuation_of\"><source source_id=\"870c7c7af3644eeb8d97de1536447957\" start=\"99\" end=\"139\" source_role=\"user_intent\" field=\"continuation_of\" quote_truncated=\"False\"><quote_excerpt> Carry both steps into the next session.</quote_excerpt></source></field></item><omitted records=\"2\" fields=\"14\"/></project-memory>"
+    }
+  ]
+}

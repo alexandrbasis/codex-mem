@@ -1,0 +1,17 @@
+..E....
+======================================================================
+ERROR: test_owning_main_count_consumer (__main__.CountContract.test_owning_main_count_consumer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-count-contract-v003.py", line 28, in test_owning_main_count_consumer
+    exec(compile(ast.fix_missing_locations(ast.Module(body=main.body[start:end+1],type_ignores=[])),str(ARGS.source),'exec'),env);self.assertTrue(all(v for k,v in checks));self.assertEqual(checks[-1],('released_fact_support_counts',True))
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v002.py", line 153, in <module>
+    check(fact_count == release['counts']['required_facts'] and support_count == release['counts']['positive_anchors'], 'released_fact_support_counts')
+                                                                                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+KeyError: 'positive_anchors'
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.117s
+
+FAILED (errors=1)

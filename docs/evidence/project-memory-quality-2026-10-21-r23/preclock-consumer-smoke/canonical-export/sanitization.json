@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "scope": "Publication privacy transformation only. Private run originals remain unchanged.",
+  "pseudonym_method": "diagnostic-{thread|turn}- plus first 20 hex characters of SHA256(original UUID), consistent across exports. No raw identifier mapping is published.",
+  "selected_diagnostic_fields": [
+    "worker_thread_id",
+    "worker_turn_id",
+    "native evidence thread_start/turn_started thread_id/turn_id and equivalent camelCase/nested spellings"
+  ],
+  "preserved": [
+    "fictional session/source/event/turn IDs",
+    "questions and answers",
+    "grades",
+    "token and latency totals",
+    "calls.jsonl byte content",
+    "accepted merge audit bundles",
+    "input fixtures"
+  ],
+  "changed_member_count": 0,
+  "changed_members": {},
+  "private_original_archive_sha256": "e81f378f17c22a811429d0fe51494b49342c8b673222f906f840780833f49896",
+  "public_export_archive_sha256": "e81f378f17c22a811429d0fe51494b49342c8b673222f906f840780833f49896",
+  "archive_container": "Sorted tar members, uid/gid/mtime zero, mode 0644, empty owner names, gzip mtime zero.",
+  "private_archive_policy": "Original digest is reproducible from retained private run files. Unsanitized archive bytes are not published."
+}

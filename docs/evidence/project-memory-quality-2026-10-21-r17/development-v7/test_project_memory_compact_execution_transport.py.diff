@@ -1,0 +1,80 @@
+--- before/test_project_memory_compact_execution_transport.py
++++ approved/test_project_memory_compact_execution_transport.py
+@@ -26,13 +26,16 @@
+ 
+     def assert_execution(self, xml, source):
+         tree = ET.fromstring(xml)
+-        item = tree.find("item[@source_role='tool_record']")
++        item = tree.find("item[execution]")
+         self.assertIsNotNone(item, xml)
+         execution = item.find('execution')
+         self.assertIsNotNone(execution, xml)
+         self.assertEqual(execution.get('command'), 'python check.py ORB-27 --run 71')
+         self.assertEqual(execution.get('exit_code'), '1')
+         self.assertEqual(execution.get('exit_field'), 'tool_response.exit_code')
++        self.assertEqual(execution.get('tool_use_id'), 'capture-71')
++        self.assertEqual(item.get('lane'), 'source_evidence')
++        self.assertIn(item.get('source_role'), (None, 'tool_record'))
+         pointers = item.findall('source')
+         self.assertEqual({ref.get('source_field') for ref in pointers},
+                          {'tool_input.cmd', 'tool_response.output'})
+@@ -44,7 +47,12 @@
+             self.assertEqual(ref.get('source_role'), 'tool_record')
+             self.assertEqual((ref.get('start'), ref.get('end')), ('0', str(len(text))))
+             self.assertEqual(ref.findtext('quote_excerpt'), text)
+-            self.assertEqual(ref.get('quote_truncated'), 'False')
++            self.assertEqual(ref.get('tool_use_id'), execution.get('tool_use_id'))
++            self.assertIn(ref.get('quote_truncated'), (None, 'False'))
++            if ref.get('quote_truncated') is None:
++                self.assertEqual(item.get('complete_capture_fields'), 'true')
++            else:
++                self.assertEqual(ref.get('excerpt_status'), 'complete_capture_field')
+         self.assertEqual(item.get('field_association'), 'original_execution_capture')
+         self.assertEqual(item.findall('field'), [])
+         return tree
+@@ -60,8 +68,15 @@
+         source, brief = self.prepare()
+         full = render_project_brief(brief, budget=6000)
+         self.assert_execution(full, source)
+-        self.assertEqual(render_project_brief(brief, budget=len(full)), full)
+-        below = render_project_brief(brief, budget=len(full) - 1)
++        # Admission uses conservative primary prices. Discover the observable
++        # threshold independently rather than equating it with compressed bytes.
++        observations = [(budget, render_project_brief(brief, budget))
++                        for budget in range(128, 1801)]
++        threshold, complete = next((budget, xml) for budget, xml in observations
++                                  if ET.fromstring(xml).find('.//execution') is not None)
++        self.assert_execution(complete, source)
++        self.assertLessEqual(len(complete), threshold)
++        below = render_project_brief(brief, budget=threshold - 1)
+         tree = ET.fromstring(below)
+         self.assertIsNone(tree.find('item'), below)
+         self.assertIsNone(tree.find('.//execution'), below)
+@@ -91,7 +106,7 @@
+                 query='What did the actual sample check establish?', budget=2900,
+                 selected_project_scopes=scopes)
+             xml = render_project_brief(brief, budget=2900)
+-            item = ET.fromstring(xml).find("item[@source_role='tool_record']")
++            item = ET.fromstring(xml).find("item[execution]")
+             self.assertIsNotNone(item, xml)
+             self.assertEqual(item.find('execution').get('command'), command)
+             self.assertEqual(item.find('execution').get('exit_code'), str(code))
+@@ -99,6 +114,18 @@
+             self.assertEqual(refs['tool_response.output'].findtext('quote_excerpt'), output)
+             self.assertEqual(refs['tool_input.cmd'].findtext('quote_excerpt'), command)
+             self.assertTrue(all(ref.get('source_id') == source['id'] for ref in refs.values()))
++            self.assertEqual(item.get('lane'), 'source_evidence')
++            self.assertEqual(item.get('field_association'), 'original_execution_capture')
++            self.assertIn(item.get('source_role'), (None, 'tool_record'))
++            self.assertEqual(item.find('execution').get('tool_use_id'), f'public-{code}')
++            for field, value in [('tool_response.output', output), ('tool_input.cmd', command)]:
++                self.assertEqual(refs[field].get('source_role'), 'tool_record')
++                self.assertEqual(refs[field].get('tool_use_id'), f'public-{code}')
++                self.assertEqual((refs[field].get('start'), refs[field].get('end')), ('0', str(len(value))))
++                if refs[field].get('quote_truncated') is None:
++                    self.assertEqual(item.get('complete_capture_fields'), 'true')
++                else:
++                    self.assertEqual(refs[field].get('quote_truncated'), 'False')
+             self.assertNotIn(foreign[0]['id'], xml)
+             self.assertEqual(brief['xml'], xml)
+             self.assertLessEqual(len(xml), 2900)

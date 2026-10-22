@@ -1,0 +1,17 @@
+E
+======================================================================
+ERROR: runTest (__main__.MissingGuard.runTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/r17-missing-review-guard-replay.py", line 25, in runTest
+    with patch.object(old.sys,'argv',argv),patch.dict(old.os.environ,{'CODEX_MEM_DISABLED':'0'}),patch.object(old.importlib.util,'spec_from_file_location',side_effect=find_spec),patch.object(old.importlib.util,'module_from_spec',side_effect=make_module),patch.object(old.subprocess,'run',side_effect=inert_dispatch),patch.object(old,'validate_author_inputs',return_value=None),patch.object(old,'phase_plan',return_value=[]):old.main()
+                                                                                                                                                                                                                                                                                                                                                                                                                                        ~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/driver-pre-independent-review-guard/run-experiment.py", line 124, in main
+    expected_contract_sha256=protocol["prospective_author_contract"]["sha256"])
+                             ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'prospective_author_contract'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.003s
+
+FAILED (errors=1)

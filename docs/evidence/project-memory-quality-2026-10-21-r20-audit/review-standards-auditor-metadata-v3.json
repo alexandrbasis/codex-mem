@@ -1,0 +1,63 @@
+{
+  "axis": "standards",
+  "status": "clear",
+  "unresolved_findings": 0,
+  "findings": [],
+  "preparation": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r20-audit/metadata-v3-preparation.json",
+    "sha256": "850f910b972968587271bfbd264111e796555a21300021081ea5884eb1a21fa9"
+  },
+  "files": {
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export-v3.py": "8d5c4de65841432779b54a3b767fec3ed744c7b7411447d95a2efbf472193152",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/test-metadata-consumers-v3.py": "d2febc3ae5a961126585352cb0404b4d386ed1a7668a1011c915746fa84296a1",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/metadata-v2-v3.diff": "b7bc95c33041fb48e4d0c8f0b87ee98177ed87ccb588b78ebd719d38a423e095"
+  },
+  "preserved_actual_v2_failure": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r20-audit/actual-audit-failure-receipt.json",
+    "sha256": "7fe815772f9a1ee889144653b37bd9c57173f767ed42c67966f51b2cd8c91c5a",
+    "reason": "KeyError archive_sha256 against actual R20 runtime_archive_sha256 metadata"
+  },
+  "unchanged_sources": {
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export.py": "54fe2614655154bd01ee3080e190e76843357b12181d04a25b925d59e9cd8c91",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export-v2.py": "a001f756c4d862d64ca628ab5886e44419ceb476a5351ed085eab06a86d1b235",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/release_schema_v2.py": "a68c05c9c1b6ceee2a740c97b3d8b5061502d2fcedadaf9ab104ac53e401b341"
+  },
+  "trial_pins": {
+    "protocol_raw_sha256": "ceee1d71f6b64ca1702f9fb080665303e5d474b174ef8c32cad254b8af9faeb9",
+    "helper_sha256": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+    "product_archive_sha256": "4446396bee764d1e2605072e9beaab3b07ba4df9896a90833ef12a33485ca4ed",
+    "canonical_report_sha256": "c162dcd3674c4ba2cf940555e10bb01630e4588911c5e63268c5f858755e8ea0",
+    "export_manifest_sha256": "ba9d32797923a0e76804b0f2f186f5a2f27317ea1a805ac39976bc41cdf3802f",
+    "quality_decision": "fail"
+  },
+  "verification": {
+    "all_supplied_source_preparation_diff_log_pins_match": true,
+    "v1_v2_release_validator_unchanged": true,
+    "all48_runtime_files_unchanged": true,
+    "product_helper_protocol_pins_match": true,
+    "independent_tests_passed": {
+      "actual_public_metadata_paths_and_complete_sourcearchive_48module_consumer": 2,
+      "synthetic_release_schema": 5,
+      "main_improvement_statement_slices": 10,
+      "main_binding_statement_slice": 1
+    },
+    "independent_negative_sourcearchive_consumer_controls": {
+      "runtime_map_mismatch": "audit_gap",
+      "helper_mismatch": "audit_gap",
+      "actual_trial_freeze_true": "audit_gap",
+      "native_calls_nonzero": "audit_gap",
+      "wrong_held_status": "audit_gap"
+    },
+    "native_model_network_Store_regrade_calls": 0,
+    "full_actual_v3_audit_executed": false
+  },
+  "notes": [
+    "No actionable documented-standard breach or Fowler heuristic finding. The direct runtime_archive_sha256 consumer matches actual R20 metadata. Runtime map and helper bindings are checked against the actual freeze, while the archive receipt remains explicitly held source with zero native calls and actual_trial_freeze false. Existing accounting, gate and provenance logic is unchanged. Literal metadata tests inspect actual public schema paths; the complete sourcearchive block checks actual archive and48 module hashes."
+  ],
+  "limits": [
+    "Source compatibility clearance only. Literal-path existence cannot prove runtime semantics, grade correctness or fidelity of every dynamic consumer. Owning improvement/binding tests are statement slices; they do not constitute the full actual CLI.",
+    "No full v3 audit, model/native/network/Store call, grade repair or trial artifact mutation occurred. No private fixture/gold/rationale/detailed review was opened. Only actual public metadata and the product source archive were consumed.",
+    "Preserved v2 failure is an auditor compatibility failure. The canonical R20 decision remains FAIL. Existing archive reconstruction success does not replace the pending main audit or establish semantic quality.",
+    "Only this new independent reviewer receipt was created."
+  ]
+}

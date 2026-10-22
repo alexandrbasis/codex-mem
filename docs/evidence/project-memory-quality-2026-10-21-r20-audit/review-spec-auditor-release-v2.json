@@ -1,0 +1,44 @@
+{
+  "axis": "spec",
+  "status": "clear",
+  "unresolved_findings": 0,
+  "findings": [],
+  "scope": "Append-only R20 auditor release-schema compatibility source review only. Trial source, protocol, criteria, inputs and running experiment unchanged.",
+  "source_files": {
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export-v2.py": "a001f756c4d862d64ca628ab5886e44419ceb476a5351ed085eab06a86d1b235",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/release_schema_v2.py": "a68c05c9c1b6ceee2a740c97b3d8b5061502d2fcedadaf9ab104ac53e401b341",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/test-release-schema-v2.py": "74f135a0a1c25a5d42b5c47da7085d9147d4aa4d8cbf339cca9a0af4d3f8d9c2"
+  },
+  "preparation": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r20-audit/release-schema-v2-preparation.json",
+    "sha256": "6cfdccd1ba7dee59d736f38d152ef5ea856523929ce92057fba8e05ab158fa0d"
+  },
+  "actual_audit_binding": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r20-audit/actual-audit-binding.json",
+    "sha256": "41602f2e80b458311205380b1f568f6571d7d774fb926ebd96c1478b78da055e"
+  },
+  "held_v1_sha256": "54fe2614655154bd01ee3080e190e76843357b12181d04a25b925d59e9cd8c91",
+  "actual_release_metadata_sha256": "f3a0d0cd4f2416940603e8e015075fcee092e80bb22db2098b4c54e8f31875ae",
+  "protocol_raw_sha256": "ceee1d71f6b64ca1702f9fb080665303e5d474b174ef8c32cad254b8af9faeb9",
+  "protocol_canonical_sha256": "f73edee22050b8d3bbc00170d9fa6aede0e590fbc38dba8046d82da6c066388c",
+  "checks": [
+    "Verified requested source, preparation, binding and log hashes; held v1 unchanged.",
+    "Compared complete v1/v2 diff: flat release field access, strict release validator and exposure_limits forwarding only; accounting, source-pin checks, all 216 slots, public usage, paired loss and high-baseline improvement gates unchanged.",
+    "Actual release metadata matches flat schema. Four prerequisite pins and three binding evidence pins independently match files; public token binding matches metadata. Actual author archive hashed only, no case contents inspected.",
+    "Validator requires exact 32-member archive hashes, 31 nonself manifest pins, 22 root files, safe regular unique member names, private/archive identity, generic contract pins, accepted review and counts. No evidence normalization or threshold relaxation."
+  ],
+  "independent_tests": {
+    "release_schema_synthetic_archive_and_actual_statement": 5,
+    "main_binding_statement_slice": 1,
+    "main_improvement_statement_slice": 10,
+    "existing_contracts": 14,
+    "passed": 30,
+    "failed": 0
+  },
+  "limits": [
+    "No full actual export audit executed. Schema tests validate a synthetic archive end-to-end; main tests execute selected owning statements only.",
+    "No native/model/network/Store calls, actual case/gold/rationale/full-review access, experiment mutation or regrading.",
+    "Formal-release and complete-export confirmation gates remain mandatory before actual audit. New auditor must be selected explicitly; preserved binding receipt historical command names v1 and is not proof that v2 ran.",
+    "Source clearance does not establish trial quality, semantic entailment, complete audit success or absence of every private string."
+  ]
+}

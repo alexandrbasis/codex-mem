@@ -5534,6 +5534,7 @@ class Store:
         remote_deadline: float | None = None,
         hook_mode: bool = False,
         include_health: bool = True,
+        selected_project_scopes: Sequence[str | Path] | None = None,
     ) -> str:
         """Build a bounded, escaped wrapper of active memory records.
 
@@ -5559,8 +5560,12 @@ class Store:
         from .query import normalize_retrieval_query
         from .retrieval import current_state_scope, state_scope_plan
         normalized_query = normalize_retrieval_query(query)
+        project_brief_query = normalized_query
         routing_only = bool(query.strip()) and not normalized_query.strip()
-        query = normalized_query
+        from .project_memory_query import scope_content_query, validated_project_scopes
+        from .config import load_config
+        selected_scopes = validated_project_scopes(workspace, selected_project_scopes, load_config(self.data_dir))
+        query, _ = scope_content_query(normalized_query, workspace, selected_scopes)
         state_scope = current_state_scope(query, workspace)
         checked_exclude = _validate_text(
             exclude_session, "exclude_session", MAX_SESSION_CHARS, required=False
@@ -5759,8 +5764,9 @@ class Store:
                 and remaining >= 256):
             from .project_memory_retrieval import build_project_brief
             brief = build_project_brief(
-                self, workspace, query=query, budget=max(128, remaining * 3 // 5),
+                self, workspace, query=project_brief_query, budget=max(128, remaining * 3 // 5),
                 exclude_session_id=checked_exclude,
+                selected_project_scopes=selected_scopes if selected_project_scopes is not None else None,
             )
             if brief["enabled"] and brief["records"]:
                 chunks.append(brief["xml"])

@@ -1,0 +1,79 @@
+--- carried-v2/run-experiment.py
++++ prospective-r17/run-experiment.py
+@@ -53,6 +53,68 @@
+         if phase == "generate":
+             return repo
+     return baseline if variant == "baseline" else repo
++
++
++def validate_independent_review(fixture_path: Path, gold_path: Path, run: Path, protocol: dict) -> dict | None:
++    """Verify sealed review metadata, never execute or expose review findings."""
++    expected = protocol.get("independent_review_contract")
++    if expected is None:
++        return None
++    basename = "sealed-semantic-review-metadata.json"
++    if (not isinstance(expected, dict) or type(expected.get("schema_version")) is not int
++            or expected["schema_version"] != 1 or expected.get("metadata_receipt_basename") != basename):
++        raise ValueError("invalid_independent_review_contract")
++    pins = ("metadata_receipt_sha256", "metadata_schema_sha256", "fixture_sha256", "gold_sha256",
++            "mechanical_contract_sha256", "semantic_guidance_sha256", "sealed_review_receipt_sha256")
++    for key in pins:
++        value = expected.get(key)
++        if not isinstance(value, str) or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
++            raise ValueError("invalid_independent_review_pin:" + key)
++    here = Path(__file__).parent
++    paths = {"metadata_receipt_sha256": fixture_path.with_name(basename),
++             "metadata_schema_sha256": here / "sealed-semantic-review-metadata.schema.json",
++             "fixture_sha256": fixture_path, "gold_sha256": gold_path,
++             "mechanical_contract_sha256": here / "public-fixture-contract.py",
++             "semantic_guidance_sha256": here / "prospective-gold-semantics-contract.json",
++             "sealed_review_receipt_sha256": fixture_path.with_name("sealed-semantic-review.json")}
++    hashes = {key: hashlib.sha256(path.read_bytes()).hexdigest() for key, path in paths.items()}
++    if any(hashes[key] != expected[key] for key in pins):
++        raise ValueError("independent_review_bytes_differ_from_protocol")
++    if protocol.get("prospective_author_contract", {}).get("sha256") != hashes["mechanical_contract_sha256"]:
++        raise ValueError("independent_review_mechanical_contract_pin_differs")
++    raw = paths["metadata_receipt_sha256"].read_bytes()
++    if len(raw) > 65536 or hashlib.sha256(raw).hexdigest() != expected["metadata_receipt_sha256"]:
++        raise ValueError("independent_review_metadata_changed_or_oversized")
++    metadata = json.loads(raw)
++    bindings = ("fixture_sha256", "gold_sha256", "mechanical_contract_sha256",
++                "semantic_guidance_sha256", "sealed_review_receipt_sha256")
++    keys = {"schema_version", "status", "unresolved_findings", "independence_attestation", "coverage", *bindings}
++    if not isinstance(metadata, dict) or set(metadata) != keys:
++        raise ValueError("invalid_independent_review_metadata_shape")
++    coverage = metadata["coverage"]
++    coverage_keys = {"questions", "required_facts", "all_questions_reviewed",
++                     "all_required_facts_reviewed", "negative_cases_reviewed"}
++    if (type(metadata["schema_version"]) is not int or metadata["schema_version"] != 1
++            or metadata["status"] != "accepted" or type(metadata["unresolved_findings"]) is not int
++            or metadata["unresolved_findings"] != 0
++            or metadata["independence_attestation"] != "independent_author_inputs_only_no_product_prior_inputs_answers_or_grades"
++            or not isinstance(coverage, dict) or set(coverage) != coverage_keys
++            or type(coverage["questions"]) is not int or coverage["questions"] != 96
++            or type(coverage["required_facts"]) is not int or coverage["required_facts"] < 1
++            or any(coverage[key] is not True for key in ("all_questions_reviewed", "all_required_facts_reviewed", "negative_cases_reviewed"))
++            or any(metadata[key] != hashes[key] for key in bindings)):
++        raise ValueError("independent_review_not_accepted_or_incomplete")
++    receipt = {"status": "independent_review_metadata_validated", **hashes,
++               "questions_reviewed": coverage["questions"], "required_facts_reviewed": coverage["required_facts"]}
++    receipt_path = run / "independent-review-validation.json"
++    serialized = json.dumps(receipt, indent=2) + "\n"
++    if receipt_path.exists():
++        if receipt_path.read_text() != serialized:
++            raise RuntimeError("independent_review_validation_receipt_differs")
++    else:
++        with receipt_path.open("x") as output:
++            output.write(serialized)
++    return receipt
+ 
+ 
+ def validate_author_inputs(fixture_path: Path, gold_path: Path, run: Path, *,
+@@ -120,6 +182,7 @@
+         "--protocol", str(protocol_path), "--fixture", str(args.fixture),
+         "--gold", str(args.gold),
+     ], cwd=repo, check=True)
++    validate_independent_review(args.fixture, args.gold, run, protocol)
+     validate_author_inputs(args.fixture, args.gold, run,
+                            expected_contract_sha256=protocol["prospective_author_contract"]["sha256"])
+     fixture = experiment.fixture(args.fixture)

@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "trial": "R10",
+  "decision": "fail",
+  "status": "complete_failed",
+  "goal_achieved": false,
+  "primary_complete": true,
+  "repeats_complete": true,
+  "pipeline_failures": [],
+  "variants": {
+    "baseline": {
+      "questions_planned": 96,
+      "questions_graded": 96,
+      "full_supported_count": 48,
+      "full_supported_rate": 0.5,
+      "critical_errors": 5,
+      "critical_errors_by_type": {
+        "false_merge": 4,
+        "false_closure": 1,
+        "project_mixing": 0,
+        "deleted_resurrection": 0
+      },
+      "context_chars_max": 5919,
+      "reader_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 2,
+        "critical_errors": 1,
+        "source": "holdout/fictional-run-evidence.tar.gz: baseline/hold_702/judge-1.json"
+      },
+      "regeneration_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 1,
+        "critical_errors": 0
+      }
+    },
+    "candidate": {
+      "questions_planned": 96,
+      "questions_graded": 96,
+      "full_supported_count": 59,
+      "full_supported_rate": 0.6145833333333334,
+      "critical_errors": 2,
+      "critical_errors_by_type": {
+        "false_merge": 2,
+        "false_closure": 0,
+        "project_mixing": 0,
+        "deleted_resurrection": 0
+      },
+      "context_chars_max": 5907,
+      "reader_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 4,
+        "critical_errors": 2,
+        "source": "holdout/fictional-run-evidence.tar.gz: candidate/hold_702/judge-1.json"
+      },
+      "regeneration_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 2,
+        "critical_errors": 0
+      }
+    }
+  },
+  "gain_percentage_points": 11.458333333333337,
+  "failed_gates": [
+    "candidate_full_supported_rate_below_90_percent",
+    "candidate_primary_critical_errors",
+    "candidate_reader_repeat_critical_errors",
+    "paired_individual_fact_losses"
+  ],
+  "paired_fact_losses": {
+    "facts": 8,
+    "questions": 7
+  },
+  "paired_recall_losses": {
+    "questions": 6,
+    "distinct_metric_from_fact_losses": true
+  },
+  "accepted_merge_count": 0,
+  "new_native_usage": {
+    "hypothetical_api_equivalent_usd": {
+      "standard": "17.52121374",
+      "fast": "35.04242748"
+    },
+    "pricing_snapshot": "openai-2026-10-07.1",
+    "attempted_calls": 310,
+    "finished_calls": 310,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 310,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "calls_with_partial_tokens": 0,
+    "partial_total_tokens_lower_bound": 0,
+    "reported_tokens_lower_bound": {
+      "input_tokens": 4701587,
+      "cached_input_tokens": 189184,
+      "output_tokens": 135029,
+      "total_tokens": 4836616
+    },
+    "tokens": {
+      "input_tokens": 4701587,
+      "cached_input_tokens": 189184,
+      "output_tokens": 135029,
+      "total_tokens": 4836616
+    },
+    "pricing_complete": false,
+    "token_accounting_complete": true,
+    "cost_usd": null
+  },
+  "combined_usage": {
+    "attempted_calls": 1593,
+    "finished_calls": 1593,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 1593,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "tokens": {
+      "input_tokens": 24873390,
+      "cached_input_tokens": 1839360,
+      "output_tokens": 1027874,
+      "total_tokens": 25901264
+    },
+    "token_accounting_complete": true,
+    "hypothetical_api_equivalent_usd": {
+      "standard": "24.42942550",
+      "fast": "48.85885100"
+    },
+    "cost_usd": null,
+    "scope": "Previous completed pilot plus every native attempt in this iteration. Current iteration limits apply only to its own ledger."
+  },
+  "prior_usage": {
+    "attempted_calls": 1283,
+    "total_tokens": 21064648
+  },
+  "source_report": "holdout/report.json",
+  "source_report_sha256": "438cfbdf7e19f296ac93c2edca670f61608db7e5d3356760a67d5874e5f89468",
+  "reader_context_isolation": "per-question-v1",
+  "context_limit_chars": 6000,
+  "history_context_sum_is_not_single_context": true,
+  "regeneration_per_arm": 6,
+  "regrade_performed": false,
+  "new_repair_claimed": false,
+  "installed_production_source_verified": false,
+  "user_review_pending": true,
+  "limitations": [
+    "Model judgments on fictional histories do not establish external truth or private production quality.",
+    "Historical known-control receipt is not independent judge validation.",
+    "Earlier trials used different evaluators or reader contracts and are not directly comparable.",
+    "Code checks are inherited from unchanged R9 bytes; no rerun is claimed.",
+    "No production installation or restart performed."
+  ]
+}

@@ -1,0 +1,392 @@
+{
+  "schema_version": 1,
+  "status": "completed_secondary_semantic_audit_with_two_wording_ambiguities",
+  "purpose": "Independent read-only semantic review of released fictional fixture and gold. This is secondary evidence, not a replacement grade or a scoring rule.",
+  "conclusion": {
+    "demonstrated_narrative_or_entailment_contradictions": 0,
+    "wording_ambiguities": 2,
+    "unsupported_positive_anchors_found": 0,
+    "deletion_questions_requiring_deleted_positive_support_found": 0,
+    "summary": "All 16 narratives support coherent answers. Two gold wording ambiguities concern the breadth of required paragraphs and temporal qualification of a historical pending state. Neither establishes an actual reader grading error."
+  },
+  "actual_reads": [
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r16-sealed/holdout-fixture.json",
+      "sha256": "e652914fd6cdedf912e7f7272c5afedb75f24a0fe23851678bc03385ff3ca7f6"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r16-sealed/holdout-gold.json",
+      "sha256": "c5bade73baf939709b08f29fc6ef81dfaaa005dc7bd63fc4c2a5078f9de98e92"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r16-sealed/manifest.json",
+      "sha256": "67ffecf215f5950ae1d75ad4cc9e48dc0a51985222adbd5554e35583df1c8f3c"
+    },
+    {
+      "path": "/private/tmp/codex-mem-quality-20261021-r16-sealed/formal-release-receipt.json",
+      "sha256": "e4be3220c5c2f7cfa4c9e83b939f85ccaf627d22abf2fdf93c22e9d3f48e80e1"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r16/public-fixture-contract.py",
+      "sha256": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877"
+    },
+    {
+      "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r16/public-fixture-contract-receipt.json",
+      "sha256": "9e59863312363f69cee69b2a6ea123cd9b7b8eae37748f7f0e14a454a73c8d6b"
+    },
+    {
+      "path": "/Users/alexandrbasis/.codex/skills/unslop/SKILL.md",
+      "sha256": "4f67d6e7e0d2ea7e747cd28de37ff2cfeabcb9c54d091436baa80bfa957003e7"
+    },
+    {
+      "path": "/Users/alexandrbasis/.codex/plugins/cache/simple-english/simple-english/2.1.1/skills/simple-english/SKILL.md",
+      "sha256": "2f25072b7edd707d525d597b388f473b46baad100a3232e13f60e30b0fcc4a82"
+    }
+  ],
+  "platform_context_exposure": {
+    "historical_context_visible": true,
+    "details": "The platform supplied MEMORY_SUMMARY, project AGENTS.md, environment and skill/tool catalogs. Historical summaries include project memory work and evaluation limitations. I did not retrieve their underlying files or previous reports. The parent assignment supplied fixed hashes, expected counts, and the report that 213 anchors passed mechanically. Counts and exact slices were independently recomputed from the allowed inputs.",
+    "scope_limit": "This is procedural isolation in a shared workspace, not a security boundary or a claim of complete blindness."
+  },
+  "method": {
+    "manual_review": "Read the 16 event sequences, all 96 question prompts, all 213 required-fact texts and support references, and all forbidden inference texts. Reviewed roles, selected projects, task continuity, cancellation, closure, source correction and deletion effects.",
+    "deterministic_checks": "Used Python standard-library JSON, pathlib, hashlib and collections only. Recounted histories, questions, project counts, checkpoints, tool captures and deletions. Verified all 213 source slices, surviving anchors, exact question-key coverage, capture-output equality and equality of forbidden_conclusions with typed inference texts. No fictional command was executed. The public contract was read, not imported or run.",
+    "prohibited_reads_or_calls_performed": false,
+    "network_calls": 0,
+    "native_model_calls": 0,
+    "store_calls": 0,
+    "reader_or_grade_access": false,
+    "orchestration_model_usage": "This audit is reasoning by the assigned orchestration agent. It is separate from the experimental runtime ledger."
+  },
+  "counts": {
+    "histories": 16,
+    "questions": 96,
+    "two_project_histories": 12,
+    "one_project_histories": 4,
+    "checkpoints": 32,
+    "inert_tool_captures": 48,
+    "deletions": 16,
+    "required_facts": 213,
+    "positive_anchors": 213,
+    "events_by_role": {
+      "user": 100,
+      "assistant": 25,
+      "tool": 48,
+      "delete_observation": 16
+    },
+    "per_history": "Every history has six final questions, two checkpoints, three inert captures and one deletion."
+  },
+  "findings": [
+    {
+      "id": "GSA-01",
+      "classification": "ambiguity_required_fact_granularity",
+      "demonstrated_contradiction": false,
+      "cases": [
+        "hold_1204/q6",
+        "hold_1209/q4",
+        "hold_1212/q3"
+      ],
+      "claim": "Some narrow questions receive whole multi-topic event paragraphs as required facts. Those paragraphs contain supported details that the question does not require. The allowed public contract does not say whether each clause must appear in an answer or whether the relevant part suffices.",
+      "evidence": [
+        {
+          "case": "hold_1204/q6",
+          "question": "What can be said about the lighthouse credit now?",
+          "event_id": "hold_1204_correction",
+          "required_fact_quote": "Correction to the source rule: use the signed proof for artist names, but use the final layout for page ranges. The earlier proof pagination is obsolete. The lighthouse credit remains unresolved pending a signed attribution.",
+          "explanation": "The unresolved credit and signed-attribution requirement answer this question. Page-range authority is unrelated to the requested credit state."
+        },
+        {
+          "case": "hold_1209/q4",
+          "question": "How do the temperature-unit requirements differ between the projects?",
+          "event_ids": [
+            "hold_1209_brief",
+            "hold_1209_other"
+          ],
+          "required_fact_quote": "Do not run the kiln from this checklist. We are correcting the document only.",
+          "explanation": "These supported restrictions belong to the required paragraph but are not needed to compare temperature units."
+        },
+        {
+          "case": "hold_1212/q3",
+          "question": "Which parts passed and what was only mocked?",
+          "event_id": "hold_1212_claim",
+          "required_fact_quote": "The assistant reported: The prototype looks ready. I would call it done based on the expiry and initials tests.",
+          "explanation": "The tool records establish passing and mocked parts. The assistant readiness belief adds useful caution but is not itself needed to answer which parts passed or were mocked."
+        }
+      ],
+      "limit": "This identifies a wording and relevance concern. I did not inspect grader instructions, reader answers or grades, so I cannot establish whether any answer was penalized for omitting these details. No replacement requirements or rescore are proposed."
+    },
+    {
+      "id": "GSA-02",
+      "classification": "ambiguity_historical_required_fact_temporal_scope",
+      "demonstrated_contradiction": false,
+      "cases": [
+        "hold_1216/q1",
+        "hold_1216/q4"
+      ],
+      "claim": "Current-state questions require an earlier instruction that says quotation review is pending, alongside a later acceptance of the quotation correction. The narrative resolves the sequence, but the earlier required-fact text carries no explicit historical qualifier.",
+      "evidence": [
+        {
+          "event_id": "hold_1216_accept",
+          "quote": "Accept the hesitation edit. Quotation review and curator approval are still pending. Do not close the whole transcript."
+        },
+        {
+          "event_id": "hold_1216_tail",
+          "quote": "Accept the quotation correction. Next request curator approval of the full transcript. The bilingual layout stays cancelled, and printing remains blocked until approval."
+        },
+        {
+          "case": "hold_1216/q1",
+          "question": "What remains before SG-33 can print, and what has been accepted?"
+        }
+      ],
+      "interpretation": "A coherent final answer treats the earlier pending statement as historical evidence of hesitation acceptance, then reports accepted quotation correction and pending full curator approval. Requiring the earlier paragraph as an unqualified current fact risks implying that the accepted correction remains pending. It is also possible that quotation review includes work beyond this correction. The narrative does not explicitly state that every quotation review activity is complete.",
+      "limit": "This is a temporal-scope ambiguity, not a contradiction. Chronological attribution resolves it. No runtime grading behavior was observed and no regrade is proposed."
+    }
+  ],
+  "dimension_results": {
+    "entailment": "All required facts quote surviving events, with explicit assistant-report and captured-tool attribution where used. No required factual claim contradicted its cited narrative under a chronological reading.",
+    "roles_and_proof": "Assistant readiness claims remain reports. Tool failures and exclusions limit those claims. Local fixtures, previews and audits do not establish external approval, real deployment or physical-world execution. No narrative requires such a leap.",
+    "project_scope": "The 12 two-project histories keep their rules and acceptances separate. The four one-project histories distinguish jobs or subtasks within the project. No positive anchor crosses the selected question project scope.",
+    "forbidden_inferences": "All 96 forbidden inference texts express mistakes supported by the narrative. Error-type labels overlap in ordinary language, but I found no substantive narrative contradiction. The review does not infer grading mechanics from those labels.",
+    "deletion": "All 16 deleted sources supply a concrete obsolete assertion and an explicit or described dependent use. Every deletion question has surviving positive evidence for the current rule, unknown value, new evidence requirement or correction. None requires reproducing the deleted value, citing the deletion action as positive evidence, or proving an unobservable global absence. Some surviving sources explicitly mention the removed source, which permits identifying it without restoring its deleted content.",
+    "task_identity_and_closure": "Continuations, genuine distinct tasks, accepted subrepairs, paused work, cancellations and reopenings are stated in the events. No identity contradiction was found. A request to reopen an assistant-reported review does not require proof that the user previously accepted that review.",
+    "question_relevance": "All questions have responsive supported content. Some required paragraphs include extra supported clauses, as disclosed in GSA-01. No unsupported new requirement was found."
+  },
+  "per_history_review": [
+    {
+      "history_id": "hold_1201",
+      "questions_reviewed": [
+        "hold_1201/q1",
+        "hold_1201/q2",
+        "hold_1201/q3",
+        "hold_1201/q4",
+        "hold_1201/q5",
+        "hold_1201/q6"
+      ],
+      "semantic_summary": "Printer approval remains pending after a local export repair. The other project accepts a color study.",
+      "deletion_event": "hold_1201_delete",
+      "deleted_source": "hold_1201_old"
+    },
+    {
+      "history_id": "hold_1202",
+      "questions_reviewed": [
+        "hold_1202/q1",
+        "hold_1202/q2",
+        "hold_1202/q3",
+        "hold_1202/q4",
+        "hold_1202/q5",
+        "hold_1202/q6"
+      ],
+      "semantic_summary": "Local access checks do not replace rights review or a deployed-site check. The other project permits downloads for its own recordings.",
+      "deletion_event": "hold_1202_delete",
+      "deleted_source": "hold_1202_old"
+    },
+    {
+      "history_id": "hold_1203",
+      "questions_reviewed": [
+        "hold_1203/q1",
+        "hold_1203/q2",
+        "hold_1203/q3",
+        "hold_1203/q4",
+        "hold_1203/q5",
+        "hold_1203/q6"
+      ],
+      "semantic_summary": "The reserve-column repair is accepted. The same simulation still needs a measurement before its manual-plan comparison.",
+      "deletion_event": "hold_1203_delete",
+      "deleted_source": "hold_1203_old"
+    },
+    {
+      "history_id": "hold_1204",
+      "questions_reviewed": [
+        "hold_1204/q1",
+        "hold_1204/q2",
+        "hold_1204/q3",
+        "hold_1204/q4",
+        "hold_1204/q5",
+        "hold_1204/q6"
+      ],
+      "semantic_summary": "A later source correction replaces proof pagination with final-layout ranges. Attribution remains unresolved.",
+      "deletion_event": "hold_1204_delete",
+      "deleted_source": "hold_1204_old"
+    },
+    {
+      "history_id": "hold_1205",
+      "questions_reviewed": [
+        "hold_1205/q1",
+        "hold_1205/q2",
+        "hold_1205/q3",
+        "hold_1205/q4",
+        "hold_1205/q5",
+        "hold_1205/q6"
+      ],
+      "semantic_summary": "The inventory export is closed. Insurance is cancelled and depends on a new valuation before any separate future task.",
+      "deletion_event": "hold_1205_delete",
+      "deleted_source": "hold_1205_old"
+    },
+    {
+      "history_id": "hold_1206",
+      "questions_reviewed": [
+        "hold_1206/q1",
+        "hold_1206/q2",
+        "hold_1206/q3",
+        "hold_1206/q4",
+        "hold_1206/q5",
+        "hold_1206/q6"
+      ],
+      "semantic_summary": "The refusal repair reopens the simulator, then closes after acceptance. Physical deployment remains outside its scope.",
+      "deletion_event": "hold_1206_delete",
+      "deleted_source": "hold_1206_old"
+    },
+    {
+      "history_id": "hold_1207",
+      "questions_reviewed": [
+        "hold_1207/q1",
+        "hold_1207/q2",
+        "hold_1207/q3",
+        "hold_1207/q4",
+        "hold_1207/q5",
+        "hold_1207/q6"
+      ],
+      "semantic_summary": "The wording repair is complete. Editorial review is pending, and sending is prohibited.",
+      "deletion_event": "hold_1207_delete",
+      "deleted_source": "hold_1207_old"
+    },
+    {
+      "history_id": "hold_1208",
+      "questions_reviewed": [
+        "hold_1208/q1",
+        "hold_1208/q2",
+        "hold_1208/q3",
+        "hold_1208/q4",
+        "hold_1208/q5",
+        "hold_1208/q6"
+      ],
+      "semantic_summary": "The accepted sample board reopens for one edge repair, then closes again. Plaza approval remains separate.",
+      "deletion_event": "hold_1208_delete",
+      "deleted_source": "hold_1208_old"
+    },
+    {
+      "history_id": "hold_1209",
+      "questions_reviewed": [
+        "hold_1209/q1",
+        "hold_1209/q2",
+        "hold_1209/q3",
+        "hold_1209/q4",
+        "hold_1209/q5",
+        "hold_1209/q6"
+      ],
+      "semantic_summary": "The labels repair is complete. The handout awaits an authoritative opening instruction and instructor review.",
+      "deletion_event": "hold_1209_delete",
+      "deleted_source": "hold_1209_old"
+    },
+    {
+      "history_id": "hold_1210",
+      "questions_reviewed": [
+        "hold_1210/q1",
+        "hold_1210/q2",
+        "hold_1210/q3",
+        "hold_1210/q4",
+        "hold_1210/q5",
+        "hold_1210/q6"
+      ],
+      "semantic_summary": "The static demo is accepted. The distinct approval-flow subtask still needs a successful-approval test.",
+      "deletion_event": "hold_1210_delete",
+      "deleted_source": "hold_1210_old"
+    },
+    {
+      "history_id": "hold_1211",
+      "questions_reviewed": [
+        "hold_1211/q1",
+        "hold_1211/q2",
+        "hold_1211/q3",
+        "hold_1211/q4",
+        "hold_1211/q5",
+        "hold_1211/q6"
+      ],
+      "semantic_summary": "The parser behavior is accepted. The dataset source audit remains unresolved pending a replacement record.",
+      "deletion_event": "hold_1211_delete",
+      "deleted_source": "hold_1211_old"
+    },
+    {
+      "history_id": "hold_1212",
+      "questions_reviewed": [
+        "hold_1212/q1",
+        "hold_1212/q2",
+        "hold_1212/q3",
+        "hold_1212/q4",
+        "hold_1212/q5",
+        "hold_1212/q6"
+      ],
+      "semantic_summary": "Rendering passes do not establish desk-confirmation behavior. The prototype remains open after its confirmation test fails.",
+      "deletion_event": "hold_1212_delete",
+      "deleted_source": "hold_1212_old"
+    },
+    {
+      "history_id": "hold_1213",
+      "questions_reviewed": [
+        "hold_1213/q1",
+        "hold_1213/q2",
+        "hold_1213/q3",
+        "hold_1213/q4",
+        "hold_1213/q5",
+        "hold_1213/q6"
+      ],
+      "semantic_summary": "Two jobs share one project. The lighting card stays closed while the evacuation rehearsal card awaits inspection and review.",
+      "deletion_event": "hold_1213_delete",
+      "deleted_source": "hold_1213_old"
+    },
+    {
+      "history_id": "hold_1214",
+      "questions_reviewed": [
+        "hold_1214/q1",
+        "hold_1214/q2",
+        "hold_1214/q3",
+        "hold_1214/q4",
+        "hold_1214/q5",
+        "hold_1214/q6"
+      ],
+      "semantic_summary": "Procurement is cancelled. A distinct paper-wording task is accepted and closed. No procurement task is active.",
+      "deletion_event": "hold_1214_delete",
+      "deleted_source": "hold_1214_old"
+    },
+    {
+      "history_id": "hold_1215",
+      "questions_reviewed": [
+        "hold_1215/q1",
+        "hold_1215/q2",
+        "hold_1215/q3",
+        "hold_1215/q4",
+        "hold_1215/q5",
+        "hold_1215/q6"
+      ],
+      "semantic_summary": "The import repair stays accepted. Duplicate review reopens. A separate planting worksheet remains paused.",
+      "deletion_event": "hold_1215_delete",
+      "deleted_source": "hold_1215_old"
+    },
+    {
+      "history_id": "hold_1216",
+      "questions_reviewed": [
+        "hold_1216/q1",
+        "hold_1216/q2",
+        "hold_1216/q3",
+        "hold_1216/q4",
+        "hold_1216/q5",
+        "hold_1216/q6"
+      ],
+      "semantic_summary": "Hesitation edits and the quotation correction are accepted. Full curator approval remains pending and printing remains blocked.",
+      "deletion_event": "hold_1216_delete",
+      "deleted_source": "hold_1216_old"
+    }
+  ],
+  "variation": {
+    "observed": "The narratives vary in domain, event order, session count, source roles, failed versus successful checks, task/subtask relations and final state. Genuine closure occurs in PS-6, GO-27 and HG-5. CW-17 is cancelled while CW-18 closes. Several histories accept a subrepair while leaving another gate open. Later source corrections occur for VP-31 and SG-33. Sixteen deletion controls cover policy, numerical inputs, rights, attribution and source-dependent drafts.",
+    "shared_structure": "All histories share six questions, two checkpoints, three captures and one obsolete-source deletion. Many use a brief, partial cancellation, test limits and a later decision. The cases are not statistically independent, and variation does not establish coverage of real projects or unseen failure modes."
+  },
+  "limits": [
+    "The same author wrote the fixture and gold. This reviewer did not author either artifact, but authorship independence does not make the source narratives externally true.",
+    "This secondary review cannot prove completeness, truth, source exhaustiveness, retrieval success or runtime quality.",
+    "No implementation, helper, prior fixture/report, reader input/answer/grade, native model, Jev or Store access occurred.",
+    "The release receipt reports release after freeze. I read that allowed receipt only and did not inspect its referenced freeze or gate files.",
+    "Difficulty or retrieval loss is not treated as a gold defect. No inference about implementation capabilities is made beyond the public source contract."
+  ],
+  "frozen_primary_outcomes": "The primary trial stays frozen. This audit does not change any input, source, protocol, grade or outcome. Both ambiguities remain disclosed as secondary evidence. No repair, new scoring rule, exclusion or rescore is requested."
+}

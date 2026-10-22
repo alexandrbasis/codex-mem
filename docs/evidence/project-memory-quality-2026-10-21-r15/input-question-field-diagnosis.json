@@ -1,0 +1,22 @@
+{
+  "status": "additional_latent_question_field_contract_incompatibility",
+  "observed_at_utc": "2026-10-21T20:44:48.389393+00:00",
+  "fixture_sha256": "de5279ec13d2b5a4632874d228deb61001acd96666e25abeb9eebd5f3028bb44",
+  "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "planned_questions": 96,
+  "nonempty_question_keys": 0,
+  "nonempty_text_keys": 96,
+  "public_fixture_parser_accepts": true,
+  "evidence": [
+    {
+      "path": "scripts/project_memory_consolidation_experiment.py",
+      "lines": "824,835,1237,1682",
+      "quote": "question['question']",
+      "meaning": "Consumer requires question directly; no text-to-question adapter was found by two agents."
+    }
+  ],
+  "diagnosis": "The standalone public parser permits question objects that satisfy id/stage/project checks but omit the runtime prompt key. R15 used text-only objects. This additional latent retrieval contract incompatibility was found after R15 stopped for the separate positive-deletion-anchor incompatibility. No R15 main phase executed, so this is a code/data contract observation, not an observed pipeline failure or native failure.",
+  "unchanged_outcome": "R15 remains incomplete, zero main calls or grades, all primary/repeat slots missing. No source/helper/protocol/input/answer/grade changed or retried. Prospective R16 author contract requires a nonempty question key.",
+  "raw_fixture_content_emitted": false,
+  "native_calls": 0
+}

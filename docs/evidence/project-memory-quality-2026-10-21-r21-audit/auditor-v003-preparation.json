@@ -1,0 +1,153 @@
+{
+  "status": "v003_source_ready_for_two_reviews_actual_integrity_cli_not_run",
+  "new_source_sha256": {
+    "audit-final-export-v003.py": "06220152267e3a5b36f0e3dec0be86440481fcc5f181217802d8fb48a0b01784",
+    "count_contract_v003.py": "eeefb5b92ff3443235344bcb343fdd47e7ddcb8f5f9e4123c5ccd684cc07f4b5",
+    "test-count-contract-v003.py": "670897f9332e6f585372979a1785f181d3c3eefa975676babba9ebc346c9d7ba",
+    "test-partial-consumers-v003.py": "1f106d201a73468ea788cf7681b94980cb34458a8ae322a876ae9bd62695f713"
+  },
+  "unchanged_v002_source_pins": {
+    "audit-final-export-v002.py": "26ec7b0230034d40da912932a5b1b38b5868347fa211a43f3bc688ea3d2cb7ed",
+    "release_schema_v002.py": "ccb2c03b521e4308730512005153772cca584e046cbfb2126c0a00fc2e885e10",
+    "actual-audit-binding.json": "8cdc45a00587de97ef82a3421326ae9fee7231cfb57cf9ac23fa81b3a7e9ebca",
+    "actual-v002-audit-failure-receipt.json": "b5d1bcb5153559d96cdc815830c50a7b6f05eb02c4492aa7ba29d90ba0eb1f09",
+    "actual-audit-v002-integrity.log": "7ac2e3426c3c1f544aeb83d1b0172027ed19b65c48120e1787631b45b883902d"
+  },
+  "delta_sha256": "98868966bb767633058545856cadd216ba6dba1bedf06ee639d26fa4474ea1c2",
+  "explicit_count_binding": {
+    "required_main_binding_key": "count_validation",
+    "provenance_file": "count-validation-provenance-v003.json",
+    "sha256": "6cf7adadcdd2d9d66ff1c9025e66953b98a75b9ad4949bb6ddc90b2123378bf5",
+    "contract": {
+      "contract": "pinned-public-mechanical-counts-v1",
+      "validator_sha256": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+      "release_verification_sha256": "c4cb0be8b64f99ceca34523adfe7f0a8f8de6890b72db339238899012f0529c0",
+      "fixture_sha256": "4f27ca1ed2ae959da36d4a74d57a1c61da9afa6576e7b5c92bb2a730224884b6",
+      "gold_sha256": "e7cbe7deee3a49c762d36d07485294e8e729385b2ce705a5ffc34383e24a3014"
+    }
+  },
+  "mechanical_derivation": {
+    "method": "Verify pinned public validator bytes against exact selected manifest generic_pack_files and explicitbinding; verify parentreleaseverification/release/archive/fixture/gold pins. Execute public validate_files on pinnedfictional fixture/gold. Independently count every fact/support, questions/histories/sessions/nondeleteevents/deletions/checkpoints/roles/repeatslots; require exactparentcounts and releasedfactbindings.",
+    "actual_facts": 218,
+    "actual_anchors": 256,
+    "hardcoded_expected_count_in_production_auditor": false,
+    "fail_closed": [
+      "missingcountcontractkey",
+      "staleparentreceiptpin",
+      "wrongparentfactcount",
+      "wrongparentanchorcount",
+      "wrongpublicvalidatorpin",
+      "wrongfixture/goldpin",
+      "mismatchedparentrelease/archive"
+    ]
+  },
+  "tests": {
+    "total": 53,
+    "individual_commands_exitcodes_logs": [
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-audit-contracts.py"
+        ],
+        "returncode": 0,
+        "tests": 13,
+        "log": "auditor-v003-suite-1.log",
+        "sha256": "19ce4c3fe936ba5a289b545d890b7ffce48ced29d4b7b20a8c6b10a871321dd4"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-release-schema-v002.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v003.py"
+        ],
+        "returncode": 0,
+        "tests": 8,
+        "log": "auditor-v003-suite-2.log",
+        "sha256": "d679fc3ad8e7eab020d24d55774886d0d611584cafd122a5cfd169337c6f9cbb"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-improvement-path.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v003.py"
+        ],
+        "returncode": 0,
+        "tests": 10,
+        "log": "auditor-v003-suite-3.log",
+        "sha256": "a60e0d2d66e445b0734c0563e528ca7eae6f1b838b35a48522a62ef5a010522e"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-binding-path.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v003.py"
+        ],
+        "returncode": 0,
+        "tests": 1,
+        "log": "auditor-v003-suite-4.log",
+        "sha256": "774d1086a37de6d8b9e2865f12621648cb23ee1c9a1e8f5919ee23e907dcf70c"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-r21-contracts-v002.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v003.py"
+        ],
+        "returncode": 0,
+        "tests": 4,
+        "log": "auditor-v003-suite-5.log",
+        "sha256": "5610bb341ae4df72930d9f88afd8d925eec567770a8ccf6387603ee214544c29"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-manifest-contract-v002.py"
+        ],
+        "returncode": 0,
+        "tests": 6,
+        "log": "auditor-v003-suite-6.log",
+        "sha256": "065c7d15facfd20f14fb9182747be315f3349fa1d5e1a0e966047509f4bfa9b1"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-count-contract-v003.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v003.py"
+        ],
+        "returncode": 0,
+        "tests": 7,
+        "log": "auditor-v003-suite-7.log",
+        "sha256": "0591f8633e7eeb516a97264ed56e19e184aa1323b974b3edcb3af6c306d1af58"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-partial-consumers-v003.py"
+        ],
+        "returncode": 0,
+        "tests": 4,
+        "log": "auditor-v003-suite-8.log",
+        "sha256": "cfc2e5c7745a039ad4dd5df4e9fad0525586cedfc2496a272ba27dcfc4300945"
+      }
+    ],
+    "compile_without_bytecode_writes": "passed",
+    "oldsource_red_sha256": "10c90dfdee4c8f203df1557fbc6bd444d84aeedda668692e707ad26695dba5c8",
+    "actual_partial_path": "Executable nativeledger request/response/profile/schema consumer55attempts54responses; coverage/strictgateconsumer216planned/0graded; missing-slot and fake-pass negativecontrols. No full actual integrity CLI or DBopens.",
+    "partial_reasoning_scope": "No readerparts/reuse requireddirectories are read absent artifacts; unknown currentusage remainsnull; sharedgenerationunknown makes complete-equivalenttokensnull; emptycanonicalpipelinefailures never interpreted as no nativeor jobfailure."
+  },
+  "offline_report_scope": "run/holdout-report.json exists due offlineexport aggregate, not native drivercompletion. v003 renames presencefield aggregate_report_exists and explicitly declines completioninference.",
+  "archive_supplement_not_run": true,
+  "actual_v003_cli_not_run": true,
+  "no_native_models_network_Store_trial_retry_semantic_grading_source_input_export_mutation": true,
+  "limits": [
+    "Actualv003 full audit still requires bothindependent source reviews and rootgate.",
+    "These tests execute countvalidator and partialconsumer seams; they do not assert completed fullintegrity.",
+    "Originalv002exception and everyprevioussource/binding/receipt retained.",
+    "CanonicalINCOMPLETE and pipeline_failures[] remainunchanged; job/nativefailure scope must remain explicit inclh05invalid_response andh12servererror."
+  ]
+}

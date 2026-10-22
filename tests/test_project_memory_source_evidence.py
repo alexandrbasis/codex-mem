@@ -65,16 +65,37 @@ class SourceEvidenceTests(unittest.TestCase):
         self.assertIn(report['body'], ''.join(tree.itertext()))
         self.assertIn(tool['body'], ''.join(tree.itertext()))
         assistant = tree.find(".//item[@lane='source_evidence'][@source_role='assistant_report']")
-        execution = tree.find(".//item[@lane='source_evidence'][@source_role='tool_record']")
+        execution = tree.find(".//item[@lane='source_evidence'][execution]")
         self.assertIsNotNone(assistant, startup)
         self.assertIsNotNone(execution, startup)
         self.assertEqual(execution.find('execution').get('exit_code'), '1')
         self.assertEqual(execution.find('execution').get('command'), 'python check.py QA-42')
-        self.assertIsNotNone(execution.find("./field/source[@source_field='tool_response.output']"))
+        self.assertIn(execution.get('source_role'), (None, 'tool_record'))
+        self.assertEqual(execution.get('field_association'), 'original_execution_capture')
+        self.assertEqual(execution.find('execution').get('exit_field'), 'tool_response.exit_code')
+        self.assertTrue(execution.find('execution').get('tool_use_id'))
+        pointers = {source.get('source_field'): source for source in execution.findall('source')}
+        self.assertEqual({'tool_response.output', 'tool_input.cmd'}, set(pointers))
+        for field, value in [('tool_response.output', tool['body']), ('tool_input.cmd', 'python check.py QA-42')]:
+            source = pointers[field]
+            self.assertEqual(tool['id'], source.get('source_id'))
+            self.assertEqual('tool_record', source.get('source_role'))
+            self.assertEqual(execution.find('execution').get('tool_use_id'), source.get('tool_use_id'))
+            self.assertEqual(('0', str(len(value))), (source.get('start'), source.get('end')))
+            self.assertEqual(value, source.findtext('quote_excerpt'))
+            self.assertIn(source.get('quote_truncated'), (None, 'False'))
+            if source.get('quote_truncated') is None:
+                self.assertEqual('true', execution.get('complete_capture_fields'))
+        self.assertIsNotNone(execution.find("./source[@source_field='tool_response.output']"))
         self.assertNotIn('workflow_state="completed"', startup)
         self.assertEqual(brief['claims'], [])
-        self.assertEqual(''.join(tree.itertext()).count(tool['body']), 1)
-        self.assertEqual(execution.find("./field/source[@source_field='tool_response.output']").get('quote_display'), 'quoted_above')
+        output = execution.find("./source[@source_field='tool_response.output']")
+        self.assertEqual(output.findtext('quote_excerpt'), tool['body'])
+        self.assertEqual(output.get('source_id'), tool['id'])
+        self.assertEqual(output.get('source_role'), 'tool_record')
+        self.assertEqual(output.get('tool_use_id'), execution.find('execution').get('tool_use_id'))
+        self.assertEqual((output.get('start'), output.get('end')), ('0', str(len(tool['body']))))
+        self.assertEqual(len(execution.findall("./source[@source_field='tool_response.output']/quote_excerpt")), 1)
         self.assertLessEqual(len(startup), 6000)
 
 
@@ -174,6 +195,28 @@ class SourceEvidenceTests(unittest.TestCase):
         self.assertEqual(tree.find('coverage').get('source_evidence_omitted'), '2')
         self.assertNotIn('inspection qualifier', ''.join(tree.itertext()))
         self.assertNotIn(report['body'][:100], brief['xml'])
+
+    def test_current_assessment_of_earlier_report_retains_report_and_actual_failure(self):
+        report = self.add_report('QA-42 alignment chart is complete according to my check.')
+        execution = self.add_execution()
+        self.process_tool_only()
+        for query in ('Was the earlier assistant completion claim accurate?',
+                      'Does the previous assistant assessment remain credible?',
+                      'What output does the evidence establish?'):
+            with self.subTest(query=query), Store(self.data) as store:
+                brief = build_project_brief(store, self.project, query=query)
+                self.assertIn(report['body'], brief['xml'])
+                self.assertIn(execution['body'], brief['xml'])
+                self.assertEqual(brief['claims'], [])
+                self.assertNotIn('workflow_state="completed"', brief['xml'])
+                self.assertLessEqual(len(brief['xml']), 6000)
+        with Store(self.data) as store:
+            unknown = build_project_brief(store, self.project,
+                query='Was the earlier assistant estimate about cobalt mirrors accurate?')
+            historical = build_project_brief(store, self.project,
+                query='What did the assistant report say as of 2031-02-03?')
+        self.assertEqual(unknown['records'], [])
+        self.assertEqual(historical.get('skip_reason'), 'historical_query')
 
     def test_subject_free_role_attribution_uses_original_assistant_source_without_claims(self):
         report = self.add_report('I expect the cooled specimen to remain intact.', session='forecast')

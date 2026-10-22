@@ -1,0 +1,45 @@
+--- V1/test-driver.py
++++ V2/test-driver.py
+@@ -308,6 +308,42 @@
+                 self.metadata[key] = original
+                 self.pin_metadata()
+ 
++    def test_review_fact_count_matches_actual_pinned_gold_not_positive_attestation(self):
++        for reported in (0, 1, 95, 97):
++            with self.subTest(reported=reported):
++                # Each hypothetical metadata packet starts its own receipt
++                # state, including when replayed against the defective guard.
++                (self.run / 'independent-review-validation.json').unlink(missing_ok=True)
++                self.metadata['coverage']['required_facts'] = reported
++                self.pin_metadata()
++                with self.assertRaises(ValueError): self.check()
++                self.assertFalse((self.run / 'independent-review-validation.json').exists())
++
++    def test_actual_gold_fact_total_can_differ_from_question_total(self):
++        gold = json.loads(self.gp.read_text())
++        gold['questions']['toy_0/q0']['required_facts'].append(dict(
++            gold['questions']['toy_0/q0']['required_facts'][0]))
++        self.gp.write_text(json.dumps(gold))
++        gold_pin = hashlib.sha256(self.gp.read_bytes()).hexdigest()
++        self.metadata['gold_sha256'] = gold_pin
++        self.protocol['independent_review_contract']['gold_sha256'] = gold_pin
++        self.metadata['coverage']['required_facts'] = 97
++        self.pin_metadata()
++        receipt = self.check()
++        self.assertEqual(receipt['questions_reviewed'], 96)
++        self.assertEqual(receipt['required_facts_reviewed'], 97)
++
++    def test_reported_question_count_cannot_hide_actual_missing_fixture_question(self):
++        fixture = json.loads(self.fp.read_text())
++        fixture['histories'][0]['questions'].pop()
++        self.fp.write_text(json.dumps(fixture))
++        fixture_pin = hashlib.sha256(self.fp.read_bytes()).hexdigest()
++        self.metadata['fixture_sha256'] = fixture_pin
++        self.protocol['independent_review_contract']['fixture_sha256'] = fixture_pin
++        self.pin_metadata()
++        with self.assertRaises(ValueError): self.check()
++        self.assertFalse((self.run / 'independent-review-validation.json').exists())
++
+     def test_fixed_basename_cannot_escape_fixture_directory(self):
+         for name in ('../sealed-semantic-review-metadata.json', '/tmp/metadata.json', 'other.json'):
+             self.protocol['independent_review_contract']['metadata_receipt_basename'] = name

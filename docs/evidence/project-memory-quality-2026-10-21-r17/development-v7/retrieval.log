@@ -1,0 +1,59 @@
+.....................E.......E.
+======================================================================
+ERROR: test_provisional_execution_signal_keeps_tool_role_exit_and_field_provenance (test_project_memory_retrieval.ProjectMemoryRetrievalTests.test_provisional_execution_signal_keeps_tool_role_exit_and_field_provenance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_retrieval.py", line 494, in test_provisional_execution_signal_keeps_tool_role_exit_and_field_provenance
+    xml = render_project_brief(brief, budget)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_retrieval.py", line 1486, in render_project_brief
+    return _compact_and_refill_sources(brief, canonical, budget)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_retrieval.py", line 1509, in _compact_and_refill_sources
+    wire = compact_selected_xml(canonical, incoming, native_tools=_EXECUTION_TOOLS)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py", line 148, in compact_selected_xml
+    compacted = re.sub(r'<item\b[^>]*>.*?</item>|<item\b[^>]*/>', compact, xml, flags=re.S)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/re/__init__.py", line 208, in sub
+    return _compile(pattern, flags).sub(repl, string, count)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py", line 145, in compact
+    node = re.sub(r'<source\b[^>]*>', compact_report, node)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/re/__init__.py", line 208, in sub
+    return _compile(pattern, flags).sub(repl, string, count)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py", line 135, in compact_report
+    pointer = ET.fromstring(text[:-1] + '/>')
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/xml/etree/ElementTree.py", line 1342, in XML
+    parser.feed(text)
+    ~~~~~~~~~~~^^^^^^
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 88
+
+======================================================================
+ERROR: test_xml_is_valid_with_escaping_controls_and_exact_budgets (test_project_memory_retrieval.ProjectMemoryRetrievalTests.test_xml_is_valid_with_escaping_controls_and_exact_budgets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_retrieval.py", line 102, in test_xml_is_valid_with_escaping_controls_and_exact_budgets
+    xml = render_project_brief(brief, budget)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_retrieval.py", line 1486, in render_project_brief
+    return _compact_and_refill_sources(brief, canonical, budget)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_retrieval.py", line 1509, in _compact_and_refill_sources
+    wire = compact_selected_xml(canonical, incoming, native_tools=_EXECUTION_TOOLS)
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py", line 148, in compact_selected_xml
+    compacted = re.sub(r'<item\b[^>]*>.*?</item>|<item\b[^>]*/>', compact, xml, flags=re.S)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/re/__init__.py", line 208, in sub
+    return _compile(pattern, flags).sub(repl, string, count)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py", line 145, in compact
+    node = re.sub(r'<source\b[^>]*>', compact_report, node)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/re/__init__.py", line 208, in sub
+    return _compile(pattern, flags).sub(repl, string, count)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/codex_mem/project_memory_source_transport.py", line 135, in compact_report
+    pointer = ET.fromstring(text[:-1] + '/>')
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/xml/etree/ElementTree.py", line 1342, in XML
+    parser.feed(text)
+    ~~~~~~~~~~~^^^^^^
+xml.etree.ElementTree.ParseError: not well-formed (invalid token): line 1, column 93
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.517s
+
+FAILED (errors=2)

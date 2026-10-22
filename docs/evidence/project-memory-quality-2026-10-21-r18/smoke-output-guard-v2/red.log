@@ -1,0 +1,39 @@
+.........EE
+======================================================================
+ERROR: test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir (__main__.ActualConsumerCompatibilityTests.test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir) (target=PosixPath('/private/tmp/codex-mem-quality-20261021-r18-experiment'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/test-consumer-compatibility.py", line 154, in test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir
+    smoke.main()
+    ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/consumer-smoke.py", line 115, in main
+    raw=args.protocol.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpfsxvac0f/must-not-open.json'
+
+======================================================================
+ERROR: test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir (__main__.ActualConsumerCompatibilityTests.test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir) (target=PosixPath('/private/tmp/tmpfsxvac0f/never-open-sealed/consumer-output'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/test-consumer-compatibility.py", line 154, in test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir
+    smoke.main()
+    ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r18/consumer-smoke.py", line 115, in main
+    raw=args.protocol.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpfsxvac0f/must-not-open.json'
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.299s
+
+FAILED (errors=2)

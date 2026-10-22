@@ -1,0 +1,48 @@
+--- R15-v4/project_memory_retrieval.py
++++ R15-v5/project_memory_retrieval.py
+@@ -947,16 +947,20 @@
+     # supplements and repeated association wrappers. Every association retains
+     # its own qualifiers; capture order only orders display candidates.
+     remaining = budget - sum(map(len, parts)) - len(closing)
+-    policy_first = bool(brief.get('user_source_coverage_requested') and not brief.get('source_evidence_requested'))
++    expanded_evidence = bool(brief.get('source_evidence_requested'))
+     protected = {}
+-    for record in records:
++    protected_roles = set()
++    protection_pool = records if expanded_evidence else [*records, *(brief.get('unassociated_role_context') or [])]
++    for record in protection_pool:
+         size = _whole_execution_size(record, brief.get('projection'))
++        role = 'execution' if size else 'report'
+         if not size and record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
+             size = _reserved_record_size(record, brief.get('projection'), set(), min(900, budget // 6))
+-        if policy_first or not size:
++        if not size or (not expanded_evidence and role in protected_roles):
+             continue
+         if size + sum(protected.values()) <= remaining:
+             protected[record['id']] = size
++            protected_roles.add(role)
+     available = max(0, remaining - sum(protected.values()))
+     source_nodes, source_pointers, neutral_selected, neutral_omitted = _plan_original_source_transport(
+         brief, records, budget, available)
+@@ -981,9 +985,11 @@
+                     for key in ('basis', 'field_association', 'partial_context') if key in field) + '>'
+                 node += ''.join(_source_xml(ref, complete=True) for ref in field.get('evidence', [])) + '</field>'
+             node += '</item>'
+-        if sum(map(len, parts)) + len(node) + len(closing) + sum(protected.values()) <= budget:
++        other_protected = sum(protected.values()) - protected.get(record.get('id'), 0)
++        if sum(map(len, parts)) + len(node) + len(closing) + other_protected <= budget:
+             parts.append(node)
+             role_selected += 1
++            protected.pop(record.get('id'), None)
+             for field in record.get('fields', []):
+                 for ref in field.get('evidence', []):
+                     complete_refs.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_field', 'tool_use_id', 'source_role')))
+@@ -1012,7 +1018,7 @@
+                 report_reservations[index] = size
+                 report_allowance -= size
+     execution_reservations = {index: _whole_execution_size(record, brief.get('projection'))
+-                             for index, record in enumerate(records) if record.get('compact_execution') and record.get('id') in protected}
++                             for index, record in enumerate(records) if record.get('execution') and record.get('id') in protected}
+     heads = [(index, record) for index, record in enumerate(records)
+              if record.get('lane') == 'episode' and record.get('is_current_head') is True]
+     latest_head = max(heads, key=lambda pair: (int(pair[1].get('source_capture_seq_max') or 0),

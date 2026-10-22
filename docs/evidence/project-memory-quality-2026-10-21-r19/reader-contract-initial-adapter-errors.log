@@ -1,0 +1,25 @@
+EE
+======================================================================
+ERROR: test_legacy_v2_public_packets_remain_supported (__main__.ReaderContractCompatibilityTests.test_legacy_v2_public_packets_remain_supported)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/test-reader-contract-compatibility.py", line 80, in test_legacy_v2_public_packets_remain_supported
+    payload=probe.judge_payload(helper,self.protocol,self.corpus,native_readers(prepared,False))
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/prepare-reader-probe.py", line 108, in judge_payload
+    catalogs[case_id] = helper.judge_source_catalog(reference['originals'], reference['catalog'], evidence_contract=protocol.get('reader_evidence_contract'))
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: judge_source_catalog() got an unexpected keyword argument 'evidence_contract'
+
+======================================================================
+ERROR: test_six_public_assertion_packets_resolve_and_judge_with_actual_helper (__main__.ReaderContractCompatibilityTests.test_six_public_assertion_packets_resolve_and_judge_with_actual_helper)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/test-reader-contract-compatibility.py", line 60, in test_six_public_assertion_packets_resolve_and_judge_with_actual_helper
+    schema=item['request']['response_schema']['properties']['answers']['properties']
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+KeyError: 'response_schema'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.010s
+
+FAILED (errors=2)

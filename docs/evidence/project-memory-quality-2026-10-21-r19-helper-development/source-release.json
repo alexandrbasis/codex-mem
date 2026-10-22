@@ -1,0 +1,56 @@
+{
+  "status": "SOURCE_HELD_ISOLATED_NOT_APPLIED",
+  "created_at_utc": "2026-10-22T02:07:22.037017+00:00",
+  "exact_repo_apply_files": [
+    {
+      "repo_path": "scripts/project_memory_consolidation_experiment.py",
+      "original_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "proposed_sha256": "9e990c27c4bd59f13df2c5edfdf5f951130ebf378c616b65b21ce47ac18b8591",
+      "applied_copy_matches": true,
+      "repo_unchanged": true
+    },
+    {
+      "repo_path": "scripts/consolidation_experiment/test_protocol.py",
+      "original_sha256": "7bf5915c8c02b25ed40818851895cfb926debccc842fed1dbabba488afc397a8",
+      "proposed_sha256": "100c6bb021ba6c93bd636a60054cc2758f648182770620a501fa8635324ec8cb",
+      "applied_copy_matches": true,
+      "repo_unchanged": true
+    }
+  ],
+  "artifacts_sha256": {
+    "evidence/applied-focused-green.log": "7fc5f2f21d548c41100beac4e406a660cb9de1f9215153fa438389d418d8eb81",
+    "evidence/bounds-green.log": "c3dc4ce80790d0a5a68dcff2d3009be59564c24dfe01144e0f6b50051e539cc3",
+    "evidence/bounds-red.log": "23d821d5a4762f36a21a561165a0d612b78a85ee59131d80a94a6cee2d921302",
+    "evidence/bounds-validation-green.log": "3872f5a85da677f909ec5c55a5821758c34e2394460567a29f8043b480cc1105",
+    "evidence/bounds-validation-red.log": "594b59091bd8c1c49070fc32834d38f7dea3f27168646c99ac12721d9bb3c36f",
+    "evidence/coherence-red.log": "06cb7282714011558fb2a89eb61a60d587df3115935538580278cd56050dffee",
+    "evidence/focused-green.log": "0b91efbf18bf599405ac2d4b15a2eefd01b926339e841af31a3da4aa2361e4f9",
+    "evidence/integration-command.log": "6350bc1bb52a91af406472ccd8a7f6527ab3dbc2d86b41b89475d7f74a8a0b2c",
+    "evidence/patch-apply.log": "2a5b892f446b6e0da94e3a2204a305eec70745fb76783a367e3cdb38771e39ac",
+    "evidence/reason-green.log": "9f75add94930d82f86f40553d972627172fa9fcad2415eaa9947d6de3d460011",
+    "evidence/reason-red.log": "133f02cbda71ddffa96648ed462d7aeb0c32106018a77c84dea8c263adc9a284",
+    "evidence/three-round-integration.json": "806928fcf245493b3eef8b45c6f7bfaa92c80bc9dd94d431f15574da89bb96cd",
+    "helper-observability-accounting.patch": "0dac89a37ae9ce3185111ecfeb85ce4df4505c7ec43e1b01098ade2d9c08a98b",
+    "design-note.json": "d9ae55ae6408dbc828a7cd828241091c7f254d3d8dd8f77f59400b02d1f57076",
+    "replay-integration.py": "91f4db42e07d4a024a658b65cc252d0cc6d0d008f4fa7dbe364504e58aaf95bb"
+  },
+  "validation": {
+    "clean_original_patch_apply": true,
+    "applied_copy_focused_tests": 9,
+    "applied_copy_log": "evidence/applied-focused-green.log",
+    "syntax_ast_parse": true,
+    "native_calls": 0,
+    "repo_edits": 0,
+    "full_protocol_suite_run": false
+  },
+  "commands": {
+    "apply": "patch -p1 -d REPOSITORY_ROOT < /private/tmp/codex-mem-quality-20261021-r19-helper-development/helper-observability-accounting.patch",
+    "focused": "PYTHONPATH=/Users/alexandrbasis/Desktop/Coding/codex-mem-public python3 -m unittest discover -s /private/tmp/codex-mem-quality-20261021-r19-helper-development/apply-check/scripts/consolidation_experiment -p test_protocol.py -k FailureReasonObservabilityTests -k CumulativeReportedBoundsTests -k test_prior_spend_is_hash_pinned_and_separate_from_current_budget",
+    "integration": "PYTHONPATH=/Users/alexandrbasis/Desktop/Coding/codex-mem-public python3 /private/tmp/codex-mem-quality-20261021-r19-helper-development/replay-integration.py"
+  },
+  "limits": [
+    "Prospective patch only; no R18 receipt or grade changes.",
+    "Parent must review and combine with independent reader patch, then run appropriate protocol suite.",
+    "Known reported lower bound is not full usage or billing; inherited unknown coverage stays explicit."
+  ]
+}

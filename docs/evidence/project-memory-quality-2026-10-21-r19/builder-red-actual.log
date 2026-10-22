@@ -1,0 +1,23 @@
+E
+======================================================================
+ERROR: test_new_reader_contract_and_capacity_require_final_helper_and_harness_reviews (__main__.ProtocolBuilderTests.test_new_reader_contract_and_capacity_require_final_helper_and_harness_reviews)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/test-protocol-builder.py", line 101, in test_new_reader_contract_and_capacity_require_final_helper_and_harness_reviews
+    result=self.build()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/test-protocol-builder.py", line 98, in build
+    return builder.build_protocol(self.config, self.repo, self.guide)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/build-protocol.py", line 129, in build_protocol
+    require(harness.get('scripts/project_memory_consolidation_experiment.py') == HELPER_SHA
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            and harness.get(PREFIX + 'run-experiment.py') == DRIVER_SHA, 'held_helper_or_driver_changed')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r19/build-protocol.py", line 45, in require
+    raise ValueError(reason)
+ValueError: held_helper_or_driver_changed
+
+----------------------------------------------------------------------
+Ran 1 test in 0.025s
+
+FAILED (errors=1)

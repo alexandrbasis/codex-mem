@@ -1,0 +1,88 @@
+--- docs/evidence/project-memory-quality-2026-10-21-r20-query-development/query-before.py	2026-10-22 07:12:08
++++ docs/evidence/project-memory-quality-2026-10-21-r20-query-development/query-after.py	2026-10-22 07:13:40
+@@ -23,7 +23,7 @@
+ # Explicit syntax, rather than the meaning of a project name, marks literals.
+ _CONTENT_LABEL = re.compile(
+     r'\b(?:function|method|symbol|field|table|column|module|variable|identifier|artifact|file|'
+-    r'command|executable|program|script|run|execute|invoke)\s+'
++    r'command|executable|program|script|run|execute|invoke|task|version|environment|env)\s+'
+     r'(?:(?:named|called)\s+)?([A-Za-z_][A-Za-z0-9_.:-]*)', re.I)
+ 
+ 
+@@ -179,6 +179,30 @@
+         identifiers.update(name.casefold() for name in re.findall(rf'\band\s+({atom})',
+                            match.group('tail'), re.I) if '-' in name)
+     return identifiers
++
++
++def _descriptive_compounds(query: str) -> set[str]:
++    """Recognize alphabetic modifiers by syntax, without interpreting names.
++
++    A following ordinary word supplies the descriptive head. Function words
++    cannot supply that head. Every occurrence must have the same safe shape,
++    so a second bare use cannot silently lose its identity constraint.
++    """
++    function_word = re.compile(
++        r'(?:a|an|the|and|or|with|versus|vs|for|in|from|to|on|about|regarding|within|of|'
++        r'across|between|after|before|by|as|at|is|are|was|were|has|have|had|does|do|did|'
++        r'can|could|may|might|must|should|will|would|not|only|it|its|this|that|these|those|'
++        r'now|today|yesterday|tomorrow|currently|here|there|then|again|however|instead|otherwise|therefore)', re.I)
++    occurrences: dict[str, list[bool]] = {}
++    for match in re.finditer(r'(?<![\w./:-])([A-Za-z]+(?:-[A-Za-z]+)+)(?![\w./:-])', query):
++        head = re.match(r'\s+([A-Za-z]+)(?![\w./:-])', query[match.end():])
++        ordinary = bool(head and not re.search(r'[a-z][A-Z]', match.group(1)) and
++                        not function_word.fullmatch(head.group(1)) and
++                        not re.search(r'[a-z][A-Z]', head.group(1)) and
++                        not re.match(r'\s*\(', query[match.end() + head.end():]) and
++                        not re.search(r'\bprojects?\s+$', query[:match.start()], re.I))
++        occurrences.setdefault(match.group(1).casefold(), []).append(ordinary)
++    return {value for value, modifiers in occurrences.items() if all(modifiers)}
+ 
+ 
+ def _requirement_state_subject(query: str) -> str | None:
+@@ -482,6 +506,11 @@
+     exact = exact_constraints(query, project)
+     explicit = {match.group()[1:-1].casefold() for match in
+                 re.finditer(r'`[^`\s]+`|"[^"\s]+"|\'[^\'\s]+\'', query)}
++    # A compound inside a quoted phrase still names literal content even
++    # when whitespace prevents the single-token quote rule from seeing it.
++    for quoted in re.finditer(r"`[^`\n]*`|\"[^\"\n]*\"|'[^'\n]*'", query):
++        explicit.update(value.casefold() for value in re.findall(
++            r'(?<![\w./:-])[A-Za-z]+(?:-[A-Za-z]+)+(?![\w./:-])', quoted.group()))
+     selected_names = {Path(value).name.casefold() for value in (project, *(selected_project_scopes or ()))}
+     artifact_names = {match.group(1).casefold() for match in _CONTENT_LABEL.finditer(query)
+         if match.group(1).casefold() in selected_names or re.search(r'[_./:-]|\d|[a-z][A-Z]', match.group(1))}
+@@ -504,6 +533,7 @@
+         tasks = [task for task in tasks if task not in excluded]
+         if all_tasks and not tasks:
+             raise ValueError('no positive task subject')
++    descriptive_compounds = _descriptive_compounds(query) if natural else set()
+     identifiers = []
+     for value in exact['identifiers']:
+         if natural and value in all_tasks:
+@@ -514,7 +544,7 @@
+         if not natural or value in explicit or value in artifact_names or re.search(r'[_./:]|\d', value) or any(
+                 token.casefold() == value and re.search(r'[a-z][A-Z]', token)
+                 for token in re.findall(r'\w+', query)) or (
+-                '-' in value and (value in coordinated_scopes or
++                '-' in value and (value in coordinated_scopes or value not in descriptive_compounds and
+                     re.search(r'\b(?:for|in|from|to|on|about|regarding|within|of|project|projects|compare|versus|vs|between|with)\s+'
+                               + re.escape(value) + r'(?![\w.-])', query, re.I))):
+             identifiers.append(value)
+@@ -578,11 +608,13 @@
+     else:
+         subject_query = answer_subject if answer_subject is not None else query
+         # The lexical adapter otherwise classifies hyphens as code identifiers
+-        # and omits them from its terms. Bare conjunction descriptors belong
+-        # in the soft topic; protected literals never reach this branch.
++        # and omits them from its terms. Descriptive modifiers and bare
++        # conjunction descriptors retain their words only in matching input.
++        # Protected literals never reach this branch.
+         for value in exact['identifiers']:
+             if (value not in identifiers and re.fullmatch(r'[a-z]+(?:-[a-z]+)+', value, re.I) and
+-                    re.search(r'\band\s+' + re.escape(value) + r'(?![\w.-])', query, re.I)):
++                    (value in descriptive_compounds or
++                     re.search(r'\band\s+' + re.escape(value) + r'(?![\w.-])', query, re.I))):
+                 subject_query = re.sub(r'(?<![\w./:-])' + re.escape(value) + r'(?![\w./:-])',
+                                        value.replace('-', ' '), subject_query, flags=re.I)
+         topical = resume_topic_plan(subject_query) or prompt_query_plan('How ' + subject_query)

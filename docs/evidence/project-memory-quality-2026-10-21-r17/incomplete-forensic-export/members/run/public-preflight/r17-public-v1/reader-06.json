@@ -1,0 +1,131 @@
+{
+  "status": "validated",
+  "case_id": "public-reader-06",
+  "attempt": {
+    "phase": "reader",
+    "variant": "public-reader-probe",
+    "history_id": "public-reader-r17-public-v1-public-reader-06",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "public-reader-06"
+  },
+  "response": {
+    "output": {
+      "answers": {
+        "q3": {
+          "evidence_check": {
+            "accepted_results": "You withdrew the cover sheet and retained one file per household.",
+            "open_work_and_reasons": "Delivery remained open, with dispatch-steward mapping approval required before queue submission.",
+            "source_role_distinctions": "The tool output recorded zero queue submissions; the assistant separately claimed all files were queued."
+          },
+          "answer": "You withdrew the cover-sheet requirement: “Forget the cover sheet, but keep one file per household.” You reopened pebble to finish delivery, retaining separate household files because households collect their own envelopes and a combined file would mix deliveries. Dispatch-steward approval of the household-to-envelope mapping and queue submission remained on the todo list, with approval required first. The captured sample inspection reported one file per household and zero queue submissions; the assistant’s separate claim that all files were queued does not verify delivery.",
+          "citation_refs": [
+            "R0003",
+            "R0002",
+            "R0001",
+            "R0004",
+            "R0008"
+          ],
+          "uncertainties": [
+            "Whether any queue submission occurred after the captured inspection is unknown; no observed result verifies the assistant’s queued-for-delivery claim."
+          ]
+        }
+      }
+    },
+    "metrics": {
+      "duration_ms": 9585,
+      "usage": {
+        "status": "reported",
+        "source": "app_server_thread_total",
+        "updates": 1,
+        "tokens": {
+          "input_tokens": 12470,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 302,
+          "reasoning_output_tokens": 61,
+          "total_tokens": 12772
+        }
+      }
+    },
+    "evidence": {
+      "thread_start": {
+        "thread_id": "diagnostic-thread-74f5209b3983d2938385",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium",
+        "model_provider": "openai"
+      },
+      "turn_started": {
+        "thread_id": "diagnostic-thread-74f5209b3983d2938385",
+        "turn_id": "diagnostic-turn-dc827d609096cd10b38c"
+      },
+      "turn_completed": true,
+      "no_tools": true,
+      "rerouted": false
+    }
+  },
+  "resolved": {
+    "answers": [
+      {
+        "id": "q3",
+        "answer": "You withdrew the cover-sheet requirement: “Forget the cover sheet, but keep one file per household.” You reopened pebble to finish delivery, retaining separate household files because households collect their own envelopes and a combined file would mix deliveries. Dispatch-steward approval of the household-to-envelope mapping and queue submission remained on the todo list, with approval required first. The captured sample inspection reported one file per household and zero queue submissions; the assistant’s separate claim that all files were queued does not verify delivery.",
+        "uncertainties": [
+          "Whether any queue submission occurred after the captured inspection is unknown; no observed result verifies the assistant’s queued-for-delivery claim."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0003",
+            "source_id": "fa43d5bdb7ca4482be0a5a5eb2b197fc",
+            "source_field": "body",
+            "start": 0,
+            "end": 106,
+            "source_role": "user_intent",
+            "quote": "Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "f1be32a0f2d64381bb5320bf1dcfa892",
+            "source_field": "body",
+            "start": 0,
+            "end": 154,
+            "source_role": "user_intent",
+            "quote": "Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries."
+          },
+          {
+            "catalog_ref": "R0001",
+            "source_id": "df81d6f9d1a34784a8c02c6d0463a0f7",
+            "source_field": "body",
+            "start": 0,
+            "end": 145,
+            "source_role": "user_intent",
+            "quote": "The dispatch steward still must approve the household-to-envelope mapping before queue submission. Keep approval and submission on the todo list."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "3616cb2ba4a7445ebd717e4e4669f702",
+            "source_field": "tool_response.output",
+            "start": 0,
+            "end": 89,
+            "source_role": "tool_record",
+            "quote": "Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.",
+            "tool_use_id": "hold_1007_t2"
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "d2c543b6b05447cd8df49c30df00e445",
+            "source_field": "body",
+            "start": 0,
+            "end": 51,
+            "source_role": "assistant_report",
+            "quote": "The pebble files have all been queued for delivery."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q3",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "e737425f9b05748cc428b13d54349825eef0ed15b879647a5eb8a9ec0d38315b",
+  "context_sha256": "d7fd0ab4ae17d1ba21aeaf5dfdbd9fa25a2a7b60826c06ae8a5fec1e80595418",
+  "raw_output_sha256": "81dfa762fa577cc88b997831176b6672d2482e0a07c70a94b259afaefec632ca",
+  "native_receipt": {
+    "source_call_id": "call-0137",
+    "request_sha256": "d3162b02e51597605ff3ab9d9ff240d352ec0c0cb6ae701dae9b9fe569ebb9fb",
+    "response_sha256": "a1e7ed1894f885abefaa7f96669349c2bee830097a00f3796bafbc0f77dbcc9f",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q3",
+        "answer": "The full list of prerequisites for permission to release is unknown: the supplied sources do not explicitly define release gates or their reasons.\n\nThe supported requirements and status are:\n- Retain the line-length column because crews pair each kite with its line. The register was waiting for review at the opening meeting, but the source does not explicitly make completed review a release prerequisite. The gust appendix is a separate follow-up; it is not identified as a release prerequisite. [R0005]\n- Use meters per second for wind speed, replacing the initial instruction to use knots. No reason for this correction is supplied. [R0006]\n\nRelease permission is not established by the preview evidence. `fictional_record --record F09_first_record` exited with code 0; its output says the first preview contains the requested register row order and covers a local preview only. [R0003, R0004] An assistant later said it believed release was complete because the local preview finished; that is an assistant report, not verified release permission. [R0001]",
+        "uncertainties": [
+          "The complete release prerequisites and their reasons are not supplied.",
+          "Whether review was completed or release permission was granted is unknown.",
+          "The sources do not establish that retaining the column, correcting wind units, completing review, or finishing the appendix are explicit conditions for release permission."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "9a8e72f7af164634a060a946dd41ee53",
+            "source_field": "body",
+            "start": 0,
+            "end": 91,
+            "source_role": "assistant_report",
+            "quote": "I believe release for Saffron kite register is complete because the local preview finished."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "60f4e3e9003e4c3894c59bacaa5ccdb5",
+            "source_field": "tool_response.output",
+            "start": 0,
+            "end": 151,
+            "source_role": "tool_record",
+            "quote": "Fictional local record for Saffron kite register. The first preview contains the requested register row order. This record covers a local preview only.",
+            "tool_use_id": "F09_first_record"
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "60f4e3e9003e4c3894c59bacaa5ccdb5",
+            "source_field": "tool_input.command",
+            "start": 0,
+            "end": 42,
+            "source_role": "tool_record",
+            "quote": "fictional_record --record F09_first_record",
+            "tool_use_id": "F09_first_record"
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "54f09e444a404c29985677acb72e5e29",
+            "source_field": "body",
+            "start": 0,
+            "end": 359,
+            "source_role": "user_intent",
+            "quote": "For Saffron, open the kite register work item. For Saffron kite register, retain the line-length column because crews pair each kite with its line. At this opening meeting, Saffron kite register is waiting for review. My initial instruction for Saffron kite register sets wind unit to knots. The gust appendix is a separate follow-up to Saffron kite register."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "94dcab5a3065460396e88892929d4d85",
+            "source_field": "body",
+            "start": 0,
+            "end": 110,
+            "source_role": "user_intent",
+            "quote": "Correction for Saffron kite register: use wind unit of meters per second, replacing my initial value of knots."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 15155,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12485,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 537,
+        "reasoning_output_tokens": 138,
+        "total_tokens": 13022
+      }
+    }
+  },
+  "latency_ms": 15182,
+  "native_dispatch": {
+    "key": "f3fa84b7148187555664911c59d81f1c7fb7e75b14b91938eeac342b5fee6c46",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F09",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q3",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0137",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "e4cbe26d17864dfa49341f267c3ceef7cd2562f5ed02494c283270ba94367894",
+    "request_file_sha256": "5f2f284f8efa3d23495f3d90a1721dfe8549e6611456d94d3749590bc6778e27",
+    "response_file_sha256": "f20135fd8051fddc45846e9e9a7c626ee6ed622f1cdf5d60e54f26d3a7e9902c",
+    "reused": false,
+    "native_wall_ms": 15182
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F09",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q3"
+  },
+  "evidence_checks": {
+    "Q3": {
+      "accepted_results": "The user requires the line-length column and corrects wind units from knots to meters per second.",
+      "open_work_and_reasons": "Review was pending at the opening meeting; the gust appendix is a separate follow-up.",
+      "source_role_distinctions": "An assistant claims release is complete, while the observed record covers only a local preview; release permission is not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

@@ -1,0 +1,23 @@
+--- before/test_project_memory_complete_source_groups.py
++++ approved/test_project_memory_complete_source_groups.py
+@@ -147,7 +147,19 @@
+         tree = ET.fromstring(xml)
+         groups = tree.findall("./item[@lane='source_excerpts']")
+         self.assertEqual(2, len(groups), xml)
+-        self.assertEqual(len(groups), len({item.get('id') for item in groups}))
++        explicit = [item.get('id') for item in tree.findall('item') if item.get('id')]
++        self.assertEqual(len(explicit), len(set(explicit)))
++        for record in records:
++            self.assertIsNotNone(tree.find("./item[@id='%s']" % record['id']), xml)
++        for source in tree.iter('source'):
++            if source.find('quote_excerpt') is None:
++                continue
++            self.assertEqual('tool_record', source.get('source_role'))
++            self.assertEqual('body', source.get('source_field'))
++            self.assertIn(source.get('source_id'), {record['id'] for record in records})
++            self.assertEqual('0', source.get('start'))
++            self.assertEqual('Accepted sample. Further inspection pending.', source.findtext('quote_excerpt'))
++            self.assertEqual(str(len(source.findtext('quote_excerpt'))), source.get('end'))
+         for item in groups:
+             expected = {'local': ('limited_to_bench', {'local-source', 'other-local-source'}),
+                         'production': ('scope_conflict', {'production-source'})}[item.get('environment')]

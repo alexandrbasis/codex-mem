@@ -1,0 +1,104 @@
+--- R15-v1/project_memory_retrieval.py
++++ R15-v2/project_memory_retrieval.py
+@@ -740,12 +740,22 @@
+     user_groups = _complete_source_groups(records, user_only=True) if (
+         brief.get('user_source_coverage_requested') or brief.get('neutral_original_context')) else []
+     capture_order = dict(brief.get('user_source_capture_order') or {})
++    # Per-source capture metadata wins over an episode's multi-source range.
++    # A range maximum cannot date each of that episode's older source pointers.
+     for record in records:
+         for field in record.get('fields', []):
+             for ref in field.get('evidence', []):
++                seq = ref.get('source_capture_seq')
++                if ref.get('source_role') == 'user_intent' and type(seq) is int:
++                    capture_order[ref.get('source_id')] = seq
++    for record in records:
++        seq = record.get('source_capture_seq_max')
++        if type(seq) is not int or record.get('source_capture_seq_min') != seq:
++            continue
++        for field in record.get('fields', []):
++            for ref in field.get('evidence', []):
+                 if ref.get('source_role') == 'user_intent':
+-                    capture_order.setdefault(ref.get('source_id'), ref.get('source_capture_seq') or
+-                                             record.get('source_capture_seq_max') or 0)
++                    capture_order.setdefault(ref.get('source_id'), seq)
+     user_groups.sort(key=lambda group: (-max((capture_order.get(ref['source_id'], 0) for ref in group['refs']), default=0),
+                                        not (group.get('custody') and not group.get('fallback_only')), -sum(len(ref['quote_excerpt']) for ref in group['refs'])))
+     source_containers: dict[str, dict[str, Any]] = {}
+@@ -753,13 +763,6 @@
+     other_groups = _complete_source_groups(records)
+     pending_groups = (other_groups + user_groups if brief.get('source_evidence_requested')
+                       else user_groups + other_groups)
+-    associated = []
+-    covered = []
+-    for group in pending_groups:
+-        if any(not _interval_covered(ref, covered) for ref in group['refs']):
+-            associated.append(group)
+-            covered.extend(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')),
+-                            ref['start'], ref['end']) for ref in group['refs'])
+     neutral = sorted(brief.get('unassociated_user_context') or [],
+                      key=lambda record: int(record.get('source_capture_seq_max') or 0))
+     neutral = ([neutral[-1], neutral[0]] + neutral[1:-1]) if len(neutral) > 1 else neutral
+@@ -773,7 +776,9 @@
+         neutral_groups.append({'qualifiers': metadata, 'refs': refs, 'neutral': True})
+     neutral_selected, neutral_spent = 0, 0
+     neutral_limit = min(1800, budget // 3)
+-    for group in associated + neutral_groups:
++    for group in pending_groups + neutral_groups:
++        if not group.get('neutral') and all(_interval_covered(ref, grouped_intervals) for ref in group['refs']):
++            continue
+         is_neutral = group.get('neutral', False)
+         if is_neutral and neutral_selected == 2:
+             continue
+@@ -898,7 +903,11 @@
+         elif record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
+             protected.setdefault(record['id'], _reserved_record_size(record, brief.get('projection'), set(), budget))
+     remaining = budget - sum(map(len, parts)) - len(closing)
+-    protected = {key: size for key, size in protected.items() if size <= remaining}
++    admitted = {}
++    for key, size in protected.items():
++        if size + sum(admitted.values()) <= remaining:
++            admitted[key] = size
++    protected = admitted
+     available = max(0, remaining - sum(protected.values()))
+     source_nodes, source_pointers, neutral_selected, neutral_omitted = _plan_original_source_transport(
+         brief, records, budget, available)
+@@ -924,6 +933,11 @@
+         if sum(map(len, parts)) + len(node) + len(closing) + sum(protected.values()) <= budget:
+             parts.append(node)
+             role_selected += 1
++            for field in record.get('fields', []):
++                for ref in field.get('evidence', []):
++                    complete_refs.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_field', 'tool_use_id', 'source_role')))
++                    complete_quotes.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_role', 'quote_excerpt')))
++                    emitted_intervals.append(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')), ref['start'], ref['end']))
+     if role_context:
+         omissions['original_context_sources'] = len(role_context) - role_selected
+     # These compact originals protect bounded source recall when competing
+@@ -941,13 +955,13 @@
+     report_reservations = {}
+     report_allowance = min(900, budget // 6)
+     for index, record in enumerate(records):
+-        if record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
++        if record.get('id') in protected and record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
+             size = _reserved_record_size(record, brief.get('projection'), set(), report_allowance)
+             if size:
+                 report_reservations[index] = size
+                 report_allowance -= size
+     execution_reservations = {index: _whole_execution_size(record, brief.get('projection'))
+-                             for index, record in enumerate(records) if record.get('compact_execution')}
++                             for index, record in enumerate(records) if record.get('compact_execution') and record.get('id') in protected}
+     heads = [(index, record) for index, record in enumerate(records)
+              if record.get('lane') == 'episode' and record.get('is_current_head') is True]
+     latest_head = max(heads, key=lambda pair: (int(pair[1].get('source_capture_seq_max') or 0),
+@@ -964,7 +978,9 @@
+         fields = [field for field in record.get('fields', []) if field.get('evidence') and
+                   all(ref.get('source_role') == 'tool_record' for ref in field['evidence']) and
+                   not all(ref.get('source_id') in native_sources for ref in field['evidence']) and
+-                  not all(_interval_covered(ref, emitted_intervals) for ref in field['evidence'])]
++                  not all(_interval_covered(ref, emitted_intervals) or tuple(ref.get(key) for key in
++                    ('source_id', 'start', 'end', 'source_role', 'quote_excerpt')) in complete_quotes
++                    for ref in field['evidence'])]
+         if not fields:
+             continue
+         field = min(fields, key=lambda field: sum(len(_source_xml(ref, complete=True)) for ref in field['evidence']))

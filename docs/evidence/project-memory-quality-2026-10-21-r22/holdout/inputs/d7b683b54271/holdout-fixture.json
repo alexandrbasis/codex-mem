@@ -1,0 +1,1968 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "h01",
+      "project_keys": [
+        "VellumFair",
+        "CopperFair"
+      ],
+      "sessions": [
+        {
+          "id": "h01_s1",
+          "project_key": "VellumFair",
+          "events": [
+            {
+              "id": "h01_a",
+              "type": "user",
+              "text": "Fictional Vellum Fair: Elin may reserve six indoor stalls. Elin may not pay deposits for Vellum Fair."
+            },
+            {
+              "id": "h01_old",
+              "type": "user",
+              "text": "The provisional gate code for Vellum Fair is MOTH-73."
+            },
+            {
+              "id": "h01_b",
+              "type": "tool",
+              "text": "Vellum Fair receipt: all six indoor stall reservations were confirmed on April 8. No deposit was charged on that receipt."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h01_b"
+            }
+          ]
+        },
+        {
+          "id": "h01_s2",
+          "project_key": "CopperFair",
+          "events": [
+            {
+              "id": "h01_c",
+              "type": "user",
+              "text": "For fictional Copper Fair, Elin may pay deposits for two outdoor stalls."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h01_c"
+            }
+          ]
+        },
+        {
+          "id": "h01_s3",
+          "project_key": "VellumFair",
+          "events": [
+            {
+              "id": "h01_d",
+              "type": "assistant",
+              "text": "I think the Vellum Fair booth plan is fully finished."
+            },
+            {
+              "id": "h01_e",
+              "type": "user",
+              "text": "Vellum Fair reservations are accepted as complete. Reopen the Vellum Fair sign layout because the west entrance moved."
+            },
+            {
+              "id": "h01_f",
+              "type": "user",
+              "text": "Elin must send the revised Vellum Fair sign layout to Noor only if Noor confirms the new entrance map. Cancel the Vellum Fair balloon order."
+            },
+            {
+              "id": "h01_g",
+              "type": "user",
+              "text": "For Vellum Fair access, Elin must ask the gate steward for a fresh code on arrival."
+            },
+            {
+              "id": "h01_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h01_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What did the April 8 Vellum Fair receipt confirm about reservations and deposits?",
+          "stage": "final",
+          "project_key": "VellumFair"
+        },
+        {
+          "id": "q2",
+          "question": "Which Vellum Fair work is complete, and which work was reopened for what reason?",
+          "stage": "final",
+          "project_key": "VellumFair"
+        },
+        {
+          "id": "q3",
+          "question": "What must Elin do with the revised Vellum Fair layout, and under what condition?",
+          "stage": "final",
+          "project_key": "VellumFair"
+        },
+        {
+          "id": "q4",
+          "question": "How does Elin’s deposit permission differ between Vellum Fair and Copper Fair?",
+          "stage": "final",
+          "project_keys": [
+            "VellumFair",
+            "CopperFair"
+          ]
+        },
+        {
+          "id": "q5",
+          "question": "What is the latest instruction for the Vellum Fair balloon order?",
+          "stage": "final",
+          "project_key": "VellumFair"
+        },
+        {
+          "id": "q6",
+          "question": "How must Elin obtain Vellum Fair access now?",
+          "stage": "final",
+          "project_key": "VellumFair"
+        }
+      ]
+    },
+    {
+      "id": "h02",
+      "project_keys": [
+        "LarchAudio",
+        "ReedAudio"
+      ],
+      "sessions": [
+        {
+          "id": "h02_s1",
+          "project_key": "LarchAudio",
+          "events": [
+            {
+              "id": "h02_a",
+              "type": "user",
+              "text": "Fictional Larch Audio: Sumi must subtitle every interview in the spring collection. Sumi may publish subtitles only after Ada signs the language review."
+            },
+            {
+              "id": "h02_old",
+              "type": "assistant",
+              "text": "The Larch Audio archive password is lantern09."
+            },
+            {
+              "id": "h02_b",
+              "type": "assistant",
+              "text": "I have drafted subtitles for three Larch Audio interviews; I have not submitted a publication request."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h02_b"
+            }
+          ]
+        },
+        {
+          "id": "h02_s2",
+          "project_key": "ReedAudio",
+          "events": [
+            {
+              "id": "h02_c",
+              "type": "user",
+              "text": "Fictional Reed Audio needs subtitles only for its opening interview."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h02_c"
+            }
+          ]
+        },
+        {
+          "id": "h02_s3",
+          "project_key": "LarchAudio",
+          "events": [
+            {
+              "id": "h02_d",
+              "type": "tool",
+              "text": "Larch Audio audit on May 2: subtitle drafts exist for three of five spring interviews."
+            },
+            {
+              "id": "h02_e",
+              "type": "user",
+              "text": "Accept the three existing Larch Audio drafts as drafts. The two remaining Larch Audio interviews still need subtitle drafts."
+            },
+            {
+              "id": "h02_f",
+              "type": "user",
+              "text": "Cancel Larch Audio’s synthetic narrator experiment because the speakers declined voice imitation. Ada’s language-review signature remains required before any Larch Audio subtitle publication."
+            },
+            {
+              "id": "h02_g",
+              "type": "user",
+              "text": "Sumi must enter Larch Audio through the archive’s single-use invitation flow."
+            },
+            {
+              "id": "h02_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h02_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What was Sumi’s original subtitle scope for Larch Audio?",
+          "stage": "final",
+          "project_key": "LarchAudio"
+        },
+        {
+          "id": "q2",
+          "question": "What did the May 2 Larch Audio audit establish?",
+          "stage": "final",
+          "project_key": "LarchAudio"
+        },
+        {
+          "id": "q3",
+          "question": "What has been accepted in Larch Audio, and what drafting work remains?",
+          "stage": "final",
+          "project_key": "LarchAudio"
+        },
+        {
+          "id": "q4",
+          "question": "Who must sign which review before any Larch Audio subtitles may be published?",
+          "stage": "final",
+          "project_key": "LarchAudio"
+        },
+        {
+          "id": "q5",
+          "question": "Which Larch Audio experiment was canceled, and why?",
+          "stage": "final",
+          "project_key": "LarchAudio"
+        },
+        {
+          "id": "q6",
+          "question": "What access method must Sumi use for Larch Audio now?",
+          "stage": "final",
+          "project_key": "LarchAudio"
+        }
+      ]
+    },
+    {
+      "id": "h03",
+      "project_keys": [
+        "PebbleLab",
+        "TernLab"
+      ],
+      "sessions": [
+        {
+          "id": "h03_s1",
+          "project_key": "PebbleLab",
+          "events": [
+            {
+              "id": "h03_a",
+              "type": "user",
+              "text": "Ivo owns Pebble Lab’s seawater sample inventory. Rhea owns Pebble Lab’s freezer maintenance."
+            },
+            {
+              "id": "h03_b",
+              "type": "tool",
+              "text": "Pebble Lab inspection: freezer F2 passed its seal test on June 4."
+            },
+            {
+              "id": "h03_old",
+              "type": "user",
+              "text": "Pebble Lab’s sample transfer destination is Locker 17."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h03_old"
+            }
+          ]
+        },
+        {
+          "id": "h03_s2",
+          "project_key": "TernLab",
+          "events": [
+            {
+              "id": "h03_c",
+              "type": "user",
+              "text": "In fictional Tern Lab, Rhea owns both sample inventory and freezer maintenance."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h03_c"
+            }
+          ]
+        },
+        {
+          "id": "h03_s3",
+          "project_key": "PebbleLab",
+          "events": [
+            {
+              "id": "h03_d",
+              "type": "assistant",
+              "text": "I reported the Pebble Lab inventory closed after seeing the freezer seal result."
+            },
+            {
+              "id": "h03_e",
+              "type": "user",
+              "text": "Close Pebble Lab freezer maintenance after the June 4 pass. Pebble Lab sample inventory is still open because two vial labels are illegible."
+            },
+            {
+              "id": "h03_f",
+              "type": "user",
+              "text": "Ivo must photograph both illegible Pebble Lab labels before requesting replacements."
+            },
+            {
+              "id": "h03_g",
+              "type": "user",
+              "text": "Pebble Lab sample transfers must wait for a destination assigned by the on-duty custodian."
+            },
+            {
+              "id": "h03_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h03_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Who owns the two separate Pebble Lab tasks?",
+          "stage": "final",
+          "project_key": "PebbleLab"
+        },
+        {
+          "id": "q2",
+          "question": "What did the June 4 Pebble Lab inspection verify?",
+          "stage": "final",
+          "project_key": "PebbleLab"
+        },
+        {
+          "id": "q3",
+          "question": "What did the assistant report about Pebble Lab inventory, and what prompted that report?",
+          "stage": "final",
+          "project_key": "PebbleLab"
+        },
+        {
+          "id": "q4",
+          "question": "What are the current states of Pebble Lab maintenance and inventory, including the reason inventory remains open?",
+          "stage": "final",
+          "project_key": "PebbleLab"
+        },
+        {
+          "id": "q5",
+          "question": "What must Ivo do before requesting replacement labels at Pebble Lab?",
+          "stage": "final",
+          "project_key": "PebbleLab"
+        },
+        {
+          "id": "q6",
+          "question": "What governs where Pebble Lab samples may be transferred now?",
+          "stage": "final",
+          "project_key": "PebbleLab"
+        }
+      ]
+    },
+    {
+      "id": "h04",
+      "project_keys": [
+        "SaffronStage",
+        "IndigoStage"
+      ],
+      "sessions": [
+        {
+          "id": "h04_s1",
+          "project_key": "SaffronStage",
+          "events": [
+            {
+              "id": "h04_old",
+              "type": "user",
+              "text": "Fictional Saffron Stage’s emergency entrance is the garden gate."
+            },
+            {
+              "id": "h04_a",
+              "type": "user",
+              "text": "Fictional Saffron Stage: Lena may rehearse the chase with foam props only."
+            },
+            {
+              "id": "h04_b",
+              "type": "tool",
+              "text": "Saffron Stage rigging ledger: the overhead banner was installed and signed off on July 11."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h04_b"
+            }
+          ]
+        },
+        {
+          "id": "h04_s2",
+          "project_key": "IndigoStage",
+          "events": [
+            {
+              "id": "h04_c",
+              "type": "user",
+              "text": "Fictional Indigo Stage allows wooden rehearsal props after its own safety briefing."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h04_c"
+            }
+          ]
+        },
+        {
+          "id": "h04_s3",
+          "project_key": "SaffronStage",
+          "events": [
+            {
+              "id": "h04_d",
+              "type": "assistant",
+              "text": "I recommend a public Saffron Stage dress rehearsal on Friday; this is a proposal."
+            },
+            {
+              "id": "h04_e",
+              "type": "user",
+              "text": "The Saffron Stage banner installation is complete. Reopen Saffron Stage lighting cues to correct glare on the new banner."
+            },
+            {
+              "id": "h04_f",
+              "type": "user",
+              "text": "Lena may invite the public to the Saffron Stage rehearsal only after Mei approves the revised lighting cues. Cancel the Saffron Stage smoke effect."
+            },
+            {
+              "id": "h04_g",
+              "type": "user",
+              "text": "Saffron Stage emergency entry must follow the route posted by the duty marshal that evening."
+            },
+            {
+              "id": "h04_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h04_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which props may Lena currently use for the Saffron Stage chase rehearsal?",
+          "stage": "final",
+          "project_key": "SaffronStage"
+        },
+        {
+          "id": "q2",
+          "question": "What Saffron Stage work is complete, and what was reopened with what purpose?",
+          "stage": "final",
+          "project_key": "SaffronStage"
+        },
+        {
+          "id": "q3",
+          "question": "What did the assistant propose for Saffron Stage, and was it stated as a proposal?",
+          "stage": "final",
+          "project_key": "SaffronStage"
+        },
+        {
+          "id": "q4",
+          "question": "What approval must precede Lena inviting the public to Saffron Stage rehearsal?",
+          "stage": "final",
+          "project_key": "SaffronStage"
+        },
+        {
+          "id": "q5",
+          "question": "What is the latest instruction concerning the Saffron Stage smoke effect?",
+          "stage": "final",
+          "project_key": "SaffronStage"
+        },
+        {
+          "id": "q6",
+          "question": "Which rule governs Saffron Stage emergency entry now?",
+          "stage": "final",
+          "project_key": "SaffronStage"
+        }
+      ]
+    },
+    {
+      "id": "h05",
+      "project_keys": [
+        "JuniperMap",
+        "QuartzMap"
+      ],
+      "sessions": [
+        {
+          "id": "h05_s1",
+          "project_key": "JuniperMap",
+          "events": [
+            {
+              "id": "h05_a",
+              "type": "user",
+              "text": "Fictional Juniper Map: Oren must validate all twelve wheelchair routes before the print edition is approved."
+            },
+            {
+              "id": "h05_b",
+              "type": "tool",
+              "text": "Juniper Map route checker: ten routes passed. Juniper Map route checker: two routes failed the curb-width check."
+            },
+            {
+              "id": "h05_old",
+              "type": "assistant",
+              "text": "Juniper Map print files go to the blue external drive."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h05_old"
+            }
+          ]
+        },
+        {
+          "id": "h05_s2",
+          "project_key": "QuartzMap",
+          "events": [
+            {
+              "id": "h05_c",
+              "type": "user",
+              "text": "Fictional Quartz Map needs validation of only its harbor route."
+            },
+            {
+              "id": "h05_d",
+              "type": "user",
+              "text": "For Quartz Map, a digital-only release is approved."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h05_d"
+            }
+          ]
+        },
+        {
+          "id": "h05_s3",
+          "project_key": "JuniperMap",
+          "events": [
+            {
+              "id": "h05_e",
+              "type": "user",
+              "text": "Accept the ten passing Juniper Map routes individually. The Juniper Map print edition remains unapproved until both failed routes are corrected and validated."
+            },
+            {
+              "id": "h05_f",
+              "type": "user",
+              "text": "Oren must ask Tavi to remeasure both failing Juniper Map curbs. Cancel the Juniper Map foldout insert to keep the booklet pocket-sized."
+            },
+            {
+              "id": "h05_g",
+              "type": "user",
+              "text": "Juniper Map print files must be uploaded through the printer’s newly issued transfer link."
+            },
+            {
+              "id": "h05_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h05_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "How many routes was Oren required to validate before Juniper Map print approval?",
+          "stage": "final",
+          "project_key": "JuniperMap"
+        },
+        {
+          "id": "q2",
+          "question": "What were the Juniper Map checker results, including the failure criterion?",
+          "stage": "final",
+          "project_key": "JuniperMap"
+        },
+        {
+          "id": "q3",
+          "question": "What has been accepted for Juniper Map, and what still prevents print approval?",
+          "stage": "final",
+          "project_key": "JuniperMap"
+        },
+        {
+          "id": "q4",
+          "question": "What must Oren ask Tavi to do for Juniper Map?",
+          "stage": "final",
+          "project_key": "JuniperMap"
+        },
+        {
+          "id": "q5",
+          "question": "What Juniper Map item was canceled, and for what reason?",
+          "stage": "final",
+          "project_key": "JuniperMap"
+        },
+        {
+          "id": "q6",
+          "question": "How must Juniper Map print files be transferred now?",
+          "stage": "final",
+          "project_key": "JuniperMap"
+        }
+      ]
+    },
+    {
+      "id": "h06",
+      "project_keys": [
+        "MarbleKitchen",
+        "WillowKitchen"
+      ],
+      "sessions": [
+        {
+          "id": "h06_s1",
+          "project_key": "MarbleKitchen",
+          "events": [
+            {
+              "id": "h06_a",
+              "type": "user",
+              "text": "Fictional Marble Kitchen: Nila may test the soup recipe with staff, but may not serve it to guests."
+            },
+            {
+              "id": "h06_old",
+              "type": "user",
+              "text": "Marble Kitchen’s supplier contact is Daro at extension 481."
+            },
+            {
+              "id": "h06_b",
+              "type": "tool",
+              "text": "Marble Kitchen tasting card: eight staff rated batch B acceptable on August 6."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h06_b"
+            }
+          ]
+        },
+        {
+          "id": "h06_s2",
+          "project_key": "WillowKitchen",
+          "events": [
+            {
+              "id": "h06_c",
+              "type": "user",
+              "text": "Fictional Willow Kitchen permits guest service of its separately approved soup recipe."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h06_c"
+            }
+          ]
+        },
+        {
+          "id": "h06_s3",
+          "project_key": "MarbleKitchen",
+          "events": [
+            {
+              "id": "h06_d",
+              "type": "assistant",
+              "text": "I described Marble Kitchen batch B as ready for guest service."
+            },
+            {
+              "id": "h06_e",
+              "type": "user",
+              "text": "Accept Marble Kitchen batch B for staff tastings only. Guest service at Marble Kitchen still requires allergen review by Safa."
+            },
+            {
+              "id": "h06_f",
+              "type": "user",
+              "text": "Reopen the Marble Kitchen ingredient sheet because the stock supplier changed. Nila must send the updated sheet to Safa before requesting allergen approval."
+            },
+            {
+              "id": "h06_g",
+              "type": "user",
+              "text": "Marble Kitchen supplier questions must go through the kitchen’s current purchasing portal."
+            },
+            {
+              "id": "h06_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h06_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What did the August 6 Marble Kitchen tasting card actually record?",
+          "stage": "final",
+          "project_key": "MarbleKitchen"
+        },
+        {
+          "id": "q2",
+          "question": "For what use is Marble Kitchen batch B accepted, and what remains required for guest service?",
+          "stage": "final",
+          "project_key": "MarbleKitchen"
+        },
+        {
+          "id": "q3",
+          "question": "What did the assistant claim about Marble Kitchen batch B?",
+          "stage": "final",
+          "project_key": "MarbleKitchen"
+        },
+        {
+          "id": "q4",
+          "question": "What Marble Kitchen document was reopened, and why?",
+          "stage": "final",
+          "project_key": "MarbleKitchen"
+        },
+        {
+          "id": "q5",
+          "question": "What must Nila send to whom before requesting Marble Kitchen allergen approval?",
+          "stage": "final",
+          "project_key": "MarbleKitchen"
+        },
+        {
+          "id": "q6",
+          "question": "How must Marble Kitchen supplier questions be routed now?",
+          "stage": "final",
+          "project_key": "MarbleKitchen"
+        }
+      ]
+    },
+    {
+      "id": "h07",
+      "project_keys": [
+        "OchreGarden",
+        "SilverGarden"
+      ],
+      "sessions": [
+        {
+          "id": "h07_s1",
+          "project_key": "OchreGarden",
+          "events": [
+            {
+              "id": "h07_a",
+              "type": "user",
+              "text": "Bex owns Ochre Garden irrigation repairs. Hal owns Ochre Garden’s planting roster."
+            },
+            {
+              "id": "h07_b",
+              "type": "tool",
+              "text": "Ochre Garden meter: irrigation pressure passed the overnight test on September 3."
+            },
+            {
+              "id": "h07_old",
+              "type": "user",
+              "text": "Ochre Garden’s seed cabinet combination is 38-12-64."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h07_old"
+            }
+          ]
+        },
+        {
+          "id": "h07_s2",
+          "project_key": "SilverGarden",
+          "events": [
+            {
+              "id": "h07_c",
+              "type": "user",
+              "text": "Fictional Silver Garden assigns both irrigation and the planting roster to Hal."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h07_c"
+            }
+          ]
+        },
+        {
+          "id": "h07_s3",
+          "project_key": "OchreGarden",
+          "events": [
+            {
+              "id": "h07_d",
+              "type": "assistant",
+              "text": "I marked the entire Ochre Garden opening checklist complete after the pressure test."
+            },
+            {
+              "id": "h07_e",
+              "type": "user",
+              "text": "Ochre Garden irrigation repairs are closed as successful. Ochre Garden’s planting roster remains pending until Hal gets two volunteer confirmations."
+            },
+            {
+              "id": "h07_f",
+              "type": "user",
+              "text": "Cancel the Ochre Garden pond excavation because the soil survey found buried pipes. Bex must buy replacement nozzles only if pressure drops again."
+            },
+            {
+              "id": "h07_g",
+              "type": "user",
+              "text": "Ochre Garden seed access requires borrowing the custodian’s supervised cabinet key."
+            },
+            {
+              "id": "h07_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h07_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Who owns irrigation and the planting roster in Ochre Garden?",
+          "stage": "final",
+          "project_key": "OchreGarden"
+        },
+        {
+          "id": "q2",
+          "question": "Which Ochre Garden task is successfully closed, and what is still needed for the planting roster?",
+          "stage": "final",
+          "project_key": "OchreGarden"
+        },
+        {
+          "id": "q3",
+          "question": "What did the assistant mark complete in Ochre Garden, and on what basis?",
+          "stage": "final",
+          "project_key": "OchreGarden"
+        },
+        {
+          "id": "q4",
+          "question": "What was canceled in Ochre Garden, and why?",
+          "stage": "final",
+          "project_key": "OchreGarden"
+        },
+        {
+          "id": "q5",
+          "question": "Under what condition must Bex buy Ochre Garden replacement nozzles?",
+          "stage": "final",
+          "project_key": "OchreGarden"
+        },
+        {
+          "id": "q6",
+          "question": "How may the Ochre Garden seed cabinet be accessed now?",
+          "stage": "final",
+          "project_key": "OchreGarden"
+        }
+      ]
+    },
+    {
+      "id": "h08",
+      "project_keys": [
+        "NimbusFerry",
+        "HarborFerry"
+      ],
+      "sessions": [
+        {
+          "id": "h08_s1",
+          "project_key": "NimbusFerry",
+          "events": [
+            {
+              "id": "h08_a",
+              "type": "user",
+              "text": "Fictional Nimbus Ferry: Ren may book a training crossing for four crew, with no passengers."
+            },
+            {
+              "id": "h08_b",
+              "type": "tool",
+              "text": "Nimbus Ferry training log: the four-crew crossing finished without faults on October 9."
+            },
+            {
+              "id": "h08_old",
+              "type": "assistant",
+              "text": "Nimbus Ferry departure updates are posted on channel 26."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h08_old"
+            }
+          ]
+        },
+        {
+          "id": "h08_s2",
+          "project_key": "HarborFerry",
+          "events": [
+            {
+              "id": "h08_c",
+              "type": "user",
+              "text": "Fictional Harbor Ferry may carry passengers on its licensed sightseeing route."
+            },
+            {
+              "id": "h08_d",
+              "type": "user",
+              "text": "Harbor Ferry’s sightseeing approval applies only to Harbor Ferry."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h08_d"
+            }
+          ]
+        },
+        {
+          "id": "h08_s3",
+          "project_key": "NimbusFerry",
+          "events": [
+            {
+              "id": "h08_e",
+              "type": "user",
+              "text": "Accept the Nimbus Ferry training crossing as complete. Reopen Nimbus Ferry’s evacuation drill to include the new wheelchair ramp."
+            },
+            {
+              "id": "h08_f",
+              "type": "user",
+              "text": "Ren may schedule the Nimbus Ferry evacuation drill only after Uma confirms ramp installation. Nimbus Ferry passenger trips remain prohibited during the training program."
+            },
+            {
+              "id": "h08_g",
+              "type": "user",
+              "text": "Nimbus Ferry departure updates must be obtained from the dispatch desk in person."
+            },
+            {
+              "id": "h08_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h08_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What was Ren allowed to book for Nimbus Ferry, including crew count and passenger restriction?",
+          "stage": "final",
+          "project_key": "NimbusFerry"
+        },
+        {
+          "id": "q2",
+          "question": "What did the October 9 Nimbus Ferry log record?",
+          "stage": "final",
+          "project_key": "NimbusFerry"
+        },
+        {
+          "id": "q3",
+          "question": "What Nimbus Ferry work is accepted as complete, and what is reopened for what purpose?",
+          "stage": "final",
+          "project_key": "NimbusFerry"
+        },
+        {
+          "id": "q4",
+          "question": "What must happen before Ren may schedule the Nimbus Ferry evacuation drill?",
+          "stage": "final",
+          "project_key": "NimbusFerry"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current rule for Nimbus Ferry passenger trips during training?",
+          "stage": "final",
+          "project_key": "NimbusFerry"
+        },
+        {
+          "id": "q6",
+          "question": "Where must Nimbus Ferry departure updates be obtained now?",
+          "stage": "final",
+          "project_key": "NimbusFerry"
+        }
+      ]
+    },
+    {
+      "id": "h09",
+      "project_keys": [
+        "BirchMuseum",
+        "OpalMuseum"
+      ],
+      "sessions": [
+        {
+          "id": "h09_s1",
+          "project_key": "BirchMuseum",
+          "events": [
+            {
+              "id": "h09_a",
+              "type": "user",
+              "text": "Fictional Birch Museum: Dena must count all loaned masks before returning any crate."
+            },
+            {
+              "id": "h09_old",
+              "type": "user",
+              "text": "Birch Museum crate pickup uses dock C at noon."
+            },
+            {
+              "id": "h09_b",
+              "type": "tool",
+              "text": "Birch Museum inventory: all nine loaned masks were counted on November 5."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h09_b"
+            }
+          ]
+        },
+        {
+          "id": "h09_s2",
+          "project_key": "OpalMuseum",
+          "events": [
+            {
+              "id": "h09_c",
+              "type": "user",
+              "text": "Fictional Opal Museum returns its crates without a mask count because its loan contains books only."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h09_c"
+            }
+          ]
+        },
+        {
+          "id": "h09_s3",
+          "project_key": "BirchMuseum",
+          "events": [
+            {
+              "id": "h09_d",
+              "type": "assistant",
+              "text": "I recommend combining the Birch Museum mask return and the pedestal repair into one completion record."
+            },
+            {
+              "id": "h09_e",
+              "type": "user",
+              "text": "Birch Museum’s mask count is complete. Birch Museum’s pedestal repair remains a separate open task assigned to Kian."
+            },
+            {
+              "id": "h09_f",
+              "type": "user",
+              "text": "Dena may return Birch Museum crates only after lender Zora signs the condition report. Cancel Birch Museum’s extra courier booking because the lender will collect the crates."
+            },
+            {
+              "id": "h09_g",
+              "type": "user",
+              "text": "Birch Museum crate pickup must follow the appointment sent by the lender’s current dispatcher."
+            },
+            {
+              "id": "h09_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h09_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What mask-count obligation applied before Dena could return any Birch Museum crate?",
+          "stage": "final",
+          "project_key": "BirchMuseum"
+        },
+        {
+          "id": "q2",
+          "question": "What did the November 5 Birch Museum inventory establish?",
+          "stage": "final",
+          "project_key": "BirchMuseum"
+        },
+        {
+          "id": "q3",
+          "question": "What is the current state of the Birch Museum mask count and pedestal repair, and who owns the repair?",
+          "stage": "final",
+          "project_key": "BirchMuseum"
+        },
+        {
+          "id": "q4",
+          "question": "Whose signature on what document is required before Dena may return Birch Museum crates?",
+          "stage": "final",
+          "project_key": "BirchMuseum"
+        },
+        {
+          "id": "q5",
+          "question": "Why was Birch Museum’s extra courier booking canceled?",
+          "stage": "final",
+          "project_key": "BirchMuseum"
+        },
+        {
+          "id": "q6",
+          "question": "What is the current rule for Birch Museum crate pickup arrangements?",
+          "stage": "final",
+          "project_key": "BirchMuseum"
+        }
+      ]
+    },
+    {
+      "id": "h10",
+      "project_keys": [
+        "CinderRelay",
+        "MossRelay"
+      ],
+      "sessions": [
+        {
+          "id": "h10_s1",
+          "project_key": "CinderRelay",
+          "events": [
+            {
+              "id": "h10_a",
+              "type": "user",
+              "text": "Fictional Cinder Relay: Vesa canceled the hill race on December 2 because the footbridge was closed."
+            },
+            {
+              "id": "h10_old",
+              "type": "assistant",
+              "text": "Cinder Relay check-in is at the red school bus."
+            },
+            {
+              "id": "h10_b",
+              "type": "user",
+              "text": "Vesa reopened Cinder Relay hill-race planning on December 6 after the council reopened the footbridge."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h10_b"
+            }
+          ]
+        },
+        {
+          "id": "h10_s2",
+          "project_key": "MossRelay",
+          "events": [
+            {
+              "id": "h10_c",
+              "type": "user",
+              "text": "Fictional Moss Relay remains canceled despite its footbridge reopening, because its insurer withdrew coverage."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h10_c"
+            }
+          ]
+        },
+        {
+          "id": "h10_s3",
+          "project_key": "CinderRelay",
+          "events": [
+            {
+              "id": "h10_d",
+              "type": "tool",
+              "text": "Cinder Relay inspection on December 7: the footbridge passed its load test."
+            },
+            {
+              "id": "h10_e",
+              "type": "user",
+              "text": "Cinder Relay bridge inspection is accepted as complete. Cinder Relay hill-race registration remains closed until Tal signs the insurance renewal."
+            },
+            {
+              "id": "h10_f",
+              "type": "user",
+              "text": "Vesa must notify every previously registered Cinder Relay runner if registration reopens."
+            },
+            {
+              "id": "h10_g",
+              "type": "user",
+              "text": "Cinder Relay check-in location must be taken from the organizer’s final event notice."
+            },
+            {
+              "id": "h10_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h10_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "When and why did Vesa cancel the Cinder Relay hill race?",
+          "stage": "final",
+          "project_key": "CinderRelay"
+        },
+        {
+          "id": "q2",
+          "question": "When and why did Vesa reopen Cinder Relay planning?",
+          "stage": "final",
+          "project_key": "CinderRelay"
+        },
+        {
+          "id": "q3",
+          "question": "How does the current Moss Relay cancellation differ from the decision to reopen Cinder Relay planning?",
+          "stage": "final",
+          "project_keys": [
+            "CinderRelay",
+            "MossRelay"
+          ]
+        },
+        {
+          "id": "q4",
+          "question": "What Cinder Relay work is complete, and what still prevents registration reopening?",
+          "stage": "final",
+          "project_key": "CinderRelay"
+        },
+        {
+          "id": "q5",
+          "question": "Whom must Vesa notify, and under what condition, for Cinder Relay?",
+          "stage": "final",
+          "project_key": "CinderRelay"
+        },
+        {
+          "id": "q6",
+          "question": "What source governs the Cinder Relay check-in location now?",
+          "stage": "final",
+          "project_key": "CinderRelay"
+        }
+      ]
+    },
+    {
+      "id": "h11",
+      "project_keys": [
+        "TopazPress",
+        "AshPress"
+      ],
+      "sessions": [
+        {
+          "id": "h11_s1",
+          "project_key": "TopazPress",
+          "events": [
+            {
+              "id": "h11_a",
+              "type": "user",
+              "text": "Fictional Topaz Press: Fen proposed releasing the poetry booklet in two languages."
+            },
+            {
+              "id": "h11_b",
+              "type": "user",
+              "text": "Topaz Press editor Yara approved only the French edition for printing."
+            },
+            {
+              "id": "h11_old",
+              "type": "user",
+              "text": "Topaz Press delivery address is 14 Lantern Lane."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h11_old"
+            }
+          ]
+        },
+        {
+          "id": "h11_s2",
+          "project_key": "AshPress",
+          "events": [
+            {
+              "id": "h11_c",
+              "type": "user",
+              "text": "Fictional Ash Press editor Yara approved both French and Italian editions for printing."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h11_c"
+            }
+          ]
+        },
+        {
+          "id": "h11_s3",
+          "project_key": "TopazPress",
+          "events": [
+            {
+              "id": "h11_d",
+              "type": "assistant",
+              "text": "I treated Yara’s Ash Press approval as permission for both Topaz Press editions."
+            },
+            {
+              "id": "h11_e",
+              "type": "user",
+              "text": "Topaz Press French proof correction is complete. Reopen the Topaz Press Italian translation to fix the missing final stanza."
+            },
+            {
+              "id": "h11_f",
+              "type": "user",
+              "text": "Fen must send the revised Topaz Press Italian translation to Yara for a separate printing decision. Cancel the Topaz Press bilingual slipcase."
+            },
+            {
+              "id": "h11_g",
+              "type": "user",
+              "text": "Topaz Press deliveries must use the address on the buyer’s latest confirmed purchase order."
+            },
+            {
+              "id": "h11_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h11_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What did Fen propose for Topaz Press, and which edition did Yara actually approve for printing?",
+          "stage": "final",
+          "project_key": "TopazPress"
+        },
+        {
+          "id": "q2",
+          "question": "How do Yara’s Topaz Press and Ash Press printing approvals differ?",
+          "stage": "final",
+          "project_keys": [
+            "TopazPress",
+            "AshPress"
+          ]
+        },
+        {
+          "id": "q3",
+          "question": "What mistaken permission did the assistant attribute to Topaz Press?",
+          "stage": "final",
+          "project_key": "TopazPress"
+        },
+        {
+          "id": "q4",
+          "question": "What Topaz Press work is complete, and what was reopened for what correction?",
+          "stage": "final",
+          "project_key": "TopazPress"
+        },
+        {
+          "id": "q5",
+          "question": "What must Fen do before a new Topaz Press Italian printing decision, and what packaging was canceled?",
+          "stage": "final",
+          "project_key": "TopazPress"
+        },
+        {
+          "id": "q6",
+          "question": "Which address must Topaz Press deliveries use now?",
+          "stage": "final",
+          "project_key": "TopazPress"
+        }
+      ]
+    },
+    {
+      "id": "h12",
+      "project_keys": [
+        "KestrelSchool",
+        "DuneSchool"
+      ],
+      "sessions": [
+        {
+          "id": "h12_s1",
+          "project_key": "KestrelSchool",
+          "events": [
+            {
+              "id": "h12_a",
+              "type": "user",
+              "text": "Fictional Kestrel School: Arlo must obtain consent from every guardian before displaying student portraits publicly."
+            },
+            {
+              "id": "h12_old",
+              "type": "assistant",
+              "text": "Kestrel School portrait files are stored on the public Gallery-Z folder."
+            },
+            {
+              "id": "h12_b",
+              "type": "tool",
+              "text": "Kestrel School consent ledger: consent has been received for seven of eight portraits."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h12_b"
+            }
+          ]
+        },
+        {
+          "id": "h12_s2",
+          "project_key": "DuneSchool",
+          "events": [
+            {
+              "id": "h12_c",
+              "type": "user",
+              "text": "Fictional Dune School displays staff portraits under a separate staff agreement."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h12_c"
+            }
+          ]
+        },
+        {
+          "id": "h12_s3",
+          "project_key": "KestrelSchool",
+          "events": [
+            {
+              "id": "h12_d",
+              "type": "assistant",
+              "text": "I called the Kestrel School display ready because most guardians had replied."
+            },
+            {
+              "id": "h12_e",
+              "type": "user",
+              "text": "Accept the seven consent records for Kestrel School. The eighth Kestrel School portrait must stay private until its guardian consents."
+            },
+            {
+              "id": "h12_f",
+              "type": "user",
+              "text": "Arlo must replace the eighth Kestrel School portrait with a blank card if consent is still missing at setup time. The Kestrel School frame assembly is complete."
+            },
+            {
+              "id": "h12_g",
+              "type": "user",
+              "text": "Kestrel School portrait files must be accessed through individual invitations issued by the records officer."
+            },
+            {
+              "id": "h12_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h12_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What consent scope applies before Kestrel School student portraits can be displayed publicly?",
+          "stage": "final",
+          "project_key": "KestrelSchool"
+        },
+        {
+          "id": "q2",
+          "question": "How much Kestrel School consent did the ledger record?",
+          "stage": "final",
+          "project_key": "KestrelSchool"
+        },
+        {
+          "id": "q3",
+          "question": "What consent work is accepted for Kestrel School, and what restriction remains on the eighth portrait?",
+          "stage": "final",
+          "project_key": "KestrelSchool"
+        },
+        {
+          "id": "q4",
+          "question": "What must Arlo do at setup if the remaining Kestrel School consent is still missing?",
+          "stage": "final",
+          "project_key": "KestrelSchool"
+        },
+        {
+          "id": "q5",
+          "question": "Which physical assembly task is complete at Kestrel School?",
+          "stage": "final",
+          "project_key": "KestrelSchool"
+        },
+        {
+          "id": "q6",
+          "question": "How must Kestrel School portrait files be accessed now?",
+          "stage": "final",
+          "project_key": "KestrelSchool"
+        }
+      ]
+    },
+    {
+      "id": "h13",
+      "project_keys": [
+        "AsterClock",
+        "FlintClock"
+      ],
+      "sessions": [
+        {
+          "id": "h13_s1",
+          "project_key": "AsterClock",
+          "events": [
+            {
+              "id": "h13_a",
+              "type": "user",
+              "text": "Mira assigned Aster Clock gear cleaning to Sol. Mira assigned Aster Clock dial repainting to Eda."
+            },
+            {
+              "id": "h13_b",
+              "type": "tool",
+              "text": "Aster Clock bench log: gear cleaning passed inspection on February 10."
+            },
+            {
+              "id": "h13_old",
+              "type": "user",
+              "text": "Aster Clock spare springs are in drawer 42."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h13_old"
+            }
+          ]
+        },
+        {
+          "id": "h13_s2",
+          "project_key": "FlintClock",
+          "events": [
+            {
+              "id": "h13_c",
+              "type": "user",
+              "text": "Fictional Flint Clock assigns both gear cleaning and dial repainting to Sol."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h13_c"
+            }
+          ]
+        },
+        {
+          "id": "h13_s3",
+          "project_key": "AsterClock",
+          "events": [
+            {
+              "id": "h13_d",
+              "type": "assistant",
+              "text": "I reported Aster Clock restoration finished after the gear inspection."
+            },
+            {
+              "id": "h13_e",
+              "type": "user",
+              "text": "Close Aster Clock gear cleaning as accepted. Reopen Aster Clock dial repainting because the hour numerals were copied in the wrong style."
+            },
+            {
+              "id": "h13_f",
+              "type": "user",
+              "text": "Eda may repaint the Aster Clock numerals only after Mira approves a paper sample. Cancel Aster Clock’s optional chime upgrade."
+            },
+            {
+              "id": "h13_g",
+              "type": "user",
+              "text": "Aster Clock spare parts must be located using the conservator’s current bin register."
+            },
+            {
+              "id": "h13_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h13_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Who was assigned Aster Clock gear cleaning and dial repainting?",
+          "stage": "final",
+          "project_key": "AsterClock"
+        },
+        {
+          "id": "q2",
+          "question": "What did the Aster Clock bench log establish on February 10?",
+          "stage": "final",
+          "project_key": "AsterClock"
+        },
+        {
+          "id": "q3",
+          "question": "What Aster Clock task is accepted, and which task was reopened for what reason?",
+          "stage": "final",
+          "project_key": "AsterClock"
+        },
+        {
+          "id": "q4",
+          "question": "Whose approval of what must Eda obtain before repainting Aster Clock numerals?",
+          "stage": "final",
+          "project_key": "AsterClock"
+        },
+        {
+          "id": "q5",
+          "question": "What is the latest instruction for Aster Clock’s chime upgrade?",
+          "stage": "final",
+          "project_key": "AsterClock"
+        },
+        {
+          "id": "q6",
+          "question": "How must Aster Clock spare parts be located now?",
+          "stage": "final",
+          "project_key": "AsterClock"
+        }
+      ]
+    },
+    {
+      "id": "h14",
+      "project_keys": [
+        "CoralSurvey",
+        "SlateSurvey"
+      ],
+      "sessions": [
+        {
+          "id": "h14_s1",
+          "project_key": "CoralSurvey",
+          "events": [
+            {
+              "id": "h14_a",
+              "type": "user",
+              "text": "Fictional Coral Survey: Neri must collect a tide reading at each of four coves."
+            },
+            {
+              "id": "h14_old",
+              "type": "assistant",
+              "text": "Coral Survey’s raw-data upload token is coral-fast-6."
+            },
+            {
+              "id": "h14_b",
+              "type": "tool",
+              "text": "Coral Survey logger: readings from all four coves were saved on March 12."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h14_b"
+            }
+          ]
+        },
+        {
+          "id": "h14_s2",
+          "project_key": "SlateSurvey",
+          "events": [
+            {
+              "id": "h14_c",
+              "type": "user",
+              "text": "Fictional Slate Survey collects only the western cove because its permit covers no other site."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h14_c"
+            }
+          ]
+        },
+        {
+          "id": "h14_s3",
+          "project_key": "CoralSurvey",
+          "events": [
+            {
+              "id": "h14_d",
+              "type": "assistant",
+              "text": "I said Coral Survey’s report was ready to publish after all four readings arrived."
+            },
+            {
+              "id": "h14_e",
+              "type": "user",
+              "text": "Coral Survey data collection is complete. Coral Survey publication remains blocked until Jo verifies the instrument calibration."
+            },
+            {
+              "id": "h14_f",
+              "type": "user",
+              "text": "Neri must repeat every Coral Survey reading if Jo finds the calibration outside tolerance. Cancel Coral Survey’s aerial photo appendix because cloud cover made it unusable."
+            },
+            {
+              "id": "h14_g",
+              "type": "user",
+              "text": "Coral Survey raw data must be uploaded using a fresh token obtained from the survey coordinator for each upload."
+            },
+            {
+              "id": "h14_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h14_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What was Neri’s Coral Survey collection scope, and what did the March 12 logger confirm?",
+          "stage": "final",
+          "project_key": "CoralSurvey"
+        },
+        {
+          "id": "q2",
+          "question": "What Coral Survey work is complete, and what still blocks publication?",
+          "stage": "final",
+          "project_key": "CoralSurvey"
+        },
+        {
+          "id": "q3",
+          "question": "What did the assistant say about Coral Survey publication readiness, and on what basis?",
+          "stage": "final",
+          "project_key": "CoralSurvey"
+        },
+        {
+          "id": "q4",
+          "question": "When must Neri repeat Coral Survey readings, and how many of them must be repeated?",
+          "stage": "final",
+          "project_key": "CoralSurvey"
+        },
+        {
+          "id": "q5",
+          "question": "Which Coral Survey appendix was canceled, and why?",
+          "stage": "final",
+          "project_key": "CoralSurvey"
+        },
+        {
+          "id": "q6",
+          "question": "What token rule applies to each Coral Survey raw-data upload now?",
+          "stage": "final",
+          "project_key": "CoralSurvey"
+        }
+      ]
+    },
+    {
+      "id": "h15",
+      "project_keys": [
+        "EmberParade",
+        "FrostParade"
+      ],
+      "sessions": [
+        {
+          "id": "h15_s1",
+          "project_key": "EmberParade",
+          "events": [
+            {
+              "id": "h15_a",
+              "type": "user",
+              "text": "Fictional Ember Parade: Lio canceled the lantern float after the first battery test failed."
+            },
+            {
+              "id": "h15_b",
+              "type": "user",
+              "text": "Reopen the Ember Parade lantern float for a replacement-battery trial only."
+            },
+            {
+              "id": "h15_old",
+              "type": "user",
+              "text": "Ember Parade assembly point is the old mill yard."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h15_old"
+            }
+          ]
+        },
+        {
+          "id": "h15_s2",
+          "project_key": "FrostParade",
+          "events": [
+            {
+              "id": "h15_c",
+              "type": "user",
+              "text": "Fictional Frost Parade’s lantern float is approved for the full procession."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h15_c"
+            }
+          ]
+        },
+        {
+          "id": "h15_s3",
+          "project_key": "EmberParade",
+          "events": [
+            {
+              "id": "h15_d",
+              "type": "tool",
+              "text": "Ember Parade trial report: the replacement battery passed the twenty-minute bench test."
+            },
+            {
+              "id": "h15_e",
+              "type": "user",
+              "text": "Accept the Ember Parade replacement-battery bench trial as complete. Ember Parade’s lantern float still needs a rolling test before procession approval."
+            },
+            {
+              "id": "h15_f",
+              "type": "user",
+              "text": "Lio must arrange the Ember Parade rolling test with Cato only if the route steward grants a closed-road slot. Lio may not substitute Frost Parade’s approval for the Ember Parade rolling test."
+            },
+            {
+              "id": "h15_g",
+              "type": "user",
+              "text": "Ember Parade participants must use the assembly point announced in the marshal’s same-day briefing."
+            },
+            {
+              "id": "h15_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h15_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Why was the Ember Parade lantern float canceled initially?",
+          "stage": "final",
+          "project_key": "EmberParade"
+        },
+        {
+          "id": "q2",
+          "question": "For what limited scope was the Ember Parade lantern float reopened?",
+          "stage": "final",
+          "project_key": "EmberParade"
+        },
+        {
+          "id": "q3",
+          "question": "What Ember Parade trial is accepted as complete, and what test remains before procession approval?",
+          "stage": "final",
+          "project_key": "EmberParade"
+        },
+        {
+          "id": "q4",
+          "question": "With whom and under what condition must Lio arrange Ember Parade’s rolling test?",
+          "stage": "final",
+          "project_key": "EmberParade"
+        },
+        {
+          "id": "q5",
+          "question": "May Lio substitute Frost Parade approval for Ember Parade’s rolling test?",
+          "stage": "final",
+          "project_key": "EmberParade"
+        },
+        {
+          "id": "q6",
+          "question": "Which assembly point rule applies to Ember Parade participants now?",
+          "stage": "final",
+          "project_key": "EmberParade"
+        }
+      ]
+    },
+    {
+      "id": "h16",
+      "project_keys": [
+        "GarnetLibrary",
+        "HazelLibrary"
+      ],
+      "sessions": [
+        {
+          "id": "h16_s1",
+          "project_key": "GarnetLibrary",
+          "events": [
+            {
+              "id": "h16_a",
+              "type": "user",
+              "text": "Fictional Garnet Library: Ziv must repair the bindings of all six donated atlases."
+            },
+            {
+              "id": "h16_b",
+              "type": "tool",
+              "text": "Garnet Library conservation log: all six atlas bindings passed inspection on April 19."
+            },
+            {
+              "id": "h16_old",
+              "type": "assistant",
+              "text": "Garnet Library donor acknowledgments must be mailed to Box 105."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h16_old"
+            }
+          ]
+        },
+        {
+          "id": "h16_s2",
+          "project_key": "HazelLibrary",
+          "events": [
+            {
+              "id": "h16_c",
+              "type": "user",
+              "text": "Fictional Hazel Library needs repairs only to its two largest atlases."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h16_c"
+            }
+          ]
+        },
+        {
+          "id": "h16_s3",
+          "project_key": "GarnetLibrary",
+          "events": [
+            {
+              "id": "h16_d",
+              "type": "assistant",
+              "text": "I suggested treating Garnet Library binding repair and donor acknowledgment as one finished donation task."
+            },
+            {
+              "id": "h16_e",
+              "type": "user",
+              "text": "Garnet Library binding repair is accepted as complete. Garnet Library donor acknowledgment remains open and belongs to Pia."
+            },
+            {
+              "id": "h16_f",
+              "type": "user",
+              "text": "Pia must send Garnet Library acknowledgments only after each donor approves the public name spelling. Cancel Garnet Library’s proposed donor plaque because donors requested private thanks."
+            },
+            {
+              "id": "h16_g",
+              "type": "user",
+              "text": "Garnet Library acknowledgments must use each donor’s newly confirmed delivery preference."
+            },
+            {
+              "id": "h16_del",
+              "type": "delete_observation",
+              "text": "Remove this observation from retained memory.",
+              "observation_event_id": "h16_old"
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What repair scope did Ziv have for Garnet Library?",
+          "stage": "final",
+          "project_key": "GarnetLibrary"
+        },
+        {
+          "id": "q2",
+          "question": "What did the April 19 Garnet Library conservation log verify?",
+          "stage": "final",
+          "project_key": "GarnetLibrary"
+        },
+        {
+          "id": "q3",
+          "question": "What Garnet Library work is complete, and what remains open with which owner?",
+          "stage": "final",
+          "project_key": "GarnetLibrary"
+        },
+        {
+          "id": "q4",
+          "question": "What approval must precede Pia sending Garnet Library acknowledgments?",
+          "stage": "final",
+          "project_key": "GarnetLibrary"
+        },
+        {
+          "id": "q5",
+          "question": "What Garnet Library proposal was canceled, and why?",
+          "stage": "final",
+          "project_key": "GarnetLibrary"
+        },
+        {
+          "id": "q6",
+          "question": "How must delivery be chosen for Garnet Library acknowledgments now?",
+          "stage": "final",
+          "project_key": "GarnetLibrary"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "status": "confirmed_frozen_historical_pointer_contract_mismatch",
+  "canonical_report_export_blocked": true,
+  "quality_outcome": null,
+  "owning_sources": [
+    {
+      "path": "protocol.json",
+      "key": "historical_spend",
+      "actual_keys": [
+        "path",
+        "sha256"
+      ],
+      "actual_path": "docs/evidence/project-memory-quality-2026-10-21-r17/historical-spend.json",
+      "sha256": "4db8d98ff0e88b78253a4b991925613c1fdf7196abf2e5c0eb2a46e123d2415b"
+    },
+    {
+      "path": "frozen-helper.py",
+      "lines": [
+        215,
+        217,
+        218,
+        219,
+        220
+      ],
+      "quote": "pointer=protocol.get('historical_spend'); if not pointer: return {}; path=ROOT/pointer['report']",
+      "meaning": "A nonempty pointer is present, so the early no-history return does not apply. The missing report key is read before opening the pinned historical file."
+    },
+    {
+      "path": "frozen-helper.py",
+      "lines": [
+        1986
+      ],
+      "quote": "report.update(historical_accounting(protocol,report['usage']))",
+      "meaning": "Canonical aggregate cannot complete and write its report under these frozen bytes."
+    },
+    {
+      "path": "frozen-helper.py",
+      "lines": [
+        2103,
+        2104,
+        2105
+      ],
+      "quote": "historical_accounting(protocol,usage([])); (target/'historical-report.json').write_bytes((ROOT/protocol['historical_spend']['report']).read_bytes())",
+      "meaning": "Export first fails through historical_accounting, and its subsequent direct report-key read has the same mismatch."
+    }
+  ],
+  "read_only_minimal_check": {
+    "operation": "protocol['historical_spend']['report']",
+    "observed": "KeyError('report')",
+    "historical_target_exists_and_matches_path_sha256": true,
+    "historical_target_has_usage": true,
+    "helper_report_export_not_invoked": true
+  },
+  "compatible_fallback": {
+    "exists": false,
+    "reason": "The only early fallback requires an absent/false historical_spend pointer. The actual nonempty mapping contains path, not report. No path alias, normalization, exception recovery, or alternate historical-accounting/export branch exists in the frozen helper. No repaired protocol was supplied."
+  },
+  "preparation_limitation": {
+    "script": "audit-final-export.py",
+    "script_sha256": "88cc066361c6722aa06b37289c927d5f810a5655caf4315538bf280b5048b32e",
+    "preparation_sha256": "9817f5de1bdbdca44adbdc0ac7ea40e95194a46a909b1b41db0d8842a3237fb6",
+    "unchanged": true,
+    "executed": false,
+    "limit": "The prepared final audit requires canonical holdout/report.json, export-manifest.json and archive. It cannot audit missing canonical output or bypass this frozen helper/protocol mismatch. Preparation is not a passed final audit."
+  },
+  "preserved_status": "R17 must remain incomplete under the frozen contract; a prospective contract repair requires a fresh set. No scored quality outcome is inferred.",
+  "restrictions": {
+    "native_model_store_calls": 0,
+    "canonical_report_export_calls": 0,
+    "source_helper_protocol_input_grade_changes": false,
+    "prior_audit_script_or_preparation_changes": false,
+    "active_trial_or_process_changes": false
+  },
+  "source_sha256": {
+    "protocol.json": "4db8d98ff0e88b78253a4b991925613c1fdf7196abf2e5c0eb2a46e123d2415b",
+    "frozen-helper.py": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "actual-freeze.json": "1fbd7c58beecc5bf60a67e4b7ee6785ebc83b8c4afe8e0be158df6937bd67a1c",
+    "historical-spend.json": "9505a738ae8ce8e297c3e0bf96140531b54f9812f52df4bfa30078e53b7b3266"
+  }
+}

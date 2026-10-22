@@ -1,0 +1,1256 @@
+{
+  "schema_version": 1,
+  "status": "diagnosis_only_no_rescore",
+  "scope": "Candidate primary critical errors and candidate reader-repeat critical error only; released original/gold, actual answers, canonical visible source catalogs and native receipts.",
+  "run_decision_unchanged": "fail",
+  "criteria_changed": false,
+  "scores_changed": false,
+  "models_called": false,
+  "cases": [
+    {
+      "history_id": "hold_207",
+      "repeat": 0,
+      "question_id": "q1",
+      "classification": "actual_reader_causal_error_with_source_omissions",
+      "diagnosis": "The answer substitutes the dining authorization boundary for the reason the goal changed. Visible R0005 explicitly provides the instructor seating-review reason. This is a real unsupported causal claim and missed reason, regardless of whether false_merge is the precise subtype. The staff-only goal is absent from the visible citation catalog; omission and reader error both contribute.",
+      "actual_answer": {
+        "id": "q1",
+        "answer": "The current goal is to prepare the workshop booking preview while keeping public reservations blocked until Lea confirms the studio seating before the 18 January walkthrough. Leave capacity unset until she measures the layout. The goal changed because the separate Saffron Dining supper deposit setup does not authorize deposits for workshop preview bookings; the retained evidence does not state that the workshop deposits or waitlist were canceled. [R0002, R0003, R0004, R0006, R0008, R0009]",
+        "uncertainties": [
+          "The supplied memory has coverage gaps and unresolved user sources, so the complete change history and any additional current requirements are unknown."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0002",
+            "source_id": "ab96bd5141914f288626fca456826fda",
+            "source_field": "body",
+            "start": 0,
+            "end": 63,
+            "source_role": "user_intent",
+            "quote": "Launch workshop reservations with card deposits and a waitlist."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+            "source_field": "body",
+            "start": 0,
+            "end": 52,
+            "source_role": "user_intent",
+            "quote": "Saffron Dining accepts deposits for supper bookings."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+            "source_field": "body",
+            "start": 52,
+            "end": 133,
+            "source_role": "user_intent",
+            "quote": " That separate dining setup does not authorize deposits for the workshop preview."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "b17df99a00434913aa2dde682b0cd760",
+            "source_field": "body",
+            "start": 66,
+            "end": 129,
+            "source_role": "user_intent",
+            "quote": " Public reservations remain blocked until seating is confirmed."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+            "source_field": "body",
+            "start": 66,
+            "end": 130,
+            "source_role": "user_intent",
+            "quote": " Leave the capacity unset until Lea measures the seating layout."
+          },
+          {
+            "catalog_ref": "R0009",
+            "source_id": "b17df99a00434913aa2dde682b0cd760",
+            "source_field": "body",
+            "start": 0,
+            "end": 66,
+            "source_role": "user_intent",
+            "quote": "Lea must confirm studio seating before the 18 January walkthrough."
+          },
+          {
+            "catalog_ref": "R0010",
+            "source_id": "364039af761349cebce6bcbeee9a3031",
+            "source_field": "body",
+            "start": 0,
+            "end": 51,
+            "source_role": "tool_record",
+            "quote": "Preview route returned HTTP 200 for the staff role."
+          },
+          {
+            "catalog_ref": "R0011",
+            "source_id": "364039af761349cebce6bcbeee9a3031",
+            "source_field": "body",
+            "start": 51,
+            "end": 83,
+            "source_role": "tool_record",
+            "quote": "\nPublic route returned HTTP 403."
+          },
+          {
+            "catalog_ref": "R0012",
+            "source_id": "364039af761349cebce6bcbeee9a3031",
+            "source_field": "body",
+            "start": 83,
+            "end": 110,
+            "source_role": "tool_record",
+            "quote": "\nPayment provider calls: 0."
+          }
+        ]
+      },
+      "immutable_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": false,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [
+          "false_merge"
+        ],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": false
+          },
+          {
+            "fact_index": 1,
+            "recalled": false
+          }
+        ],
+        "rationale": "Does not explicitly state the required staff-only reservation preview or that the instructor wants seating reviewed before customers can reserve. It instead attributes the change to the separate dining deposit arrangement, which is unsupported as the stated reason and mixes the neighboring project into the rationale.",
+        "id": "q1",
+        "required_facts_total": 2,
+        "required_facts_recalled": 0,
+        "context_chars": 4574,
+        "reader_shared_latency_ms": 18693,
+        "reader_shared_metrics": {
+          "duration_ms": 18670,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18146,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1689,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 19835
+            }
+          }
+        },
+        "category": "current_goal"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Deliver a staff-only reservation preview.",
+            "support": [
+              {
+                "session_id": "hold_207_return",
+                "event_index": 0,
+                "event_id": "hold_207_direction",
+                "fragment": "Deliver a staff-only reservation preview."
+              }
+            ]
+          },
+          {
+            "text": "The instructor wants to review seating before customers can reserve.",
+            "support": [
+              {
+                "session_id": "hold_207_return",
+                "event_index": 0,
+                "event_id": "hold_207_direction",
+                "fragment": "The instructor wants to review seating before customers can reserve."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "Launch workshop reservations with card deposits and a waitlist.",
+            "error_type": "false_merge"
+          }
+        ],
+        "current_state_required": true,
+        "category": "current_goal",
+        "expected_actionability": "Continue the current goal for its stated reason."
+      },
+      "original_evidence": [
+        {
+          "session_id": "hold_207_early",
+          "project_key": "saffron_booking",
+          "event_index": 0,
+          "id": "hold_207_request",
+          "type": "user",
+          "text": "Launch workshop reservations with card deposits and a waitlist."
+        },
+        {
+          "session_id": "hold_207_early",
+          "project_key": "saffron_booking",
+          "event_index": 2,
+          "id": "hold_207_report",
+          "type": "assistant",
+          "text": "The booking page is live and deposits are enabled."
+        },
+        {
+          "session_id": "hold_207_return",
+          "project_key": "saffron_booking",
+          "event_index": 0,
+          "id": "hold_207_direction",
+          "type": "user",
+          "text": "Deliver a staff-only reservation preview. The instructor wants to review seating before customers can reserve. Collect no payment in the preview. Display the cancellation terms alongside each session."
+        },
+        {
+          "session_id": "hold_207_return",
+          "project_key": "saffron_booking",
+          "event_index": 1,
+          "id": "hold_207_scope",
+          "type": "user",
+          "text": "Defer card deposits. Keep the waitlist design in the preview."
+        },
+        {
+          "session_id": "hold_207_boundary_session",
+          "project_key": "saffron_booking",
+          "event_index": 0,
+          "id": "hold_207_boundary",
+          "type": "user",
+          "text": "Saffron Dining accepts deposits for supper bookings. That separate dining setup does not authorize deposits for the workshop preview."
+        }
+      ],
+      "visible_citation_catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "9f75353324f048b4a6107faf19f844d8",
+          "source_field": "body",
+          "start": 0,
+          "end": 50,
+          "source_role": "assistant_report",
+          "quote": "The booking page is live and deposits are enabled."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "ab96bd5141914f288626fca456826fda",
+          "source_field": "body",
+          "start": 0,
+          "end": 63,
+          "source_role": "user_intent",
+          "quote": "Launch workshop reservations with card deposits and a waitlist."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+          "source_field": "body",
+          "start": 0,
+          "end": 52,
+          "source_role": "user_intent",
+          "quote": "Saffron Dining accepts deposits for supper bookings."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+          "source_field": "body",
+          "start": 52,
+          "end": 133,
+          "source_role": "user_intent",
+          "quote": " That separate dining setup does not authorize deposits for the workshop preview."
+        },
+        {
+          "ref": "R0005",
+          "source_id": "c2613590d18448e08c040236bceabf08",
+          "source_field": "body",
+          "start": 41,
+          "end": 110,
+          "source_role": "user_intent",
+          "quote": " The instructor wants to review seating before customers can reserve."
+        },
+        {
+          "ref": "R0006",
+          "source_id": "b17df99a00434913aa2dde682b0cd760",
+          "source_field": "body",
+          "start": 66,
+          "end": 129,
+          "source_role": "user_intent",
+          "quote": " Public reservations remain blocked until seating is confirmed."
+        },
+        {
+          "ref": "R0007",
+          "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+          "source_field": "body",
+          "start": 0,
+          "end": 66,
+          "source_role": "user_intent",
+          "quote": "The removed room worksheet does not establish a workshop capacity."
+        },
+        {
+          "ref": "R0008",
+          "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+          "source_field": "body",
+          "start": 66,
+          "end": 130,
+          "source_role": "user_intent",
+          "quote": " Leave the capacity unset until Lea measures the seating layout."
+        },
+        {
+          "ref": "R0009",
+          "source_id": "b17df99a00434913aa2dde682b0cd760",
+          "source_field": "body",
+          "start": 0,
+          "end": 66,
+          "source_role": "user_intent",
+          "quote": "Lea must confirm studio seating before the 18 January walkthrough."
+        },
+        {
+          "ref": "R0010",
+          "source_id": "364039af761349cebce6bcbeee9a3031",
+          "source_field": "body",
+          "start": 0,
+          "end": 51,
+          "source_role": "tool_record",
+          "quote": "Preview route returned HTTP 200 for the staff role."
+        },
+        {
+          "ref": "R0011",
+          "source_id": "364039af761349cebce6bcbeee9a3031",
+          "source_field": "body",
+          "start": 51,
+          "end": 83,
+          "source_role": "tool_record",
+          "quote": "\nPublic route returned HTTP 403."
+        },
+        {
+          "ref": "R0012",
+          "source_id": "364039af761349cebce6bcbeee9a3031",
+          "source_field": "body",
+          "start": 83,
+          "end": 110,
+          "source_role": "tool_record",
+          "quote": "\nPayment provider calls: 0."
+        },
+        {
+          "ref": "R0013",
+          "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+          "source_field": "body",
+          "start": 0,
+          "end": 130,
+          "source_role": "user_intent",
+          "quote": "The removed room worksheet does not establish a workshop capacity. Leave the capacity unset until Lea measures the seating layout."
+        },
+        {
+          "ref": "R0014",
+          "source_id": "ccbee2d5af9749f39bee5498c402cd31",
+          "source_field": "body",
+          "start": 0,
+          "end": 34,
+          "source_role": "user_intent",
+          "quote": "Dining may accept supper deposits."
+        }
+      ],
+      "blind_answer_id": "answer-05",
+      "reader_native_dispatch": {
+        "key": "0b346d7bd07d874d78d9f47bedd3ad4a0afb9cce2506c7aa6f008bcf373860f1",
+        "scope": {
+          "phase": "reader",
+          "history_id": "hold_207",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "0366f486c90fedfd52025ec1d84776aa1cf042b8b1d5efd0d9eebe0926a2deb6",
+          "helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0089",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "485d84193860467f5d3b75f55ed6f4a361cc60156fd7cde0fae7ec7b1709b102",
+        "request_file_sha256": "18cb65f916de0fd7e6f57d3864bdbeec95e270aca692d750b230062e655d633d",
+        "response_file_sha256": "5719347cd2ec5e95b116345527c7348f54c7a3f004f676b926205c8c8b3440d0",
+        "reused": false,
+        "native_wall_ms": 18693
+      },
+      "judge_native_dispatch": {
+        "key": "9c2b12179efb8a4a1022ed88306ddf78a2424a27b8774fb7b56b0f804e24b263",
+        "scope": {
+          "phase": "judge",
+          "history_id": "hold_207",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "0366f486c90fedfd52025ec1d84776aa1cf042b8b1d5efd0d9eebe0926a2deb6",
+          "helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0123",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "1b573110168ad0728c2e075cd73660fc1326b5e30ceea6f49fae6ddb55fa43cf",
+        "request_file_sha256": "991d9c852491adf93cd0542167a8adc4b95ded70f5abb33629e2fdc38dadfa4f",
+        "response_file_sha256": "66bf236eb3911c71a208abc414745fa5eb8aab07443ddfaf2e413185ecabb55e",
+        "reused": false,
+        "native_wall_ms": 12243
+      },
+      "visibility_audit": {
+        "scope": "Union of all six query views available to the reader, as recorded by the canonical citation catalog.",
+        "direction_visible_spans": [
+          {
+            "ref": "R0005",
+            "source_id": "c2613590d18448e08c040236bceabf08",
+            "source_field": "body",
+            "start": 41,
+            "end": 110,
+            "source_role": "user_intent",
+            "quote": " The instructor wants to review seating before customers can reserve."
+          }
+        ],
+        "scope_visible_spans": [],
+        "omitted_original_sentences": [
+          "Deliver a staff-only reservation preview.",
+          "Collect no payment in the preview.",
+          "Display the cancellation terms alongside each session.",
+          "Defer card deposits. Keep the waitlist design in the preview."
+        ],
+        "limit": "This establishes missing original source spans in the displayed evidence, not the precise internal processing or allocation cause."
+      }
+    },
+    {
+      "history_id": "hold_207",
+      "repeat": 0,
+      "question_id": "q5",
+      "classification": "demonstrable_critical_label_mismatch",
+      "diagnosis": "The answer explicitly prohibits carrying over dining permission and prohibits treating the assistant report as proof. The report belongs to booking, not the neighboring dining project. The judge rationale acknowledges the prohibition yet labels the extra caution project_mixing. Neither the answer nor its citations assert the forbidden neighboring authorization/completion. This does not adjudicate every other score field.",
+      "actual_answer": {
+        "id": "q5",
+        "answer": "The resumed work belongs to Saffron workshop booking. Do not carry over Saffron Dining's proposed permission to accept supper deposits, or treat the assistant's earlier booking-live/deposits-enabled report as proof of workshop completion. The retained booking intent explicitly says the dining setup does not authorize deposits for the workshop preview. [R0003, R0004, R0014, R0001]",
+        "uncertainties": [
+          "The supplied dining record says only that dining may accept supper deposits and marks that decision proposed; it does not establish implementation or completion."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "9f75353324f048b4a6107faf19f844d8",
+            "source_field": "body",
+            "start": 0,
+            "end": 50,
+            "source_role": "assistant_report",
+            "quote": "The booking page is live and deposits are enabled."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+            "source_field": "body",
+            "start": 0,
+            "end": 52,
+            "source_role": "user_intent",
+            "quote": "Saffron Dining accepts deposits for supper bookings."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+            "source_field": "body",
+            "start": 52,
+            "end": 133,
+            "source_role": "user_intent",
+            "quote": " That separate dining setup does not authorize deposits for the workshop preview."
+          },
+          {
+            "catalog_ref": "R0014",
+            "source_id": "ccbee2d5af9749f39bee5498c402cd31",
+            "source_field": "body",
+            "start": 0,
+            "end": 34,
+            "source_role": "user_intent",
+            "quote": "Dining may accept supper deposits."
+          }
+        ]
+      },
+      "immutable_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [
+          "project_mixing"
+        ],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true
+          },
+          {
+            "fact_index": 1,
+            "recalled": true
+          }
+        ],
+        "rationale": "Recalls both dining facts and says they do not authorize workshop deposits. But it improperly treats the earlier assistant report as potentially relevant completion for this question, despite correctly saying it is not proof; the required warning concerns not carrying over neighboring permission or completion, and this adds an unrelated booking report. The dining proposal is clearly distinguished.",
+        "id": "q5",
+        "required_facts_total": 2,
+        "required_facts_recalled": 2,
+        "context_chars": 4070,
+        "reader_shared_latency_ms": 18693,
+        "reader_shared_metrics": {
+          "duration_ms": 18670,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18146,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1689,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 19835
+            }
+          }
+        },
+        "category": "project_boundary"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Saffron Dining accepts deposits for supper bookings.",
+            "support": [
+              {
+                "session_id": "hold_207_boundary_session",
+                "event_index": 0,
+                "event_id": "hold_207_boundary",
+                "fragment": "Saffron Dining accepts deposits for supper bookings."
+              }
+            ]
+          },
+          {
+            "text": "That separate dining setup does not authorize deposits for the workshop preview.",
+            "support": [
+              {
+                "session_id": "hold_207_boundary_session",
+                "event_index": 0,
+                "event_id": "hold_207_boundary",
+                "fragment": "That separate dining setup does not authorize deposits for the workshop preview."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "The neighboring project or completed task authorizes or completes the current work.",
+            "error_type": "project_mixing"
+          }
+        ],
+        "current_state_required": true,
+        "category": "project_boundary",
+        "expected_actionability": "Keep the stated task identity and permission boundary."
+      },
+      "original_evidence": [
+        {
+          "session_id": "hold_207_early",
+          "project_key": "saffron_booking",
+          "event_index": 0,
+          "id": "hold_207_request",
+          "type": "user",
+          "text": "Launch workshop reservations with card deposits and a waitlist."
+        },
+        {
+          "session_id": "hold_207_early",
+          "project_key": "saffron_booking",
+          "event_index": 2,
+          "id": "hold_207_report",
+          "type": "assistant",
+          "text": "The booking page is live and deposits are enabled."
+        },
+        {
+          "session_id": "hold_207_return",
+          "project_key": "saffron_booking",
+          "event_index": 0,
+          "id": "hold_207_direction",
+          "type": "user",
+          "text": "Deliver a staff-only reservation preview. The instructor wants to review seating before customers can reserve. Collect no payment in the preview. Display the cancellation terms alongside each session."
+        },
+        {
+          "session_id": "hold_207_return",
+          "project_key": "saffron_booking",
+          "event_index": 1,
+          "id": "hold_207_scope",
+          "type": "user",
+          "text": "Defer card deposits. Keep the waitlist design in the preview."
+        },
+        {
+          "session_id": "hold_207_boundary_session",
+          "project_key": "saffron_booking",
+          "event_index": 0,
+          "id": "hold_207_boundary",
+          "type": "user",
+          "text": "Saffron Dining accepts deposits for supper bookings. That separate dining setup does not authorize deposits for the workshop preview."
+        }
+      ],
+      "visible_citation_catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "9f75353324f048b4a6107faf19f844d8",
+          "source_field": "body",
+          "start": 0,
+          "end": 50,
+          "source_role": "assistant_report",
+          "quote": "The booking page is live and deposits are enabled."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "ab96bd5141914f288626fca456826fda",
+          "source_field": "body",
+          "start": 0,
+          "end": 63,
+          "source_role": "user_intent",
+          "quote": "Launch workshop reservations with card deposits and a waitlist."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+          "source_field": "body",
+          "start": 0,
+          "end": 52,
+          "source_role": "user_intent",
+          "quote": "Saffron Dining accepts deposits for supper bookings."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "be0a7e2933bb44a185ec23fadc501e48",
+          "source_field": "body",
+          "start": 52,
+          "end": 133,
+          "source_role": "user_intent",
+          "quote": " That separate dining setup does not authorize deposits for the workshop preview."
+        },
+        {
+          "ref": "R0005",
+          "source_id": "c2613590d18448e08c040236bceabf08",
+          "source_field": "body",
+          "start": 41,
+          "end": 110,
+          "source_role": "user_intent",
+          "quote": " The instructor wants to review seating before customers can reserve."
+        },
+        {
+          "ref": "R0006",
+          "source_id": "b17df99a00434913aa2dde682b0cd760",
+          "source_field": "body",
+          "start": 66,
+          "end": 129,
+          "source_role": "user_intent",
+          "quote": " Public reservations remain blocked until seating is confirmed."
+        },
+        {
+          "ref": "R0007",
+          "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+          "source_field": "body",
+          "start": 0,
+          "end": 66,
+          "source_role": "user_intent",
+          "quote": "The removed room worksheet does not establish a workshop capacity."
+        },
+        {
+          "ref": "R0008",
+          "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+          "source_field": "body",
+          "start": 66,
+          "end": 130,
+          "source_role": "user_intent",
+          "quote": " Leave the capacity unset until Lea measures the seating layout."
+        },
+        {
+          "ref": "R0009",
+          "source_id": "b17df99a00434913aa2dde682b0cd760",
+          "source_field": "body",
+          "start": 0,
+          "end": 66,
+          "source_role": "user_intent",
+          "quote": "Lea must confirm studio seating before the 18 January walkthrough."
+        },
+        {
+          "ref": "R0010",
+          "source_id": "364039af761349cebce6bcbeee9a3031",
+          "source_field": "body",
+          "start": 0,
+          "end": 51,
+          "source_role": "tool_record",
+          "quote": "Preview route returned HTTP 200 for the staff role."
+        },
+        {
+          "ref": "R0011",
+          "source_id": "364039af761349cebce6bcbeee9a3031",
+          "source_field": "body",
+          "start": 51,
+          "end": 83,
+          "source_role": "tool_record",
+          "quote": "\nPublic route returned HTTP 403."
+        },
+        {
+          "ref": "R0012",
+          "source_id": "364039af761349cebce6bcbeee9a3031",
+          "source_field": "body",
+          "start": 83,
+          "end": 110,
+          "source_role": "tool_record",
+          "quote": "\nPayment provider calls: 0."
+        },
+        {
+          "ref": "R0013",
+          "source_id": "74e64c5f2f5c44dbb455266067d2557b",
+          "source_field": "body",
+          "start": 0,
+          "end": 130,
+          "source_role": "user_intent",
+          "quote": "The removed room worksheet does not establish a workshop capacity. Leave the capacity unset until Lea measures the seating layout."
+        },
+        {
+          "ref": "R0014",
+          "source_id": "ccbee2d5af9749f39bee5498c402cd31",
+          "source_field": "body",
+          "start": 0,
+          "end": 34,
+          "source_role": "user_intent",
+          "quote": "Dining may accept supper deposits."
+        }
+      ],
+      "blind_answer_id": "answer-01",
+      "reader_native_dispatch": {
+        "key": "0b346d7bd07d874d78d9f47bedd3ad4a0afb9cce2506c7aa6f008bcf373860f1",
+        "scope": {
+          "phase": "reader",
+          "history_id": "hold_207",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "0366f486c90fedfd52025ec1d84776aa1cf042b8b1d5efd0d9eebe0926a2deb6",
+          "helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0089",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "485d84193860467f5d3b75f55ed6f4a361cc60156fd7cde0fae7ec7b1709b102",
+        "request_file_sha256": "18cb65f916de0fd7e6f57d3864bdbeec95e270aca692d750b230062e655d633d",
+        "response_file_sha256": "5719347cd2ec5e95b116345527c7348f54c7a3f004f676b926205c8c8b3440d0",
+        "reused": false,
+        "native_wall_ms": 18693
+      },
+      "judge_native_dispatch": {
+        "key": "9c2b12179efb8a4a1022ed88306ddf78a2424a27b8774fb7b56b0f804e24b263",
+        "scope": {
+          "phase": "judge",
+          "history_id": "hold_207",
+          "run_id": "primary",
+          "repeat": 0,
+          "protocol_sha256": "0366f486c90fedfd52025ec1d84776aa1cf042b8b1d5efd0d9eebe0926a2deb6",
+          "helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0123",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "1b573110168ad0728c2e075cd73660fc1326b5e30ceea6f49fae6ddb55fa43cf",
+        "request_file_sha256": "991d9c852491adf93cd0542167a8adc4b95ded70f5abb33629e2fdc38dadfa4f",
+        "response_file_sha256": "66bf236eb3911c71a208abc414745fa5eb8aab07443ddfaf2e413185ecabb55e",
+        "reused": false,
+        "native_wall_ms": 12243
+      }
+    },
+    {
+      "history_id": "hold_202",
+      "repeat": 1,
+      "question_id": "q1",
+      "classification": "demonstrable_critical_label_mismatch",
+      "diagnosis": "The answer identifies the request as initial and explicitly says automatic swaps were canceled while the sheet remains. The original boundary explicitly identifies the same November task. Describing that change history does not assert current swaps or merge a neighboring task. Any concern about whether cancellation caused the goal change is a separate causal-support question, not evidence of the assigned false_merge label.",
+      "actual_answer": {
+        "id": "q1",
+        "answer": "The current goal is to finish a draft of the November volunteer rota for coordinator review. The initial request included automatic shift swaps and a printable attendance sheet; the goal changed when the user canceled swaps but kept the printable sheet. Shared phones mean individual confirmation links cannot establish attendance, so use initials on the printed sheet and send no confirmation messages. The separate December fundraiser guest list must not be used to fill rota shifts. Two shifts still need assignments, and publication waits for coordinator review.",
+        "uncertainties": [
+          "The source coverage is incomplete and user-source custody remains unresolved; the cited excerpts support this summary but may not capture all user intent."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0002",
+            "source_id": "56dae41025f646259442a64dd2d26662",
+            "source_field": "body",
+            "start": 0,
+            "end": 93,
+            "source_role": "user_intent",
+            "quote": "Prepare a monthly volunteer rota with automatic shift swaps and a printable attendance sheet."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "33ec50067888458e9406355bce423a64",
+            "source_field": "body",
+            "start": 43,
+            "end": 141,
+            "source_role": "user_intent",
+            "quote": " Several volunteers share one phone, so individual confirmation links cannot establish attendance."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "33ec50067888458e9406355bce423a64",
+            "source_field": "body",
+            "start": 141,
+            "end": 176,
+            "source_role": "user_intent",
+            "quote": " Use initials on the printed sheet."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "33ec50067888458e9406355bce423a64",
+            "source_field": "body",
+            "start": 176,
+            "end": 226,
+            "source_role": "user_intent",
+            "quote": " Do not send confirmation messages from this task."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "4c02b873e4ce40b8a018e85218a790a8",
+            "source_field": "body",
+            "start": 0,
+            "end": 49,
+            "source_role": "user_intent",
+            "quote": "This is the same November rota task as yesterday."
+          },
+          {
+            "catalog_ref": "R0007",
+            "source_id": "4c02b873e4ce40b8a018e85218a790a8",
+            "source_field": "body",
+            "start": 49,
+            "end": 151,
+            "source_role": "user_intent",
+            "quote": " The separate December fundraiser guest list is not a volunteer roster and must not fill these shifts."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "21fc439bb38e4edaa89615c3aed96269",
+            "source_field": "body",
+            "start": 0,
+            "end": 29,
+            "source_role": "user_intent",
+            "quote": "Cancel automatic shift swaps."
+          },
+          {
+            "catalog_ref": "R0009",
+            "source_id": "21fc439bb38e4edaa89615c3aed96269",
+            "source_field": "body",
+            "start": 29,
+            "end": 75,
+            "source_role": "user_intent",
+            "quote": " Keep the printable attendance sheet in scope."
+          },
+          {
+            "catalog_ref": "R0011",
+            "source_id": "33ec50067888458e9406355bce423a64",
+            "source_field": "body",
+            "start": 0,
+            "end": 43,
+            "source_role": "user_intent",
+            "quote": "Finish a draft rota for coordinator review."
+          },
+          {
+            "catalog_ref": "R0013",
+            "source_id": "6c50fb72aabe4e0385c3c6b372d62713",
+            "source_field": "body",
+            "start": 0,
+            "end": 65,
+            "source_role": "user_intent",
+            "quote": "Coordinator Ellis must assign the two empty shifts by 4 November."
+          },
+          {
+            "catalog_ref": "R0014",
+            "source_id": "6c50fb72aabe4e0385c3c6b372d62713",
+            "source_field": "body",
+            "start": 65,
+            "end": 111,
+            "source_role": "user_intent",
+            "quote": " Publication waits for the coordinator review."
+          },
+          {
+            "catalog_ref": "R0015",
+            "source_id": "1683514cbb9447da827eb7d3112e5c0b",
+            "source_field": "body",
+            "start": 0,
+            "end": 57,
+            "source_role": "tool_record",
+            "quote": "Roster validation: two shifts have no assigned volunteer."
+          }
+        ]
+      },
+      "immutable_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": false,
+        "empty_or_evasive": false,
+        "critical_errors": [
+          "false_merge"
+        ],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true
+          },
+          {
+            "fact_index": 1,
+            "recalled": true
+          }
+        ],
+        "rationale": "States the current draft goal and shared-phone reason, but incorrectly imports the original monthly-rota request as part of the current goal’s change history, despite the later cancellation and narrowed scope. The citations support the quoted historical request but not that it caused the goal change.",
+        "id": "q1",
+        "required_facts_total": 2,
+        "required_facts_recalled": 2,
+        "context_chars": 4789,
+        "reader_shared_latency_ms": 13789,
+        "reader_shared_metrics": {
+          "duration_ms": 13770,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18429,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1398,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 19827
+            }
+          }
+        },
+        "category": "current_goal"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Finish a draft rota for coordinator review.",
+            "support": [
+              {
+                "session_id": "hold_202_return",
+                "event_index": 0,
+                "event_id": "hold_202_direction",
+                "fragment": "Finish a draft rota for coordinator review."
+              }
+            ]
+          },
+          {
+            "text": "Several volunteers share one phone, so individual confirmation links cannot establish attendance.",
+            "support": [
+              {
+                "session_id": "hold_202_return",
+                "event_index": 0,
+                "event_id": "hold_202_direction",
+                "fragment": "Several volunteers share one phone, so individual confirmation links cannot establish attendance."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "Prepare a monthly volunteer rota with automatic shift swaps and a printable attendance sheet.",
+            "error_type": "false_merge"
+          }
+        ],
+        "current_state_required": true,
+        "category": "current_goal",
+        "expected_actionability": "Continue the current goal for its stated reason."
+      },
+      "original_evidence": [
+        {
+          "session_id": "hold_202_early",
+          "project_key": "cedar_rota",
+          "event_index": 0,
+          "id": "hold_202_request",
+          "type": "user",
+          "text": "Prepare a monthly volunteer rota with automatic shift swaps and a printable attendance sheet."
+        },
+        {
+          "session_id": "hold_202_early",
+          "project_key": "cedar_rota",
+          "event_index": 2,
+          "id": "hold_202_report",
+          "type": "assistant",
+          "text": "All volunteers have confirmed the final rota."
+        },
+        {
+          "session_id": "hold_202_return",
+          "project_key": "cedar_rota",
+          "event_index": 0,
+          "id": "hold_202_direction",
+          "type": "user",
+          "text": "Finish a draft rota for coordinator review. Several volunteers share one phone, so individual confirmation links cannot establish attendance. Use initials on the printed sheet. Do not send confirmation messages from this task."
+        },
+        {
+          "session_id": "hold_202_return",
+          "project_key": "cedar_rota",
+          "event_index": 1,
+          "id": "hold_202_boundary",
+          "type": "user",
+          "text": "This is the same November rota task as yesterday. The separate December fundraiser guest list is not a volunteer roster and must not fill these shifts."
+        },
+        {
+          "session_id": "hold_202_return",
+          "project_key": "cedar_rota",
+          "event_index": 3,
+          "id": "hold_202_scope",
+          "type": "user",
+          "text": "Cancel automatic shift swaps. Keep the printable attendance sheet in scope."
+        }
+      ],
+      "visible_citation_catalog": [
+        {
+          "ref": "R0001",
+          "source_id": "8f317ab69f3d457e9eb2facc20fc4b29",
+          "source_field": "body",
+          "start": 0,
+          "end": 45,
+          "source_role": "assistant_report",
+          "quote": "All volunteers have confirmed the final rota."
+        },
+        {
+          "ref": "R0002",
+          "source_id": "56dae41025f646259442a64dd2d26662",
+          "source_field": "body",
+          "start": 0,
+          "end": 93,
+          "source_role": "user_intent",
+          "quote": "Prepare a monthly volunteer rota with automatic shift swaps and a printable attendance sheet."
+        },
+        {
+          "ref": "R0003",
+          "source_id": "33ec50067888458e9406355bce423a64",
+          "source_field": "body",
+          "start": 43,
+          "end": 141,
+          "source_role": "user_intent",
+          "quote": " Several volunteers share one phone, so individual confirmation links cannot establish attendance."
+        },
+        {
+          "ref": "R0004",
+          "source_id": "33ec50067888458e9406355bce423a64",
+          "source_field": "body",
+          "start": 141,
+          "end": 176,
+          "source_role": "user_intent",
+          "quote": " Use initials on the printed sheet."
+        },
+        {
+          "ref": "R0005",
+          "source_id": "33ec50067888458e9406355bce423a64",
+          "source_field": "body",
+          "start": 176,
+          "end": 226,
+          "source_role": "user_intent",
+          "quote": " Do not send confirmation messages from this task."
+        },
+        {
+          "ref": "R0006",
+          "source_id": "4c02b873e4ce40b8a018e85218a790a8",
+          "source_field": "body",
+          "start": 0,
+          "end": 49,
+          "source_role": "user_intent",
+          "quote": "This is the same November rota task as yesterday."
+        },
+        {
+          "ref": "R0007",
+          "source_id": "4c02b873e4ce40b8a018e85218a790a8",
+          "source_field": "body",
+          "start": 49,
+          "end": 151,
+          "source_role": "user_intent",
+          "quote": " The separate December fundraiser guest list is not a volunteer roster and must not fill these shifts."
+        },
+        {
+          "ref": "R0008",
+          "source_id": "21fc439bb38e4edaa89615c3aed96269",
+          "source_field": "body",
+          "start": 0,
+          "end": 29,
+          "source_role": "user_intent",
+          "quote": "Cancel automatic shift swaps."
+        },
+        {
+          "ref": "R0009",
+          "source_id": "21fc439bb38e4edaa89615c3aed96269",
+          "source_field": "body",
+          "start": 29,
+          "end": 75,
+          "source_role": "user_intent",
+          "quote": " Keep the printable attendance sheet in scope."
+        },
+        {
+          "ref": "R0010",
+          "source_id": "7654b39812f7462a90de56efd180b575",
+          "source_field": "body",
+          "start": 0,
+          "end": 56,
+          "source_role": "user_intent",
+          "quote": "Do not rely on the removed availability import for Hana."
+        },
+        {
+          "ref": "R0011",
+          "source_id": "33ec50067888458e9406355bce423a64",
+          "source_field": "body",
+          "start": 0,
+          "end": 43,
+          "source_role": "user_intent",
+          "quote": "Finish a draft rota for coordinator review."
+        },
+        {
+          "ref": "R0012",
+          "source_id": "7654b39812f7462a90de56efd180b575",
+          "source_field": "body",
+          "start": 56,
+          "end": 115,
+          "source_role": "user_intent",
+          "quote": " Ask the coordinator for a fresh availability confirmation."
+        },
+        {
+          "ref": "R0013",
+          "source_id": "6c50fb72aabe4e0385c3c6b372d62713",
+          "source_field": "body",
+          "start": 0,
+          "end": 65,
+          "source_role": "user_intent",
+          "quote": "Coordinator Ellis must assign the two empty shifts by 4 November."
+        },
+        {
+          "ref": "R0014",
+          "source_id": "6c50fb72aabe4e0385c3c6b372d62713",
+          "source_field": "body",
+          "start": 65,
+          "end": 111,
+          "source_role": "user_intent",
+          "quote": " Publication waits for the coordinator review."
+        },
+        {
+          "ref": "R0015",
+          "source_id": "1683514cbb9447da827eb7d3112e5c0b",
+          "source_field": "body",
+          "start": 0,
+          "end": 57,
+          "source_role": "tool_record",
+          "quote": "Roster validation: two shifts have no assigned volunteer."
+        },
+        {
+          "ref": "R0016",
+          "source_id": "1683514cbb9447da827eb7d3112e5c0b",
+          "source_field": "body",
+          "start": 57,
+          "end": 88,
+          "source_role": "tool_record",
+          "quote": "\nConfirmation messages sent: 0."
+        },
+        {
+          "ref": "R0017",
+          "source_id": "33ec50067888458e9406355bce423a64",
+          "source_field": "body",
+          "start": 0,
+          "end": 226,
+          "source_role": "user_intent",
+          "quote": "Finish a draft rota for coordinator review. Several volunteers share one phone, so individual confirmation links cannot establish attendance. Use initials on the printed sheet. Do not send confirmation messages from this task."
+        },
+        {
+          "ref": "R0018",
+          "source_id": "4c02b873e4ce40b8a018e85218a790a8",
+          "source_field": "body",
+          "start": 0,
+          "end": 151,
+          "source_role": "user_intent",
+          "quote": "This is the same November rota task as yesterday. The separate December fundraiser guest list is not a volunteer roster and must not fill these shifts."
+        }
+      ],
+      "blind_answer_id": "answer-03",
+      "reader_native_dispatch": {
+        "key": "dbdf35d82707826196d855eaeb3451806c6803d009c1c53c6b37d61a50557920",
+        "scope": {
+          "phase": "reader",
+          "history_id": "hold_202",
+          "run_id": "primary",
+          "repeat": 1,
+          "protocol_sha256": "0366f486c90fedfd52025ec1d84776aa1cf042b8b1d5efd0d9eebe0926a2deb6",
+          "helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0084",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "e5f73b1c88a43016b5ec4a0bd2ea70bb758c48dc4867f761ace67fd8fea1ef1a",
+        "request_file_sha256": "0acb39d71e6cd7c621f6d62d438fd8e02c6069ae3b6958bc4c864e4c3a587d83",
+        "response_file_sha256": "1ff0d172263efde4fb89612987f36a89e9b33a186cc4d35f023a96c5b0df6caf",
+        "reused": false,
+        "native_wall_ms": 13789
+      },
+      "judge_native_dispatch": {
+        "key": "8f451c7139dd0b88d7ed04537ab061a4f5c617d1df9068a2250d2e8eee567753",
+        "scope": {
+          "phase": "judge",
+          "history_id": "hold_202",
+          "run_id": "primary",
+          "repeat": 1,
+          "protocol_sha256": "0366f486c90fedfd52025ec1d84776aa1cf042b8b1d5efd0d9eebe0926a2deb6",
+          "helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "medium",
+          "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+        },
+        "source_call_id": "call-0118",
+        "source_variant": "candidate",
+        "request_bytes_sha256": "6326f708ba4a0ea4b57e659c61731b338902f2b3f100275d307a5266fb9e6d64",
+        "request_file_sha256": "ab44dc3f89bbae8d8b248c08817da474cb3eff5b819456a038ba79b5d8d1146c",
+        "response_file_sha256": "14e667d4948ea6b792ef8b4eaf3a3d232d5fe1b483635ae12fbcf96c283f579d",
+        "reused": false,
+        "native_wall_ms": 8532
+      }
+    }
+  ],
+  "general_findings": [
+    {
+      "kind": "product_and_reader",
+      "finding": "A short user direction can lose its current-goal and constraints while retaining only its reason. Displaying a neighboring boundary does not license deriving the goal-change reason from it. Whole-source and reason retention need separate prospective checks.",
+      "evidence": "hold_207 q1: canonical catalog exposes only the second direction sentence as R0005, which the answer then fails to use."
+    },
+    {
+      "kind": "judge_contract",
+      "finding": "Critical labels must identify an asserted forbidden conclusion, preserving negation, historical tense, task identity and source role. A forbidden-inference string that repeats the old request is not itself evidence that a reader reinstated it. Extra explicit caution against promoting a report is not project mixing.",
+      "evidence": "hold_207 q5 and hold_202 repeat1 q1; exact answers and original source statements above.",
+      "prospective_only": "Use exact asserted-answer and source witnesses in future validation; preserve every existing raw grade and failed run."
+    }
+  ],
+  "limitations": [
+    "This is a human-readable evidence audit, not a replacement judge result or score repair.",
+    "No conclusion that the run would pass without the two disputed critical labels; all original grades, omissions, denominator and acceptance gates remain unchanged.",
+    "No code, criteria, fixture, gold, report, answer or native receipt was modified.",
+    "Only the three critical cases were diagnosed; this is not an audit of all noncritical grading."
+  ],
+  "input_sha256": {
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/holdout-report.json": "8667e6cd5e52be5f2c72dac6019663226417f6f988161bb774e49c5d12caffc7",
+    "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout.json": "0b2a90f73b3b5d23b227988485bf5e02a55c196105b7260757f7813df0410e74",
+    "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json": "195fdf9a14c58c5e125d00160901b74302cb938413a95b8174c0df427c15bb83",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_207/reader-0.json": "fb4857a7e684f3591c757ff82ab061607a83213a217c7e81b51e486c8ff138dd",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_207/judge-0.json": "f5b1c10e92482466a55de4e188738851c6aebf85bb1e3a8b66a6239204127535",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_207/judge-0.blind-map.json": "440ee5dd9a022d57437b888c3fea1ef91f88706114eb7f579d238857d32720a9",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_207/citation-catalog.json": "22959ae288c1ea7a76aeab282bff332e1748cc187e1978f1c8f4910ff5c2a22e",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0089-request.json": "18cb65f916de0fd7e6f57d3864bdbeec95e270aca692d750b230062e655d633d",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0089-response.json": "5719347cd2ec5e95b116345527c7348f54c7a3f004f676b926205c8c8b3440d0",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0123-request.json": "991d9c852491adf93cd0542167a8adc4b95ded70f5abb33629e2fdc38dadfa4f",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0123-response.json": "66bf236eb3911c71a208abc414745fa5eb8aab07443ddfaf2e413185ecabb55e",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_202/reader-1.json": "d5d6dcd6a946ad31b4ea523352da6196fd8f820ed6b2876522a896e846d627e2",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_202/judge-1.json": "b7d07284c068ea0f77b303900c502f2e2dd6ee41d2359570b586c99470173664",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_202/judge-1.blind-map.json": "7f2ec3940486894cf1fb51004e15fc6f85afbf40c27edf39eec7b15cc91f72ef",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_202/citation-catalog.json": "070ccee01381374318e7f1eabc352e52c0d90cec1fde69d00c71fa680974e95d",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0084-request.json": "0acb39d71e6cd7c621f6d62d438fd8e02c6069ae3b6958bc4c864e4c3a587d83",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0084-response.json": "1ff0d172263efde4fb89612987f36a89e9b33a186cc4d35f023a96c5b0df6caf",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0118-request.json": "ab44dc3f89bbae8d8b248c08817da474cb3eff5b819456a038ba79b5d8d1146c",
+    "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0118-response.json": "14e667d4948ea6b792ef8b4eaf3a3d232d5fe1b483635ae12fbcf96c283f579d"
+  },
+  "input_integrity_verified_unchanged": true
+}

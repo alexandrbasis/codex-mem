@@ -1,0 +1,1954 @@
+{
+  "schema_version": 1,
+  "scope": "All candidate primary execution_evidence q3 failures and q3 paired losses, plus failing regeneration q3. Read-only diagnosis; scores unchanged; no native calls.",
+  "frozen_r3_result": {
+    "candidate_full": 71,
+    "baseline_full": 67,
+    "denominator": 96,
+    "status": "negative"
+  },
+  "general_causes": [
+    {
+      "owner": "codex_mem/project_memory_query.py:_COMPARE and plan_query",
+      "cause": "All disclosed q3 queries say compared with ... earlier ... . _COMPARE recognizes compare, not compared, so earlier makes historical=True and projection=state. build_project_brief returns historical_query before selecting sources. Own contexts are metadata stubs of 176-179 chars.",
+      "repair_direction": "Recognize grammatical comparison inflections in the existing comparison operator. Preserve exact subject/scope filtering and genuinely historical queries. Verify stored source selection through the public read seam; do not infer outcomes from assistant reports."
+    },
+    {
+      "owner": "bounded episode field projection and source association",
+      "cause": "Tool outcomes exist in every inspected SQLite source and have episode evidence refs, but bounded other-question projections often omit outcome fields from the shared union. Assistant reports always exist as sources but sometimes have no episode evidence refs.",
+      "repair_direction": "Keep comparison requests connected to both attributed tool outcomes and assistant reports, under existing project/session/privacy/deletion guards and bounded evidence budgets. Missing refs must remain a disclosed gap, not inferred completion."
+    },
+    {
+      "owner": "judge rationale visibility attribution",
+      "cause": "Several rationales describe original-history facts as visible despite their absence from every shared context and the trusted citation catalog. This changes causal attribution, not the frozen recall score.",
+      "repair_direction": "Future diagnosis must compare against actual shared catalog spans. Do not rescore this trial."
+    }
+  ],
+  "cases": [
+    {
+      "history": "hold_201",
+      "run": "candidate/hold_201",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 3,
+      "baseline_recalled": 2,
+      "paired_fact_loss_indexes": [
+        0,
+        1
+      ],
+      "own_context_chars": 178,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Harbor crate labels, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish harbor crate labels compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_201_observed",
+          "source_id": "7b054100959b42de885c4d619c19940b",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_201/harbor_labels",
+            "capture_source": "hook:PostToolUse",
+            "body": "Local export check: 18 of 18 sample rows retained their leading zeros.\nPacking-floor deployment: not attempted.",
+            "span": [
+              0,
+              111
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_fafb77b6238e8a611abdcc6217e86cd98aa8c83d",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  70
+                ],
+                [
+                  70,
+                  111
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_fafb77b6238e8a611abdcc6217e86cd98aa8c83d",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  70
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_201_report",
+          "source_id": "289a6174b4f94756aa8c33e469e8b843",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_201/harbor_labels",
+            "capture_source": "hook:Stop",
+            "body": "I have deployed the exporter to the packing floor and every scanner accepted a label.",
+            "span": [
+              0,
+              85
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied view contains only project-memory coverage metadata, so it does not establish what Harbor execution observed or what an earlier assistant reported as complete; no command, exit code, or output is available for comparison.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "Abstains despite the visible evidence: the local check retained leading zeros in 18 of 18 rows, packing-floor deployment was not attempted, and the earlier assistant reported deployment and scanner acceptance. No citations are supplied.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "7b054100959b42de885c4d619c19940b",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        },
+        {
+          "source_id": "289a6174b4f94756aa8c33e469e8b843",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_201/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_201/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_201/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_201/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_201/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_201~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_204",
+      "run": "candidate/hold_204",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 4,
+      "baseline_recalled": 1,
+      "paired_fact_loss_indexes": [
+        3
+      ],
+      "own_context_chars": 179,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Birch invoice preview, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish birch invoice preview compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_204_observed",
+          "source_id": "98f95bb87a384fb9b092f05c40444385",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_204/birch_invoices",
+            "capture_source": "hook:PostToolUse",
+            "body": "Preview comparison: 7 of 9 examples include adjustment notes.\nLive invoice records written: 0.\nDispatch attempted: false.",
+            "span": [
+              0,
+              121
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_0011ecdfde6774e1c7cbcb7e1bd5863674e0722e",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  61
+                ],
+                [
+                  61,
+                  94
+                ],
+                [
+                  94,
+                  121
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_204_report",
+          "source_id": "e615f5f233144e4d8737f0386bf18931",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_204/birch_invoices",
+            "capture_source": "hook:Stop",
+            "body": "I replaced the live invoice engine and delivered this month’s invoices.",
+            "span": [
+              0,
+              71
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied view contains no execution details and no earlier assistant completion report to compare against.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "This is an unsupported abstention: all six retrieved contexts are visible, including the recorded result (7 of 9 examples, zero live-record writes, no dispatch attempt) and the assistant’s earlier completion report. It recalls none of the required facts.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "98f95bb87a384fb9b092f05c40444385",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        },
+        {
+          "source_id": "e615f5f233144e4d8737f0386bf18931",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_204/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_204/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_204/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_204/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_204/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_204~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_205",
+      "run": "candidate/hold_205",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 4,
+      "baseline_recalled": 0,
+      "paired_fact_loss_indexes": [],
+      "own_context_chars": 176,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Moss trail map, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish moss trail map compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_205_observed",
+          "source_id": "41fb80aace064c188ee4a63e6792311b",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_205/moss_trails",
+            "capture_source": "hook:PostToolUse",
+            "body": "Internal map rendered: 6 routes.\nPublic publish command rejected: missing ranger approval.\nPublic map changed: false.",
+            "span": [
+              0,
+              117
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_2fa704b4998bec62438649ff9498c38383205f54",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  32
+                ],
+                [
+                  32,
+                  90
+                ],
+                [
+                  90,
+                  117
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_2fa704b4998bec62438649ff9498c38383205f54",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  32
+                ],
+                [
+                  32,
+                  90
+                ],
+                [
+                  90,
+                  117
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_205_report",
+          "source_id": "2b03679f44bb461886ab2ce7d55f7a41",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_205/moss_trails",
+            "capture_source": "hook:Stop",
+            "body": "The public map has been published with all routes approved.",
+            "span": [
+              0,
+              59
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_bf1ce8d24190bacdd93223a2b291585ef1618abd",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  59
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied context for this question contains only a coverage notice; it provides neither the assistant’s earlier completion report nor observed execution details, so no command, exit code, output, or completed work can be established or compared.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "The shared memory includes the six-route internal render, rejected public publish, unchanged public map, and the assistant’s earlier publication report. The answer incorrectly claims those details are absent and gives no citations.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "41fb80aace064c188ee4a63e6792311b",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        },
+        {
+          "source_id": "2b03679f44bb461886ab2ce7d55f7a41",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_205/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_205/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_205/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_205/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_205/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_205~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_209",
+      "run": "candidate/hold_209",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 3,
+      "baseline_recalled": 3,
+      "paired_fact_loss_indexes": [
+        0,
+        1,
+        2
+      ],
+      "own_context_chars": 176,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Lumen meter export, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish lumen meter export compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_209_observed",
+          "source_id": "0e5aadf3869d43eebb0e51b60b55ce4c",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_209/lumen_meter",
+            "capture_source": "hook:PostToolUse",
+            "body": "Sandbox unit test: 5 cases passed, 1 case failed.\nLive meter configuration updated: false.",
+            "span": [
+              0,
+              90
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_6a24eb05811dbc1ae1b0a89537994b247fcf07ee",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  49
+                ],
+                [
+                  49,
+                  90
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_209_report",
+          "source_id": "e7a222ce23c34a54a8500a2735a669d7",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_209/lumen_meter",
+            "capture_source": "hook:Stop",
+            "body": "The live meter export is installed and reporting accurate totals.",
+            "span": [
+              0,
+              65
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [],
+          "shared_catalog_entries": [
+            {
+              "ref": "R0001",
+              "source_id": "e7a222ce23c34a54a8500a2735a669d7",
+              "source_field": "body",
+              "start": 0,
+              "end": 65,
+              "source_role": "assistant_report"
+            }
+          ],
+          "shared_context_locations": [
+            {
+              "questions": [
+                "q1",
+                "q2",
+                "q4",
+                "q5",
+                "q6"
+              ],
+              "location": {
+                "object_id": "e7a222ce23c34a54a8500a2735a669d7",
+                "field": "assistant_report",
+                "source_field": "body",
+                "start": 0,
+                "end": 65
+              }
+            }
+          ],
+          "classification": "visible_to_reader"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied view contains no observed command, exit code, or output, and no earlier assistant completion report to compare against. It therefore establishes neither execution nor completion for the meter export.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "The shared memory contains the observed test result, the unchanged live configuration, and the earlier assistant report. The answer incorrectly says these are absent and provides no citations.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "0e5aadf3869d43eebb0e51b60b55ce4c",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_209/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_209/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_209/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_209/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_209/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_209~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_210",
+      "run": "candidate/hold_210",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 4,
+      "baseline_recalled": 3,
+      "paired_fact_loss_indexes": [
+        0,
+        1,
+        2
+      ],
+      "own_context_chars": 177,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Wren exhibition posters, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish wren exhibition posters compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_210_observed",
+          "source_id": "66ea7798e51648c08803be8def240da8",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_210/wren_posters",
+            "capture_source": "hook:PostToolUse",
+            "body": "Local PDF proof generated: 2 pages.\nPrinter upload failed: destination unavailable.\nPrinter approval received: false.",
+            "span": [
+              0,
+              117
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_5d9cd51b29605404c5bec5f09fb519a6b527c839",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  35
+                ],
+                [
+                  35,
+                  83
+                ],
+                [
+                  83,
+                  117
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_210_report",
+          "source_id": "646d522f67114991983e956b9af0294d",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_210/wren_posters",
+            "capture_source": "hook:Stop",
+            "body": "The print files have been sent and the printer has approved them.",
+            "span": [
+              0,
+              65
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_9b5886028b1340ecb636b85a706c9952a7fc9227",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_9b5886028b1340ecb636b85a706c9952a7fc9227",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied memory view contains only project metadata and no observed execution or earlier assistant completion report, so it cannot establish what was done or how that compares with the report.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "Abstains based on the memory view despite the execution output and earlier assistant report being visible elsewhere in shared memory. It misses the two-page local proof, failed upload due to unavailable destination, false approval result, and the assistant’s earlier report. No citations are provided.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "66ea7798e51648c08803be8def240da8",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        },
+        {
+          "source_id": "646d522f67114991983e956b9af0294d",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_210/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_210/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_210/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_210/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_210/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_210~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_211",
+      "run": "candidate/hold_211",
+      "question": "q3",
+      "candidate_recalled": 1,
+      "required": 4,
+      "baseline_recalled": 0,
+      "paired_fact_loss_indexes": [],
+      "own_context_chars": 176,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Copper seed library, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish copper seed library compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_211_observed",
+          "source_id": "abb8658279e848b99c683c213a4b60af",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_211/copper_seed",
+            "capture_source": "hook:PostToolUse",
+            "body": "Desk catalogue imported: 41 lots.\nPublic catalogue route disabled.\nShipping labels generated: 0.",
+            "span": [
+              0,
+              96
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_91d6abd05d5b15c96ea4e9577d61116821667c33",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  33
+                ],
+                [
+                  33,
+                  66
+                ],
+                [
+                  66,
+                  96
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_91d6abd05d5b15c96ea4e9577d61116821667c33",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  33
+                ],
+                [
+                  33,
+                  66
+                ],
+                [
+                  66,
+                  96
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_211_report",
+          "source_id": "b7997cc01f9a48c5a8ca0516b41fcd0b",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_211/copper_seed",
+            "capture_source": "hook:Stop",
+            "body": "The catalogue is public and postal delivery is ready.",
+            "span": [
+              0,
+              53
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_6ee326fdcbc8dfba1911a99428869e8f7b2a0ceb",
+              "field": "goal",
+              "spans": [
+                [
+                  0,
+                  53
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_6ee326fdcbc8dfba1911a99428869e8f7b2a0ceb",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  53
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [
+            {
+              "ref": "R0011",
+              "source_id": "b7997cc01f9a48c5a8ca0516b41fcd0b",
+              "source_field": "body",
+              "start": 0,
+              "end": 53,
+              "source_role": "assistant_report"
+            }
+          ],
+          "shared_context_locations": [
+            {
+              "questions": [
+                "q1"
+              ],
+              "location": {
+                "object_id": "pm_6ee326fdcbc8dfba1911a99428869e8f7b2a0ceb",
+                "field": "goal_source_excerpt",
+                "source_field": "body",
+                "start": 0,
+                "end": 53
+              }
+            }
+          ],
+          "classification": "visible_to_reader"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown: the supplied memory contains no observed execution, command, exit code, or output establishing what was done. It only contains an earlier assistant report that the catalogue was public and postal delivery ready; that report does not verify execution. User intent later sets a desk-only goal and cancels postal delivery, with Toma’s tests and a passing rehearsal still required, but the memory does not establish whether those steps occurred.",
+        "cited_source_ids": [
+          "07786f4c63ff40de8ef483919cafcecd",
+          "8a83897722e54ea1aceee7da61a85399",
+          "b7997cc01f9a48c5a8ca0516b41fcd0b"
+        ]
+      },
+      "judge_rationale": "It incorrectly says there is no observed execution evidence: visible memory includes the recorded output that 41 lots were imported, the public route disabled, and zero shipping labels generated. It correctly recalls the earlier assistant report, but omits all three observed results and cites none of them.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "abb8658279e848b99c683c213a4b60af",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_211/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_211/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_211/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_211/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_211/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_211~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_213",
+      "run": "candidate/hold_213",
+      "question": "q3",
+      "candidate_recalled": 3,
+      "required": 4,
+      "baseline_recalled": 0,
+      "paired_fact_loss_indexes": [],
+      "own_context_chars": 177,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Plum caption review, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish plum caption compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_213_observed",
+          "source_id": "58c2df12584d41a2970a8dce907de393",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_213/plum_caption",
+            "capture_source": "hook:PostToolUse",
+            "body": "Caption alignment check: 32 of 32 clips within tolerance.\nIdentification consent records checked: 0.\nPublication write attempted: false.",
+            "span": [
+              0,
+              136
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_217ea6959c49e8768128cf1644e04ed827254a90",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  57
+                ],
+                [
+                  57,
+                  100
+                ],
+                [
+                  100,
+                  136
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_217ea6959c49e8768128cf1644e04ed827254a90",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  57
+                ],
+                [
+                  57,
+                  100
+                ],
+                [
+                  100,
+                  136
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [
+            {
+              "ref": "R0011",
+              "source_id": "58c2df12584d41a2970a8dce907de393",
+              "source_field": "body",
+              "start": 0,
+              "end": 57,
+              "source_role": "tool_record"
+            },
+            {
+              "ref": "R0012",
+              "source_id": "58c2df12584d41a2970a8dce907de393",
+              "source_field": "body",
+              "start": 57,
+              "end": 100,
+              "source_role": "tool_record"
+            },
+            {
+              "ref": "R0013",
+              "source_id": "58c2df12584d41a2970a8dce907de393",
+              "source_field": "body",
+              "start": 100,
+              "end": 136,
+              "source_role": "tool_record"
+            }
+          ],
+          "shared_context_locations": [
+            {
+              "questions": [
+                "q1",
+                "q5"
+              ],
+              "location": {
+                "object_id": "pm_217ea6959c49e8768128cf1644e04ed827254a90",
+                "field": "outcome_source_excerpt",
+                "source_field": "body",
+                "start": 0,
+                "end": 57
+              }
+            },
+            {
+              "questions": [
+                "q1",
+                "q5"
+              ],
+              "location": {
+                "object_id": "pm_217ea6959c49e8768128cf1644e04ed827254a90",
+                "field": "outcome_source_excerpt",
+                "source_field": "body",
+                "start": 57,
+                "end": 100
+              }
+            },
+            {
+              "questions": [
+                "q1",
+                "q5"
+              ],
+              "location": {
+                "object_id": "pm_217ea6959c49e8768128cf1644e04ed827254a90",
+                "field": "outcome_source_excerpt",
+                "source_field": "body",
+                "start": 100,
+                "end": 136
+              }
+            }
+          ],
+          "classification": "visible_to_reader"
+        },
+        {
+          "event_id": "hold_213_report",
+          "source_id": "bd3475726691493a8a938e8ce025dfd1",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_213/plum_caption",
+            "capture_source": "hook:Stop",
+            "body": "All captions and speaker names have been verified and published.",
+            "span": [
+              0,
+              64
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown from the q3 view: it provides no source excerpts or citation refs showing observed execution or the assistant’s earlier completion report, and no command, exit code, or output scope. Across the shared evidence pool, a tool record reports that 32 of 32 clips were within alignment tolerance, zero identification-consent records were checked, and no publication write was attempted. That establishes only those reported check results; it does not establish consent verification or publication. No earlier assistant completion report is supplied, so a comparison with it cannot be made.",
+        "cited_source_ids": [
+          "58c2df12584d41a2970a8dce907de393"
+        ]
+      },
+      "judge_rationale": "The three observed check results are accurately cited and qualified. But it incorrectly says no earlier assistant completion report is supplied; the answer omits the required report and cannot make the requested comparison. The visible memory is incomplete, so that absence claim is unsupported.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "bd3475726691493a8a938e8ce025dfd1",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_213/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_213/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_213/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_213/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_213/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_213~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_214",
+      "run": "candidate/hold_214",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 3,
+      "baseline_recalled": 1,
+      "paired_fact_loss_indexes": [
+        2
+      ],
+      "own_context_chars": 177,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Slate repair intake, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish slate repair intake compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_214_observed",
+          "source_id": "5e120f4290d741f2abd0de3e963cf332",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_214/slate_repair",
+            "capture_source": "hook:PostToolUse",
+            "body": "Draft intake test: fault and diagnosis stored in separate fields.\nCustomer portal deployment blocked: technician sign-off missing.",
+            "span": [
+              0,
+              130
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_260ca1147540f27928722bd89c0422d3f87ad30d",
+              "field": "open_work",
+              "spans": [
+                [
+                  65,
+                  130
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_260ca1147540f27928722bd89c0422d3f87ad30d",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  65
+                ],
+                [
+                  65,
+                  130
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_260ca1147540f27928722bd89c0422d3f87ad30d",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [
+            {
+              "ref": "R0007",
+              "source_id": "5e120f4290d741f2abd0de3e963cf332",
+              "source_field": "body",
+              "start": 65,
+              "end": 130,
+              "source_role": "tool_record"
+            }
+          ],
+          "shared_context_locations": [
+            {
+              "questions": [
+                "q1",
+                "q2",
+                "q4",
+                "q5",
+                "q6"
+              ],
+              "location": {
+                "object_id": "pm_260ca1147540f27928722bd89c0422d3f87ad30d",
+                "field": "open_work_source_excerpt",
+                "source_field": "body",
+                "start": 65,
+                "end": 130
+              }
+            }
+          ],
+          "classification": "partial_shared_union_omission"
+        },
+        {
+          "event_id": "hold_214_report",
+          "source_id": "174f0dba36f849d3b2175845cd09892f",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_214/slate_repair",
+            "capture_source": "hook:Stop",
+            "body": "Intake is live and the estimates are approved by the technicians.",
+            "span": [
+              0,
+              65
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_52f3abba32d43e90d820287e50e9f38dc442be3e",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_52f3abba32d43e90d820287e50e9f38dc442be3e",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied view contains no observed execution details and no earlier assistant completion report to compare against, so it establishes neither what was executed nor whether any reported completion was verified.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "Abstains despite visible evidence: the tool record reports separate fault and diagnosis fields and a portal deployment block for missing sign-off, while an earlier assistant report said intake was live and estimates were technician-approved. No citations are provided.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "174f0dba36f849d3b2175845cd09892f",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_214/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_214/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_214/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_214/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_214/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_214~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_215",
+      "run": "candidate/hold_215",
+      "question": "q3",
+      "candidate_recalled": 0,
+      "required": 4,
+      "baseline_recalled": 0,
+      "paired_fact_loss_indexes": [],
+      "own_context_chars": 176,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Amber water log, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish amber water log compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_215_observed",
+          "source_id": "a92b70ec9c664f3fbf2fbe16d71e698b",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_215/amber_water",
+            "capture_source": "hook:PostToolUse",
+            "body": "Observation run completed: 48 meter samples logged.\nActuator commands sent: 0.\nController deployment: not performed.",
+            "span": [
+              0,
+              116
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_08ffb23fbb376b2466e43cc63df6448647741b80",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  51
+                ],
+                [
+                  51,
+                  78
+                ],
+                [
+                  78,
+                  116
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_215_report",
+          "source_id": "ab9aeb28141f4e64a1d2246fe30f7a3c",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_215/amber_water",
+            "capture_source": "hook:Stop",
+            "body": "The controller is deployed and the west beds were watered automatically.",
+            "span": [
+              0,
+              72
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The supplied view does not show observed execution details or the assistant’s earlier completion report, so it cannot establish what actually ran or compare that with the report.",
+        "cited_source_ids": []
+      },
+      "judge_rationale": "Abstains despite the shared memory providing no cited execution result or earlier report. It recalls none of the four required facts; under the stated grading rule, empty abstention fails.",
+      "judge_visibility_mismatches": [],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_215/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_215/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_215/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_215/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_215/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_215~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_216",
+      "run": "candidate/hold_216",
+      "question": "q3",
+      "candidate_recalled": 1,
+      "required": 4,
+      "baseline_recalled": 3,
+      "paired_fact_loss_indexes": [
+        0,
+        1,
+        2
+      ],
+      "own_context_chars": 178,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Pearl course certificates, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish pearl course certificates compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_216_observed",
+          "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_216/pearl_courses",
+            "capture_source": "hook:PostToolUse",
+            "body": "Draft certificate batch generated: 23 files.\nInstructor approval flag: false.\nEmail submissions: 0.",
+            "span": [
+              0,
+              99
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_b85bb92a21a1de27f061823e102040698cf87417",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  44
+                ],
+                [
+                  44,
+                  77
+                ],
+                [
+                  77,
+                  99
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_b85bb92a21a1de27f061823e102040698cf87417",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  44
+                ],
+                [
+                  44,
+                  77
+                ],
+                [
+                  77,
+                  99
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        },
+        {
+          "event_id": "hold_216_report",
+          "source_id": "44c0b24d38004ad98a17d8c08fc2d93d",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/projects/hold_216/pearl_courses",
+            "capture_source": "hook:Stop",
+            "body": "Every certificate has been issued and emailed to its participant.",
+            "span": [
+              0,
+              65
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_4310e5d7788214ea2415881379cf1a310affdbe4",
+              "field": "goal",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_4310e5d7788214ea2415881379cf1a310affdbe4",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  65
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [
+            {
+              "ref": "R0013",
+              "source_id": "44c0b24d38004ad98a17d8c08fc2d93d",
+              "source_field": "body",
+              "start": 0,
+              "end": 65,
+              "source_role": "assistant_report"
+            }
+          ],
+          "shared_context_locations": [
+            {
+              "questions": [
+                "q2",
+                "q4",
+                "q5",
+                "q6"
+              ],
+              "location": {
+                "object_id": "pm_4310e5d7788214ea2415881379cf1a310affdbe4",
+                "field": "goal_source_excerpt",
+                "source_field": "body",
+                "start": 0,
+                "end": 65
+              }
+            }
+          ],
+          "classification": "visible_to_reader"
+        }
+      ],
+      "reader_answer": {
+        "answer": "Unknown. The observed execution is not included in the supplied memory, so what it establishes cannot be compared with the earlier assistant report that every certificate was issued and emailed. That report is not execution evidence. (R0013)",
+        "cited_source_ids": [
+          "44c0b24d38004ad98a17d8c08fc2d93d"
+        ]
+      },
+      "judge_rationale": "It recalls the assistant’s earlier report, but incorrectly says the observed execution is absent from memory. Visible evidence reports 23 draft files, approval false, and zero email submissions. The answer abstains instead of comparing those observed limits with the earlier report.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_216~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    },
+    {
+      "history": "hold_201",
+      "run": "replicates/regeneration-1/candidate/hold_201",
+      "question": "q3",
+      "candidate_recalled": 2,
+      "required": 3,
+      "baseline_recalled": 2,
+      "paired_fact_loss_indexes": [],
+      "own_context_chars": 178,
+      "own_context_has_sources": false,
+      "query": "What does the observed execution establish for Harbor crate labels, compared with the assistant’s earlier completion report?",
+      "query_ir_before_repair": {
+        "natural": true,
+        "historical": true,
+        "projection": "state",
+        "candidate_queries": [
+          "observed execution establish harbor crate labels compared assistant s earlier completion report"
+        ],
+        "topic_query": true,
+        "generic_project_state": false,
+        "assesses_current_evidence": false
+      },
+      "sources": [
+        {
+          "event_id": "hold_201_observed",
+          "source_id": "69d914015352444980d8251df29b03e2",
+          "source_role": "tool_record",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/projects/hold_201/harbor_labels",
+            "capture_source": "hook:PostToolUse",
+            "body": "Local export check: 18 of 18 sample rows retained their leading zeros.\nPacking-floor deployment: not attempted.",
+            "span": [
+              0,
+              111
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [
+            {
+              "object_id": "pm_0f4f4074cac0078040ab91704f063230240dd455",
+              "field": "outcome",
+              "spans": [
+                [
+                  0,
+                  70
+                ],
+                [
+                  70,
+                  111
+                ]
+              ]
+            },
+            {
+              "object_id": "pm_0f4f4074cac0078040ab91704f063230240dd455",
+              "field": "summary",
+              "spans": [
+                [
+                  0,
+                  70
+                ],
+                [
+                  70,
+                  111
+                ]
+              ]
+            }
+          ],
+          "shared_catalog_entries": [
+            {
+              "ref": "R0010",
+              "source_id": "69d914015352444980d8251df29b03e2",
+              "source_field": "body",
+              "start": 0,
+              "end": 70,
+              "source_role": "tool_record"
+            },
+            {
+              "ref": "R0011",
+              "source_id": "69d914015352444980d8251df29b03e2",
+              "source_field": "body",
+              "start": 70,
+              "end": 111,
+              "source_role": "tool_record"
+            }
+          ],
+          "shared_context_locations": [
+            {
+              "questions": [
+                "q1",
+                "q2",
+                "q4",
+                "q6"
+              ],
+              "location": {
+                "object_id": "pm_0f4f4074cac0078040ab91704f063230240dd455",
+                "field": "outcome_source_excerpt",
+                "source_field": "body",
+                "start": 0,
+                "end": 70
+              }
+            },
+            {
+              "questions": [
+                "q1",
+                "q2",
+                "q4",
+                "q6"
+              ],
+              "location": {
+                "object_id": "pm_0f4f4074cac0078040ab91704f063230240dd455",
+                "field": "outcome_source_excerpt",
+                "source_field": "body",
+                "start": 70,
+                "end": 111
+              }
+            }
+          ],
+          "classification": "visible_to_reader"
+        },
+        {
+          "event_id": "hold_201_report",
+          "source_id": "75fb36c937844a84ab23798c6e152e43",
+          "source_role": "assistant_report",
+          "source_field": "body",
+          "captured": true,
+          "stored_source": {
+            "project": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/projects/hold_201/harbor_labels",
+            "capture_source": "hook:Stop",
+            "body": "I have deployed the exporter to the packing floor and every scanner accepted a label.",
+            "span": [
+              0,
+              85
+            ],
+            "superseded_by": null
+          },
+          "eligible_project": true,
+          "stored_object_refs": [],
+          "shared_catalog_entries": [],
+          "shared_context_locations": [],
+          "classification": "shared_union_omission"
+        }
+      ],
+      "reader_answer": {
+        "answer": "The available observed result is limited to the tool-record statement that a local export check retained leading zeros in 18 of 18 sample rows. It also says packing-floor deployment was not attempted. The supplied memory does not include the command, exit code, or output details, and it contains no earlier assistant completion report to compare against. Therefore, whether or how that report overstated completion is unknown; the evidence does not establish a deployment or broader completion.",
+        "cited_source_ids": [
+          "69d914015352444980d8251df29b03e2"
+        ]
+      },
+      "judge_rationale": "Reports the local check and unattempted deployment accurately, but misses the earlier assistant deployment and scanner-acceptance report, despite that report being visible in shared memory. Its claim that no such report was supplied is unsupported.",
+      "judge_visibility_mismatches": [
+        {
+          "source_id": "75fb36c937844a84ab23798c6e152e43",
+          "issue": "Judge rationale implies this evidence was reader-visible, but the complete shared catalog and context union contain no span from this source. Original required-fact score is preserved."
+        }
+      ],
+      "evidence_paths": {
+        "contexts": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/candidate/hold_201/contexts.json",
+        "catalog": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/candidate/hold_201/citation-catalog.json",
+        "reader": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/candidate/hold_201/reader-0.json",
+        "judge": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/candidate/hold_201/judge-0.json",
+        "sqlite": "/private/tmp/codex-mem-quality-20261021-r3-experiment/replicates/regeneration-1/candidate/hold_201/data/memory.sqlite3",
+        "gold_pointer": "/private/tmp/codex-mem-quality-20261021-r3-sealed/holdout-gold.json#/questions/hold_201~1q3"
+      },
+      "causal_assessment": "Every q3 own view is skipped as historical. Sources absent from the actual shared union cannot be recalled by the reader; omissions of present catalog entries are reader omissions. Missing object refs are an extraction-association gap, not source capture loss. No scoring change is proposed."
+    }
+  ],
+  "post_trial_local_repair_proof": {
+    "native_calls": 0,
+    "scores_unchanged": true,
+    "database_method": "Copy frozen candidate memory.sqlite3 and config.json into a disposable directory, then call build_project_brief with exact disclosed q3 and 5900-char budget. Frozen experiment files untouched.",
+    "implementation_sha256": "e20edbbca511eb6f2e2e0d2a0a0c03142b3ba66fa9bfb49b27c753bc27daf82a",
+    "tests": "python3 -m unittest tests.test_project_memory_query tests.test_project_memory_retrieval:49passed, including a temporary-store attributed execution/report regression",
+    "results": [
+      {
+        "history": "hold_201",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "289a6174b4f94756aa8c33e469e8b843",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "85"
+          }
+        ],
+        "chars": 5895
+      },
+      {
+        "history": "hold_202",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "8f317ab69f3d457e9eb2facc20fc4b29",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "45"
+          },
+          {
+            "source_id": "1683514cbb9447da827eb7d3112e5c0b",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "57"
+          },
+          {
+            "source_id": "1683514cbb9447da827eb7d3112e5c0b",
+            "source_role": "tool_record",
+            "start": "57",
+            "end": "88"
+          }
+        ],
+        "chars": 5786
+      },
+      {
+        "history": "hold_203",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "24fd2983b6654e94b2ca786d48edd65f",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "47"
+          },
+          {
+            "source_id": "76f193bb5d1c420d87aeaaa5bb6d6a03",
+            "source_role": "tool_record",
+            "start": "62",
+            "end": "115"
+          }
+        ],
+        "chars": 5773
+      },
+      {
+        "history": "hold_204",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [],
+        "chars": 5725
+      },
+      {
+        "history": "hold_205",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "2b03679f44bb461886ab2ce7d55f7a41",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "59"
+          }
+        ],
+        "chars": 5375
+      },
+      {
+        "history": "hold_206",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "44"
+          },
+          {
+            "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+            "source_role": "tool_record",
+            "start": "44",
+            "end": "85"
+          },
+          {
+            "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+            "source_role": "tool_record",
+            "start": "85",
+            "end": "108"
+          }
+        ],
+        "chars": 5739
+      },
+      {
+        "history": "hold_207",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "9f75353324f048b4a6107faf19f844d8",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "50"
+          }
+        ],
+        "chars": 5873
+      },
+      {
+        "history": "hold_208",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "fe5569cb981c405688eacbe05bec7920",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "77"
+          }
+        ],
+        "chars": 5622
+      },
+      {
+        "history": "hold_209",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "e7a222ce23c34a54a8500a2735a669d7",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "65"
+          }
+        ],
+        "chars": 5713
+      },
+      {
+        "history": "hold_210",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "66ea7798e51648c08803be8def240da8",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "35"
+          },
+          {
+            "source_id": "66ea7798e51648c08803be8def240da8",
+            "source_role": "tool_record",
+            "start": "35",
+            "end": "83"
+          },
+          {
+            "source_id": "66ea7798e51648c08803be8def240da8",
+            "source_role": "tool_record",
+            "start": "83",
+            "end": "117"
+          }
+        ],
+        "chars": 5715
+      },
+      {
+        "history": "hold_211",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "b7997cc01f9a48c5a8ca0516b41fcd0b",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "53"
+          }
+        ],
+        "chars": 5702
+      },
+      {
+        "history": "hold_212",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "03cf5cf44ec9439883cb5bbf5b553e93",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "63"
+          },
+          {
+            "source_id": "03cf5cf44ec9439883cb5bbf5b553e93",
+            "source_role": "tool_record",
+            "start": "63",
+            "end": "115"
+          }
+        ],
+        "chars": 5898
+      },
+      {
+        "history": "hold_213",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "bd3475726691493a8a938e8ce025dfd1",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "64"
+          }
+        ],
+        "chars": 5814
+      },
+      {
+        "history": "hold_214",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [],
+        "chars": 5865
+      },
+      {
+        "history": "hold_215",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [],
+        "chars": 5801
+      },
+      {
+        "history": "hold_216",
+        "historical": false,
+        "projection": "history",
+        "skip_reason": null,
+        "source_refs": [
+          {
+            "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "44"
+          },
+          {
+            "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+            "source_role": "tool_record",
+            "start": "44",
+            "end": "77"
+          },
+          {
+            "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+            "source_role": "tool_record",
+            "start": "77",
+            "end": "99"
+          }
+        ],
+        "chars": 5728
+      }
+    ],
+    "limitation": "Fix removes historical skip. Actual observed tool spans remain absent in some bounded own-query views; this is a separate source/field-selection gap and is not claimed repaired."
+  },
+  "repair_status": "Comparison inflections fixed after the frozen R3 export. This is a partial source-selection repair, with remaining bounded omission documented. No old artifacts or grades changed."
+}

@@ -1,0 +1,1373 @@
+{
+  "schema_version": 1,
+  "scope": "R2 development-v1 primary reader-0/judge-0 diagnosis only; original grades preserved",
+  "outcome": "negative: baseline 23/24 fully supported; candidate 22/24; zero critical errors; no positive quality claim",
+  "access_boundary": "Read development fixtures/gold, experiment artifacts, local retrieval source and SQLite databases in read-only mode. No holdout, holdout gold, independent author material, model calls, code edits or rescoring.",
+  "original_run_budget_reported_by_parent": {
+    "model_calls": 39,
+    "tokens": 635888
+  },
+  "method": "Check exact native request/response receipts, canonical context union, typed citation catalog and stored source/field intervals. Treat every query view as shared reader evidence as the native prompt explicitly directs. Database connections used mode=ro. No new retrieval invocation or counterfactual model run.",
+  "development_gold_sha256": "9c232fb5aa2555a6d15f9bc564fa5845ca3b04ad59244ff593425fd182fd1b65",
+  "histories": [
+    {
+      "history": "dev_101",
+      "baseline_fully_supported": 5,
+      "candidate_fully_supported": 5,
+      "baseline_state_sha256": "b11b7ece369383560c28411cb6e46fdc9745e3ecf8c6bf98b32840433b630199",
+      "candidate_state_sha256": "b11b7ece369383560c28411cb6e46fdc9745e3ecf8c6bf98b32840433b630199",
+      "candidate_cloned_baseline_state_sha256": "b11b7ece369383560c28411cb6e46fdc9745e3ecf8c6bf98b32840433b630199",
+      "contexts_exactly_equal": false,
+      "catalogs_exactly_equal": false
+    },
+    {
+      "history": "dev_102",
+      "baseline_fully_supported": 6,
+      "candidate_fully_supported": 6,
+      "baseline_state_sha256": "91c8cbbc409f82f721bc18c74f3315914d7cb94e890763417519c2ce7bbd6031",
+      "candidate_state_sha256": "91c8cbbc409f82f721bc18c74f3315914d7cb94e890763417519c2ce7bbd6031",
+      "candidate_cloned_baseline_state_sha256": "91c8cbbc409f82f721bc18c74f3315914d7cb94e890763417519c2ce7bbd6031",
+      "contexts_exactly_equal": true,
+      "catalogs_exactly_equal": true
+    },
+    {
+      "history": "dev_103",
+      "baseline_fully_supported": 6,
+      "candidate_fully_supported": 5,
+      "baseline_state_sha256": "79b1cd3f14ab9e358d1919e3d2508f705c55b74e77d499dcd2fe69b44cedf0e0",
+      "candidate_state_sha256": "79b1cd3f14ab9e358d1919e3d2508f705c55b74e77d499dcd2fe69b44cedf0e0",
+      "candidate_cloned_baseline_state_sha256": "79b1cd3f14ab9e358d1919e3d2508f705c55b74e77d499dcd2fe69b44cedf0e0",
+      "contexts_exactly_equal": true,
+      "catalogs_exactly_equal": true
+    },
+    {
+      "history": "dev_104",
+      "baseline_fully_supported": 6,
+      "candidate_fully_supported": 6,
+      "baseline_state_sha256": "a9eba5c72ec9f316e4d6a85edd3e1f1022d0d75bd77d0ee02db4b73327a1ced0",
+      "candidate_state_sha256": "a9eba5c72ec9f316e4d6a85edd3e1f1022d0d75bd77d0ee02db4b73327a1ced0",
+      "candidate_cloned_baseline_state_sha256": "a9eba5c72ec9f316e4d6a85edd3e1f1022d0d75bd77d0ee02db4b73327a1ced0",
+      "contexts_exactly_equal": true,
+      "catalogs_exactly_equal": true
+    }
+  ],
+  "failure_inventory": {
+    "candidate": [
+      "dev_101/q5",
+      "dev_103/q4"
+    ],
+    "baseline": [
+      "dev_101/q5"
+    ],
+    "baseline_only_failed_question_keys": [],
+    "clarification": "The baseline has one failure, shared with candidate; there is no question that fails only in baseline. Candidate loses an additional fact within the shared q5 failure and both facts on q4."
+  },
+  "cases": [
+    {
+      "question_key": "dev_101/q5",
+      "question": "What did the recorded inspection actually confirm about the sheet?",
+      "gold": {
+        "required_facts": [
+          {
+            "text": "The paper label sheet was saved.",
+            "support": [
+              {
+                "session_id": "dev_101_s2",
+                "event_index": 1,
+                "event_id": "dev_101_d",
+                "fragment": "Paper label sheet: saved."
+              }
+            ]
+          },
+          {
+            "text": "The spacing check had not run.",
+            "support": [
+              {
+                "session_id": "dev_101_s2",
+                "event_index": 1,
+                "event_id": "dev_101_d",
+                "fragment": "Spacing check: not run."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "All verification was complete.",
+            "error_type": "false_closure"
+          }
+        ],
+        "current_state_required": true,
+        "category": "tool_evidence",
+        "expected_actionability": "informational"
+      },
+      "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+      "source_role": "tool_record",
+      "classification": "genuine rendering/budget visibility loss; common missing outcome plus candidate-only missing tool-open-work group",
+      "baseline": {
+        "grade_unchanged": {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": false,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false
+            },
+            {
+              "fact_index": 1,
+              "recalled": true
+            }
+          ],
+          "rationale": "Correctly states that the spacing check had not run and avoids claiming verification was complete. It omits the required fact that the paper label sheet was saved; the sole citation does not support the answer’s description of what the inspection confirmed as a whole.",
+          "id": "q5",
+          "required_facts_total": 2,
+          "required_facts_recalled": 1,
+          "context_chars": 5815,
+          "reader_shared_latency_ms": 8798,
+          "reader_shared_metrics": {
+            "duration_ms": 8771,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 17366,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 686,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 18052
+              }
+            }
+          },
+          "category": "tool_evidence"
+        },
+        "reader_answer": {
+          "id": "q5",
+          "answer": "The recorded inspection confirmed no findings: the spacing check was not run. The memory does not establish whether the sheet’s spacing is correct.",
+          "uncertainties": [
+            "No completed inspection or spacing result is shown."
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0007",
+              "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+              "source_field": "body",
+              "start": 25,
+              "end": 49,
+              "source_role": "tool_record",
+              "quote": " Spacing check: not run."
+            }
+          ]
+        },
+        "native_output": {
+          "evidence_check": {
+            "accepted_results": "The tool record confirms only that the spacing check was not run.",
+            "open_work_and_reasons": "The spacing check remains open; no inspection findings are evidenced.",
+            "source_role_distinctions": "There is a tool record of non-execution, not a recorded inspection result."
+          },
+          "answer": "The recorded inspection confirmed no findings: the spacing check was not run. The memory does not establish whether the sheet’s spacing is correct.",
+          "citation_refs": [
+            "R0007"
+          ],
+          "uncertainties": [
+            "No completed inspection or spacing result is shown."
+          ]
+        },
+        "source_visibility_in_all_views": [
+          {
+            "query_view": "q4",
+            "item_id": "pm_f483c5703e750dedab353e6bdcc6db35383d3049",
+            "lane": "episode",
+            "field_name": "open_work_source_excerpt",
+            "pointer": {
+              "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+              "start": "25",
+              "end": "49",
+              "source_role": "tool_record",
+              "field": "open_work",
+              "quote_truncated": "False"
+            },
+            "quote": " Spacing check: not run."
+          },
+          {
+            "query_view": "q5",
+            "item_id": "pm_f483c5703e750dedab353e6bdcc6db35383d3049",
+            "lane": "episode",
+            "field_name": "open_work_source_excerpt",
+            "pointer": {
+              "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+              "start": "25",
+              "end": "49",
+              "source_role": "tool_record",
+              "field": "open_work",
+              "quote_truncated": "False"
+            },
+            "quote": " Spacing check: not run."
+          }
+        ],
+        "catalog_entries": [
+          {
+            "ref": "R0007",
+            "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+            "source_field": "body",
+            "start": 25,
+            "end": 49,
+            "source_role": "tool_record",
+            "quote": " Spacing check: not run."
+          }
+        ],
+        "stored_entries": [
+          {
+            "id": "4f595dcf2e69411fbbf9c46413f151b4",
+            "project": "/private/tmp/codex-mem-quality-20261021-r2-experiment/projects/dev_101/seed_shelf",
+            "body": "Paper label sheet: saved. Spacing check: not run.",
+            "source": "hook:PostToolUse",
+            "session_id": "dev_101_s2",
+            "superseded_by": null
+          }
+        ],
+        "stored_object_fields": [
+          {
+            "id": "pm_f483c5703e750dedab353e6bdcc6db35383d3049",
+            "revision": 2,
+            "object_type": "episode",
+            "workflow_state": null,
+            "fields": {
+              "open_work": "User intent: The paper label sheet still needs a spacing check.\nTool record: Spacing check: not run.",
+              "outcome": "Tool record: Paper label sheet: saved.",
+              "summary": "User intent: Drop only the screen preview.\nUser intent: The paper label sheet still needs a spacing check.\nTool record: Paper label sheet: saved."
+            },
+            "evidence": {
+              "open_work": [
+                {
+                  "end": 80,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " The paper label sheet still needs a spacing check.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "a77cdab230d64098b894bb15ace6b93e",
+                  "source_recorded_at": "2026-10-21T06:49:45.054569Z",
+                  "source_role": "user_intent",
+                  "start": 29
+                },
+                {
+                  "end": 49,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " Spacing check: not run.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+                  "source_recorded_at": "2026-10-21T06:49:45.057371Z",
+                  "source_role": "tool_record",
+                  "start": 25
+                }
+              ],
+              "outcome": [
+                {
+                  "end": 25,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "Paper label sheet: saved.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+                  "source_recorded_at": "2026-10-21T06:49:45.057371Z",
+                  "source_role": "tool_record",
+                  "start": 0
+                }
+              ],
+              "summary": [
+                {
+                  "end": 29,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "Drop only the screen preview.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "a77cdab230d64098b894bb15ace6b93e",
+                  "source_recorded_at": "2026-10-21T06:49:45.054569Z",
+                  "source_role": "user_intent",
+                  "start": 0
+                },
+                {
+                  "end": 80,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " The paper label sheet still needs a spacing check.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "a77cdab230d64098b894bb15ace6b93e",
+                  "source_recorded_at": "2026-10-21T06:49:45.054569Z",
+                  "source_role": "user_intent",
+                  "start": 29
+                },
+                {
+                  "end": 25,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "Paper label sheet: saved.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+                  "source_recorded_at": "2026-10-21T06:49:45.057371Z",
+                  "source_role": "tool_record",
+                  "start": 0
+                }
+              ]
+            }
+          }
+        ],
+        "stored_tool_uses": [
+          {
+            "entry_id": "4f595dcf2e69411fbbf9c46413f151b4",
+            "tool_use_id": "dev_101_d",
+            "tool_name": "functions.exec_command",
+            "tool_input": "{\"command\":\"seed-index inspect --paper\"}",
+            "tool_response": "{\"exit_code\":0,\"output\":\"Paper label sheet: saved. Spacing check: not run.\"}",
+            "response_metadata_json": "{\"encoding\":\"json\",\"excluded\":false,\"memory_context_omitted\":false,\"original_bytes\":76,\"present\":true,\"redacted\":false,\"shape\":\"object\",\"stored_bytes\":76,\"truncated\":false}"
+          }
+        ],
+        "native_reader_receipt": {
+          "call_id": "call-0013",
+          "request": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0013-request.json",
+          "request_file_sha256": "2036f61f3e5e7d3b1280130c55f36ee4b0bbc1689822437ae16c378af5ba8b32",
+          "response": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0013-response.json",
+          "response_file_sha256": "207048ede7daa56ecc00bf87d66ef7ad1e0b70c6a175b368ac490de7e85bfbf4",
+          "shared_pool_instruction_verified": true,
+          "source_fragments_in_actual_prompt": {
+            "Paper label sheet: saved.": false,
+            "Spacing check: not run.": true
+          }
+        },
+        "artifact_hashes": {
+          "contexts.json": "21695f6ad226d803f81cd84826a4f658ba0cc66b8a7ca53ab67d811f2ae3153e",
+          "citation-catalog.json": "f65818b4e2f9051733a6838487e79a674920fe9ef52978c52e0284161e111798",
+          "reader-0.json": "13c52f033d025fc5907a58b00b68d988473952f9c32841649fdf52844ebaef5a",
+          "judge-0.json": "38d8ff8bf9e634ecc8f29ea2308410a396a659ee4dcf8b8761024c874d578dbd",
+          "generation.json": "c4b8785f853213ba86ef7c7c488819f902f16b15ea2e5b880e78e90862dad984"
+        }
+      },
+      "candidate": {
+        "grade_unchanged": {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": false,
+          "empty_or_evasive": true,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false
+            },
+            {
+              "fact_index": 1,
+              "recalled": false
+            }
+          ],
+          "rationale": "The answer abstains and incorrectly claims no inspection record is supplied. The gold records an inspection confirming the sheet was saved and the spacing check had not run. Its citation supports only that the check was still needed, not the denial of an inspection record.",
+          "id": "q5",
+          "required_facts_total": 2,
+          "required_facts_recalled": 0,
+          "context_chars": 5827,
+          "reader_shared_latency_ms": 9027,
+          "reader_shared_metrics": {
+            "duration_ms": 8999,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 17360,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 838,
+                "reasoning_output_tokens": 231,
+                "total_tokens": 18198
+              }
+            }
+          },
+          "category": "tool_evidence"
+        },
+        "reader_answer": {
+          "id": "q5",
+          "answer": "Unknown. The supplied memory does not record an inspection confirming anything about the sheet; it says the paper label sheet still needs a spacing check.",
+          "uncertainties": [
+            "No inspection record or result is present in the supplied contexts."
+          ],
+          "citations": [
+            {
+              "catalog_ref": "R0008",
+              "source_id": "a77cdab230d64098b894bb15ace6b93e",
+              "source_field": "body",
+              "start": 0,
+              "end": 80,
+              "source_role": "user_intent",
+              "quote": "Drop only the screen preview. The paper label sheet still needs a spacing check."
+            }
+          ]
+        },
+        "native_output": {
+          "evidence_check": {
+            "accepted_results": "Not evidenced: no recorded inspection result appears in the supplied contexts.",
+            "open_work_and_reasons": "The user says the sheet still needs a spacing check.",
+            "source_role_distinctions": "The memory includes user statements and an assistant report about drafting views, but no observed inspection result."
+          },
+          "answer": "Unknown. The supplied memory does not record an inspection confirming anything about the sheet; it says the paper label sheet still needs a spacing check.",
+          "citation_refs": [
+            "R0008"
+          ],
+          "uncertainties": [
+            "No inspection record or result is present in the supplied contexts."
+          ]
+        },
+        "source_visibility_in_all_views": [],
+        "catalog_entries": [],
+        "stored_entries": [
+          {
+            "id": "4f595dcf2e69411fbbf9c46413f151b4",
+            "project": "/private/tmp/codex-mem-quality-20261021-r2-experiment/projects/dev_101/seed_shelf",
+            "body": "Paper label sheet: saved. Spacing check: not run.",
+            "source": "hook:PostToolUse",
+            "session_id": "dev_101_s2",
+            "superseded_by": null
+          }
+        ],
+        "stored_object_fields": [
+          {
+            "id": "pm_f483c5703e750dedab353e6bdcc6db35383d3049",
+            "revision": 2,
+            "object_type": "episode",
+            "workflow_state": null,
+            "fields": {
+              "open_work": "User intent: The paper label sheet still needs a spacing check.\nTool record: Spacing check: not run.",
+              "outcome": "Tool record: Paper label sheet: saved.",
+              "summary": "User intent: Drop only the screen preview.\nUser intent: The paper label sheet still needs a spacing check.\nTool record: Paper label sheet: saved."
+            },
+            "evidence": {
+              "open_work": [
+                {
+                  "end": 80,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " The paper label sheet still needs a spacing check.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "a77cdab230d64098b894bb15ace6b93e",
+                  "source_recorded_at": "2026-10-21T06:49:45.054569Z",
+                  "source_role": "user_intent",
+                  "start": 29
+                },
+                {
+                  "end": 49,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " Spacing check: not run.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+                  "source_recorded_at": "2026-10-21T06:49:45.057371Z",
+                  "source_role": "tool_record",
+                  "start": 25
+                }
+              ],
+              "outcome": [
+                {
+                  "end": 25,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "Paper label sheet: saved.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+                  "source_recorded_at": "2026-10-21T06:49:45.057371Z",
+                  "source_role": "tool_record",
+                  "start": 0
+                }
+              ],
+              "summary": [
+                {
+                  "end": 29,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "Drop only the screen preview.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "a77cdab230d64098b894bb15ace6b93e",
+                  "source_recorded_at": "2026-10-21T06:49:45.054569Z",
+                  "source_role": "user_intent",
+                  "start": 0
+                },
+                {
+                  "end": 80,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " The paper label sheet still needs a spacing check.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "a77cdab230d64098b894bb15ace6b93e",
+                  "source_recorded_at": "2026-10-21T06:49:45.054569Z",
+                  "source_role": "user_intent",
+                  "start": 29
+                },
+                {
+                  "end": 25,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "Paper label sheet: saved.",
+                  "session_id": "dev_101_s2",
+                  "source_id": "4f595dcf2e69411fbbf9c46413f151b4",
+                  "source_recorded_at": "2026-10-21T06:49:45.057371Z",
+                  "source_role": "tool_record",
+                  "start": 0
+                }
+              ]
+            }
+          }
+        ],
+        "stored_tool_uses": [
+          {
+            "entry_id": "4f595dcf2e69411fbbf9c46413f151b4",
+            "tool_use_id": "dev_101_d",
+            "tool_name": "functions.exec_command",
+            "tool_input": "{\"command\":\"seed-index inspect --paper\"}",
+            "tool_response": "{\"exit_code\":0,\"output\":\"Paper label sheet: saved. Spacing check: not run.\"}",
+            "response_metadata_json": "{\"encoding\":\"json\",\"excluded\":false,\"memory_context_omitted\":false,\"original_bytes\":76,\"present\":true,\"redacted\":false,\"shape\":\"object\",\"stored_bytes\":76,\"truncated\":false}"
+          }
+        ],
+        "native_reader_receipt": {
+          "call_id": "call-0018",
+          "request": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0018-request.json",
+          "request_file_sha256": "4a2875f127e98942455a40e584738a9416993761662cdee4524b4fc0cc19962d",
+          "response": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0018-response.json",
+          "response_file_sha256": "f15ccbf7ed3764252f299878b59d3a78398c9bf0a3818dbdff02c9a7c236d080",
+          "shared_pool_instruction_verified": true,
+          "source_fragments_in_actual_prompt": {
+            "Paper label sheet: saved.": false,
+            "Spacing check: not run.": false
+          }
+        },
+        "artifact_hashes": {
+          "contexts.json": "e7515f2dac876c4c0aebf7d8eb0bd265a1ad268c8481bd573cf060c2adab1153",
+          "citation-catalog.json": "1fb5376439bfd8c99f46d33ca3b0500d94ce6429792b374920f41d9672c61f6d",
+          "reader-0.json": "cd63465289cce4aec37f6e58f1ec24f1d27dc0b3745e620d4442664b2ef07f9e",
+          "judge-0.json": "d47d251507e6607845cf9db06d4b3331a0d959b27f046fbca222bd3ff814db3b",
+          "generation.json": "3b6a1af89cd4ac8b5c99f1fcb285c22b867a24644d351255d9d35ec81efc2f99"
+        }
+      },
+      "conclusions": [
+        "Capture and extraction succeeded in the common ledger. Both arms store the same tool source and validated functions.exec_command record, exit_code 0, command seed-index inspect --paper, untruncated output. Episode pm_f483c5703e750dedab353e6bdcc6db35383d3049 revision 2 has saved-sheet outcome/summary evidence [0,25) and not-run open_work evidence [25,49). No completion claim is needed.",
+        "Saved-sheet fact [0,25) is absent from every canonical view, typed catalog and raw native reader prompt in BOTH arms. Baseline cannot cite this missing fact. The baseline answer accurately recalls not-run but omits saved, so its full-answer failure is supported; do not classify the missing saved fact as reader omission.",
+        "Baseline q4/q5 expose the full open_work pointer group: user source a77cdab230d64098b894bb15ace6b93e [29,80), and tool source [25,49). Catalog R0007 is the actual not-run tool span. Candidate omits the entire open_work group: same episode has fields_omitted=4 rather than baseline 3. Candidate has zero catalog spans from the tool source and neither tool fact occurs anywhere in its actual native prompt.",
+        "Candidate q4/q5 instead show full user custody quotes [0,118) from 504c3cc1d003401bb9a852ded2c562ba and [0,80) from a77cdab230d64098b894bb15ace6b93e. Baseline q5 is 5815 characters; candidate q5 is 5827. Candidate custody fallback reservation competes with the complete open_work group under the same 6000-character ceiling. Source evidence is deferred when the tool source is already cited by candidate material, even if that material does not render. Thus candidate material/source presence is not actual source visibility.",
+        "Candidate abstention about an absent inspection result is consistent with the supplied visible union, although its broader claim that no inspection record exists is not established by incomplete memory. The score drop on the not-run fact has a real evidence-availability cause; it is not a demonstrated stochastic reader omission.",
+        "Judge failure results are consistent with the gold. The candidate rationale says the answer incorrectly denies a supplied inspection, but inspection is not actually supplied to that reader; gold availability and reader visibility must be distinguished."
+      ],
+      "targeted_general_repair_direction": "For evidence/inspection questions, retain one complete validated execution output+command provenance group before redundant user custody or repeated episode prose. Deduplicate and reserve using actual rendered interval coverage across source roles, not candidate citations. Keep independent constraints/reasons, source roles, strict subject/session/privacy fences and all-or-omit groups. Regress simultaneous saved-output plus unperformed-check visibility under 6000 with a shared cloned Store; do not patch fixture terms."
+    },
+    {
+      "question_key": "dev_103/q4",
+      "question": "What two steps should happen next?",
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Change the saved sort to hook number.",
+            "support": [
+              {
+                "session_id": "dev_103_s3",
+                "event_index": 0,
+                "event_id": "dev_103_e",
+                "fragment": "Change the saved sort to hook number"
+              }
+            ]
+          },
+          {
+            "text": "Then compare the list with the rack.",
+            "support": [
+              {
+                "session_id": "dev_103_s3",
+                "event_index": 0,
+                "event_id": "dev_103_e",
+                "fragment": "then compare it with the rack"
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [],
+        "current_state_required": true,
+        "category": "open_work",
+        "expected_actionability": "actionable"
+      },
+      "source_id": "7429b0d71a42425ca429574437013177",
+      "source_role": "user_intent",
+      "classification": "reader shared-pool omission on identical evidence; shared query-local selection gap is secondary, not an arm-specific retrieval loss",
+      "baseline": {
+        "grade_unchanged": {
+          "full_supported_answer": true,
+          "current_state_actionable": true,
+          "constraints_obligations_reasons_recalled": true,
+          "citations_supported": true,
+          "empty_or_evasive": false,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": true
+            },
+            {
+              "fact_index": 1,
+              "recalled": true
+            }
+          ],
+          "rationale": "Lists both requested steps in order: change the saved sort to hook number, then compare with the rack. Inspection evidence supports that both remain open.",
+          "id": "q4",
+          "required_facts_total": 2,
+          "required_facts_recalled": 2,
+          "context_chars": 495,
+          "reader_shared_latency_ms": 11561,
+          "reader_shared_metrics": {
+            "duration_ms": 11532,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 17048,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 1063,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 18111
+              }
+            }
+          },
+          "category": "open_work"
+        },
+        "reader_answer": {
+          "id": "q4",
+          "answer": "The shared evidence says the next two steps are to change the saved sort to hook number and compare it with the rack. The inspection reports the current sort is color and that the comparison has not been performed, so both steps remain open. (R0005, R0001)",
+          "uncertainties": [],
+          "citations": [
+            {
+              "catalog_ref": "R0005",
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "source_field": "body",
+              "start": 37,
+              "end": 109,
+              "source_role": "user_intent",
+              "quote": " Change the saved sort to hook number and then compare it with the rack."
+            },
+            {
+              "catalog_ref": "R0001",
+              "source_id": "915beca6940342e1ae6f6dbb5cbb5654",
+              "source_field": "tool_response.output",
+              "start": 0,
+              "end": 55,
+              "source_role": "tool_record",
+              "quote": "Saved list sort: color. Rack comparison: not performed.",
+              "tool_use_id": "dev_103_d"
+            }
+          ]
+        },
+        "native_output": {
+          "evidence_check": {
+            "accepted_results": "Not evidenced in this query view.",
+            "open_work_and_reasons": "Not evidenced in this query view.",
+            "source_role_distinctions": "Not evidenced in this query view."
+          },
+          "answer": "The shared evidence says the next two steps are to change the saved sort to hook number and compare it with the rack. The inspection reports the current sort is color and that the comparison has not been performed, so both steps remain open. (R0005, R0001)",
+          "citation_refs": [
+            "R0005",
+            "R0001"
+          ],
+          "uncertainties": []
+        },
+        "source_visibility_in_all_views": [
+          {
+            "query_view": "q1",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q1",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "37",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record."
+          },
+          {
+            "query_view": "q1",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q1",
+            "item_id": "pmc_55ec2ca8fdddf40a508d1d213a8e26c03e83f703",
+            "lane": "intent_custody",
+            "field_name": "source_custody",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "197",
+              "source_role": "user_intent",
+              "field": "source_custody",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          },
+          {
+            "query_view": "q2",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q2",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "37",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record."
+          },
+          {
+            "query_view": "q2",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "37",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pmc_55ec2ca8fdddf40a508d1d213a8e26c03e83f703",
+            "lane": "intent_custody",
+            "field_name": "source_custody",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "197",
+              "source_role": "user_intent",
+              "field": "source_custody",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          },
+          {
+            "query_view": "q5",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q6",
+            "item_id": "pmc_55ec2ca8fdddf40a508d1d213a8e26c03e83f703",
+            "lane": "intent_custody",
+            "field_name": "source_custody",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "197",
+              "source_role": "user_intent",
+              "field": "source_custody",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          }
+        ],
+        "catalog_entries": [
+          {
+            "ref": "R0005",
+            "source_id": "7429b0d71a42425ca429574437013177",
+            "source_field": "body",
+            "start": 37,
+            "end": 109,
+            "source_role": "user_intent",
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "ref": "R0006",
+            "source_id": "7429b0d71a42425ca429574437013177",
+            "source_field": "body",
+            "start": 0,
+            "end": 37,
+            "source_role": "user_intent",
+            "quote": "The inspection is the current record."
+          },
+          {
+            "ref": "R0007",
+            "source_id": "7429b0d71a42425ca429574437013177",
+            "source_field": "body",
+            "start": 0,
+            "end": 197,
+            "source_role": "user_intent",
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          }
+        ],
+        "stored_entries": [
+          {
+            "id": "7429b0d71a42425ca429574437013177",
+            "project": "/private/tmp/codex-mem-quality-20261021-r2-experiment/projects/dev_103/lantern_list",
+            "body": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request.",
+            "source": "hook:UserPromptSubmit",
+            "session_id": "dev_103_s3",
+            "superseded_by": null
+          }
+        ],
+        "stored_object_fields": [
+          {
+            "id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "revision": 3,
+            "object_type": "episode",
+            "workflow_state": null,
+            "fields": {
+              "goal": "User intent: Change the saved sort to hook number and then compare it with the rack.",
+              "summary": "User intent: The inspection is the current record.\nUser intent: Change the saved sort to hook number and then compare it with the rack."
+            },
+            "evidence": {
+              "goal": [
+                {
+                  "end": 109,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " Change the saved sort to hook number and then compare it with the rack.",
+                  "session_id": "dev_103_s3",
+                  "source_id": "7429b0d71a42425ca429574437013177",
+                  "source_recorded_at": "2026-10-21T06:50:27.748222Z",
+                  "source_role": "user_intent",
+                  "start": 37
+                }
+              ],
+              "summary": [
+                {
+                  "end": 37,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "The inspection is the current record.",
+                  "session_id": "dev_103_s3",
+                  "source_id": "7429b0d71a42425ca429574437013177",
+                  "source_recorded_at": "2026-10-21T06:50:27.748222Z",
+                  "source_role": "user_intent",
+                  "start": 0
+                },
+                {
+                  "end": 109,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " Change the saved sort to hook number and then compare it with the rack.",
+                  "session_id": "dev_103_s3",
+                  "source_id": "7429b0d71a42425ca429574437013177",
+                  "source_recorded_at": "2026-10-21T06:50:27.748222Z",
+                  "source_role": "user_intent",
+                  "start": 37
+                }
+              ]
+            }
+          }
+        ],
+        "stored_tool_uses": [],
+        "native_reader_receipt": {
+          "call_id": "call-0016",
+          "request": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0016-request.json",
+          "request_file_sha256": "4495eefd9ac4f045d5c12ae1d4858371eebaad3baa00a36788162df3d508ac02",
+          "response": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0016-response.json",
+          "response_file_sha256": "4b4bc65925ee52d706ba8e37fd6ddb6d1607f41704dbbb7cd6895eb19b35e306",
+          "shared_pool_instruction_verified": true,
+          "source_fragments_in_actual_prompt": {
+            "Change the saved sort to hook number and then compare it with the rack.": true
+          }
+        },
+        "artifact_hashes": {
+          "contexts.json": "cc4c3d805b55581986559d0af21268e30151fe77a150a7602f31eb6a58ed6d0e",
+          "citation-catalog.json": "3b22aad4d9fe2d8746785d58685e20303d61cc2fd2112bb599a212acaab3107f",
+          "reader-0.json": "5db1256f113168f3c2b603cc37510e6fc95fa33b62aeb0d903757f48dcfe4cd9",
+          "judge-0.json": "f42b12a47e9c89698f731978527bbf892d7e0a4a6fa23f76087022ac32266e03",
+          "generation.json": "e6d5805ec3386e70df985388f6b9069d8a0413e61544627630f23a005502acac"
+        }
+      },
+      "candidate": {
+        "grade_unchanged": {
+          "full_supported_answer": false,
+          "current_state_actionable": false,
+          "constraints_obligations_reasons_recalled": false,
+          "citations_supported": false,
+          "empty_or_evasive": true,
+          "critical_errors": [],
+          "fact_recall": [
+            {
+              "fact_index": 0,
+              "recalled": false
+            },
+            {
+              "fact_index": 1,
+              "recalled": false
+            }
+          ],
+          "rationale": "Abstains despite the shared visible memory containing the instruction to change the saved sort to hook number and then compare it with the rack. It provides no supporting citations.",
+          "id": "q4",
+          "required_facts_total": 2,
+          "required_facts_recalled": 0,
+          "context_chars": 495,
+          "reader_shared_latency_ms": 12074,
+          "reader_shared_metrics": {
+            "duration_ms": 12044,
+            "usage": {
+              "status": "reported",
+              "source": "app_server_thread_total",
+              "updates": 1,
+              "tokens": {
+                "input_tokens": 17048,
+                "cached_input_tokens": 0,
+                "cache_write_input_tokens": 0,
+                "output_tokens": 940,
+                "reasoning_output_tokens": 0,
+                "total_tokens": 17988
+              }
+            }
+          },
+          "category": "open_work"
+        },
+        "reader_answer": {
+          "id": "q4",
+          "answer": "Unknown from the supplied context for this question: its view contains no source statements about the next steps.",
+          "uncertainties": [
+            "The other query views say to change the saved sort to hook number, then compare it with the rack, and report that the inspection found color sorting and no comparison; this question’s own view does not include those sources."
+          ],
+          "citations": []
+        },
+        "native_output": {
+          "evidence_check": {
+            "accepted_results": "Not evidenced in this query view.",
+            "open_work_and_reasons": "Not evidenced in this query view.",
+            "source_role_distinctions": "Not evidenced in this query view."
+          },
+          "answer": "Unknown from the supplied context for this question: its view contains no source statements about the next steps.",
+          "citation_refs": [],
+          "uncertainties": [
+            "The other query views say to change the saved sort to hook number, then compare it with the rack, and report that the inspection found color sorting and no comparison; this question’s own view does not include those sources."
+          ]
+        },
+        "source_visibility_in_all_views": [
+          {
+            "query_view": "q1",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q1",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "37",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record."
+          },
+          {
+            "query_view": "q1",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q1",
+            "item_id": "pmc_55ec2ca8fdddf40a508d1d213a8e26c03e83f703",
+            "lane": "intent_custody",
+            "field_name": "source_custody",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "197",
+              "source_role": "user_intent",
+              "field": "source_custody",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          },
+          {
+            "query_view": "q2",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q2",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "37",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record."
+          },
+          {
+            "query_view": "q2",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "37",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "summary_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "summary",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q3",
+            "item_id": "pmc_55ec2ca8fdddf40a508d1d213a8e26c03e83f703",
+            "lane": "intent_custody",
+            "field_name": "source_custody",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "197",
+              "source_role": "user_intent",
+              "field": "source_custody",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          },
+          {
+            "query_view": "q5",
+            "item_id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "lane": "episode",
+            "field_name": "goal_source_excerpt",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "37",
+              "end": "109",
+              "source_role": "user_intent",
+              "field": "goal",
+              "quote_truncated": "False"
+            },
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "query_view": "q6",
+            "item_id": "pmc_55ec2ca8fdddf40a508d1d213a8e26c03e83f703",
+            "lane": "intent_custody",
+            "field_name": "source_custody",
+            "pointer": {
+              "source_id": "7429b0d71a42425ca429574437013177",
+              "start": "0",
+              "end": "197",
+              "source_role": "user_intent",
+              "field": "source_custody",
+              "quote_truncated": "False"
+            },
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          }
+        ],
+        "catalog_entries": [
+          {
+            "ref": "R0005",
+            "source_id": "7429b0d71a42425ca429574437013177",
+            "source_field": "body",
+            "start": 37,
+            "end": 109,
+            "source_role": "user_intent",
+            "quote": " Change the saved sort to hook number and then compare it with the rack."
+          },
+          {
+            "ref": "R0006",
+            "source_id": "7429b0d71a42425ca429574437013177",
+            "source_field": "body",
+            "start": 0,
+            "end": 37,
+            "source_role": "user_intent",
+            "quote": "The inspection is the current record."
+          },
+          {
+            "ref": "R0007",
+            "source_id": "7429b0d71a42425ca429574437013177",
+            "source_field": "body",
+            "start": 0,
+            "end": 197,
+            "source_role": "user_intent",
+            "quote": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+          }
+        ],
+        "stored_entries": [
+          {
+            "id": "7429b0d71a42425ca429574437013177",
+            "project": "/private/tmp/codex-mem-quality-20261021-r2-experiment/projects/dev_103/lantern_list",
+            "body": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request.",
+            "source": "hook:UserPromptSubmit",
+            "session_id": "dev_103_s3",
+            "superseded_by": null
+          }
+        ],
+        "stored_object_fields": [
+          {
+            "id": "pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9",
+            "revision": 3,
+            "object_type": "episode",
+            "workflow_state": null,
+            "fields": {
+              "goal": "User intent: Change the saved sort to hook number and then compare it with the rack.",
+              "summary": "User intent: The inspection is the current record.\nUser intent: Change the saved sort to hook number and then compare it with the rack."
+            },
+            "evidence": {
+              "goal": [
+                {
+                  "end": 109,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " Change the saved sort to hook number and then compare it with the rack.",
+                  "session_id": "dev_103_s3",
+                  "source_id": "7429b0d71a42425ca429574437013177",
+                  "source_recorded_at": "2026-10-21T06:50:27.748222Z",
+                  "source_role": "user_intent",
+                  "start": 37
+                }
+              ],
+              "summary": [
+                {
+                  "end": 37,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": "The inspection is the current record.",
+                  "session_id": "dev_103_s3",
+                  "source_id": "7429b0d71a42425ca429574437013177",
+                  "source_recorded_at": "2026-10-21T06:50:27.748222Z",
+                  "source_role": "user_intent",
+                  "start": 0
+                },
+                {
+                  "end": 109,
+                  "event_at": null,
+                  "event_time_basis": "source_capture_time",
+                  "quote": " Change the saved sort to hook number and then compare it with the rack.",
+                  "session_id": "dev_103_s3",
+                  "source_id": "7429b0d71a42425ca429574437013177",
+                  "source_recorded_at": "2026-10-21T06:50:27.748222Z",
+                  "source_role": "user_intent",
+                  "start": 37
+                }
+              ]
+            }
+          }
+        ],
+        "stored_tool_uses": [],
+        "native_reader_receipt": {
+          "call_id": "call-0021",
+          "request": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0021-request.json",
+          "request_file_sha256": "4495eefd9ac4f045d5c12ae1d4858371eebaad3baa00a36788162df3d508ac02",
+          "response": "/private/tmp/codex-mem-quality-20261021-r2-experiment/receipts/call-0021-response.json",
+          "response_file_sha256": "38a4b1e8f8989b0bcfc2f22857ad0b49cdd8ad5ea3492097ecf626c9e9c746e4",
+          "shared_pool_instruction_verified": true,
+          "source_fragments_in_actual_prompt": {
+            "Change the saved sort to hook number and then compare it with the rack.": true
+          }
+        },
+        "artifact_hashes": {
+          "contexts.json": "cc4c3d805b55581986559d0af21268e30151fe77a150a7602f31eb6a58ed6d0e",
+          "citation-catalog.json": "3b22aad4d9fe2d8746785d58685e20303d61cc2fd2112bb599a212acaab3107f",
+          "reader-0.json": "07c25813a27d5a19221cdf905329385d49bc0e22c4bb470e382b689df3afc77e",
+          "judge-0.json": "8ab7dff721a3b31968da49ae383b09fe03c691e72042176716c22e66e8f49e1c",
+          "generation.json": "cc670fecfc391fd20e248fc53053c4e67afa68456ea6205fb3b73e6142959049"
+        }
+      },
+      "conclusions": [
+        "All six canonical query views and the entire typed citation catalog are byte-equivalent between arms. Both databases contain the same episode pm_f510f78ae620a3dc3991fa626c6c70bb02c0daa9 revision 3; goal and summary cite user source [37,109). open_work is empty in BOTH arms, but this does not erase the explicitly stored next-step source.",
+        "The question-local q4 view is empty coverage XML (495 characters) in BOTH arms. Nonetheless the actual shared native prompt supplies both ordered steps in q1, q2, q3, q5 and q6; catalog R0005 is exact user source [37,109), and R0007 supplies the complete source [0,197). The inspection output is also visible as tool_record R0001 and distinguishes actual color sorting from the earlier assistant readiness report.",
+        "Baseline cites R0005 and R0001 and answers both steps. Candidate q4 explicitly says other query views contain the requested change/comparison but refuses to use them. The native reader instruction says all views form ONE shared evidence pool. Candidate q1 also answers the same change/comparison with citations, demonstrating the model encountered the relevant evidence.",
+        "This paired loss cannot be attributed to candidate extraction, storage, consolidation or retrieval visibility; inputs are equal and the candidate acknowledges the source in the native response. It is a reader omission/instruction-following variance consistent with stochastic output, not proof of a systematic model distribution from one sample.",
+        "The judge correctly rejects the answer against shared evidence. No score correction is warranted. The empty question-local view is a genuine shared planner/field-selection weakness that may encourage this failure, but it did not prevent the baseline from answering and it does not explain an arm-specific memory advantage."
+      ],
+      "targeted_general_repair_direction": "Keep shared-pool citation semantics explicit and test readers against evidence outside the question-local view. A separate public regression may improve conservative subject-free next-action planning so a complete user goal with ordered pending actions is visible in its own view, while preserving residual topical and exact scope constraints. Do not label this as a candidate retrieval regression or invent lifecycle state from goal text."
+    }
+  ],
+  "limits": [
+    "No counterfactual renderer invocation, model rerun or rescoring was performed; budget causality is traced from frozen renderer rules and actual emitted groups, not a measured isolated intervention.",
+    "Primary failures were diagnosed across all four development histories. Reader and regeneration repeats were not used to revise primary grades or establish a quality claim.",
+    "Identical dev_103 evidence supports a reader-level explanation for that paired result; it does not estimate reader failure probability.",
+    "Zero accepted consolidation merges in these primary development histories; the observed answer differences are not consolidation gains."
+  ]
+}

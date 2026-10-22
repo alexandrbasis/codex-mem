@@ -1,0 +1,2383 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "hold_801",
+      "project_keys": [
+        "seed_archive",
+        "seed_shop"
+      ],
+      "sessions": [
+        {
+          "id": "hold_801_chat1",
+          "project_key": "seed_archive",
+          "events": [
+            {
+              "id": "hold_801_obsolete",
+              "type": "tool",
+              "text": "Seed archive: The packet index uses the provisional location field shelf_old.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Seed archive obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Seed archive: The packet index uses the provisional location field shelf_old.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_801_request",
+              "type": "user",
+              "text": "In project Seed archive, work on the packet index. Treat the packet labels as a distinct task. Keep accession numbers as text, including leading zeroes, because the cabinet cards use those exact strings."
+            },
+            {
+              "id": "hold_801_ack",
+              "type": "assistant",
+              "text": "I will prepare the packet index locally and keep its review step visible."
+            },
+            {
+              "id": "hold_801_local",
+              "type": "tool",
+              "text": "Seed archive packet index: local import of 12 invented packets passed. No shared installation was contacted.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Seed archive local snapshot"
+                },
+                "tool_response": {
+                  "output": "Seed archive packet index: local import of 12 invented packets passed. No shared installation was contacted.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_801_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_801_chat2",
+          "project_key": "seed_archive",
+          "events": [
+            {
+              "id": "hold_801_current",
+              "type": "user",
+              "text": "Continuing the same packet index from our first chat. The packet index now uses drawer_code as its location field. This replaces shelf_old."
+            },
+            {
+              "id": "hold_801_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_801_obsolete"
+            },
+            {
+              "id": "hold_801_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_801_report",
+              "type": "assistant",
+              "text": "I believe the packet index was installed on the shared kiosk yesterday; I have no installation log in this chat."
+            },
+            {
+              "id": "hold_801_pending",
+              "type": "user",
+              "text": "The packet index still needs a curator check of the drawer mapping before installation can be approved."
+            },
+            {
+              "id": "hold_801_tail",
+              "type": "user",
+              "text": "For the packet index, retain the drawer mapping work but cancel the optional seed-photo thumbnails. Next time show me the mapping first."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_801_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_801_otherchat",
+          "project_key": "seed_shop",
+          "events": [
+            {
+              "id": "hold_801_boundary",
+              "type": "user",
+              "text": "Seed shop packet labels use numeric stock numbers. That shop rule does not apply to Seed archive accession numbers."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the packet index, and why was it chosen?",
+          "project_key": "seed_archive",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the packet index, and what must continue?",
+          "project_key": "seed_archive",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the packet index?",
+          "project_key": "seed_archive",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the packet index, and how should the assistant claim about shared use be treated?",
+          "project_key": "seed_archive",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate packet labels, and may it change the packet index?",
+          "stage": "final",
+          "project_keys": [
+            "seed_archive",
+            "seed_shop"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the packet index?",
+          "project_key": "seed_archive",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_802",
+      "project_keys": [
+        "pool_rota"
+      ],
+      "sessions": [
+        {
+          "id": "hold_802_chat1",
+          "project_key": "pool_rota",
+          "events": [
+            {
+              "id": "hold_802_obsolete",
+              "type": "tool",
+              "text": "Pool rota: The lane schedule draft starts weekday sessions at 06:00.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Pool rota obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Pool rota: The lane schedule draft starts weekday sessions at 06:00.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_802_request",
+              "type": "user",
+              "text": "In project Pool rota, work on the lane schedule. Treat the lesson schedule as a distinct task. Show lane bookings in quarter-hour blocks; the printed pool clock has only quarter-hour marks."
+            },
+            {
+              "id": "hold_802_ack",
+              "type": "assistant",
+              "text": "I will prepare the lane schedule locally and keep its review step visible."
+            },
+            {
+              "id": "hold_802_local",
+              "type": "tool",
+              "text": "Pool rota lane schedule: a local overlap check passed for Monday. The public board was not updated.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Pool rota local snapshot"
+                },
+                "tool_response": {
+                  "output": "Pool rota lane schedule: a local overlap check passed for Monday. The public board was not updated.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_802_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_802_chat2",
+          "project_key": "pool_rota",
+          "events": [
+            {
+              "id": "hold_802_current",
+              "type": "user",
+              "text": "Continuing the same lane schedule from our first chat. The lane schedule weekday start is 06:30, replacing the 06:00 draft."
+            },
+            {
+              "id": "hold_802_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_802_obsolete"
+            },
+            {
+              "id": "hold_802_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_802_report",
+              "type": "assistant",
+              "text": "I said the public lane board looked updated, but that was my impression rather than a recorded board check."
+            },
+            {
+              "id": "hold_802_pending",
+              "type": "user",
+              "text": "Ask the duty coordinator to approve the Monday lane allocation; the local overlap check does not fulfill that request."
+            },
+            {
+              "id": "hold_802_boundary",
+              "type": "user",
+              "text": "The lesson schedule can begin at 08:00. It is a separate task and does not change the lane schedule start."
+            },
+            {
+              "id": "hold_802_tail",
+              "type": "user",
+              "text": "Continue the lane allocation in this chat. Drop the proposed colour legend, but keep the text lane names and the approval request."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_802_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the lane schedule, and why was it chosen?",
+          "project_key": "pool_rota",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the lane schedule, and what must continue?",
+          "project_key": "pool_rota",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the lane schedule?",
+          "project_key": "pool_rota",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the lane schedule, and how should the assistant claim about shared use be treated?",
+          "project_key": "pool_rota",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate lesson schedule, and may it change the lane schedule?",
+          "project_key": "pool_rota",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the lane schedule?",
+          "project_key": "pool_rota",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_803",
+      "project_keys": [
+        "ceramic_log",
+        "glass_log"
+      ],
+      "sessions": [
+        {
+          "id": "hold_803_chat1",
+          "project_key": "ceramic_log",
+          "events": [
+            {
+              "id": "hold_803_obsolete",
+              "type": "tool",
+              "text": "Ceramic log: Firing register batches were temporarily identified with prefix TMP.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Ceramic log obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Ceramic log: Firing register batches were temporarily identified with prefix TMP.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_803_request",
+              "type": "user",
+              "text": "In project Ceramic log, work on the firing register. Treat the firing labels as a distinct task. Record temperatures in whole degrees Celsius because the workshop kiln display has no decimal setting."
+            },
+            {
+              "id": "hold_803_ack",
+              "type": "assistant",
+              "text": "I will prepare the firing register locally and keep its review step visible."
+            },
+            {
+              "id": "hold_803_local",
+              "type": "tool",
+              "text": "Ceramic log firing register: local CSV round-trip preserved five sample rows. No workshop tablet was accessed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Ceramic log local snapshot"
+                },
+                "tool_response": {
+                  "output": "Ceramic log firing register: local CSV round-trip preserved five sample rows. No workshop tablet was accessed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_803_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_803_chat2",
+          "project_key": "ceramic_log",
+          "events": [
+            {
+              "id": "hold_803_current",
+              "type": "user",
+              "text": "Continuing the same firing register from our first chat. Firing register batches use prefix CLAY. The temporary TMP prefix is retired."
+            },
+            {
+              "id": "hold_803_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_803_obsolete"
+            },
+            {
+              "id": "hold_803_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_803_report",
+              "type": "assistant",
+              "text": "My earlier message claimed the workshop tablet had the register; that claim has no tablet output attached."
+            },
+            {
+              "id": "hold_803_pending",
+              "type": "user",
+              "text": "The workshop lead must still review the cooling-stage names before the tablet rollout."
+            },
+            {
+              "id": "hold_803_tail",
+              "type": "user",
+              "text": "Carry the register work into the next chat. Remove the optional glaze-photo column from this delivery, and keep the cooling-stage review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_803_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_803_otherchat",
+          "project_key": "glass_log",
+          "events": [
+            {
+              "id": "hold_803_boundary",
+              "type": "user",
+              "text": "Glass log firing labels allow fractional Celsius values for its test controller. That exception belongs only to Glass log."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the firing register, and why was it chosen?",
+          "project_key": "ceramic_log",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the firing register, and what must continue?",
+          "project_key": "ceramic_log",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the firing register?",
+          "project_key": "ceramic_log",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the firing register, and how should the assistant claim about shared use be treated?",
+          "project_key": "ceramic_log",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate firing labels, and may it change the firing register?",
+          "stage": "final",
+          "project_keys": [
+            "ceramic_log",
+            "glass_log"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the firing register?",
+          "project_key": "ceramic_log",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_804",
+      "project_keys": [
+        "trail_signs"
+      ],
+      "sessions": [
+        {
+          "id": "hold_804_chat1",
+          "project_key": "trail_signs",
+          "events": [
+            {
+              "id": "hold_804_obsolete",
+              "type": "tool",
+              "text": "Trail signs: Junction inventory exported its marker identifier under marker_temp.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Trail signs obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Trail signs: Junction inventory exported its marker identifier under marker_temp.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_804_request",
+              "type": "user",
+              "text": "In project Trail signs, work on the junction inventory. Treat the distance inventory as a distinct task. Use metres without rounding to kilometres, since several junctions lie less than one kilometre apart."
+            },
+            {
+              "id": "hold_804_ack",
+              "type": "assistant",
+              "text": "I will prepare the junction inventory locally and keep its review step visible."
+            },
+            {
+              "id": "hold_804_local",
+              "type": "tool",
+              "text": "Trail signs junction inventory: local export contains 18 marker_id entries. No field signs were replaced.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Trail signs local snapshot"
+                },
+                "tool_response": {
+                  "output": "Trail signs junction inventory: local export contains 18 marker_id entries. No field signs were replaced.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_804_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_804_chat2",
+          "project_key": "trail_signs",
+          "events": [
+            {
+              "id": "hold_804_current",
+              "type": "user",
+              "text": "Continuing the same junction inventory from our first chat. The junction inventory export field is marker_id; marker_temp is obsolete."
+            },
+            {
+              "id": "hold_804_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_804_obsolete"
+            },
+            {
+              "id": "hold_804_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_804_report",
+              "type": "assistant",
+              "text": "I reported that crews had replaced the signs, but I did not obtain a crew confirmation."
+            },
+            {
+              "id": "hold_804_pending",
+              "type": "user",
+              "text": "A ranger still needs to compare the inventory with the north-loop junctions in person."
+            },
+            {
+              "id": "hold_804_boundary",
+              "type": "user",
+              "text": "Distance inventory groups segments by trail colour. That separate inventory does not change junction marker identifiers."
+            },
+            {
+              "id": "hold_804_tail",
+              "type": "user",
+              "text": "Resume the north-loop comparison task here. Cancel the decorative map border only; the inventory export and ranger comparison remain required."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_804_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the junction inventory, and why was it chosen?",
+          "project_key": "trail_signs",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the junction inventory, and what must continue?",
+          "project_key": "trail_signs",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the junction inventory?",
+          "project_key": "trail_signs",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the junction inventory, and how should the assistant claim about shared use be treated?",
+          "project_key": "trail_signs",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate distance inventory, and may it change the junction inventory?",
+          "project_key": "trail_signs",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the junction inventory?",
+          "project_key": "trail_signs",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_805",
+      "project_keys": [
+        "choir_library",
+        "theatre_library"
+      ],
+      "sessions": [
+        {
+          "id": "hold_805_chat1",
+          "project_key": "choir_library",
+          "events": [
+            {
+              "id": "hold_805_obsolete",
+              "type": "tool",
+              "text": "Choir library: Score checkout had a draft loan duration of 21 days.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Choir library obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Choir library: Score checkout had a draft loan duration of 21 days.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_805_request",
+              "type": "user",
+              "text": "In project Choir library, work on the score checkout. Treat the script checkout as a distinct task. Keep arranger credits visible in the checkout slip because different arrangements share the same song title."
+            },
+            {
+              "id": "hold_805_ack",
+              "type": "assistant",
+              "text": "I will prepare the score checkout locally and keep its review step visible."
+            },
+            {
+              "id": "hold_805_local",
+              "type": "tool",
+              "text": "Choir library score checkout: local slip preview includes arranger credits. No circulation desk deployment was performed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Choir library local snapshot"
+                },
+                "tool_response": {
+                  "output": "Choir library score checkout: local slip preview includes arranger credits. No circulation desk deployment was performed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_805_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_805_chat2",
+          "project_key": "choir_library",
+          "events": [
+            {
+              "id": "hold_805_current",
+              "type": "user",
+              "text": "Continuing the same score checkout from our first chat. Score checkout loans last 28 days. The 21-day draft is withdrawn."
+            },
+            {
+              "id": "hold_805_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_805_obsolete"
+            },
+            {
+              "id": "hold_805_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_805_report",
+              "type": "assistant",
+              "text": "I wrote that the circulation desk was already using the new slips, without observing a desk transaction."
+            },
+            {
+              "id": "hold_805_pending",
+              "type": "user",
+              "text": "The librarian must still approve the overdue wording before desk deployment."
+            },
+            {
+              "id": "hold_805_tail",
+              "type": "user",
+              "text": "Keep the checkout-slip change moving in the next chat. Cancel the proposed reminder email, but retain the overdue wording review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_805_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_805_otherchat",
+          "project_key": "theatre_library",
+          "events": [
+            {
+              "id": "hold_805_boundary",
+              "type": "user",
+              "text": "Theatre library script checkout uses 14-day loans. Its loan policy has no effect on Choir library."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the score checkout, and why was it chosen?",
+          "project_key": "choir_library",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the score checkout, and what must continue?",
+          "project_key": "choir_library",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the score checkout?",
+          "project_key": "choir_library",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the score checkout, and how should the assistant claim about shared use be treated?",
+          "project_key": "choir_library",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate script checkout, and may it change the score checkout?",
+          "stage": "final",
+          "project_keys": [
+            "choir_library",
+            "theatre_library"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the score checkout?",
+          "project_key": "choir_library",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_806",
+      "project_keys": [
+        "orchard_notes"
+      ],
+      "sessions": [
+        {
+          "id": "hold_806_chat1",
+          "project_key": "orchard_notes",
+          "events": [
+            {
+              "id": "hold_806_obsolete",
+              "type": "tool",
+              "text": "Orchard notes: The pruning checklist draft used a section called winter_old.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Orchard notes obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Orchard notes: The pruning checklist draft used a section called winter_old.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_806_request",
+              "type": "user",
+              "text": "In project Orchard notes, work on the pruning checklist. Treat the watering checklist as a distinct task. List tree rows from west to east because crews enter through the western gate."
+            },
+            {
+              "id": "hold_806_ack",
+              "type": "assistant",
+              "text": "I will prepare the pruning checklist locally and keep its review step visible."
+            },
+            {
+              "id": "hold_806_local",
+              "type": "tool",
+              "text": "Orchard notes pruning checklist: local print preview has west-to-east row order. No crew handheld was synchronized.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Orchard notes local snapshot"
+                },
+                "tool_response": {
+                  "output": "Orchard notes pruning checklist: local print preview has west-to-east row order. No crew handheld was synchronized.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_806_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_806_chat2",
+          "project_key": "orchard_notes",
+          "events": [
+            {
+              "id": "hold_806_current",
+              "type": "user",
+              "text": "Continuing the same pruning checklist from our first chat. The pruning checklist section is dormant_season, replacing winter_old."
+            },
+            {
+              "id": "hold_806_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_806_obsolete"
+            },
+            {
+              "id": "hold_806_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_806_report",
+              "type": "assistant",
+              "text": "I assumed the handhelds had synchronized overnight; I did not inspect their synchronization status."
+            },
+            {
+              "id": "hold_806_pending",
+              "type": "user",
+              "text": "The foreman still needs to walk row seven and confirm the pruning exceptions."
+            },
+            {
+              "id": "hold_806_boundary",
+              "type": "user",
+              "text": "The watering checklist follows pipe order instead of tree-row order. This is a different checklist and does not override pruning order."
+            },
+            {
+              "id": "hold_806_tail",
+              "type": "user",
+              "text": "Continue the row-seven work from this chat. Skip the optional bark photos now; preserve the exception notes and foreman walk."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_806_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the pruning checklist, and why was it chosen?",
+          "project_key": "orchard_notes",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the pruning checklist, and what must continue?",
+          "project_key": "orchard_notes",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the pruning checklist?",
+          "project_key": "orchard_notes",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the pruning checklist, and how should the assistant claim about shared use be treated?",
+          "project_key": "orchard_notes",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate watering checklist, and may it change the pruning checklist?",
+          "project_key": "orchard_notes",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the pruning checklist?",
+          "project_key": "orchard_notes",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_807",
+      "project_keys": [
+        "museum_audio",
+        "museum_shop"
+      ],
+      "sessions": [
+        {
+          "id": "hold_807_chat1",
+          "project_key": "museum_audio",
+          "events": [
+            {
+              "id": "hold_807_obsolete",
+              "type": "tool",
+              "text": "Museum audio: The gallery track list used the draft language code en_old.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Museum audio obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Museum audio: The gallery track list used the draft language code en_old.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_807_request",
+              "type": "user",
+              "text": "In project Museum audio, work on the gallery track list. Treat the shop playlist as a distinct task. Preserve a three-second pause between tracks because visitors need time to move the handheld away from the display."
+            },
+            {
+              "id": "hold_807_ack",
+              "type": "assistant",
+              "text": "I will prepare the gallery track list locally and keep its review step visible."
+            },
+            {
+              "id": "hold_807_local",
+              "type": "tool",
+              "text": "Museum audio gallery track list: offline timing check measured three-second gaps. Visitor devices were not loaded.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Museum audio local snapshot"
+                },
+                "tool_response": {
+                  "output": "Museum audio gallery track list: offline timing check measured three-second gaps. Visitor devices were not loaded.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_807_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_807_chat2",
+          "project_key": "museum_audio",
+          "events": [
+            {
+              "id": "hold_807_current",
+              "type": "user",
+              "text": "Continuing the same gallery track list from our first chat. The gallery track list language code is en_GB. The en_old draft code is no longer used."
+            },
+            {
+              "id": "hold_807_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_807_obsolete"
+            },
+            {
+              "id": "hold_807_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_807_report",
+              "type": "assistant",
+              "text": "I told you visitor devices were loaded, but that was an unverified report from my own notes."
+            },
+            {
+              "id": "hold_807_pending",
+              "type": "user",
+              "text": "The access coordinator has yet to listen to the transition after track four."
+            },
+            {
+              "id": "hold_807_tail",
+              "type": "user",
+              "text": "For the track list, cancel the optional opening chime while keeping all three-second gaps. Continue with the track-four listening review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_807_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_807_otherchat",
+          "project_key": "museum_shop",
+          "events": [
+            {
+              "id": "hold_807_boundary",
+              "type": "user",
+              "text": "Museum shop playlist has no gaps between tracks. This applies to shop speakers only, not Museum audio handhelds."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the gallery track list, and why was it chosen?",
+          "project_key": "museum_audio",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the gallery track list, and what must continue?",
+          "project_key": "museum_audio",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the gallery track list?",
+          "project_key": "museum_audio",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the gallery track list, and how should the assistant claim about shared use be treated?",
+          "project_key": "museum_audio",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate shop playlist, and may it change the gallery track list?",
+          "stage": "final",
+          "project_keys": [
+            "museum_audio",
+            "museum_shop"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the gallery track list?",
+          "project_key": "museum_audio",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_808",
+      "project_keys": [
+        "repair_queue"
+      ],
+      "sessions": [
+        {
+          "id": "hold_808_chat1",
+          "project_key": "repair_queue",
+          "events": [
+            {
+              "id": "hold_808_obsolete",
+              "type": "tool",
+              "text": "Repair queue: Bicycle intake used a temporary status called waiting_old.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Repair queue obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Repair queue: Bicycle intake used a temporary status called waiting_old.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_808_request",
+              "type": "user",
+              "text": "In project Repair queue, work on the bicycle intake. Treat the tool intake as a distinct task. Allow an unknown wheel size at intake because some bicycles arrive without either wheel."
+            },
+            {
+              "id": "hold_808_ack",
+              "type": "assistant",
+              "text": "I will prepare the bicycle intake locally and keep its review step visible."
+            },
+            {
+              "id": "hold_808_local",
+              "type": "tool",
+              "text": "Repair queue bicycle intake: local form accepted unknown wheel size. No reception terminal was changed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Repair queue local snapshot"
+                },
+                "tool_response": {
+                  "output": "Repair queue bicycle intake: local form accepted unknown wheel size. No reception terminal was changed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_808_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_808_chat2",
+          "project_key": "repair_queue",
+          "events": [
+            {
+              "id": "hold_808_current",
+              "type": "user",
+              "text": "Continuing the same bicycle intake from our first chat. Bicycle intake now calls that status awaiting_inspection; waiting_old has been removed from the design."
+            },
+            {
+              "id": "hold_808_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_808_obsolete"
+            },
+            {
+              "id": "hold_808_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_808_report",
+              "type": "assistant",
+              "text": "I claimed reception was on the new form, although I have no terminal check to support that statement."
+            },
+            {
+              "id": "hold_808_pending",
+              "type": "user",
+              "text": "The mechanic must still test the missing-frame-number case before reception rollout."
+            },
+            {
+              "id": "hold_808_boundary",
+              "type": "user",
+              "text": "Tool intake requires a tool category, not a wheel size. Its mandatory-category rule is separate from bicycle intake."
+            },
+            {
+              "id": "hold_808_tail",
+              "type": "user",
+              "text": "Continue bicycle intake testing here. Cancel the optional customer-print copy; keep the missing-frame-number test in scope."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_808_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the bicycle intake, and why was it chosen?",
+          "project_key": "repair_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the bicycle intake, and what must continue?",
+          "project_key": "repair_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the bicycle intake?",
+          "project_key": "repair_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the bicycle intake, and how should the assistant claim about shared use be treated?",
+          "project_key": "repair_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate tool intake, and may it change the bicycle intake?",
+          "project_key": "repair_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the bicycle intake?",
+          "project_key": "repair_queue",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_809",
+      "project_keys": [
+        "ferry_notices",
+        "bus_notices"
+      ],
+      "sessions": [
+        {
+          "id": "hold_809_chat1",
+          "project_key": "ferry_notices",
+          "events": [
+            {
+              "id": "hold_809_obsolete",
+              "type": "tool",
+              "text": "Ferry notices: Pier notice sheet was provisionally set to A5 paper.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Ferry notices obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Ferry notices: Pier notice sheet was provisionally set to A5 paper.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_809_request",
+              "type": "user",
+              "text": "In project Ferry notices, work on the pier notice sheet. Treat the stop notice sheet as a distinct task. Print both pier names in every notice because travellers sometimes board from the reverse direction."
+            },
+            {
+              "id": "hold_809_ack",
+              "type": "assistant",
+              "text": "I will prepare the pier notice sheet locally and keep its review step visible."
+            },
+            {
+              "id": "hold_809_local",
+              "type": "tool",
+              "text": "Ferry notices pier notice sheet: local PDF preview includes both pier names. No pier printer received a job.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Ferry notices local snapshot"
+                },
+                "tool_response": {
+                  "output": "Ferry notices pier notice sheet: local PDF preview includes both pier names. No pier printer received a job.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_809_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_809_chat2",
+          "project_key": "ferry_notices",
+          "events": [
+            {
+              "id": "hold_809_current",
+              "type": "user",
+              "text": "Continuing the same pier notice sheet from our first chat. Pier notice sheet uses A4 paper. The provisional A5 setting is obsolete."
+            },
+            {
+              "id": "hold_809_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_809_obsolete"
+            },
+            {
+              "id": "hold_809_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_809_report",
+              "type": "assistant",
+              "text": "I said the pier printer had produced the notice, but I never retrieved a print result."
+            },
+            {
+              "id": "hold_809_pending",
+              "type": "user",
+              "text": "A dispatcher still must confirm the alternate-pier wording before notices go up."
+            },
+            {
+              "id": "hold_809_tail",
+              "type": "user",
+              "text": "Carry the pier sheet into the next chat. Remove the optional QR code, but keep both pier names and the dispatcher wording check."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_809_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_809_otherchat",
+          "project_key": "bus_notices",
+          "events": [
+            {
+              "id": "hold_809_boundary",
+              "type": "user",
+              "text": "Bus notices stop notice sheet uses A5 paper. That size is specific to Bus notices and does not change Ferry notices."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the pier notice sheet, and why was it chosen?",
+          "project_key": "ferry_notices",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the pier notice sheet, and what must continue?",
+          "project_key": "ferry_notices",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the pier notice sheet?",
+          "project_key": "ferry_notices",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the pier notice sheet, and how should the assistant claim about shared use be treated?",
+          "project_key": "ferry_notices",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate stop notice sheet, and may it change the pier notice sheet?",
+          "stage": "final",
+          "project_keys": [
+            "ferry_notices",
+            "bus_notices"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the pier notice sheet?",
+          "project_key": "ferry_notices",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_810",
+      "project_keys": [
+        "bookbind_queue"
+      ],
+      "sessions": [
+        {
+          "id": "hold_810_chat1",
+          "project_key": "bookbind_queue",
+          "events": [
+            {
+              "id": "hold_810_obsolete",
+              "type": "tool",
+              "text": "Bookbind queue: Repair ticket priority was temporarily a field named urgency_old.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Bookbind queue obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Bookbind queue: Repair ticket priority was temporarily a field named urgency_old.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_810_request",
+              "type": "user",
+              "text": "In project Bookbind queue, work on the repair ticket. Treat the supply ticket as a distinct task. Keep the original spine title even when misspelled because binders match tickets to the physical volume."
+            },
+            {
+              "id": "hold_810_ack",
+              "type": "assistant",
+              "text": "I will prepare the repair ticket locally and keep its review step visible."
+            },
+            {
+              "id": "hold_810_local",
+              "type": "tool",
+              "text": "Bookbind queue repair ticket: local ticket sample preserved the misspelled spine title. The bindery service was not updated.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Bookbind queue local snapshot"
+                },
+                "tool_response": {
+                  "output": "Bookbind queue repair ticket: local ticket sample preserved the misspelled spine title. The bindery service was not updated.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_810_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_810_chat2",
+          "project_key": "bookbind_queue",
+          "events": [
+            {
+              "id": "hold_810_current",
+              "type": "user",
+              "text": "Continuing the same repair ticket from our first chat. Repair ticket uses priority_band instead of the retired urgency_old field."
+            },
+            {
+              "id": "hold_810_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_810_obsolete"
+            },
+            {
+              "id": "hold_810_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_810_report",
+              "type": "assistant",
+              "text": "I described the bindery service as updated, but I have not seen a service version or a completed ticket there."
+            },
+            {
+              "id": "hold_810_pending",
+              "type": "user",
+              "text": "The senior binder still owes a review of the loose-cover checklist."
+            },
+            {
+              "id": "hold_810_boundary",
+              "type": "user",
+              "text": "Supply ticket normalizes catalogue spelling for orders. That behaviour does not apply to original titles on repair tickets."
+            },
+            {
+              "id": "hold_810_tail",
+              "type": "user",
+              "text": "Resume the repair-ticket work here. Drop the optional cover thumbnail and retain the loose-cover checklist review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_810_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the repair ticket, and why was it chosen?",
+          "project_key": "bookbind_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the repair ticket, and what must continue?",
+          "project_key": "bookbind_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the repair ticket?",
+          "project_key": "bookbind_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the repair ticket, and how should the assistant claim about shared use be treated?",
+          "project_key": "bookbind_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate supply ticket, and may it change the repair ticket?",
+          "project_key": "bookbind_queue",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the repair ticket?",
+          "project_key": "bookbind_queue",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_811",
+      "project_keys": [
+        "market_stalls",
+        "night_market"
+      ],
+      "sessions": [
+        {
+          "id": "hold_811_chat1",
+          "project_key": "market_stalls",
+          "events": [
+            {
+              "id": "hold_811_obsolete",
+              "type": "tool",
+              "text": "Market stalls: Morning placement plan labelled the bread stand slot B-OLD.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Market stalls obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Market stalls: Morning placement plan labelled the bread stand slot B-OLD.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_811_request",
+              "type": "user",
+              "text": "In project Market stalls, work on the morning placement plan. Treat the evening placement plan as a distinct task. Reserve a two-metre aisle beside the bread stand because delivery carts must turn there."
+            },
+            {
+              "id": "hold_811_ack",
+              "type": "assistant",
+              "text": "I will prepare the morning placement plan locally and keep its review step visible."
+            },
+            {
+              "id": "hold_811_local",
+              "type": "tool",
+              "text": "Market stalls morning placement plan: local geometry check leaves a two-metre aisle. The steward display was not published.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Market stalls local snapshot"
+                },
+                "tool_response": {
+                  "output": "Market stalls morning placement plan: local geometry check leaves a two-metre aisle. The steward display was not published.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_811_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_811_chat2",
+          "project_key": "market_stalls",
+          "events": [
+            {
+              "id": "hold_811_current",
+              "type": "user",
+              "text": "Continuing the same morning placement plan from our first chat. Morning placement plan labels the bread stand slot B-07. B-OLD was a placeholder."
+            },
+            {
+              "id": "hold_811_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_811_obsolete"
+            },
+            {
+              "id": "hold_811_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_811_report",
+              "type": "assistant",
+              "text": "I reported that the steward display showed this layout, but no display capture confirms it."
+            },
+            {
+              "id": "hold_811_pending",
+              "type": "user",
+              "text": "The steward must still verify the delivery-cart turn before publication."
+            },
+            {
+              "id": "hold_811_tail",
+              "type": "user",
+              "text": "Continue the morning plan in the next chat. Cancel decorative stall icons only; keep the aisle clearance and cart-turn verification."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_811_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_811_otherchat",
+          "project_key": "night_market",
+          "events": [
+            {
+              "id": "hold_811_boundary",
+              "type": "user",
+              "text": "Night market evening placement plan uses slot B-12 for its bread stand. This does not relabel Market stalls slot B-07."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the morning placement plan, and why was it chosen?",
+          "project_key": "market_stalls",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the morning placement plan, and what must continue?",
+          "project_key": "market_stalls",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the morning placement plan?",
+          "project_key": "market_stalls",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the morning placement plan, and how should the assistant claim about shared use be treated?",
+          "project_key": "market_stalls",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate evening placement plan, and may it change the morning placement plan?",
+          "stage": "final",
+          "project_keys": [
+            "market_stalls",
+            "night_market"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the morning placement plan?",
+          "project_key": "market_stalls",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_812",
+      "project_keys": [
+        "costume_store"
+      ],
+      "sessions": [
+        {
+          "id": "hold_812_chat1",
+          "project_key": "costume_store",
+          "events": [
+            {
+              "id": "hold_812_obsolete",
+              "type": "tool",
+              "text": "Costume store: Cloak inventory had a draft rack code R0.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Costume store obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Costume store: Cloak inventory had a draft rack code R0.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_812_request",
+              "type": "user",
+              "text": "In project Costume store, work on the cloak inventory. Treat the shoe inventory as a distinct task. Store cloak lengths in centimetres because the cutting table is marked in centimetres."
+            },
+            {
+              "id": "hold_812_ack",
+              "type": "assistant",
+              "text": "I will prepare the cloak inventory locally and keep its review step visible."
+            },
+            {
+              "id": "hold_812_local",
+              "type": "tool",
+              "text": "Costume store cloak inventory: local import retained centimetre lengths for eight cloaks. No wardrobe tablet was touched.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Costume store local snapshot"
+                },
+                "tool_response": {
+                  "output": "Costume store cloak inventory: local import retained centimetre lengths for eight cloaks. No wardrobe tablet was touched.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_812_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_812_chat2",
+          "project_key": "costume_store",
+          "events": [
+            {
+              "id": "hold_812_current",
+              "type": "user",
+              "text": "Continuing the same cloak inventory from our first chat. Cloak inventory uses rack code R4. The draft R0 assignment is cancelled."
+            },
+            {
+              "id": "hold_812_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_812_obsolete"
+            },
+            {
+              "id": "hold_812_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_812_report",
+              "type": "assistant",
+              "text": "I previously said the wardrobe tablet was updated; I have no tablet readback for that claim."
+            },
+            {
+              "id": "hold_812_pending",
+              "type": "user",
+              "text": "The wardrobe manager still needs to count the lined cloaks on rack R4."
+            },
+            {
+              "id": "hold_812_boundary",
+              "type": "user",
+              "text": "Shoe inventory records European sizes. It is separate from cloak inventory and does not change cloak length units."
+            },
+            {
+              "id": "hold_812_tail",
+              "type": "user",
+              "text": "Continue from this inventory chat. Cancel the optional fabric-swatch attachment but keep the lined-cloak count."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_812_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the cloak inventory, and why was it chosen?",
+          "project_key": "costume_store",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the cloak inventory, and what must continue?",
+          "project_key": "costume_store",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the cloak inventory?",
+          "project_key": "costume_store",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the cloak inventory, and how should the assistant claim about shared use be treated?",
+          "project_key": "costume_store",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate shoe inventory, and may it change the cloak inventory?",
+          "project_key": "costume_store",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the cloak inventory?",
+          "project_key": "costume_store",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_813",
+      "project_keys": [
+        "bird_hide",
+        "lake_walk"
+      ],
+      "sessions": [
+        {
+          "id": "hold_813_chat1",
+          "project_key": "bird_hide",
+          "events": [
+            {
+              "id": "hold_813_obsolete",
+              "type": "tool",
+              "text": "Bird hide: Observation board listed the hide opening time as a provisional 05:00.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Bird hide obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Bird hide: Observation board listed the hide opening time as a provisional 05:00.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_813_request",
+              "type": "user",
+              "text": "In project Bird hide, work on the observation board. Treat the walk board as a distinct task. Use silhouettes instead of species photographs because the board printer produces monochrome output."
+            },
+            {
+              "id": "hold_813_ack",
+              "type": "assistant",
+              "text": "I will prepare the observation board locally and keep its review step visible."
+            },
+            {
+              "id": "hold_813_local",
+              "type": "tool",
+              "text": "Bird hide observation board: local monochrome preview retained silhouette outlines. No hide noticeboard was installed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Bird hide local snapshot"
+                },
+                "tool_response": {
+                  "output": "Bird hide observation board: local monochrome preview retained silhouette outlines. No hide noticeboard was installed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_813_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_813_chat2",
+          "project_key": "bird_hide",
+          "events": [
+            {
+              "id": "hold_813_current",
+              "type": "user",
+              "text": "Continuing the same observation board from our first chat. Observation board lists hide opening at 05:45. The provisional 05:00 entry is obsolete."
+            },
+            {
+              "id": "hold_813_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_813_obsolete"
+            },
+            {
+              "id": "hold_813_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_813_report",
+              "type": "assistant",
+              "text": "I wrote that the hide noticeboard had been installed, but that was not based on an installation record."
+            },
+            {
+              "id": "hold_813_pending",
+              "type": "user",
+              "text": "A volunteer still must check the board readability through the hide window."
+            },
+            {
+              "id": "hold_813_tail",
+              "type": "user",
+              "text": "Take the observation-board work into the next chat. Remove the optional migration chart, while preserving silhouettes and the window readability check."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_813_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_813_otherchat",
+          "project_key": "lake_walk",
+          "events": [
+            {
+              "id": "hold_813_boundary",
+              "type": "user",
+              "text": "Lake walk walk board advertises a 07:00 start. That start belongs to Lake walk, not Bird hide."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the observation board, and why was it chosen?",
+          "project_key": "bird_hide",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the observation board, and what must continue?",
+          "project_key": "bird_hide",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the observation board?",
+          "project_key": "bird_hide",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the observation board, and how should the assistant claim about shared use be treated?",
+          "project_key": "bird_hide",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate walk board, and may it change the observation board?",
+          "stage": "final",
+          "project_keys": [
+            "bird_hide",
+            "lake_walk"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the observation board?",
+          "project_key": "bird_hide",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_814",
+      "project_keys": [
+        "bakery_batches"
+      ],
+      "sessions": [
+        {
+          "id": "hold_814_chat1",
+          "project_key": "bakery_batches",
+          "events": [
+            {
+              "id": "hold_814_obsolete",
+              "type": "tool",
+              "text": "Bakery batches: Dough worksheet used a provisional rest duration of 35 minutes.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Bakery batches obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Bakery batches: Dough worksheet used a provisional rest duration of 35 minutes.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_814_request",
+              "type": "user",
+              "text": "In project Bakery batches, work on the dough worksheet. Treat the icing worksheet as a distinct task. Express water as grams because the bench scale does not measure volume."
+            },
+            {
+              "id": "hold_814_ack",
+              "type": "assistant",
+              "text": "I will prepare the dough worksheet locally and keep its review step visible."
+            },
+            {
+              "id": "hold_814_local",
+              "type": "tool",
+              "text": "Bakery batches dough worksheet: local calculation used grams for water. No bakery workstation received the worksheet.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Bakery batches local snapshot"
+                },
+                "tool_response": {
+                  "output": "Bakery batches dough worksheet: local calculation used grams for water. No bakery workstation received the worksheet.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_814_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_814_chat2",
+          "project_key": "bakery_batches",
+          "events": [
+            {
+              "id": "hold_814_current",
+              "type": "user",
+              "text": "Continuing the same dough worksheet from our first chat. Dough worksheet rest duration is 45 minutes; the provisional 35-minute value is withdrawn."
+            },
+            {
+              "id": "hold_814_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_814_obsolete"
+            },
+            {
+              "id": "hold_814_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_814_report",
+              "type": "assistant",
+              "text": "I said the bakery workstation had the worksheet; I have only my message, not a workstation response."
+            },
+            {
+              "id": "hold_814_pending",
+              "type": "user",
+              "text": "The shift baker still needs to check the worksheet against one actual mixing batch."
+            },
+            {
+              "id": "hold_814_boundary",
+              "type": "user",
+              "text": "Icing worksheet permits millilitres for flavouring. That separate worksheet does not change the dough water unit."
+            },
+            {
+              "id": "hold_814_tail",
+              "type": "user",
+              "text": "Resume the dough worksheet here. Cancel the optional humidity graph, but keep the actual-batch comparison before rollout."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_814_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the dough worksheet, and why was it chosen?",
+          "project_key": "bakery_batches",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the dough worksheet, and what must continue?",
+          "project_key": "bakery_batches",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the dough worksheet?",
+          "project_key": "bakery_batches",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the dough worksheet, and how should the assistant claim about shared use be treated?",
+          "project_key": "bakery_batches",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate icing worksheet, and may it change the dough worksheet?",
+          "project_key": "bakery_batches",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the dough worksheet?",
+          "project_key": "bakery_batches",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_815",
+      "project_keys": [
+        "puppet_workshop",
+        "stage_props"
+      ],
+      "sessions": [
+        {
+          "id": "hold_815_chat1",
+          "project_key": "puppet_workshop",
+          "events": [
+            {
+              "id": "hold_815_obsolete",
+              "type": "tool",
+              "text": "Puppet workshop: Joint checklist used a draft component code wrist_tmp.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Puppet workshop obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Puppet workshop: Joint checklist used a draft component code wrist_tmp.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_815_request",
+              "type": "user",
+              "text": "In project Puppet workshop, work on the joint checklist. Treat the hinge checklist as a distinct task. Describe left and right from the puppeteer viewpoint because the assembly bench faces the puppet back."
+            },
+            {
+              "id": "hold_815_ack",
+              "type": "assistant",
+              "text": "I will prepare the joint checklist locally and keep its review step visible."
+            },
+            {
+              "id": "hold_815_local",
+              "type": "tool",
+              "text": "Puppet workshop joint checklist: local sample labels follow the puppeteer viewpoint. No assembly station was updated.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Puppet workshop local snapshot"
+                },
+                "tool_response": {
+                  "output": "Puppet workshop joint checklist: local sample labels follow the puppeteer viewpoint. No assembly station was updated.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_815_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_815_chat2",
+          "project_key": "puppet_workshop",
+          "events": [
+            {
+              "id": "hold_815_current",
+              "type": "user",
+              "text": "Continuing the same joint checklist from our first chat. Joint checklist component code is wrist_link. The wrist_tmp draft code has been retired."
+            },
+            {
+              "id": "hold_815_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_815_obsolete"
+            },
+            {
+              "id": "hold_815_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_815_report",
+              "type": "assistant",
+              "text": "I claimed the assembly station was updated, without an assembly-station output to confirm it."
+            },
+            {
+              "id": "hold_815_pending",
+              "type": "user",
+              "text": "The maker still needs to test the wrist joint with the heavy sleeve fitted."
+            },
+            {
+              "id": "hold_815_tail",
+              "type": "user",
+              "text": "Continue joint-checklist work in the next chat. Cancel only the optional pose photographs; retain the heavy-sleeve test."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_815_pending"
+            }
+          ]
+        },
+        {
+          "id": "hold_815_otherchat",
+          "project_key": "stage_props",
+          "events": [
+            {
+              "id": "hold_815_boundary",
+              "type": "user",
+              "text": "Stage props hinge checklist defines left and right from the audience viewpoint. That convention does not apply to Puppet workshop."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the joint checklist, and why was it chosen?",
+          "project_key": "puppet_workshop",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the joint checklist, and what must continue?",
+          "project_key": "puppet_workshop",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the joint checklist?",
+          "project_key": "puppet_workshop",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the joint checklist, and how should the assistant claim about shared use be treated?",
+          "project_key": "puppet_workshop",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate hinge checklist, and may it change the joint checklist?",
+          "stage": "final",
+          "project_keys": [
+            "puppet_workshop",
+            "stage_props"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the joint checklist?",
+          "project_key": "puppet_workshop",
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "hold_816",
+      "project_keys": [
+        "recycling_rounds"
+      ],
+      "sessions": [
+        {
+          "id": "hold_816_chat1",
+          "project_key": "recycling_rounds",
+          "events": [
+            {
+              "id": "hold_816_obsolete",
+              "type": "tool",
+              "text": "Recycling rounds: Glass collection route assigned the school stop identifier S-TEMP.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Recycling rounds obsolete snapshot"
+                },
+                "tool_response": {
+                  "output": "Recycling rounds: Glass collection route assigned the school stop identifier S-TEMP.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_816_request",
+              "type": "user",
+              "text": "In project Recycling rounds, work on the glass collection route. Treat the paper collection route as a distinct task. Keep the school stop after 09:00 because the collection vehicle must avoid the morning arrival crowd."
+            },
+            {
+              "id": "hold_816_ack",
+              "type": "assistant",
+              "text": "I will prepare the glass collection route locally and keep its review step visible."
+            },
+            {
+              "id": "hold_816_local",
+              "type": "tool",
+              "text": "Recycling rounds glass collection route: local schedule check placed the school stop at 09:20. No driver device was synchronized.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "FICTIONAL ONLY: read Recycling rounds local snapshot"
+                },
+                "tool_response": {
+                  "output": "Recycling rounds glass collection route: local schedule check placed the school stop at 09:20. No driver device was synchronized.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_816_local"
+            }
+          ]
+        },
+        {
+          "id": "hold_816_chat2",
+          "project_key": "recycling_rounds",
+          "events": [
+            {
+              "id": "hold_816_current",
+              "type": "user",
+              "text": "Continuing the same glass collection route from our first chat. Glass collection route uses school stop identifier S-19. S-TEMP is obsolete."
+            },
+            {
+              "id": "hold_816_delete",
+              "type": "delete_observation",
+              "observation_event_id": "hold_816_obsolete"
+            },
+            {
+              "id": "hold_816_forget",
+              "type": "user",
+              "text": "Delete the obsolete draft observation above from memory. Use the replacement I just gave for the current task; the old draft must not return as current guidance."
+            },
+            {
+              "id": "hold_816_report",
+              "type": "assistant",
+              "text": "I reported that drivers had received the route, although I did not inspect any device acknowledgement."
+            },
+            {
+              "id": "hold_816_pending",
+              "type": "user",
+              "text": "The route supervisor still must confirm access at the narrow school gate."
+            },
+            {
+              "id": "hold_816_boundary",
+              "type": "user",
+              "text": "Paper collection route reaches the school at 11:00. It is a separate route and does not set the glass route arrival time."
+            },
+            {
+              "id": "hold_816_tail",
+              "type": "user",
+              "text": "Continue the glass route from this chat. Drop the optional route-colour redesign; preserve the after-09:00 rule and gate-access confirmation."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_816_pending"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What requirement governs the glass collection route, and why was it chosen?",
+          "project_key": "recycling_rounds",
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What did the final user instruction remove from the glass collection route, and what must continue?",
+          "project_key": "recycling_rounds",
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Which review or real-world check remains open for the glass collection route?",
+          "project_key": "recycling_rounds",
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What does the captured execution actually establish for the glass collection route, and how should the assistant claim about shared use be treated?",
+          "project_key": "recycling_rounds",
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What rule belongs to the separate paper collection route, and may it change the glass collection route?",
+          "project_key": "recycling_rounds",
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the obsolete observation was deleted, what replacement setting remains authoritative for the glass collection route?",
+          "project_key": "recycling_rounds",
+          "stage": "final"
+        }
+      ]
+    }
+  ]
+}

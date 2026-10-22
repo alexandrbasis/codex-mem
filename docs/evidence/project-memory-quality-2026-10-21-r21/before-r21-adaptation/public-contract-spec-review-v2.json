@@ -1,0 +1,43 @@
+{
+  "axis": "Spec",
+  "status": "resolved_no_remaining_findings_in_narrow_V2_delta",
+  "pack_receipt_sha256": "261d52b0e772950e33d868cc4a2d6a8e32a27790f4e78284c20d98b7ac722bc5",
+  "driver_sha256": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+  "tests_sha256": "f215d7bb6d7a865066df5526d0d57a587898b464a3bdd980d32d737ff56dc313",
+  "prior_review_sha256": "ff466649bc54191364afb2bd50b5d73465ee51fb09b068ecacaaf163b6296bc7",
+  "findings": [],
+  "resolved_finding": "P2 incomplete fact-count attestation: exact counts are now derived from reread, hash-verified fixture/gold bytes and compared before success receipt creation.",
+  "verification": {
+    "driver_tests_executed": 20,
+    "driver_tests_passed": 20,
+    "pack_pin_mismatches": 0,
+    "global_helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "public_schemas_guidance_mechanical_contract_unchanged": true,
+    "rejection_cases": [
+      "metadata facts0/1/95/97 against actual96",
+      "actual95fixturequestions against claimed96"
+    ],
+    "acceptance_control": "independently pinned actual97facts with metadata97 accepted",
+    "native_calls": 0,
+    "private_author_inputs_read": false
+  },
+  "clearance": {
+    "fresh_independent_author_dispatch": true,
+    "independent_sealed_reviewer_dispatch": true,
+    "conditions": [
+      "Deliver only the documented author/reviewer allowlists.",
+      "Reviewer receives the new sealed inputs, remains independent of product/prior inputs/answers/grades, and completes all question/fact/negative-case checks.",
+      "Preserve rejected versions; obtain accepted matching final metadata before freeze.",
+      "R17 trial protocol must declare independent_review_contract with final exact pins; all later readiness gates still apply."
+    ],
+    "trial_readiness": false,
+    "main_freeze": false,
+    "quality_acceptance": false
+  },
+  "narrative": "The confirmed count-consistency finding is resolved. The V2 driver verifies the exact input bytes again, counts actual fixture questions and gold required facts, and rejects discrepancies before a success receipt. Twenty offline driver tests pass. Pack pins match, and the helper, mechanical contract, guidance and reviewer schemas remain unchanged. Author and independent reviewer handoff may proceed under the documented allowlists. This is not trial or quality clearance: truthful semantic review and final accepted bindings remain future requirements.",
+  "limits": [
+    "No product-worker files or old/private fixture/gold inspected.",
+    "No source edits, native/model calls or score changes.",
+    "Only this new review artifact was written."
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "status": "passed_release_authorized",
+  "released_at": 1792601296.149833,
+  "verified_bindings": {
+    "freeze_path": "/private/tmp/codex-mem-quality-20261021-r13-experiment/freeze.json",
+    "freeze_sha256": "791dbbbf6fdc0fee0181997567fe606bc6bc6a64aa5c622ca0383a14d6c83aba",
+    "run_path": "/private/tmp/codex-mem-quality-20261021-r13-experiment/run.json",
+    "run_sha256": "ddfcaf34b1bf782022d52d7a15ffa7b638eead530b2db7a82b9f0dfe805f08fd",
+    "original_started_at": 1792600962.23668,
+    "freeze_at": 1792601213.821503,
+    "protocol_semantic_sha256": "df0844d4c4fe6b2af7474af3bf2c35d7ec8b1d9e1ce430ee353569be08b6e4df",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "sealed_files": {
+      "author.py": "6fc59dae4b7275221a196341f5e76486623324477b6b58f2f7c27d37b4045c6a",
+      "holdout-fixture.json": "b6d8ae5e7ec4396bd51acde46b46584558e76b7c922175b030ad910c14b5716a",
+      "holdout-gold.json": "6821870ef6d8c60026ca9b4ec48f235a14323b2a1fc36627667bf549592b5323",
+      "manifest.json": "398397bcf603776e95ce920c3d2981c6ddc711278e4d3b28eb7938959ee6e1c8"
+    },
+    "sealed_input_pins_sha256": "d0447f90fa5115e90eb4f40ed1363dc8e13737276292234bed6f75d35e176e02"
+  },
+  "checks": {
+    "sealed_bytes_unchanged": true,
+    "freeze_manifest_exact_four_pins": true,
+    "protocol_and_helper_match_supplied_expected_values": true,
+    "original_run_start_preserved": true,
+    "run_start_before_freeze_before_release": true
+  },
+  "parent_attestation": {
+    "protocol_file_sha256": "7f8742d9bdf7cac9e133c925160e41fc7126d5fb03406b83d82e9adb5c00ec6e",
+    "public_audit_sha256": "633954dbdd7c2ecdf8c2b9d0befacc1ba5f498b4d4b8f04bd64dcce4694ef07a",
+    "public_gate": "Eight completed calls; six of six full and supported, zero critical findings, known six-question oracle; 136309 tokens.",
+    "prerequisites": "Parent attests public gate, independent public audit, 1763 tests, acceptance, package, four Archify gates and both source review axes passed before freeze.",
+    "private_read_order": "Parent attests no private fixture/gold/author reads before this receipt, and will read them only after receipt.",
+    "metadata_ordering_deviation": "The first root readiness-receipt script failed with SyntaxError. A separate freeze command ran after the actual verified public gates and audit. The corrected readiness receipt was written after freeze. Parent attests no source/protocol/input edit, model retry, clock reset or sealed read occurred."
+  },
+  "limits": [
+    "This verifies metadata and sealed-input integrity, not product code, evaluation results or source-review findings.",
+    "Protocol file hash, gate completion, independent audit and private-read ordering are parent attestations; underlying files were not read.",
+    "The same author created fixture and gold; independent semantic grading has not occurred.",
+    "Platform-injected repository instructions and memory summaries were visible but not used as scenario material.",
+    "Read scope stayed within the two public contract files, owned sealed outputs, and the explicitly authorized freeze.json/run.json.",
+    "No native model, API or Store calls; no fictional commands executed.",
+    "Original sealed author, fixture, gold, manifest and pins were not modified."
+  ]
+}

@@ -1,0 +1,71 @@
+--- R15-v2/project_memory_retrieval.py
++++ R15-v3/project_memory_retrieval.py
+@@ -761,8 +761,6 @@
+     source_containers: dict[str, dict[str, Any]] = {}
+     grouped_intervals = []
+     other_groups = _complete_source_groups(records)
+-    pending_groups = (other_groups + user_groups if brief.get('source_evidence_requested')
+-                      else user_groups + other_groups)
+     neutral = sorted(brief.get('unassociated_user_context') or [],
+                      key=lambda record: int(record.get('source_capture_seq_max') or 0))
+     neutral = ([neutral[-1], neutral[0]] + neutral[1:-1]) if len(neutral) > 1 else neutral
+@@ -774,9 +772,25 @@
+         metadata = {key: record[key] for key in ('source_role', 'disposition', 'is_requirement_claim',
+             'meaning', 'uncertainty', 'selection_basis', 'relationship_to_query', 'scope') if key in record}
+         neutral_groups.append({'qualifiers': metadata, 'refs': refs, 'neutral': True})
++    # Merge the already ordered material and neutral streams. Neutral boundary
++    # diversity remains bounded, but lexical association does not buy an older
++    # source an unconditional turn before a later eligible original.
++    def source_sequence(group: Mapping[str, Any]) -> int:
++        return max((capture_order.get(ref.get('source_id'), ref.get('source_capture_seq') or 0)
++                    for ref in group['refs']), default=0)
++    shared_users = []
++    material, supplemental = list(user_groups), list(neutral_groups)
++    while material or supplemental:
++        reason_first = bool(material and material[0].get('fallback_only') and brief.get('projection') == 'rationale')
++        if material and (not supplemental or reason_first or source_sequence(material[0]) >= source_sequence(supplemental[0])):
++            shared_users.append(material.pop(0))
++        else:
++            shared_users.append(supplemental.pop(0))
++    pending_groups = (other_groups + shared_users if brief.get('source_evidence_requested')
++                      else shared_users + other_groups)
+     neutral_selected, neutral_spent = 0, 0
+     neutral_limit = min(1800, budget // 3)
+-    for group in pending_groups + neutral_groups:
++    for group in pending_groups:
+         if not group.get('neutral') and all(_interval_covered(ref, grouped_intervals) for ref in group['refs']):
+             continue
+         is_neutral = group.get('neutral', False)
+@@ -895,19 +909,22 @@
+     # One source plan pays for already selected user originals before neutral
+     # supplements and repeated association wrappers. Every association retains
+     # its own qualifiers; capture order only orders display candidates.
++    remaining = budget - sum(map(len, parts)) - len(closing)
++    policy_first = bool(brief.get('user_source_coverage_requested') and not brief.get('source_evidence_requested'))
++    evidence_assessment = bool(brief.get('source_evidence_requested'))
+     protected = {}
++    admitted_roles = set()
+     for record in records:
+         size = _whole_execution_size(record, brief.get('projection'))
+-        if size:
+-            protected.setdefault(record['id'], size)
+-        elif record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
+-            protected.setdefault(record['id'], _reserved_record_size(record, brief.get('projection'), set(), budget))
+-    remaining = budget - sum(map(len, parts)) - len(closing)
+-    admitted = {}
+-    for key, size in protected.items():
+-        if size + sum(admitted.values()) <= remaining:
+-            admitted[key] = size
+-    protected = admitted
++        role = 'execution' if size else None
++        if not size and record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
++            size = _reserved_record_size(record, brief.get('projection'), set(), min(900, budget // 6))
++            role = 'report'
++        if policy_first or not size or evidence_assessment and role in admitted_roles:
++            continue
++        if size + sum(protected.values()) <= remaining:
++            protected[record['id']] = size
++            admitted_roles.add(role)
+     available = max(0, remaining - sum(protected.values()))
+     source_nodes, source_pointers, neutral_selected, neutral_omitted = _plan_original_source_transport(
+         brief, records, budget, available)

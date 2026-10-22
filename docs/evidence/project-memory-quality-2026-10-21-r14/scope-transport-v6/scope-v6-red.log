@@ -1,0 +1,101 @@
+FFFFFFFF
+======================================================================
+FAIL: test_stored_and_completed_scopes_stay_distinct_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_stored_and_completed_scopes_stay_distinct_in_both_orders) (completed=False, scopes=(('local', '1.2.0'), ('production', '2.0.0')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 81, in test_stored_and_completed_scopes_stay_distinct_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 66, in check_pair
+    self.assertEqual(item.get('environment'), environment or None)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 'local'
+
+======================================================================
+FAIL: test_stored_and_completed_scopes_stay_distinct_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_stored_and_completed_scopes_stay_distinct_in_both_orders) (completed=False, scopes=(('production', '2.0.0'), ('local', '1.2.0')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 81, in test_stored_and_completed_scopes_stay_distinct_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 66, in check_pair
+    self.assertEqual(item.get('environment'), environment or None)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 'production'
+
+======================================================================
+FAIL: test_stored_and_completed_scopes_stay_distinct_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_stored_and_completed_scopes_stay_distinct_in_both_orders) (completed=True, scopes=(('local', '1.2.0'), ('production', '2.0.0')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 81, in test_stored_and_completed_scopes_stay_distinct_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 66, in check_pair
+    self.assertEqual(item.get('environment'), environment or None)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 'local'
+
+======================================================================
+FAIL: test_stored_and_completed_scopes_stay_distinct_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_stored_and_completed_scopes_stay_distinct_in_both_orders) (completed=True, scopes=(('production', '2.0.0'), ('local', '1.2.0')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 81, in test_stored_and_completed_scopes_stay_distinct_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 66, in check_pair
+    self.assertEqual(item.get('environment'), environment or None)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 'production'
+
+======================================================================
+FAIL: test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders) (completed=False, scopes=(('', ''), ('local', '1.2.0')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 88, in test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 72, in check_pair
+    self.assertEqual(len(list(item.iter('source'))), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders) (completed=False, scopes=(('local', '1.2.0'), ('', '')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 88, in test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 66, in check_pair
+    self.assertEqual(item.get('environment'), environment or None)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 'local'
+
+======================================================================
+FAIL: test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders) (completed=True, scopes=(('', ''), ('local', '1.2.0')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 88, in test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 72, in check_pair
+    self.assertEqual(len(list(item.iter('source'))), 1)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 1
+
+======================================================================
+FAIL: test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders (test_project_memory_neutral_scope_transport.NeutralOriginalScopeTransportTests.test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders) (completed=True, scopes=(('local', '1.2.0'), ('', '')))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 88, in test_unknown_scope_stays_unknown_beside_declared_scope_in_both_orders
+    self.check_pair(scopes, completed)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_neutral_scope_transport.py", line 66, in check_pair
+    self.assertEqual(item.get('environment'), environment or None)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None != 'local'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.166s
+
+FAILED (failures=8)

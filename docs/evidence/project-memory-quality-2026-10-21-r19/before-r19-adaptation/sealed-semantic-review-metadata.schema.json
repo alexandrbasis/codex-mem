@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prospective sealed semantic-review metadata v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "status",
+    "unresolved_findings",
+    "fixture_sha256",
+    "gold_sha256",
+    "mechanical_contract_sha256",
+    "semantic_guidance_sha256",
+    "sealed_review_receipt_sha256",
+    "independence_attestation",
+    "coverage"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "status": {
+      "enum": [
+        "accepted",
+        "changes_required"
+      ]
+    },
+    "unresolved_findings": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "independence_attestation": {
+      "const": "independent_author_inputs_only_no_product_prior_inputs_answers_or_grades"
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "questions",
+        "required_facts",
+        "all_questions_reviewed",
+        "all_required_facts_reviewed",
+        "negative_cases_reviewed"
+      ],
+      "properties": {
+        "questions": {
+          "const": 96
+        },
+        "required_facts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "all_questions_reviewed": {
+          "type": "boolean"
+        },
+        "all_required_facts_reviewed": {
+          "type": "boolean"
+        },
+        "negative_cases_reviewed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "fixture_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gold_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "mechanical_contract_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "semantic_guidance_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sealed_review_receipt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "description": "Metadata only. Detailed review findings remain sealed in the separately pinned receipt. Acceptance is an attestation, not a semantic proof."
+}

@@ -101,6 +101,36 @@ class GenericProjectFacetTests(unittest.TestCase):
         self.assertNotIn(separate, [item['id'] for item in excluded['episodes']])
         self.assertNotIn('telescope registry', excluded['xml'])
 
+    def test_current_assessment_keeps_superseded_episode_with_scope_guards(self):
+        prior = self.add_episode('OBS-42 builds the atlas package.',
+            outcome='The earlier checker reported the atlas package complete.', session='original')
+        current = self.add_episode('Continue OBS-42: verify its revised package.',
+            outcome='The current checker found an incomplete atlas index.',
+            session='revision', target=prior)
+        other = self.add_episode('OBS-89 checks the telescope registry.', session='registry')
+
+        assessment = build_project_brief(self.store, self.project,
+            query='Was the earlier assistant completion claim accurate?')
+        self.assertTrue({prior, current}.issubset({item['id'] for item in assessment['episodes']}))
+        scoped = build_project_brief(self.store, self.project,
+            query='Was the earlier assistant completion claim for OBS-42 accurate?')
+        self.assertEqual({prior, current}, {item['id'] for item in scoped['episodes']})
+        self.assertNotIn(other, [item['id'] for item in scoped['episodes']])
+        self.assertLessEqual(len(scoped['xml']), 6000)
+        ElementTree.fromstring(scoped['xml'])
+
+        state = build_project_brief(self.store, self.project,
+            query='Which results are confirmed for OBS-42?')
+        self.assertEqual([current], [item['id'] for item in state['episodes']])
+        historical = build_project_brief(self.store, self.project,
+            query='What did the assistant report for OBS-42 say as of 2031-02-03?')
+        self.assertEqual([], historical['records'])
+        excluded = build_project_brief(self.store, self.project,
+            query='Was the earlier assistant completion claim for OBS-42 accurate?',
+            exclude_session_id='original')
+        self.assertNotIn(prior, [item['id'] for item in excluded['episodes']])
+        self.assertNotIn('earlier checker reported', excluded['xml'])
+
 
 
 if __name__ == '__main__':

@@ -1,0 +1,29 @@
+{
+  "status": "preclock_test_scope_clarification",
+  "source_addendum": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r21/source-readiness-addendum.json",
+    "sha256": "62d835da569ca0442edbb6fff027b946f2403ed52f6d3426ac461b746446cb3c"
+  },
+  "exact_emitted_protocol_consumer_smoke": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r21/preclock-consumer-smoke/consumer-smoke-receipt.json",
+    "sha256": "fc3b393c23cb926c304ba2727f5682f6b044486153d6d8dc6b0332775b49cd18"
+  },
+  "additional_source_suites": {
+    "public_preflight": {
+      "tests": 8,
+      "scope": "Public source guards and synthetic dispatch tests. Some load currentR21protocol and adapt pins in temporary fixtures; no native call."
+    },
+    "reader_contract": {
+      "tests": 4,
+      "scope": "Constructs protocol from inheritedR16guide plus current defaults and explicit reader contract; not an exact emittedR21protocol execution."
+    },
+    "canonical_history": {
+      "tests": 4,
+      "scope": "Exercises actual helper accounting/export with R20history and public toy fixtures; its export protocol derives from R16guide with toy repeats, not exact emittedR21protocol."
+    }
+  },
+  "interpretation": "The actual-protocol-* log filenames identify when tests ran. They do not establish that every source test consumed the exact emittedR21object. Only the pinned consumer-smoke proves that exact protocol path through accounting/aggregate/export with216missing synthetic slots. No native or freshquality claim.",
+  "native_calls": 0,
+  "actual_clock_started": false,
+  "runtime_helper_protocol_changed": false
+}

@@ -1,0 +1,134 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q4",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "df23cbae3591f69a7f26082abde59fbd54f17d2110bef4ae0775ee75130617b6",
+  "context_sha256": "531a6f37beb41b55091d12f0c6b917cf7ab683b8fa918427d6cafa2e8fdf8639",
+  "raw_output_sha256": "58af943b448969d38e7606d3a64ec53b6f27c23a54c2a65ce349eb81b9b16245",
+  "native_receipt": {
+    "source_call_id": "call-0099",
+    "request_sha256": "85abbca682fe89f50fec0f01663c4b4e466652c20cd6a561e5f05c35998319a3",
+    "response_sha256": "e9ea089187199c17a07f7f72e11e40bf19db81a853f2163a8c32609ecc44cc6d",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q4",
+        "answer": "At the opening, the user specified inches as the depth unit, and Pebble pond survey was waiting for review. The user later explicitly replaced inches with centimeters, so centimeters is the instruction that applies now. That correction changes the recorded value without changing the survey’s closed status. The opening instruction also required uncertain readings to remain visible because the next survey must revisit them.",
+        "uncertainties": [
+          "Whether centimeters has been applied in the survey output is unknown from the supplied evidence."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0011",
+            "source_id": "8446b2d831df43ae80ad9fd92b5f9dfb",
+            "source_field": "body",
+            "start": 209,
+            "end": 282,
+            "source_role": "user_intent",
+            "quote": " My initial instruction for Pebble pond survey sets depth unit to inches."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "8446b2d831df43ae80ad9fd92b5f9dfb",
+            "source_field": "body",
+            "start": 142,
+            "end": 209,
+            "source_role": "user_intent",
+            "quote": " At this opening meeting, Pebble pond survey is waiting for review."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "a6875a241a8d44ae8f86e3f7cfb8fdb1",
+            "source_field": "body",
+            "start": 0,
+            "end": 103,
+            "source_role": "user_intent",
+            "quote": "Correction for Pebble pond survey: use depth unit of centimeters, replacing my initial value of inches."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "a6875a241a8d44ae8f86e3f7cfb8fdb1",
+            "source_field": "body",
+            "start": 103,
+            "end": 192,
+            "source_role": "user_intent",
+            "quote": " This correction changes the recorded value, not the closed status of Pebble pond survey."
+          },
+          {
+            "catalog_ref": "R0007",
+            "source_id": "8446b2d831df43ae80ad9fd92b5f9dfb",
+            "source_field": "body",
+            "start": 43,
+            "end": 142,
+            "source_role": "user_intent",
+            "quote": " For Pebble pond survey, keep uncertain readings visible because the next survey must revisit them."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 10002,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12476,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 396,
+        "reasoning_output_tokens": 184,
+        "total_tokens": 12872
+      }
+    }
+  },
+  "latency_ms": 10049,
+  "native_dispatch": {
+    "key": "f5d5073552d382319f1773824fe48543a855d69b0cda7435a4439f04b10c53f5",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F03",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q4",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0099",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "95523fe385747d2d7c67f6db7064d1b91c936cd76381ddd149574573fcf10ea0",
+    "request_file_sha256": "a3fc5898156410e80a7920aed055d3a4db7e58a416ca1d118546da95ac3b8cb7",
+    "response_file_sha256": "8597119f35d02c94cfec9f05e0f990de3c9598220656e23a4622c2ed4a30910b",
+    "reused": false,
+    "native_wall_ms": 10049
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F03",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q4"
+  },
+  "evidence_checks": {
+    "Q4": {
+      "accepted_results": "The user replaced inches with centimeters and stated that the correction leaves the closed status unchanged.",
+      "open_work_and_reasons": "At opening, review was pending, and uncertain readings were to remain visible for the next survey to revisit.",
+      "source_role_distinctions": "These are user instructions; execution of the corrected unit is not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

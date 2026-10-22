@@ -11,6 +11,7 @@ from codex_mem.project_memory import ProjectMemory
 from codex_mem.project_memory_retrieval import build_project_brief
 from codex_mem.store import Store
 from test_episode_processor import receipt
+from source_transport_assertions import SourceRegistry
 
 
 class ProjectMemoryRetentionTests(unittest.TestCase):
@@ -72,14 +73,17 @@ class ProjectMemoryRetentionTests(unittest.TestCase):
         tree = self.brief()
         fields = tree.findall("./item/field[@name='open_work_source_excerpt']")
         self.assertEqual(len(fields), 1, ElementTree.tostring(tree, encoding='unicode'))
-        quotes = fields[0].findall('./source/quote_excerpt')
-        self.assertEqual([quote.text for quote in quotes], [ref['quote'] for ref in episode['evidence']['open_work']])
-        source = fields[0].find('source')
-        self.assertEqual(source.get('source_role'), 'user_intent')
-        self.assertEqual(len(quotes), 3)
-        for pointer, quote in zip(fields[0].findall('source'), quotes):
-            self.assertEqual(int(pointer.get('end')) - int(pointer.get('start')), len(quote.text))
-            self.assertEqual(pointer.get('quote_truncated'), 'False')
+        sources = SourceRegistry(tree).field_sources(fields[0])
+        stored = episode['evidence']['open_work']
+        self.assertEqual([source['quote'] for source in sources], [ref['quote'] for ref in stored])
+        self.assertEqual(len(sources), 3)
+        for pointer, ref in zip(sources, stored):
+            self.assertEqual(pointer['source_id'], ref['source_id'])
+            self.assertEqual(pointer['source_role'], 'user_intent')
+            self.assertEqual(pointer['source_field'], 'body')
+            self.assertEqual((pointer['start'], pointer['end']), (ref['start'], ref['end']))
+            self.assertEqual(pointer['end'] - pointer['start'], len(pointer['quote']))
+            self.assertFalse(pointer['quote_truncated'])
         self.assertIsNone(fields[0].find('derived_text'))
 
     def test_fitting_shared_reference_survives_omission_of_larger_group(self):

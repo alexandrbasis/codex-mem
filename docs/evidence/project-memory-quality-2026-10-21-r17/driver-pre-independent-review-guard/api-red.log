@@ -1,0 +1,194 @@
+.....EEEEEEEEEEEEEEE.....
+======================================================================
+ERROR: test_accepted_pinned_metadata_is_idempotent_and_output_has_no_findings (__main__.IndependentReviewGuardTests.test_accepted_pinned_metadata_is_idempotent_and_output_has_no_findings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 226, in test_accepted_pinned_metadata_is_idempotent_and_output_has_no_findings
+    receipt = self.check()
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_existing_success_receipt_is_not_overwritten (__main__.IndependentReviewGuardTests.test_existing_success_receipt_is_not_overwritten)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 278, in test_existing_success_receipt_is_not_overwritten
+    with self.assertRaisesRegex(RuntimeError, 'receipt_differs'): self.check()
+                                                                  ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_fixed_basename_cannot_escape_fixture_directory (__main__.IndependentReviewGuardTests.test_fixed_basename_cannot_escape_fixture_directory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 271, in test_fixed_basename_cannot_escape_fixture_directory
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_missing_tampered_or_rejected_receipts_never_write_success (__main__.IndependentReviewGuardTests.test_missing_tampered_or_rejected_receipts_never_write_success) (failure='missing')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 252, in test_missing_tampered_or_rejected_receipts_never_write_success
+    self.check()
+    ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_missing_tampered_or_rejected_receipts_never_write_success (__main__.IndependentReviewGuardTests.test_missing_tampered_or_rejected_receipts_never_write_success) (failure='tampered')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 239, in test_missing_tampered_or_rejected_receipts_never_write_success
+    original = self.mp.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpk_vncjg9/sealed-semantic-review-metadata.json'
+
+======================================================================
+ERROR: test_missing_tampered_or_rejected_receipts_never_write_success (__main__.IndependentReviewGuardTests.test_missing_tampered_or_rejected_receipts_never_write_success) (failure='rejected')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 239, in test_missing_tampered_or_rejected_receipts_never_write_success
+    original = self.mp.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpk_vncjg9/sealed-semantic-review-metadata.json'
+
+======================================================================
+ERROR: test_missing_tampered_or_rejected_receipts_never_write_success (__main__.IndependentReviewGuardTests.test_missing_tampered_or_rejected_receipts_never_write_success) (failure='unresolved')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 239, in test_missing_tampered_or_rejected_receipts_never_write_success
+    original = self.mp.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpk_vncjg9/sealed-semantic-review-metadata.json'
+
+======================================================================
+ERROR: test_missing_tampered_or_rejected_receipts_never_write_success (__main__.IndependentReviewGuardTests.test_missing_tampered_or_rejected_receipts_never_write_success) (failure='incomplete')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 239, in test_missing_tampered_or_rejected_receipts_never_write_success
+    original = self.mp.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpk_vncjg9/sealed-semantic-review-metadata.json'
+
+======================================================================
+ERROR: test_missing_tampered_or_rejected_receipts_never_write_success (__main__.IndependentReviewGuardTests.test_missing_tampered_or_rejected_receipts_never_write_success) (failure='extra_text')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 239, in test_missing_tampered_or_rejected_receipts_never_write_success
+    original = self.mp.read_bytes()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_abc.py", line 625, in read_bytes
+    with self.open(mode='rb') as f:
+         ~~~~~~~~~^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/private/tmp/tmpk_vncjg9/sealed-semantic-review-metadata.json'
+
+======================================================================
+ERROR: test_wrong_input_guidance_contract_schema_or_findings_binding_rejects (__main__.IndependentReviewGuardTests.test_wrong_input_guidance_contract_schema_or_findings_binding_rejects) (binding='fixture_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 264, in test_wrong_input_guidance_contract_schema_or_findings_binding_rejects
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_wrong_input_guidance_contract_schema_or_findings_binding_rejects (__main__.IndependentReviewGuardTests.test_wrong_input_guidance_contract_schema_or_findings_binding_rejects) (binding='gold_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 264, in test_wrong_input_guidance_contract_schema_or_findings_binding_rejects
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_wrong_input_guidance_contract_schema_or_findings_binding_rejects (__main__.IndependentReviewGuardTests.test_wrong_input_guidance_contract_schema_or_findings_binding_rejects) (binding='semantic_guidance_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 264, in test_wrong_input_guidance_contract_schema_or_findings_binding_rejects
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_wrong_input_guidance_contract_schema_or_findings_binding_rejects (__main__.IndependentReviewGuardTests.test_wrong_input_guidance_contract_schema_or_findings_binding_rejects) (binding='mechanical_contract_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 264, in test_wrong_input_guidance_contract_schema_or_findings_binding_rejects
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_wrong_input_guidance_contract_schema_or_findings_binding_rejects (__main__.IndependentReviewGuardTests.test_wrong_input_guidance_contract_schema_or_findings_binding_rejects) (binding='metadata_schema_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 264, in test_wrong_input_guidance_contract_schema_or_findings_binding_rejects
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+======================================================================
+ERROR: test_wrong_input_guidance_contract_schema_or_findings_binding_rejects (__main__.IndependentReviewGuardTests.test_wrong_input_guidance_contract_schema_or_findings_binding_rejects) (binding='sealed_review_receipt_sha256')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 264, in test_wrong_input_guidance_contract_schema_or_findings_binding_rejects
+    with self.assertRaises(ValueError): self.check()
+                                        ~~~~~~~~~~^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r17/test-driver.py", line 223, in check
+    return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'paired_driver' has no attribute 'validate_independent_review'
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.032s
+
+FAILED (errors=15)

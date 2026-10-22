@@ -1,0 +1,120 @@
+{
+  "status": "append_only_manifest_contract_v002_ready_for_reviews_not_actual_audit",
+  "source_sha256": {
+    "audit-final-export-v002.py": "26ec7b0230034d40da912932a5b1b38b5868347fa211a43f3bc688ea3d2cb7ed",
+    "release_schema_v002.py": "ccb2c03b521e4308730512005153772cca584e046cbfb2126c0a00fc2e885e10",
+    "test-release-schema-v002.py": "91f523c4639a8b2ba7eda47a00c4bc6a76b1728dda6be0b1d79c2833f998d752",
+    "test-r21-contracts-v002.py": "5d512466fe263a61db2b2afe11033913547279549c2e4a9c99109febff0d8217",
+    "test-manifest-contract-v002.py": "3194188efdca2b36243f45db8d05655cfd19d4ca782a11a89abccd81b2a1200e"
+  },
+  "prior_sources_receipts_preserved": {
+    "audit-final-export.py": "0cf2f20876f41806d193daeef0cf36ff2042e838cace46815338e2b6a38e1303",
+    "release_schema.py": "f8c4ccc5b2bc8b130092830e5b4a1bd077edfd8423c11c4047b52b4439eb06f5",
+    "preparation.json": "6acffffd3befc54d3a90e5f7a006d77e69622c15e2048b7d2046489fb0c19ca7",
+    "source-release-v002.json": "f81976bf8b1c7671323f4f0f88d05b493ff7f9e9e0d8ba22b2dedc244a5b99bc"
+  },
+  "actual_metadata_failure": {
+    "red_log_sha256": "ecb249b3525c10f254cf9dc81283b2f21b1e70dc0a593cee3b4172dbe159b2fc",
+    "exception": "KeyError generic_contract_pins",
+    "method": "Execute exact old generic map consumer with actual contents-free sealed-author-manifest; no private archive/case parsing."
+  },
+  "explicit_schema_selection": {
+    "binding_key": "author_manifest_contract",
+    "R21": "generic-pack-files-v1 -> strict generic_pack_files",
+    "legacy_R20": "generic-contract-pins-v1 -> strict generic_contract_pins",
+    "fallback": "none; wrong/missing selector/selectedfield fails",
+    "publicpins": "Every basename/hash validated against base files; actualR21fivepins includinggeneric-pack-pins.json pass"
+  },
+  "metadata_pins": {
+    "sealed-author-manifest.json": "15e3e930062b2589554464b2d80f7ef6565d7ebd66b93c3cd29af98b0cc474b2",
+    "formal-release.json": "65527c180aa17618c44381a64b34c1127202843b0f4bf37f3e1cf357a55792b7",
+    "freeze.json": "16716e5713b914805586783ffcd2f18b03561943ff98e054631b9db7eba780ff",
+    "actual-freeze.json": "16716e5713b914805586783ffcd2f18b03561943ff98e054631b9db7eba780ff",
+    "generic-pack-pins.json": "04da7d960615e4bee59ce4b42e86642e11a675b4dc4210fd0a93c5ff6fa25e1f"
+  },
+  "tests": {
+    "individual_exitcodes": [
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-audit-contracts.py"
+        ],
+        "returncode": 0,
+        "log": "manifest-contract-v002-green-1.log",
+        "sha256": "19ce4c3fe936ba5a289b545d890b7ffce48ced29d4b7b20a8c6b10a871321dd4"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-release-schema-v002.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v002.py"
+        ],
+        "returncode": 0,
+        "log": "manifest-contract-v002-green-2.log",
+        "sha256": "2e492bc0517b1e562c7602b89d070621f9207b69d8f9ad3683cdd82864596912"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-improvement-path.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v002.py"
+        ],
+        "returncode": 0,
+        "log": "manifest-contract-v002-green-3.log",
+        "sha256": "a60e0d2d66e445b0734c0563e528ca7eae6f1b838b35a48522a62ef5a010522e"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-main-binding-path.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v002.py"
+        ],
+        "returncode": 0,
+        "log": "manifest-contract-v002-green-4.log",
+        "sha256": "0c1444824fd71eec878a61b61872df1e891b1aacd98843caec2dfe110aef03c8"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-r21-contracts-v002.py",
+          "--source",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/audit-final-export-v002.py"
+        ],
+        "returncode": 0,
+        "log": "manifest-contract-v002-green-5.log",
+        "sha256": "7a559f5f3b288fe7710f7d08453f712cd2e9ce60025f248acc51ca1c2ff5db00"
+      },
+      {
+        "command": [
+          "python3",
+          "docs/evidence/project-memory-quality-2026-10-21-r21-audit/test-manifest-contract-v002.py"
+        ],
+        "returncode": 0,
+        "log": "manifest-contract-v002-green-6.log",
+        "sha256": "065c7d15facfd20f14fb9182747be315f3349fa1d5e1a0e966047509f4bfa9b1"
+      }
+    ],
+    "counts": [
+      13,
+      8,
+      10,
+      1,
+      4,
+      6
+    ],
+    "total_passed": 42,
+    "compile": "passed",
+    "scope": "Existing36 against versioned main/source plus6 new explicitcontract positive/negative/publicmetadata tests. Owning main consumer suites remain slices. No full actualR21audit or case/gold/rationale/archive parse."
+  },
+  "delta_sha256": "a391e7af310443a7eb29088ccc3297dfe618301371f8c8afec23131212c04630",
+  "main_native_quality_failure_claim": false,
+  "native_network_model_store_privatecase_opens": 0,
+  "limits": [
+    "Finalbinding must explicitly select generic-pack-files-v1 for actualR21.",
+    "Both-axis review and canonicalexport authorization still required before actualaudit.",
+    "No newquality result; no opportunistic normalization or modification to release/protocol/helper/runtime/old receipts."
+  ]
+}

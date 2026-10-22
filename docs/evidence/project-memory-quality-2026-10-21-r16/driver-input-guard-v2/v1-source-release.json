@@ -1,0 +1,33 @@
+{
+  "status": "SOURCESTABLE_R16_driver_input_guard",
+  "old_files": {
+    "run-experiment.py": "0b0cb0dfde5d238d7214cc9cca37689494cb522da06879c1fb92b127d68e727a",
+    "test-driver.py": "9c2e9e3f118bfc58b28a8cca07dfad1c43f27f25eb69efd2b52e779ee31c4a63"
+  },
+  "new_files": {
+    "run-experiment.py": "d5280d22f4a3bbef92f0ef88b7e8f7c87d47b056ffc84a7b0b97849c634c83d8",
+    "test-driver.py": "d6b82e40acb4f149eb6d1feee1031a1e3267a35d852290454fc31979a89458c7"
+  },
+  "contract_sha256": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+  "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "ordering": [
+    "Frozen helper validate confirms pins and author input opening permitted.",
+    "Load same-directory prospective contract and validate_files fixture+gold.",
+    "Bind fixture/gold/contract bytes before/after validation; persist successful machine receipt only. Conflicting prior receipt rejected unchanged.",
+    "Only then open fixture through helper, check phase journal and begin fixed original phase plan."
+  ],
+  "validation": {
+    "driver_tests": 9,
+    "contract_tests": 14,
+    "red": "Held old driver main reaches helper.fixture before author validation (1failure/0errors). Replay supplies isolated new validator function only to test missing call/order, preserving old driver bytes. Initial missing-seam4errors also preserved separately.",
+    "py_compile": true,
+    "diff_check": true,
+    "toy_inputs_only": true,
+    "native_calls": 0,
+    "private_author_inputs_read": false,
+    "main_order_red_log": "docs/evidence/project-memory-quality-2026-10-21-r16/driver-pre-input-guard/main-order-red.log"
+  },
+  "compatibility": "No change to runtime/helper/contracts, phase order/profile/reuse/budget, historical R15, or carried-public-files.json. This is a prospective technical input guard, not semantic grade or repair.",
+  "receipt_path": "run/author-input-validation.json",
+  "source_held": true
+}

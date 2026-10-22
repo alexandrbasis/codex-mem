@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "status": "passed_with_limits",
+  "decision_verified": "complete_failed",
+  "concrete_gaps": [],
+  "scope": "Frozen R12 artifacts only. Authorized private run/released input bytes used for integrity checks. No model calls, new grades, rescoring, repairs, mutable source changes or existing evidence edits.",
+  "source_sha256": {
+    "frozen-helper.py": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "freeze.json": "77cdb8d14d1bd08939060f3633937568b15dfa3a24c365beb86857b1e49306cf",
+    "protocol.json": "b98b6cc73aa36c4888668e8c16e0e4a1e1beefa480c54a8bc7450189c1f9c28d",
+    "result-summary.json": "7ad2f109901cc314cac0f1b3b15d6c142bd708c4cdd9381dc756eadc4c0d2f9a",
+    "holdout/export-manifest.json": "7abbd5263c58728f0d0aba0fac2e9a5e4eecaec1bdc7e64a406124f16a57d0b9",
+    "holdout/report.json": "8bc08d2748d2f8915a83029d358883945a818448b175a7ce86ff2eefb4a95eeb",
+    "holdout/per-question.json": "225acb1dbf2aa7cb10c53ce94968fd6a29a00e400810acecfc4aa510f731f0a7",
+    "holdout/fictional-run-evidence.tar.gz": "32653eb65808aea43da14cd1a33980e234209bc03ef4f6ec657676a2065df18b",
+    "holdout/sanitization.json": "70f579a1d50608402b231ad98338227065d42d165732986d171a54ef06290b00"
+  },
+  "integrity": {
+    "archive_members": 1177,
+    "all_manifest_hashes_match": true,
+    "sanitized_member_hashes_checked": 351,
+    "all_sanitized_member_hashes_match": true,
+    "private_raw_request_response_pairs_checked": 317,
+    "all_request_digests_match_ledger": true,
+    "all_response_metrics_match_ledger": true,
+    "all_private_receipts_match_public_after_frozen_sanitization": true,
+    "frozen_helper_matches_export": true,
+    "released_fixture_gold_match_export": true,
+    "ledger_matches_private_byte_for_byte": true
+  },
+  "coverage": {
+    "question_records": 96,
+    "unique_graded_logical_attempts": 216,
+    "primary_per_arm": 96,
+    "reader_repeat_per_arm": 6,
+    "regeneration_per_arm": 6,
+    "duplicates": 0,
+    "missing": 0
+  },
+  "verified_results": {
+    "baseline_primary": 72,
+    "candidate_primary": 78,
+    "denominator": 96,
+    "gain_percentage_points": 6.25,
+    "primary_critical_per_arm": 2,
+    "primary_critical_types_per_arm": [
+      "deleted_resurrection",
+      "false_closure"
+    ],
+    "baseline_reader_repeat_fully_supported": 5,
+    "candidate_reader_repeat_fully_supported": 5,
+    "reader_repeat_denominator_per_arm": 6,
+    "reader_repeat_critical_per_arm": 0,
+    "regeneration_fully_supported_per_arm": 5,
+    "regeneration_denominator_per_arm": 6,
+    "regeneration_critical_per_arm": 0,
+    "paired_fact_losses": [
+      {
+        "history_id": "hold_915",
+        "question_id": "q1",
+        "fact_index": 0,
+        "category": "constraint"
+      }
+    ],
+    "paired_recall_losses": [
+      {
+        "history_id": "hold_910",
+        "question_id": "q1"
+      },
+      {
+        "history_id": "hold_915",
+        "question_id": "q1"
+      }
+    ]
+  },
+  "actual_usage": {
+    "started": 317,
+    "finished": 317,
+    "failed": 0,
+    "unresolved": 0,
+    "input_tokens": 4741390,
+    "output_tokens": 131892,
+    "cached_input_tokens": 89600,
+    "total_tokens": 4873282,
+    "public_calls_included_once": 9,
+    "public_tokens_included_once": 154431,
+    "cumulative_calls": 1998,
+    "cumulative_tokens": 32054940
+  },
+  "exact_request_reuse": {
+    "allocations": 4,
+    "recipient_requests_reconstructed_byte_identically_from_their_own_contexts": 4,
+    "source_private_request_response_hashes_verified": 4,
+    "cross_arm_and_question_identity_verified": true,
+    "allocated_usage_matches_native_source_usage": true,
+    "actual_calls_remain_317": true,
+    "equivalent_primary_arm_tokens": {
+      "baseline": {
+        "actual_primary_reader_tokens": 1180244,
+        "equivalent_reused_primary_reader_tokens": 0,
+        "sum": 1180244
+      },
+      "candidate": {
+        "actual_primary_reader_tokens": 1155503,
+        "equivalent_reused_primary_reader_tokens": 33884,
+        "sum": 1189387
+      }
+    },
+    "shared_generation_tokens": 789346,
+    "equivalent_complete_arm_tokens": {
+      "baseline": 1969590,
+      "candidate": 1978733
+    },
+    "accounting_note": "Reused reader tokens are attributed to arm-equivalent cost only; native actual ledger counts each call once. The separate public archive duplicates evidence, not trial spend."
+  },
+  "privacy": {
+    "credential_access_url_patterns": {
+      "private_key": 0,
+      "openai_key": 0,
+      "aws_key": 0,
+      "jwt": 0,
+      "access_url": 0
+    },
+    "approved_raw_native_diagnostic_ids_remaining": 0,
+    "sanitizer_second_pass_changes": 0,
+    "observed_url_hosts": [
+      "learn.chatgpt.com"
+    ],
+    "fictional_ids_and_content_preserved": true
+  },
+  "limitations": [
+    "Frozen model grades are verified as preserved, not independently adjudicated.",
+    "Pattern scans and approved diagnostic-field sanitization do not prove absence of every possible sensitive string.",
+    "Failure decision remains unchanged: candidate quality below required threshold, primary critical errors and paired losses prevent acceptance."
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "sha256": "ed8363780f1af68923da7672b91428f320bb0bf64fc781d26a844c9f3ca4dbe3",
+    "bytes": 34596
+  },
+  "artifact": {
+    "path": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "sha256": "d4c4bdcba883b1062bbadf221bb32d146a07731a47b322132cbb885da5beb1f5",
+    "bytes": 861206
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "fail"
+  },
+  "failedStage": "browser-check",
+  "diagnostics": [
+    {
+      "code": "viewer/browser-check-runtime",
+      "severity": "error",
+      "message": "browser-check could not complete its Chrome inspection.",
+      "subject": {
+        "artifact": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html"
+      },
+      "evidence": {
+        "reason": "Chrome DevTools read pipe failed: stream ended\nChrome process: still running.\nChrome transport: Node v22.22.3, libuv 1.51.0, darwin; pid=47777, exitCode=null, signalCode=null.\nChrome read pipe: readable=false, ended=true, destroyed=false, receivedBytes=0, messages=0, bufferedBytes=0.\nChrome write pipe: writable=true, ended=false, destroyed=false, completedWrites=1, writtenBytes=50, bufferedBytes=0."
+      },
+      "supportedFixes": [
+        "resolve the reported Chrome inspection error, then rerun browser-check"
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021-r11/codex-mem.finalize.json",
+    "summaryReceipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021-r11/codex-mem.finalize-summary.json",
+    "browserCheckReceipt": "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-20261021-r11/codex-mem.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T13:34:32.936Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1093,
+  "browserCheck": {
+    "requested": true,
+    "ran": false
+  }
+}

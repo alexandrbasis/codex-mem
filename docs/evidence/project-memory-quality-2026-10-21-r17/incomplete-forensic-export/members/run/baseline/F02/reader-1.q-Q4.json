@@ -1,0 +1,114 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q4",
+  "repeat": 1,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "50e09565c36239368de53c91ed84f3ec672b8970503d8e929f666303b366e3e6",
+  "context_sha256": "d19136ecada570cf0826a7df43e68b3a2cf786cce377b58c42f4ce0ce88784c0",
+  "raw_output_sha256": "712529d2a2a74319ea5b156be4aee80ea8caaa45bfc3f312ba93ed5b72628c5f",
+  "native_receipt": {
+    "source_call_id": "call-0095",
+    "request_sha256": "c6121da26b53c48de9ddd5e121c7a0a908d803ec9fb43269eae5ac9867a9f819",
+    "response_sha256": "7646081b39f576c2d318870359646849494bf8a93ec90cd543a6f442152864ca",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q4",
+        "answer": "The governing sample size is 12 parcels, replacing the initial instruction to use 18 parcels. The correction changes the recorded value and explicitly leaves the index’s closed status unchanged. Separately, at the opening meeting, the index was waiting for review.",
+        "uncertainties": [],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "21c22f901b17463ba8757d1480a2d3ee",
+            "source_field": "body",
+            "start": 0,
+            "end": 198,
+            "source_role": "user_intent",
+            "quote": "Correction for Vellum parcel index: use sample size of 12 parcels, replacing my initial value of 18 parcels. This correction changes the recorded value, not the closed status of Vellum parcel index."
+          },
+          {
+            "catalog_ref": "R0007",
+            "source_id": "cd756ef1da8c425cb022b33f2d5226f5",
+            "source_field": "body",
+            "start": 222,
+            "end": 301,
+            "source_role": "user_intent",
+            "quote": " My initial instruction for Vellum parcel index sets sample size to 18 parcels."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "cd756ef1da8c425cb022b33f2d5226f5",
+            "source_field": "body",
+            "start": 154,
+            "end": 222,
+            "source_role": "user_intent",
+            "quote": " At this opening meeting, Vellum parcel index is waiting for review."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 9809,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12304,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 289,
+        "reasoning_output_tokens": 124,
+        "total_tokens": 12593
+      }
+    }
+  },
+  "latency_ms": 9832,
+  "native_dispatch": {
+    "key": "6f95b70bde29c221096a488a36b8b9e529c1dd634932639a12933210cc2dd4f7",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F02",
+      "run_id": "primary",
+      "repeat": 1,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q4",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0095",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "8df18b4cae5cc27357bf5f98db5a6992c6bdfadb2ae226f8caece1bd78af6529",
+    "request_file_sha256": "b6e7b7700f578e9df07a6864ddf62dafd7c83f229b87ea6e0acc5fff12918ca8",
+    "response_file_sha256": "315a634849de687b49b0868122e99a3ad2517654e9374769b8013cd526cdb5b2",
+    "reused": false,
+    "native_wall_ms": 9832
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F02",
+    "run_id": "primary",
+    "repeat": 1,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q4"
+  },
+  "evidence_checks": {
+    "Q4": {
+      "accepted_results": "The user corrected the sample size to 12 parcels, replacing 18, while preserving the closed status.",
+      "open_work_and_reasons": "At the opening meeting, the index was waiting for review; no reason is stated.",
+      "source_role_distinctions": "These are user statements; execution of the sample-size correction is not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

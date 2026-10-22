@@ -1,0 +1,148 @@
+--- carried-v2/test-driver.py
++++ prospective-r17/test-driver.py
+@@ -182,5 +182,145 @@
+         self.assertFalse((self.run / 'author-input-validation.json').exists())
+ 
+ 
++class IndependentReviewGuardTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory(dir='/private/tmp')
++        self.addCleanup(self.temp.cleanup)
++        self.home = Path(self.temp.name)
++        self.run = self.home / 'run'
++        self.run.mkdir()
++        self.fp, self.gp = self.home / 'holdout-fixture.json', self.home / 'holdout-gold.json'
++        fixture, gold = _fixture_tests.toy()
++        self.fp.write_text(json.dumps(fixture))
++        self.gp.write_text(json.dumps(gold))
++        self.findings = self.home / 'sealed-semantic-review.json'
++        self.findings.write_text('{"private_findings":"public toy findings never parsed or echoed"}')
++        here = Path(driver.__file__).parent
++        sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
++        self.metadata = {'schema_version': 1, 'status': 'accepted', 'unresolved_findings': 0,
++            'fixture_sha256': sha(self.fp), 'gold_sha256': sha(self.gp),
++            'mechanical_contract_sha256': sha(here / 'public-fixture-contract.py'),
++            'semantic_guidance_sha256': sha(here / 'prospective-gold-semantics-contract.json'),
++            'sealed_review_receipt_sha256': sha(self.findings),
++            'independence_attestation': 'independent_author_inputs_only_no_product_prior_inputs_answers_or_grades',
++            'coverage': {'questions': 96, 'required_facts': 96, 'all_questions_reviewed': True,
++                         'all_required_facts_reviewed': True, 'negative_cases_reviewed': True}}
++        self.mp = self.home / 'sealed-semantic-review-metadata.json'
++        self.protocol = {'prospective_author_contract': {'sha256': self.metadata['mechanical_contract_sha256']},
++            'independent_review_contract': {'schema_version': 1,
++                'metadata_receipt_basename': self.mp.name,
++                'metadata_receipt_sha256': '',
++                'metadata_schema_sha256': sha(here / 'sealed-semantic-review-metadata.schema.json'),
++                **{key: self.metadata[key] for key in ('fixture_sha256', 'gold_sha256',
++                    'mechanical_contract_sha256', 'semantic_guidance_sha256', 'sealed_review_receipt_sha256')}}}
++        self.pin_metadata()
++
++    def pin_metadata(self):
++        self.mp.write_text(json.dumps(self.metadata))
++        self.protocol['independent_review_contract']['metadata_receipt_sha256'] = hashlib.sha256(self.mp.read_bytes()).hexdigest()
++
++    def check(self):
++        return driver.validate_independent_review(self.fp, self.gp, self.run, self.protocol)
++
++    def test_accepted_pinned_metadata_is_idempotent_and_output_has_no_findings(self):
++        receipt = self.check()
++        path = self.run / 'independent-review-validation.json'
++        original = path.read_bytes()
++        self.assertEqual(receipt, self.check())
++        self.assertEqual(original, path.read_bytes())
++        self.assertEqual(receipt['status'], 'independent_review_metadata_validated')
++        self.assertNotIn('private_findings', path.read_text())
++        self.assertNotIn('toy_', path.read_text())
++        self.assertNotIn('Keep the sample', path.read_text())
++
++    def test_missing_tampered_or_rejected_receipts_never_write_success(self):
++        for failure in ('missing', 'tampered', 'rejected', 'unresolved', 'incomplete', 'extra_text'):
++            with self.subTest(failure=failure):
++                original = self.mp.read_bytes()
++                metadata = dict(self.metadata, coverage=dict(self.metadata['coverage']))
++                pin = self.protocol['independent_review_contract']['metadata_receipt_sha256']
++                if failure == 'missing': self.mp.unlink()
++                elif failure == 'tampered': self.mp.write_text('not even JSON')
++                else:
++                    if failure == 'rejected': metadata['status'] = 'changes_required'
++                    elif failure == 'unresolved': metadata['unresolved_findings'] = 1
++                    elif failure == 'incomplete': metadata['coverage']['all_required_facts_reviewed'] = False
++                    else: metadata['case_summary'] = 'must not be accepted'
++                    self.mp.write_text(json.dumps(metadata))
++                    self.protocol['independent_review_contract']['metadata_receipt_sha256'] = hashlib.sha256(self.mp.read_bytes()).hexdigest()
++                with self.assertRaises((ValueError, FileNotFoundError)):
++                    self.check()
++                self.assertFalse((self.run / 'independent-review-validation.json').exists())
++                self.mp.write_bytes(original)
++                self.protocol['independent_review_contract']['metadata_receipt_sha256'] = pin
++
++    def test_wrong_input_guidance_contract_schema_or_findings_binding_rejects(self):
++        for key in ('fixture_sha256', 'gold_sha256', 'semantic_guidance_sha256',
++                    'mechanical_contract_sha256', 'metadata_schema_sha256', 'sealed_review_receipt_sha256'):
++            with self.subTest(binding=key):
++                binding = self.protocol['independent_review_contract']
++                original = binding[key]
++                binding[key] = '0' * 64
++                with self.assertRaises(ValueError): self.check()
++                self.assertFalse((self.run / 'independent-review-validation.json').exists())
++                binding[key] = original
++
++    def test_main_rejects_review_after_frozen_pin_check_before_author_import_or_model_phase(self):
++        self.metadata['status'] = 'changes_required'
++        self.pin_metadata()
++        self.protocol.update(driver_sha256=hashlib.sha256(Path(driver.__file__).read_bytes()).hexdigest(),
++                             comparison_mode='shared-prefix', candidate_processing_mode='read_only_snapshot')
++        helper = SimpleNamespace(read=Mock(return_value=self.protocol), fixture=Mock(), append=Mock(), ledger_calls=Mock())
++        original_spec, original_module = driver.importlib.util.spec_from_file_location, driver.importlib.util.module_from_spec
++        helper_spec = SimpleNamespace(loader=SimpleNamespace(exec_module=lambda module: None))
++        def find_spec(name, path):
++            return helper_spec if name == 'experiment' else original_spec(name, path)
++        def make_module(spec):
++            return helper if spec is helper_spec else original_module(spec)
++        def frozen_validate(command, **kwargs):
++            self.assertEqual(command[2], 'validate')
++            self.assertFalse((self.run / 'independent-review-validation.json').exists())
++        argv = ['driver', '--run', str(self.run), '--baseline', '/private/tmp/public-baseline',
++                '--fixture', str(self.fp), '--gold', str(self.gp)]
++        with patch.object(driver.sys, 'argv', argv), patch.dict(driver.os.environ, {'CODEX_MEM_DISABLED': '0'}), \
++             patch.object(driver.importlib.util, 'spec_from_file_location', side_effect=find_spec), \
++             patch.object(driver.importlib.util, 'module_from_spec', side_effect=make_module), \
++             patch.object(driver.subprocess, 'run', side_effect=frozen_validate) as dispatch, \
++             patch.object(driver, 'validate_author_inputs') as author_import:
++            with self.assertRaisesRegex(ValueError, 'not_accepted'):
++                driver.main()
++        self.assertEqual(dispatch.call_count, 1)
++        author_import.assert_not_called()
++        helper.fixture.assert_not_called()
++        helper.append.assert_not_called()
++        helper.ledger_calls.assert_not_called()
++        self.assertFalse((self.run / 'baseline').exists())
++
++    def test_metadata_cannot_bind_different_inputs_or_disguise_incomplete_review_types(self):
++        for key, value in (('fixture_sha256', '0' * 64), ('gold_sha256', '0' * 64),
++                           ('unresolved_findings', False), ('schema_version', True)):
++            with self.subTest(key=key):
++                original = self.metadata[key]
++                self.metadata[key] = value
++                self.pin_metadata()
++                with self.assertRaises(ValueError): self.check()
++                self.assertFalse((self.run / 'independent-review-validation.json').exists())
++                self.metadata[key] = original
++                self.pin_metadata()
++
++    def test_fixed_basename_cannot_escape_fixture_directory(self):
++        for name in ('../sealed-semantic-review-metadata.json', '/tmp/metadata.json', 'other.json'):
++            self.protocol['independent_review_contract']['metadata_receipt_basename'] = name
++            with self.assertRaises(ValueError): self.check()
++        self.assertFalse((self.run / 'independent-review-validation.json').exists())
++
++    def test_existing_success_receipt_is_not_overwritten(self):
++        path = self.run / 'independent-review-validation.json'
++        path.write_text('{"prior":"preserve"}')
++        original = path.read_bytes()
++        with self.assertRaisesRegex(RuntimeError, 'receipt_differs'): self.check()
++        self.assertEqual(original, path.read_bytes())
++
++
+ if __name__ == "__main__":
+     unittest.main()

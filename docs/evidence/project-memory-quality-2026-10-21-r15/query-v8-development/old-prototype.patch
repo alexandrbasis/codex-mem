@@ -1,0 +1,61 @@
+--- a/codex_mem/project_memory_query.py
++++ b/codex_mem/project_memory_query.py
+@@ -167,6 +167,27 @@
+     return re.sub(r'(?<=[A-Za-z])-(?=[A-Za-z])', ' ', ' '.join(subjects))
+ 
+ 
++def _current_request_reference(query: str) -> tuple[str, bool] | None:
++    """Recognize request fate/relation, without selecting an earlier time slice."""
++    if _EXPLICIT_AS_OF.search(query):
++        return None
++    question = _question_body(query)
++    fate = re.fullmatch(
++        r'(?:how\s+much|what\s+part)\s+of\s+(?:the\s+)?'
++        r'(?:earlier|previous|prior)\s+(?:(?P<subject>.+?)\s+)?'
++        r'(?:request|instruction|requirement)\s+(?:was|is|has\s+been)\s+'
++        r'(?:withdrawn|cancelled|canceled|removed|retained)', question, re.I)
++    if fate:
++        return fate.group('subject') or '', False
++    relation = re.fullmatch(
++        r'does\s+(?:the\s+)?(?:later|latest|current|new)\s+(?:request|instruction)\s+'
++        r'belong\s+to\s+(?:the\s+)?(?:earlier|previous|prior|existing)\s+'
++        r'(?:(?P<subject>.+?)\s+)?(?:task|work)', question, re.I)
++    if relation:
++        return relation.group('subject') or '', True
++    return None
++
++
+ def _question_body(query: str) -> str:
+     question = ' '.join(query.strip().rstrip('?.!').split())
+     # A recognized environment is a retained scope constraint, not a topic.
+@@ -400,7 +421,9 @@
+ def plan_query(query: str, project: str | Path, *,
+                selected_project_scopes: Sequence[str | Path] | None = None) -> QueryPlan:
+     query, scope_aliases = scope_content_query(query, project, selected_project_scopes)
+-    requirement_subject = _requirement_state_subject(query)
++    current_reference = _current_request_reference(query)
++    requirement_subject = (_requirement_state_subject(query) if current_reference is None
++                           else current_reference[0])
+     exact = exact_constraints(query, project)
+     explicit = {match.group()[1:-1].casefold() for match in
+                 re.finditer(r'`[^`\s]+`|"[^"\s]+"|\'[^\'\s]+\'', query)}
+@@ -459,6 +482,10 @@
+     if requirement_subject is not None and re.search(r'\band\s+why[?.!]*$', query, re.I):
+         answer_facets += ('reason',)
+     source_order = execution[1] if execution is not None else None
++    if natural and current_reference is not None:
++        historical = False
++        if current_reference[1]:
++            continuation = True
+     assesses_current_evidence = assessment_subject is not None
+     if assesses_current_evidence:
+         historical = False
+@@ -467,7 +494,7 @@
+     if generic_project_state and generic_relation:
+         continuation = True
+         historical = False
+-    projection = 'continuity' if natural and continuation and re.search(r'\b(?:chats?|sessions?|link|statements?|same task)\b|чат|сесси|связ', query, re.I) else 'state'
++    projection = 'continuity' if natural and continuation and (bool(current_reference and current_reference[1]) or re.search(r'\b(?:chats?|sessions?|link|statements?|same task)\b|чат|сесси|связ', query, re.I)) else 'state'
+     if natural and re.search(r'\b(?:why|rationale|reconsider(?:ed)?)\b|почему|причин|пересмотр', query, re.I):
+         projection = 'rationale'
+     if natural and compare and (historical_query(query) or _HISTORY.search(query)):

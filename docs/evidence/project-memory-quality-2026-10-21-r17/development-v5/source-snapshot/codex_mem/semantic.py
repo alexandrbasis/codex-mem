@@ -1,0 +1,1724 @@
+"""Bounded, local semantic indexing for Codex Mem.
+
+The ordinary memory store stays dependency-free.  This module is the optional
+semantic layer: it only imports FastEmbed after a caller asks to encode text,
+and it never downloads a model while handling a search or a hook.  The one
+embedding networking entrypoint is :func:`prepare_model`. An independently
+opted-in Jev reranker can evaluate a bounded redacted search shortlist.
+
+Stored text remains untrusted evidence.  It is redacted again before it reaches
+the embedding model, and results are previews supplied by :class:`Store`.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping, Sequence
+from contextlib import contextmanager
+from datetime import datetime, timezone
+import hashlib
+import importlib.metadata
+import importlib.util
+import math
+import os
+from pathlib import Path
+import re
+import tempfile
+import threading
+from typing import Any, Protocol, runtime_checkable
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
+from .privacy import redact_text
+from .store import Store, StoreError, project_key
+
+
+MODEL = "intfloat/multilingual-e5-base"
+"""Pinned multilingual retrieval model, registered locally with FastEmbed."""
+
+MODEL_REPOSITORY = "intfloat/multilingual-e5-base"
+MODEL_REVISION = "d128750597153bb5987e10b1c3493a34e5a4502a"
+MODEL_FILE = "model_qint8_avx512_vnni.onnx"
+MODEL_SHA256 = "2523551878658b305550d8759443822dbfda9ed9c8012ef2c354ba2c5b9de503"
+TOKENIZER_SHA256 = "62c24cdc13d4c9952d63718d6c9fa4c287974249e16b7ade6d5a85e7bbb75626"
+DIMENSIONS = 768
+
+# E5 was trained asymmetrically.  These literal ASCII prefixes are part of
+# its documented input contract, including for non-English input.
+QUERY_PREFIX = "query: "
+PASSAGE_PREFIX = "passage: "
+
+FASTEMBED_VERSION = "0.8.0"
+ONNXRUNTIME_VERSION = "1.23.2"
+
+MODEL_FILES = (
+    MODEL_FILE,
+    "config.json",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "special_tokens_map.json",
+)
+_CHECKSUMS = {
+    MODEL_FILE: MODEL_SHA256,
+    "config.json": "9dab198f24c8c0879e481cf7822005d5ecbceedbacb390ffafa594e28d31bac4",
+    "tokenizer.json": TOKENIZER_SHA256,
+    "tokenizer_config.json": "efb5c0d09722e5fe59a462cd2a9976ee216d55b037597d997cd3fe833216da15",
+    "special_tokens_map.json": "06e405a36dfe4b9604f484f6a1e619af1a7f7d09e34a8555eb0b77b66318067f",
+}
+_REMOTE_ARTIFACTS = {
+    MODEL_FILE: f"onnx/{MODEL_FILE}",
+    "config.json": "config.json",
+    "tokenizer.json": "tokenizer.json",
+    "tokenizer_config.json": "tokenizer_config.json",
+    "special_tokens_map.json": "special_tokens_map.json",
+}
+
+MAX_QUERY_CHARS = 1_000
+MAX_DOCUMENT_CHARS = 120_000
+# The pinned tokenizer advertises a 512-token model context.  This bound
+# includes the model's special tokens and the E5 query/passage prefix.
+MAX_CHUNK_TOKENS = 512
+EMBED_BATCH_SIZE = 8
+INDEX_BATCH_SIZE = 16
+INDEX_LEASE_SECONDS = 300
+MAX_SEARCH_LIMIT = 100
+RRF_K = 60
+MAX_ARTIFACT_BYTES = 512 * 1024 * 1024
+
+_BACKEND_CACHE: dict[tuple[str, int], "FastEmbedBackend"] = {}
+_BACKEND_CACHE_LOCK = threading.Lock()
+_CUSTOM_MODEL_REGISTRATION_LOCK = threading.Lock()
+_PREPARE_LOCK = threading.Lock()
+_ARTIFACT_STATUS_CACHE: dict[
+    str, tuple[tuple[tuple[str, int, int, int, int], ...] | None, dict[str, str]]
+] = {}
+_ARTIFACT_STATUS_LOCK = threading.Lock()
+
+
+class SemanticError(RuntimeError):
+    """A concise semantic-layer failure suitable for CLI and MCP metadata."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(code)
+
+
+@runtime_checkable
+class EmbeddingBackend(Protocol):
+    """Strict injectable backend contract used by semantic tests and callers.
+
+    ``embed`` receives non-empty, already redacted strings and returns one raw,
+    finite 768-dimensional vector per input.  It must not normalize those
+    vectors.  This module averages document chunks, then applies L2
+    normalization once to each document and query vector.
+    """
+
+    @property
+    def ready(self) -> bool:
+        """Whether this backend can encode without downloading a model."""
+
+    @property
+    def unavailable_code(self) -> str | None:
+        """A stable reason when ``ready`` is false."""
+
+    def split(self, text: str, *, prefix: str = "") -> Sequence[str]:
+        """Return complete prefixed chunks within the 512-token model limit."""
+
+    def embed(self, texts: Sequence[str]) -> Sequence[Sequence[float]]:
+        """Encode a bounded batch of local text without network access."""
+
+
+class FastEmbedBackend:
+    """CPU-only FastEmbed 0.8.0 backend bound to verified local artifacts."""
+
+    def __init__(self, model_dir: str | Path | None = None, *, threads: int | None = None) -> None:
+        self.model_dir = _model_dir(model_dir)
+        self.threads = _validated_threads(threads)
+        self._engine: Any | None = None
+        self._planner_tokenizer: Any | None = None
+        self._engine_lock = threading.Lock()
+        self._tokenizer_lock = threading.Lock()
+        self._encode_lock = threading.Lock()
+
+    @property
+    def ready(self) -> bool:
+        return semantic_status(self.model_dir)["status"] == "ready"
+
+    @property
+    def unavailable_code(self) -> str | None:
+        status = semantic_status(self.model_dir)
+        code = status.get("code")
+        return code if isinstance(code, str) else None
+
+    def split(self, text: str, *, prefix: str = "") -> list[str]:
+        """Use the verified tokenizer offsets to retain every input character."""
+
+        if not isinstance(text, str) or not text or len(text) > MAX_DOCUMENT_CHARS:
+            raise SemanticError("invalid_embedding_input")
+        return _split_with_tokenizer(self._get_planner_tokenizer(), text, prefix=prefix)
+
+    def embed(self, texts: Sequence[str]) -> list[list[float]]:
+        checked = _checked_text_batch(texts)
+        engine = self._get_engine()
+        try:
+            # FastEmbed 0.8.0 accepts this exact API.  ``parallel=None`` keeps
+            # work inside the fixed ONNX thread budget instead of spawning a
+            # process pool for a small local queue batch.
+            with self._encode_lock:
+                raw_vectors = list(
+                    engine.embed(checked, batch_size=EMBED_BATCH_SIZE, parallel=None)
+                )
+        except SemanticError:
+            raise
+        except Exception as exc:
+            raise SemanticError("embedding_failed") from exc
+        return [_checked_vector(vector) for vector in raw_vectors]
+
+    def _get_engine(self) -> Any:
+        state = _artifact_status(self.model_dir)
+        if state["status"] != "ready":
+            raise SemanticError(str(state["code"]))
+
+        with self._engine_lock:
+            if self._engine is not None:
+                return self._engine
+            if importlib.util.find_spec("fastembed") is None:
+                raise SemanticError("dependency_missing")
+            try:
+                actual_fastembed_version = importlib.metadata.version("fastembed")
+                actual_onnxruntime_version = importlib.metadata.version("onnxruntime")
+            except importlib.metadata.PackageNotFoundError as exc:
+                raise SemanticError("dependency_missing") from exc
+            if actual_fastembed_version != FASTEMBED_VERSION:
+                raise SemanticError("dependency_version_mismatch")
+            if actual_onnxruntime_version != ONNXRUNTIME_VERSION:
+                raise SemanticError("dependency_version_mismatch")
+
+            try:
+                with _offline_huggingface():
+                    from fastembed import TextEmbedding
+                    from fastembed.common.model_description import ModelSource, PoolingType
+
+                    _register_e5_base(TextEmbedding, ModelSource, PoolingType)
+
+                    self._engine = TextEmbedding(
+                        model_name=MODEL,
+                        specific_model_path=str(self.model_dir),
+                        local_files_only=True,
+                        providers=["CPUExecutionProvider"],
+                        threads=self.threads,
+                        cuda=False,
+                    )
+            except SemanticError:
+                raise
+            except Exception as exc:
+                raise SemanticError("runtime_unavailable") from exc
+            return self._engine
+
+    def _get_planner_tokenizer(self) -> Any:
+        state = _artifact_status(self.model_dir)
+        if state["status"] != "ready":
+            raise SemanticError(str(state["code"]))
+        dependency_code = _dependency_status()
+        if dependency_code is not None:
+            raise SemanticError(dependency_code)
+        with self._tokenizer_lock:
+            if self._planner_tokenizer is not None:
+                return self._planner_tokenizer
+            try:
+                # The FastEmbed live tokenizer has truncation enabled from
+                # tokenizer_config.json.  Chunk planning needs the exact same
+                # vocabulary and offsets without truncating a long document,
+                # so it uses an isolated tokenizer instance.
+                from tokenizers import Tokenizer
+
+                tokenizer = Tokenizer.from_file(str(self.model_dir / "tokenizer.json"))
+                tokenizer.no_truncation()
+                tokenizer.no_padding()
+            except Exception as exc:
+                raise SemanticError("runtime_unavailable") from exc
+            self._planner_tokenizer = tokenizer
+            return tokenizer
+
+
+def default_model_dir() -> Path:
+    """Return the shared immutable-location model cache without creating it."""
+
+    return Path.home() / ".cache" / "codex-mem" / "models" / MODEL_REVISION
+
+
+def semantic_status(model_dir: str | Path | None = None) -> dict[str, Any]:
+    """Report whether the exact local model and runtime are ready, offline only."""
+
+    directory = _model_dir(model_dir)
+    state = _artifact_status(directory)
+    result: dict[str, Any] = {
+        "status": state["status"],
+        "model": MODEL,
+        "revision": MODEL_REVISION,
+        "dimensions": DIMENSIONS,
+        "model_dir": str(directory),
+    }
+    if state["status"] != "ready":
+        result["code"] = state["code"]
+        return result
+
+    dependency_code = _dependency_status()
+    if dependency_code is not None:
+        result["status"] = "unavailable"
+        result["code"] = dependency_code
+        return result
+    return result
+
+
+def prepare_model(model_dir: str | Path | None = None) -> dict[str, Any]:
+    """Explicitly download and verify the five pinned model artifacts.
+
+    This is the sole networked function in the semantic module.  Search,
+    indexing, hooks, and status inspection only use the already verified local
+    directory.
+    """
+
+    try:
+        directory = _model_dir(model_dir)
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return _prepare_receipt("failed", "invalid_model_dir")
+
+    try:
+        with _PREPARE_LOCK:
+            directory.mkdir(parents=True, exist_ok=True)
+            try:
+                directory.chmod(0o700)
+            except OSError:
+                pass
+            for filename in MODEL_FILES:
+                destination = directory / filename
+                expected = _CHECKSUMS.get(filename)
+                if _artifact_valid(destination, expected):
+                    continue
+                _download_artifact(destination, filename, expected)
+            artifact_state = _artifact_status(directory)
+    except SemanticError as exc:
+        return _prepare_receipt("failed", exc.code)
+    except (HTTPError, URLError, OSError, ValueError):
+        return _prepare_receipt("failed", "download_failed")
+    except Exception:
+        return _prepare_receipt("failed", "download_failed")
+
+    if artifact_state["status"] != "ready":
+        return _prepare_receipt("failed", str(artifact_state["code"]))
+    return semantic_status(directory)
+
+
+def index_pending(
+    project: str | Path,
+    data_dir: str | Path | None = None,
+    *,
+    backend: EmbeddingBackend | None = None,
+    retry_failed: bool = False,
+) -> dict[str, Any]:
+    """Claim, encode, and finish at most one local embedding batch.
+
+    A backend is checked before any row is leased.  Therefore a missing model
+    never turns pending work into a failed embedding job.
+    """
+
+    workspace = project_key(project)
+    if not isinstance(retry_failed, bool):
+        raise ValueError("retry_failed must be a boolean")
+    active_backend = _backend(backend)
+    if not active_backend.ready:
+        return _index_receipt("unavailable", 0, 0, active_backend.unavailable_code or "model_not_ready")
+
+    try:
+        with Store(data_dir) as store:
+            claimed = store.claim_embedding_batch(
+                workspace,
+                MODEL,
+                MODEL_REVISION,
+                DIMENSIONS,
+                limit=INDEX_BATCH_SIZE,
+                max_chars=MAX_DOCUMENT_CHARS,
+                lease_seconds=INDEX_LEASE_SECONDS,
+                retry_failed=retry_failed,
+            )
+            if claimed is None:
+                return _index_receipt("idle", 0, _pending_count(store, workspace))
+            job_id, lease_token, entries = _claimed_parts(claimed)
+            try:
+                vectors = _vectors_for_entries(entries, active_backend)
+                completed = store.complete_embedding_batch(
+                    workspace,
+                    job_id,
+                    lease_token,
+                    vectors=vectors,
+                )
+                indexed = _completed_count(completed)
+                return _index_receipt("indexed", indexed, _pending_count(store, workspace))
+            except SemanticError as exc:
+                _fail_claim(store, workspace, job_id, lease_token, exc.code)
+                return _index_receipt("failed", 0, _pending_count(store, workspace), exc.code)
+            except (OSError, TypeError, ValueError):
+                _fail_claim(store, workspace, job_id, lease_token, "indexing_failed")
+                return _index_receipt("failed", 0, _pending_count(store, workspace), "indexing_failed")
+    except (OSError, TypeError, ValueError):
+        return _index_receipt("failed", 0, 0, "storage_failure")
+
+
+def search(
+    store: Store,
+    project: str | Path,
+    query: str,
+    *,
+    mode: str = "hybrid",
+    intent: str = "lookup",
+    limit: int = 10,
+    kinds: Sequence[str] | None = None,
+    types: Sequence[str] | None = None,
+    concepts: Sequence[str] | None = None,
+    files: Sequence[str] | None = None,
+    backend: EmbeddingBackend | None = None,
+    jev_evaluator: Any = None,
+) -> dict[str, Any]:
+    """Search lexical, semantic, or hybrid previews with stable RRF ordering."""
+
+    workspace = project_key(project)
+    requested_mode = _checked_mode(mode)
+    checked_limit = _checked_limit(limit)
+    checked_intent = _checked_intent(intent)
+    # Current handoffs can rank below many repeated details. Keep resume's
+    # candidate coverage independent of the requested final preview count.
+    retrieval_limit = MAX_SEARCH_LIMIT if checked_intent == "resume" else min(
+        MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
+    from .query import normalize_retrieval_query
+    checked_query = _checked_query(normalize_retrieval_query(_checked_query(query)))
+    checked_kinds = _checked_filter_values(kinds, "kinds") if kinds is not None else None
+    checked_types = _checked_filter_values(types, "types") if types is not None else None
+    checked_concepts = _checked_filter_values(concepts, "concepts") if concepts is not None else None
+    checked_files = _checked_filter_values(files, "files") if files is not None else None
+    from .config import load_config
+    from .jev_retrieval import MAX_CANDIDATES, allowed, rerank
+    settings = load_config(getattr(store, "data_dir", None))
+    jev_enabled = allowed(settings, workspace, checked_query)
+    if jev_enabled and checked_intent != "resume":
+        retrieval_limit = max(checked_limit, MAX_CANDIDATES)
+
+    def receipt(
+        results: list[dict[str, Any]], used_mode: str, fallback_reason: str | None,
+        baseline_results: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        added_candidates = 0
+        linked_handoffs = 0
+        recent_candidates = 0
+        jev_receipt = None
+        results, quality_added = _quality_candidates(
+            store, workspace, checked_query, results, checked_kinds,
+            checked_types, checked_concepts, checked_files)
+        if checked_intent == "resume":
+            # General relevance windows can be filled entirely by repeated UI
+            # details. Query priority categories separately before the final
+            # cap, while keeping project/activity and caller filters in Store.
+            candidates = list(results[:MAX_SEARCH_LIMIT * 2])
+            seen = {record["id"] for record in candidates}
+            for record in _resume_candidates(
+                store, workspace, checked_query, checked_limit, checked_kinds,
+                checked_types, checked_concepts, checked_files,
+            ):
+                if record["id"] not in seen:
+                    seen.add(record["id"])
+                    if used_mode != "lexical" and "score" in record:
+                        record = dict(record)
+                        record["lexical_score"] = record.pop("score")
+                    candidates.append(record)
+                    added_candidates += 1
+            for record in _resume_recent_candidates(
+                store, workspace, checked_query, checked_kinds,
+                checked_types, checked_concepts, checked_files,
+            ):
+                if record["id"] not in seen:
+                    seen.add(record["id"])
+                    candidates.append(record)
+                    recent_candidates += 1
+                    added_candidates += 1
+            candidates = _resume_records(store, workspace, candidates)
+            linked = _resume_linked_handoffs(
+                store, workspace, checked_query, candidates,
+                checked_kinds, checked_types, checked_concepts, checked_files,
+            )
+            candidates.extend(linked)
+            linked_handoffs = len(linked)
+            added_candidates += linked_handoffs
+            if jev_enabled:
+                candidates, jev_receipt = rerank(
+                    store, workspace, checked_query, candidates, kinds=checked_kinds,
+                    types=checked_types, concepts=checked_concepts, files=checked_files,
+                    settings=settings, evaluator=jev_evaluator, route="search")
+            results = _resume_selection(
+                candidates, checked_limit, query=checked_query,
+                project=workspace,
+            )
+            if added_candidates and used_mode == "semantic":
+                used_mode = "hybrid"
+        elif jev_enabled:
+            results, jev_receipt = rerank(
+                store, workspace, checked_query,
+                baseline_results if baseline_results is not None else results[:checked_limit], candidates=results,
+                kinds=checked_kinds, types=checked_types, concepts=checked_concepts,
+                files=checked_files, settings=settings, evaluator=jev_evaluator, route="search")
+            results = results[:checked_limit]
+        else:
+            from .retrieval import retrieval_query_hints, resume_answer_score
+            if retrieval_query_hints(checked_query):
+                results = sorted(results, key=lambda row: resume_answer_score(row, checked_query), reverse=True)
+            results = results[:checked_limit]
+        if jev_receipt is not None:
+            from .store import _preview
+            previews = []
+            for record in results:
+                if "body" in record:
+                    record = dict(record)
+                    record["preview"] = _preview(record.pop("body"))
+                previews.append(record)
+            results = previews
+        if isinstance(store, Store) and results:
+            from .evidence import expand_source_evidence
+            from .privacy import redact_search_text
+            full = {row["id"]: row for row in store.get(workspace, [row["id"] for row in results])}
+            expanded = expand_source_evidence(
+                [dict(full.get(row["id"], {}), **row) for row in results],
+                checked_query, workspace,
+                load_records=lambda ids: store.get(workspace, ids),
+                load_capture=lambda entry_id: store.get_source_capture(workspace, entry_id),
+                redact=redact_search_text)
+            # Full evidence is opt-in through memory_get; search carries only
+            # bounded source excerpts plus the existing preview contract.
+            results = [{key: value for key, value in row.items() if key != "body"} for row in expanded]
+        if quality_added and used_mode == "semantic":
+            used_mode = "hybrid"
+        result = _search_receipt(results, requested_mode, used_mode, fallback_reason, checked_intent)
+        result["quality_added_candidates"] = quality_added
+        if jev_receipt is not None:
+            result["jev_retrieval"] = jev_receipt
+        if checked_intent == "resume":
+            from .retrieval import broad_current_state_query, historical_query
+            selection = (
+                "query_relevance_with_history" if historical_query(checked_query)
+                else "latest_query_matched_handoffs_and_findings_by_event_time"
+                if broad_current_state_query(checked_query, workspace)
+                else "query_relevance_with_latest_session_handoffs"
+            )
+            result.update(
+                resume_expansion_mode=("lexical_and_recent_curated" if recent_candidates else
+                    "lexical_and_linked_handoffs" if linked_handoffs else "lexical"),
+                resume_added_candidates=added_candidates,
+                resume_linked_handoffs=linked_handoffs,
+                resume_recent_candidates=recent_candidates,
+                resume_selection=selection,
+            )
+        return result
+
+    if requested_mode == "lexical":
+        results = _lexical_results(
+            store,
+            workspace,
+            checked_query,
+            retrieval_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
+        return receipt(results, "lexical", None)
+
+    active_backend = _backend(backend)
+    if not active_backend.ready:
+        code = active_backend.unavailable_code or "model_not_ready"
+        if requested_mode == "auto":
+            results = _lexical_results(
+                store,
+                workspace,
+                checked_query,
+                retrieval_limit,
+                checked_kinds,
+                checked_types,
+                checked_concepts,
+                checked_files,
+            )
+            return receipt(results, "lexical", code)
+        raise SemanticError(code)
+
+    literal_kwargs: dict[str, str] = {}
+    if isinstance(store, Store):
+        from .jev_retrieval import exact_constraints
+        try:
+            constraints = exact_constraints(checked_query, workspace)
+        except ValueError as exc:
+            # Do not relax an over-constrained query into vector neighbors.
+            raise SemanticError("too_many_literal_constraints") from exc
+        if constraints["identifiers"] or constraints["versions"]:
+            literal_kwargs["literal_query"] = checked_query
+
+    try:
+        query_vector = _normalized_query_vector(active_backend, checked_query)
+        if requested_mode == "semantic":
+            results = _semantic_results(
+                store,
+                workspace,
+                query_vector,
+                retrieval_limit,
+                checked_kinds,
+                checked_types,
+                checked_concepts,
+                checked_files,
+                **literal_kwargs,
+            )
+            return receipt(results, "semantic", None)
+
+        candidate_limit = (
+            MAX_SEARCH_LIMIT if checked_intent == "resume"
+            else min(MAX_SEARCH_LIMIT, max(checked_limit, checked_limit * 4))
+        )
+        original_candidate_limit = candidate_limit
+        if jev_enabled:
+            candidate_limit = max(candidate_limit, retrieval_limit)
+        lexical = _lexical_results(
+            store,
+            workspace,
+            checked_query,
+            candidate_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
+        semantic = _semantic_results(
+            store,
+            workspace,
+            query_vector,
+            candidate_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+            **literal_kwargs,
+        )
+        results = _rrf(lexical, semantic, retrieval_limit)
+        used_mode = "hybrid"
+        baseline_results = (_rrf(lexical[:original_candidate_limit], semantic[:original_candidate_limit], checked_limit)
+                            if jev_enabled and checked_intent != "resume" else None)
+        return receipt(results, used_mode, None, baseline_results)
+    except SemanticError as exc:
+        if requested_mode != "auto":
+            raise
+        results = _lexical_results(
+            store,
+            workspace,
+            checked_query,
+            retrieval_limit,
+            checked_kinds,
+            checked_types,
+            checked_concepts,
+            checked_files,
+        )
+        return receipt(results, "lexical", exc.code)
+
+
+def _model_dir(model_dir: str | Path | None) -> Path:
+    candidate = default_model_dir() if model_dir is None else Path(model_dir).expanduser()
+    if not str(candidate).strip() or "\x00" in str(candidate):
+        raise ValueError("model_dir must be a usable path")
+    return candidate.resolve(strict=False)
+
+
+def _validated_threads(threads: int | None) -> int:
+    if threads is None:
+        return min(2, max(1, os.cpu_count() or 1))
+    if isinstance(threads, bool) or not isinstance(threads, int) or not 1 <= threads <= 2:
+        raise ValueError("threads must be 1 or 2")
+    return threads
+
+
+def _artifact_status(directory: Path) -> dict[str, str]:
+    fingerprint = _artifact_fingerprint(directory)
+    key = str(directory)
+    with _ARTIFACT_STATUS_LOCK:
+        cached = _ARTIFACT_STATUS_CACHE.get(key)
+        if cached is not None and cached[0] == fingerprint:
+            return dict(cached[1])
+
+    result = _artifact_status_uncached(directory, fingerprint)
+    with _ARTIFACT_STATUS_LOCK:
+        _ARTIFACT_STATUS_CACHE[key] = (fingerprint, dict(result))
+    return result
+
+
+def _artifact_fingerprint(
+    directory: Path,
+) -> tuple[tuple[str, int, int, int, int], ...] | None:
+    """Return the stat fields that make a cached SHA-256 verification valid."""
+
+    if not directory.is_dir() or directory.is_symlink():
+        return None
+    try:
+        children = sorted(directory.iterdir(), key=lambda child: child.name)
+        fingerprint: list[tuple[str, int, int, int, int]] = []
+        for child in children:
+            stat = child.lstat()
+            fingerprint.append(
+                (child.name, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+            )
+    except OSError:
+        return None
+    return tuple(fingerprint)
+
+
+def _artifact_status_uncached(
+    directory: Path, fingerprint: tuple[tuple[str, int, int, int, int], ...] | None
+) -> dict[str, str]:
+    if fingerprint is None:
+        return {"status": "unavailable", "code": "model_not_ready"}
+    children = {item[0] for item in fingerprint}
+    if children.difference(MODEL_FILES):
+        return {"status": "unavailable", "code": "model_layout_invalid"}
+    for filename in MODEL_FILES:
+        path = directory / filename
+        if not path.is_file() or path.is_symlink():
+            return {"status": "unavailable", "code": "model_not_ready"}
+        expected = _CHECKSUMS.get(filename)
+        if expected is not None and not _artifact_valid(path, expected):
+            return {"status": "unavailable", "code": "model_hash_mismatch"}
+    return {"status": "ready"}
+
+
+def _artifact_valid(path: Path, expected_sha256: str | None) -> bool:
+    if not path.is_file() or path.is_symlink():
+        return False
+    try:
+        if path.stat().st_size <= 0:
+            return False
+        if expected_sha256 is None:
+            return True
+        return _sha256(path) == expected_sha256
+    except OSError:
+        return False
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        while True:
+            chunk = handle.read(1024 * 1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _dependency_status() -> str | None:
+    if importlib.util.find_spec("fastembed") is None:
+        return "dependency_missing"
+    try:
+        fastembed_version = importlib.metadata.version("fastembed")
+        onnxruntime_version = importlib.metadata.version("onnxruntime")
+    except importlib.metadata.PackageNotFoundError:
+        return "dependency_missing"
+    if fastembed_version != FASTEMBED_VERSION or onnxruntime_version != ONNXRUNTIME_VERSION:
+        return "dependency_version_mismatch"
+    return None
+
+
+def _register_e5_base(text_embedding: Any, model_source: Any, pooling_type: Any) -> None:
+    """Register the pinned E5-base ONNX layout once per process.
+
+    FastEmbed 0.8.0 does not ship this model in its built-in registry.  Its
+    supported custom-model API supplies the correct mean pooling while this
+    module retains normalization until after multi-chunk aggregation.
+    """
+
+    with _CUSTOM_MODEL_REGISTRATION_LOCK:
+        supported = text_embedding.list_supported_models()
+        if any(
+            isinstance(description, Mapping)
+            and description.get("model", "").casefold() == MODEL.casefold()
+            for description in supported
+        ):
+            return
+        text_embedding.add_custom_model(
+            model=MODEL,
+            pooling=pooling_type.MEAN,
+            normalization=False,
+            sources=model_source(hf=MODEL_REPOSITORY),
+            dim=DIMENSIONS,
+            model_file=MODEL_FILE,
+            description="Pinned local multilingual E5-base retrieval model",
+            license="mit",
+            size_in_gb=0.28,
+        )
+
+
+def _download_artifact(destination: Path, filename: str, expected_sha256: str | None) -> None:
+    if filename not in MODEL_FILES or destination.name != filename:
+        raise SemanticError("invalid_artifact")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    request = Request(
+        "https://huggingface.co/"
+        f"{MODEL_REPOSITORY}/resolve/{MODEL_REVISION}/{_REMOTE_ARTIFACTS[filename]}",
+        headers={"User-Agent": "codex-mem-local/semantic-1"},
+    )
+    temporary_name: str | None = None
+    try:
+        with urlopen(request, timeout=60) as response:
+            content_length = response.headers.get("Content-Length")
+            if content_length is not None:
+                try:
+                    if int(content_length) > MAX_ARTIFACT_BYTES:
+                        raise SemanticError("artifact_too_large")
+                except ValueError as exc:
+                    raise SemanticError("download_failed") from exc
+            with tempfile.NamedTemporaryFile(
+                dir=destination.parent, prefix=f".{filename}.", suffix=".part", delete=False
+            ) as handle:
+                temporary_name = handle.name
+                written = 0
+                while True:
+                    block = response.read(1024 * 1024)
+                    if not block:
+                        break
+                    written += len(block)
+                    if written > MAX_ARTIFACT_BYTES:
+                        raise SemanticError("artifact_too_large")
+                    handle.write(block)
+        temporary = Path(temporary_name)
+        if not _artifact_valid(temporary, expected_sha256):
+            raise SemanticError("model_hash_mismatch" if expected_sha256 else "download_failed")
+        try:
+            temporary.chmod(0o600)
+        except OSError:
+            pass
+        os.replace(temporary, destination)
+        temporary_name = None
+    finally:
+        if temporary_name is not None:
+            try:
+                Path(temporary_name).unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+@contextmanager
+def _offline_huggingface() -> Any:
+    """Set Hugging Face's offline guard only while constructing FastEmbed."""
+
+    previous = os.environ.get("HF_HUB_OFFLINE")
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop("HF_HUB_OFFLINE", None)
+        else:
+            os.environ["HF_HUB_OFFLINE"] = previous
+
+
+def _backend(backend: EmbeddingBackend | None) -> EmbeddingBackend:
+    if backend is not None:
+        if not isinstance(backend, EmbeddingBackend):
+            raise TypeError("backend must implement EmbeddingBackend")
+        return backend
+    directory = _model_dir(None)
+    threads = _validated_threads(None)
+    key = (str(directory), threads)
+    with _BACKEND_CACHE_LOCK:
+        cached = _BACKEND_CACHE.get(key)
+        if cached is None:
+            cached = FastEmbedBackend(directory, threads=threads)
+            _BACKEND_CACHE[key] = cached
+        return cached
+
+
+def _checked_text_batch(texts: Sequence[str]) -> list[str]:
+    if isinstance(texts, (str, bytes, bytearray)) or not isinstance(texts, Sequence):
+        raise SemanticError("invalid_embedding_input")
+    if not texts or len(texts) > EMBED_BATCH_SIZE:
+        raise SemanticError("invalid_embedding_input")
+    checked: list[str] = []
+    for text in texts:
+        if (
+            not isinstance(text, str)
+            or not text
+            or len(text) > MAX_DOCUMENT_CHARS + len(PASSAGE_PREFIX)
+        ):
+            raise SemanticError("invalid_embedding_input")
+        checked.append(text)
+    return checked
+
+
+def _checked_vector(vector: Sequence[float]) -> list[float]:
+    if isinstance(vector, (str, bytes, bytearray)):
+        raise SemanticError("invalid_embedding")
+    try:
+        values = [float(item) for item in vector]
+    except (TypeError, ValueError) as exc:
+        raise SemanticError("invalid_embedding") from exc
+    if len(values) != DIMENSIONS or any(not math.isfinite(item) for item in values):
+        raise SemanticError("invalid_embedding")
+    return values
+
+
+def _checked_query(query: str) -> str:
+    if not isinstance(query, str) or "\x00" in query:
+        raise ValueError("query must be text")
+    redacted = redact_text(query.strip())
+    if not redacted:
+        raise ValueError("query must not be empty")
+    if len(redacted) > MAX_QUERY_CHARS:
+        raise ValueError("query is too long")
+    return redacted
+
+
+def _checked_intent(intent: str) -> str:
+    if not isinstance(intent, str) or intent not in {"lookup", "resume"}:
+        raise ValueError("intent must be lookup or resume")
+    return intent
+
+
+def resume_priority(record: Mapping[str, Any]) -> int:
+    """Prefer useful handoff records without asserting freshness or truth."""
+    kind = record.get("kind")
+    if kind == "session_summary" or record.get("session_summary"):
+        return 0
+    observation = record.get("observation")
+    observation_type = observation.get("type") if isinstance(observation, Mapping) else None
+    if observation_type or kind in {
+        "decision", "bugfix", "security_alert", "discovery", "feature",
+        "refactor", "change", "security_note", "sensitive",
+    }:
+        return 1
+    if kind in {"session", "tool", "checkpoint"}:
+        return 3
+    return 2
+
+
+def _resume_selection(
+    records: Sequence[dict[str, Any]], limit: int, *, query: str = "", project: str | None = None
+) -> list[dict[str, Any]]:
+    """Balance relevant handoffs with findings without erasing topic ranking.
+
+    Summaries use source event time, with an explicitly identified recorded-time
+    fallback. Delayed processing must not turn an old event into a new handoff.
+    The latest matched summary represents its session at that session's first
+    relevance position. Time must not reorder unrelated sessions; otherwise a
+    large semantic candidate window returns the same newest summaries for every
+    question. Explicit broad current-state requests instead prioritize source
+    chronology for both handoffs and findings. All curated observation types
+    share one lane. Historical requests retain intermediate records and caveats.
+    """
+    from .retrieval import (
+        continuation_state_matches, continuation_state_plan, current_state_scope,
+        defer_prior_status, historical_query, installation_receipt, prefer_topic_followups, resume_duplicate_key,
+        state_scope_matches, resume_subject_plan, resume_subject_matches, resume_answer_score,
+        retrieval_query_hints, current_installation_question,
+    )
+    if historical_query(query):
+        return list(records[:limit])
+    state_scope = current_state_scope(query, project)
+    if not state_scope and current_installation_question(query, project):
+        state_scope = "installation"
+    if state_scope and state_scope != "project":
+        scoped = [record for record in records if state_scope_matches(record, state_scope, project)]
+        # Full records must retain the requested subject. ID-only adapters
+        # remain eligible because they already applied their query boundary.
+        records = scoped
+    if not state_scope:
+        subject = resume_subject_plan(query, project)
+        if subject and subject["names"]:
+            # Store already enforces exact identifiers/versions. Named topics
+            # also need concrete evidence before vector neighbors can answer.
+            named = dict(subject, identifiers=[], versions=[])
+            # The owning project can be a location qualifier, as in
+            # "Redis installed in Atlas". Its name cannot satisfy the
+            # explicitly requested foreign dependency by itself.
+            owner_words = set(re.split(r"[-_]", Path(project).name.casefold())) if project else set()
+            foreign_names = [name for name in named["names"] if name not in owner_words]
+            if foreign_names:
+                named["names"] = foreign_names
+            records = [record for record in records if resume_subject_matches(record, named)]
+        if (retrieval_query_hints(query) or
+                subject and any(subject.values()) and any(resume_subject_matches(record, subject) for record in records)):
+            records = sorted(records, key=lambda record: resume_answer_score(record, query), reverse=True)
+    summary_candidates: list[dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
+    for record in sorted(records, key=resume_priority):
+        if resume_priority(record) == 0:
+            summary_candidates.append(record)
+        else:
+            findings.append(record)
+    def representatives(candidates: Sequence[dict[str, Any]], *, summaries: bool) -> list[dict[str, Any]]:
+        selected: dict[tuple[str, ...], dict[str, Any]] = {}
+        for record in candidates:
+            session = record.get("session_id")
+            key = (("session", str(session)) if summaries and session
+                   else resume_duplicate_key(record) if not summaries else None)
+            key = key or ("id", record["id"])
+            earlier = selected.get(key)
+            if earlier is None or _resume_event_time(record) > _resume_event_time(earlier):
+                # Replacing a value preserves the group's original query rank.
+                selected[key] = record
+        return list(selected.values())
+
+    summaries = representatives(summary_candidates, summaries=True)
+    findings = representatives(findings, summaries=False)
+    if state_scope:
+        summaries.sort(key=_resume_event_time, reverse=True)
+        findings.sort(key=_resume_event_time, reverse=True)
+        findings.sort(key=resume_priority)
+    selected: list[dict[str, Any]] = []
+    for index in range(max(len(summaries), len(findings))):
+        for lane in (summaries, findings):
+            if index < len(lane):
+                selected.append(lane[index])
+    if state_scope in {"installation", "version"}:
+        # An installed-version question needs the newest matching receipt.
+        # A historical summary must not outrank a newer installation finding
+        # merely because the generic resume policy reserves a summary lane.
+        selected.sort(key=_resume_event_time, reverse=True)
+        if state_scope == "installation":
+            selected.sort(key=lambda record: not installation_receipt(record))
+    if state_scope:
+        selected = defer_prior_status(selected)
+    continuation_plan = continuation_state_plan(query)
+    if continuation_plan:
+        # Promote only handoffs that contain the named topic and outcome.
+        # Newer notes about another topic (or just SDK docs) keep their rank.
+        matched = [record for record in selected if resume_priority(record) == 0
+                   and continuation_state_matches(record, continuation_plan)]
+        matched.sort(key=_resume_event_time, reverse=True)
+        matched_ids = {record["id"] for record in matched}
+        selected = matched + [record for record in selected if record["id"] not in matched_ids]
+    # An inferred relationship must never push an independent open obligation
+    # out of the caller's bounded view. Reorder only the already selected set.
+    if not state_scope and retrieval_query_hints(query):
+        selected.sort(key=lambda row: resume_answer_score(row, query), reverse=True)
+    return prefer_topic_followups(selected[:limit])
+
+
+def _resume_records(
+    store: Store, project: str, records: Sequence[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Attach bounded chronology metadata without widening the candidate set."""
+    read_metadata = getattr(store, "resume_metadata", None)
+    if not callable(read_metadata):
+        # Existing in-process adapters may not expose the optional metadata
+        # helper yet. Their relevance order remains the only known ordering.
+        return list(records)
+    metadata: dict[str, dict[str, Any]] = {}
+    ids = [record["id"] for record in records]
+    for offset in range(0, len(ids), MAX_SEARCH_LIMIT):
+        batch_ids = ids[offset:offset + MAX_SEARCH_LIMIT]
+        batch = read_metadata(project, batch_ids)
+        if not isinstance(batch, Mapping):
+            raise SemanticError("storage_protocol_error")
+        for entry_id in batch_ids:
+            item = batch.get(entry_id)
+            if item is None:
+                continue
+            if not isinstance(item, Mapping):
+                raise SemanticError("storage_protocol_error")
+            metadata[entry_id] = {
+                key: item[key]
+                for key in (
+                    "event_at", "event_id", "event_time_basis",
+                    "context_historical", "later_summary_id",
+                    "later_context_id", "later_context_relation", "later_context_basis",
+                )
+                if key in item
+            }
+    return [dict(record, **metadata.get(record["id"], {})) for record in records]
+
+
+def _resume_event_time(record: Mapping[str, Any]) -> datetime:
+    """Read the declared chronology basis; never infer it from created_at."""
+    unknown = datetime.min.replace(tzinfo=timezone.utc)
+    event_at = record.get("event_at")
+    if (
+        record.get("event_time_basis") not in {"source_event", "recorded_at"}
+        or not isinstance(event_at, str)
+    ):
+        return unknown
+    try:
+        value = datetime.fromisoformat(event_at.replace("Z", "+00:00"))
+    except ValueError:
+        return unknown
+    return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+
+
+def _resume_recent_candidates(
+    store: Store, project: str, query: str,
+    kinds: Sequence[str] | None, types: Sequence[str] | None,
+    concepts: Sequence[str] | None, files: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Cover current state beyond a full or empty relevance window.
+
+    The existing storage boundary supplies at most twelve active curated
+    records, balancing source-dated handoffs and findings. Only broad current
+    state requests qualify; topical/history queries and explicit filters keep
+    their original candidate boundary. Release questions retain release scope.
+    """
+    from .retrieval import current_state_scope, state_scope_matches
+    from .store import _preview
+    scope = current_state_scope(query, project)
+    read = getattr(store, "retrieval_candidates", None)
+    if not scope or not callable(read) or any(value is not None for value in (kinds, types, concepts, files)):
+        return []
+    records = []
+    for record in _preview_list(read(project, query=query)):
+        if (record.get("project") != project or record.get("superseded_by")
+            or str(record.get("source") or "").startswith("hook:")
+            or not state_scope_matches(record, scope, project)):
+            continue
+        record = dict(record)
+        body = record.pop("body", None)
+        if isinstance(body, str):
+            record["preview"] = _preview(body)
+        records.append(record)
+    return records
+
+
+def _quality_candidates(
+    store: Store, project: str, query: str, records: Sequence[dict[str, Any]],
+    kinds: Sequence[str] | None, types: Sequence[str] | None,
+    concepts: Sequence[str] | None, files: Sequence[str] | None,
+) -> tuple[list[dict[str, Any]], int]:
+    """Bounded bilingual recall and independently evidenced pre-issue links."""
+    from .retrieval import (historical_query, retrieval_query_hints,
+                            resume_subject_plan, resume_subject_matches,
+                            issue_discovery_association)
+    if historical_query(query):
+        return list(records), 0
+    candidates = list(records)
+    seen = {row["id"] for row in candidates}
+    subject = resume_subject_plan(query, project)
+    anchors = [*(subject or {}).get("identifiers", []), *(subject or {}).get("versions", [])]
+    exact_subject = dict(subject, names=[]) if subject else None
+    if anchors:
+        # A question may ask about a facet not repeated in the task-creation
+        # note. Resolve the exact anchors before expanding proved discovery.
+        for row in _lexical_results(store, project, " ".join(anchors), 40,
+                                    kinds, types, concepts, files):
+            if row["id"] not in seen and resume_subject_matches(row, exact_subject):
+                seen.add(row["id"])
+                candidates.append(row)
+    for hint in retrieval_query_hints(query):
+        probe = " ".join([*anchors, hint])
+        for row in _lexical_results(store, project, probe, 20, kinds, types, concepts, files):
+            if (row["id"] in seen or len(candidates) >= MAX_SEARCH_LIMIT * 2
+                    or subject and not resume_subject_matches(row, subject)):
+                continue
+            seen.add(row["id"])
+            candidates.append(row)
+    read = getattr(store, "retrieval_session_peers", None)
+    if callable(read) and subject and subject.get("identifiers") and not any(
+            item is not None for item in (kinds, types, concepts, files)):
+        sessions: dict[str, list[dict[str, Any]]] = {}
+        for origin in candidates:
+            session = origin.get("session_id")
+            if isinstance(session, str) and resume_subject_matches(origin, exact_subject):
+                sessions.setdefault(session, []).append(origin)
+        for session, origins in list(sessions.items())[:4]:
+            peer_kwargs = {"limit": 64, **({"query": query} if isinstance(store, Store) else {})}
+            for row in read(project, session, **peer_kwargs):
+                if row["id"] in seen:
+                    continue
+                origin = next((item for item in origins if issue_discovery_association(item, row, query)), None)
+                if origin is not None:
+                    row = dict(row, issue_association={
+                        "origin_id": origin["id"], "basis": "same_session_shared_task_file",
+                        "query_identifiers": subject["identifiers"],
+                        "inferred": True, "verification": "not_assessed"})
+                    seen.add(row["id"])
+                    candidates.append(row)
+    return candidates, len(candidates) - len(records)
+
+
+def _resume_linked_handoffs(
+    store: Store, project: str, query: str, records: Sequence[dict[str, Any]],
+    kinds: Sequence[str] | None, types: Sequence[str] | None,
+    concepts: Sequence[str] | None, files: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Read one bounded layer of explicit continuation links for state queries.
+
+    These are subsequent handoffs from an already-matched session, never an
+    arbitrary project-wide latest-record expansion. Explicit filters and
+    history questions opt out. Topical disablement followups must match both
+    their named subject and outcome. No row is superseded or claimed resolved.
+    """
+    from .retrieval import (continuation_state_matches, continuation_state_plan,
+                            current_state_scope, state_scope_matches,
+                            linked_handoff_matches, historical_query, resume_subject_plan)
+    from .store import _preview
+    scope = current_state_scope(query, project)
+    read = getattr(store, "get", None)
+    continuation_plan = continuation_state_plan(query)
+    subject = resume_subject_plan(query, project)
+    if historical_query(query) or subject and (subject["identifiers"] or subject["versions"]):
+        return []
+    if not callable(read) or any(value is not None for value in (kinds, types, concepts, files)):
+        return []
+    present = {record["id"] for record in records}
+    origins: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        later = record.get("later_summary_id")
+        if not scope and not continuation_plan:
+            from .retrieval import (resume_subject_matches, prompt_query_plan,
+                                    prompt_match_score, resume_evidence_text)
+            if subject and any(subject.values()):
+                if not resume_subject_matches(record, subject):
+                    continue
+            else:
+                topical = prompt_query_plan(query)
+                if not topical or not prompt_match_score(
+                        resume_evidence_text(record), dict(topical, minimum=1)):
+                    continue
+        if isinstance(later, str) and later not in present and record.get("session_id"):
+            origins.setdefault(later, []).append(record)
+    ids = list(origins)[:MAX_SEARCH_LIMIT]
+    if not ids:
+        return []
+    records_by_id = {record["id"]: record for record in _preview_list(read(project, ids))}
+    candidates = []
+    for entry_id in ids:
+        record = records_by_id.get(entry_id)
+        if (not record or record.get("project") != project or record.get("superseded_by")
+            or str(record.get("source") or "").startswith("hook:")
+            or not (record.get("kind") == "session_summary" or record.get("session_summary"))
+            or not any(record.get("session_id") == origin.get("session_id") for origin in origins[entry_id])
+            or not (state_scope_matches(record, scope, project) if scope else
+                    continuation_state_matches(record, continuation_plan) if continuation_plan else
+                    any(linked_handoff_matches(origin, record, query, project)
+                        for origin in origins[entry_id]))):
+            continue
+        record = dict(record)
+        body = record.pop("body", None)
+        if isinstance(body, str):
+            record["preview"] = _preview(body)
+        candidates.append(record)
+    return [record for record in _resume_records(store, project, candidates)
+            if any(_resume_event_time(record) > _resume_event_time(origin)
+                   for origin in origins[record["id"]])]
+
+
+def _checked_mode(mode: str) -> str:
+    if mode not in {"auto", "lexical", "semantic", "hybrid"}:
+        raise ValueError("mode must be auto, lexical, semantic, or hybrid")
+    return mode
+
+
+def _checked_limit(limit: int) -> int:
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= MAX_SEARCH_LIMIT:
+        raise ValueError(f"limit must be between 1 and {MAX_SEARCH_LIMIT}")
+    return limit
+
+
+def _checked_filter_values(
+    value: Sequence[str] | str | None,
+    field: str,
+    *,
+    maximum_items: int = 100,
+    maximum_chars: int = 1_000,
+) -> list[str] | None:
+    """Validate a structured retrieval filter before it reaches storage.
+
+    Storage owns the canonical validation and redaction of metadata.  The
+    semantic layer still validates the transport shape so an embedding search
+    cannot accidentally interpret a scalar, mapping, or bytes object as an
+    iterable of filter values.  Returning a fresh list also prevents a caller
+    from mutating filters while lexical and semantic branches are running.
+    """
+
+    if value is None:
+        return None
+    if isinstance(value, str):
+        values: list[object] = [value]
+    elif isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        values = list(value)
+    else:
+        raise ValueError(f"{field} must be a list of text values")
+    if not values:
+        raise ValueError(f"{field} must not be empty")
+    if len(values) > maximum_items:
+        raise ValueError(f"{field} has too many values")
+    checked: list[str] = []
+    seen: set[str] = set()
+    for candidate in values:
+        if not isinstance(candidate, str) or "\x00" in candidate:
+            raise ValueError(f"{field} must contain text values")
+        cleaned = candidate.strip()
+        if not cleaned:
+            raise ValueError(f"{field} must not contain empty values")
+        if len(cleaned) > maximum_chars:
+            raise ValueError(f"{field} contains a value that is too long")
+        if cleaned not in seen:
+            checked.append(cleaned)
+            seen.add(cleaned)
+    if not checked:
+        raise ValueError(f"{field} must not be empty")
+    return checked
+
+
+def _filter_kwargs(
+    kinds: Sequence[str] | str | None,
+    types: Sequence[str] | str | None,
+    concepts: Sequence[str] | str | None,
+    files: Sequence[str] | str | None,
+) -> dict[str, list[str] | None]:
+    """Build only the filter kwargs requested by the caller.
+
+    Omitting new kwargs when they are absent keeps the v1/v2 in-process Store
+    seam and third-party test doubles source compatible.  Once a structured
+    filter is requested it is passed to storage as a candidate-universe
+    constraint; callers must not emulate this by filtering an already limited
+    result list.
+    """
+
+    values: dict[str, list[str] | None] = {}
+    if kinds is not None:
+        values["kinds"] = _checked_filter_values(kinds, "kinds")
+    if types is not None:
+        values["types"] = _checked_filter_values(types, "types")
+    if concepts is not None:
+        values["concepts"] = _checked_filter_values(concepts, "concepts")
+    if files is not None:
+        values["files"] = _checked_filter_values(files, "files")
+    return values
+
+
+def _claimed_parts(claimed: object) -> tuple[str, str, list[Mapping[str, Any]]]:
+    if not isinstance(claimed, Mapping):
+        raise SemanticError("storage_protocol_error")
+    job_id = claimed.get("job_id")
+    lease_token = claimed.get("lease_token")
+    entries = claimed.get("entries")
+    if not isinstance(job_id, str) or not job_id or not isinstance(lease_token, str) or not lease_token:
+        raise SemanticError("storage_protocol_error")
+    if not isinstance(entries, Sequence) or isinstance(entries, (str, bytes, bytearray)) or not entries:
+        raise SemanticError("storage_protocol_error")
+    if len(entries) > INDEX_BATCH_SIZE or any(not isinstance(entry, Mapping) for entry in entries):
+        raise SemanticError("storage_protocol_error")
+    return job_id, lease_token, list(entries)
+
+
+def _vectors_for_entries(
+    entries: Sequence[Mapping[str, Any]], backend: EmbeddingBackend
+) -> list[dict[str, Any]]:
+    vectors: list[dict[str, Any]] = []
+    for entry in entries:
+        entry_id = entry.get("id")
+        content_hash = entry.get("content_hash")
+        if not isinstance(entry_id, str) or not entry_id or not isinstance(content_hash, str) or not content_hash:
+            raise SemanticError("storage_protocol_error")
+        document = _entry_document(entry)
+        chunks = _backend_chunks(backend, document, prefix=PASSAGE_PREFIX)
+        embedded = _embed_chunks(backend, chunks)
+        vectors.append(
+            {
+                "entry_id": entry_id,
+                "content_hash": content_hash,
+                "vector": _normalize(_mean(embedded)),
+            }
+        )
+    return vectors
+
+
+def _entry_document(entry: Mapping[str, Any]) -> str:
+    encoded_text = entry.get("text")
+    if encoded_text is not None:
+        if not isinstance(encoded_text, str) or not encoded_text:
+            raise SemanticError("storage_protocol_error")
+        if redact_text(encoded_text) != encoded_text or len(encoded_text) > MAX_DOCUMENT_CHARS:
+            raise SemanticError("storage_protocol_error")
+        content_hash = entry.get("content_hash")
+        expected_hash = hashlib.sha256(encoded_text.encode("utf-8")).hexdigest()
+        if content_hash != expected_hash:
+            raise SemanticError("storage_protocol_error")
+        return encoded_text
+
+    # Store v3 sends ``text`` above.  The structured fallback keeps the
+    # injected-backend seam usable while an older in-process Store finishes a
+    # migration, without changing what a v3 content hash describes.
+    title = entry.get("title")
+    body = entry.get("body")
+    tags = entry.get("tags")
+    if not isinstance(title, str) or not isinstance(body, str):
+        raise SemanticError("storage_protocol_error")
+    if not isinstance(tags, Sequence) or isinstance(tags, (str, bytes, bytearray)):
+        raise SemanticError("storage_protocol_error")
+    if any(not isinstance(tag, str) for tag in tags):
+        raise SemanticError("storage_protocol_error")
+    parts = [title]
+    if tags:
+        parts.append("Tags: " + ", ".join(tags))
+    parts.append(body)
+    document = redact_text("\n\n".join(parts).strip())
+    if not document or len(document) > MAX_DOCUMENT_CHARS:
+        raise SemanticError("document_too_large")
+    return document
+
+
+def _normalized_query_vector(backend: EmbeddingBackend, query: str) -> list[float]:
+    chunks = _backend_chunks(backend, query, prefix=QUERY_PREFIX)
+    return _normalize(_mean(_embed_chunks(backend, chunks)))
+
+
+def _backend_chunks(backend: EmbeddingBackend, text: str, *, prefix: str = "") -> list[str]:
+    try:
+        raw_chunks = backend.split(text, prefix=prefix)
+    except SemanticError:
+        raise
+    except Exception as exc:
+        raise SemanticError("chunking_failed") from exc
+    if isinstance(raw_chunks, (str, bytes, bytearray)) or not isinstance(raw_chunks, Sequence):
+        raise SemanticError("invalid_chunking")
+    chunks = list(raw_chunks)
+    if not chunks or any(not isinstance(chunk, str) or not chunk for chunk in chunks):
+        raise SemanticError("invalid_chunking")
+    if any(len(chunk) > MAX_DOCUMENT_CHARS + len(PASSAGE_PREFIX) for chunk in chunks):
+        raise SemanticError("invalid_chunking")
+    if prefix and any(not chunk.startswith(prefix) for chunk in chunks):
+        raise SemanticError("invalid_chunking")
+    return chunks
+
+
+def _embed_chunks(backend: EmbeddingBackend, chunks: Sequence[str]) -> list[list[float]]:
+    embedded: list[list[float]] = []
+    for position in range(0, len(chunks), EMBED_BATCH_SIZE):
+        batch = chunks[position : position + EMBED_BATCH_SIZE]
+        raw_vectors = backend.embed(batch)
+        if len(raw_vectors) != len(batch):
+            raise SemanticError("invalid_embedding")
+        embedded.extend(_checked_vector(vector) for vector in raw_vectors)
+    return embedded
+
+
+def _split_with_tokenizer(tokenizer: Any, text: str, *, prefix: str = "") -> list[str]:
+    """Use untruncated token offsets to partition every original character.
+
+    ``Tokenizer`` offsets refer to the unprefixed input string.  Every output
+    chunk carries the supplied E5 prefix, and the boundary reserves room for
+    that prefix plus the model's special tokens.  A candidate is tokenized
+    again with its prefix to handle a wordpiece that changes at a string edge.
+    The cursor always advances over original characters, so the final tail is
+    encoded instead of being silently truncated.
+    """
+
+    if not isinstance(text, str) or not text:
+        raise SemanticError("invalid_document")
+    if prefix not in {"", QUERY_PREFIX, PASSAGE_PREFIX}:
+        raise SemanticError("invalid_embedding_prefix")
+    prefix_encoding = _tokenizer_encode(tokenizer, prefix, add_special_tokens=False)
+    prefix_ids = getattr(prefix_encoding, "ids", None)
+    if not isinstance(prefix_ids, Sequence):
+        raise SemanticError("tokenizer_failure")
+    content_budget = MAX_CHUNK_TOKENS - 2 - len(prefix_ids)
+    if content_budget < 1:
+        raise SemanticError("tokenizer_failure")
+    chunks: list[str] = []
+    remaining = text
+    while remaining:
+        encoding = _tokenizer_encode(tokenizer, remaining, add_special_tokens=False)
+        ids = getattr(encoding, "ids", None)
+        offsets = getattr(encoding, "offsets", None)
+        if not isinstance(ids, Sequence) or not isinstance(offsets, Sequence) or len(ids) != len(offsets):
+            raise SemanticError("tokenizer_failure")
+        if (
+            len(ids) <= content_budget
+            and _token_count(tokenizer, prefix + remaining, add_special_tokens=True)
+            <= MAX_CHUNK_TOKENS
+        ):
+            chunks.append(prefix + remaining)
+            break
+        boundary = _token_boundary(offsets, content_budget - 1, len(remaining))
+        candidate_end = _safe_chunk_end(tokenizer, remaining, boundary, prefix=prefix)
+        if candidate_end <= 0:
+            raise SemanticError("tokenizer_failure")
+        candidate = remaining[:candidate_end]
+        if not candidate:
+            raise SemanticError("tokenizer_failure")
+        chunks.append(prefix + candidate)
+        remaining = remaining[candidate_end:]
+    return chunks
+
+
+def _tokenizer_encode(tokenizer: Any, text: str, *, add_special_tokens: bool) -> Any:
+    try:
+        return tokenizer.encode(text, add_special_tokens=add_special_tokens)
+    except Exception as exc:
+        raise SemanticError("tokenizer_failure") from exc
+
+
+def _token_boundary(offsets: Sequence[object], index: int, text_length: int) -> int:
+    """Return an advancing character boundary at or before one token budget."""
+
+    for position in range(min(index, len(offsets) - 1), -1, -1):
+        offset = offsets[position]
+        if (
+            isinstance(offset, Sequence)
+            and not isinstance(offset, (str, bytes, bytearray))
+            and len(offset) == 2
+            and isinstance(offset[1], int)
+            and 0 < offset[1] <= text_length
+        ):
+            return offset[1]
+    raise SemanticError("tokenizer_failure")
+
+
+def _token_count(tokenizer: Any, text: str, *, add_special_tokens: bool) -> int:
+    ids = getattr(_tokenizer_encode(tokenizer, text, add_special_tokens=add_special_tokens), "ids", None)
+    if not isinstance(ids, Sequence):
+        raise SemanticError("tokenizer_failure")
+    return len(ids)
+
+
+def _safe_chunk_end(tokenizer: Any, text: str, boundary: int, *, prefix: str) -> int:
+    """Find a boundary whose full prefixed model input fits the context."""
+
+    end = boundary
+    while end > 0:
+        encoded = _tokenizer_encode(tokenizer, prefix + text[:end], add_special_tokens=True)
+        ids = getattr(encoded, "ids", None)
+        if isinstance(ids, Sequence) and len(ids) <= MAX_CHUNK_TOKENS:
+            return end
+        # A model token can cover several source characters.  Back up to the
+        # preceding Unicode code point and retry rather than dropping it.
+        end -= 1
+    return 0
+
+
+def _mean(vectors: Sequence[Sequence[float]]) -> list[float]:
+    if not vectors:
+        raise SemanticError("invalid_embedding")
+    total = [0.0] * DIMENSIONS
+    for vector in vectors:
+        checked = _checked_vector(vector)
+        for index, value in enumerate(checked):
+            total[index] += value
+    divisor = float(len(vectors))
+    return [value / divisor for value in total]
+
+
+def _normalize(vector: Sequence[float]) -> list[float]:
+    checked = _checked_vector(vector)
+    magnitude = math.sqrt(sum(value * value for value in checked))
+    if not math.isfinite(magnitude) or magnitude == 0.0:
+        raise SemanticError("invalid_embedding")
+    return [value / magnitude for value in checked]
+
+
+def _lexical_results(
+    store: Store,
+    project: str,
+    query: str,
+    limit: int,
+    kinds: Sequence[str] | None,
+    types: Sequence[str] | None = None,
+    concepts: Sequence[str] | None = None,
+    files: Sequence[str] | None = None,
+) -> list[dict[str, Any]]:
+    kwargs = {"limit": limit, **_filter_kwargs(kinds, types, concepts, files)}
+    return _preview_list(store.search(project, query, **kwargs))
+
+
+def _resume_candidates(
+    store: Store,
+    project: str,
+    query: str,
+    limit: int,
+    kinds: Sequence[str] | None,
+    types: Sequence[str] | None,
+    concepts: Sequence[str] | None,
+    files: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Find query-matched handoffs beyond the general relevance window.
+
+    Expansion is deliberately lexical even for semantic searches: nearest
+    vectors alone can return unrelated summaries from a small category. Every
+    added record must match the query and all caller-supplied filters. The
+    receipt exposes this mixing instead of claiming pure semantic retrieval.
+    """
+    preferred = ("decision", "bugfix", "security_alert")
+    summary_kinds = [kind for kind in ("session_summary",) if kinds is None or kind in kinds]
+    decision_kinds = [kind for kind in preferred if kinds is None or kind in kinds]
+    decision_types = [kind for kind in preferred if types is None or kind in types]
+    scopes: list[tuple[Sequence[str] | None, Sequence[str] | None]] = []
+    if summary_kinds:
+        scopes.append((summary_kinds, types))
+    if decision_kinds:
+        scopes.append((decision_kinds, types))
+    if decision_types:
+        scopes.append((kinds, decision_types))
+    results: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    from .retrieval import historical_query, resume_subject_plan, resume_subject_matches
+    subject = resume_subject_plan(query, project)
+    if subject and not historical_query(query):
+        # Answer prose can use another language than the question. Retrieve a
+        # bounded exact subject window before scoring answer facets locally.
+        # This preserves every literal constraint and every caller filter.
+        anchors = [*subject["identifiers"], *subject["versions"]]
+        anchor_queries = [" ".join(anchors + [name]) for name in subject["names"]]
+        if not anchor_queries and anchors:
+            anchor_queries = [" ".join(anchors)]
+        focused_queries = []
+        if re.search(r"disabl|отключ", query, re.IGNORECASE):
+            focused_queries = [anchor_query + " disabled" for anchor_query in anchor_queries]
+        for anchor_query in (focused_queries + anchor_queries)[:16]:
+            for record in _lexical_results(
+                store, project, anchor_query, MAX_SEARCH_LIMIT, kinds, types, concepts, files
+            ):
+                if (len(results) < MAX_SEARCH_LIMIT and record["id"] not in seen
+                        and resume_subject_matches(record, subject)):
+                    seen.add(record["id"])
+                    results.append(record)
+    for scoped_kinds, scoped_types in scopes:
+        for record in _lexical_results(
+            store, project, query, limit, scoped_kinds, scoped_types, concepts, files
+        ):
+            if record["id"] not in seen:
+                seen.add(record["id"])
+                results.append(record)
+    return results
+
+
+def _semantic_results(
+    store: Store,
+    project: str,
+    query_vector: Sequence[float],
+    limit: int,
+    kinds: Sequence[str] | None,
+    types: Sequence[str] | None = None,
+    concepts: Sequence[str] | None = None,
+    files: Sequence[str] | None = None,
+    *, literal_query: str | None = None,
+) -> list[dict[str, Any]]:
+    kwargs = {"limit": limit, **_filter_kwargs(kinds, types, concepts, files)}
+    if literal_query is not None:
+        # Apply exact literals in SQL before cosine ordering and the limit.
+        kwargs["literal_query"] = literal_query
+    return _preview_list(
+        store.semantic_search(
+            project,
+            list(query_vector),
+            MODEL,
+            MODEL_REVISION,
+            DIMENSIONS,
+            **kwargs,
+        )
+    )
+
+
+def _preview_list(value: object) -> list[dict[str, Any]]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
+        raise SemanticError("storage_protocol_error")
+    previews: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for preview in value:
+        if not isinstance(preview, Mapping):
+            raise SemanticError("storage_protocol_error")
+        record = dict(preview)
+        entry_id = record.get("id")
+        if not isinstance(entry_id, str) or not entry_id or entry_id in seen:
+            raise SemanticError("storage_protocol_error")
+        seen.add(entry_id)
+        previews.append(record)
+    return previews
+
+
+def _rrf(
+    lexical: Sequence[Mapping[str, Any]], semantic: Sequence[Mapping[str, Any]], limit: int
+) -> list[dict[str, Any]]:
+    scores: dict[str, float] = {}
+    records: dict[str, dict[str, Any]] = {}
+    for results in (lexical, semantic):
+        for rank, result in enumerate(results, start=1):
+            entry_id = result.get("id")
+            if not isinstance(entry_id, str) or not entry_id:
+                raise SemanticError("storage_protocol_error")
+            scores[entry_id] = scores.get(entry_id, 0.0) + (1.0 / (RRF_K + rank))
+            records.setdefault(entry_id, dict(result))
+    ordered = sorted(scores, key=lambda entry_id: (-scores[entry_id], entry_id))[:limit]
+    output: list[dict[str, Any]] = []
+    for entry_id in ordered:
+        record = records[entry_id]
+        record["score"] = scores[entry_id]
+        output.append(record)
+    return output
+
+
+def _pending_count(store: Store, project: str) -> int:
+    absent = object()
+    fast_count = getattr(store, "pending_embedding_count", absent)
+    if fast_count is not absent:
+        if not callable(fast_count):
+            raise SemanticError("storage_protocol_error")
+        pending = fast_count(project, MODEL, MODEL_REVISION, DIMENSIONS)
+    else:
+        # Compatibility for older in-process adapters. Store always uses the
+        # metadata aggregate instead of running a full audit after each batch.
+        status = store.embedding_status(project, MODEL, MODEL_REVISION, DIMENSIONS)
+        if not isinstance(status, Mapping):
+            raise SemanticError("storage_protocol_error")
+        pending = status.get("pending")
+    if isinstance(pending, bool) or not isinstance(pending, int) or pending < 0:
+        raise SemanticError("storage_protocol_error")
+    return pending
+
+
+def _completed_count(completed: object) -> int:
+    if not isinstance(completed, Mapping):
+        raise SemanticError("storage_protocol_error")
+    indexed = completed.get("indexed_count")
+    if isinstance(indexed, bool) or not isinstance(indexed, int) or indexed < 0:
+        raise SemanticError("storage_protocol_error")
+    return indexed
+
+
+def _fail_claim(store: Store, project: str, job_id: str, lease_token: str, code: str) -> None:
+    try:
+        store.fail_embedding_batch(project, job_id, lease_token, code)
+    except (OSError, TypeError, ValueError):
+        pass
+
+
+def _index_receipt(
+    status: str, indexed: int, pending: int, code: str | None = None
+) -> dict[str, Any]:
+    receipt: dict[str, Any] = {"status": status, "indexed": indexed, "pending": pending}
+    if code is not None:
+        receipt["code"] = code
+    return receipt
+
+
+def _search_receipt(
+    results: list[dict[str, Any]],
+    requested_mode: str,
+    used_mode: str,
+    fallback_reason: str | None,
+    intent: str,
+) -> dict[str, Any]:
+    return {
+        "results": results,
+        "intent": intent,
+        "requested_mode": requested_mode,
+        "used_mode": used_mode,
+        "fallback_reason": fallback_reason,
+        "model": MODEL,
+        "revision": MODEL_REVISION,
+    }
+
+
+def _prepare_receipt(status: str, code: str) -> dict[str, Any]:
+    return {
+        "status": status,
+        "code": code,
+        "model": MODEL,
+        "revision": MODEL_REVISION,
+        "dimensions": DIMENSIONS,
+    }

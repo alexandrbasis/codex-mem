@@ -1,0 +1,28 @@
+{
+  "version": "R16-driver-input-guard-v2",
+  "status": "SOURCESTABLE",
+  "v1_preserved": {
+    "v1-run-experiment.py": "d5280d22f4a3bbef92f0ef88b7e8f7c87d47b056ffc84a7b0b97849c634c83d8",
+    "v1-test-driver.py": "d6b82e40acb4f149eb6d1feee1031a1e3267a35d852290454fc31979a89458c7",
+    "v1-source-release.json": "27b235f225ecc1a5c553783f3a905e615f413e4827157da2119e76bb9ae75dda"
+  },
+  "files": {
+    "run-experiment.py": "e2945793f3a107db5c037133b5ef8733c44e23cffe66cf7876918e3a231a6325",
+    "test-driver.py": "dc246aec96c55db0a67772101c1222c26eaf6d483642b9781f1cba5b5f182644"
+  },
+  "contract_sha256": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+  "global_helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "change": "validate_author_inputs requires keyword expected_contract_sha256 from already pinned protocol.prospective_author_contract.sha256; mismatching contract bytes rejected before import/execution/receipt. All existing input and phase ordering unchanged.",
+  "validation": {
+    "driver_tests": 10,
+    "contract_tests": 14,
+    "behavior_red": "Held V1 executes changed public contract; marker-not-executed assertion fails1/0errors.",
+    "green": "Changed contract mismatch raises before import, marker absent and no receipt. Main passes expected pinned hash; previous actual-invalid-input ordering checks remain.",
+    "py_compile": true,
+    "diff_check": true,
+    "native_calls": 0,
+    "author_inputs_opened": false
+  },
+  "limits": "Prospective input representability guard only; no semantic grade, repair, retry or runtime/helper/protocol edits.",
+  "source_held": true
+}

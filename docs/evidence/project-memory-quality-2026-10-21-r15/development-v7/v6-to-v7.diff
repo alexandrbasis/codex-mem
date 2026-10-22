@@ -1,0 +1,11 @@
+--- held-v6
++++ candidate-v7
+@@ -831,7 +831,7 @@
+         if not group.get('neutral') and all(_interval_covered(ref, grouped_intervals) for ref in group['refs']):
+             continue
+         is_neutral = group.get('neutral', False)
+-        if is_neutral and neutral_selected == 2:
++        if is_neutral and neutral_selected == 3:
+             continue
+         key = json.dumps((is_neutral, group.get('custody', False), group['qualifiers']), sort_keys=True)
+         container = source_containers.setdefault(key, {

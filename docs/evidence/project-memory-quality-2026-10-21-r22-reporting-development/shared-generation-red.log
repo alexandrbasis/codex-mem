@@ -1,0 +1,22 @@
+F
+======================================================================
+FAIL: test_failed_shared_generation_is_reported_with_full_missing_denominator (__main__.SharedPipelineReportingTests.test_failed_shared_generation_is_reported_with_full_missing_denominator)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r22-reporting-development/test_shared_pipeline_reporting.py", line 36, in test_failed_shared_generation_is_reported_with_full_missing_denominator
+    self.assertTrue(any(
+    ~~~~~~~~~~~~~~~^^^^^
+        row.get("stage") == "generation" and row.get("variant") == "baseline"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        and row.get("status") == "failed" and row.get("history_id") == "fictional-task"
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        for row in report["pipeline_failures"]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ))
+    ^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 0.007s
+
+FAILED (failures=1)

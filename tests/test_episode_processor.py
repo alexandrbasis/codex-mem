@@ -329,7 +329,7 @@ class EpisodeProcessorTests(unittest.TestCase):
             item["evidence"]["consolidation_of"] = []
             item["evidence"]["summary"] = [ref]
             item["evidence"]["continuation_of"] = [ref]
-            wire = {"episodes": [item], "claims": [], "relations": []}
+            wire = {"episodes": [item], "claims": []}
             self.assertTrue(validator.is_valid(wire))
             item["evidence"]["continuation_of"] = []
             self.assertFalse(validator.is_valid(wire))
@@ -507,7 +507,7 @@ class EpisodeProcessorTests(unittest.TestCase):
         self.assertEqual(sum(values == list(registry) for values in enums), 1)
         self.assertTrue(all(span["source_id"] in {"event-1", "event-2"} for span in registry.values()))
         self.assertNotIn("key", schema["properties"]["claims"]["items"]["properties"])
-        relation = schema["properties"]["relations"]["items"]["properties"]
+        relation = schema["properties"]["claims"]["items"]["properties"]["outgoing_relations"]["items"]["properties"]
         self.assertEqual(relation["to_claim_id"]["enum"], ["old-claim"])
         self.assertNotIn("supports", relation["type"]["enum"])
 
@@ -588,10 +588,12 @@ class EpisodeProcessorTests(unittest.TestCase):
         schema = ep.runner_request(raw, 10)["output_schema"]["properties"]
         self.assertNotIn("key", schema["episodes"]["items"]["properties"])
         self.assertNotIn("key", schema["claims"]["items"]["properties"])
-        self.assertEqual(schema["relations"], {"type": "array", "items": {"type": "null"}, "maxItems": 0})
+        self.assertNotIn("relations", schema)
+        self.assertEqual(schema["claims"]["items"]["properties"]["outgoing_relations"],
+                         {"type": "array", "items": {"type": "null"}, "maxItems": 0})
         self.assertIn("raw source IDs in relation endpoints", ep.runner_request(raw, 10)["prompt"])
 
-    def test_native_object_indices_bind_only_returned_claims_and_existing_targets(self):
+    def test_native_claim_ownership_binds_only_returned_claims_and_existing_targets(self):
         raw = snapshot(self.project)
         item = episode()
         del item["key"]
@@ -599,8 +601,8 @@ class EpisodeProcessorTests(unittest.TestCase):
         claim = {"text": "Use local import.", "kind": "task", "workflow_state": "open",
                  "scope": {"environment": "", "version": "", "worktree": ""}, "rationale": "",
                  "evidence": {"text": [span], "workflow_state": [span], "rationale": []}}
-        wire = {"episodes": [item], "claims": [claim], "relations": [{"type": "contradicts", "from_claim_index": 0,
-                 "to_claim_id": "old-claim", "evidence": [span]}]}
+        claim["outgoing_relations"] = [{"type": "contradicts", "to_claim_id": "old-claim", "evidence": [span]}]
+        wire = {"episodes": [item], "claims": [claim]}
         resolved = ep._resolve_object_references(wire, raw)
         self.assertEqual(resolved["episodes"][0]["key"], "episode_0")
         self.assertEqual(resolved["claims"][0]["key"], "claim_0")
@@ -609,7 +611,8 @@ class EpisodeProcessorTests(unittest.TestCase):
         self.assertEqual(resolved["relations"][0]["to"], "old-claim")
         ep._validate_output(ep._resolve_quotes(resolved, raw), raw)
         self.assertNotIn("key", wire["claims"][0])
-        self.assertIn("from_claim_index", wire["relations"][0])
+        self.assertNotIn("from", wire["claims"][0]["outgoing_relations"][0])
+        self.assertNotIn("outgoing_relations", resolved["claims"][0])
 
     def test_native_relation_rejects_source_ids_absent_indices_and_foreign_targets(self):
         raw = snapshot(self.project)

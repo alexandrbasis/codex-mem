@@ -1,0 +1,23 @@
+{
+  "status": "actual_native_source_destination_guards_verified",
+  "prior_evidence": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r22/automatic-approval-rereview-evidence.json",
+    "sha256": "d159af3308a87f7d02363aca23ff00fbcbcbc43e8d0453b0ce91210ca7c9e8a4"
+  },
+  "prior_literal_probe_limit": "First literal probe used single quotes; source actually uses double quotes. False spelling flags were not safety-control failures. Original evidence retained.",
+  "source": {
+    "path": "codex_mem/processor.py",
+    "sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39",
+    "exact_excerpt": "\"modelProvider\": \"openai\",\n\"allowProviderModelFallback\": False,\n\"ephemeral\": True,\n\"sandbox\": \"read-only\",",
+    "line_first": 765
+  },
+  "guards": {
+    "explicit_openai_provider": true,
+    "provider_fallback_disabled": true,
+    "ephemeral": true,
+    "read_only_sandbox": true
+  },
+  "source_runtime_pinned": true,
+  "current_main_calls": 0,
+  "no_execution_workaround": true
+}

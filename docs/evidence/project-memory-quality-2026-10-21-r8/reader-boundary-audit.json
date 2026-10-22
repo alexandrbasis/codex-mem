@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "review_scope": [
+    "per-question reader/judge visibility and citation bounds",
+    "exact request cache identity",
+    "durable partial-question receipts",
+    "fixed planned-question denominator",
+    "actual native usage versus equivalent reuse allocation",
+    "annotated source-content character budget"
+  ],
+  "restrictions": {
+    "sealed_fixture_gold_answers_contexts_read": false,
+    "native_or_model_calls": 0,
+    "production_runtime_changes": false
+  },
+  "reviewed_sha256": {
+    "scripts/project_memory_consolidation_experiment.py": "6e56d64bcf1c26e219eef97af705fefab4d15fbd85d3f7d1a3c147e93f226a79",
+    "scripts/consolidation_experiment/test_protocol.py": "0c274edad0e3ea3905fab916c23cc306f5de7d7229d1ecbe53c498b6335ae364"
+  },
+  "p1_p2_findings": [],
+  "focused_public_tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.consolidation_experiment.test_protocol.ProtocolTests.test_inline_reader_refs_preserve_all_visible_text_within_each_view_budget scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_public_cli_keeps_six_question_scopes_and_actual_metrics scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_partial_failure_is_durable_and_never_retried",
+    "tests_run": 3,
+    "result": "OK",
+    "mocked_native_only": true
+  },
+  "public_synthetic_budget_probe": {
+    "original_memory_chars": 6000,
+    "annotated_memory_chars": 5992,
+    "entire_serialized_request_source_quote_occurrences": 1,
+    "hidden_original_tail_present": false,
+    "payload_keys": [
+      "contexts"
+    ],
+    "question_views": 1,
+    "quote": "Keep logs.",
+    "source_id_length": 32,
+    "mechanism": "Source IDs become short aliases; inline citation_ref attributes are added; len(annotated memory) must be <= context_chars. Canonical catalog and original fields stay private; schema contains ref enum values only. Question, instructions and schema are additional metadata, not source-content budget."
+  },
+  "verified_properties": {
+    "reader_boundary": "Each Capture request receives one context and its own catalog; question_id is part of cache scope; exact serialized request bytes are compared before reuse.",
+    "judge_boundary": "Case-specific reader_visible_memory, source catalogs and mechanical citation bounds use the corresponding question view; original history is reference truth only.",
+    "durability": "Capture saves raw response and actual ledger receipt before response validation; each successful question part is saved before next dispatch. Partial failure records completed parts and disallows automatic retry/resume.",
+    "denominator": "Planned denominator remains six questions per history; absent judge batches lower completeness instead of shrinking denominator. Partial parts are reported ungraded and count as failures.",
+    "usage": "Ledger counts actual native calls once. Combined reader metrics sum six per-question metrics; equivalent reuse allocations remain separate from actual usage.",
+    "attribution": "Isolation mode uses per-question memory equality strata and own-view explanatory wording.",
+    "export_logical_attempts": "Public complete export has 2 graded attempts per question for 2 arms x 1 repeat, and 4 for 2 arms x 2 repeats; durable part artifacts remain available without duplicated logical attempts.",
+    "partial_regeneration": "Public synthetic regeneration-1 reader-1 partial reports run_id regeneration-1, repeat 1, planned denominator 6, graded 0 and actual ledger calls 0."
+  },
+  "limitations": [
+    "Static code review and public mocked tests do not establish live model compliance or performance on sealed R8 inputs.",
+    "No sealed data or old judge grading was executed."
+  ],
+  "audit_history": [
+    {
+      "reviewed_sha256": {
+        "scripts/project_memory_consolidation_experiment.py": "8e1310722899b4422593910ae1568845cbcaf7040b34f3c4f9f5b88c8012161d",
+        "scripts/consolidation_experiment/test_protocol.py": "e6797fda47132295c4e679fabed66da0a5e36d6cb72d3d3dbf9be517a1f84828"
+      },
+      "focused_public_tests": {
+        "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.consolidation_experiment.test_protocol.ProtocolTests.test_inline_reader_refs_preserve_all_visible_text_within_each_view_budget scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_public_cli_keeps_six_question_scopes_and_actual_metrics scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_partial_failure_is_durable_and_never_retried",
+        "tests_run": 3,
+        "result": "OK",
+        "mocked_native_only": true
+      },
+      "receipt_sha256_before_refresh": "4df96b6c24df8021dddd22f1efd0f1a90e3ebb6d1097ba050484bde15e104254",
+      "scope": "Initial per-question reader boundary audit; preserved before export fix refresh."
+    }
+  ],
+  "refresh_public_tests": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_public_cli_keeps_six_question_scopes_and_actual_metrics scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_repeat_calls_remain_independent scripts.consolidation_experiment.test_protocol.ProtocolTests.test_isolated_reader_partial_failure_is_durable_and_never_retried scripts.consolidation_experiment.test_protocol.ProtocolTests.test_partial_reader_report_includes_regeneration_and_preserves_artifact_repeat",
+    "tests_run": 4,
+    "result": "OK",
+    "mocked_native_only": true
+  },
+  "refresh_scope": "Narrow export/partial-report delta only: suppress successful per-question part duplicates when aggregate exists; preserve/derive repeat identity; include regeneration partial parts."
+}

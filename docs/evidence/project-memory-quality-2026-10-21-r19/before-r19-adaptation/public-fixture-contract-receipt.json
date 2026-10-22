@@ -1,0 +1,118 @@
+{
+  "schema_version": 3,
+  "status": "prospective_standalone_author_contract_verified",
+  "contract_file": "docs/evidence/project-memory-quality-2026-10-21-r16/public-fixture-contract.py",
+  "contract_sha256": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+  "tests_file": "docs/evidence/project-memory-quality-2026-10-21-r16/test_public_fixture_contract_v2.py",
+  "tests_sha256": "93bc2fd59bc19ffd4f30168c962df9a8acef0f7443622a1075a4c2709d1fce9e",
+  "test_result": {
+    "tests": 14,
+    "passed": 14,
+    "native_calls": 0,
+    "runtime_imports": 0
+  },
+  "existing_fixture_parser": {
+    "prior_contract_sha256": "56a223a0d3997f92e1f32dc1017d546756f3eb981a4d8f123203c2280900527a",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "unchanged_functions": {
+      "read": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "e3faf3e0b1adaadec08633e65f00a6793b65d50073785671a8198dd427b0589d"
+      },
+      "identifier": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "abe825ddf49d3c4fb4707ba63617a2a4a255f5b71fbacb61caef52750a86ac38"
+      },
+      "validate_tool_capture": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "e58ac428f71d10a4c4e6dc8b63caec133e1060d82d1f083bab8f30898f624088"
+      },
+      "fixture": {
+        "verbatim_ast_source_segment_equal": true,
+        "sha256": "f4836ec7ae9fc31988f6ab5a8b5623691ae7f69539a6aa2dee34116bc12f469b"
+      }
+    },
+    "holdout_cardinality": "16 histories; six final questions each;96 total",
+    "event_types_unchanged": [
+      "user",
+      "assistant",
+      "tool",
+      "delete_observation"
+    ]
+  },
+  "author_usage": [
+    "Copy this standalone Python file and run: python3 public-fixture-contract.py YOUR_FIXTURE.json YOUR_GOLD.json",
+    "The validator needs only your two JSON files and the Python standard library. It does not import the helper or product, or read a prior fixture.",
+    "Use existing schema_version1 fictional fixture and gold shapes. Positive support remains event_id,start,end,quote; omitted source_field means body.",
+    "An optional source_field names a captured string field. An optional reader_visible_equivalent must reproduce the same quote in a canonical field of the same event. It is not a source substitute.",
+    "Minimal complete field-shape guide is in module docstring; no other repository files are needed.",
+    "Existing aggregate thresholds and semantic requirements remain in the trial instructions; validator does not optimize scenario difficulty."
+  ],
+  "positive_anchor_contract": [
+    "A positive support event is user, assistant or tool; it survives all final deletion controls.",
+    "Its project is among the question selected project keys. Session attribution comes from the owning fixture session.",
+    "Offsets are non-boolean integers and the exact nonempty quote equals that canonical field slice.",
+    "Questions remain final-stage only. A late source after an explicit checkpoint is valid because final settling includes the tail. Checkpoint provenance is reported, not treated as a nonexistent earlier question stage.",
+    "Deletion is a control action and creates no positive citation source. A deleted original cannot be required as positive evidence.",
+    "A surviving source may describe an event or state, but this mechanical validator does not infer the semantic fact from its text."
+  ],
+  "negative_contract": [
+    "Sixteen deletion operations are accepted by the toy holdout test. Existing forbidden conclusions and deleted-source-resurrection critical checks remain separate and unchanged.",
+    "No thresholds, answer grading criteria, critical definitions or runtime source eligibility rules are relaxed.",
+    "This prospective clarification does not rewrite prior gold, regrade outcomes, or claim a prior fixture was schema-invalid."
+  ],
+  "toy_test_coverage": [
+    "user/assistant/tool roles",
+    "16 deletions and96question cardinality",
+    "deletion control positive rejection",
+    "deleted target positive rejection",
+    "surviving negative deletion assertion retained",
+    "tail after last checkpoint accepted at final_settle",
+    "cross-project rejection and explicit selected-project union",
+    "offset/quote/type/field rejection",
+    "same-source canonical tool-field mirror",
+    "existing checkpoint/final-stage parser guards",
+    "unknown event and exact question-key coverage",
+    "same-session checkpoint target/order rejection",
+    "exec_command event/output equality",
+    "exact16 authored deletions",
+    "semantic prose alone does not satisfy typed deletion-negative coverage"
+  ],
+  "limits": [
+    "Mechanical representability only; no guarantee of reader context retention or semantic answer support.",
+    "No scenario difficulty guidance or prior holdout scenario contents are included."
+  ],
+  "models": 0,
+  "old_fixture_gold_grades_modified": false,
+  "revision": "prospective author-contract v3",
+  "pre_review_archive": "contract-pre-review/",
+  "added_author_requirements": [
+    "Exactly16 deletion controls on holdout, one per history. This is a prospective trial author rule beyond unchanged fixture parser.",
+    "Each holdout history has at least one typed forbidden_inferences entry with error_type deleted_resurrection. This is typed coverage, not semantic quality proof.",
+    "Recognized exec_command full tool_response.output equals event.text.",
+    "Checkpoints target own-session events in unique event order.",
+    "Question prompt string key is question; gold key is history_id/question_id, each entry requires category string."
+  ],
+  "negative_field_distinction": {
+    "forbidden_conclusions": "Semantic prose passed to judge payload; not itself a typed gold:N witness reference.",
+    "forbidden_inferences": "List of objects with recognized error_type; helper creates typed gold:N prohibition refs.",
+    "meaningful_deletion_scenario": "Requires independent author and review; no keyword classifier pretends to verify semantics."
+  },
+  "toy_actual_helper_consumer_smoke": {
+    "status": "passed",
+    "inputs": "Fresh generic toy() generated in contract tests only; no old or sealed input access",
+    "helper_fixture_parser_accepts_full_toy": true,
+    "retrieve_question_accepts_question_key": true,
+    "text_only_question_consumer": "KeyError question, no normalization or mapping exists",
+    "consumer_lines": [
+      "scripts/project_memory_consolidation_experiment.py:824",
+      "scripts/project_memory_consolidation_experiment.py:835",
+      "scripts/project_memory_consolidation_experiment.py:1237",
+      "scripts/project_memory_consolidation_experiment.py:1682"
+    ],
+    "temporary_local_store_only": true,
+    "native_calls": 0,
+    "fixture_parser_verbatim_unchanged": true,
+    "limits": "This smoke validates prompt-field consumption and offline context building, not producer generation or semantic scenario quality."
+  }
+}

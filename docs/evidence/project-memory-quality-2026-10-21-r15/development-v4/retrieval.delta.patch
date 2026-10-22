@@ -1,0 +1,170 @@
+--- R15-v3/project_memory_retrieval.py
++++ R15-v4/project_memory_retrieval.py
+@@ -541,6 +541,14 @@
+ def _reserved_record_size(record: Mapping[str, Any], projection: str | None,
+                           seen: set[tuple[Any, ...]], maximum: int) -> int:
+     """Reserve complete useful groups; oversized groups cannot hide small reasons."""
++    if record.get('lane') == 'source_evidence' and record.get('execution'):
++        node = _execution_xml(record, projection)
++        if not node or len(node) > maximum:
++            return 0
++        for field in record['fields']:
++            seen.update((ref.get('source_id'), ref.get('start'), ref.get('end'), ref.get('source_role'))
++                        for ref in field['evidence'])
++        return len(node)
+     if record.get('source_overlap_with_material'):
+         return 0
+     groups = []
+@@ -603,21 +611,50 @@
+                '>' + _source_xml(pointer, complete=True) + '</field></item>')
+ 
+ 
+-def _whole_execution_size(record: Mapping[str, Any], projection: str | None) -> int:
+-    """Size a complete validated execution group before allocating its turn."""
++def _execution_xml(record: Mapping[str, Any], projection: str | None,
++                   complete_quotes: set[tuple[Any, ...]] | None = None) -> str:
++    """Serialize one complete original execution for both fit and emission.
++
++    Original capture pointers are children of the item. A common association
++    qualifier replaces identical per-field wrappers; every pointer, quote and
++    execution attribute remains literal and independently citable.
++    """
+     if record.get('lane') != 'source_evidence' or not record.get('execution'):
+-        return 0
++        return ''
+     fields = record.get('fields') or []
+     if not fields or any(not field.get('evidence') or any(ref.get('quote_truncated')
+             for ref in field['evidence']) for field in fields):
+-        return 0
++        return ''
++    compact = all(field.get('basis') == 'attributed_source_excerpts' and
++                  field.get('field_association') == 'original_execution_capture' for field in fields)
++    attrs = _item_attrs(record, projection)
++    if compact:
++        attrs += ' field_association="original_execution_capture"'
+     execution = '<execution' + ''.join(' ' + key + '=' + _attr(value)
+         for key, value in record['execution'].items() if key != 'capture_recorded_at') + '/>'
+-    content = ''.join('<field name=' + _attr(field['name']) + ''.join(
+-        ' ' + key + '=' + _attr(field[key]) for key in ('basis', 'field_association', 'partial_context')
+-        if key in field) + '>' + ''.join(_source_xml(ref, complete=True)
+-        for ref in field['evidence']) + '</field>' for field in fields)
+-    return len('<item' + _item_attrs(record, projection) + '>' + execution + content + '</item>')
++    content = ''
++    for field in fields:
++        refs = []
++        for ref in field['evidence']:
++            displayed = dict(ref)
++            identity = tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_role', 'quote_excerpt'))
++            if complete_quotes and identity in complete_quotes:
++                displayed.pop('quote_excerpt', None)
++                displayed['quote_display'] = 'quoted_above'
++            refs.append(displayed)
++        sources = ''.join(_source_xml(ref, complete=True) for ref in refs)
++        if compact:
++            content += sources
++        else:
++            metadata = ''.join(' ' + key + '=' + _attr(field[key]) for key in
++                               ('basis', 'field_association', 'partial_context') if key in field)
++            content += '<field name=' + _attr(field['name']) + metadata + '>' + sources + '</field>'
++    return '<item' + attrs + '>' + execution + content + '</item>'
++
++
++def _whole_execution_size(record: Mapping[str, Any], projection: str | None) -> int:
++    """The exact complete-node size, with no separately maintained estimate."""
++    return len(_execution_xml(record, projection))
+ 
+ 
+ def _bundle_field_xml(field: Mapping[str, Any]) -> str:
+@@ -911,20 +948,15 @@
+     # its own qualifiers; capture order only orders display candidates.
+     remaining = budget - sum(map(len, parts)) - len(closing)
+     policy_first = bool(brief.get('user_source_coverage_requested') and not brief.get('source_evidence_requested'))
+-    evidence_assessment = bool(brief.get('source_evidence_requested'))
+     protected = {}
+-    admitted_roles = set()
+     for record in records:
+         size = _whole_execution_size(record, brief.get('projection'))
+-        role = 'execution' if size else None
+         if not size and record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
+             size = _reserved_record_size(record, brief.get('projection'), set(), min(900, budget // 6))
+-            role = 'report'
+-        if policy_first or not size or evidence_assessment and role in admitted_roles:
++        if policy_first or not size:
+             continue
+         if size + sum(protected.values()) <= remaining:
+             protected[record['id']] = size
+-            admitted_roles.add(role)
+     available = max(0, remaining - sum(protected.values()))
+     source_nodes, source_pointers, neutral_selected, neutral_omitted = _plan_original_source_transport(
+         brief, records, budget, available)
+@@ -938,15 +970,17 @@
+     role_context = list(brief.get('unassociated_role_context') or [])
+     role_selected = 0
+     for record in role_context:
+-        node = '<item' + _item_attrs(record, brief.get('projection')) + '>'
+         if record.get('execution'):
+-            node += '<execution' + ''.join(' ' + key + '=' + _attr(value)
+-                for key, value in record['execution'].items() if key != 'capture_recorded_at') + '/>'
+-        for field in record.get('fields', []):
+-            node += '<field name=' + _attr(field['name']) + ''.join(' ' + key + '=' + _attr(field[key])
+-                for key in ('basis', 'field_association', 'partial_context') if key in field) + '>'
+-            node += ''.join(_source_xml(ref, complete=True) for ref in field.get('evidence', [])) + '</field>'
+-        node += '</item>'
++            node = _execution_xml(record, brief.get('projection'), complete_quotes)
++            if not node:
++                continue
++        else:
++            node = '<item' + _item_attrs(record, brief.get('projection')) + '>'
++            for field in record.get('fields', []):
++                node += '<field name=' + _attr(field['name']) + ''.join(' ' + key + '=' + _attr(field[key])
++                    for key in ('basis', 'field_association', 'partial_context') if key in field) + '>'
++                node += ''.join(_source_xml(ref, complete=True) for ref in field.get('evidence', [])) + '</field>'
++            node += '</item>'
+         if sum(map(len, parts)) + len(node) + len(closing) + sum(protected.values()) <= budget:
+             parts.append(node)
+             role_selected += 1
+@@ -1074,12 +1108,19 @@
+         # Their allowance cannot consume later custody or execution reserves.
+         atomic_execution = record.get('lane') == 'source_evidence' and bool(record.get('execution'))
+         if atomic_execution:
+-            whole_size = _whole_execution_size(record, brief.get('projection'))
+-            if whole_size > max(0, remaining - compact_reserve - execution_reserve - head_reserve):
++            node = _execution_xml(record, brief.get('projection'), complete_quotes)
++            if not node or len(node) > max(0, remaining - compact_reserve - execution_reserve - head_reserve):
+                 omissions['records'] += 1
+                 omissions['fields'] += len(record.get('fields') or [])
+                 continue
+-            item_budget = max(item_budget, whole_size)
++            parts.append(node)
++            rendered_record_ids.add(record.get('id'))
++            for field in record['fields']:
++                for ref in field['evidence']:
++                    complete_refs.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_field', 'tool_use_id', 'source_role')))
++                    complete_quotes.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_role', 'quote_excerpt')))
++                    emitted_intervals.append(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')), ref['start'], ref['end']))
++            continue
+         text = str(record.get('preview') or '')[:700]
+         content = ''
+         if isinstance(record.get('execution'), Mapping):
+@@ -1170,7 +1211,7 @@
+                     metadata = ''
+                 return '<field name=' + _attr(field['name']) + metadata + '>' + prose + evidence + '</field>'
+             omission_reserve = (' fields_omitted=' + _attr(bundle_omissions) if bundle_omissions else '') if record.get('source_bundle') else (
+-                ' fields_omitted="99"' if len(fields) > 1 and not atomic_execution else '')
++                ' fields_omitted="99"' if len(fields) > 1 else '')
+             remaining_item = item_budget - len('<item' + attrs + omission_reserve + '>' + content + '</item>')
+             if grounded:
+                 whole = field_node(len(value))
+@@ -1195,12 +1236,6 @@
+             content += field_node(low)
+             retain_complete_pointers(refs, grounded=False)
+         omissions['fields'] += omitted_fields
+-        if atomic_execution and omitted_fields:
+-            # A size estimate or a field-loop edge must never turn an original
+-            # execution into a command-only or result-only retained record.
+-            omissions['records'] += 1
+-            omissions['fields'] += len(fields) - omitted_fields
+-            continue
+         if quoted_groups and record.get('lane') == 'episode':
+             # Original quotes remain available above, but this inferred field
+             # association was compressed rather than represented by its refs.

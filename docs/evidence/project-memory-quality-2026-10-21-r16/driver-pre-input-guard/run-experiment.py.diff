@@ -1,0 +1,46 @@
+--- before/run-experiment.py
++++ guard/run-experiment.py
+@@ -53,6 +53,35 @@
+         if phase == "generate":
+             return repo
+     return baseline if variant == "baseline" else repo
++
++
++def validate_author_inputs(fixture_path: Path, gold_path: Path, run: Path) -> dict:
++    """Validate newly opened pinned inputs before any experiment phase starts.
++
++    The caller first asks the frozen helper to validate its input pins. This
++    prospective author contract checks source representability, not semantics
++    or answer quality. A rejected packet is never repaired or dispatched.
++    """
++    contract_path = Path(__file__).with_name("public-fixture-contract.py")
++    paths = {"fixture_sha256": fixture_path, "gold_sha256": gold_path,
++             "contract_sha256": contract_path}
++    hashes = {key: hashlib.sha256(path.read_bytes()).hexdigest() for key, path in paths.items()}
++    spec = importlib.util.spec_from_file_location("prospective_author_contract", contract_path)
++    contract = importlib.util.module_from_spec(spec)
++    spec.loader.exec_module(contract)
++    validation = contract.validate_files(fixture_path, gold_path)
++    if any(hashlib.sha256(path.read_bytes()).hexdigest() != hashes[key] for key, path in paths.items()):
++        raise RuntimeError("author_input_changed_during_validation")
++    receipt = {"status": "author_input_contract_validated", **hashes, "validation": validation}
++    receipt_path = run / "author-input-validation.json"
++    serialized = json.dumps(receipt, indent=2) + "\n"
++    if receipt_path.exists():
++        if receipt_path.read_text() != serialized:
++            raise RuntimeError("author_input_validation_receipt_differs")
++    else:
++        with receipt_path.open("x") as output:
++            output.write(serialized)
++    return receipt
+ 
+ 
+ def main() -> int:
+@@ -87,6 +116,7 @@
+         "--protocol", str(protocol_path), "--fixture", str(args.fixture),
+         "--gold", str(args.gold),
+     ], cwd=repo, check=True)
++    validate_author_inputs(args.fixture, args.gold, run)
+     fixture = experiment.fixture(args.fixture)
+     split = fixture["split"]
+     journal = run / "baseline" / f"{split}-phase-execution.jsonl"

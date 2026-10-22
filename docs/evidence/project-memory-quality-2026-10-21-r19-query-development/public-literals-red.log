@@ -1,0 +1,142 @@
+.FFFFFFFFFFFFFF..
+======================================================================
+FAIL: test_literal_occurrences_are_not_stripped_even_beside_a_scope_mention (test_project_memory_query_scope_contract.QueryScopeContractTests.test_literal_occurrences_are_not_stripped_even_beside_a_scope_mention) (literal='relay_workspace()')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 38, in test_literal_occurrences_are_not_stripped_even_beside_a_scope_mention
+    self.assertTrue(plan.identifiers)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: () is not true
+
+======================================================================
+FAIL: test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked (test_project_memory_query_scope_contract.QueryScopeContractTests.test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked) (query='What was the final catalogue instruction?')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 58, in test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked
+    self.assertIn('catalogue', plan.identifiers)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'catalogue' not found in ()
+
+======================================================================
+FAIL: test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked (test_project_memory_query_scope_contract.QueryScopeContractTests.test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked) (query='What did catalogue contain?')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 58, in test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked
+    self.assertIn('catalogue', plan.identifiers)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'catalogue' not found in ()
+
+======================================================================
+FAIL: test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked (test_project_memory_query_scope_contract.QueryScopeContractTests.test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked) (query='What changed after run catalogue?')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 58, in test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked
+    self.assertIn('catalogue', plan.identifiers)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'catalogue' not found in ()
+
+======================================================================
+FAIL: test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked (test_project_memory_query_scope_contract.QueryScopeContractTests.test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 64, in test_plain_selected_content_nouns_remain_hard_when_scope_is_unmarked
+    self.assertTrue(plan.matches({'summary': 'Preserve the raw inventory records.'}))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_scope_removal_preserves_task_artifact_version_and_environment_constraints (test_project_memory_query_scope_contract.QueryScopeContractTests.test_scope_removal_preserves_task_artifact_version_and_environment_constraints)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 83, in test_scope_removal_preserves_task_artifact_version_and_environment_constraints
+    self.assertEqual(('scan_rule',), plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('scan_rule',) != ('relay_workspace', 'beacon-board', 'scan_rule')
+
+First differing element 0:
+'scan_rule'
+'relay_workspace'
+
+Second tuple contains 2 additional elements.
+First extra element 1:
+'beacon-board'
+
+- ('scan_rule',)
++ ('relay_workspace', 'beacon-board', 'scan_rule')
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='Across relay_workspace and beacon-board, what requirements remain active?', owner=PosixPath('/public/scope-contract/relay_workspace'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 23, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertFalse(plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: ('relay_workspace', 'beacon-board') is not false
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='Across relay_workspace and beacon-board, what requirements remain active?', owner=PosixPath('/public/scope-contract/beacon-board'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 23, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertFalse(plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: ('relay_workspace', 'beacon-board') is not false
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='What was the final relay_workspace instruction?', owner=PosixPath('/public/scope-contract/relay_workspace'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 23, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertFalse(plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: ('relay_workspace',) is not false
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='What was the final relay_workspace instruction?', owner=PosixPath('/public/scope-contract/beacon-board'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 23, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertFalse(plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: ('relay_workspace',) is not false
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='For relay_workspace, compare retained obligations with the beacon-board instruction?', owner=PosixPath('/public/scope-contract/relay_workspace'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 25, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertNotIn('beacon-board', plan.content_query.casefold())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'beacon-board' unexpectedly found in ', compare retained obligations with the beacon-board instruction?'
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='For relay_workspace, compare retained obligations with the beacon-board instruction?', owner=PosixPath('/public/scope-contract/beacon-board'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 25, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertNotIn('beacon-board', plan.content_query.casefold())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'beacon-board' unexpectedly found in ', compare retained obligations with the beacon-board instruction?'
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='Explain relay_workspace constraints and beacon-board constraints?', owner=PosixPath('/public/scope-contract/relay_workspace'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 23, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertFalse(plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: ('relay_workspace', 'beacon-board') is not false
+
+======================================================================
+FAIL: test_selected_aliases_are_scope_in_unrecognized_natural_grammar (test_project_memory_query_scope_contract.QueryScopeContractTests.test_selected_aliases_are_scope_in_unrecognized_natural_grammar) (query='Explain relay_workspace constraints and beacon-board constraints?', owner=PosixPath('/public/scope-contract/beacon-board'))
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_query_scope_contract.py", line 23, in test_selected_aliases_are_scope_in_unrecognized_natural_grammar
+    self.assertFalse(plan.identifiers)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+AssertionError: ('relay_workspace', 'beacon-board') is not false
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.015s
+
+FAILED (failures=14)

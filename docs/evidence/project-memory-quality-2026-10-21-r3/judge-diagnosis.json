@@ -1,0 +1,1084 @@
+{
+  "status": "diagnosis_only_no_regrade",
+  "scope": "General judge contract audit of completed frozen R3. No helper, product, protocol, native receipt, score, or historical artifact changed. No new model calls.",
+  "preservation": {
+    "r3_actual_calls": 141,
+    "r3_tokens": 2418096,
+    "historical_actual_calls": 954,
+    "historical_tokens": 16667090,
+    "frozen_helper_sha256": "338e995ea162ee1b0026a8aa80cc7c905a053244d9b5a5959d2331fbd0279648",
+    "original_result": "fail",
+    "all_original_grades_preserved": true
+  },
+  "causal_findings": [
+    {
+      "history": "hold_216",
+      "variant": "candidate",
+      "question": "q2",
+      "call_id": "call-0132",
+      "answer": {
+        "id": "q2",
+        "answer": "The earlier goal of issuing certificates with grades and automatic email delivery (R0012) was superseded by a review batch: use participant codes, remove printed grades, and keep completion status visible. The accepted course-feedback report PE-11 survives as a separate deliverable; it does not prove certificate eligibility. No explicit cancellation is evidenced. Certificate issue remains pending approval of the corrected batch, P19’s eligibility remains unverified until corrected attendance is approved, and certificates must not be emailed before instructor approval. (R0001–R0011)",
+        "uncertainties": [
+          "The evidence does not say that the original certificate task was canceled; the source history is incomplete."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "7dddccdcb00b4163b0f13c281b2c4760",
+            "source_field": "body",
+            "start": 0,
+            "end": 148,
+            "source_role": "user_intent",
+            "quote": "This resumes certificate task PE-18. The accepted course-feedback report PE-11 is a separate deliverable and does not prove certificate eligibility."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "41ea7b7e3ded4bf0b882f3ab5374db14",
+            "source_field": "body",
+            "start": 132,
+            "end": 175,
+            "source_role": "user_intent",
+            "quote": " Use participant codes in the review batch."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "28d3ccfdb0a64180968de90f790ea478",
+            "source_field": "body",
+            "start": 0,
+            "end": 42,
+            "source_role": "user_intent",
+            "quote": "Drop printed grades from the certificates."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "28d3ccfdb0a64180968de90f790ea478",
+            "source_field": "body",
+            "start": 42,
+            "end": 94,
+            "source_role": "user_intent",
+            "quote": " Keep completion status visible in the review table."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "d8f4eb68dee641498c50cbaeacb9d345",
+            "source_field": "body",
+            "start": 60,
+            "end": 139,
+            "source_role": "user_intent",
+            "quote": " Leave P19’s eligibility unverified until the corrected attendance is approved."
+          },
+          {
+            "catalog_ref": "R0010",
+            "source_id": "f42d59cb07d9478b9a7a54cb332df4cc",
+            "source_field": "body",
+            "start": 66,
+            "end": 133,
+            "source_role": "user_intent",
+            "quote": " Certificate issue remains pending approval of the corrected batch."
+          },
+          {
+            "catalog_ref": "R0011",
+            "source_id": "41ea7b7e3ded4bf0b882f3ab5374db14",
+            "source_field": "body",
+            "start": 175,
+            "end": 229,
+            "source_role": "user_intent",
+            "quote": " Do not email certificates before instructor approval."
+          },
+          {
+            "catalog_ref": "R0012",
+            "source_id": "6124b79dbac143e7840534a46a457fa4",
+            "source_field": "body",
+            "start": 0,
+            "end": 67,
+            "source_role": "user_intent",
+            "quote": "Issue course certificates with grades and automatic email delivery."
+          }
+        ]
+      },
+      "preserved_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": false,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true
+          },
+          {
+            "fact_index": 1,
+            "recalled": true
+          },
+          {
+            "fact_index": 2,
+            "recalled": false
+          },
+          {
+            "fact_index": 3,
+            "recalled": true
+          }
+        ],
+        "rationale": "Correctly says to drop printed grades, retain completion status in the review table, and wait for instructor approval before emailing. It omits the requirement to use participant codes in the review batch.",
+        "id": "q2",
+        "required_facts_total": 4,
+        "required_facts_recalled": 3,
+        "context_chars": 5911,
+        "reader_shared_latency_ms": 11600,
+        "reader_shared_metrics": {
+          "duration_ms": 11559,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18819,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1218,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 20037
+            }
+          }
+        },
+        "category": "retained_constraints"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Drop printed grades from the certificates.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 3,
+                "event_id": "hold_216_scope",
+                "fragment": "Drop printed grades from the certificates."
+              }
+            ]
+          },
+          {
+            "text": "Keep completion status visible in the review table.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 3,
+                "event_id": "hold_216_scope",
+                "fragment": "Keep completion status visible in the review table."
+              }
+            ]
+          },
+          {
+            "text": "Use participant codes in the review batch.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 0,
+                "event_id": "hold_216_direction",
+                "fragment": "Use participant codes in the review batch."
+              }
+            ]
+          },
+          {
+            "text": "Do not email certificates before instructor approval.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 0,
+                "event_id": "hold_216_direction",
+                "fragment": "Do not email certificates before instructor approval."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "The entire project has been canceled.",
+            "error_type": "false_closure"
+          }
+        ],
+        "current_state_required": true,
+        "category": "retained_constraints",
+        "expected_actionability": "Keep the retained work and enforce both constraints."
+      },
+      "request_checks": {
+        "delivered_answer_matches_judge_input": true,
+        "auxiliary_evidence_checks_excluded": true,
+        "schema_fact_keys": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "fact_values_are_bare_booleans": true,
+        "no_fact_or_critical_witness_fields": true
+      },
+      "visible_sources": [
+        {
+          "event_id": "hold_216_scope",
+          "source_id": "28d3ccfdb0a64180968de90f790ea478",
+          "catalog_spans": 2
+        },
+        {
+          "event_id": "hold_216_report",
+          "source_id": "44c0b24d38004ad98a17d8c08fc2d93d",
+          "catalog_spans": 1
+        },
+        {
+          "event_id": "hold_216_observed",
+          "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+          "catalog_spans": 0
+        }
+      ],
+      "evidence": [
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/reader-0.json",
+          "sha256": "da8ba118ace3cebe8fc89fb3680fdc0ab6b57334d297ac5b34f74012f3990ccb"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/judge-0.json",
+          "sha256": "22dbffe99156f7f93f9b47b3cce0b3565429fadbb645731c70f6c97e47e04b2c"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/contexts.json",
+          "sha256": "d86bb974a41f32f6a68ebe9aff9c1c126da0b8b7e7c50d941567c7e16e4f87e1"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/citation-catalog.json",
+          "sha256": "a0f77038c46dd742fc60d43d41e2d5d26caa832c272939d2e62b9494e3bc23be"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0132-request.json",
+          "sha256": "fd970825ef8def6dbdcec0c05d0d558005a58c7f359a1740b42d15105ab12a46"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0132-response.json",
+          "sha256": "239c09db3753cfbb2b2208498b1e37822b7534814072cdfbf43c8b88bd16a1f5"
+        }
+      ],
+      "finding": {
+        "classification": "demonstrable_false_negative",
+        "fact_index": 2,
+        "answer_witness": "superseded by a review batch: use participant codes, remove printed grades, and keep completion status visible.",
+        "source_witness": {
+          "catalog_ref": "R0003",
+          "source_id": "41ea7b7e3ded4bf0b882f3ab5374db14",
+          "source_field": "body",
+          "start": 132,
+          "end": 175,
+          "source_role": "user_intent",
+          "quote": " Use participant codes in the review batch."
+        },
+        "contradiction": "The judge says participant codes were omitted although the delivered answer explicitly requires them and cites the visible original user span. This is a grading error, not missing retrieval or citation resolution."
+      }
+    },
+    {
+      "history": "hold_206",
+      "variant": "baseline",
+      "question": "q2",
+      "call_id": "call-0105",
+      "answer": {
+        "id": "q2",
+        "answer": "The retained evidence does not show that OPL-8 was canceled: it says to reopen it as a dry-run reconciliation. Real migration is deferred pending Sal’s classification of the nine repeated numbers, and cabinet K must be counted again before reconciling its total. The dry-run report survives with 214 records mapped, nine potential repeats, and zero destination writes. Constraints still apply: do not merge records solely because catalogue numbers match, preserve the original catalogue strings, and do not treat the deleted register as evidence of cabinet K’s current count. OPL-3’s completed cabinet-photo job is separate from this resumed migration work.",
+        "uncertainties": [
+          "Coverage is incomplete and some user sources remain unresolved, so the excerpts cannot establish whether any additional cancellation or deferral was recorded."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "634feeeedc9c4e91855347e25800d79c",
+            "source_field": "body",
+            "start": 49,
+            "end": 129,
+            "source_role": "user_intent",
+            "quote": " Curators found that repeated catalogue numbers can refer to distinct specimens."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "634feeeedc9c4e91855347e25800d79c",
+            "source_field": "body",
+            "start": 129,
+            "end": 189,
+            "source_role": "user_intent",
+            "quote": " Never merge records solely because catalogue numbers match."
+          },
+          {
+            "catalog_ref": "R0003",
+            "source_id": "634feeeedc9c4e91855347e25800d79c",
+            "source_field": "body",
+            "start": 189,
+            "end": 230,
+            "source_role": "user_intent",
+            "quote": " Preserve the original catalogue strings."
+          },
+          {
+            "catalog_ref": "R0004",
+            "source_id": "a67eb2a10f294969a23e8f42d42daf57",
+            "source_field": "body",
+            "start": 0,
+            "end": 66,
+            "source_role": "user_intent",
+            "quote": "The deleted register is not evidence of cabinet K’s current count."
+          },
+          {
+            "catalog_ref": "R0005",
+            "source_id": "634feeeedc9c4e91855347e25800d79c",
+            "source_field": "body",
+            "start": 0,
+            "end": 49,
+            "source_role": "user_intent",
+            "quote": "Reopen the migration as a dry-run reconciliation."
+          },
+          {
+            "catalog_ref": "R0006",
+            "source_id": "a1b8d4c0088144dc92382f3cd634b014",
+            "source_field": "body",
+            "start": 0,
+            "end": 83,
+            "source_role": "user_intent",
+            "quote": "This resumes migration job OPL-8, not the already finished cabinet-photo job OPL-3."
+          },
+          {
+            "catalog_ref": "R0007",
+            "source_id": "a67eb2a10f294969a23e8f42d42daf57",
+            "source_field": "body",
+            "start": 66,
+            "end": 118,
+            "source_role": "user_intent",
+            "quote": " Count cabinet K again before reconciling its total."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "9b418d06536e4ef4949d3276b1ab989a",
+            "source_field": "body",
+            "start": 0,
+            "end": 77,
+            "source_role": "user_intent",
+            "quote": "Curator Sal must classify the nine repeated numbers before the Friday review."
+          },
+          {
+            "catalog_ref": "R0009",
+            "source_id": "9b418d06536e4ef4949d3276b1ab989a",
+            "source_field": "body",
+            "start": 77,
+            "end": 132,
+            "source_role": "user_intent",
+            "quote": " Real migration remains pending curator classification."
+          },
+          {
+            "catalog_ref": "R0010",
+            "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+            "source_field": "body",
+            "start": 0,
+            "end": 44,
+            "source_role": "tool_record",
+            "quote": "Dry-run mapping report created: 214 records."
+          },
+          {
+            "catalog_ref": "R0011",
+            "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+            "source_field": "body",
+            "start": 44,
+            "end": 85,
+            "source_role": "tool_record",
+            "quote": "\nPotential repeated catalogue numbers: 9."
+          },
+          {
+            "catalog_ref": "R0012",
+            "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+            "source_field": "body",
+            "start": 85,
+            "end": 108,
+            "source_role": "tool_record",
+            "quote": "\nDestination writes: 0."
+          }
+        ]
+      },
+      "preserved_grade": {
+        "full_supported_answer": true,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": true,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true
+          },
+          {
+            "fact_index": 1,
+            "recalled": true
+          },
+          {
+            "fact_index": 2,
+            "recalled": true
+          },
+          {
+            "fact_index": 3,
+            "recalled": true
+          }
+        ],
+        "rationale": "States that automatic merging is not proceeding, the report survives, and both matching-number and original-string constraints remain. It preserves the pending status and distinguishes OPL-8 from OPL-3.",
+        "id": "q2",
+        "required_facts_total": 4,
+        "required_facts_recalled": 4,
+        "context_chars": 5623,
+        "reader_shared_latency_ms": 13566,
+        "reader_shared_metrics": {
+          "duration_ms": 13544,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18576,
+              "cached_input_tokens": 8960,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1496,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 20072
+            }
+          }
+        },
+        "category": "retained_constraints"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Cancel automatic duplicate merging.",
+            "support": [
+              {
+                "session_id": "hold_206_return",
+                "event_index": 3,
+                "event_id": "hold_206_scope",
+                "fragment": "Cancel automatic duplicate merging."
+              }
+            ]
+          },
+          {
+            "text": "Retain the migration mapping report.",
+            "support": [
+              {
+                "session_id": "hold_206_return",
+                "event_index": 3,
+                "event_id": "hold_206_scope",
+                "fragment": "Retain the migration mapping report."
+              }
+            ]
+          },
+          {
+            "text": "Never merge records solely because catalogue numbers match.",
+            "support": [
+              {
+                "session_id": "hold_206_return",
+                "event_index": 0,
+                "event_id": "hold_206_direction",
+                "fragment": "Never merge records solely because catalogue numbers match."
+              }
+            ]
+          },
+          {
+            "text": "Preserve the original catalogue strings.",
+            "support": [
+              {
+                "session_id": "hold_206_return",
+                "event_index": 0,
+                "event_id": "hold_206_direction",
+                "fragment": "Preserve the original catalogue strings."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "The entire project has been canceled.",
+            "error_type": "false_closure"
+          }
+        ],
+        "current_state_required": true,
+        "category": "retained_constraints",
+        "expected_actionability": "Keep the retained work and enforce both constraints."
+      },
+      "request_checks": {
+        "delivered_answer_matches_judge_input": true,
+        "auxiliary_evidence_checks_excluded": true,
+        "schema_fact_keys": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "fact_values_are_bare_booleans": true,
+        "no_fact_or_critical_witness_fields": true
+      },
+      "visible_sources": [
+        {
+          "event_id": "hold_206_scope",
+          "source_id": "e065d67e13f647dbb6331bea315a8684",
+          "catalog_spans": 0
+        },
+        {
+          "event_id": "hold_206_report",
+          "source_id": "e2a4595b80e54d76a64399d91b6485c8",
+          "catalog_spans": 0
+        },
+        {
+          "event_id": "hold_206_observed",
+          "source_id": "a4b42bd3abcb455faaf72bed87e0e58c",
+          "catalog_spans": 3
+        }
+      ],
+      "evidence": [
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_206/reader-0.json",
+          "sha256": "7470ca5e791a87e8c460b40653b58324d20f0f652b989d40c1f881d16ec2153d"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_206/judge-0.json",
+          "sha256": "0e7332b290ecadc88f1e25643150767f263460be56b61b5ff64224b7a9d477e3"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_206/contexts.json",
+          "sha256": "a32d604ed823ccd39daae12976290525dd9fa721d19c72a4e8298a7dba0c0dcb"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_206/citation-catalog.json",
+          "sha256": "d4af30406b467bb4fad6c3ed22c4033ee1ab1be3686106ecefc3e5c2bc744563"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0105-request.json",
+          "sha256": "29105083726e893e039569183003e643dfadf5f5ddf78c3f3b616f39094309aa"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0105-response.json",
+          "sha256": "e2f2756e4e654fb8563d61bf65d6ec4304d8cac98f1530c27b3b92aa8ad934af"
+        }
+      ],
+      "finding": {
+        "classification": "unsupported_positive_fact_credit",
+        "fact_index": 0,
+        "issue": "The answer denies evidence of whole-task cancellation and never states cancellation of automatic duplicate merging. The judge substitutes automatic merging is not proceeding for the explicit scoped cancellation fact. The explicit cancel/retain event is absent from all rendered contexts and catalog in both arms.",
+        "retention_fact_index": 1,
+        "retention_limit": "The answer says the dry-run report survives, which may paraphrase retaining it; whether this fully recalls the explicit retention obligation is semantic and less decisive than the cancellation mismatch. No categorical retention rescore is made.",
+        "causal_distinction": "Both arms have a real missing-source problem; baseline overcredit creates an additional grading asymmetry. No revised scores are calculated."
+      }
+    },
+    {
+      "history": "hold_216",
+      "variant": "baseline",
+      "question": "q3",
+      "call_id": "call-0115",
+      "answer": {
+        "id": "q3",
+        "answer": "The observed tool record establishes that a draft batch of 23 files was generated, the instructor approval flag was false, and email submissions were zero. It therefore does not establish that certificates were approved, issued, or emailed. An assistant’s earlier completion report is not included in the supplied memory, so its wording and scope are unknown and cannot be compared directly.",
+        "uncertainties": [
+          "The assistant’s earlier completion report is not evidenced in the supplied memory."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0012",
+            "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+            "source_field": "body",
+            "start": 0,
+            "end": 44,
+            "source_role": "tool_record",
+            "quote": "Draft certificate batch generated: 23 files."
+          },
+          {
+            "catalog_ref": "R0013",
+            "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+            "source_field": "body",
+            "start": 44,
+            "end": 77,
+            "source_role": "tool_record",
+            "quote": "\nInstructor approval flag: false."
+          },
+          {
+            "catalog_ref": "R0014",
+            "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+            "source_field": "body",
+            "start": 77,
+            "end": 99,
+            "source_role": "tool_record",
+            "quote": "\nEmail submissions: 0."
+          }
+        ]
+      },
+      "preserved_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": true,
+        "constraints_obligations_reasons_recalled": true,
+        "citations_supported": false,
+        "empty_or_evasive": false,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": true
+          },
+          {
+            "fact_index": 1,
+            "recalled": true
+          },
+          {
+            "fact_index": 2,
+            "recalled": true
+          },
+          {
+            "fact_index": 3,
+            "recalled": false
+          }
+        ],
+        "rationale": "Accurately recalls the three observed tool results, but omits the earlier assistant report, which is present in shared visible memory and required for comparison. Its claim that the report is not included is contradicted by the visible history, and the citations do not support that claim.",
+        "id": "q3",
+        "required_facts_total": 4,
+        "required_facts_recalled": 3,
+        "context_chars": 178,
+        "reader_shared_latency_ms": 17919,
+        "reader_shared_metrics": {
+          "duration_ms": 17898,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18658,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1229,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 19887
+            }
+          }
+        },
+        "category": "execution_evidence"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Draft certificate batch generated: 23 files.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 2,
+                "event_id": "hold_216_observed",
+                "fragment": "Draft certificate batch generated: 23 files."
+              }
+            ]
+          },
+          {
+            "text": "Instructor approval flag: false.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 2,
+                "event_id": "hold_216_observed",
+                "fragment": "Instructor approval flag: false."
+              }
+            ]
+          },
+          {
+            "text": "Email submissions: 0.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 2,
+                "event_id": "hold_216_observed",
+                "fragment": "Email submissions: 0."
+              }
+            ]
+          },
+          {
+            "text": "The assistant earlier reported: Every certificate has been issued and emailed to its participant.",
+            "support": [
+              {
+                "session_id": "hold_216_early",
+                "event_index": 2,
+                "event_id": "hold_216_report",
+                "fragment": "Every certificate has been issued and emailed to its participant."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "The assistant’s earlier completion report proves the live work succeeded.",
+            "error_type": "false_closure"
+          }
+        ],
+        "current_state_required": true,
+        "category": "execution_evidence",
+        "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+      },
+      "request_checks": {
+        "delivered_answer_matches_judge_input": true,
+        "auxiliary_evidence_checks_excluded": true,
+        "schema_fact_keys": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "fact_values_are_bare_booleans": true,
+        "no_fact_or_critical_witness_fields": true
+      },
+      "visible_sources": [
+        {
+          "event_id": "hold_216_scope",
+          "source_id": "28d3ccfdb0a64180968de90f790ea478",
+          "catalog_spans": 2
+        },
+        {
+          "event_id": "hold_216_report",
+          "source_id": "44c0b24d38004ad98a17d8c08fc2d93d",
+          "catalog_spans": 0
+        },
+        {
+          "event_id": "hold_216_observed",
+          "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+          "catalog_spans": 3
+        }
+      ],
+      "evidence": [
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_216/reader-0.json",
+          "sha256": "65967301ab03af3c83739c28cee385b762bdee526a99810d4771698bea1140c3"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_216/judge-0.json",
+          "sha256": "06c0dd39695e87a0621367baa64f7872be65b63675b90eb5a286fe8b78f5eae2"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_216/contexts.json",
+          "sha256": "852dc0a7242fe6eee940f55e09eb3849e7e43c9d3a8581e98c58c0b065b8bd86"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/baseline/hold_216/citation-catalog.json",
+          "sha256": "e5c21986dddde7877433b2abc918f030a2fb8e2c89a753ba817c97bafd7d8890"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0115-request.json",
+          "sha256": "0515f981008c382ab8f9485e0a202d31e4711e912c85f10c6038bcfd6166fe78"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0115-response.json",
+          "sha256": "1ad84d5c70316e9edab234d0687150ae4a4cf2df9c801aa94f3709bbc84e1f82"
+        }
+      ],
+      "finding": {
+        "classification": "demonstrable_visibility_rationale_mismatch",
+        "issue": "The judge rationale treats a source from original_history as shared-reader-visible although the source has zero catalog spans and is absent from the canonical shared context union. The required-fact omission itself remains real under the original full-history recall denominator; missing source availability does not earn recall.",
+        "not_a_reader_hallucination": "The delivered answer correctly limits what the supplied memory contains. Citation presence and semantic answer support must be judged separately."
+      }
+    },
+    {
+      "history": "hold_216",
+      "variant": "candidate",
+      "question": "q3",
+      "call_id": "call-0132",
+      "answer": {
+        "id": "q3",
+        "answer": "Unknown. The observed execution is not included in the supplied memory, so what it establishes cannot be compared with the earlier assistant report that every certificate was issued and emailed. That report is not execution evidence. (R0013)",
+        "uncertainties": [
+          "No observed command, exit code, or output is supplied."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0013",
+            "source_id": "44c0b24d38004ad98a17d8c08fc2d93d",
+            "source_field": "body",
+            "start": 0,
+            "end": 65,
+            "source_role": "assistant_report",
+            "quote": "Every certificate has been issued and emailed to its participant."
+          }
+        ]
+      },
+      "preserved_grade": {
+        "full_supported_answer": false,
+        "current_state_actionable": false,
+        "constraints_obligations_reasons_recalled": false,
+        "citations_supported": false,
+        "empty_or_evasive": true,
+        "critical_errors": [],
+        "fact_recall": [
+          {
+            "fact_index": 0,
+            "recalled": false
+          },
+          {
+            "fact_index": 1,
+            "recalled": false
+          },
+          {
+            "fact_index": 2,
+            "recalled": false
+          },
+          {
+            "fact_index": 3,
+            "recalled": true
+          }
+        ],
+        "rationale": "It recalls the assistant’s earlier report, but incorrectly says the observed execution is absent from memory. Visible evidence reports 23 draft files, approval false, and zero email submissions. The answer abstains instead of comparing those observed limits with the earlier report.",
+        "id": "q3",
+        "required_facts_total": 4,
+        "required_facts_recalled": 1,
+        "context_chars": 178,
+        "reader_shared_latency_ms": 11600,
+        "reader_shared_metrics": {
+          "duration_ms": 11559,
+          "usage": {
+            "status": "reported",
+            "source": "app_server_thread_total",
+            "updates": 1,
+            "tokens": {
+              "input_tokens": 18819,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1218,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 20037
+            }
+          }
+        },
+        "category": "execution_evidence"
+      },
+      "gold": {
+        "required_facts": [
+          {
+            "text": "Draft certificate batch generated: 23 files.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 2,
+                "event_id": "hold_216_observed",
+                "fragment": "Draft certificate batch generated: 23 files."
+              }
+            ]
+          },
+          {
+            "text": "Instructor approval flag: false.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 2,
+                "event_id": "hold_216_observed",
+                "fragment": "Instructor approval flag: false."
+              }
+            ]
+          },
+          {
+            "text": "Email submissions: 0.",
+            "support": [
+              {
+                "session_id": "hold_216_return",
+                "event_index": 2,
+                "event_id": "hold_216_observed",
+                "fragment": "Email submissions: 0."
+              }
+            ]
+          },
+          {
+            "text": "The assistant earlier reported: Every certificate has been issued and emailed to its participant.",
+            "support": [
+              {
+                "session_id": "hold_216_early",
+                "event_index": 2,
+                "event_id": "hold_216_report",
+                "fragment": "Every certificate has been issued and emailed to its participant."
+              }
+            ]
+          }
+        ],
+        "forbidden_inferences": [
+          {
+            "text": "The assistant’s earlier completion report proves the live work succeeded.",
+            "error_type": "false_closure"
+          }
+        ],
+        "current_state_required": true,
+        "category": "execution_evidence",
+        "expected_actionability": "Use the observed execution boundaries; do not treat the earlier report as verified completion."
+      },
+      "request_checks": {
+        "delivered_answer_matches_judge_input": true,
+        "auxiliary_evidence_checks_excluded": true,
+        "schema_fact_keys": [
+          "0",
+          "1",
+          "2",
+          "3"
+        ],
+        "fact_values_are_bare_booleans": true,
+        "no_fact_or_critical_witness_fields": true
+      },
+      "visible_sources": [
+        {
+          "event_id": "hold_216_scope",
+          "source_id": "28d3ccfdb0a64180968de90f790ea478",
+          "catalog_spans": 2
+        },
+        {
+          "event_id": "hold_216_report",
+          "source_id": "44c0b24d38004ad98a17d8c08fc2d93d",
+          "catalog_spans": 1
+        },
+        {
+          "event_id": "hold_216_observed",
+          "source_id": "a37e9b0f0a95483ea48bf18d6b3eb3d3",
+          "catalog_spans": 0
+        }
+      ],
+      "evidence": [
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/reader-0.json",
+          "sha256": "da8ba118ace3cebe8fc89fb3680fdc0ab6b57334d297ac5b34f74012f3990ccb"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/judge-0.json",
+          "sha256": "22dbffe99156f7f93f9b47b3cce0b3565429fadbb645731c70f6c97e47e04b2c"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/contexts.json",
+          "sha256": "d86bb974a41f32f6a68ebe9aff9c1c126da0b8b7e7c50d941567c7e16e4f87e1"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/candidate/hold_216/citation-catalog.json",
+          "sha256": "a0f77038c46dd742fc60d43d41e2d5d26caa832c272939d2e62b9494e3bc23be"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0132-request.json",
+          "sha256": "fd970825ef8def6dbdcec0c05d0d558005a58c7f359a1740b42d15105ab12a46"
+        },
+        {
+          "path": "/private/tmp/codex-mem-quality-20261021-r3-experiment/receipts/call-0132-response.json",
+          "sha256": "239c09db3753cfbb2b2208498b1e37822b7534814072cdfbf43c8b88bd16a1f5"
+        }
+      ],
+      "finding": {
+        "classification": "demonstrable_visibility_rationale_mismatch",
+        "issue": "The judge rationale treats a source from original_history as shared-reader-visible although the source has zero catalog spans and is absent from the canonical shared context union. The required-fact omission itself remains real under the original full-history recall denominator; missing source availability does not earn recall.",
+        "not_a_reader_hallucination": "The delivered answer correctly limits what the supplied memory contains. Citation presence and semantic answer support must be judged separately."
+      }
+    }
+  ],
+  "critical_error_audit": {
+    "evidence_path": "docs/evidence/project-memory-quality-2026-10-21-r3/critical-diagnosis.json",
+    "sha256": "007a96dae5a70e53fa2f20681390b71250b8ff7a9b7ceee9524f52e6ac332bf6",
+    "findings": [
+      {
+        "case": "hold_207/primary/candidate/q1",
+        "assessment": "Real unsupported causal attribution: a cross-project deposit boundary replaces the instructor seating-review reason. Retain as an error in a general regression fixture."
+      },
+      {
+        "case": "hold_207/primary/candidate/q5",
+        "assessment": "Critical project_mixing label conflicts with an answer that explicitly forbids carrying over dining permission or completion. Mere mention of another project or rejected inference is not an affirmative project transfer."
+      },
+      {
+        "case": "hold_202/reader-repeat-1/candidate/q1",
+        "assessment": "Critical false_merge label conflicts with explicitly historical same-task initial scope followed by explicit cancellation. Historical mention is not current reactivation."
+      }
+    ]
+  },
+  "owning_code": {
+    "file": "scripts/project_memory_consolidation_experiment.py",
+    "boundaries": [
+      "judge_schema",
+      "decode_judge_output",
+      "validate_judge_grades",
+      "judges"
+    ],
+    "current_guarantees": [
+      "Exact complete question and fact index coverage.",
+      "Boolean and enum shape validation.",
+      "Typed citations resolve exact original source fields and displayed catalog bounds.",
+      "Mechanical checks can only lower full-answer acceptance after model judgment.",
+      "Auxiliary reader evidence_checks are excluded from judge inputs."
+    ],
+    "missing_guarantees": [
+      "Bare fact booleans require no exact delivered-answer witness.",
+      "A valid citation need not entail the particular recalled fact.",
+      "Original history, gold, and shared reader memory coexist; source visibility is asserted in free text rather than checked against a structured witness.",
+      "Critical error enums require no exact affirmative false-conclusion witness or polarity and temporal scope.",
+      "Rationales may contradict booleans and the actual answer without contract rejection."
+    ]
+  },
+  "proposed_contract": {
+    "status": "proposal_requires_parent_approval_before_implementation",
+    "new_version_only": true,
+    "reader_gold_boundary": "Keep reader prompt and source catalog free of gold, expected facts, error labels, previous grades, arm identity and author history. All new fact-specific checks occur only after the delivered reader answer is frozen. Same contract and blinded grading in both arms.",
+    "per_fact_receipt": {
+      "fields": [
+        "fact_index",
+        "assessment enum recalled/missing/contradicted/uncertain",
+        "answer_witnesses of exact nonempty answer start/end/text",
+        "source_witnesses selecting exact canonical source_id/source_field/start/end/role and scope original_only or reader_visible",
+        "omission_reason enum literal_omission/scope_status_or_reason_omission/no_relevant_answer/uncertain",
+        "missing_anchor only for literal_omission, with exact fact start/end/text"
+      ],
+      "rules": [
+        "A recalled fact requires at least one delivered-answer witness and source witness. Citations, uncertainties or auxiliary checklists alone cannot earn answer recall.",
+        "Validate offsets and exact text in code; source visibility is computed from the canonical shared catalog and same-field bounds, never accepted from a model boolean.",
+        "A literal-omission allegation must name a nonempty exact fact-derived anchor. Reject the batch if that anchor occurs case-insensitively with whitespace normalization in the actual delivered answer. Do not flip the fact or synthesize a replacement grade.",
+        "Other semantic omissions cannot be mechanically proved by missing-anchor checks. Require typed reason and preserve uncertain outcomes as rejected/incomplete grading rather than automatic recall credit.",
+        "Do not require all required facts to have been visible to keep them in the planned recall denominator. Record availability separately from recall."
+      ]
+    },
+    "critical_receipt": {
+      "fields": [
+        "critical enum",
+        "exact delivered-answer asserted-conclusion span",
+        "assertion_mode enum affirmative_current/negated/historical/quoted_report/conditional/uncertain",
+        "original reference witness and forbidden-inference identifier when applicable",
+        "semantic relation enum asserts_forbidden_conclusion/does_not_assert/uncertain"
+      ],
+      "rules": [
+        "Critical error requires an exact nonempty answer span plus affirmative assertion of the forbidden conclusion in its relevant scope.",
+        "Reject a critical label whose own receipt says negated, historical, attributed report only, does_not_assert or uncertain.",
+        "Compare the full answer sentence and adjacent temporal/negation qualifiers, not an isolated noun phrase.",
+        "Do not use generic token heuristics such as contains not or contains earlier as semantic proof. Preserve the real unsupported because-clause control."
+      ]
+    },
+    "deterministic_acceptance": [
+      "Reject the entire grading batch on missing witness, invalid offsets, unknown sources, wrong fields, false reader-visibility claim, contradictory receipt fields or detected literal-omission anchor conflict.",
+      "Preserve raw request/response and rejected receipt, consume original cost, stop without automatic retry, salvage, rescoring or denominator shrink.",
+      "Derive positive aggregates only from accepted complete per-fact receipts under a declared version. Existing frozen trials retain their historical format and scores."
+    ],
+    "semantic_verification": {
+      "tool": "TypeSafe per typesafe-ai skill, proposal only; no TypeSafe/model calls performed in this audit.",
+      "shape": "One narrow Choice per selected answer-fact witness and per alleged critical conclusion: supported/contradicted/unsupported/uncertain. State contains the frozen delivered answer, selected exact witnesses, provenance and relevant fact or prohibition; never send gold to reader.",
+      "policy": "Initially shadow only because no calibrated domain gate is established. Store raw model/version/distributions and compare against independent author-written public controls. Uncertain or disagreement rejects/escalates grading; it must not silently upgrade recall or downgrade a critical error.",
+      "limits": "Exact witness checks establish provenance, not entailment, completeness, polarity or temporal truth. A second semantic model can agree incorrectly. The parent-reported Jev probe is not treated as evidence of enabled or validated gates."
+    }
+  },
+  "public_regression_plan": [
+    "Synthetic partial cancellation: missing explicit cancellation cannot earn recall from do not merge solely by matching numbers; retaining a result is tested separately from retaining the obligation.",
+    "Exact answered term: fact calls for participant codes and answer uses them with valid source; a missing literal-anchor receipt must reject. Include paraphrase with an antecedent review batch to test semantic rather than literal full-sentence identity.",
+    "Original-only evidence source falsely labeled reader-visible rejects; same source field with an unseen gap also rejects. Missing visible evidence stays a retrieval loss without shrinking required-fact denominator.",
+    "Critical polarity controls: affirmative cross-project authorization rejects as real critical; explicit do-not-transfer, historical canceled same-task scope, and attributed assistant report cannot satisfy affirmative critical receipt. Include the real unsupported causal because-clause control.",
+    "Missing/unknown answer or source witnesses, offsets into citation/checklist text, contradictory flags, invalid batches, no automatic retry, no accepted-grade salvage and raw native receipt preservation."
+  ],
+  "limits": [
+    "This audit demonstrates grading errors, but does not estimate their net rate or revise R3 outcome.",
+    "Requiring witnesses would expose several present inconsistencies; it does not guarantee a judge will select the correct witness or reason.",
+    "No semantic threshold relaxation is proposed. A new independently authored unopened trial and explicit protocol version are needed before new performance claims."
+  ],
+  "typesafe_sources": [
+    {
+      "url": "https://docs.typesafe.ai/cookbooks/citation_check",
+      "used_for": "Pattern of deterministic quote existence checks followed by separate semantic support judgment; no cookbook threshold adopted."
+    },
+    {
+      "url": "https://docs.typesafe.ai/confidence",
+      "used_for": "Confidence summarizes distributions; domain-specific thresholds require validation, not assumption."
+    }
+  ],
+  "related_diagnoses": [
+    "docs/evidence/project-memory-quality-2026-10-21-r3/constraint-diagnosis.json",
+    "docs/evidence/project-memory-quality-2026-10-21-r3/execution-diagnosis.json",
+    "docs/evidence/project-memory-quality-2026-10-21-r3/critical-diagnosis.json"
+  ]
+}

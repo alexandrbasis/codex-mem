@@ -1,0 +1,2407 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "h01",
+      "project_keys": [
+        "reedbank",
+        "hillglass"
+      ],
+      "sessions": [
+        {
+          "id": "h01_s1",
+          "project_key": "reedbank",
+          "events": [
+            {
+              "id": "h01_e01",
+              "type": "user",
+              "text": "Use the silver cabinet for exhibit recordings."
+            },
+            {
+              "id": "h01_e02",
+              "type": "user",
+              "text": "Prepare the tactile map proof only after I approve the legend. Do not send the tactile map proof to the printer without my written approval."
+            },
+            {
+              "id": "h01_e03",
+              "type": "tool",
+              "text": "The canal listening exhibit was accepted and closed after the listening-room check.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The canal listening exhibit was accepted and closed after the listening-room check.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h01_e03"
+            }
+          ]
+        },
+        {
+          "id": "h01_s2",
+          "project_key": "reedbank",
+          "events": [
+            {
+              "id": "h01_e04",
+              "type": "user",
+              "text": "Reopen the exhibit task only to replace the west-speaker caption; that replacement is pending. The west-speaker caption names the wrong bird."
+            },
+            {
+              "id": "h01_e05",
+              "type": "user",
+              "text": "Cancel the printed leaflet. Keep the tactile map task open."
+            },
+            {
+              "id": "h01_e06",
+              "type": "assistant",
+              "text": "I have sent the tactile map proof to the printer."
+            },
+            {
+              "id": "h01_e07",
+              "type": "tool",
+              "text": "Printer queue inspection: no tactile map proof is queued; the proof remains local.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Printer queue inspection: no tactile map proof is queued; the proof remains local.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h01_e08",
+              "type": "user",
+              "text": "Store exhibit recordings in the locked amber cabinet."
+            },
+            {
+              "id": "h01_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h01_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h01_e07"
+            }
+          ]
+        },
+        {
+          "id": "h01_s3",
+          "project_key": "hillglass",
+          "events": [
+            {
+              "id": "h01_e10",
+              "type": "user",
+              "text": "Store exhibit recordings in the open green cabinet."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Reedbank, what acceptance and what closure were recorded for the canal listening exhibit, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "reedbank"
+        },
+        {
+          "id": "q2",
+          "question": "For Reedbank, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "reedbank"
+        },
+        {
+          "id": "q3",
+          "question": "For Reedbank, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "reedbank"
+        },
+        {
+          "id": "q4",
+          "question": "For Reedbank, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "reedbank"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Reedbank?",
+          "stage": "final",
+          "project_key": "reedbank"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Reedbank and Hillglass; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "reedbank",
+            "hillglass"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h02",
+      "project_keys": [
+        "mossdock",
+        "clayhaven"
+      ],
+      "sessions": [
+        {
+          "id": "h02_s1",
+          "project_key": "mossdock",
+          "events": [
+            {
+              "id": "h02_e01",
+              "type": "user",
+              "text": "The seed catalogue may include supplier telephone numbers."
+            },
+            {
+              "id": "h02_e02",
+              "type": "user",
+              "text": "Start the seed-index audit only when Nera supplies the signed inventory. During the seed-index audit, preserve the original accession numbers."
+            },
+            {
+              "id": "h02_e03",
+              "type": "tool",
+              "text": "The seed catalogue import finished successfully and the import task was closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The seed catalogue import finished successfully and the import task was closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h02_e03"
+            }
+          ]
+        },
+        {
+          "id": "h02_s2",
+          "project_key": "mossdock",
+          "events": [
+            {
+              "id": "h02_e04",
+              "type": "user",
+              "text": "Reopen the import task to correct the fennel unit labels; this correction is still waiting. Fennel packets were labelled in grams instead of packet counts."
+            },
+            {
+              "id": "h02_e05",
+              "type": "user",
+              "text": "Cancel the decorative catalogue cover. Continue the seed-index audit; it is still open."
+            },
+            {
+              "id": "h02_e06",
+              "type": "assistant",
+              "text": "I completed the seed-index audit."
+            },
+            {
+              "id": "h02_e07",
+              "type": "tool",
+              "text": "Audit ledger: seed-index audit is in progress; three shelves remain unchecked.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Audit ledger: seed-index audit is in progress; three shelves remain unchecked.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h02_e08",
+              "type": "user",
+              "text": "The seed catalogue must show supplier codes only."
+            },
+            {
+              "id": "h02_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h02_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h02_e07"
+            }
+          ]
+        },
+        {
+          "id": "h02_s3",
+          "project_key": "clayhaven",
+          "events": [
+            {
+              "id": "h02_e10",
+              "type": "user",
+              "text": "The seed catalogue must show supplier organisation names."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Mossdock, what import result and what closure were recorded for the seed catalogue, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "mossdock"
+        },
+        {
+          "id": "q2",
+          "question": "For Mossdock, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "mossdock"
+        },
+        {
+          "id": "q3",
+          "question": "For Mossdock, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "mossdock"
+        },
+        {
+          "id": "q4",
+          "question": "For Mossdock, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "mossdock"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Mossdock?",
+          "stage": "final",
+          "project_key": "mossdock"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Mossdock and Clayhaven; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "mossdock",
+            "clayhaven"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h03",
+      "project_keys": [
+        "cindermead",
+        "foxquay"
+      ],
+      "sessions": [
+        {
+          "id": "h03_s1",
+          "project_key": "cindermead",
+          "events": [
+            {
+              "id": "h03_e01",
+              "type": "user",
+              "text": "Publish the route with the private service-gate code."
+            },
+            {
+              "id": "h03_e02",
+              "type": "user",
+              "text": "Hold the volunteer briefing only after the steward approves the detour. The volunteer briefing must include the river exit procedure."
+            },
+            {
+              "id": "h03_e03",
+              "type": "tool",
+              "text": "The lantern route was walked, approved and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The lantern route was walked, approved and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h03_e03"
+            }
+          ]
+        },
+        {
+          "id": "h03_s2",
+          "project_key": "cindermead",
+          "events": [
+            {
+              "id": "h03_e04",
+              "type": "user",
+              "text": "Open the route task again for a new bridge detour drawing; the drawing remains due. The bridge access has been blocked by scaffolding."
+            },
+            {
+              "id": "h03_e05",
+              "type": "user",
+              "text": "Cancel the souvenir lantern sketch. The volunteer briefing remains required and unfinished."
+            },
+            {
+              "id": "h03_e06",
+              "type": "assistant",
+              "text": "The volunteer briefing has taken place."
+            },
+            {
+              "id": "h03_e07",
+              "type": "tool",
+              "text": "Attendance register: volunteer briefing is scheduled but has not taken place.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Attendance register: volunteer briefing is scheduled but has not taken place.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h03_e08",
+              "type": "user",
+              "text": "Publish the lantern route without any gate codes."
+            },
+            {
+              "id": "h03_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h03_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h03_e07"
+            }
+          ]
+        },
+        {
+          "id": "h03_s3",
+          "project_key": "foxquay",
+          "events": [
+            {
+              "id": "h03_e10",
+              "type": "user",
+              "text": "Share the lantern route only with registered stewards."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Cindermead, what approval and what closure were recorded for the lantern route, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "cindermead"
+        },
+        {
+          "id": "q2",
+          "question": "For Cindermead, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "cindermead"
+        },
+        {
+          "id": "q3",
+          "question": "For Cindermead, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "cindermead"
+        },
+        {
+          "id": "q4",
+          "question": "For Cindermead, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "cindermead"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Cindermead?",
+          "stage": "final",
+          "project_key": "cindermead"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Cindermead and Foxquay; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "cindermead",
+            "foxquay"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h04",
+      "project_keys": [
+        "brackenreach",
+        "saltgrove"
+      ],
+      "sessions": [
+        {
+          "id": "h04_s1",
+          "project_key": "brackenreach",
+          "events": [
+            {
+              "id": "h04_e01",
+              "type": "user",
+              "text": "Read tide values from the old pier sensor."
+            },
+            {
+              "id": "h04_e02",
+              "type": "user",
+              "text": "Translate the visitor label after the curator signs the source text. Use plain language in the visitor label translation."
+            },
+            {
+              "id": "h04_e03",
+              "type": "tool",
+              "text": "The tide display calibration passed and its calibration task was closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The tide display calibration passed and its calibration task was closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h04_e03"
+            }
+          ]
+        },
+        {
+          "id": "h04_s2",
+          "project_key": "brackenreach",
+          "events": [
+            {
+              "id": "h04_e04",
+              "type": "user",
+              "text": "Reopen calibration solely for the noon marker adjustment; the adjustment is pending. The noon marker is one notch too far left."
+            },
+            {
+              "id": "h04_e05",
+              "type": "user",
+              "text": "Cancel the animated wave background. Keep the visitor label translation active."
+            },
+            {
+              "id": "h04_e06",
+              "type": "assistant",
+              "text": "The visitor label translation is installed on the display."
+            },
+            {
+              "id": "h04_e07",
+              "type": "tool",
+              "text": "Display inspection: the source-language label is installed; the translation file is still awaiting installation.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Display inspection: the source-language label is installed; the translation file is still awaiting installation.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h04_e08",
+              "type": "user",
+              "text": "Read tide values from the harbour sensor."
+            },
+            {
+              "id": "h04_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h04_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h04_e07"
+            }
+          ]
+        },
+        {
+          "id": "h04_s3",
+          "project_key": "saltgrove",
+          "events": [
+            {
+              "id": "h04_e10",
+              "type": "user",
+              "text": "Read tide values from the estuary sensor."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Brackenreach, what calibration result and what closure were recorded for the tide display, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "brackenreach"
+        },
+        {
+          "id": "q2",
+          "question": "For Brackenreach, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "brackenreach"
+        },
+        {
+          "id": "q3",
+          "question": "For Brackenreach, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "brackenreach"
+        },
+        {
+          "id": "q4",
+          "question": "For Brackenreach, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "brackenreach"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Brackenreach?",
+          "stage": "final",
+          "project_key": "brackenreach"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Brackenreach and Saltgrove; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "brackenreach",
+            "saltgrove"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h05",
+      "project_keys": [
+        "ochrevale",
+        "willowbay"
+      ],
+      "sessions": [
+        {
+          "id": "h05_s1",
+          "project_key": "ochrevale",
+          "events": [
+            {
+              "id": "h05_e01",
+              "type": "user",
+              "text": "Public mosaic entries should include donor street addresses."
+            },
+            {
+              "id": "h05_e02",
+              "type": "user",
+              "text": "Begin damage annotation only after I approve the tile-number map. Mark uncertain damage annotations as uncertain."
+            },
+            {
+              "id": "h05_e03",
+              "type": "tool",
+              "text": "The mosaic archive thumbnail task was accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The mosaic archive thumbnail task was accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h05_e03"
+            }
+          ]
+        },
+        {
+          "id": "h05_s2",
+          "project_key": "ochrevale",
+          "events": [
+            {
+              "id": "h05_e04",
+              "type": "user",
+              "text": "Reopen the thumbnail task for the missing corner-detail image; that image is outstanding. The corner-detail photograph was omitted from the approved set."
+            },
+            {
+              "id": "h05_e05",
+              "type": "user",
+              "text": "Cancel the souvenir postcard batch. Retain the damage annotation task as open work."
+            },
+            {
+              "id": "h05_e06",
+              "type": "assistant",
+              "text": "All damage annotations have been approved."
+            },
+            {
+              "id": "h05_e07",
+              "type": "tool",
+              "text": "Review log: damage annotations are submitted but approval is pending.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Review log: damage annotations are submitted but approval is pending.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h05_e08",
+              "type": "user",
+              "text": "Public mosaic entries may include donor display names only."
+            },
+            {
+              "id": "h05_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h05_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h05_e07"
+            }
+          ]
+        },
+        {
+          "id": "h05_s3",
+          "project_key": "willowbay",
+          "events": [
+            {
+              "id": "h05_e10",
+              "type": "user",
+              "text": "Public mosaic entries must omit all donor identifiers."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Ochrevale, what acceptance and what closure were recorded for the mosaic archive, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "ochrevale"
+        },
+        {
+          "id": "q2",
+          "question": "For Ochrevale, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "ochrevale"
+        },
+        {
+          "id": "q3",
+          "question": "For Ochrevale, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "ochrevale"
+        },
+        {
+          "id": "q4",
+          "question": "For Ochrevale, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "ochrevale"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Ochrevale?",
+          "stage": "final",
+          "project_key": "ochrevale"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Ochrevale and Willowbay; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "ochrevale",
+            "willowbay"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h06",
+      "project_keys": [
+        "pineharbour",
+        "elmford"
+      ],
+      "sessions": [
+        {
+          "id": "h06_s1",
+          "project_key": "pineharbour",
+          "events": [
+            {
+              "id": "h06_e01",
+              "type": "user",
+              "text": "Keep workshop consent slips in the public prop drawer."
+            },
+            {
+              "id": "h06_e02",
+              "type": "user",
+              "text": "Print the safety handout only after the tutor checks it. Include the glue-handling steps in the safety handout."
+            },
+            {
+              "id": "h06_e03",
+              "type": "tool",
+              "text": "The puppet workshop seating plan was accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The puppet workshop seating plan was accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h06_e03"
+            }
+          ]
+        },
+        {
+          "id": "h06_s2",
+          "project_key": "pineharbour",
+          "events": [
+            {
+              "id": "h06_e04",
+              "type": "user",
+              "text": "Reopen the seating task to move the front bench; that move has not been done. The front bench blocks the wheelchair turning space."
+            },
+            {
+              "id": "h06_e05",
+              "type": "user",
+              "text": "Cancel the velvet stage curtain order. The safety handout remains in scope and unfinished."
+            },
+            {
+              "id": "h06_e06",
+              "type": "assistant",
+              "text": "The safety handout has been printed."
+            },
+            {
+              "id": "h06_e07",
+              "type": "tool",
+              "text": "Print job log: safety handout job is held; no copies have been printed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Print job log: safety handout job is held; no copies have been printed.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h06_e08",
+              "type": "user",
+              "text": "Keep workshop consent slips in the locked office drawer."
+            },
+            {
+              "id": "h06_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h06_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h06_e07"
+            }
+          ]
+        },
+        {
+          "id": "h06_s3",
+          "project_key": "elmford",
+          "events": [
+            {
+              "id": "h06_e10",
+              "type": "user",
+              "text": "Keep workshop consent slips in the sealed coordinator box."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Pineharbour, what acceptance and what closure were recorded for the puppet workshop, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "pineharbour"
+        },
+        {
+          "id": "q2",
+          "question": "For Pineharbour, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "pineharbour"
+        },
+        {
+          "id": "q3",
+          "question": "For Pineharbour, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "pineharbour"
+        },
+        {
+          "id": "q4",
+          "question": "For Pineharbour, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "pineharbour"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Pineharbour?",
+          "stage": "final",
+          "project_key": "pineharbour"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Pineharbour and Elmford; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "pineharbour",
+            "elmford"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h07",
+      "project_keys": [
+        "rookfen",
+        "birchspan"
+      ],
+      "sessions": [
+        {
+          "id": "h07_s1",
+          "project_key": "rookfen",
+          "events": [
+            {
+              "id": "h07_e01",
+              "type": "user",
+              "text": "Round bell diameters to whole centimetres."
+            },
+            {
+              "id": "h07_e02",
+              "type": "user",
+              "text": "Draft the survey-method note after the conservator approves the replacement ruler. Record the ruler identifier in the survey-method note."
+            },
+            {
+              "id": "h07_e03",
+              "type": "tool",
+              "text": "The bell survey measurements were accepted and the survey task was closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The bell survey measurements were accepted and the survey task was closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h07_e03"
+            }
+          ]
+        },
+        {
+          "id": "h07_s2",
+          "project_key": "rookfen",
+          "events": [
+            {
+              "id": "h07_e04",
+              "type": "user",
+              "text": "Reopen the survey to remeasure the south bell; that remeasurement is not complete. The south-bell ruler had a bent end."
+            },
+            {
+              "id": "h07_e05",
+              "type": "user",
+              "text": "Cancel the brass display plaque. The survey-method note is still required and open."
+            },
+            {
+              "id": "h07_e06",
+              "type": "assistant",
+              "text": "The conservator approved the survey-method note."
+            },
+            {
+              "id": "h07_e07",
+              "type": "tool",
+              "text": "Conservator register: survey-method note awaits review.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Conservator register: survey-method note awaits review.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h07_e08",
+              "type": "user",
+              "text": "Record bell diameters to the nearest millimetre."
+            },
+            {
+              "id": "h07_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h07_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h07_e07"
+            }
+          ]
+        },
+        {
+          "id": "h07_s3",
+          "project_key": "birchspan",
+          "events": [
+            {
+              "id": "h07_e10",
+              "type": "user",
+              "text": "Record bell diameters to the nearest half centimetre."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Rookfen, what measurement acceptance and what closure were recorded for the bell survey, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "rookfen"
+        },
+        {
+          "id": "q2",
+          "question": "For Rookfen, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "rookfen"
+        },
+        {
+          "id": "q3",
+          "question": "For Rookfen, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "rookfen"
+        },
+        {
+          "id": "q4",
+          "question": "For Rookfen, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "rookfen"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Rookfen?",
+          "stage": "final",
+          "project_key": "rookfen"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Rookfen and Birchspan; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "rookfen",
+            "birchspan"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h08",
+      "project_keys": [
+        "marshlight",
+        "stonecove"
+      ],
+      "sessions": [
+        {
+          "id": "h08_s1",
+          "project_key": "marshlight",
+          "events": [
+            {
+              "id": "h08_e01",
+              "type": "user",
+              "text": "Loan boats without a caretaker signature."
+            },
+            {
+              "id": "h08_e02",
+              "type": "user",
+              "text": "Perform the storage-condition inspection only when the caretaker unlocks the shed. Photograph damp patches during the storage-condition inspection."
+            },
+            {
+              "id": "h08_e03",
+              "type": "tool",
+              "text": "The reed boat inventory count was reconciled and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The reed boat inventory count was reconciled and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h08_e03"
+            }
+          ]
+        },
+        {
+          "id": "h08_s2",
+          "project_key": "marshlight",
+          "events": [
+            {
+              "id": "h08_e04",
+              "type": "user",
+              "text": "Reopen the count task for the east shed recount; the recount remains open. Two boat tags were found behind the east shed ledger."
+            },
+            {
+              "id": "h08_e05",
+              "type": "user",
+              "text": "Cancel the illustrated inventory poster. Keep the storage-condition inspection open."
+            },
+            {
+              "id": "h08_e06",
+              "type": "assistant",
+              "text": "The storage-condition inspection found no damp patches."
+            },
+            {
+              "id": "h08_e07",
+              "type": "tool",
+              "text": "Inspection record: a damp patch was observed beneath rack four.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Inspection record: a damp patch was observed beneath rack four.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h08_e08",
+              "type": "user",
+              "text": "Every boat loan requires a caretaker signature."
+            },
+            {
+              "id": "h08_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h08_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h08_e07"
+            }
+          ]
+        },
+        {
+          "id": "h08_s3",
+          "project_key": "stonecove",
+          "events": [
+            {
+              "id": "h08_e10",
+              "type": "user",
+              "text": "Every boat loan requires a harbourmaster signature."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Marshlight, what reconciliation result and what closure were recorded for the reed boat inventory, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "marshlight"
+        },
+        {
+          "id": "q2",
+          "question": "For Marshlight, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "marshlight"
+        },
+        {
+          "id": "q3",
+          "question": "For Marshlight, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "marshlight"
+        },
+        {
+          "id": "q4",
+          "question": "For Marshlight, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "marshlight"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Marshlight?",
+          "stage": "final",
+          "project_key": "marshlight"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Marshlight and Stonecove; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "marshlight",
+            "stonecove"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h09",
+      "project_keys": [
+        "juniperhall",
+        "alderwick"
+      ],
+      "sessions": [
+        {
+          "id": "h09_s1",
+          "project_key": "juniperhall",
+          "events": [
+            {
+              "id": "h09_e01",
+              "type": "user",
+              "text": "Use the backup key without signing it out."
+            },
+            {
+              "id": "h09_e02",
+              "type": "user",
+              "text": "Run the operator training session after the lighting lead approves the cue edit. Include the manual blackout procedure in operator training."
+            },
+            {
+              "id": "h09_e03",
+              "type": "tool",
+              "text": "The shadow theatre cue sheet was rehearsed, accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The shadow theatre cue sheet was rehearsed, accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h09_e03"
+            }
+          ]
+        },
+        {
+          "id": "h09_s2",
+          "project_key": "juniperhall",
+          "events": [
+            {
+              "id": "h09_e04",
+              "type": "user",
+              "text": "Reopen the cue sheet to change the owl entrance cue; that edit remains pending. The owl entrance cue overlaps the narrator pause."
+            },
+            {
+              "id": "h09_e05",
+              "type": "user",
+              "text": "Cancel the foyer silhouette banner. Retain the operator training session as unfinished work."
+            },
+            {
+              "id": "h09_e06",
+              "type": "assistant",
+              "text": "All operators passed the training session."
+            },
+            {
+              "id": "h09_e07",
+              "type": "tool",
+              "text": "Training sheet: two operators passed; one operator has not attended.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Training sheet: two operators passed; one operator has not attended.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h09_e08",
+              "type": "user",
+              "text": "Sign out the backup key before use."
+            },
+            {
+              "id": "h09_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h09_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h09_e07"
+            }
+          ]
+        },
+        {
+          "id": "h09_s3",
+          "project_key": "alderwick",
+          "events": [
+            {
+              "id": "h09_e10",
+              "type": "user",
+              "text": "Ask the stage manager to hold the backup key during use."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Juniperhall, what acceptance and what closure were recorded for the shadow theatre, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "juniperhall"
+        },
+        {
+          "id": "q2",
+          "question": "For Juniperhall, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "juniperhall"
+        },
+        {
+          "id": "q3",
+          "question": "For Juniperhall, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "juniperhall"
+        },
+        {
+          "id": "q4",
+          "question": "For Juniperhall, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "juniperhall"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Juniperhall?",
+          "stage": "final",
+          "project_key": "juniperhall"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Juniperhall and Alderwick; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "juniperhall",
+            "alderwick"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h10",
+      "project_keys": [
+        "coppermere",
+        "ashport"
+      ],
+      "sessions": [
+        {
+          "id": "h10_s1",
+          "project_key": "coppermere",
+          "events": [
+            {
+              "id": "h10_e01",
+              "type": "user",
+              "text": "Discard origin labels after scanning them."
+            },
+            {
+              "id": "h10_e02",
+              "type": "user",
+              "text": "Investigate duplicate samples only after the lab lead releases the comparison tray. Keep sample origin labels attached throughout the duplicate investigation."
+            },
+            {
+              "id": "h10_e03",
+              "type": "tool",
+              "text": "The clay sample register migration passed its check and was closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The clay sample register migration passed its check and was closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h10_e03"
+            }
+          ]
+        },
+        {
+          "id": "h10_s2",
+          "project_key": "coppermere",
+          "events": [
+            {
+              "id": "h10_e04",
+              "type": "user",
+              "text": "Reopen the migration to restore the kiln-temperature column; that restoration is pending. The kiln-temperature column was left out of the exported register."
+            },
+            {
+              "id": "h10_e05",
+              "type": "user",
+              "text": "Cancel the glazed binder covers. Continue the duplicate-sample investigation; it remains open."
+            },
+            {
+              "id": "h10_e06",
+              "type": "assistant",
+              "text": "The duplicate-sample investigation proved the two samples are identical."
+            },
+            {
+              "id": "h10_e07",
+              "type": "tool",
+              "text": "Comparison record: the two samples have different grain patterns; identity is not established.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Comparison record: the two samples have different grain patterns; identity is not established.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h10_e08",
+              "type": "user",
+              "text": "Retain paper origin labels with the clay samples."
+            },
+            {
+              "id": "h10_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h10_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h10_e07"
+            }
+          ]
+        },
+        {
+          "id": "h10_s3",
+          "project_key": "ashport",
+          "events": [
+            {
+              "id": "h10_e10",
+              "type": "user",
+              "text": "Retain paper origin labels in a separate records sleeve."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Coppermere, what migration check result and what closure were recorded for the clay sample register, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "coppermere"
+        },
+        {
+          "id": "q2",
+          "question": "For Coppermere, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "coppermere"
+        },
+        {
+          "id": "q3",
+          "question": "For Coppermere, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "coppermere"
+        },
+        {
+          "id": "q4",
+          "question": "For Coppermere, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "coppermere"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current general storage rule for paper origin labels in Coppermere, apart from the investigation-specific attachment instruction?",
+          "stage": "final",
+          "project_key": "coppermere"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the general storage locations required for paper origin labels in Coppermere and Ashport, apart from investigation-specific handling; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "coppermere",
+            "ashport"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h11",
+      "project_keys": [
+        "dunebrook",
+        "hazelrun"
+      ],
+      "sessions": [
+        {
+          "id": "h11_s1",
+          "project_key": "dunebrook",
+          "events": [
+            {
+              "id": "h11_e01",
+              "type": "user",
+              "text": "Publish maker contact addresses beside kite images."
+            },
+            {
+              "id": "h11_e02",
+              "type": "user",
+              "text": "Prepare the fabric-condition report only after the registrar releases the handling permit. Describe frayed seams separately from stains in the fabric-condition report."
+            },
+            {
+              "id": "h11_e03",
+              "type": "tool",
+              "text": "The kite archive accession task was accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The kite archive accession task was accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h11_e03"
+            }
+          ]
+        },
+        {
+          "id": "h11_s2",
+          "project_key": "dunebrook",
+          "events": [
+            {
+              "id": "h11_e04",
+              "type": "user",
+              "text": "Reopen accession for the missing maker-credit entry; that entry remains to be added. One kite was accessioned without its maker credit."
+            },
+            {
+              "id": "h11_e05",
+              "type": "user",
+              "text": "Cancel the ribbon award display. Keep the fabric-condition report active and unfinished."
+            },
+            {
+              "id": "h11_e06",
+              "type": "assistant",
+              "text": "The fabric-condition report has been signed by the registrar."
+            },
+            {
+              "id": "h11_e07",
+              "type": "tool",
+              "text": "Signature record: the fabric-condition report is unsigned.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Signature record: the fabric-condition report is unsigned.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h11_e08",
+              "type": "user",
+              "text": "Publish maker display names beside kite images."
+            },
+            {
+              "id": "h11_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h11_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h11_e07"
+            }
+          ]
+        },
+        {
+          "id": "h11_s3",
+          "project_key": "hazelrun",
+          "events": [
+            {
+              "id": "h11_e10",
+              "type": "user",
+              "text": "Publish anonymous maker codes beside kite images."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Dunebrook, what acceptance and what closure were recorded for the kite archive, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "dunebrook"
+        },
+        {
+          "id": "q2",
+          "question": "For Dunebrook, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "dunebrook"
+        },
+        {
+          "id": "q3",
+          "question": "For Dunebrook, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "dunebrook"
+        },
+        {
+          "id": "q4",
+          "question": "For Dunebrook, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "dunebrook"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Dunebrook?",
+          "stage": "final",
+          "project_key": "dunebrook"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Dunebrook and Hazelrun; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "dunebrook",
+            "hazelrun"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h12",
+      "project_keys": [
+        "saffronpier",
+        "fernstead"
+      ],
+      "sessions": [
+        {
+          "id": "h12_s1",
+          "project_key": "saffronpier",
+          "events": [
+            {
+              "id": "h12_e01",
+              "type": "user",
+              "text": "Lift the model by the axle."
+            },
+            {
+              "id": "h12_e02",
+              "type": "user",
+              "text": "Release the handling guide only after the model keeper approves it. Include the lifting points in the handling guide."
+            },
+            {
+              "id": "h12_e03",
+              "type": "tool",
+              "text": "The waterwheel model assembly was tested, accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The waterwheel model assembly was tested, accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h12_e03"
+            }
+          ]
+        },
+        {
+          "id": "h12_s2",
+          "project_key": "saffronpier",
+          "events": [
+            {
+              "id": "h12_e04",
+              "type": "user",
+              "text": "Reopen assembly only to replace the cracked paddle; that replacement is unfinished. A paddle cracked during packing after acceptance."
+            },
+            {
+              "id": "h12_e05",
+              "type": "user",
+              "text": "Cancel the painted backdrop. The handling guide remains required and open."
+            },
+            {
+              "id": "h12_e06",
+              "type": "assistant",
+              "text": "The handling guide has been released to visitors."
+            },
+            {
+              "id": "h12_e07",
+              "type": "tool",
+              "text": "Release register: handling guide remains an internal draft.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Release register: handling guide remains an internal draft.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h12_e08",
+              "type": "user",
+              "text": "Lift the model using its base handles."
+            },
+            {
+              "id": "h12_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h12_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h12_e07"
+            }
+          ]
+        },
+        {
+          "id": "h12_s3",
+          "project_key": "fernstead",
+          "events": [
+            {
+              "id": "h12_e10",
+              "type": "user",
+              "text": "Lift the model using the fitted transport cradle."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Saffronpier, what acceptance and what closure were recorded for the waterwheel model, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "saffronpier"
+        },
+        {
+          "id": "q2",
+          "question": "For Saffronpier, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "saffronpier"
+        },
+        {
+          "id": "q3",
+          "question": "For Saffronpier, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "saffronpier"
+        },
+        {
+          "id": "q4",
+          "question": "For Saffronpier, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "saffronpier"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Saffronpier?",
+          "stage": "final",
+          "project_key": "saffronpier"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Saffronpier and Fernstead; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "saffronpier",
+            "fernstead"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h13",
+      "project_keys": [
+        "thistlecourt",
+        "larchwell"
+      ],
+      "sessions": [
+        {
+          "id": "h13_s1",
+          "project_key": "thistlecourt",
+          "events": [
+            {
+              "id": "h13_e01",
+              "type": "user",
+              "text": "Include the caretaker home location on the public map."
+            },
+            {
+              "id": "h13_e02",
+              "type": "user",
+              "text": "Start the route-access audit only after the guide confirms the inspection time. Measure the narrowest gate during the route-access audit."
+            },
+            {
+              "id": "h13_e03",
+              "type": "tool",
+              "text": "The chalk map lettering was accepted and its lettering task was closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The chalk map lettering was accepted and its lettering task was closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h13_e03"
+            }
+          ]
+        },
+        {
+          "id": "h13_s2",
+          "project_key": "thistlecourt",
+          "events": [
+            {
+              "id": "h13_e04",
+              "type": "user",
+              "text": "Reopen lettering for the north-path spelling correction; the correction is still due. The north-path name has two letters transposed."
+            },
+            {
+              "id": "h13_e05",
+              "type": "user",
+              "text": "Cancel the souvenir map stickers. Keep the route-access audit open."
+            },
+            {
+              "id": "h13_e06",
+              "type": "assistant",
+              "text": "The route-access audit measured every gate."
+            },
+            {
+              "id": "h13_e07",
+              "type": "tool",
+              "text": "Audit sheet: the west gate has not been measured.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Audit sheet: the west gate has not been measured.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h13_e08",
+              "type": "user",
+              "text": "Show public entrances only on the public map."
+            },
+            {
+              "id": "h13_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h13_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h13_e07"
+            }
+          ]
+        },
+        {
+          "id": "h13_s3",
+          "project_key": "larchwell",
+          "events": [
+            {
+              "id": "h13_e10",
+              "type": "user",
+              "text": "Show public entrances and staff entrances on the public map."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Thistlecourt, what acceptance and what closure were recorded for the chalk map, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "thistlecourt"
+        },
+        {
+          "id": "q2",
+          "question": "For Thistlecourt, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "thistlecourt"
+        },
+        {
+          "id": "q3",
+          "question": "For Thistlecourt, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "thistlecourt"
+        },
+        {
+          "id": "q4",
+          "question": "For Thistlecourt, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "thistlecourt"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Thistlecourt?",
+          "stage": "final",
+          "project_key": "thistlecourt"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Thistlecourt and Larchwell; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "thistlecourt",
+            "larchwell"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h14",
+      "project_keys": [
+        "orchardwake",
+        "mallowridge"
+      ],
+      "sessions": [
+        {
+          "id": "h14_s1",
+          "project_key": "orchardwake",
+          "events": [
+            {
+              "id": "h14_e01",
+              "type": "user",
+              "text": "Keep delivery driver phone numbers on the public schedule."
+            },
+            {
+              "id": "h14_e02",
+              "type": "user",
+              "text": "Issue the cleaning checklist only after the press operator approves it. List the filter-rinse step in the cleaning checklist."
+            },
+            {
+              "id": "h14_e03",
+              "type": "tool",
+              "text": "The fruit press schedule was agreed, posted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The fruit press schedule was agreed, posted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h14_e03"
+            }
+          ]
+        },
+        {
+          "id": "h14_s2",
+          "project_key": "orchardwake",
+          "events": [
+            {
+              "id": "h14_e04",
+              "type": "user",
+              "text": "Reopen the schedule to move the pear session; that move is pending. The pear delivery now arrives after the original session."
+            },
+            {
+              "id": "h14_e05",
+              "type": "user",
+              "text": "Cancel the decorative jar labels. The cleaning checklist remains unfinished and required."
+            },
+            {
+              "id": "h14_e06",
+              "type": "assistant",
+              "text": "The cleaning checklist has been issued to every operator."
+            },
+            {
+              "id": "h14_e07",
+              "type": "tool",
+              "text": "Distribution ledger: the cleaning checklist has reached one of three operators.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Distribution ledger: the cleaning checklist has reached one of three operators.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h14_e08",
+              "type": "user",
+              "text": "Use delivery batch codes on the public schedule."
+            },
+            {
+              "id": "h14_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h14_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h14_e07"
+            }
+          ]
+        },
+        {
+          "id": "h14_s3",
+          "project_key": "mallowridge",
+          "events": [
+            {
+              "id": "h14_e10",
+              "type": "user",
+              "text": "Use delivery company names on the public schedule."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Orchardwake, what agreement and what closure were recorded for the fruit press schedule, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "orchardwake"
+        },
+        {
+          "id": "q2",
+          "question": "For Orchardwake, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "orchardwake"
+        },
+        {
+          "id": "q3",
+          "question": "For Orchardwake, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "orchardwake"
+        },
+        {
+          "id": "q4",
+          "question": "For Orchardwake, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "orchardwake"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Orchardwake?",
+          "stage": "final",
+          "project_key": "orchardwake"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Orchardwake and Mallowridge; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "orchardwake",
+            "mallowridge"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h15",
+      "project_keys": [
+        "gullmarsh",
+        "rowancliff"
+      ],
+      "sessions": [
+        {
+          "id": "h15_s1",
+          "project_key": "gullmarsh",
+          "events": [
+            {
+              "id": "h15_e01",
+              "type": "user",
+              "text": "Leave cabinet keys on the public reception desk."
+            },
+            {
+              "id": "h15_e02",
+              "type": "user",
+              "text": "Conduct the pest inspection only after the collection keeper grants drawer access. Record the inspected drawer numbers in the pest inspection log."
+            },
+            {
+              "id": "h15_e03",
+              "type": "tool",
+              "text": "The feather cabinet labelling task was accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The feather cabinet labelling task was accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h15_e03"
+            }
+          ]
+        },
+        {
+          "id": "h15_s2",
+          "project_key": "gullmarsh",
+          "events": [
+            {
+              "id": "h15_e04",
+              "type": "user",
+              "text": "Reopen labelling to correct the tern drawer label; that correction has not been made. The tern drawer label uses the gull code."
+            },
+            {
+              "id": "h15_e05",
+              "type": "user",
+              "text": "Cancel the embroidered cabinet cover. The pest inspection remains open."
+            },
+            {
+              "id": "h15_e06",
+              "type": "assistant",
+              "text": "The pest inspection covered all drawers."
+            },
+            {
+              "id": "h15_e07",
+              "type": "tool",
+              "text": "Inspection log: drawers one through five were inspected; drawer six is pending.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Inspection log: drawers one through five were inspected; drawer six is pending.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h15_e08",
+              "type": "user",
+              "text": "Store cabinet keys in the keeper safe."
+            },
+            {
+              "id": "h15_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h15_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h15_e07"
+            }
+          ]
+        },
+        {
+          "id": "h15_s3",
+          "project_key": "rowancliff",
+          "events": [
+            {
+              "id": "h15_e10",
+              "type": "user",
+              "text": "Store cabinet keys in the supervised reception locker."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Gullmarsh, what acceptance and what closure were recorded for the feather cabinet, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "gullmarsh"
+        },
+        {
+          "id": "q2",
+          "question": "For Gullmarsh, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "gullmarsh"
+        },
+        {
+          "id": "q3",
+          "question": "For Gullmarsh, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "gullmarsh"
+        },
+        {
+          "id": "q4",
+          "question": "For Gullmarsh, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "gullmarsh"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Gullmarsh?",
+          "stage": "final",
+          "project_key": "gullmarsh"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Gullmarsh and Rowancliff; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "gullmarsh",
+            "rowancliff"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "h16",
+      "project_keys": [
+        "heatherlock",
+        "baywillow"
+      ],
+      "sessions": [
+        {
+          "id": "h16_s1",
+          "project_key": "heatherlock",
+          "events": [
+            {
+              "id": "h16_e01",
+              "type": "user",
+              "text": "Allow visitors to turn the service valve."
+            },
+            {
+              "id": "h16_e02",
+              "type": "user",
+              "text": "Approve the maintenance checklist only after the technician tests the drain valve. The maintenance checklist must include the drain-valve reset step."
+            },
+            {
+              "id": "h16_e03",
+              "type": "tool",
+              "text": "The canal model label installation was accepted and closed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "The canal model label installation was accepted and closed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h16_e03"
+            }
+          ]
+        },
+        {
+          "id": "h16_s2",
+          "project_key": "heatherlock",
+          "events": [
+            {
+              "id": "h16_e04",
+              "type": "user",
+              "text": "Reopen installation for the lock-number plate replacement; that replacement remains pending. The lock-number plate was scratched during cleaning."
+            },
+            {
+              "id": "h16_e05",
+              "type": "user",
+              "text": "Cancel the commemorative badge order. Keep the maintenance checklist task open."
+            },
+            {
+              "id": "h16_e06",
+              "type": "assistant",
+              "text": "The technician tested the drain valve successfully."
+            },
+            {
+              "id": "h16_e07",
+              "type": "tool",
+              "text": "Technician test log: drain-valve test failed because the valve stuck halfway.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-record-read --local-ledger"
+                },
+                "tool_response": {
+                  "output": "Technician test log: drain-valve test failed because the valve stuck halfway.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "h16_e08",
+              "type": "user",
+              "text": "Only model staff may turn the service valve."
+            },
+            {
+              "id": "h16_e09",
+              "type": "delete_observation",
+              "text": "Remove the earlier handling-rule observation from retained memory.",
+              "observation_event_id": "h16_e01"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "h16_e07"
+            }
+          ]
+        },
+        {
+          "id": "h16_s3",
+          "project_key": "baywillow",
+          "events": [
+            {
+              "id": "h16_e10",
+              "type": "user",
+              "text": "Only the named maintenance technician may turn the service valve."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "For Heatherlock, what acceptance and what closure were recorded for the canal model labels, what work is now reopened and pending, and why was it reopened?",
+          "stage": "final",
+          "project_key": "heatherlock"
+        },
+        {
+          "id": "q2",
+          "question": "For Heatherlock, which deliverable did the user cancel, and which separate work did the user keep open?",
+          "stage": "final",
+          "project_key": "heatherlock"
+        },
+        {
+          "id": "q3",
+          "question": "For Heatherlock, what prerequisite and what additional requirement did the user set for the retained work or its approval?",
+          "stage": "final",
+          "project_key": "heatherlock"
+        },
+        {
+          "id": "q4",
+          "question": "For Heatherlock, what did the assistant claim about the retained work or its prerequisite, and what did the later tool record actually report? Keep the two sources distinct.",
+          "stage": "final",
+          "project_key": "heatherlock"
+        },
+        {
+          "id": "q5",
+          "question": "What is the current surviving handling or publication rule in Heatherlock?",
+          "stage": "final",
+          "project_key": "heatherlock"
+        },
+        {
+          "id": "q6",
+          "question": "Compare the handling or publication rules for Heatherlock and Baywillow; state each project’s own rule.",
+          "stage": "final",
+          "project_keys": [
+            "heatherlock",
+            "baywillow"
+          ]
+        }
+      ]
+    }
+  ]
+}

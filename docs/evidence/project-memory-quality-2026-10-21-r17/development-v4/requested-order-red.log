@@ -1,0 +1,17 @@
+.F..........
+======================================================================
+FAIL: test_explicit_capture_order_controls_the_first_protected_execution (test_project_memory_single_source_packing.NativeOriginalPackingTests.test_explicit_capture_order_controls_the_first_protected_execution)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_single_source_packing.py", line 226, in test_explicit_capture_order_controls_the_first_protected_execution
+    self.assertEqual(expected, tree.find('./item[execution]').get('id'), xml)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'public-later' != '2f2f61085a5043a7be61da272c2e3f19'
+- public-later
++ 2f2f61085a5043a7be61da272c2e3f19
+ : <project-memory trust="untrusted" freshness="not_verified" capture_order_basis="local_capture_sequence_not_event_time"><coverage complete_transcript="false" pending="false" observations_only="true"/><item id="2f2f61085a5043a7be61da272c2e3f19" lane="source_evidence" source_role="tool_record" signal_kind="observed_execution_result" selection_basis="captured_execution_shape" source_capture_seq="1" field_association="original_execution_capture"><execution tool_use_id="capture-71" tool_name="functions.exec_command" command="python check.py ORB-27 --run 71" exit_code="1" exit_field="tool_response.exit_code"/><source source_id="2f2f61085a5043a7be61da272c2e3f19" start="0" end="102" source_role="tool_record" tool_use_id="capture-71" source_field="tool_response.output" quote_truncated="False" excerpt_status="complete_capture_field" id="s1"><quote_excerpt>Instrument fixture: sample rows matched. Remote delivery was not attempted. Labels were not inspected.</quote_excerpt></source><source source_id="2f2f61085a5043a7be61da272c2e3f19" start="0" end="31" source_role="tool_record" tool_use_id="capture-71" source_field="tool_input.cmd" quote_truncated="False" excerpt_status="complete_capture_field" id="s2"><quote_excerpt>python check.py ORB-27 --run 71</quote_excerpt></source></item><item id="public-later" lane="source_evidence" source_role="tool_record" signal_kind="observed_execution_result" selection_basis="captured_execution_shape" source_capture_seq="9" field_association="original_execution_capture"><execution tool_use_id="public-later-call" tool_name="functions.exec_command" command="python check.py ORB-27 --run 71" exit_code="1" exit_field="tool_response.exit_code"/><source source_id="public-later" start="0" end="102" source_role="tool_record" tool_use_id="public-later-call" source_field="tool_response.output" quote_truncated="False" excerpt_status="complete_capture_field" id="s3"><quote_excerpt>Instrument fixture: sample rows matched. Remote delivery was not attempted. Labels were not inspected.</quote_excerpt></source><source source_id="public-later" start="0" end="31" source_role="tool_record" tool_use_id="public-later-call" source_field="tool_input.cmd" quote_truncated="False" excerpt_status="complete_capture_field" id="s4"><quote_excerpt>python check.py ORB-27 --run 71</quote_excerpt></source></item></project-memory>
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.050s
+
+FAILED (failures=1)

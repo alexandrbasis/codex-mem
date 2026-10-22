@@ -1,0 +1,26 @@
+{
+  "status": "blocking_frozen_protocol_consumer_incompatibility_reproduced",
+  "protocol_file_sha256": "4db8d98ff0e88b78253a4b991925613c1fdf7196abf2e5c0eb2a46e123d2415b",
+  "frozen_helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+  "actual_historical_spend": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r17/historical-spend.json",
+    "sha256": "9505a738ae8ce8e297c3e0bf96140531b54f9812f52df4bfa30078e53b7b3266"
+  },
+  "consumer_required_pointer_key": "report",
+  "exception": {
+    "type": "KeyError",
+    "key": "report"
+  },
+  "reproduction": "Import exact held helper from original path, then historical_accounting(actual frozen protocol, usage([])). No fixture/gold/answers/Store/network/model execution.",
+  "affected_operations": [
+    "aggregate final report",
+    "canonical export historical report copy"
+  ],
+  "source_lines": {
+    "historical_accounting": "scripts/project_memory_consolidation_experiment.py:220",
+    "export": "scripts/project_memory_consolidation_experiment.py:2105",
+    "builder_assignment": "docs/evidence/project-memory-quality-2026-10-21-r17/build-protocol.py:195"
+  },
+  "disposition": "Suspend parent driver and drain active child phase. Preserve every planned denominator and every native receipt. R17 is incomplete, cannot pass; no frozen protocol/helper/input repair. Fix and test prospective builder before new trial and new fresh set.",
+  "review_gap": "Final Spec and Standards source checks returned clear but missed this producer-consumer metadata mismatch."
+}

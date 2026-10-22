@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "split": "holdout",
+  "fictional": true,
+  "status": "sealed",
+  "history_count": 16,
+  "question_count": 96,
+  "history_id_range": [
+    "hold_301",
+    "hold_316"
+  ],
+  "session_count": 48,
+  "event_count": 128,
+  "checkpoint_count": 16,
+  "deletion_count": 16,
+  "tool_capture_count": 32,
+  "support_span_count": 176,
+  "self_validation": {
+    "fixture_contract": "passed",
+    "exact_96_question_coverage": "passed",
+    "support_spans_and_indices": "passed",
+    "no_deleted_gold_support": "passed",
+    "no_assistant_gold_support": "passed",
+    "project_scopes": "passed",
+    "tool_response_equals_event_text": "passed",
+    "checkpoint_before_each_deletion": "passed",
+    "maximum_two_checkpoints": "passed",
+    "global_event_and_session_identity": "passed"
+  },
+  "independence": {
+    "authored_directly_by_independent_child": true,
+    "prior_fixtures_gold_reports_or_results_read": false,
+    "runtime_algorithms_inspected": false,
+    "permitted_source_inspection": "scripts/project_memory_consolidation_experiment.py lines 38-131 only",
+    "permitted_contract_calls": [
+      "fixture",
+      "identifier",
+      "validate_tool_capture"
+    ],
+    "native_or_model_or_api_calls_for_authoring": false,
+    "fictional_commands_executed": false,
+    "historical_summary_exposure": true,
+    "independence_caveat": "The platform injected MEMORY_SUMMARY containing historical evaluation-result summaries and other project history. That exposure occurred before authoring and is disclosed; those facts and results were not used to author this set. No prior fixture, gold, report, result file, runtime algorithm, or memory file was read. The parent supplied only requested fixture deletion and gold schema details."
+  },
+  "sealed_files": [
+    "holdout.json",
+    "holdout-gold.json",
+    "author.py"
+  ],
+  "sha256": {
+    "holdout.json": "509e9281c0b8c5a01acc7cb83d92e4bf59a444e273ed5e157a6661dbe231b716",
+    "holdout-gold.json": "2c2789bdee0810999961ce7e7247a77597f6fba9fc6b57adaa3ed2ee2399cd4d",
+    "author.py": "00cc3b50e4e7421a3b1e414c393d90d9f94de08589af0fb7544a646fd7f35ecb"
+  },
+  "release_rule": "Parent may read manifest.json and sealed-input-pins.json only until new R5 freeze and explicit release request."
+}

@@ -1,0 +1,58 @@
+--- copied-R17/build-protocol.py
++++ prospective-R18/build-protocol.py
+@@ -1,4 +1,4 @@
+-"""Build prospective R17 pins from final contents-free evidence. Never run/freeze."""
++"""Build prospective R18 pins from final contents-free evidence. Never run/freeze."""
+ from __future__ import annotations
+ 
+ import argparse
+@@ -13,14 +13,16 @@
+ PRODUCER_SHA = 'e80bb9f6c0adbe41c03bee3e63f6cf9d44bfa2895fa6a4369ebdeaeda504c92a'
+ GUIDE_SHA = '94b2cb4c826762af984099d8a7b653dba72e3296fe27540dfbc2046a0653bfa8'
+ HERE = Path(__file__).resolve().parent
+-PREFIX = 'docs/evidence/project-memory-quality-2026-10-21-r17/'
++PREFIX = 'docs/evidence/project-memory-quality-2026-10-21-r18/'
+ PUBLIC = ('run-experiment.py', 'test-driver.py', 'run-public-preflight.py', 'test-public-preflight.py',
+           'prepare-reader-probe.py', 'public-calibration-library.py', 'public-reader-regressions.json',
+           'judge-contract-controls.json', 'public-fixture-contract.py', 'public-fixture-contract-receipt.json',
+           'prospective-gold-semantics-contract.json', 'sealed-semantic-review-metadata.schema.json',
+           'sealed-semantic-review-findings.schema.json', 'public-contract-pack-receipt-v2.json',
+           'public-contract-spec-review-v2.json', 'public-contract-standards-review-v2.json',
+-          'build-protocol.py', 'test-protocol-builder.py', 'protocol-builder-input-contract.json')
++          'build-protocol.py', 'test-protocol-builder.py', 'protocol-builder-input-contract.json',
++          'test_public_fixture_contract_v2.py', 'test-consumer-compatibility.py',
++          'consumer-smoke.py', 'protocol-consumer-contract.json')
+ SEALED_CONTENT = {'holdout-fixture.json', 'holdout-gold.json', 'sealed-semantic-review.json',
+                   'author-fact-rationale.json', 'author.py'}
+ STABLE = ('schema_version', 'baseline_commit', 'model', 'reasoning_effort', 'jev', 'data_policy', 'histories',
+@@ -186,14 +188,14 @@
+     result = {key: deepcopy(guide[key]) for key in STABLE}
+     # These descriptions identify the current trial, not historical outcomes.
+     for key in ('reader', 'grouped_reader_dependence'):
+-        result[key] = result[key].replace('R16', 'R17')
+-    result.update(experiment='project-memory-quality-20261021-r17', driver_sha256=DRIVER_SHA,
++        result[key] = result[key].replace('R16', 'R18')
++    result.update(experiment='project-memory-quality-20261021-r18', driver_sha256=DRIVER_SHA,
+         baseline_runtime_root=str(baseline), baseline_runtime_hashes=guide['baseline_runtime_hashes'],
+         repeat_history_ids=[regen, reader], regeneration_repeat_history_ids=[regen], reader_repeat_history_ids=[reader],
+-        blind_shuffle_seed='project-memory-quality-r17-fixed-before-native',
++        blind_shuffle_seed='project-memory-quality-r18-fixed-before-native',
+         repeats='Regenerate one fresh shared prefix for '+regen+' and repeat isolated readers for '+reader+'. All primary and repeated questions remain required.',
+         budget_note='All public, primary and repeat attempts share one original clock and ledger. No retry, grade repair or post-freeze edits. Actual billing remains unknown.',
+-        historical_spend=config['historical_spend'],
++        historical_spend={'report':config['historical_spend']['path'], 'sha256':config['historical_spend']['sha256']},
+         source_repairs={'status':'final_source_candidate_not_quality_acceptance', 'runtime_receipt':config['runtime_receipt'],
+                         'runtime_files':runtime, 'common_producer_sha256':PRODUCER_SHA},
+         prospective_author_contract={'module':PREFIX+'public-fixture-contract.py','sha256':metadata['mechanical_contract_sha256']},
+@@ -218,9 +220,9 @@
+         'metadata_schema_sha256':harness[PREFIX+'sealed-semantic-review-metadata.schema.json'],
+         **{key:metadata[key] for key in ('fixture_sha256','gold_sha256','mechanical_contract_sha256','semantic_guidance_sha256','sealed_review_receipt_sha256')}}
+     result['public_preflight'] = deepcopy(guide['public_preflight'])
+-    result['public_preflight'].update(attempt_id='r17-public-v1', file_sha256={**runtime, **harness})
++    result['public_preflight'].update(attempt_id='r18-public-v1', file_sha256={**runtime, **harness})
+     result['judge_calibration'] = deepcopy(guide['judge_calibration'])
+-    result['judge_calibration'].update(attempt_id='r17-public-v1', controls=PREFIX+'judge-contract-controls.json',
++    result['judge_calibration'].update(attempt_id='r18-public-v1', controls=PREFIX+'judge-contract-controls.json',
+         library=PREFIX+'public-calibration-library.py')
+     result['protocol_preparation'] = {'status':'pins_only_not_clock_freeze_or_trial_readiness',
+         'builder_sha256':sha(Path(__file__).read_bytes()), 'input_pins':pins.files,

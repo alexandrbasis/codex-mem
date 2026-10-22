@@ -1,0 +1,21 @@
+test_four_independent_neutral_sources_fit_without_a_count_cutoff (test_project_memory_whole_source_allocation.WholeSourceAllocationTests.test_four_independent_neutral_sources_fit_without_a_count_cutoff) ... FAIL
+
+======================================================================
+FAIL: test_four_independent_neutral_sources_fit_without_a_count_cutoff (test_project_memory_whole_source_allocation.WholeSourceAllocationTests.test_four_independent_neutral_sources_fit_without_a_count_cutoff)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_whole_source_allocation.py", line 38, in test_four_independent_neutral_sources_fit_without_a_count_cutoff
+    self.assertTrue(any(node.findtext('quote_excerpt') == ref['quote_excerpt'] and
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        node.get('start') == '0' and node.get('end') == str(ref['end']) and
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        node.get('source_role') == 'user_intent' and node.get('source_field') == 'body'
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        for node in sources), xml)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><item lane="intent_custody" source_role="user_intent" capture_order_basis="local_capture_sequence_not_event_time" selection_basis="unassociated_user_context" relationship_to_query="unresolved" disposition="stored" is_requirement_claim="False" meaning="original_user_observation" uncertainty="current_applicability_unresolved" source_bundle="True"><field><source source_id="source-d" source_role="user_intent" source_field="body" start="0" end="30" source_capture_seq="4" id="s1"><quote_excerpt>The parcel label needs review.</quote_excerpt></source><source source_id="source-a" source_role="user_intent" source_field="body" start="0" end="23" source_capture_seq="1" id="s2"><quote_excerpt>Retain the green cover.</quote_excerpt></source><source source_id="source-b" source_role="user_intent" source_field="body" start="0" end="22" source_capture_seq="2" id="s3"><quote_excerpt>Keep the linen sample.</quote_excerpt></source></field></item><source-context-coverage selected_source_count="3" omitted="1"/><omitted records="0" fields="0" unassociated_user_sources="1"/></project-memory>
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (failures=1)

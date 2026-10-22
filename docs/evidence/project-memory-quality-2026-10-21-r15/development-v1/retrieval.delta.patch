@@ -1,0 +1,248 @@
+--- R14-held/project_memory_retrieval.py
++++ R15-v1/project_memory_retrieval.py
+@@ -665,6 +665,10 @@
+         if not user_only and record.get('lane') != 'episode':
+             continue
+         qualifiers = {key: record[key] for key in ('scope', 'uncertainty') if record.get(key)}
++        custody = user_only and record.get('lane') == 'intent_custody'
++        if custody:
++            qualifiers.update({key: record[key] for key in ('source_role', 'disposition',
++                'is_requirement_claim', 'meaning', 'uncertainty') if key in record})
+         if user_only and record.get('lane') == 'episode' and record.get('is_current_head') is True:
+             qualifiers.update({('context_' + key): record[key] for key in
+                 ('episode_version', 'is_current_head') if key in record})
+@@ -681,8 +685,9 @@
+                     continue
+                 key = (ref['source_id'], ref.get('source_field') or 'body', ref.get('source_role'),
+                        str(sorted((record.get('scope') or {}).items())), record.get('uncertainty'),
+-                       tuple(sorted((key, str(value)) for key, value in qualifiers.items() if key.startswith('context_'))))
+-                group = groups.setdefault(key, {'qualifiers': qualifiers, 'refs': []})
++                       json.dumps(qualifiers, sort_keys=True), custody)
++                group = groups.setdefault(key, {'qualifiers': qualifiers, 'refs': [], 'custody': custody,
++                    'fallback_only': bool(record.get('source_fallback_for_reason'))})
+                 group['refs'].append(dict(ref))
+     result = []
+     for group in groups.values():
+@@ -724,39 +729,95 @@
+     return value == ''.join(ref['quote_excerpt'] for ref in ordered)
+ 
+ 
+-def _neutral_user_context(brief: Mapping[str, Any], allowance: int) -> tuple[list[str], int, int]:
+-    records = list(brief.get('unassociated_user_context') or [])
+-    # Boundary diversity exposes earlier context and a later revision without
+-    # asserting that they are related. Sequence is never event identity/time.
+-    records.sort(key=lambda record: int(record.get('source_capture_seq_max') or 0))
+-    ordered = ([records[-1], records[0]] + records[1:-1]) if len(records) > 1 else records
+-    containers: dict[str, dict[str, Any]] = {}
+-    chosen = 0
+-    for record in ordered:
+-        if chosen == 2:
+-            break
++def _plan_original_source_transport(brief: Mapping[str, Any], records: list[Mapping[str, Any]],
++                                    budget: int, available: int) -> tuple[list[str], list[dict[str, Any]], int, int]:
++    """Allocate complete selected originals before bounded neutral supplements.
++
++    This plan owns quote transport only. Each association keeps its own scope,
++    role and uncertainty; an omitted duplicate association stays for the normal
++    record renderer, which reports any association it cannot retain.
++    """
++    user_groups = _complete_source_groups(records, user_only=True) if (
++        brief.get('user_source_coverage_requested') or brief.get('neutral_original_context')) else []
++    capture_order = dict(brief.get('user_source_capture_order') or {})
++    for record in records:
++        for field in record.get('fields', []):
++            for ref in field.get('evidence', []):
++                if ref.get('source_role') == 'user_intent':
++                    capture_order.setdefault(ref.get('source_id'), ref.get('source_capture_seq') or
++                                             record.get('source_capture_seq_max') or 0)
++    user_groups.sort(key=lambda group: (-max((capture_order.get(ref['source_id'], 0) for ref in group['refs']), default=0),
++                                       not (group.get('custody') and not group.get('fallback_only')), -sum(len(ref['quote_excerpt']) for ref in group['refs'])))
++    source_containers: dict[str, dict[str, Any]] = {}
++    grouped_intervals = []
++    other_groups = _complete_source_groups(records)
++    pending_groups = (other_groups + user_groups if brief.get('source_evidence_requested')
++                      else user_groups + other_groups)
++    associated = []
++    covered = []
++    for group in pending_groups:
++        if any(not _interval_covered(ref, covered) for ref in group['refs']):
++            associated.append(group)
++            covered.extend(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')),
++                            ref['start'], ref['end']) for ref in group['refs'])
++    neutral = sorted(brief.get('unassociated_user_context') or [],
++                     key=lambda record: int(record.get('source_capture_seq_max') or 0))
++    neutral = ([neutral[-1], neutral[0]] + neutral[1:-1]) if len(neutral) > 1 else neutral
++    neutral_groups = []
++    for record in neutral:
+         refs = [ref for field in record.get('fields', []) for ref in field.get('evidence', [])]
+         if len(refs) != 1 or refs[0].get('quote_truncated') or len(refs[0].get('quote_excerpt') or '') > 600:
+             continue
+         metadata = {key: record[key] for key in ('source_role', 'disposition', 'is_requirement_claim',
+             'meaning', 'uncertainty', 'selection_basis', 'relationship_to_query', 'scope') if key in record}
+-        key = json.dumps(metadata, sort_keys=True)
+-        prior = containers.get(key, {'refs': [], 'metadata': metadata})
+-        trial = prior['refs'] + refs
+-        attrs = _item_attrs({'id': 'unassociated-user-sources-' + str(len(containers) + (key not in containers)),
+-            'lane': 'intent_custody', 'source_bundle': True, 'source_count': len(trial),
+-            'capture_order_basis': 'local_capture_sequence_not_event_time', **metadata}, brief.get('projection'))
+-        node = '<item' + attrs + '>' + _bundle_field_xml({'evidence': trial}) + '</item>'
+-        used = sum(len(value['xml']) for value in containers.values()) - len(prior.get('xml', '')) + len(node)
+-        marker = '<source-context-coverage selected_source_count=' + _attr(chosen + 1) + ' omitted=' + _attr(len(records) - chosen - 1) + '/>'
+-        if used + len(marker) <= allowance:
+-            containers[key] = {**prior, 'refs': trial, 'xml': node}
+-            chosen += 1
+-    nodes = [value['xml'] for value in containers.values()]
+-    marker = '<source-context-coverage selected_source_count=' + _attr(chosen) + ' omitted=' + _attr(len(records) - chosen) + '/>'
+-    if records and sum(map(len, nodes)) + len(marker) <= allowance:
+-        nodes.append(marker)
+-    return nodes, chosen, len(records) - chosen
++        neutral_groups.append({'qualifiers': metadata, 'refs': refs, 'neutral': True})
++    neutral_selected, neutral_spent = 0, 0
++    neutral_limit = min(1800, budget // 3)
++    for group in associated + neutral_groups:
++        is_neutral = group.get('neutral', False)
++        if is_neutral and neutral_selected == 2:
++            continue
++        key = json.dumps((is_neutral, group.get('custody', False), group['qualifiers']), sort_keys=True)
++        container = source_containers.setdefault(key, {
++            'id': ('unassociated-user-sources-' if is_neutral else 'selected-source-') + str(len(source_containers) + 1),
++            'qualifiers': group['qualifiers'], 'refs': [], 'neutral': is_neutral})
++        trial = [*container['refs'], *group['refs']]
++        if group.get('custody'):
++            trial.sort(key=lambda ref: int(ref.get('source_capture_seq') or 0))
++        display_refs = container.get('display_refs', []) + [
++            {**{key: value for key, value in ref.items() if key != 'quote_excerpt'}, 'quote_display': 'quoted_in_context'}
++            if _interval_covered(ref, grouped_intervals) else ref for ref in group['refs']]
++        metadata = {'id': container['id'], 'lane': 'intent_custody' if is_neutral or group.get('custody') else 'source_excerpts',
++                    **group['qualifiers']}
++        if is_neutral or group.get('custody'):
++            metadata.update(source_bundle=True, source_count=len(trial),
++                            capture_order_basis='local_capture_sequence_not_event_time')
++        if group.get('custody'):
++            display_refs.sort(key=lambda ref: int(ref.get('source_capture_seq') or 0))
++        attrs = _item_attrs(metadata, brief.get('projection'))
++        node = ('<item' + attrs + '>' + _bundle_field_xml({'evidence': display_refs}) + '</item>' if is_neutral or group.get('custody') else
++                '<item' + attrs + '><field name="source_excerpts" basis="attributed_source_excerpts" field_association="not_assessed">' +
++                ''.join(_source_xml(ref, complete=True) for ref in display_refs) + '</field></item>')
++        cost = len(node) - len(container.get('xml', ''))
++        marker = '<source-context-coverage selected_source_count=' + _attr(neutral_selected + int(is_neutral)) + ' omitted=' + _attr(len(neutral) - neutral_selected - int(is_neutral)) + '/>'
++        if cost + (len(marker) if neutral else 0) > available or (
++                is_neutral and neutral_spent + cost + len(marker) > neutral_limit):
++            continue
++        available -= cost
++        if is_neutral:
++            neutral_spent += cost
++            neutral_selected += 1
++        container.update(refs=trial, display_refs=display_refs, xml=node)
++        grouped_intervals.extend(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')),
++                                  ref['start'], ref['end']) for ref in group['refs'])
++    nodes = [container['xml'] for container in source_containers.values() if container.get('xml')]
++    pointers = [ref for container in source_containers.values() if container.get('xml') for ref in container['refs']]
++    if neutral:
++        neutral_omitted = len(neutral) - neutral_selected
++        marker = '<source-context-coverage selected_source_count=' + _attr(neutral_selected) + ' omitted=' + _attr(neutral_omitted) + '/>'
++        if len(marker) <= available and neutral_spent + len(marker) <= neutral_limit:
++            nodes.append(marker)
++    return nodes, pointers, neutral_selected, len(neutral) - neutral_selected
+ 
+ 
+ def _render_project_brief(brief: Mapping[str, Any], budget: int = 6000) -> tuple[str, dict[str, int]]:
+@@ -826,55 +887,9 @@
+     complete_refs: set[tuple[Any, ...]] = set()
+     complete_quotes: set[tuple[Any, ...]] = set()
+     emitted_intervals: list[tuple[Any, ...]] = []
+-    # Pay for bounded complete source intervals before inferred field fragments.
+-    # Native execution records keep their existing atomic command/result budget.
+-    user_groups = _complete_source_groups(records, user_only=True) if brief.get('user_source_coverage_requested') else []
+-    capture_order = brief.get('user_source_capture_order') or {}
+-    user_groups.sort(key=lambda group: (-max((capture_order.get(ref['source_id'], 0) for ref in group['refs']), default=0),
+-                                       -sum(len(ref['quote_excerpt']) for ref in group['refs'])))
+-    source_allowance = min(1800, budget // 3) if user_groups or brief.get('source_evidence_requested') else 0
+-    source_parts = []
+-    source_containers: dict[str, dict[str, Any]] = {}
+-    grouped_intervals = []
+-    pending_groups = user_groups + _complete_source_groups(records)
+-    while pending_groups:
+-        # A new complete original competes before a repeated qualifier wrapper.
+-        # Qualifiers stay on their own associations; they are never merged onto
+-        # an unknown scope or a historical/neutral record.
+-        position = next((index for index, group in enumerate(pending_groups)
+-            if any(not _interval_covered(ref, grouped_intervals) for ref in group['refs'])), 0)
+-        group = pending_groups.pop(position)
+-        key = str(group['qualifiers'])
+-        container = source_containers.setdefault(key, {'id': f'selected-source-{len(source_containers) + 1}',
+-            'qualifiers': group['qualifiers'], 'refs': []})
+-        trial = [*container['refs'], *group['refs']]
+-        display_refs = container.get('display_refs', []) + [
+-            {**{key: value for key, value in ref.items() if key != 'quote_excerpt'}, 'quote_display': 'quoted_in_context'}
+-            if _interval_covered(ref, grouped_intervals) else ref for ref in group['refs']]
+-        attrs = _item_attrs({'id': container['id'], 'lane': 'source_excerpts',
+-            **group['qualifiers']}, brief.get('projection'))
+-        node = '<item' + attrs + '><field name="source_excerpts" basis="attributed_source_excerpts" field_association="not_assessed">' + ''.join(
+-            _source_xml(ref, complete=True) for ref in display_refs) + '</field></item>'
+-        previous_size = len(container.get('xml', ''))
+-        if len(node) - previous_size <= source_allowance:
+-            source_allowance -= len(node) - previous_size
+-            container.update(refs=trial, display_refs=display_refs, xml=node)
+-            grouped_intervals.extend(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')),
+-                                      ref['start'], ref['end']) for ref in group['refs'])
+-    for container in source_containers.values():
+-        if not container.get('xml'):
+-            continue
+-        source_parts.append(container['xml'])
+-        for ref in container['refs']:
+-            complete_refs.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_field', 'tool_use_id', 'source_role')))
+-            complete_quotes.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_role', 'quote_excerpt')))
+-            emitted_intervals.append(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')), ref['start'], ref['end']))
+-    if source_parts and sum(map(len, parts)) + sum(map(len, source_parts)) + len(closing) <= budget:
+-        parts.extend(source_parts)
+-    else:
+-        complete_refs.clear()
+-        complete_quotes.clear()
+-        emitted_intervals.clear()
++    # One source plan pays for already selected user originals before neutral
++    # supplements and repeated association wrappers. Every association retains
++    # its own qualifiers; capture order only orders display candidates.
+     protected = {}
+     for record in records:
+         size = _whole_execution_size(record, brief.get('projection'))
+@@ -883,9 +898,15 @@
+         elif record.get('lane') == 'source_evidence' and record.get('source_role') == 'assistant_report':
+             protected.setdefault(record['id'], _reserved_record_size(record, brief.get('projection'), set(), budget))
+     remaining = budget - sum(map(len, parts)) - len(closing)
+-    allowance = min(1800, budget // 3, max(0, remaining - sum(protected.values())))
+-    neutral_nodes, neutral_selected, neutral_omitted = _neutral_user_context(brief, allowance)
+-    parts.extend(neutral_nodes)
++    protected = {key: size for key, size in protected.items() if size <= remaining}
++    available = max(0, remaining - sum(protected.values()))
++    source_nodes, source_pointers, neutral_selected, neutral_omitted = _plan_original_source_transport(
++        brief, records, budget, available)
++    parts.extend(source_nodes)
++    for ref in source_pointers:
++        complete_refs.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_field', 'tool_use_id', 'source_role')))
++        complete_quotes.add(tuple(ref.get(key) for key in ('source_id', 'start', 'end', 'source_role', 'quote_excerpt')))
++        emitted_intervals.append(((ref.get('source_id'), ref.get('source_field') or 'body', ref.get('source_role')), ref['start'], ref['end']))
+     if brief.get('unassociated_user_context'):
+         omissions['unassociated_user_sources'] = neutral_omitted
+     role_context = list(brief.get('unassociated_role_context') or [])
+@@ -1089,6 +1110,9 @@
+                 if record.get('lane') == 'source_evidence' and quote_key in complete_quotes:
+                     displayed.pop('quote_excerpt', None)
+                     displayed['quote_display'] = 'quoted_above'
++                elif record.get('lane') == 'claim' and not grounded and ref.get('source_role') == 'user_intent' and _interval_covered(ref, emitted_intervals):
++                    displayed.pop('quote_excerpt', None)
++                    displayed['quote_display'] = 'quoted_in_context'
+                 displayed_refs.append(displayed)
+             repeated_value = _source_value_repeated(str(field.get('text') or ''), refs)
+             evidence = ''.join(_source_xml(ref, complete=grounded or repeated_value) for ref in displayed_refs)
+@@ -1171,6 +1195,10 @@
+         head = latest_head[1]
+         metadata = {key: head[key] for key in ('id', 'episode_version', 'is_current_head',
+                     'continuity_basis', 'uncertainty', 'prior_context_status', 'retained_context_fields_omitted') if key in head}
++        compressed = sum(bool(field.get('evidence')) and all(_interval_covered(ref, emitted_intervals)
++            for ref in field['evidence']) for field in head.get('fields', []))
++        if compressed:
++            metadata['field_associations_omitted'] = compressed
+         marker = '<item lane="episode"' + ''.join(' ' + key + '=' + _attr(value)
+                     for key, value in metadata.items()) + ' fields_omitted=' + _attr(len(head.get('fields', []))) + '/>'
+         if len(parts) > 1 and parts[1].startswith('<coverage'):

@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "experiment": "project-memory-quality-20261021-r2",
+  "baseline_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "medium",
+  "model_selection": "The production native runner fixes gpt-6-luna medium, verifies model/list and rejects fallback. All generator, reader and judge calls use that profile.",
+  "jev": {
+    "filter": false,
+    "quality": false,
+    "retrieval": false
+  },
+  "data_policy": "Fictional histories in isolated temporary Stores only. Never change global configuration or the installed service.",
+  "histories": {
+    "development": 4,
+    "holdout": 16,
+    "questions_per_history": 6
+  },
+  "context_chars": 6000,
+  "retrieval": "build_project_brief plus render_project_brief with include_shadow=True, identical query and character budget for both versions; questions spanning two projects divide the same total 6000-character budget across project contexts",
+  "comparison": "The baseline is the complete first repair iteration dd60f1c, including final-field preparation, user custody and original source evidence. Generate one common fictional Store per history under baseline, then clone that Store for candidate. Both therefore have exactly the same captured IDs, custody and generated objects. Candidate preparation is read-only and asserts identical logical database hashes before/after; it cannot run a processor/model. Only query planning and rendered source selection differ in product code. This isolates retrieval changes from generation variance; it does not measure a new consolidation effect.",
+  "reader": "One fresh reader per history and variant answers six questions from the shared union of six query memories. Each annotated view remains at most 6000 characters. Both variants use the same contract: a short factual checklist precedes the actual answer, but only the answer earns credit. The model selects typed inline span refs; trusted code resolves canonical citations. Bijective short source aliases pay annotation overhead. No duplicate source-text catalog enters the prompt. Gold, original history and variant are withheld from the reader.",
+  "judge": "One fresh isolated blinded judge per history and answer set receives original fictional history, gold facts and support spans, the complete shared evidence union, and the actual answers with resolved citations. Inline ref and source-alias annotation changes no quotation, role or scope. The judge sees canonical IDs after trusted resolution. Mechanical checks verify exact displayed spans against their original source field. Variant and product version never enter the prompt. The auxiliary reader checklist is excluded.",
+  "repeat_history_ids": [
+    "dev_101",
+    "dev_102",
+    "hold_101",
+    "hold_102"
+  ],
+  "repeats": "dev_101 and hold_101 independently regenerate one shared prefix and rerun BOTHarms readers/judges. dev_102 and hold_102 repeat readers/judges only. Primary excludes repeats; all spend remains in one iteration ledger.",
+  "limits": {
+    "max_calls": 180,
+    "max_observed_tokens": 3500000,
+    "wall_seconds": 5400,
+    "call_seconds": 180,
+    "jobs_per_checkpoint": 5,
+    "jobs_per_consolidation": 6,
+    "per_call_token_reservation": 100000
+  },
+  "budget_note": "This second bounded iteration allows 180 native attempts, 3,500,000 reported tokens, 5,400 wall seconds, 180 seconds per call and a 100,000-token reservation before dispatch. Development, holdout, repeats and failures share one append-only ledger and clock; unknown usage stops dispatch. The first iteration remains immutable at 244 calls and 4,158,420 tokens. historical-spend.json carries all 658 earlier native attempts and 11,654,125 reported tokens. Limits cannot be raised or reset within this iteration. Actual billed cost is unknown; Jev and coding/research/orchestration costs remain separate.",
+  "planned_call_allocation": {
+    "common_prefix_generation": 70,
+    "readers": 48,
+    "judges": 48,
+    "explicit_reserve": 14
+  },
+  "pass_criteria": {
+    "critical_errors_max": 0,
+    "candidate_fully_supported_min": 0.9,
+    "gain_min_percentage_points_if_baseline_below_90": 10,
+    "constraint_obligation_reason_recall_regression_max": 0,
+    "all_questions_must_be_graded": true,
+    "measured_improvement_required": true,
+    "baseline_at_or_above_90": "Require measurable quality gain or lower fully observed processing-plus-reader token use without worse supported quality. Passing safety/quality gate alone is not evidence of improvement.",
+    "paired_constraint_retention": "No individual question can lose constraint, obligation or reason recall that the baseline retained. Aggregate gains cannot cancel such a loss."
+  },
+  "critical_errors": [
+    "false_merge",
+    "false_closure",
+    "project_mixing",
+    "deleted_resurrection"
+  ],
+  "full_supported_answer": "All gold required facts recalled, current status and action scope correct, citations support the claims, no forbidden conclusion, no empty or evasive abstention.",
+  "metrics": [
+    "fully_supported_answer",
+    "current_state_actionability",
+    "constraint_obligation_reason_recall",
+    "citation_support",
+    "critical_error_types",
+    "empty_abstention",
+    "context_characters",
+    "latency_ms",
+    "reported_tokens",
+    "cost_usd_or_unknown"
+  ],
+  "failure_policy": "Record all started, failed and completed calls durably. Keep failed or missing answers in the planned denominator. A rejected consolidation remains an explicit pipeline failure, but the reader still receives its actual unchanged committed memory. Grade all six answers without retrying or replacing the failed job. A pipeline failure prevents a pilot pass even if answer scores happen to improve. Do not retry failed extraction silently or tune code after holdout release. Any post-freeze repair requires a new experiment and untouched holdout.",
+  "freeze_policy": "Freeze protocol, helper hash and candidate product hashes before opening sealed holdout. Root must disclose any subsequent code change and cannot claim a clean holdout pass.",
+  "limitations": [
+    "Blinded model grading remains fallible.",
+    "Six questions share one reader and up to36000characters of retrieved memory; history is the sampling unit.",
+    "The new citation contract applies equally to botharms and is a technical evaluator change; it does not retrospectively improve the first trial scores.",
+    "This comparison isolates read selection with a shared generated Store. It does not establish consolidation benefit or production behavior.",
+    "The source-fate and field-purpose limits from the first iteration remain; no blocking semantic gate is enabled."
+  ],
+  "reader_repeat_history_ids": [
+    "dev_102",
+    "hold_102"
+  ],
+  "regeneration_repeat_history_ids": [
+    "dev_101",
+    "hold_101"
+  ],
+  "blind_shuffle_seed": "project-memory-quality-blind-20261021-1",
+  "holdout_primary_questions": 96,
+  "grouped_reader_dependence": "Six questions in one fresh reader share context and are statistically dependent. Each question has its own independently selected memory capped at 6000 characters. Across six questions the combined memory can reach 36000 characters. Treat history as the sampling unit.",
+  "evidence_roles": "Assistant results require explicit reported attribution. They do not independently prove execution. User intent, assistant reports, actual tool results, local validation, deployment and production remain distinct.",
+  "capture_fidelity": "Baseline captures identical inert fictional events through normalize_capture and Store.remember. Candidate is an SQLite-backup clone AFTER baseline generation; this is valid now because both product versions already include user custody. Source IDs, observations, derived records and custody are shared. No hypothetical command is executed. Read-only preparation rejects state or watermark drift; no candidate processor runs.",
+  "retrieval_timing": "Measure local Store-open plus build_project_brief/render_project_brief per project and total per-question retrieval wall time. Save append-only retrieval-timings.jsonl separately. Timing data never enters reader or judge prompts and never changes retrieval character budgets.",
+  "export_privacy": "Export pseudonymizes real native diagnostic worker/thread/turn UUIDs deterministically, including equivalent evidence spellings. Preserve fictional provenance IDs, answers, grades, token and latency totals, and original private run files. Publish exact transformation and original/public hashes without a raw ID mapping.",
+  "historical_spend": {
+    "report": "docs/evidence/project-memory-quality-2026-10-21-r2/historical-spend.json",
+    "sha256": "ed1c545019df76f1bc6d363034ef9a9eeca637df697bad5689fa03c32b09aa14"
+  },
+  "criteria_source": {
+    "protocol": "docs/evidence/consolidation-retention-2026-10-20/protocol.json",
+    "sha256": "fc6f4ce1e2563688370ffca7e5949e7fc722c16b0ab10104d1cc34877e0424ca",
+    "unchanged_fields": [
+      "pass_criteria",
+      "critical_errors",
+      "full_supported_answer",
+      "context_chars",
+      "model",
+      "reasoning_effort",
+      "holdout_primary_questions"
+    ],
+    "comparison_change_reason": "The complete first candidate already has source custody. Both variants can now share one generated Store, so this iteration isolates retrieval changes without generation variance. Candidate preparation cannot process or change the Store."
+  },
+  "implementation_base_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+  "separate_semantic_assessment": "Jev gates remain off in both arms. New purpose filter was not justified by the separate24-case probe; its8 useful uncertain cases would be lost under blocking. It is not part of the primary effect.",
+  "previous_holdouts": "All earlier released histories, including the complete first2026-10-21control, are disclosed regressions only. New independently authored4development/16sealed holdout histories are pinned before release; previous scores are never regraded.",
+  "dispatch_wall_reservation": "Under the shared budget lock, every native dispatch reserves its full call_seconds allowance against the remaining wall_seconds, including later calls within one phase.",
+  "experiment_id": "project-memory-quality-20261021-r2",
+  "comparison_mode": "shared-prefix",
+  "baseline_runtime": "Exact isolated Git archive of dd60f1c, whose47product hashes match the first frozen candidate.",
+  "driver_sha256": "5cb9c23e23458abd1a2c6816dc4d864d5545dd07b89c8510f1a597f15cd2fd47",
+  "candidate_processing_mode": "read_only_snapshot",
+  "reader_citation_contract": "visible-span-refs-v1",
+  "new_iteration_reason": "The complete first control failed74/96with5fact losses. Diagnosis proves premature candidate-level custody dedup, an overly strict citation-boundary contract, historical-role query exclusion and reader omissions. Fixes are tested on disclosed regressions; quality must be measured on a new untouched holdout."
+}

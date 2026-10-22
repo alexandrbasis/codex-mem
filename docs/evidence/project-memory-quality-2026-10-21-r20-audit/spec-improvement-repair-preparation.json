@@ -1,0 +1,40 @@
+{
+  "status": "both_auditor_findings_fixed_synthetic_only_actual_audit_pending",
+  "prior_shadowfix_snapshot": "before-spec-v2/",
+  "prior_shadowfix_receipt_preserved_byte_exact": true,
+  "authoritative_metric": "independently recounted incremental_processing_and_reader_tokens, checked against report; complete-equivalent tokens independently checked with shared generation attribution",
+  "high_baseline_rule": "Known C/B arm totals AND ((Cscore > Bscore AND Ctokens <= Btokens) OR (Ctokens < Btokens AND Cscore >= Bscore)).",
+  "high_baseline_gate_position": "after independent equivalent-arm token reconstruction and report equality check",
+  "unknown_preservation": "Unreported/missing arm receipt usage yields None, never zero. Unknown cannot establish high-baseline improvement.",
+  "script_sha256": {
+    "held-helper-preparation.py": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+    "audit-final-export.py": "54fe2614655154bd01ee3080e190e76843357b12181d04a25b925d59e9cd8c91",
+    "audit-archive-supplement.py": "b3b7e435d1f779fed906e1eb8460c78e70acbc95cbd8eb5915be756617a25874",
+    "test-audit-contracts.py": "0ce5cf5d1f35be78b6b98a341586872c2e8c97aea1149f256b30158c415b33d7",
+    "audit_contracts.py": "a22f98e3145704beea3de8960a61d700d09f6c094d6cccfc2f87598631c0195a",
+    "test-main-improvement-path.py": "b84eb720513cf897d2177e3ca57eef3312948746c07bb072e01e4a4137814c90",
+    "test-main-binding-path.py": "33d888c7828a1ae3968ba48b53ea963297d3c613a96db313d66fcba20c85eab6"
+  },
+  "log_sha256": {
+    "improvement-red.log": "8230efacb84d4c6523427222145c697faba3df834cdd0ac44fbc5ed323d0d7f9",
+    "improvement-green.log": "a60e0d2d66e445b0734c0563e528ca7eae6f1b838b35a48522a62ef5a010522e",
+    "main-binding-v2-green.log": "c3a83593d26384c7ba197fc59d784f63c97d392d7d404bd5e99e5f1e4a48395d",
+    "contracts-v2-green.log": "c46d0b4828ed0a4991dcc028edaa3f90892fa4f6e4000662a7f0d6ca37c2a200"
+  },
+  "red_result": "Preserved shadowfix auditor fails five high-baseline rejection controls; known equal-quality/equal-token bug reproduced.",
+  "green_tests": {
+    "improvement_main_consumer": 10,
+    "binding_main_consumer": 1,
+    "contract_tests": 14,
+    "total": 25,
+    "compile": "PASS"
+  },
+  "regression_scope": "Actual main source gate-consumer statements execute with synthetic scores/metrics; actual known_total source function executes on missing/unreported/reported synthetic receipts. No tautological name-only assertion.",
+  "native_network_model_store_private_cases_or_product_edits": 0,
+  "limits": [
+    "No actual R20 audit or quality outcome claimed.",
+    "Executable seam tests do not replace a full audit of later released canonical export.",
+    "Formal release and complete export confirmation still required before actual main audit.",
+    "Existing strict critical/fact-loss/full-denominator/cap/current-unknown gates remain active; historical unknowns do not block complete-current quality decision."
+  ]
+}

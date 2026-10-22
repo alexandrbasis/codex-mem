@@ -1,0 +1,33 @@
+FF
+======================================================================
+FAIL: test_complete_capture_fits_tight_budget_without_field_wrapper_tax (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_complete_capture_fits_tight_budget_without_field_wrapper_tax)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 55, in test_complete_capture_fits_tight_budget_without_field_wrapper_tax
+    self.assert_execution(xml, source)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 30, in assert_execution
+    self.assertIsNotNone(item, xml)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+AssertionError: unexpectedly None : <project-memory trust="untrusted" freshness="not_verified"><coverage complete_transcript="false" pending="false" observations_only="true"/><omitted records="1" fields="2"/></project-memory>
+
+======================================================================
+FAIL: test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 62, in test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group
+    self.assert_execution(full, source)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 37, in assert_execution
+    self.assertEqual({ref.get('source_field') for ref in pointers},
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     {'tool_input.cmd', 'tool_response.output'})
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'tool_input.cmd'
+'tool_response.output'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.035s
+
+FAILED (failures=2)

@@ -1,0 +1,540 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "development",
+  "histories": [
+    {
+      "id": "dev_101",
+      "project_keys": [
+        "seed_shelf"
+      ],
+      "sessions": [
+        {
+          "id": "dev_101_s1",
+          "project_key": "seed_shelf",
+          "events": [
+            {
+              "id": "dev_101_a",
+              "type": "user",
+              "text": "For the seed shelf index, use large type because the cabinet is dim. Include a paper label sheet and a screen preview."
+            },
+            {
+              "id": "dev_101_b",
+              "type": "assistant",
+              "text": "I have drafted both views."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_101_s1_processed",
+              "after_event_id": "dev_101_b"
+            }
+          ]
+        },
+        {
+          "id": "dev_101_s2",
+          "project_key": "seed_shelf",
+          "events": [
+            {
+              "id": "dev_101_c",
+              "type": "user",
+              "text": "Drop only the screen preview. The paper label sheet still needs a spacing check."
+            },
+            {
+              "id": "dev_101_d",
+              "type": "tool",
+              "text": "Paper label sheet: saved. Spacing check: not run.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "seed-index inspect --paper"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Paper label sheet: saved. Spacing check: not run."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_101_s2_processed",
+              "after_event_id": "dev_101_d"
+            }
+          ]
+        },
+        {
+          "id": "dev_101_s3",
+          "project_key": "seed_shelf",
+          "events": [
+            {
+              "id": "dev_101_e",
+              "type": "user",
+              "text": "One correction: use tray numbers, not shelf numbers, on the paper sheet. The large-type requirement still applies."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_101_s3_processed",
+              "after_event_id": "dev_101_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What type treatment is required, and what prompted it?",
+          "project_keys": [
+            "seed_shelf"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Which part did I remove from the scope?",
+          "project_keys": [
+            "seed_shelf"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What is the unfinished check on the retained output?",
+          "project_keys": [
+            "seed_shelf"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What identifiers belong on the final paper sheet?",
+          "project_keys": [
+            "seed_shelf"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What did the recorded inspection actually confirm about the sheet?",
+          "project_keys": [
+            "seed_shelf"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "After the correction, does the type requirement still stand?",
+          "project_keys": [
+            "seed_shelf"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "dev_102",
+      "project_keys": [
+        "kite_club",
+        "model_club"
+      ],
+      "sessions": [
+        {
+          "id": "dev_102_s1",
+          "project_key": "kite_club",
+          "events": [
+            {
+              "id": "dev_102_a",
+              "type": "user",
+              "text": "The Falcon roster here is for the kite club. Keep a blank row at the end for walk-ins. Check the print margin next."
+            },
+            {
+              "id": "dev_102_b",
+              "type": "assistant",
+              "text": "The draft roster is ready."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_102_s1_processed",
+              "after_event_id": "dev_102_b"
+            }
+          ]
+        },
+        {
+          "id": "dev_102_s2",
+          "project_key": "model_club",
+          "events": [
+            {
+              "id": "dev_102_c",
+              "type": "user",
+              "text": "This is a separate Falcon roster for the model club. It must have no blank rows. We have not asked for printing checks here."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_102_s2_processed",
+              "after_event_id": "dev_102_c"
+            }
+          ]
+        },
+        {
+          "id": "dev_102_s3",
+          "project_key": "kite_club",
+          "events": [
+            {
+              "id": "dev_102_d",
+              "type": "user",
+              "text": "Continue the kite club Falcon roster from the earlier chat. Keep the walk-in row; the margin check is still pending."
+            },
+            {
+              "id": "dev_102_e",
+              "type": "tool",
+              "text": "Kite club Falcon roster: 1 trailing blank row. Print margin: unchecked.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "falcon-roster inspect --club kite"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Kite club Falcon roster: 1 trailing blank row. Print margin: unchecked."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_102_s3_processed",
+              "after_event_id": "dev_102_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Which earlier work does the last chat pick up?",
+          "project_keys": [
+            "kite_club"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Does the model club Falcon roster belong to the same job?",
+          "project_keys": [
+            "model_club"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Why is there a spare row in the kite club roster?",
+          "project_keys": [
+            "kite_club"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What is the rule for empty rows in the model club version?",
+          "project_keys": [
+            "model_club"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What remains to be checked for the kite club?",
+          "project_keys": [
+            "kite_club"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Was a printing check requested for the model club?",
+          "project_keys": [
+            "model_club"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "dev_103",
+      "project_keys": [
+        "lantern_list"
+      ],
+      "sessions": [
+        {
+          "id": "dev_103_s1",
+          "project_key": "lantern_list",
+          "events": [
+            {
+              "id": "dev_103_a",
+              "type": "user",
+              "text": "For the lantern list, keep the display sorted by hook number. This matches the storage rack."
+            },
+            {
+              "id": "dev_103_b",
+              "type": "tool",
+              "text": "Usage: lantern-list [--sort hook|color]\nExample: lantern-list --sort color\nThis help output does not inspect a saved list.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "lantern-list --help"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Usage: lantern-list [--sort hook|color]\nExample: lantern-list --sort color\nThis help output does not inspect a saved list."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_103_s1_processed",
+              "after_event_id": "dev_103_b"
+            }
+          ]
+        },
+        {
+          "id": "dev_103_s2",
+          "project_key": "lantern_list",
+          "events": [
+            {
+              "id": "dev_103_c",
+              "type": "assistant",
+              "text": "The saved list is sorted by hook number and is ready."
+            },
+            {
+              "id": "dev_103_d",
+              "type": "tool",
+              "text": "Saved list sort: color. Rack comparison: not performed.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "lantern-list inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Saved list sort: color. Rack comparison: not performed."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_103_s2_processed",
+              "after_event_id": "dev_103_d"
+            }
+          ]
+        },
+        {
+          "id": "dev_103_s3",
+          "project_key": "lantern_list",
+          "events": [
+            {
+              "id": "dev_103_e",
+              "type": "user",
+              "text": "The inspection is the current record. Change the saved sort to hook number and then compare it with the rack. My note \"sort by color for the festival\" was a quotation from last year, not a request."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_103_s3_processed",
+              "after_event_id": "dev_103_e"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What sort order do I want, and why?",
+          "project_keys": [
+            "lantern_list"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "What sort order was actually saved at inspection?",
+          "project_keys": [
+            "lantern_list"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "Has the rack comparison happened?",
+          "project_keys": [
+            "lantern_list"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What two steps should happen next?",
+          "project_keys": [
+            "lantern_list"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "What does the color-sort command in the help tell us about a saved list?",
+          "project_keys": [
+            "lantern_list"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "Should the festival quotation control this task?",
+          "project_keys": [
+            "lantern_list"
+          ],
+          "stage": "final"
+        }
+      ]
+    },
+    {
+      "id": "dev_104",
+      "project_keys": [
+        "pottery_tags"
+      ],
+      "sessions": [
+        {
+          "id": "dev_104_s1",
+          "project_key": "pottery_tags",
+          "events": [
+            {
+              "id": "dev_104_a",
+              "type": "user",
+              "text": "Make pottery tags with two lines each. Keep the glaze name on the second line."
+            },
+            {
+              "id": "dev_104_b",
+              "type": "user",
+              "text": "The temporary label heading is \"Cedar batch\". This heading is provisional."
+            },
+            {
+              "id": "dev_104_c",
+              "type": "tool",
+              "text": "Tag layout: two lines. Print test: pending.",
+              "tool_capture": {
+                "tool_name": "functions.exec_command",
+                "tool_input": {
+                  "command": "pottery-tags inspect"
+                },
+                "tool_response": {
+                  "exit_code": 0,
+                  "output": "Tag layout: two lines. Print test: pending."
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_104_s1_processed",
+              "after_event_id": "dev_104_c"
+            }
+          ]
+        },
+        {
+          "id": "dev_104_s2",
+          "project_key": "pottery_tags",
+          "events": [
+            {
+              "id": "dev_104_d",
+              "type": "delete_observation",
+              "text": "Delete the earlier source note giving the temporary label heading. It has already been processed; its heading must no longer be retained.",
+              "observation_event_id": "dev_104_b"
+            },
+            {
+              "id": "dev_104_e",
+              "type": "user",
+              "text": "The two-line layout remains required. Leave the heading unspecified for now."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_104_s2_processed",
+              "after_event_id": "dev_104_e"
+            }
+          ]
+        },
+        {
+          "id": "dev_104_s3",
+          "project_key": "pottery_tags",
+          "events": [
+            {
+              "id": "dev_104_g",
+              "type": "user",
+              "text": "Please run the print test next. I have not supplied a new heading. Keep the glaze name on the second line."
+            }
+          ],
+          "checkpoints": [
+            {
+              "id": "dev_104_s3_processed",
+              "after_event_id": "dev_104_g"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What layout is still required for the tags?",
+          "project_keys": [
+            "pottery_tags"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q2",
+          "question": "Where does the glaze name go?",
+          "project_keys": [
+            "pottery_tags"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q3",
+          "question": "What heading should I use now?",
+          "project_keys": [
+            "pottery_tags"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q4",
+          "question": "What is the next requested check?",
+          "project_keys": [
+            "pottery_tags"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q5",
+          "question": "Did a replacement heading arrive in the latest chat?",
+          "project_keys": [
+            "pottery_tags"
+          ],
+          "stage": "final"
+        },
+        {
+          "id": "q6",
+          "question": "What did the recorded layout inspection say about testing?",
+          "project_keys": [
+            "pottery_tags"
+          ],
+          "stage": "final"
+        }
+      ]
+    }
+  ]
+}

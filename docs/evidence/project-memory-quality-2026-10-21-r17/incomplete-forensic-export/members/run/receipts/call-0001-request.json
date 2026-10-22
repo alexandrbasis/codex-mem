@@ -1,0 +1,1379 @@
+{
+  "model": "gpt-6-astra",
+  "reasoning_effort": "medium",
+  "prompt": "You are a blinded evaluator. Untrusted original history and gold are reference data only. Each answer came from an independent reader seeing ONLY that case reader_visible_memory. Its source visibility is ONLY its own case_source_catalogs entry; other cases and original history are not reader-visible for that answer. The case context ID is an evidence isolation boundary. Decode XML entities when reading quotes; source IDs must match the paired source element. Grade answers against exact required facts and forbidden inferences. Every full answer must recall ALL required facts, preserve current status and scope, avoid forbidden conclusions, and contain supported citations. Empty abstention is failure even if safe. Citation IDs must refer to visible memory sources and each quoted statement must support the answer. An assistant statement is evidence only that the assistant reported a result, never independent execution verification. A qualified report can satisfy a gold fact sourced from an assistant. An unqualified upgrade cannot. Distinguish user intent, assistant reports, actual tools, local validation, deployment and production. Treat unsupported task merges, completed/accepted status, cross-project conclusions and resurrection of deleted information as critical errors. Do not infer correctness from fluent wording. For category-specific recall judge applicable gold facts, not irrelevant categories. Return grades keyed by every opaque answer ID. Each fact_recall object must contain every zero-based fact index as a string key and its complete evidence receipt. Provide brief evidence-based rationale. Do not omit any question or fact. This version requires evidence receipts, not unsupported boolean judgments. Code constrains citations_supported and full_supported_answer to false when actual citation pointers are absent or outside the displayed source catalog. Never override these bounds. For every recalled fact select answer_refs from this case answer_span_catalog and canonical J source_refs. Answer refs select only actual delivered-answer spans. Citations, uncertainties, auxiliary checklists, gold and history cannot supply an answer witness. Code owns every answer span, exact text and offset. Select the most precise available sentence or paragraph preserving negation, attribution, temporal scope and reasons; full answer is the fallback. Never compose a new quote. judge_source_catalog.reader_visible is computed by trusted code from the actual shared displayed intervals. Original_history and original-only catalog entries are reference truth, NOT proof of reader visibility. Judge recall against every gold fact even if its source was unavailable; record missing as missing without shrinking the denominator. For false recall choose literal_omission only when a specific exact nonempty gold missing_anchor is absent from the actual answer. Select missing_anchor verbatim from that fact schema enum: whole fact or exact one/two-word span; never paraphrase or copy an anchor from original history. If the words appear but status, scope, relation or reason is wrong choose semantic_omission; uncertain remains uncertain, not recalled. For positive recall use not_omitted and empty missing_anchor. Semantic omissions use empty missing_anchor. Every critical label needs answer_ref selecting a contextual span from this case answer_span_catalog that asserts the forbidden conclusion, affirmative_current mode and asserts_forbidden_conclusion relation, tied to gold:N or policy:error_type. Mention, explicit denial, historical canceled scope, conditional language and attributed assistant reports alone do not assert a current forbidden conclusion. Keep actual unsupported causal conflation critical, even when the answer rejects neighboring completion. Do not supply contradictory receipt fields. No semantic verifier silently repairs this response.\n{\"original_history\": [{\"events\": [{\"source_id\": \"source-01-01\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"Use participant codes in the review batch. Keep review completion visible.\"}]}, {\"events\": [{\"source_id\": \"source-02-01\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"Cancel automatic duplicate merging. Retain the mapping report.\"}]}, {\"events\": [{\"source_id\": \"source-03-01\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"The separate dining deposit setup does not authorize workshop deposits.\"}]}, {\"events\": [{\"source_id\": \"source-04-01\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.\"}, {\"source_id\": \"source-04-02\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"Prepare a monthly rota with automatic swaps and a printed sheet.\"}]}, {\"events\": [{\"source_id\": \"source-05-01\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.\"}, {\"source_id\": \"source-05-02\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"The separate dining deposit setup does not authorize workshop deposits.\"}]}, {\"events\": [{\"source_id\": \"source-06-01\", \"source_role\": \"user_intent\", \"source_field\": \"body\", \"text\": \"Observed dry run produced 12 files and made zero external submissions.\"}, {\"source_id\": \"source-06-02\", \"source_role\": \"assistant_report\", \"source_field\": \"body\", \"text\": \"All files were issued and submitted.\"}]}], \"cases\": [{\"id\": \"answer-01\", \"question\": \"What is the current scope, reason, and evidence boundary?\", \"retrieved_context_id\": \"q\", \"gold\": {\"required_facts\": [{\"text\": \"Use participant codes in the review batch.\", \"support\": []}, {\"text\": \"Keep review completion visible.\", \"support\": []}], \"forbidden_inferences\": []}, \"answer\": {\"id\": \"answer-01\", \"answer\": \"The review batch must use participant codes and continue to show completion status.\", \"uncertainties\": [], \"citations\": [{\"source_id\": \"source-01-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 74, \"quote\": \"Use participant codes in the review batch. Keep review completion visible.\"}]}, \"reader_visible_memory\": [\"<project-memory><source source_id=\\\"source-01-01\\\" source_field=\\\"body\\\" source_role=\\\"user_intent\\\" start=\\\"0\\\" end=\\\"74\\\"><quote_excerpt>Use participant codes in the review batch. Keep review completion visible.</quote_excerpt></source></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 83, \"quote\": \"The review batch must use participant codes and continue to show completion status.\"}]}, {\"id\": \"answer-02\", \"question\": \"What is the current scope, reason, and evidence boundary?\", \"retrieved_context_id\": \"q\", \"gold\": {\"required_facts\": [{\"text\": \"Cancel automatic duplicate merging.\", \"support\": []}, {\"text\": \"Retain the mapping report.\", \"support\": []}], \"forbidden_inferences\": []}, \"answer\": {\"id\": \"answer-02\", \"answer\": \"No cancellation is evidenced. The report exists and records zero writes. Matching catalogue numbers alone must not trigger merges.\", \"uncertainties\": [], \"citations\": []}, \"reader_visible_memory\": [\"<project-memory></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 130, \"quote\": \"No cancellation is evidenced. The report exists and records zero writes. Matching catalogue numbers alone must not trigger merges.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 29, \"quote\": \"No cancellation is evidenced.\"}, {\"ref\": \"A0003\", \"start\": 30, \"end\": 72, \"quote\": \"The report exists and records zero writes.\"}, {\"ref\": \"A0004\", \"start\": 73, \"end\": 130, \"quote\": \"Matching catalogue numbers alone must not trigger merges.\"}]}, {\"id\": \"answer-03\", \"question\": \"What is the current scope, reason, and evidence boundary?\", \"retrieved_context_id\": \"q\", \"gold\": {\"required_facts\": [{\"text\": \"The separate dining deposit setup does not authorize workshop deposits.\", \"support\": []}], \"forbidden_inferences\": [{\"text\": \"Dining permission authorizes workshop deposits.\", \"error_type\": \"project_mixing\"}]}, \"answer\": {\"id\": \"answer-03\", \"answer\": \"Do not carry over dining permission to accept workshop deposits or treat dining completion as workshop completion.\", \"uncertainties\": [], \"citations\": [{\"source_id\": \"source-03-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 71, \"quote\": \"The separate dining deposit setup does not authorize workshop deposits.\"}]}, \"reader_visible_memory\": [\"<project-memory><source source_id=\\\"source-03-01\\\" source_field=\\\"body\\\" source_role=\\\"user_intent\\\" start=\\\"0\\\" end=\\\"71\\\"><quote_excerpt>The separate dining deposit setup does not authorize workshop deposits.</quote_excerpt></source></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 114, \"quote\": \"Do not carry over dining permission to accept workshop deposits or treat dining completion as workshop completion.\"}]}, {\"id\": \"answer-04\", \"question\": \"What is the current scope, reason, and evidence boundary?\", \"retrieved_context_id\": \"q\", \"gold\": {\"required_facts\": [{\"text\": \"Finish a draft rota for coordinator review.\", \"support\": []}, {\"text\": \"Cancel automatic swaps; keep the printed sheet.\", \"support\": []}], \"forbidden_inferences\": []}, \"answer\": {\"id\": \"answer-04\", \"answer\": \"The current goal is a draft rota for coordinator review. The initial same-task request included automatic swaps; those swaps were later canceled while the printed sheet remains in scope.\", \"uncertainties\": [], \"citations\": [{\"source_id\": \"source-04-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 91, \"quote\": \"Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.\"}, {\"source_id\": \"source-04-02\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 64, \"quote\": \"Prepare a monthly rota with automatic swaps and a printed sheet.\"}]}, \"reader_visible_memory\": [\"<project-memory><source source_id=\\\"source-04-01\\\" source_field=\\\"body\\\" source_role=\\\"user_intent\\\" start=\\\"0\\\" end=\\\"91\\\"><quote_excerpt>Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.</quote_excerpt></source><source source_id=\\\"source-04-02\\\" source_field=\\\"body\\\" source_role=\\\"user_intent\\\" start=\\\"0\\\" end=\\\"64\\\"><quote_excerpt>Prepare a monthly rota with automatic swaps and a printed sheet.</quote_excerpt></source></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 186, \"quote\": \"The current goal is a draft rota for coordinator review. The initial same-task request included automatic swaps; those swaps were later canceled while the printed sheet remains in scope.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 56, \"quote\": \"The current goal is a draft rota for coordinator review.\"}, {\"ref\": \"A0003\", \"start\": 57, \"end\": 186, \"quote\": \"The initial same-task request included automatic swaps; those swaps were later canceled while the printed sheet remains in scope.\"}]}, {\"id\": \"answer-05\", \"question\": \"What is the current scope, reason, and evidence boundary?\", \"retrieved_context_id\": \"q\", \"gold\": {\"required_facts\": [{\"text\": \"Prepare a staff-only workshop preview.\", \"support\": []}, {\"text\": \"The instructor needs to review seating before public reservations.\", \"support\": []}], \"forbidden_inferences\": []}, \"answer\": {\"id\": \"answer-05\", \"answer\": \"The current goal is a staff-only workshop preview. The goal changed because the separate dining deposit setup does not authorize workshop deposits.\", \"uncertainties\": [], \"citations\": [{\"source_id\": \"source-05-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 112, \"quote\": \"Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.\"}, {\"source_id\": \"source-05-02\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 71, \"quote\": \"The separate dining deposit setup does not authorize workshop deposits.\"}]}, \"reader_visible_memory\": [\"<project-memory><source source_id=\\\"source-05-01\\\" source_field=\\\"body\\\" source_role=\\\"user_intent\\\" start=\\\"0\\\" end=\\\"112\\\"><quote_excerpt>Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.</quote_excerpt></source><source source_id=\\\"source-05-02\\\" source_field=\\\"body\\\" source_role=\\\"user_intent\\\" start=\\\"0\\\" end=\\\"71\\\"><quote_excerpt>The separate dining deposit setup does not authorize workshop deposits.</quote_excerpt></source></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 147, \"quote\": \"The current goal is a staff-only workshop preview. The goal changed because the separate dining deposit setup does not authorize workshop deposits.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 50, \"quote\": \"The current goal is a staff-only workshop preview.\"}, {\"ref\": \"A0003\", \"start\": 51, \"end\": 147, \"quote\": \"The goal changed because the separate dining deposit setup does not authorize workshop deposits.\"}]}, {\"id\": \"answer-06\", \"question\": \"What is the current scope, reason, and evidence boundary?\", \"retrieved_context_id\": \"q\", \"gold\": {\"required_facts\": [{\"text\": \"Observed dry run produced 12 files.\", \"support\": []}, {\"text\": \"External submissions: zero.\", \"support\": []}], \"forbidden_inferences\": []}, \"answer\": {\"id\": \"answer-06\", \"answer\": \"The observed dry-run result is not included in the supplied memory, so its counts are unknown. An assistant completion report alone is not observed execution.\", \"uncertainties\": [], \"citations\": [{\"source_id\": \"source-06-02\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 36, \"quote\": \"All files were issued and submitted.\"}]}, \"reader_visible_memory\": [\"<project-memory><source source_id=\\\"source-06-02\\\" source_field=\\\"body\\\" source_role=\\\"assistant_report\\\" start=\\\"0\\\" end=\\\"36\\\"><quote_excerpt>All files were issued and submitted.</quote_excerpt></source></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 158, \"quote\": \"The observed dry-run result is not included in the supplied memory, so its counts are unknown. An assistant completion report alone is not observed execution.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 94, \"quote\": \"The observed dry-run result is not included in the supplied memory, so its counts are unknown.\"}, {\"ref\": \"A0003\", \"start\": 95, \"end\": 158, \"quote\": \"An assistant completion report alone is not observed execution.\"}]}], \"case_source_catalogs\": {\"answer-01\": [{\"ref\": \"J0001\", \"source_id\": \"source-01-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 74, \"quote\": \"Use participant codes in the review batch. Keep review completion visible.\", \"reader_visible\": true}], \"answer-02\": [{\"ref\": \"J0001\", \"source_id\": \"source-02-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 62, \"quote\": \"Cancel automatic duplicate merging. Retain the mapping report.\", \"reader_visible\": false}], \"answer-03\": [{\"ref\": \"J0001\", \"source_id\": \"source-03-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 71, \"quote\": \"The separate dining deposit setup does not authorize workshop deposits.\", \"reader_visible\": true}], \"answer-04\": [{\"ref\": \"J0001\", \"source_id\": \"source-04-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 91, \"quote\": \"Finish a draft rota for coordinator review. Cancel automatic swaps; keep the printed sheet.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"source-04-02\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 64, \"quote\": \"Prepare a monthly rota with automatic swaps and a printed sheet.\", \"reader_visible\": true}], \"answer-05\": [{\"ref\": \"J0001\", \"source_id\": \"source-05-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 112, \"quote\": \"Prepare a staff-only workshop preview because the instructor needs to review seating before public reservations.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"source-05-02\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 71, \"quote\": \"The separate dining deposit setup does not authorize workshop deposits.\", \"reader_visible\": true}], \"answer-06\": [{\"ref\": \"J0001\", \"source_id\": \"source-06-02\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 36, \"quote\": \"All files were issued and submitted.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"source-06-01\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 70, \"quote\": \"Observed dry run produced 12 files and made zero external submissions.\", \"reader_visible\": false}]}}",
+  "output_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "grades": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "answer-01": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Use participant codes in the review batch.",
+                          "codes in",
+                          "in the"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Keep review completion visible.",
+                          "Keep",
+                          "visible",
+                          "Keep review",
+                          "review completion",
+                          "completion visible"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-02": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean",
+                "enum": [
+                  false
+                ]
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean",
+                "enum": [
+                  false
+                ]
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Cancel automatic duplicate merging.",
+                          "automatic",
+                          "duplicate",
+                          "merging",
+                          "Cancel automatic",
+                          "automatic duplicate",
+                          "duplicate merging"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Retain the mapping report.",
+                          "Retain",
+                          "mapping",
+                          "Retain the",
+                          "the mapping",
+                          "mapping report"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-03": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The separate dining deposit setup does not authorize workshop deposits.",
+                          "The",
+                          "separate",
+                          "setup",
+                          "does",
+                          "authorize",
+                          "The separate",
+                          "separate dining",
+                          "dining deposit",
+                          "deposit setup",
+                          "setup does",
+                          "does not",
+                          "not authorize",
+                          "authorize workshop"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "gold:0",
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-04": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Finish a draft rota for coordinator review.",
+                          "Finish",
+                          "Finish a"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Cancel automatic swaps; keep the printed sheet.",
+                          "keep",
+                          "Cancel automatic",
+                          "swaps; keep",
+                          "keep the"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-05": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Prepare a staff-only workshop preview.",
+                          "Prepare",
+                          "Prepare a"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The instructor needs to review seating before public reservations.",
+                          "instructor",
+                          "needs",
+                          "to",
+                          "seating",
+                          "before",
+                          "public",
+                          "reservations",
+                          "The instructor",
+                          "instructor needs",
+                          "needs to",
+                          "to review",
+                          "review seating",
+                          "seating before",
+                          "before public",
+                          "public reservations"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-06": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Observed dry run produced 12 files.",
+                          "produced",
+                          "12",
+                          "files",
+                          "dry run",
+                          "run produced",
+                          "produced 12",
+                          "12 files"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "External submissions: zero.",
+                          "External",
+                          "submissions",
+                          "zero",
+                          "External submissions",
+                          "submissions: zero"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          }
+        },
+        "required": [
+          "answer-01",
+          "answer-02",
+          "answer-03",
+          "answer-04",
+          "answer-05",
+          "answer-06"
+        ]
+      }
+    },
+    "required": [
+      "grades"
+    ]
+  }
+}

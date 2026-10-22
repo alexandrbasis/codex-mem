@@ -1,0 +1,25 @@
+.E...........
+======================================================================
+ERROR: test_durable_ownership_roundtrip_and_tamper_rejection (__main__.OwnershipTests.test_durable_ownership_roundtrip_and_tamper_rejection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/apply-simulation/scripts/consolidation_experiment/test_reader_assertion_ownership.py", line 148, in test_durable_ownership_roundtrip_and_tamper_rejection
+    h.isolated_readers(args,PROTOCOL,{'id':'public-fiction'},destination,context,originals,catalog,0,'state-pin','complete')
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/apply-simulation/scripts/project_memory_consolidation_experiment.py", line 1283, in isolated_readers
+    'output': {'answers': answers}, 'metrics': combined_reader_metrics(parts),
+                                               ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/apply-simulation/scripts/project_memory_consolidation_experiment.py", line 1215, in combined_reader_metrics
+    reported = [reported_metrics(part) for part in parts]
+                ~~~~~~~~~~~~~~~~^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/apply-simulation/scripts/project_memory_consolidation_experiment.py", line 256, in reported_metrics
+    if not usage([{'status': 'started'}, {'status': 'completed', 'metrics': metrics}])['token_accounting_complete']:
+           ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/codex-mem-quality-20261021-r19-reader-development/apply-simulation/scripts/project_memory_consolidation_experiment.py", line 188, in usage
+    from codex_mem.pricing import token_counts
+ModuleNotFoundError: No module named 'codex_mem'
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.024s
+
+FAILED (errors=1)

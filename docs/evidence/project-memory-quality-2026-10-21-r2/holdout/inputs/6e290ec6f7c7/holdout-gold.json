@@ -1,0 +1,2096 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "questions": {
+    "hold_101/q1": {
+      "required_facts": [
+        {
+          "text": "Show whole numbers.",
+          "support": [
+            {
+              "session_id": "hold_101_s1",
+              "event_index": 0,
+              "event_id": "hold_101_a",
+              "fragment": "show piece counts in whole numbers"
+            }
+          ]
+        },
+        {
+          "text": "Volunteers count by hand.",
+          "support": [
+            {
+              "session_id": "hold_101_s1",
+              "event_index": 0,
+              "event_id": "hold_101_a",
+              "fragment": "the volunteers count by hand"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "actionable"
+    },
+    "hold_101/q2": {
+      "required_facts": [
+        {
+          "text": "The photo column was cancelled.",
+          "support": [
+            {
+              "session_id": "hold_101_s2",
+              "event_index": 0,
+              "event_id": "hold_101_c",
+              "fragment": "Cancel just the photo column."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The register was cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "actionable"
+    },
+    "hold_101/q3": {
+      "required_facts": [
+        {
+          "text": "Call it pieces absent.",
+          "support": [
+            {
+              "session_id": "hold_101_s3",
+              "event_index": 0,
+              "event_id": "hold_101_e",
+              "fragment": "call that retained column \"pieces absent\""
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_101/q4": {
+      "required_facts": [
+        {
+          "text": "Keep the cells empty pending inspection.",
+          "support": [
+            {
+              "session_id": "hold_101_s3",
+              "event_index": 0,
+              "event_id": "hold_101_e",
+              "fragment": "Its cells should still stay empty pending inspection."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "actionable"
+    },
+    "hold_101/q5": {
+      "required_facts": [
+        {
+          "text": "It has not started.",
+          "support": [
+            {
+              "session_id": "hold_101_s2",
+              "event_index": 1,
+              "event_id": "hold_101_d",
+              "fragment": "Box inspection: not started."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The boxes have been checked.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "hold_101/q6": {
+      "required_facts": [
+        {
+          "text": "The boxes must be checked first.",
+          "support": [
+            {
+              "session_id": "hold_101_s2",
+              "event_index": 0,
+              "event_id": "hold_101_c",
+              "fragment": "leave its cells empty until the boxes are checked"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_102/q1": {
+      "required_facts": [
+        {
+          "text": "The trail Pebble cards from the first chat.",
+          "support": [
+            {
+              "session_id": "hold_102_s3",
+              "event_index": 0,
+              "event_id": "hold_102_d",
+              "fragment": "Picking up the trail Pebble cards from the first chat"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "actionable"
+    },
+    "hold_102/q2": {
+      "required_facts": [
+        {
+          "text": "Walkers can read them at a glance.",
+          "support": [
+            {
+              "session_id": "hold_102_s1",
+              "event_index": 0,
+              "event_id": "hold_102_a",
+              "fragment": "so walkers can read them at a glance"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_102/q3": {
+      "required_facts": [
+        {
+          "text": "The museum cards are a separate job.",
+          "support": [
+            {
+              "session_id": "hold_102_s2",
+              "event_index": 0,
+              "event_id": "hold_102_b",
+              "fragment": "The museum Pebble cards are a separate job."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All Pebble cards are one shared task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "separate_work",
+      "expected_actionability": "informational"
+    },
+    "hold_102/q4": {
+      "required_facts": [
+        {
+          "text": "A written object title.",
+          "support": [
+            {
+              "session_id": "hold_102_s2",
+              "event_index": 0,
+              "event_id": "hold_102_b",
+              "fragment": "Each card needs a written object title."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Museum cards must be wordless arrows.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_scope",
+      "expected_actionability": "actionable"
+    },
+    "hold_102/q5": {
+      "required_facts": [
+        {
+          "text": "Review the bend marker next.",
+          "support": [
+            {
+              "session_id": "hold_102_s3",
+              "event_index": 0,
+              "event_id": "hold_102_d",
+              "fragment": "review the bend marker next"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_102/q6": {
+      "required_facts": [
+        {
+          "text": "Proofreading is pending.",
+          "support": [
+            {
+              "session_id": "hold_102_s2",
+              "event_index": 1,
+              "event_id": "hold_102_c",
+              "fragment": "Proofreading: pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Museum proofreading is finished.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "actionable"
+    },
+    "hold_103/q1": {
+      "required_facts": [
+        {
+          "text": "To move carts.",
+          "support": [
+            {
+              "session_id": "hold_103_s1",
+              "event_index": 0,
+              "event_id": "hold_103_a",
+              "fragment": "for moving carts"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_103/q2": {
+      "required_facts": [
+        {
+          "text": "It is queued but not printed.",
+          "support": [
+            {
+              "session_id": "hold_103_s2",
+              "event_index": 1,
+              "event_id": "hold_103_d",
+              "fragment": "Paper map: queued, not printed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The paper map is printed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "hold_103/q3": {
+      "required_facts": [
+        {
+          "text": "The aisle check has not run.",
+          "support": [
+            {
+              "session_id": "hold_103_s2",
+              "event_index": 1,
+              "event_id": "hold_103_d",
+              "fragment": "Aisle check: not run."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_103/q4": {
+      "required_facts": [
+        {
+          "text": "Finish the paper copy first.",
+          "support": [
+            {
+              "session_id": "hold_103_s3",
+              "event_index": 0,
+              "event_id": "hold_103_e",
+              "fragment": "Finish the paper copy"
+            }
+          ]
+        },
+        {
+          "text": "Check the aisle first.",
+          "support": [
+            {
+              "session_id": "hold_103_s3",
+              "event_index": 0,
+              "event_id": "hold_103_e",
+              "fragment": "check the aisle before starting the projection trial"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "ordering",
+      "expected_actionability": "actionable"
+    },
+    "hold_103/q5": {
+      "required_facts": [
+        {
+          "text": "No map was rendered by the help command.",
+          "support": [
+            {
+              "session_id": "hold_103_s1",
+              "event_index": 1,
+              "event_id": "hold_103_b",
+              "fragment": "Help only; no map was rendered."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The projection trial was completed by the example command.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "help_scope",
+      "expected_actionability": "informational"
+    },
+    "hold_103/q6": {
+      "required_facts": [
+        {
+          "text": "Use the status as the record.",
+          "support": [
+            {
+              "session_id": "hold_103_s3",
+              "event_index": 0,
+              "event_id": "hold_103_e",
+              "fragment": "Use that status as the record."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The assistant completion claim overrides the status.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "evidence_priority",
+      "expected_actionability": "informational"
+    },
+    "hold_104/q1": {
+      "required_facts": [
+        {
+          "text": "Put tabs on the top edge.",
+          "support": [
+            {
+              "session_id": "hold_104_s3",
+              "event_index": 0,
+              "event_id": "hold_104_e",
+              "fragment": "use the top edge"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_104/q2": {
+      "required_facts": [
+        {
+          "text": "The right edge catches on the storage sleeve.",
+          "support": [
+            {
+              "session_id": "hold_104_s3",
+              "event_index": 0,
+              "event_id": "hold_104_e",
+              "fragment": "The right edge catches on the storage sleeve."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_104/q3": {
+      "required_facts": [
+        {
+          "text": "The cooking-time index is still wanted.",
+          "support": [
+            {
+              "session_id": "hold_104_s3",
+              "event_index": 0,
+              "event_id": "hold_104_e",
+              "fragment": "The cooking-time index is still wanted."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All index work was cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "actionable"
+    },
+    "hold_104/q4": {
+      "required_facts": [
+        {
+          "text": "Use the penciled durations.",
+          "support": [
+            {
+              "session_id": "hold_104_s2",
+              "event_index": 0,
+              "event_id": "hold_104_c",
+              "fragment": "using those penciled durations"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement",
+      "expected_actionability": "actionable"
+    },
+    "hold_104/q5": {
+      "required_facts": [
+        {
+          "text": "The duration cross-check is pending.",
+          "support": [
+            {
+              "session_id": "hold_104_s2",
+              "event_index": 1,
+              "event_id": "hold_104_d",
+              "fragment": "Duration cross-check: pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The duration cross-check passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "actionable"
+    },
+    "hold_104/q6": {
+      "required_facts": [
+        {
+          "text": "Only the alphabetical index.",
+          "support": [
+            {
+              "session_id": "hold_104_s2",
+              "event_index": 0,
+              "event_id": "hold_104_c",
+              "fragment": "Drop the alphabetical index only."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "informational"
+    },
+    "hold_105/q1": {
+      "required_facts": [
+        {
+          "text": "Station numbers.",
+          "support": [
+            {
+              "session_id": "hold_105_s2",
+              "event_index": 1,
+              "event_id": "hold_105_d",
+              "fragment": "bench labels must show station numbers"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement",
+      "expected_actionability": "actionable"
+    },
+    "hold_105/q2": {
+      "required_facts": [
+        {
+          "text": "Use dark ink.",
+          "support": [
+            {
+              "session_id": "hold_105_s2",
+              "event_index": 1,
+              "event_id": "hold_105_d",
+              "fragment": "in dark ink"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "actionable"
+    },
+    "hold_105/q3": {
+      "required_facts": [
+        {
+          "text": "No spare-bench wording is approved.",
+          "support": [
+            {
+              "session_id": "hold_105_s2",
+              "event_index": 1,
+              "event_id": "hold_105_d",
+              "fragment": "No spare-bench wording is approved."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Quiet corner is approved wording.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "informational"
+    },
+    "hold_105/q4": {
+      "required_facts": [
+        {
+          "text": "Leave it undecided.",
+          "support": [
+            {
+              "session_id": "hold_105_s3",
+              "event_index": 0,
+              "event_id": "hold_105_e",
+              "fragment": "Leave the spare-bench wording undecided."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Restore Quiet corner from the earlier note.",
+          "error_type": "deleted_resurrection"
+        }
+      ],
+      "current_state_required": true,
+      "category": "deletion",
+      "expected_actionability": "actionable"
+    },
+    "hold_105/q5": {
+      "required_facts": [
+        {
+          "text": "A smudge test of the numbered labels.",
+          "support": [
+            {
+              "session_id": "hold_105_s3",
+              "event_index": 0,
+              "event_id": "hold_105_e",
+              "fragment": "The next step is a smudge test of the numbered labels."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_105/q6": {
+      "required_facts": [
+        {
+          "text": "They were draft only.",
+          "support": [
+            {
+              "session_id": "hold_105_s1",
+              "event_index": 1,
+              "event_id": "hold_105_b",
+              "fragment": "Numbered labels: draft only."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The labels passed the smudge test and are final.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "hold_106/q1": {
+      "required_facts": [
+        {
+          "text": "So children can sort them.",
+          "support": [
+            {
+              "session_id": "hold_106_s1",
+              "event_index": 0,
+              "event_id": "hold_106_a",
+              "fragment": "so children can sort them"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_106/q2": {
+      "required_facts": [
+        {
+          "text": "Six fronts had silhouettes.",
+          "support": [
+            {
+              "session_id": "hold_106_s2",
+              "event_index": 0,
+              "event_id": "hold_106_c",
+              "fragment": "Fronts with silhouettes: 6."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "All eight fronts had silhouettes.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "hold_106/q3": {
+      "required_facts": [
+        {
+          "text": "The two missing silhouettes.",
+          "support": [
+            {
+              "session_id": "hold_106_s2",
+              "event_index": 1,
+              "event_id": "hold_106_d",
+              "fragment": "Complete the two missing silhouettes before reviewing captions."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_106/q4": {
+      "required_facts": [
+        {
+          "text": "Use common names only.",
+          "support": [
+            {
+              "session_id": "hold_106_s3",
+              "event_index": 0,
+              "event_id": "hold_106_e",
+              "fragment": "the back captions should use common names only"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_106/q5": {
+      "required_facts": [
+        {
+          "text": "Keep one bird per card.",
+          "support": [
+            {
+              "session_id": "hold_106_s3",
+              "event_index": 0,
+              "event_id": "hold_106_e",
+              "fragment": "Keep one bird per card."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "informational"
+    },
+    "hold_106/q6": {
+      "required_facts": [
+        {
+          "text": "Back captions were unreviewed.",
+          "support": [
+            {
+              "session_id": "hold_106_s2",
+              "event_index": 0,
+              "event_id": "hold_106_c",
+              "fragment": "Back captions: unreviewed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The caption review is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "false_completion",
+      "expected_actionability": "actionable"
+    },
+    "hold_107/q1": {
+      "required_facts": [
+        {
+          "text": "The reading-cart checklist from the earlier chat.",
+          "support": [
+            {
+              "session_id": "hold_107_s3",
+              "event_index": 0,
+              "event_id": "hold_107_d",
+              "fragment": "Resume the reading-cart checklist from our earlier chat."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "actionable"
+    },
+    "hold_107/q2": {
+      "required_facts": [
+        {
+          "text": "Tall books tip on the top shelf.",
+          "support": [
+            {
+              "session_id": "hold_107_s1",
+              "event_index": 0,
+              "event_id": "hold_107_a",
+              "fragment": "because tall books tip on the top shelf"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_107/q3": {
+      "required_facts": [
+        {
+          "text": "By watering day.",
+          "support": [
+            {
+              "session_id": "hold_107_s2",
+              "event_index": 0,
+              "event_id": "hold_107_b",
+              "fragment": "List pots by watering day."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Order plant pots using book height.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_scope",
+      "expected_actionability": "actionable"
+    },
+    "hold_107/q4": {
+      "required_facts": [
+        {
+          "text": "The plant-cart checklist is separate.",
+          "support": [
+            {
+              "session_id": "hold_107_s2",
+              "event_index": 0,
+              "event_id": "hold_107_b",
+              "fragment": "My Maple checklist here is separate: it is for the plant cart."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Maple denotes one shared checklist task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "separate_work",
+      "expected_actionability": "informational"
+    },
+    "hold_107/q5": {
+      "required_facts": [
+        {
+          "text": "Check the wheels next.",
+          "support": [
+            {
+              "session_id": "hold_107_s3",
+              "event_index": 0,
+              "event_id": "hold_107_d",
+              "fragment": "Check the wheels next"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_107/q6": {
+      "required_facts": [
+        {
+          "text": "Tray fit has not been checked.",
+          "support": [
+            {
+              "session_id": "hold_107_s2",
+              "event_index": 1,
+              "event_id": "hold_107_c",
+              "fragment": "Tray fit: not checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The plant cart needs the reading-cart wheel check because they share a checklist.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "actionable"
+    },
+    "hold_108/q1": {
+      "required_facts": [
+        {
+          "text": "Group by width.",
+          "support": [
+            {
+              "session_id": "hold_108_s3",
+              "event_index": 0,
+              "event_id": "hold_108_e",
+              "fragment": "leave the grouping as width"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement",
+      "expected_actionability": "actionable"
+    },
+    "hold_108/q2": {
+      "required_facts": [
+        {
+          "text": "It makes the dividers easy to label.",
+          "support": [
+            {
+              "session_id": "hold_108_s1",
+              "event_index": 0,
+              "event_id": "hold_108_a",
+              "fragment": "This makes the dividers easy to label."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_108/q3": {
+      "required_facts": [
+        {
+          "text": "No drawer data was loaded.",
+          "support": [
+            {
+              "session_id": "hold_108_s1",
+              "event_index": 1,
+              "event_id": "hold_108_b",
+              "fragment": "No drawer data was loaded."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The help example recorded a shade grouping for this drawer.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "help_scope",
+      "expected_actionability": "informational"
+    },
+    "hold_108/q4": {
+      "required_facts": [
+        {
+          "text": "It was a quoted example only.",
+          "support": [
+            {
+              "session_id": "hold_108_s2",
+              "event_index": 0,
+              "event_id": "hold_108_c",
+              "fragment": "That is a quoted example only"
+            }
+          ]
+        },
+        {
+          "text": "Width grouping remained the requirement.",
+          "support": [
+            {
+              "session_id": "hold_108_s2",
+              "event_index": 0,
+              "event_id": "hold_108_c",
+              "fragment": "my width grouping remains the requirement"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The quoted shade example replaced the width request.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "quoted_text",
+      "expected_actionability": "informational"
+    },
+    "hold_108/q5": {
+      "required_facts": [
+        {
+          "text": "Compare the guide with the divider count.",
+          "support": [
+            {
+              "session_id": "hold_108_s3",
+              "event_index": 0,
+              "event_id": "hold_108_e",
+              "fragment": "Compare the guide with the divider count next"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The divider comparison has passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_108/q6": {
+      "required_facts": [
+        {
+          "text": "It continues the same drawer guide.",
+          "support": [
+            {
+              "session_id": "hold_108_s3",
+              "event_index": 0,
+              "event_id": "hold_108_e",
+              "fragment": "Continue with the same drawer guide."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "informational"
+    },
+    "hold_109/q1": {
+      "required_facts": [
+        {
+          "text": "The texture column is still needed.",
+          "support": [
+            {
+              "session_id": "hold_109_s2",
+              "event_index": 0,
+              "event_id": "hold_109_c",
+              "fragment": "The texture column is still needed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The whole tile-sample sheet was cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "actionable"
+    },
+    "hold_109/q2": {
+      "required_facts": [
+        {
+          "text": "Only the shine column.",
+          "support": [
+            {
+              "session_id": "hold_109_s2",
+              "event_index": 0,
+              "event_id": "hold_109_c",
+              "fragment": "Remove only the shine column."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "informational"
+    },
+    "hold_109/q3": {
+      "required_facts": [
+        {
+          "text": "Smooth or rough.",
+          "support": [
+            {
+              "session_id": "hold_109_s3",
+              "event_index": 0,
+              "event_id": "hold_109_e",
+              "fragment": "describe texture as smooth or rough"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_109/q4": {
+      "required_facts": [
+        {
+          "text": "The sample spaces are narrow.",
+          "support": [
+            {
+              "session_id": "hold_109_s1",
+              "event_index": 0,
+              "event_id": "hold_109_a",
+              "fragment": "because the sample spaces are narrow"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_109/q5": {
+      "required_facts": [
+        {
+          "text": "Label fit has not been checked.",
+          "support": [
+            {
+              "session_id": "hold_109_s2",
+              "event_index": 1,
+              "event_id": "hold_109_d",
+              "fragment": "Label fit: not checked."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Label fit is verified.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_109/q6": {
+      "required_facts": [
+        {
+          "text": "Labels must remain short.",
+          "support": [
+            {
+              "session_id": "hold_109_s3",
+              "event_index": 0,
+              "event_id": "hold_109_e",
+              "fragment": "Keep the labels short."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "informational"
+    },
+    "hold_110/q1": {
+      "required_facts": [
+        {
+          "text": "The doorway sign remains.",
+          "support": [
+            {
+              "session_id": "hold_110_s2",
+              "event_index": 0,
+              "event_id": "hold_110_c",
+              "fragment": "Keep the doorway sign"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "Both signs were cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "actionable"
+    },
+    "hold_110/q2": {
+      "required_facts": [
+        {
+          "text": "Only the counter sign.",
+          "support": [
+            {
+              "session_id": "hold_110_s2",
+              "event_index": 0,
+              "event_id": "hold_110_c",
+              "fragment": "Cancel the counter sign only."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "informational"
+    },
+    "hold_110/q3": {
+      "required_facts": [
+        {
+          "text": "Tools return.",
+          "support": [
+            {
+              "session_id": "hold_110_s3",
+              "event_index": 0,
+              "event_id": "hold_110_d",
+              "fragment": "correct the heading to \"Tools return\""
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_110/q4": {
+      "required_facts": [
+        {
+          "text": "It stands out on the dark wall.",
+          "support": [
+            {
+              "session_id": "hold_110_s1",
+              "event_index": 0,
+              "event_id": "hold_110_a",
+              "fragment": "so it stands out on the dark wall"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_110/q5": {
+      "required_facts": [
+        {
+          "text": "Check the doorway sign against the wall.",
+          "support": [
+            {
+              "session_id": "hold_110_s3",
+              "event_index": 0,
+              "event_id": "hold_110_d",
+              "fragment": "check it against the wall"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The wall contrast check is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_110/q6": {
+      "required_facts": [
+        {
+          "text": "It follows up on the doorway sign from that chat.",
+          "support": [
+            {
+              "session_id": "hold_110_s3",
+              "event_index": 0,
+              "event_id": "hold_110_d",
+              "fragment": "Following up on the doorway sign from that chat"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "informational"
+    },
+    "hold_111/q1": {
+      "required_facts": [
+        {
+          "text": "They match the pocket shapes.",
+          "support": [
+            {
+              "session_id": "hold_111_s1",
+              "event_index": 0,
+              "event_id": "hold_111_a",
+              "fragment": "to match the pocket shapes"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_111/q2": {
+      "required_facts": [
+        {
+          "text": "Rectangular labels.",
+          "support": [
+            {
+              "session_id": "hold_111_s2",
+              "event_index": 0,
+              "event_id": "hold_111_b",
+              "fragment": "Use rectangular labels here."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The button board requires round labels.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_scope",
+      "expected_actionability": "actionable"
+    },
+    "hold_111/q3": {
+      "required_facts": [
+        {
+          "text": "It is independent of the marble board.",
+          "support": [
+            {
+              "session_id": "hold_111_s2",
+              "event_index": 0,
+              "event_id": "hold_111_b",
+              "fragment": "is independent of the marble board"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The two Orbit boards are the same task.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "separate_work",
+      "expected_actionability": "informational"
+    },
+    "hold_111/q4": {
+      "required_facts": [
+        {
+          "text": "The marble Orbit board from the first conversation.",
+          "support": [
+            {
+              "session_id": "hold_111_s3",
+              "event_index": 0,
+              "event_id": "hold_111_d",
+              "fragment": "Carry on with the marble Orbit board from the first conversation."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "actionable"
+    },
+    "hold_111/q5": {
+      "required_facts": [
+        {
+          "text": "The label-size check is pending.",
+          "support": [
+            {
+              "session_id": "hold_111_s3",
+              "event_index": 1,
+              "event_id": "hold_111_e",
+              "fragment": "Marble board label-size check: pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The label-size check passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_111/q6": {
+      "required_facts": [
+        {
+          "text": "The fasteners.",
+          "support": [
+            {
+              "session_id": "hold_111_s2",
+              "event_index": 0,
+              "event_id": "hold_111_b",
+              "fragment": "Check the fasteners after labeling."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The marble inspection completed the button-board fastener check.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_112/q1": {
+      "required_facts": [
+        {
+          "text": "One row per tray.",
+          "support": [
+            {
+              "session_id": "hold_112_s3",
+              "event_index": 0,
+              "event_id": "hold_112_e",
+              "fragment": "Keep one row per tray."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement",
+      "expected_actionability": "actionable"
+    },
+    "hold_112/q2": {
+      "required_facts": [
+        {
+          "text": "Each tray is stored as a unit.",
+          "support": [
+            {
+              "session_id": "hold_112_s1",
+              "event_index": 0,
+              "event_id": "hold_112_a",
+              "fragment": "because each tray is stored as a unit"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_112/q3": {
+      "required_facts": [
+        {
+          "text": "The paper export failed.",
+          "support": [
+            {
+              "session_id": "hold_112_s2",
+              "event_index": 1,
+              "event_id": "hold_112_d",
+              "fragment": "Paper export: failed."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The paper export finished successfully.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "hold_112/q4": {
+      "required_facts": [
+        {
+          "text": "Page width was not set.",
+          "support": [
+            {
+              "session_id": "hold_112_s2",
+              "event_index": 1,
+              "event_id": "hold_112_d",
+              "fragment": "Reason: page width not set."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "informational"
+    },
+    "hold_112/q5": {
+      "required_facts": [
+        {
+          "text": "Set the page width.",
+          "support": [
+            {
+              "session_id": "hold_112_s3",
+              "event_index": 0,
+              "event_id": "hold_112_e",
+              "fragment": "Set the page width"
+            }
+          ]
+        },
+        {
+          "text": "Retry the paper export.",
+          "support": [
+            {
+              "session_id": "hold_112_s3",
+              "event_index": 0,
+              "event_id": "hold_112_e",
+              "fragment": "retry the paper export"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_112/q6": {
+      "required_facts": [
+        {
+          "text": "The example was only documentation.",
+          "support": [
+            {
+              "session_id": "hold_112_s3",
+              "event_index": 0,
+              "event_id": "hold_112_e",
+              "fragment": "The example with rows per shell was only documentation."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The example changed the actual row rule to shell.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "help_scope",
+      "expected_actionability": "informational"
+    },
+    "hold_113/q1": {
+      "required_facts": [
+        {
+          "text": "The washable section.",
+          "support": [
+            {
+              "session_id": "hold_113_s2",
+              "event_index": 0,
+              "event_id": "hold_113_c",
+              "fragment": "Keep the washable section"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The whole guide was dropped.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "actionable"
+    },
+    "hold_113/q2": {
+      "required_facts": [
+        {
+          "text": "The delicate section.",
+          "support": [
+            {
+              "session_id": "hold_113_s2",
+              "event_index": 0,
+              "event_id": "hold_113_c",
+              "fragment": "Remove the delicate section for now."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "informational"
+    },
+    "hold_113/q3": {
+      "required_facts": [
+        {
+          "text": "From light to dark.",
+          "support": [
+            {
+              "session_id": "hold_113_s3",
+              "event_index": 0,
+              "event_id": "hold_113_e",
+              "fragment": "order it from light to dark"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_113/q4": {
+      "required_facts": [
+        {
+          "text": "To be readable across the table.",
+          "support": [
+            {
+              "session_id": "hold_113_s1",
+              "event_index": 0,
+              "event_id": "hold_113_a",
+              "fragment": "so the guide is readable across the table"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_113/q5": {
+      "required_facts": [
+        {
+          "text": "The stack-order check.",
+          "support": [
+            {
+              "session_id": "hold_113_s2",
+              "event_index": 1,
+              "event_id": "hold_113_d",
+              "fragment": "Stack-order check: incomplete."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The stack order has been verified.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_113/q6": {
+      "required_facts": [
+        {
+          "text": "Keep the large heading.",
+          "support": [
+            {
+              "session_id": "hold_113_s3",
+              "event_index": 0,
+              "event_id": "hold_113_e",
+              "fragment": "Keep the large heading."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "informational"
+    },
+    "hold_114/q1": {
+      "required_facts": [
+        {
+          "text": "Five rounds.",
+          "support": [
+            {
+              "session_id": "hold_114_s3",
+              "event_index": 0,
+              "event_id": "hold_114_e",
+              "fragment": "make room for five rounds"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    },
+    "hold_114/q2": {
+      "required_facts": [
+        {
+          "text": "Only the rules card.",
+          "support": [
+            {
+              "session_id": "hold_114_s2",
+              "event_index": 0,
+              "event_id": "hold_114_c",
+              "fragment": "Cancel only the rules card."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The score-sheet work was cancelled.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "partial_cancellation",
+      "expected_actionability": "informational"
+    },
+    "hold_114/q3": {
+      "required_facts": [
+        {
+          "text": "Circles.",
+          "support": [
+            {
+              "session_id": "hold_114_s3",
+              "event_index": 0,
+              "event_id": "hold_114_e",
+              "fragment": "Keep circles for the marks"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "actionable"
+    },
+    "hold_114/q4": {
+      "required_facts": [
+        {
+          "text": "Squares look like the board spaces.",
+          "support": [
+            {
+              "session_id": "hold_114_s1",
+              "event_index": 0,
+              "event_id": "hold_114_a",
+              "fragment": "because squares look like the board spaces"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_114/q5": {
+      "required_facts": [
+        {
+          "text": "Test with the wooden counters.",
+          "support": [
+            {
+              "session_id": "hold_114_s3",
+              "event_index": 0,
+              "event_id": "hold_114_e",
+              "fragment": "test it with the wooden counters next"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The counter test already passed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_114/q6": {
+      "required_facts": [
+        {
+          "text": "Four rounds were in the inspected draft.",
+          "support": [
+            {
+              "session_id": "hold_114_s2",
+              "event_index": 1,
+              "event_id": "hold_114_d",
+              "fragment": "Score sheet rounds: 4."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "informational"
+    },
+    "hold_115/q1": {
+      "required_facts": [
+        {
+          "text": "The window Harbor display from the earlier chat.",
+          "support": [
+            {
+              "session_id": "hold_115_s3",
+              "event_index": 0,
+              "event_id": "hold_115_d",
+              "fragment": "Continue our window Harbor display from the earlier chat."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "continuation",
+      "expected_actionability": "actionable"
+    },
+    "hold_115/q2": {
+      "required_facts": [
+        {
+          "text": "So the dark paper boats are visible.",
+          "support": [
+            {
+              "session_id": "hold_115_s1",
+              "event_index": 0,
+              "event_id": "hold_115_a",
+              "fragment": "so the dark paper boats are visible"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "informational"
+    },
+    "hold_115/q3": {
+      "required_facts": [
+        {
+          "text": "A dark background.",
+          "support": [
+            {
+              "session_id": "hold_115_s2",
+              "event_index": 0,
+              "event_id": "hold_115_b",
+              "fragment": "Use a dark background for the pale wooden boats."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The shelf project should use the window project pale background.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "project_scope",
+      "expected_actionability": "actionable"
+    },
+    "hold_115/q4": {
+      "required_facts": [
+        {
+          "text": "The shelf display is a separate project.",
+          "support": [
+            {
+              "session_id": "hold_115_s2",
+              "event_index": 0,
+              "event_id": "hold_115_b",
+              "fragment": "This Harbor display is a separate shelf project."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The two Harbor displays are one job.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "separate_work",
+      "expected_actionability": "informational"
+    },
+    "hold_115/q5": {
+      "required_facts": [
+        {
+          "text": "Glare.",
+          "support": [
+            {
+              "session_id": "hold_115_s3",
+              "event_index": 0,
+              "event_id": "hold_115_d",
+              "fragment": "Next, check glare."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The glare check has been completed.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_115/q6": {
+      "required_facts": [
+        {
+          "text": "The shelf-depth check.",
+          "support": [
+            {
+              "session_id": "hold_115_s2",
+              "event_index": 1,
+              "event_id": "hold_115_c",
+              "fragment": "Shelf-depth check: pending."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The window glare check replaces the shelf-depth check.",
+          "error_type": "project_mixing"
+        }
+      ],
+      "current_state_required": true,
+      "category": "tool_evidence",
+      "expected_actionability": "actionable"
+    },
+    "hold_116/q1": {
+      "required_facts": [
+        {
+          "text": "Sort by decade.",
+          "support": [
+            {
+              "session_id": "hold_116_s1",
+              "event_index": 0,
+              "event_id": "hold_116_a",
+              "fragment": "sort sections by decade"
+            }
+          ]
+        },
+        {
+          "text": "So empty spaces line up with the album.",
+          "support": [
+            {
+              "session_id": "hold_116_s1",
+              "event_index": 0,
+              "event_id": "hold_116_a",
+              "fragment": "so the empty spaces line up with the album"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "requirement_reason",
+      "expected_actionability": "actionable"
+    },
+    "hold_116/q2": {
+      "required_facts": [
+        {
+          "text": "Keep empty sections for missing decades.",
+          "support": [
+            {
+              "session_id": "hold_116_s2",
+              "event_index": 0,
+              "event_id": "hold_116_c",
+              "fragment": "Keep empty sections for missing decades."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "constraint_retention",
+      "expected_actionability": "actionable"
+    },
+    "hold_116/q3": {
+      "required_facts": [
+        {
+          "text": "The comment was quoted, not accepted.",
+          "support": [
+            {
+              "session_id": "hold_116_s2",
+              "event_index": 0,
+              "event_id": "hold_116_c",
+              "fragment": "I am quoting that comment, not accepting it."
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The visitor comment became the user requirement.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "quoted_text",
+      "expected_actionability": "informational"
+    },
+    "hold_116/q4": {
+      "required_facts": [
+        {
+          "text": "No guide was saved.",
+          "support": [
+            {
+              "session_id": "hold_116_s1",
+              "event_index": 1,
+              "event_id": "hold_116_b",
+              "fragment": "no guide was saved"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The help example changed the saved sort to country.",
+          "error_type": "false_merge"
+        }
+      ],
+      "current_state_required": true,
+      "category": "help_scope",
+      "expected_actionability": "informational"
+    },
+    "hold_116/q5": {
+      "required_facts": [
+        {
+          "text": "Review the empty sections against the album.",
+          "support": [
+            {
+              "session_id": "hold_116_s3",
+              "event_index": 0,
+              "event_id": "hold_116_e",
+              "fragment": "review the empty sections against the album"
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [
+        {
+          "text": "The empty-section review is complete.",
+          "error_type": "false_closure"
+        }
+      ],
+      "current_state_required": true,
+      "category": "open_work",
+      "expected_actionability": "actionable"
+    },
+    "hold_116/q6": {
+      "required_facts": [
+        {
+          "text": "Print full decade headings such as 1980s.",
+          "support": [
+            {
+              "session_id": "hold_116_s3",
+              "event_index": 0,
+              "event_id": "hold_116_e",
+              "fragment": "print decade headings in full, such as \"1980s\""
+            }
+          ]
+        }
+      ],
+      "forbidden_inferences": [],
+      "current_state_required": true,
+      "category": "late_correction",
+      "expected_actionability": "actionable"
+    }
+  }
+}

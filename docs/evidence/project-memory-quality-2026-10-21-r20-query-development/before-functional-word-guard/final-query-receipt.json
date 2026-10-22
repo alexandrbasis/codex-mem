@@ -1,0 +1,407 @@
+{
+  "status": "offline_query_repair_regressions_verified_only",
+  "quality_gate_pass_claim": false,
+  "answer_or_grade_changes": 0,
+  "r19_status": "closed FAIL unchanged",
+  "runtime_file_changed": [
+    "codex_mem/project_memory_query.py"
+  ],
+  "query_before_sha256": "4d0bef0fe97774415cb856a8d2a20f4443e6648b9198100702b292d5f2100ada",
+  "query_after_sha256": "386b08d1afbcbd3bd3ca6e628aee0e0c763a67e8f9aa2aa04915a755d32d281f",
+  "contract_tests_sha256": "f3e86bc0d2d747dbd1b5cc3264cec26f9f6019fc9f0e4edeb1a20761a4b17b10",
+  "targeted_tests": [
+    {
+      "pattern": "test_project_memory_query*.py",
+      "exit_code": 0,
+      "seconds": 0.219,
+      "log": "docs/evidence/project-memory-quality-2026-10-21-r20-query-development/test_project_memory_queryall.py.log",
+      "tests": 52,
+      "log_sha256": "9969d94b854decaddda4ce8c6bd8025ed3d226f0cc7847a71373a007576f99be"
+    },
+    {
+      "pattern": "test_project_scope*.py",
+      "exit_code": 0,
+      "seconds": 0.427,
+      "log": "docs/evidence/project-memory-quality-2026-10-21-r20-query-development/test_project_scopeall.py.log",
+      "tests": 26,
+      "log_sha256": "fcc12c6af0016e4a623acc8b31d104ad5018f9b212d6285e1accf72509e555f2"
+    },
+    {
+      "pattern": "test_environment_constraint_queries.py",
+      "exit_code": 0,
+      "seconds": 0.685,
+      "log": "docs/evidence/project-memory-quality-2026-10-21-r20-query-development/test_environment_constraint_queries.py.log",
+      "tests": 22,
+      "log_sha256": "c2f1e22a0415ab9e14bbc72d25196975b30bec98d64deec14bb4abc2eae4ce11"
+    },
+    {
+      "pattern": "test_project_memory_request_reference.py",
+      "exit_code": 0,
+      "seconds": 0.367,
+      "log": "docs/evidence/project-memory-quality-2026-10-21-r20-query-development/test_project_memory_request_reference.py.log",
+      "tests": 5,
+      "log_sha256": "f592e7476d14074c9f2f0a81217b95c964b2254cb502a84cd4ed521fcc32acd6"
+    },
+    {
+      "pattern": "test_context_query_performance.py",
+      "exit_code": 0,
+      "seconds": 0.667,
+      "log": "docs/evidence/project-memory-quality-2026-10-21-r20-query-development/test_context_query_performance.py.log",
+      "tests": 2,
+      "log_sha256": "262bd4a8ba47ea435929e0ff1b019c543183815a368a396e4952558342757cc5"
+    },
+    {
+      "pattern": "test_project_memory_retrieval.py",
+      "exit_code": 0,
+      "seconds": 0.768,
+      "log": "docs/evidence/project-memory-quality-2026-10-21-r20-query-development/test_project_memory_retrieval.py.log",
+      "tests": 31,
+      "log_sha256": "a63f54ef1166f5f9e32d221580ffa46e7e7cb35b38481ef57396a0ffcb689e7d"
+    }
+  ],
+  "targeted_test_total": 138,
+  "vertical_red_green_cycles": 6,
+  "replay": {
+    "scope": "96 disclosed R19 candidate contexts before and after query repair",
+    "before_saved_byteexact": 96,
+    "after_saved_byteexact": 83,
+    "changed_contexts": 13,
+    "source_visibility_gain_contexts": 3,
+    "lost_previously_visible_source_intervals": 0,
+    "maximum_context_characters": 5614,
+    "context_budget": 6000,
+    "owner_budget_formula": "max(1000, 6000 // len(selected_scopes) - 100)",
+    "original_store_policy": "SQLite mode=ro backup only; Store opens fresh scratch copies only",
+    "original_pinned_files_unchanged": 64,
+    "source_rows": [
+      {
+        "case": "R19H02",
+        "id": "q2",
+        "question": "Why was the shelf-code work reopened, and how broad is the new pass?",
+        "old_visible_source_intervals": 9,
+        "new_visible_source_intervals": 9,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5470
+      },
+      {
+        "case": "R19H02",
+        "id": "q3",
+        "question": "What is the latest measured status of the glaze-weight work?",
+        "old_visible_source_intervals": 9,
+        "new_visible_source_intervals": 9,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5570
+      },
+      {
+        "case": "R19H07",
+        "id": "q2",
+        "question": "What conductor-aisle width must the orchestra plan retain?",
+        "old_visible_source_intervals": 8,
+        "new_visible_source_intervals": 8,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5575
+      },
+      {
+        "case": "R19H07",
+        "id": "q5",
+        "question": "What is the current status of empty-seat assignments in the orchestra plan?",
+        "old_visible_source_intervals": 1,
+        "new_visible_source_intervals": 9,
+        "lost_intervals": [],
+        "gained_intervals": [
+          {
+            "source_id": "47b08dea3e6041afbe69061ee58cf32f",
+            "source_field": "tool_response.output",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "76",
+            "quote": "percussion check: rear gap 0.6 m; required gap 0.9 m; conductor aisle 1.2 m."
+          },
+          {
+            "source_id": "47b08dea3e6041afbe69061ee58cf32f",
+            "source_field": "tool_input.command",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "33",
+            "quote": "linden-orchestra check percussion"
+          },
+          {
+            "source_id": "d16f7fc3eee343bab56e3d55187734e3",
+            "source_field": "body",
+            "source_role": "user_intent",
+            "start": "0",
+            "end": "134",
+            "quote": "The Linden Orchestra seating plan has a string section pass and a percussion clearance pass. Keep the conductor aisle 1.2 metres wide."
+          },
+          {
+            "source_id": "5d407527245e4c5685175144ee91c8c6",
+            "source_field": "body",
+            "source_role": "user_intent",
+            "start": "0",
+            "end": "79",
+            "quote": "Accept the string rows. The seating plan remains open for percussion clearance."
+          },
+          {
+            "source_id": "2475b7e3c1984716ba15a805bc8c2fc8",
+            "source_field": "tool_response.output",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "65",
+            "quote": "seating check: string rows fit; percussion clearance not checked."
+          },
+          {
+            "source_id": "2475b7e3c1984716ba15a805bc8c2fc8",
+            "source_field": "tool_input.command",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "30",
+            "quote": "linden-orchestra check strings"
+          },
+          {
+            "source_id": "47b08dea3e6041afbe69061ee58cf32f",
+            "source_field": "body",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "76",
+            "quote": "percussion check: rear gap 0.6 m; required gap 0.9 m; conductor aisle 1.2 m."
+          },
+          {
+            "source_id": "2475b7e3c1984716ba15a805bc8c2fc8",
+            "source_field": "body",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "65",
+            "quote": "seating check: string rows fit; percussion clearance not checked."
+          }
+        ],
+        "after_context_characters": 5459
+      },
+      {
+        "case": "R19H08",
+        "id": "q3",
+        "question": "Does the nursery timer audit reopen the display dawn-ramp experiment?",
+        "old_visible_source_intervals": 8,
+        "new_visible_source_intervals": 8,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5524
+      },
+      {
+        "case": "R19H08",
+        "id": "q6",
+        "question": "At what brightness did the captured dawn-ramp test detect flicker?",
+        "old_visible_source_intervals": 9,
+        "new_visible_source_intervals": 9,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5293
+      },
+      {
+        "case": "R19H09",
+        "id": "q5",
+        "question": "What is required before relying on eastern-gate access now?",
+        "old_visible_source_intervals": 4,
+        "new_visible_source_intervals": 9,
+        "lost_intervals": [],
+        "gained_intervals": [
+          {
+            "source_id": "e102b83c9ec84c65bdfed5b449720a53",
+            "source_field": "tool_response.output",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "70",
+            "quote": "bench 4 recheck: new coordinate recorded; ranger confirmation pending."
+          },
+          {
+            "source_id": "e102b83c9ec84c65bdfed5b449720a53",
+            "source_field": "tool_input.command",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "27",
+            "quote": "rowan-trail recheck bench-4"
+          },
+          {
+            "source_id": "f2d47ade027d4c81b626a46d87944392",
+            "source_field": "body",
+            "source_role": "user_intent",
+            "start": "0",
+            "end": "63",
+            "quote": "Accept the eleven coordinates and close the bench mapping task."
+          },
+          {
+            "source_id": "1a522ab5471c4dc5a30d50c56ed786a6",
+            "source_field": "body",
+            "source_role": "user_intent",
+            "start": "0",
+            "end": "90",
+            "quote": "For Rowan Trail bench mapping, record bench coordinates without publishing visitor routes."
+          },
+          {
+            "source_id": "bb39291382f54ee48c15ea14a6c494f8",
+            "source_field": "tool_response.output",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "55",
+            "quote": "bench map: 11 coordinates verified; route layer absent."
+          },
+          {
+            "source_id": "bb39291382f54ee48c15ea14a6c494f8",
+            "source_field": "tool_input.command",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "26",
+            "quote": "rowan-trail verify benches"
+          }
+        ],
+        "after_context_characters": 5511
+      },
+      {
+        "case": "R19H10",
+        "id": "q1",
+        "question": "What inventory measure did the user request for the spool-bin reconciliation?",
+        "old_visible_source_intervals": 8,
+        "new_visible_source_intervals": 8,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5560
+      },
+      {
+        "case": "R19H10",
+        "id": "q2",
+        "question": "What was accepted, and why was the green-bin work dropped?",
+        "old_visible_source_intervals": 8,
+        "new_visible_source_intervals": 8,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 4561
+      },
+      {
+        "case": "R19H10",
+        "id": "q4",
+        "question": "What does the final blue-label save establish about local and physical labels?",
+        "old_visible_source_intervals": 9,
+        "new_visible_source_intervals": 9,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5466
+      },
+      {
+        "case": "R19H11",
+        "id": "q1",
+        "question": "What condition permits exporting the public comet-show cut, and which take must stay private?",
+        "old_visible_source_intervals": 8,
+        "new_visible_source_intervals": 8,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5507
+      },
+      {
+        "case": "R19H11",
+        "id": "q3",
+        "question": "What did the assistant report about public-cut export after the complete caption review?",
+        "old_visible_source_intervals": 0,
+        "new_visible_source_intervals": 8,
+        "lost_intervals": [],
+        "gained_intervals": [
+          {
+            "source_id": "b7b1a4162a9b47dc96b0688baab09247",
+            "source_field": "tool_response.output",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "46",
+            "quote": "comet caption review: 24 passed; unresolved=0."
+          },
+          {
+            "source_id": "b7b1a4162a9b47dc96b0688baab09247",
+            "source_field": "tool_input.command",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "33",
+            "quote": "vesper-dome review captions --all"
+          },
+          {
+            "source_id": "767a238c3abf4e4d82232f99dd0c526e",
+            "source_field": "body",
+            "source_role": "assistant_report",
+            "start": "0",
+            "end": "74",
+            "quote": "The complete caption check passes. I have not exported the public cut yet."
+          },
+          {
+            "source_id": "4f9d27261ff0462b961c9b86dc8a7ec0",
+            "source_field": "body",
+            "source_role": "user_intent",
+            "start": "0",
+            "end": "153",
+            "quote": "For Vesper Dome\u2019s comet show, you may export the public cut only if every caption has passed spelling review. Keep the narrator\u2019s rehearsal take private."
+          },
+          {
+            "source_id": "fa1dad57c99048e69a40309273fa3325",
+            "source_field": "body",
+            "source_role": "user_intent",
+            "start": "0",
+            "end": "153",
+            "quote": "Continue the same dome show. The misspelling is fixed; run the complete caption review before exporting. The reveal cue needs a fresh timing measurement."
+          },
+          {
+            "source_id": "36cf6b4361874ac09eb1014d08e3b91f",
+            "source_field": "tool_response.output",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "58",
+            "quote": "comet caption review: 23 passed; 1 misspelling unresolved."
+          },
+          {
+            "source_id": "36cf6b4361874ac09eb1014d08e3b91f",
+            "source_field": "tool_input.command",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "27",
+            "quote": "vesper-dome review captions"
+          },
+          {
+            "source_id": "b7b1a4162a9b47dc96b0688baab09247",
+            "source_field": "body",
+            "source_role": "tool_record",
+            "start": "0",
+            "end": "46",
+            "quote": "comet caption review: 24 passed; unresolved=0."
+          }
+        ],
+        "after_context_characters": 5561
+      },
+      {
+        "case": "R19H15",
+        "id": "q2",
+        "question": "What did the spare-unit test record, including its scope limit?",
+        "old_visible_source_intervals": 10,
+        "new_visible_source_intervals": 10,
+        "lost_intervals": [],
+        "gained_intervals": [],
+        "after_context_characters": 5369
+      }
+    ],
+    "network_calls": 0,
+    "native_calls": 0,
+    "model_calls": 0,
+    "before_receipt_sha256": "88ae7f7cb192168ecaaebf2512cca9c3337a981c018cca0f39662d3e46d2971f",
+    "after_receipt_sha256": "8d147aeaf30562c03687f65f5ff79bd2b5093776840e5e3a93f42361a03b82eb",
+    "superseded_attempt": "incorrect-owner-budget replay files retain initial seven multi-scope mismatches; excluded from final conclusions"
+  },
+  "architecture_source_delta": {
+    "stage": "local read query planning",
+    "change": "Unquoted alphabetic hyphen modifier plus ordinary alphabetic head is topical unless explicit identity or existing scope guard protects it. Only lexical matching input splits eligible compounds.",
+    "unchanged": "Original query bytes, original source bytes and spans, project read ownership, model/provider boundaries, capture/processing/storage, reader prompt and all saved R19 answers/grades.",
+    "identity_protection": "Quotes including multiword phrases, function/module/file/command/artifact/task/version/environment labels, calls, paths, members, numeric/version/environment constraints, explicit unknown project labels and coordinated scope names."
+  },
+  "limits": [
+    "This finite English syntax convention does not identify nouns or infer intended identity.",
+    "A bare unknown or unselected scope name retains prior hard guards. An unquoted name plus ordinary-looking head is ambiguous and follows the modifier convention.",
+    "Unsupported function words or adverbs can resemble heads. Quoting or explicit project/code labels disambiguate literal identity.",
+    "Source visibility is mechanical. It does not establish answer quality, entailment, acceptance or a fresh R20 goal pass.",
+    "No fresh R20 sealed input was read and no model, native, network or semantic-classifier call was made."
+  ]
+}

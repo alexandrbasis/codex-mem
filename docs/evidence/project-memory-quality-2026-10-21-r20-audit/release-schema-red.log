@@ -1,0 +1,17 @@
+E....
+======================================================================
+ERROR: test_actual_main_flat_freeze_consumer (__main__.ReleaseSchema.test_actual_main_flat_freeze_consumer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/docs/evidence/project-memory-quality-2026-10-21-r20-audit/test-release-schema-v2.py", line 13, in test_actual_main_flat_freeze_consumer
+    exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),str(args.source),'exec'),env);self.assertEqual(checks,[('actual_freeze_release_binding',True)])
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export.py", line 68, in <module>
+    check(sha((run / 'freeze.json').read_bytes()) == release['actual_freeze']['sha256'], 'actual_freeze_release_binding')
+                                                     ~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'actual_freeze'
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.039s
+
+FAILED (errors=1)

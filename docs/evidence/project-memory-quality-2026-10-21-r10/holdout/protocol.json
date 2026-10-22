@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "experiment": "project-memory-quality-20261021-r10",
+  "baseline_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+  "model": "gpt-6-luna",
+  "reasoning_effort": "medium",
+  "model_selection": "Generator and reader retain the production native gpt-6-luna medium profile. Judge alone uses gpt-6-astra medium in an isolated experiment adapter; actual availability/profile must be verified without fallback. This is a provisional task-specific calibration choice, not a market ranking or proof of general adequacy.",
+  "jev": {
+    "filter": false,
+    "quality": false,
+    "retrieval": false
+  },
+  "data_policy": "Fictional histories in isolated temporary Stores only. Never change global configuration or the installed service.",
+  "histories": {
+    "development": 0,
+    "holdout": 16,
+    "questions_per_history": 6
+  },
+  "context_chars": 6000,
+  "retrieval": "build_project_brief plus render_project_brief with include_shadow=True, identical query and character budget for both versions; questions spanning two projects divide the same total 6000-character budget across project contexts",
+  "comparison": "The baseline is the complete first repair iteration dd60f1c, including final-field preparation, user custody and original source evidence. Generate one common fictional Store per history under baseline, then clone that Store for candidate. Both therefore have exactly the same captured IDs, custody and generated objects. Candidate preparation is read-only and asserts identical logical database hashes before/after; it cannot run a processor/model. Only query planning and rendered source selection differ in product code. This isolates retrieval changes from generation variance; it does not measure a new consolidation effect.",
+  "reader": "A fresh isolated call answers one question from only its own rendered memory view, at most 6000 characters including source annotations. Both variants use identical contracts. Six calls per history cannot borrow another question or source view. Original histories, gold and variant never enter reader inputs. Typed inline refs resolve to canonical exact visible source spans. Only the answer earns credit; auxiliary checklist is excluded. Complete serialized request equality may reuse a validated response only inside the same question/run/repeat namespace.",
+  "judge": "Blinded gpt-6-astra medium evaluator selects code-owned answer/source spans under the optional answer-source-span-refs-v4 rubric. Judge visibility and citation bounds are per case. False mechanical citation bounds preconstrain citation_support and fully_supported to false before dispatch; valid bounds do not establish semantic support. Strict receipt validation remains. No returned score repair.",
+  "repeat_history_ids": [
+    "hold_701",
+    "hold_702"
+  ],
+  "repeats": "hold_701 regenerates one shared prefix then reruns both arms readers/judges. hold_702 repeats isolated readers/judges only. All primary, repeated and calibration calls use the original R10 clock and ledger. Primary denominator excludes repeats, while pass safety gates include them.",
+  "limits": {
+    "max_calls": 340,
+    "max_observed_tokens": 5500000,
+    "wall_seconds": 5400,
+    "call_seconds": 180,
+    "jobs_per_checkpoint": 5,
+    "jobs_per_consolidation": 6,
+    "per_call_token_reservation": 100000
+  },
+  "budget_note": "Distinct R10 attempt capped at 340 native attempts, 5500000 reported tokens and 5400 wall seconds, 180 seconds per call and 100000-token reservation. Zero new public calibration calls. The exact R8 known-control receipt is historical preflight evidence only. All new 96 questions per arm and both repeats share the original R10 clock and ledger. Unknown usage or exhaustion stops incomplete. Prior 1283 native attempts and 21064648 tokens remain retained. Actual billed cost is unknown.",
+  "planned_call_allocation": {
+    "common_prefix_generation_and_possible_processing": 70,
+    "isolated_readers": 216,
+    "judges": 36,
+    "public_judge_calibration": 0,
+    "explicit_reserve": 18
+  },
+  "pass_criteria": {
+    "critical_errors_max": 0,
+    "candidate_fully_supported_min": 0.9,
+    "gain_min_percentage_points_if_baseline_below_90": 10,
+    "constraint_obligation_reason_recall_regression_max": 0,
+    "all_questions_must_be_graded": true,
+    "measured_improvement_required": true,
+    "baseline_at_or_above_90": "Require measurable quality gain with no increase in fully observed processing-plus-reader tokens, or lower fully observed processing-plus-reader tokens with no worse supported quality. This preserves the original plan requirement that the other metric must not worsen.",
+    "paired_constraint_retention": "No individual question can lose constraint, obligation or reason recall that the baseline retained. Aggregate gains cannot cancel such a loss."
+  },
+  "critical_errors": [
+    "false_merge",
+    "false_closure",
+    "project_mixing",
+    "deleted_resurrection"
+  ],
+  "full_supported_answer": "All gold required facts recalled, current status and action scope correct, citations support the claims, no forbidden conclusion, no empty or evasive abstention.",
+  "metrics": [
+    "fully_supported_answer",
+    "current_state_actionability",
+    "constraint_obligation_reason_recall",
+    "citation_support",
+    "critical_error_types",
+    "empty_abstention",
+    "context_characters",
+    "latency_ms",
+    "reported_tokens",
+    "cost_usd_or_unknown"
+  ],
+  "failure_policy": "Record all started, failed and completed calls durably. Keep failed or missing answers in the planned denominator. A rejected consolidation remains an explicit pipeline failure, but the reader still receives its actual unchanged committed memory. Grade all six answers without retrying or replacing the failed job. A pipeline failure prevents a pilot pass even if answer scores happen to improve. Do not retry failed extraction silently or tune code after holdout release. Any post-freeze repair requires a new experiment and untouched holdout.",
+  "freeze_policy": "Freeze protocol, helper hash and candidate product hashes before opening sealed holdout. Root must disclose any subsequent code change and cannot claim a clean holdout pass.",
+  "limitations": [
+    "Blinded model grading remains fallible.",
+    "This comparison isolates read selection with a shared generated Store. It does not establish consolidation benefit or production behavior.",
+    "The source-fate and field-purpose limits from the first iteration remain; no blocking semantic gate is enabled.",
+    "Exact-request coupling removes between-arm variation only for identical complete requests. It does not establish independent-run consistency.",
+    "The new author inherited platform-injected memory containing historical evaluation summaries. No prior fixtures, gold, reports or product algorithms were retrieved. Zero exposure to historical summaries cannot be certified.",
+    "Exact answer/source witness existence does not guarantee semantic entailment or a correct judge. No historical result is rescored by the new opt-in contract.",
+    "R10 uses isolated question readers while earlier iterations shared six views. The within-R10 paired comparison is valid for the new contract; no direct cross-iteration score improvement is claimed."
+  ],
+  "reader_repeat_history_ids": [
+    "hold_702"
+  ],
+  "regeneration_repeat_history_ids": [
+    "hold_701"
+  ],
+  "blind_shuffle_seed": "project-memory-quality-blind-20261021-1",
+  "holdout_primary_questions": 96,
+  "grouped_reader_dependence": "Each question uses an independent fresh reader call with only its own at-most-6000-character context. Questions still share a fictional history and generated Store, so history remains the sampling unit. Compare variants within R10; scores are not directly comparable to earlier union-of-six reader experiments.",
+  "evidence_roles": "Assistant results require explicit reported attribution. They do not independently prove execution. User intent, assistant reports, actual tool results, local validation, deployment and production remain distinct.",
+  "capture_fidelity": "Baseline captures identical inert fictional events through normalize_capture and Store.remember. Candidate is an SQLite-backup clone AFTER baseline generation; this is valid now because both product versions already include user custody. Source IDs, observations, derived records and custody are shared. No hypothetical command is executed. Read-only preparation rejects state or watermark drift; no candidate processor runs.",
+  "retrieval_timing": "Measure local Store-open plus build_project_brief/render_project_brief per project and total per-question retrieval wall time. Save append-only retrieval-timings.jsonl separately. Timing data never enters reader or judge prompts and never changes retrieval character budgets.",
+  "export_privacy": "Export pseudonymizes real native diagnostic worker/thread/turn UUIDs deterministically, including equivalent evidence spellings. Preserve fictional provenance IDs, answers, grades, token and latency totals, and original private run files. Publish exact transformation and original/public hashes without a raw ID mapping.",
+  "historical_spend": {
+    "report": "docs/evidence/project-memory-quality-2026-10-21-r10/historical-spend.json",
+    "sha256": "18eb0072e099eea690ce199e1fb556a9b2229c0fd44428459622120fad9c900c"
+  },
+  "criteria_source": {
+    "protocol": "docs/evidence/consolidation-retention-2026-10-20/protocol.json",
+    "sha256": "fc6f4ce1e2563688370ffca7e5949e7fc722c16b0ab10104d1cc34877e0424ca",
+    "unchanged_fields": [
+      "critical_errors",
+      "full_supported_answer",
+      "context_chars",
+      "model",
+      "reasoning_effort",
+      "holdout_primary_questions"
+    ],
+    "comparison_change_reason": "The complete first candidate already has source custody. Both variants can now share one generated Store, so this iteration isolates retrieval changes without generation variance. Candidate preparation cannot process or change the Store.",
+    "unchanged_semantic_thresholds": [
+      "zero critical errors",
+      "candidate fully supported rate >=90%",
+      "gain >=10 percentage points if baseline <90%",
+      "no paired constraint/obligation/reason losses",
+      "complete primary and repeated questions"
+    ]
+  },
+  "implementation_base_commit": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+  "separate_semantic_assessment": "Jev gates remain off in both arms. New purpose filter was not justified by the separate 24-case probe; its 8 useful uncertain cases would be lost under blocking. It is not part of the primary effect.",
+  "previous_holdouts": "Every released set through R8 is disclosed regression material. R10 uses a fresh independent sealed set with historical platform-summary exposure disclosed.",
+  "dispatch_wall_reservation": "Under the shared budget lock, every native dispatch reserves its full call_seconds allowance against the remaining wall_seconds, including later calls within one phase.",
+  "comparison_mode": "shared-prefix",
+  "baseline_runtime": "Exact isolated Git archive of dd60f1c, reused as read-only code runtime; no Store or generated history is reused.",
+  "driver_sha256": "5cb9c23e23458abd1a2c6816dc4d864d5545dd07b89c8510f1a597f15cd2fd47",
+  "candidate_processing_mode": "read_only_snapshot",
+  "reader_citation_contract": "visible-span-refs-v1",
+  "new_iteration_reason": "R9 stopped before any native call because its newly authored frozen fixture omitted the required fictional:true marker. R9 is archived incomplete with zero scores and zero new native usage. R10 uses an entirely new independently authored hold_701..716 set. The author must execute the complete public fixture validator and gold/capture/provenance checks before sealing. Product/helper/judge contracts remain exactly the final reviewed R9 bytes. No old input is repaired or rerun.",
+  "paired_native_request_reuse": "exact-request-v1",
+  "paired_reuse_policy": {
+    "key": "Complete serialized native request and output schema, protocol/native profile, phase, history, question, run and repeat namespace. Exact equality only; no semantic matching.",
+    "registration": "Only after reader or judge contract validation. Invalid outputs and unknown usage cannot enter the reuse index.",
+    "accounting": "One actual native ledger attempt and raw receipt. Reuse provenance records request/response hashes, original call ID and recipient. Equivalent per-arm reader token use includes the reused original metrics in BOTH arms. Actual total usage counts the original once. Cache latency cannot establish a performance gain.",
+    "independence_limit": "Identical inputs within the same question namespace may share one draw across arms. Each question still receives its own isolated input. Planned reader and regeneration repeats use fresh namespaces."
+  },
+  "judge_evidence_contract": "answer-source-witnesses-v1",
+  "calibration": {
+    "purpose": "Earlier known-control structural regression only, not fresh calibration or independent judge validation.",
+    "new_native_calls": 0,
+    "status": "historical R8 known-control receipt verified offline before R10 clock; zero new calls",
+    "accounting": "The original one call and 18851 tokens remain charged exactly once in R8 cumulative history. No native receipt or cache entry is copied into the R10 run.",
+    "model_behavior_limit": "Availability checks do not establish unchanged provider/model behavior. All R10 primary/repeat judgments remain fresh under their declared profile."
+  },
+  "authorship": {
+    "manifest": "docs/evidence/project-memory-quality-2026-10-21-r10/sealed-manifest.json",
+    "manifest_sha256": "897f0578c1ad5289ab166908228bb661d6ae50edddeaf9a04a28d1c0da1700ca",
+    "historical_summary_exposure": true,
+    "fixture_gold_opened_by_parent": false,
+    "fresh_set_required": "Entirely new independently authored hold_701..716; no released/frozen content transfer.",
+    "limitation": [
+      "One author created both histories and gold. Independence is from product tuning and earlier datasets, not between fixture and gold authors.",
+      "Platform-injected historical memory summary was visible, reported unused. No earlier corpus, gold, reports, runtime, algorithm or judge implementation was inspected.",
+      "The author read the complete public fixture validator lines38–137 and executed that extracted standalone validator offline. It passed on the final sealed fixture.",
+      "Author self-checks passed exact support offsets, source existence, project/deletion order, final question coverage, capture shape and checkpoints. Two deterministic author runs produced identical files.",
+      "No native model, API, Store generation or semantic scoring was used for authorship. Fictional commands were not executed.",
+      "Public format/provenance validation and content hashes do not prove semantic gold correctness, natural-distribution coverage or blind human adjudication."
+    ],
+    "counts": {
+      "histories": 16,
+      "questions": 96,
+      "sessions": 56,
+      "events": 176,
+      "tool_captures": 32,
+      "checkpoints": 32,
+      "deletions": 16
+    },
+    "validation_readback": "docs/evidence/project-memory-quality-2026-10-21-r10/author-validation-readback.json",
+    "validation_readback_sha256": "19ce7f7f3d9cfe7183da73edcbef09b6128b1f535e5cdd2d493d62fefc4b0687"
+  },
+  "source_repairs": "Product code remains byte-identical to the reviewed final R9 source. No product repair is derived from the invalid R9 input. Role/scope-aware environment eligibility, exact whole-source custody bindings and per-source uncertainty groups retain their reviewed boundaries.",
+  "judge_calibration": {
+    "mode": "historical_preflight_only",
+    "new_native_calls": 0,
+    "source_protocol": "docs/evidence/project-memory-quality-2026-10-21-r8/protocol.json",
+    "source_result": "docs/evidence/project-memory-quality-2026-10-21-r8/calibration-summary.json",
+    "proof": "docs/evidence/project-memory-quality-2026-10-21-r10/historical-calibration-proof.json",
+    "required_identity": [
+      "complete serialized native request and output schema",
+      "helper bytes",
+      "prompt version",
+      "judge native model and reasoning effort"
+    ],
+    "no_cross_run_primary_reuse": true,
+    "invalidate_on_judge_contract_change": true,
+    "verification_script": "docs/evidence/project-memory-quality-2026-10-21-r10/verify-historical-calibration.py",
+    "verification_script_sha256": "5dc0f8aa725eb33f161c5d8d9de3771b1ce5f7b05f3e45ff963cd5dea491558a",
+    "proof_sha256": "bf694571a22bfe50ca766590f3379dde12f7b29b53890a1db78f78e5ce44fac6"
+  },
+  "pre_freeze_revisions": [],
+  "new_attempt_reason": "R9 stopped before any native call because its newly authored frozen fixture omitted the required fictional:true marker. R9 is archived incomplete with zero scores and zero new native usage. R10 uses an entirely new independently authored hold_701..716 set. The author must execute the complete public fixture validator and gold/capture/provenance checks before sealing. Product/helper/judge contracts remain exactly the final reviewed R9 bytes. No old input is repaired or rerun.",
+  "judge_schema_version": "answer-source-span-refs-v4",
+  "judge_profile": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "medium"
+  },
+  "reader_context_isolation": "per-question-v1",
+  "explicit_project_scope_context": true,
+  "criterion_alignment_before_freeze": {
+    "source": "docs/plans/project-memory-quality-2026-10-20.md:191",
+    "source_text": "Если baseline уже проходит порог, нужен измеримый выигрыш в качестве или стоимости без ухудшения другого показателя.",
+    "change_from_previous_trial_protocol": "R10 preserves the strict default used in R8 and R9. No threshold is relaxed and no earlier trial is rescored.",
+    "quantitative_safety_and_recall_thresholds": "unchanged"
+  }
+}

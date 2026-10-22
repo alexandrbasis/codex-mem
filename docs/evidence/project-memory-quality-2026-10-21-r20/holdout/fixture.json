@@ -1,0 +1,2509 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "h01",
+      "project_keys": [
+        "p01a",
+        "p01b"
+      ],
+      "sessions": [
+        {
+          "id": "h01s1",
+          "project_key": "p01a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Lantern exhibit, print the large labels only after Mira approves the contrast sample. The sample gate is required because the hall lighting is dim."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "Make a floor guide and an audio guide as separate deliverables."
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "I finished the floor guide draft. I think the audio guide can be called finished too."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "Accept the floor guide and close that task. Cancel the audio narration recording, but keep the audio script review open."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Temporary delivery note: the label courier is Nilo.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Temporary delivery note: the label courier is Nilo.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e2"
+            },
+            {
+              "after_event_id": "e5"
+            }
+          ]
+        },
+        {
+          "id": "h01s2",
+          "project_key": "p01b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Harbor exhibit, Tess can approve label printing. This authority applies only to Harbor."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h01s3",
+          "project_key": "p01a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "For Lantern deliveries, use the coordinator named in the signed dispatch sheet."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Reopen the floor guide to correct the west-door arrow. Keep the already accepted room names."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Floor guide file inspection: west-door arrow still points east.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Floor guide file inspection: west-door arrow still points east.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must happen before Lantern labels can be printed, and why is that gate required?",
+          "stage": "final",
+          "project_key": "p01a"
+        },
+        {
+          "id": "q2",
+          "question": "Which audio-guide work was canceled, and which work remains open?",
+          "stage": "final",
+          "project_key": "p01a"
+        },
+        {
+          "id": "q3",
+          "question": "What is the floor guide task now, and what accepted content must stay?",
+          "stage": "final",
+          "project_key": "p01a"
+        },
+        {
+          "id": "q4",
+          "question": "Did the floor-guide acceptance also accept the audio guide? What did the assistant claim?",
+          "stage": "final",
+          "project_key": "p01a"
+        },
+        {
+          "id": "q5",
+          "question": "Who approves label printing for Lantern, and who has that authority for Harbor?",
+          "stage": "final",
+          "project_keys": [
+            "p01a",
+            "p01b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Which surviving rule determines the Lantern delivery coordinator?",
+          "stage": "final",
+          "project_key": "p01a"
+        }
+      ]
+    },
+    {
+      "id": "h02",
+      "project_keys": [
+        "p02a",
+        "p02b"
+      ],
+      "sessions": [
+        {
+          "id": "h02s1",
+          "project_key": "p02a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Alder seed trial, water plot C only if the morning sensor reads below 18 percent. This avoids washing seeds out of saturated soil."
+            },
+            {
+              "id": "e2",
+              "type": "tool",
+              "text": "Trial ledger: plot C watering is pending; shade-frame repair is pending.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e2"
+                },
+                "tool_response": {
+                  "output": "Trial ledger: plot C watering is pending; shade-frame repair is pending.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "The shade frame looks repaired to me, so I assume watering is done as well."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "I inspected and accepted the shade-frame repair. Close that repair. Watering is a separate task and remains pending."
+            },
+            {
+              "id": "e5",
+              "type": "user",
+              "text": "The provisional seed supplier is Vela Nursery."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h02s2",
+          "project_key": "p02a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Use only the supplier on the current purchase order for the Alder seed trial."
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Cancel the afternoon moisture reading. Keep the morning reading, because it controls whether plot C is watered."
+            },
+            {
+              "id": "e9",
+              "type": "tool",
+              "text": "Morning sensor record: plot C moisture 21 percent.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e9"
+                },
+                "tool_response": {
+                  "output": "Morning sensor record: plot C moisture 21 percent.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            }
+          ]
+        },
+        {
+          "id": "h02s3",
+          "project_key": "p02b",
+          "events": [
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "For the Birch seed trial, water plot C every morning. Birch does not use the Alder moisture gate."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Under what condition may plot C be watered in Alder, and what is the reason?",
+          "stage": "final",
+          "project_key": "p02a"
+        },
+        {
+          "id": "q2",
+          "question": "After the schedule change, which moisture reading remains and why?",
+          "stage": "final",
+          "project_key": "p02a"
+        },
+        {
+          "id": "q3",
+          "question": "What is the accepted state of the shade-frame repair, and what is the watering task state?",
+          "stage": "final",
+          "project_key": "p02a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant infer about watering, and what did the morning sensor actually record?",
+          "stage": "final",
+          "project_key": "p02a"
+        },
+        {
+          "id": "q5",
+          "question": "How do the watering instructions for plot C differ between Alder and Birch?",
+          "stage": "final",
+          "project_keys": [
+            "p02a",
+            "p02b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "What is the current source of authority for choosing the Alder seed supplier?",
+          "stage": "final",
+          "project_key": "p02a"
+        }
+      ]
+    },
+    {
+      "id": "h03",
+      "project_keys": [
+        "p03a",
+        "p03b"
+      ],
+      "sessions": [
+        {
+          "id": "h03s1",
+          "project_key": "p03a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Copper radio play, release episode two only when both actors sign the voice-use form. We need both signatures because the episode includes both performances."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "Treat the music cue sheet and dialogue edit as separate tasks."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "The dialogue edit is accepted and closed. The music cue sheet is still under review."
+            },
+            {
+              "id": "e4",
+              "type": "tool",
+              "text": "Unconfirmed contact card: rights reviewer is Oren.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e4"
+                },
+                "tool_response": {
+                  "output": "Unconfirmed contact card: rights reviewer is Oren.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            }
+          ]
+        },
+        {
+          "id": "h03s2",
+          "project_key": "p03b",
+          "events": [
+            {
+              "id": "e5",
+              "type": "user",
+              "text": "For the Silver radio play, the producer alone approves release. Actor signatures are already covered by its standing agreement."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h03s3",
+          "project_key": "p03a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "assistant",
+              "text": "I exported a preview of Copper episode two. I did not release it."
+            },
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e4"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Route Copper rights questions to the reviewer listed in the active rights register."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Reopen the dialogue edit because the final line names the wrong station. Fix only that station name."
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "Drop the optional flute cue from the cue sheet, but finish checking the drum cue."
+            },
+            {
+              "id": "e11",
+              "type": "tool",
+              "text": "Export folder contains preview-02.wav; publication receipt field is empty.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e11"
+                },
+                "tool_response": {
+                  "output": "Export folder contains preview-02.wav; publication receipt field is empty.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            },
+            {
+              "after_event_id": "e10"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What signatures does Copper episode two need before release, and why?",
+          "stage": "final",
+          "project_key": "p03a"
+        },
+        {
+          "id": "q2",
+          "question": "Which music-cue work remains after the scope change?",
+          "stage": "final",
+          "project_key": "p03a"
+        },
+        {
+          "id": "q3",
+          "question": "Why was the dialogue edit reopened, and how far should the correction go?",
+          "stage": "final",
+          "project_key": "p03a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant report doing with episode two, and does the cue-sheet review count as dialogue acceptance?",
+          "stage": "final",
+          "project_key": "p03a"
+        },
+        {
+          "id": "q5",
+          "question": "Can the producer-alone release rule from Silver be used for Copper? State each project rule.",
+          "stage": "final",
+          "project_keys": [
+            "p03a",
+            "p03b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Where should Copper rights questions be routed now?",
+          "stage": "final",
+          "project_key": "p03a"
+        }
+      ]
+    },
+    {
+      "id": "h04",
+      "project_keys": [
+        "p04a",
+        "p04b"
+      ],
+      "sessions": [
+        {
+          "id": "h04s1",
+          "project_key": "p04a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Meadow footbridge survey, enter the east bank only after the ranger confirms that nesting has ended. Keep that restriction because survey traffic disturbs the birds."
+            },
+            {
+              "id": "e2",
+              "type": "assistant",
+              "text": "I completed the west-bank measurements. I would mark the whole survey complete."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "Accept and close the west-bank measurements only. The east-bank visit is blocked by the nesting restriction."
+            },
+            {
+              "id": "e4",
+              "type": "tool",
+              "text": "Draft route card: meeting point is Red Mill.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e4"
+                },
+                "tool_response": {
+                  "output": "Draft route card: meeting point is Red Mill.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            }
+          ]
+        },
+        {
+          "id": "h04s2",
+          "project_key": "p04a",
+          "events": [
+            {
+              "id": "e5",
+              "type": "user",
+              "text": "Cancel the drone photography. The hand-drawn bank sketch is still needed."
+            },
+            {
+              "id": "e6",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e4"
+            },
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Take the meeting point from the ranger's dated visit permit."
+            },
+            {
+              "id": "e8",
+              "type": "tool",
+              "text": "Permit inspection: east-bank access is not authorized yet.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e8"
+                },
+                "tool_response": {
+                  "output": "Permit inspection: east-bank access is not authorized yet.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Keep the west-bank measurements closed. Do not reopen them just because the east-bank visit is pending."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e7"
+            }
+          ]
+        },
+        {
+          "id": "h04s3",
+          "project_key": "p04b",
+          "events": [
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "For the Ridge culvert survey, east-bank access needs the landowner's permission, not a ranger nesting confirmation."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What controls entry to Meadow's east bank, and why?",
+          "stage": "final",
+          "project_key": "p04a"
+        },
+        {
+          "id": "q2",
+          "question": "What visual record is still required after photography was canceled?",
+          "stage": "final",
+          "project_key": "p04a"
+        },
+        {
+          "id": "q3",
+          "question": "Are the west-bank measurements open again, and what is the east-bank access state?",
+          "stage": "final",
+          "project_key": "p04a"
+        },
+        {
+          "id": "q4",
+          "question": "How did the user limit the assistant's suggested survey completion?",
+          "stage": "final",
+          "project_key": "p04a"
+        },
+        {
+          "id": "q5",
+          "question": "Which permission applies to east-bank entry in Meadow versus Ridge?",
+          "stage": "final",
+          "project_keys": [
+            "p04a",
+            "p04b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Which surviving instruction identifies the survey meeting point?",
+          "stage": "final",
+          "project_key": "p04a"
+        }
+      ]
+    },
+    {
+      "id": "h05",
+      "project_keys": [
+        "p05a",
+        "p05b"
+      ],
+      "sessions": [
+        {
+          "id": "h05s1",
+          "project_key": "p05a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "In the Juniper costume workshop, cut the velvet only after Sada signs the paper pattern. Velvet is scarce, so we cannot replace a mistaken cut."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The cape pattern and coat pattern are separate orders."
+            },
+            {
+              "id": "e3",
+              "type": "tool",
+              "text": "Work board: cape pattern accepted; coat pattern awaiting fitting.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e3"
+                },
+                "tool_response": {
+                  "output": "Work board: cape pattern accepted; coat pattern awaiting fitting.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "I accept the cape pattern and close it."
+            },
+            {
+              "id": "e5",
+              "type": "assistant",
+              "text": "Since the cape is accepted, I think the coat can skip its fitting."
+            },
+            {
+              "id": "e6",
+              "type": "tool",
+              "text": "Old stock note: reserve roll is stored in cupboard nine.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e6"
+                },
+                "tool_response": {
+                  "output": "Old stock note: reserve roll is stored in cupboard nine.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            },
+            {
+              "after_event_id": "e6"
+            }
+          ]
+        },
+        {
+          "id": "h05s2",
+          "project_key": "p05b",
+          "events": [
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "In the Marigold workshop, Ivo signs paper patterns. That appointment covers Marigold only."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h05s3",
+          "project_key": "p05a",
+          "events": [
+            {
+              "id": "e8",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e6"
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Find the reserve roll using the current stock ledger."
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "Reopen the cape pattern for a shorter collar, because the actor cannot turn their head. Do not change its hem."
+            },
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "Cancel the coat's silver trim. Keep its fitting on the task list."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Who must authorize Juniper velvet cutting, and why is prior authorization necessary?",
+          "stage": "final",
+          "project_key": "p05a"
+        },
+        {
+          "id": "q2",
+          "question": "What coat work was removed, and what is still on the task list?",
+          "stage": "final",
+          "project_key": "p05a"
+        },
+        {
+          "id": "q3",
+          "question": "What change reopened the cape pattern, why, and what must remain unchanged?",
+          "stage": "final",
+          "project_key": "p05a"
+        },
+        {
+          "id": "q4",
+          "question": "Did accepting the cape authorize skipping the coat fitting, or was that only the assistant's view?",
+          "stage": "final",
+          "project_key": "p05a"
+        },
+        {
+          "id": "q5",
+          "question": "Who signs patterns in Juniper and in Marigold?",
+          "stage": "final",
+          "project_keys": [
+            "p05a",
+            "p05b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "How should the reserve roll be located now?",
+          "stage": "final",
+          "project_key": "p05a"
+        }
+      ]
+    },
+    {
+      "id": "h06",
+      "project_keys": [
+        "p06a",
+        "p06b"
+      ],
+      "sessions": [
+        {
+          "id": "h06s1",
+          "project_key": "p06a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Pebble ferry model, run the fan test only with the clear guard latched. The guard keeps loose rigging away from the fan blades."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "Hull sealing and fan testing are independent acceptance tasks."
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "I sealed the hull. I assume the model is ready to sail."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "Hull sealing passed my inspection and is closed. Fan testing remains unstarted."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Temporary test plan: use battery pack K4.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Temporary test plan: use battery pack K4.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h06s2",
+          "project_key": "p06b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Slate ferry model, use a mesh fan guard. The clear guard rule belongs to Pebble."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h06s3",
+          "project_key": "p06a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Cancel painting the display stand. Still attach the model's identification plate."
+            },
+            {
+              "id": "e8",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Choose the test battery from the approved power list."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Bench observation: clear guard latch open; fan stationary.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Bench observation: clear guard latch open; fan stationary.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "Do not reopen hull sealing. It remains accepted while we wait for fan testing."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must be true before Pebble's fan test, and what hazard does the rule address?",
+          "stage": "final",
+          "project_key": "p06a"
+        },
+        {
+          "id": "q2",
+          "question": "Which display-stand job was canceled, and which identification job remains?",
+          "stage": "final",
+          "project_key": "p06a"
+        },
+        {
+          "id": "q3",
+          "question": "What is the latest accepted hull state, and what is the stated fan-testing task state?",
+          "stage": "final",
+          "project_key": "p06a"
+        },
+        {
+          "id": "q4",
+          "question": "What readiness did the assistant assume, and what did the later bench observation show?",
+          "stage": "final",
+          "project_key": "p06a"
+        },
+        {
+          "id": "q5",
+          "question": "Which fan guard is specified for each ferry model?",
+          "stage": "final",
+          "project_keys": [
+            "p06a",
+            "p06b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "What should determine the battery used for the test?",
+          "stage": "final",
+          "project_key": "p06a"
+        }
+      ]
+    },
+    {
+      "id": "h07",
+      "project_keys": [
+        "p07a",
+        "p07b"
+      ],
+      "sessions": [
+        {
+          "id": "h07s1",
+          "project_key": "p07a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Willow oral-history collection, publish a transcript only after its speaker approves the redactions. Speakers need this control because a recording can mention neighbors."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The transcript cleanup and consent review are separate tasks."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "Accept the cleanup of interview seven. Close cleanup, but keep consent review open."
+            },
+            {
+              "id": "e4",
+              "type": "assistant",
+              "text": "I believe the interview can go online now that cleanup is accepted."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Early catalog note: interview seven belongs in shelf group D.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Early catalog note: interview seven belongs in shelf group D.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            }
+          ]
+        },
+        {
+          "id": "h07s2",
+          "project_key": "p07a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Use the signed catalog allocation sheet to select the shelf group."
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Reopen cleanup of interview seven to restore a missing pause marker. Keep the speaker's wording exactly as accepted."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Cancel the short promotional excerpt. Continue the full transcript consent review."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Consent register: interview seven redaction approval pending.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Consent register: interview seven redaction approval pending.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e7"
+            },
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        },
+        {
+          "id": "h07s3",
+          "project_key": "p07b",
+          "events": [
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "For the Ash oral-history collection, the archive editor approves redactions under its donated-rights agreement."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Whose approval is needed before a Willow transcript is published, and why is that control required?",
+          "stage": "final",
+          "project_key": "p07a"
+        },
+        {
+          "id": "q2",
+          "question": "What remains in scope after the promotional excerpt was canceled?",
+          "stage": "final",
+          "project_key": "p07a"
+        },
+        {
+          "id": "q3",
+          "question": "What does the reopened cleanup require, and what text must it preserve?",
+          "stage": "final",
+          "project_key": "p07a"
+        },
+        {
+          "id": "q4",
+          "question": "Was publication readiness the assistant's belief or an approved consent state? What does the register say?",
+          "stage": "final",
+          "project_key": "p07a"
+        },
+        {
+          "id": "q5",
+          "question": "Who approves redactions in Willow and in Ash?",
+          "stage": "final",
+          "project_keys": [
+            "p07a",
+            "p07b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Which record should select interview seven's shelf group?",
+          "stage": "final",
+          "project_key": "p07a"
+        }
+      ]
+    },
+    {
+      "id": "h08",
+      "project_keys": [
+        "p08a",
+        "p08b"
+      ],
+      "sessions": [
+        {
+          "id": "h08s1",
+          "project_key": "p08a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Lark kite festival, open the large-kite lane only when the wind marshal records a speed below 20 knots. The limit protects the small-kite lane beside it."
+            },
+            {
+              "id": "e2",
+              "type": "tool",
+              "text": "Festival checklist: fence placement complete; lane opening not checked.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e2"
+                },
+                "tool_response": {
+                  "output": "Festival checklist: fence placement complete; lane opening not checked.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "I accept fence placement and close that task. Opening the lane is a separate decision."
+            },
+            {
+              "id": "e4",
+              "type": "assistant",
+              "text": "The fence is ready, so I think the large-kite lane is open."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Draft roster: lane steward is Pavi.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Draft roster: lane steward is Pavi.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            },
+            {
+              "after_event_id": "e5"
+            }
+          ]
+        },
+        {
+          "id": "h08s2",
+          "project_key": "p08b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Wren kite festival, the large-kite lane limit is 15 knots. This is Wren's rule."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h08s3",
+          "project_key": "p08a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Assign the lane steward from the signed morning roster."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Cancel the evening kite parade, but keep the afternoon safety briefing."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Wind marshal log: 23 knots. Lane gate remains locked.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Wind marshal log: 23 knots. Lane gate remains locked.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "Fence placement stays closed. The locked lane gate does not reopen the fence task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "When may Lark's large-kite lane open, and why is the wind limit in place?",
+          "stage": "final",
+          "project_key": "p08a"
+        },
+        {
+          "id": "q2",
+          "question": "Which scheduled activity survives the parade cancellation?",
+          "stage": "final",
+          "project_key": "p08a"
+        },
+        {
+          "id": "q3",
+          "question": "Does the locked gate reopen fence placement, and what gate state was recorded?",
+          "stage": "final",
+          "project_key": "p08a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant assume about the lane, and what measurement did the marshal record?",
+          "stage": "final",
+          "project_key": "p08a"
+        },
+        {
+          "id": "q5",
+          "question": "What wind limits apply to the large-kite lane at Lark and Wren?",
+          "stage": "final",
+          "project_keys": [
+            "p08a",
+            "p08b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "How is the lane steward selected under the surviving instruction?",
+          "stage": "final",
+          "project_key": "p08a"
+        }
+      ]
+    },
+    {
+      "id": "h09",
+      "project_keys": [
+        "p09a",
+        "p09b"
+      ],
+      "sessions": [
+        {
+          "id": "h09s1",
+          "project_key": "p09a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Moss ceramic commission, fire the blue glaze sample only after the kiln operator approves the test tile. We need the tile approval because this clay body is new."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The vase silhouette and glaze selection are separate approvals."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "The vase silhouette is accepted. Close the silhouette task. Glaze selection stays open."
+            },
+            {
+              "id": "e4",
+              "type": "assistant",
+              "text": "I photographed the accepted silhouette. I suspect that means the glaze is approved too."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Superseded packing note: deliver in crate Z8.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Superseded packing note: deliver in crate Z8.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            }
+          ]
+        },
+        {
+          "id": "h09s2",
+          "project_key": "p09b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Fern ceramic commission, the client approves the test tile. The kiln operator does not replace that approval."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h09s3",
+          "project_key": "p09a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Use the crate specified on the final packing slip for Moss."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Reopen the silhouette to widen the base for stability. Leave its neck profile unchanged."
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "Cancel the gold stripe option. Continue testing the blue glaze."
+            },
+            {
+              "id": "e11",
+              "type": "tool",
+              "text": "Glaze board: blue test tile awaiting kiln-operator approval.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e11"
+                },
+                "tool_response": {
+                  "output": "Glaze board: blue test tile awaiting kiln-operator approval.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What approval gates Moss's blue glaze firing, and why?",
+          "stage": "final",
+          "project_key": "p09a"
+        },
+        {
+          "id": "q2",
+          "question": "What glaze work remains after the option was canceled?",
+          "stage": "final",
+          "project_key": "p09a"
+        },
+        {
+          "id": "q3",
+          "question": "What change is required in the reopened silhouette, for what reason, and what stays unchanged?",
+          "stage": "final",
+          "project_key": "p09a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant infer from silhouette acceptance, and what does the glaze board actually record?",
+          "stage": "final",
+          "project_key": "p09a"
+        },
+        {
+          "id": "q5",
+          "question": "Who approves the test tile for Moss, and who approves it for Fern?",
+          "stage": "final",
+          "project_keys": [
+            "p09a",
+            "p09b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "What document determines the crate for Moss delivery?",
+          "stage": "final",
+          "project_key": "p09a"
+        }
+      ]
+    },
+    {
+      "id": "h10",
+      "project_keys": [
+        "p10a",
+        "p10b"
+      ],
+      "sessions": [
+        {
+          "id": "h10s1",
+          "project_key": "p10a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Quartz puzzle booklet, print answer pages only after the puzzle editor checks every solution. A single wrong answer can make the booklet unusable."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The cover proof and answer proof need separate acceptance."
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "I sent the cover proof. I expect both proofs are effectively approved."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "I accept the cover proof and close it. Answer-proof acceptance is still pending."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Early print note: use press room six.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Early print note: use press room six.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h10s2",
+          "project_key": "p10a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Use the press room assigned on the current production ticket."
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Cancel the bonus maze. Keep the crossword solution check."
+            },
+            {
+              "id": "e9",
+              "type": "tool",
+              "text": "Answer proof audit: crossword solution 12 has not been checked.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e9"
+                },
+                "tool_response": {
+                  "output": "Answer proof audit: crossword solution 12 has not been checked.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "Keep the cover proof closed. The missing solution check belongs to the answer proof."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            }
+          ]
+        },
+        {
+          "id": "h10s3",
+          "project_key": "p10b",
+          "events": [
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "For the Opal puzzle booklet, a guest solver approves the answer pages. Quartz keeps its own editor rule."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must happen before Quartz answer pages are printed, and why?",
+          "stage": "final",
+          "project_key": "p10a"
+        },
+        {
+          "id": "q2",
+          "question": "What puzzle work is still required after the bonus maze was removed?",
+          "stage": "final",
+          "project_key": "p10a"
+        },
+        {
+          "id": "q3",
+          "question": "Which proof remains closed, and which acceptance is pending?",
+          "stage": "final",
+          "project_key": "p10a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant expect about approval, and what specific gap did the answer audit find?",
+          "stage": "final",
+          "project_key": "p10a"
+        },
+        {
+          "id": "q5",
+          "question": "Who is responsible for checking or approving answer pages in Quartz and Opal?",
+          "stage": "final",
+          "project_keys": [
+            "p10a",
+            "p10b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Where should the press-room assignment be taken from?",
+          "stage": "final",
+          "project_key": "p10a"
+        }
+      ]
+    },
+    {
+      "id": "h11",
+      "project_keys": [
+        "p11a",
+        "p11b"
+      ],
+      "sessions": [
+        {
+          "id": "h11s1",
+          "project_key": "p11a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Dune lantern walk, light the hanging lanterns only after the fire steward approves the spacing. The spacing keeps hot lanterns away from fabric banners."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "Route marking and lantern lighting are distinct tasks."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "Accept the route marking and close it. Lantern lighting still awaits approval."
+            },
+            {
+              "id": "e4",
+              "type": "tool",
+              "text": "Temporary volunteer list: spare lantern keeper is Yara.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e4"
+                },
+                "tool_response": {
+                  "output": "Temporary volunteer list: spare lantern keeper is Yara.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            },
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h11s2",
+          "project_key": "p11b",
+          "events": [
+            {
+              "id": "e5",
+              "type": "user",
+              "text": "For the Reef lantern walk, the venue manager approves lantern spacing. Reef uses electric lanterns."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h11s3",
+          "project_key": "p11a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "assistant",
+              "text": "I see the route markers are finished, so I think the lantern walk is ready to start."
+            },
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e4"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Get the spare lantern keeper from the final volunteer sign-in sheet."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Reopen route marking to move the turn marker away from the well. Keep the route itself unchanged."
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "Drop the closing drum procession, but keep the opening safety talk."
+            },
+            {
+              "id": "e11",
+              "type": "tool",
+              "text": "Spacing inspection: approval withheld for the north banner section.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e11"
+                },
+                "tool_response": {
+                  "output": "Spacing inspection: approval withheld for the north banner section.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What approval does Dune need before lighting hanging lanterns, and what does the spacing rule prevent?",
+          "stage": "final",
+          "project_key": "p11a"
+        },
+        {
+          "id": "q2",
+          "question": "Which gathering activity remains after the drum procession was dropped?",
+          "stage": "final",
+          "project_key": "p11a"
+        },
+        {
+          "id": "q3",
+          "question": "What is the new route-marking task, and does it change the route?",
+          "stage": "final",
+          "project_key": "p11a"
+        },
+        {
+          "id": "q4",
+          "question": "What readiness did the assistant infer, and what did the spacing inspection say?",
+          "stage": "final",
+          "project_key": "p11a"
+        },
+        {
+          "id": "q5",
+          "question": "Who approves lantern spacing for Dune and for Reef?",
+          "stage": "final",
+          "project_keys": [
+            "p11a",
+            "p11b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Which surviving record identifies the spare lantern keeper?",
+          "stage": "final",
+          "project_key": "p11a"
+        }
+      ]
+    },
+    {
+      "id": "h12",
+      "project_keys": [
+        "p12a",
+        "p12b"
+      ],
+      "sessions": [
+        {
+          "id": "h12s1",
+          "project_key": "p12a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Elm chess league, post the final standings only after the arbiter resolves all disputed scores. A disputed score can change a qualifying place."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The venue booking and standings publication are separate jobs."
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "I confirmed the venue booking. I assume the league administration is finished."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "The venue booking is accepted and closed. Standings publication remains blocked by the disputed scores."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Old assignment sheet: trophy collector is Beto.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Old assignment sheet: trophy collector is Beto.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h12s2",
+          "project_key": "p12a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Choose the trophy collector from the signed duty roster."
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Cancel the exhibition match, but retain the score-dispute hearing."
+            },
+            {
+              "id": "e9",
+              "type": "tool",
+              "text": "Arbiter docket: two disputed scores remain unresolved.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e9"
+                },
+                "tool_response": {
+                  "output": "Arbiter docket: two disputed scores remain unresolved.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "The venue booking stays closed while the score hearing proceeds."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            }
+          ]
+        },
+        {
+          "id": "h12s3",
+          "project_key": "p12b",
+          "events": [
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "For the Pine chess league, the league secretary resolves score disputes. This assignment applies only to Pine."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must happen before Elm posts final standings, and why does it matter?",
+          "stage": "final",
+          "project_key": "p12a"
+        },
+        {
+          "id": "q2",
+          "question": "Which event remains scheduled after the exhibition match was canceled?",
+          "stage": "final",
+          "project_key": "p12a"
+        },
+        {
+          "id": "q3",
+          "question": "What is the venue-booking state during the hearing, and what blocks publication?",
+          "stage": "final",
+          "project_key": "p12a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant assume about administration, and what unresolved work does the docket show?",
+          "stage": "final",
+          "project_key": "p12a"
+        },
+        {
+          "id": "q5",
+          "question": "Who resolves disputed scores in Elm and in Pine?",
+          "stage": "final",
+          "project_keys": [
+            "p12a",
+            "p12b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "How should the trophy collector be selected?",
+          "stage": "final",
+          "project_key": "p12a"
+        }
+      ]
+    },
+    {
+      "id": "h13",
+      "project_keys": [
+        "p13a",
+        "p13b"
+      ],
+      "sessions": [
+        {
+          "id": "h13s1",
+          "project_key": "p13a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Garnet puppet show, raise the overhead scenery only after the stage rigger signs the load sheet. The signature is required because children perform underneath."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The puppet repair and scenery rigging are different tasks."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "Accept the puppet repair and close it. Scenery rigging remains pending."
+            },
+            {
+              "id": "e4",
+              "type": "assistant",
+              "text": "The repaired puppet looks good. I would count scenery setup as done too."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Preliminary prop note: spare crown is in trunk L2.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Preliminary prop note: spare crown is in trunk L2.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            }
+          ]
+        },
+        {
+          "id": "h13s2",
+          "project_key": "p13b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Ruby puppet show, the venue engineer signs the scenery load sheet. That is Ruby's approval route."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h13s3",
+          "project_key": "p13a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Locate the spare crown through the current prop inventory."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Reopen the puppet repair to loosen its left wrist, because it cannot hold the cup. Keep the new paint untouched."
+            },
+            {
+              "id": "e10",
+              "type": "user",
+              "text": "Cancel the extra curtain backdrop. Still finish the overhead scenery inspection."
+            },
+            {
+              "id": "e11",
+              "type": "tool",
+              "text": "Load-sheet reader: stage-rigger signature absent.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e11"
+                },
+                "tool_response": {
+                  "output": "Load-sheet reader: stage-rigger signature absent.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e8"
+            },
+            {
+              "after_event_id": "e10"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What authorization is required to raise Garnet's scenery, and why?",
+          "stage": "final",
+          "project_key": "p13a"
+        },
+        {
+          "id": "q2",
+          "question": "Which scenery work survives the backdrop cancellation?",
+          "stage": "final",
+          "project_key": "p13a"
+        },
+        {
+          "id": "q3",
+          "question": "What reopened the puppet repair, and what must the repair leave untouched?",
+          "stage": "final",
+          "project_key": "p13a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant say about scenery setup, and what authorization evidence did the reader find?",
+          "stage": "final",
+          "project_key": "p13a"
+        },
+        {
+          "id": "q5",
+          "question": "Who signs the scenery load sheet in Garnet and Ruby?",
+          "stage": "final",
+          "project_keys": [
+            "p13a",
+            "p13b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Which source should be used to locate the spare crown?",
+          "stage": "final",
+          "project_key": "p13a"
+        }
+      ]
+    },
+    {
+      "id": "h14",
+      "project_keys": [
+        "p14a",
+        "p14b"
+      ],
+      "sessions": [
+        {
+          "id": "h14s1",
+          "project_key": "p14a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Kestrel map club, share the cave map only after the land custodian approves the marked entrances. The approval protects access points that must stay private."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "The scale-bar correction and entrance review need separate sign-off."
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "I fixed the scale bar. I think the whole map is cleared for sharing."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "I accept and close the scale-bar correction. Entrance review remains open."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Temporary map index: backup sheet is in drawer Q.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Temporary map index: backup sheet is in drawer Q.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h14s2",
+          "project_key": "p14b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Osprey map club, the park surveyor approves marked entrances. This rule does not apply to Kestrel."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h14s3",
+          "project_key": "p14a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Find the backup sheet using the controlled map index."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Cancel the decorative compass rose. Keep the entrance review."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Review ledger: entrance E3 not approved for sharing.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Review ledger: entrance E3 not approved for sharing.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "The scale-bar correction remains closed despite the open entrance review."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must happen before Kestrel shares its cave map, and what does that protect?",
+          "stage": "final",
+          "project_key": "p14a"
+        },
+        {
+          "id": "q2",
+          "question": "What review remains after the decorative compass rose was canceled?",
+          "stage": "final",
+          "project_key": "p14a"
+        },
+        {
+          "id": "q3",
+          "question": "Is the scale-bar correction open again, and what is the entrance-review state?",
+          "stage": "final",
+          "project_key": "p14a"
+        },
+        {
+          "id": "q4",
+          "question": "What did the assistant claim about sharing, and what specific exception is in the review ledger?",
+          "stage": "final",
+          "project_key": "p14a"
+        },
+        {
+          "id": "q5",
+          "question": "Who approves marked entrances for Kestrel and for Osprey?",
+          "stage": "final",
+          "project_keys": [
+            "p14a",
+            "p14b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "How should the backup map sheet be located now?",
+          "stage": "final",
+          "project_key": "p14a"
+        }
+      ]
+    },
+    {
+      "id": "h15",
+      "project_keys": [
+        "p15a",
+        "p15b"
+      ],
+      "sessions": [
+        {
+          "id": "h15s1",
+          "project_key": "p15a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Citrine clock exhibit, start the pendulum only after the conservator approves the mounting bracket. The old case cannot bear an unchecked load."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "Dial cleaning and bracket approval are separate tasks."
+            },
+            {
+              "id": "e3",
+              "type": "user",
+              "text": "Accept dial cleaning and close it. Bracket approval is pending."
+            },
+            {
+              "id": "e4",
+              "type": "assistant",
+              "text": "The dial is clean, so I assume the clock can run now."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Early equipment card: winding key is held by Leto.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Early equipment card: winding key is held by Leto.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e3"
+            },
+            {
+              "after_event_id": "e5"
+            }
+          ]
+        },
+        {
+          "id": "h15s2",
+          "project_key": "p15a",
+          "events": [
+            {
+              "id": "e6",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e7",
+              "type": "user",
+              "text": "Obtain the winding key from the custodian named in the signed equipment register."
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Reopen dial cleaning to remove one fingerprint near twelve. Preserve the remaining patina."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Cancel polishing the rear panel. Keep the mounting-bracket inspection."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Bracket inspection record: conservator decision deferred.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Bracket inspection record: conservator decision deferred.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e7"
+            },
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        },
+        {
+          "id": "h15s3",
+          "project_key": "p15b",
+          "events": [
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "For the Amber clock exhibit, the mechanical curator approves the mounting bracket. That permission is limited to Amber."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What approval is needed before Citrine's pendulum starts, and why?",
+          "stage": "final",
+          "project_key": "p15a"
+        },
+        {
+          "id": "q2",
+          "question": "Which inspection remains required after rear-panel polishing was canceled?",
+          "stage": "final",
+          "project_key": "p15a"
+        },
+        {
+          "id": "q3",
+          "question": "What must the reopened dial-cleaning task remove, and what must it preserve?",
+          "stage": "final",
+          "project_key": "p15a"
+        },
+        {
+          "id": "q4",
+          "question": "What running permission did the assistant assume, and what did the bracket record actually say?",
+          "stage": "final",
+          "project_key": "p15a"
+        },
+        {
+          "id": "q5",
+          "question": "Who approves the mounting bracket for Citrine and for Amber?",
+          "stage": "final",
+          "project_keys": [
+            "p15a",
+            "p15b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "From whom should the winding key be obtained under the surviving instruction?",
+          "stage": "final",
+          "project_key": "p15a"
+        }
+      ]
+    },
+    {
+      "id": "h16",
+      "project_keys": [
+        "p16a",
+        "p16b"
+      ],
+      "sessions": [
+        {
+          "id": "h16s1",
+          "project_key": "p16a",
+          "events": [
+            {
+              "id": "e1",
+              "type": "user",
+              "text": "For the Brook astronomy camp, uncover the public telescope only after the instrument lead verifies the solar filter lock. The lock prevents the filter from slipping during daytime viewing."
+            },
+            {
+              "id": "e2",
+              "type": "user",
+              "text": "Tent setup and telescope readiness are separate approvals."
+            },
+            {
+              "id": "e3",
+              "type": "assistant",
+              "text": "The tents are up. I expect the camp is fully ready for observers."
+            },
+            {
+              "id": "e4",
+              "type": "user",
+              "text": "Tent setup is accepted and closed. Telescope readiness remains blocked until the filter-lock check."
+            },
+            {
+              "id": "e5",
+              "type": "tool",
+              "text": "Draft equipment route: spare eyepiece is in case M.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e5"
+                },
+                "tool_response": {
+                  "output": "Draft equipment route: spare eyepiece is in case M.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e4"
+            }
+          ]
+        },
+        {
+          "id": "h16s2",
+          "project_key": "p16b",
+          "events": [
+            {
+              "id": "e6",
+              "type": "user",
+              "text": "For the Lake astronomy camp, the optics technician verifies the solar filter lock. This appointment is for Lake only."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "h16s3",
+          "project_key": "p16a",
+          "events": [
+            {
+              "id": "e7",
+              "type": "delete_observation",
+              "text": "Remove the named source observation.",
+              "observation_event_id": "e5"
+            },
+            {
+              "id": "e8",
+              "type": "user",
+              "text": "Locate the spare eyepiece from the current equipment checkout ledger."
+            },
+            {
+              "id": "e9",
+              "type": "user",
+              "text": "Cancel the evening constellation quiz. Retain the daytime filter-lock demonstration."
+            },
+            {
+              "id": "e10",
+              "type": "tool",
+              "text": "Instrument log: filter-lock check not performed; public telescope remains covered.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "fictional-inspector --record e10"
+                },
+                "tool_response": {
+                  "output": "Instrument log: filter-lock check not performed; public telescope remains covered.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "e11",
+              "type": "user",
+              "text": "Keep tent setup closed while telescope readiness is pending."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "e9"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "question": "What must happen before Brook uncovers its telescope, and why is the lock needed?",
+          "stage": "final",
+          "project_key": "p16a"
+        },
+        {
+          "id": "q2",
+          "question": "Which demonstration remains after the quiz was canceled?",
+          "stage": "final",
+          "project_key": "p16a"
+        },
+        {
+          "id": "q3",
+          "question": "What is the tent-setup state now, and what blocks telescope readiness?",
+          "stage": "final",
+          "project_key": "p16a"
+        },
+        {
+          "id": "q4",
+          "question": "What readiness did the assistant expect, and what telescope state did the instrument log record?",
+          "stage": "final",
+          "project_key": "p16a"
+        },
+        {
+          "id": "q5",
+          "question": "Who verifies the solar filter lock at Brook and at Lake?",
+          "stage": "final",
+          "project_keys": [
+            "p16a",
+            "p16b"
+          ]
+        },
+        {
+          "id": "q6",
+          "question": "Which record should locate the spare eyepiece?",
+          "stage": "final",
+          "project_key": "p16a"
+        }
+      ]
+    }
+  ]
+}

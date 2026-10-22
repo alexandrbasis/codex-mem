@@ -1,0 +1,41 @@
+{
+  "axis": "spec",
+  "status": "clear",
+  "unresolved_findings": 0,
+  "findings": [],
+  "scope": "Narrow append-only R20 auditor v3 metadata consumer compatibility review; completed quality FAIL unchanged.",
+  "source_files": {
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/audit-final-export-v3.py": "8d5c4de65841432779b54a3b767fec3ed744c7b7411447d95a2efbf472193152",
+    "docs/evidence/project-memory-quality-2026-10-21-r20-audit/test-metadata-consumers-v3.py": "d2febc3ae5a961126585352cb0404b4d386ed1a7668a1011c915746fa84296a1"
+  },
+  "preparation": {
+    "path": "docs/evidence/project-memory-quality-2026-10-21-r20-audit/metadata-v3-preparation.json",
+    "sha256": "850f910b972968587271bfbd264111e796555a21300021081ea5884eb1a21fa9"
+  },
+  "held_v1_sha256": "54fe2614655154bd01ee3080e190e76843357b12181d04a25b925d59e9cd8c91",
+  "held_v2_sha256": "a001f756c4d862d64ca628ab5886e44419ceb476a5351ed085eab06a86d1b235",
+  "release_validator_sha256": "a68c05c9c1b6ceee2a740c97b3d8b5061502d2fcedadaf9ab104ac53e401b341",
+  "source_archive_metadata_sha256": "9353d7a2da3e2ac2a9246e67ae33da0b2a1827adb02027c01fffdde71e85832d",
+  "actual_audit_binding_sha256": "41602f2e80b458311205380b1f568f6571d7d774fb926ebd96c1478b78da055e",
+  "preserved_actual_failure_receipt_sha256": "7fe815772f9a1ee889144653b37bd9c57173f767ed42c67966f51b2cd8c91c5a",
+  "checks": [
+    "Actual frozen-source-archive uses runtime_archive_sha256. V3 consumes this exact field and requires its runtime map to equal actual freeze candidate_hashes, helper equality and held-source/non-native/non-trial-freeze status.",
+    "Complete v2/v3 diff contains only source-archive metadata compatibility and added checks. Accounting, criteria, public usage, 216-slot coverage, paired loss, high-baseline improvement, release validation and other source-pin checks are unchanged.",
+    "Literal nested metadata paths in owning main were checked against all nine actual public JSON roots. This verifies key compatibility, not dynamic values or semantic correctness.",
+    "Executed whole source-archive and 48-runtime-module consumer block against actual immutable public bytes; archive and current runtime hashes passed. Preserved v2 failure receipt and traceback hashes verified."
+  ],
+  "independent_tests": {
+    "actual_metadata_paths_and_whole_sourcearchive_block": 2,
+    "synthetic_release_archive_and_release_statement": 5,
+    "actual_improvement_statement_slices": 10,
+    "actual_binding_statement_slice": 1,
+    "total_passed": 18,
+    "failed": 0
+  },
+  "limits": [
+    "Actual v3 main audit was not executed. Literal inventory excludes dynamic accesses; owning slices and synthetic archive tests do not prove full actual audit success.",
+    "No model, network, Store, SQLite, regrade or source/export mutation performed. Actual cases, answers and private review content were not inspected.",
+    "Completed canonical quality FAIL remains unchanged. Compatibility clearance permits later confirmed audit work but proves no quality improvement.",
+    "Prior main audit tooling failure and standalone archive supplement remain preserved; archive reconstruction does not substitute for full main audit."
+  ]
+}

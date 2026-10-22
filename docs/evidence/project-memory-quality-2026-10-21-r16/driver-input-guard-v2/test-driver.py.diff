@@ -1,0 +1,71 @@
+--- v1/test-driver.py
++++ v2/test-driver.py
+@@ -88,7 +88,8 @@
+ 
+     def test_valid_guard_receipt_binds_exact_inputs_and_contract(self):
+         self.write_inputs()
+-        receipt = driver.validate_author_inputs(self.fp, self.gp, self.run)
++        receipt = driver.validate_author_inputs(self.fp, self.gp, self.run, expected_contract_sha256=hashlib.sha256(
++                    Path(driver.__file__).with_name('public-fixture-contract.py').read_bytes()).hexdigest())
+         self.assertEqual(receipt, json.loads((self.run / 'author-input-validation.json').read_text()))
+         for key, path in (('fixture_sha256', self.fp), ('gold_sha256', self.gp),
+                           ('contract_sha256', Path(driver.__file__).with_name('public-fixture-contract.py'))):
+@@ -102,8 +103,23 @@
+         receipt_path.write_text('{"prior_validation":"preserve"}\n')
+         original = receipt_path.read_bytes()
+         with self.assertRaisesRegex(RuntimeError, 'receipt_differs'):
+-            driver.validate_author_inputs(self.fp, self.gp, self.run)
++            driver.validate_author_inputs(self.fp, self.gp, self.run, expected_contract_sha256=hashlib.sha256(
++                    Path(driver.__file__).with_name('public-fixture-contract.py').read_bytes()).hexdigest())
+         self.assertEqual(receipt_path.read_bytes(), original)
++
++    def test_changed_contract_bytes_are_rejected_before_import_or_execution(self):
++        self.write_inputs()
++        expected = hashlib.sha256(Path(driver.__file__).with_name('public-fixture-contract.py').read_bytes()).hexdigest()
++        changed = self.run / 'public-fixture-contract.py'
++        marker = self.run / 'contract-executed'
++        changed.write_text('from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("executed")\n')
++        with patch.object(driver, '__file__', str(self.run / 'run-experiment.py')), \
++             patch.object(driver.importlib.util, 'spec_from_file_location') as importing:
++            with self.assertRaisesRegex(RuntimeError, 'author_contract_differs_from_protocol'):
++                driver.validate_author_inputs(self.fp, self.gp, self.run, expected_contract_sha256=expected)
++        importing.assert_not_called()
++        self.assertFalse(marker.exists())
++        self.assertFalse((self.run / 'author-input-validation.json').exists())
+ 
+     def test_actual_guard_rejects_invalid_question_or_delete_positive_without_receipt(self):
+         for failure in ('question', 'delete_positive'):
+@@ -117,7 +133,8 @@
+                 self.write_inputs()
+                 original = self.fp.read_bytes(), self.gp.read_bytes()
+                 with self.assertRaises(ValueError):
+-                    driver.validate_author_inputs(self.fp, self.gp, self.run)
++                    driver.validate_author_inputs(self.fp, self.gp, self.run, expected_contract_sha256=hashlib.sha256(
++                    Path(driver.__file__).with_name('public-fixture-contract.py').read_bytes()).hexdigest())
+                 self.assertFalse((self.run / 'author-input-validation.json').exists())
+                 self.assertEqual(original, (self.fp.read_bytes(), self.gp.read_bytes()))
+ 
+@@ -127,7 +144,9 @@
+         events = []
+         helper = SimpleNamespace()
+         helper.read = Mock(return_value={'driver_sha256': hashlib.sha256(Path(driver.__file__).read_bytes()).hexdigest(),
+-            'comparison_mode': 'shared-prefix', 'candidate_processing_mode': 'read_only_snapshot'})
++            'comparison_mode': 'shared-prefix', 'candidate_processing_mode': 'read_only_snapshot',
++            'prospective_author_contract': {'sha256': hashlib.sha256(
++                Path(driver.__file__).with_name('public-fixture-contract.py').read_bytes()).hexdigest()}})
+         helper.fixture = Mock(side_effect=AssertionError('fixture_opened_before_author_validation'))
+         helper.append = Mock(side_effect=AssertionError('journal_written_before_author_validation'))
+         helper.ledger_calls = Mock(side_effect=AssertionError('phase_started_before_author_validation'))
+@@ -141,10 +160,10 @@
+             self.assertEqual(command[2], 'validate')
+             events.append('frozen_pins_validated')
+         actual_guard = driver.validate_author_inputs
+-        def guard(*args):
++        def guard(*args, **kwargs):
+             self.assertEqual(events, ['frozen_pins_validated'])
+             events.append('author_contract')
+-            return actual_guard(*args)
++            return actual_guard(*args, **kwargs)
+         argv = ['driver', '--run', str(self.run), '--baseline', '/private/tmp/public-baseline',
+                 '--fixture', str(self.fp), '--gold', str(self.gp)]
+         with patch.object(driver.sys, 'argv', argv), patch.dict(driver.os.environ, {'CODEX_MEM_DISABLED': '0'}), \

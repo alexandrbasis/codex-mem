@@ -1,0 +1,247 @@
+--- a/scripts/project_memory_consolidation_experiment.py
++++ b/scripts/project_memory_consolidation_experiment.py
+@@ -212,6 +212,32 @@
+             'token_accounting_complete': len(known) == len(starts), 'cost_usd': None}
+ 
+ 
++def _valid_reported_token_map(counts: object) -> dict | None:
++    keys = ('input_tokens', 'cached_input_tokens', 'output_tokens', 'total_tokens')
++    if (not isinstance(counts, dict) or set(counts) != set(keys)
++            or any(type(counts[key]) is not int or counts[key] < 0 for key in keys)
++            or counts['cached_input_tokens'] > counts['input_tokens']
++            or counts['total_tokens'] != counts['input_tokens'] + counts['output_tokens']):
++        return None
++    return {key: counts[key] for key in keys}
++
++
++def _reported_bound_component(value: dict) -> tuple[dict | None, int | None]:
++    """Keep valid known-reported subtotals separate from missing usage."""
++    bound = _valid_reported_token_map(value.get('reported_tokens_lower_bound'))
++    full = (_valid_reported_token_map(value.get('tokens')) if value.get('token_accounting_complete') is True else None)
++    if bound is not None and full is not None and any(bound[key] > full[key] for key in full):
++        bound = None
++    if bound is None:
++        bound = full
++    missing = value.get('reported_tokens_lower_bound_missing_components', 0 if bound is not None else 1)
++    coverage = value.get('reported_tokens_lower_bound_coverage_complete', missing == 0)
++    if (type(missing) is not int or missing < 0 or type(coverage) is not bool
++            or (bound is None and missing == 0) or (coverage is False and missing == 0)):
++        missing = None
++    return bound, missing
++
++
+ def historical_accounting(protocol: dict, current: dict) -> dict:
+     """Report previous pilot spend without consuming this iteration's cap."""
+     pointer=protocol.get('historical_spend')
+@@ -221,15 +247,27 @@
+     if hashlib.sha256(path.read_bytes()).hexdigest()!=pointer['sha256']:
+         raise ValueError('historical spend report changed')
+     prior=read(path)['usage']
+-    complete=prior['token_accounting_complete'] and current['token_accounting_complete']
++    full = [_valid_reported_token_map(value.get('tokens')) for value in (prior, current)]
++    complete=(prior.get('token_accounting_complete') is True and current.get('token_accounting_complete') is True
++              and all(counts is not None for counts in full))
+     combined={key:prior[key]+current[key] for key in ('attempted_calls','finished_calls','failed_calls','unresolved_calls','calls_with_reported_tokens','calls_with_unknown_or_partial_tokens')}
+-    combined['tokens']={key:prior['tokens'][key]+current['tokens'][key] if complete else None for key in ('input_tokens','cached_input_tokens','output_tokens','total_tokens')}
++    combined['tokens']={key:full[0][key]+full[1][key] if complete else None for key in ('input_tokens','cached_input_tokens','output_tokens','total_tokens')}
++    components = [_reported_bound_component(value) for value in (prior, current)]
++    known = [bound for bound, _ in components if bound is not None]
++    missing = (sum(count for _, count in components) if all(count is not None for _, count in components) else None)
++    combined.update(reported_tokens_lower_bound=(
++        {key: sum(bound[key] for bound in known) for key in known[0]} if known else None),
++        reported_tokens_lower_bound_scope='known_reported_receipts_only_not_total_usage',
++        reported_tokens_lower_bound_coverage_complete=missing == 0,
++        reported_tokens_lower_bound_missing_components=missing)
+     from decimal import Decimal
+     monetary={}
+     for tier in ('standard','fast'):
+         amounts=[v['hypothetical_api_equivalent_usd'][tier] if v['attempted_calls'] else '0' for v in (prior,current)]
+         monetary[tier]=str(sum((Decimal(v) for v in amounts),Decimal(0))) if all(v is not None for v in amounts) else None
+     combined.update(token_accounting_complete=complete,hypothetical_api_equivalent_usd=monetary,
++        pricing_complete=complete and prior.get('pricing_complete') is True and current.get('pricing_complete') is True,
++        hypothetical_api_equivalent_scope='known_reported_priced_receipts_only_not_billing',
+         cost_usd=None,scope='Previous completed pilot plus every native attempt in this iteration. Current iteration limits apply only to its own ledger.')
+     return {'historical_spend':pointer,'historical_usage':prior,'cumulative_pilot_usage':combined,
+         'coding_research_overhead_tokens':None,'coding_research_overhead_cost_usd':None,
+@@ -460,8 +498,11 @@
+             self._last_dispatch = dispatch
+             return result
+         except Exception as exc:
++            from codex_mem.observation_diagnostics import safe_failure_reason
+             append(ledger, {**base, 'status': 'failed', 'error_type': type(exc).__name__,
+-                            'error_code': getattr(exc, 'code', None), 'metrics': getattr(exc, 'metrics', None) or {},
++                            'error_code': getattr(exc, 'code', None),
++                            'reason_code': safe_failure_reason(getattr(exc, 'code', None), getattr(exc, 'reason_code', None)),
++                            'metrics': getattr(exc, 'metrics', None) or {},
+                             'wall_ms': round((time.monotonic() - started) * 1000)})
+             raise
+ 
+--- a/scripts/consolidation_experiment/test_protocol.py
++++ b/scripts/consolidation_experiment/test_protocol.py
+@@ -2320,5 +2320,166 @@
+         self.assertEqual(report['paired_fact_losses'][0]['fact_index'],0)
+ 
+ 
++class FailureReasonObservabilityTests(unittest.TestCase):
++    def test_failed_native_ledger_keeps_only_allowlisted_reason_and_unknown_usage(self):
++        from codex_mem.processor import ProcessorFailure
++        cases = [('runner_failure', 'native_usage_limit', 'native_usage_limit'),
++                 ('invalid_response', 'invalid_json', 'invalid_json'),
++                 ('runner_failure', 'private remote prose with worker-secret', None),
++                 ('timeout', 'native_usage_limit', None),
++                 ('runner_failure', {'remote':'worker-secret'}, None)]
++        for code, reason, expected in cases:
++            with self.subTest(code=code, reason=reason), tempfile.TemporaryDirectory() as temporary:
++                run=Path(temporary)
++                experiment.write(run/'run.json',{'started_at':experiment.time.time(),'budget_run':str(run)})
++                protocol={'model':'gpt-6-luna','reasoning_effort':'medium','limits':{
++                    'max_calls':5,'max_observed_tokens':1000000,'per_call_token_reservation':100000,
++                    'wall_seconds':3600,'call_seconds':1}}
++                capture=experiment.Capture(run,protocol,'judge','candidate','public-fiction')
++                request=experiment.request('Public fictional input only.',experiment.object_schema({'value':experiment.TEXT}),protocol)
++                error=ProcessorFailure(code,reason_code=reason,worker_thread_id='worker-secret',worker_turn_id='turn-secret')
++                # A runner-compatible exception may expose arbitrary attributes;
++                # Capture must apply the allowlist itself rather than trust it.
++                error.reason_code=reason
++                error.remote_detail='private remote prose with worker-secret'
++                with patch('codex_mem.processor.NativeProcessorRunner') as runner:
++                    runner.return_value.side_effect=error
++                    with self.assertRaises(ProcessorFailure):capture(request)
++                    rows=experiment.ledger_calls(run/'calls.jsonl')
++                    self.assertEqual([row['status'] for row in rows],['started','failed'])
++                    self.assertEqual(rows[-1]['error_code'],code)
++                    self.assertIn('reason_code',rows[-1])
++                    self.assertEqual(rows[-1]['reason_code'],expected)
++                    serialized=json.dumps(rows)
++                    for secret in ('worker-secret','turn-secret','private remote prose','remote_detail'):
++                        self.assertNotIn(secret,serialized)
++                    usage=experiment.usage(rows)
++                    self.assertFalse(usage['token_accounting_complete'])
++                    self.assertIsNone(usage['tokens']['total_tokens'])
++                    self.assertIsNone(usage['cost_usd'])
++                    self.assertEqual(experiment.read(run/'receipts/call-0001-request.json'),request)
++                    self.assertFalse((run/'receipts/call-0001-response.json').exists())
++                    with self.assertRaisesRegex(RuntimeError,'usage_unknown_stop'):
++                        capture(request)
++                    self.assertEqual(runner.call_count,1)
++                    self.assertEqual(len(experiment.ledger_calls(run/'calls.jsonl')),2)
++
++
++class CumulativeReportedBoundsTests(unittest.TestCase):
++    def accounting(self, root, prior, current):
++        import hashlib
++        path=root/'prior-report.json'
++        experiment.write(path,{'usage':prior})
++        protocol={'historical_spend':{'report':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}}
++        return experiment.historical_accounting(protocol,current)['cumulative_pilot_usage']
++
++    def test_three_round_unknown_prior_preserves_known_reported_bounds(self):
++        prior=experiment.usage(model_call('known','reader','baseline',100)+[
++            {'call_id':'unknown','status':'started','phase':'reader','variant':'candidate'}])
++        expected=[{'input_tokens':280,'cached_input_tokens':0,'output_tokens':20,'total_tokens':300},
++                  {'input_tokens':320,'cached_input_tokens':0,'output_tokens':30,'total_tokens':350},
++                  {'input_tokens':335,'cached_input_tokens':0,'output_tokens':40,'total_tokens':375}]
++        with tempfile.TemporaryDirectory() as temporary:
++            for total,bound in zip((200,50,25),expected):
++                current=experiment.usage(model_call('new-'+str(total),'reader','candidate',total))
++                prior=self.accounting(Path(temporary),prior,current)
++                self.assertFalse(prior['token_accounting_complete'])
++                self.assertIsNone(prior['tokens']['total_tokens'])
++                self.assertEqual(prior.get('reported_tokens_lower_bound'),bound)
++                self.assertTrue(prior['reported_tokens_lower_bound_coverage_complete'])
++                self.assertEqual(prior['reported_tokens_lower_bound_missing_components'],0)
++                self.assertEqual(prior['reported_tokens_lower_bound_scope'],'known_reported_receipts_only_not_total_usage')
++                self.assertIsNone(prior['cost_usd'])
++
++    def test_missing_bounds_do_not_become_zero_or_disappear_on_next_round(self):
++        unknown=experiment.usage([{'call_id':'unknown','status':'started'}])
++        unknown.pop('reported_tokens_lower_bound')
++        known=experiment.usage(model_call('known','reader','candidate',100))
++        with tempfile.TemporaryDirectory() as temporary:
++            both=self.accounting(Path(temporary),unknown,unknown)
++            self.assertIsNone(both['reported_tokens_lower_bound'])
++            self.assertFalse(both['reported_tokens_lower_bound_coverage_complete'])
++            self.assertEqual(both['reported_tokens_lower_bound_missing_components'],2)
++            partial=self.accounting(Path(temporary),unknown,known)
++            self.assertEqual(partial['reported_tokens_lower_bound']['total_tokens'],100)
++            self.assertEqual(partial['reported_tokens_lower_bound_missing_components'],1)
++            again=self.accounting(Path(temporary),partial,experiment.usage(model_call('later','reader','candidate',20)))
++            self.assertEqual(again['reported_tokens_lower_bound']['total_tokens'],120)
++            self.assertEqual(again['reported_tokens_lower_bound_missing_components'],1)
++            self.assertFalse(again['reported_tokens_lower_bound_coverage_complete'])
++            self.assertFalse(again['token_accounting_complete'])
++
++    def test_incomplete_or_incoherent_bound_map_is_not_partially_salvaged(self):
++        base={'input_tokens':90,'cached_input_tokens':0,'output_tokens':10,'total_tokens':100}
++        malformed=[{}, {**base,'input_tokens':True}, {**base,'total_tokens':-1},
++                   {**base,'total_tokens':101}, {**base,'cached_input_tokens':91},
++                   {**base,'extra':'remote arbitrary value'}, {**base,'output_tokens':'10'}]
++        with tempfile.TemporaryDirectory() as temporary:
++            for bound in malformed:
++                with self.subTest(bound=bound):
++                    prior=experiment.usage([{'call_id':'unknown','status':'started'}])
++                    prior['reported_tokens_lower_bound']=bound
++                    result=self.accounting(Path(temporary),prior,experiment.usage(model_call('new','reader','candidate',50)))
++                    self.assertEqual(result['reported_tokens_lower_bound'],
++                        {'input_tokens':40,'cached_input_tokens':0,'output_tokens':10,'total_tokens':50})
++                    self.assertEqual(result['reported_tokens_lower_bound_missing_components'],1)
++                    self.assertFalse(result['reported_tokens_lower_bound_coverage_complete'])
++                    self.assertIsNone(result['tokens']['total_tokens'])
++
++    def test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens(self):
++        prior=experiment.usage(model_call('old','reader','baseline',100))
++        prior.pop('reported_tokens_lower_bound')
++        current=experiment.usage(model_call('new','reader','candidate',50))
++        with tempfile.TemporaryDirectory() as temporary:
++            valid=self.accounting(Path(temporary),prior,current)
++            self.assertEqual(valid['reported_tokens_lower_bound']['total_tokens'],150)
++            self.assertTrue(valid['reported_tokens_lower_bound_coverage_complete'])
++            self.assertEqual(valid['tokens']['total_tokens'],150)
++            for invalid in ({**prior['tokens'],'input_tokens':True}, {**prior['tokens'],'total_tokens':101}):
++                with self.subTest(tokens=invalid):
++                    bad={**prior,'tokens':invalid}
++                    result=self.accounting(Path(temporary),bad,current)
++                    self.assertEqual(result['reported_tokens_lower_bound']['total_tokens'],50)
++                    self.assertFalse(result['reported_tokens_lower_bound_coverage_complete'])
++                    self.assertFalse(result['token_accounting_complete'])
++                    self.assertIsNone(result['tokens']['total_tokens'])
++
++    def test_pricing_incompleteness_survives_unknown_prior_chains_without_billing_claim(self):
++        prior=experiment.usage(model_call('known','reader','baseline',100)+[
++            {'call_id':'unknown','status':'started'}])
++        with tempfile.TemporaryDirectory() as temporary:
++            result=self.accounting(Path(temporary),prior,experiment.usage(model_call('new','reader','candidate',50)))
++            self.assertIs(result.get('pricing_complete'),False)
++            self.assertIsNone(result['cost_usd'])
++            result=self.accounting(Path(temporary),result,experiment.usage(model_call('again','reader','candidate',25)))
++            self.assertIs(result.get('pricing_complete'),False)
++            self.assertIsNone(result['cost_usd'])
++
++    def test_unavailable_bound_count_remains_unknown_across_later_rounds(self):
++        prior=experiment.usage(model_call('known','reader','baseline',100))
++        prior['token_accounting_complete']=False
++        prior['tokens']={key:None for key in prior['tokens']}
++        prior['reported_tokens_lower_bound_coverage_complete']=False
++        prior['reported_tokens_lower_bound_missing_components']=None
++        with tempfile.TemporaryDirectory() as temporary:
++            result=self.accounting(Path(temporary),prior,experiment.usage(model_call('new','reader','candidate',50)))
++            self.assertEqual(result['reported_tokens_lower_bound']['total_tokens'],150)
++            self.assertIsNone(result['reported_tokens_lower_bound_missing_components'])
++            self.assertFalse(result['reported_tokens_lower_bound_coverage_complete'])
++            again=self.accounting(Path(temporary),result,experiment.usage(model_call('later','reader','candidate',25)))
++            self.assertEqual(again['reported_tokens_lower_bound']['total_tokens'],175)
++            self.assertIsNone(again['reported_tokens_lower_bound_missing_components'])
++            self.assertFalse(again['reported_tokens_lower_bound_coverage_complete'])
++
++    def test_complete_known_totals_bound_a_contradictory_reported_subtotal(self):
++        prior=experiment.usage(model_call('old','reader','baseline',100))
++        prior['reported_tokens_lower_bound']={'input_tokens':190,'cached_input_tokens':0,'output_tokens':10,'total_tokens':200}
++        with tempfile.TemporaryDirectory() as temporary:
++            result=self.accounting(Path(temporary),prior,experiment.usage(model_call('new','reader','candidate',50)))
++            self.assertEqual(result['tokens']['total_tokens'],150)
++            self.assertEqual(result['reported_tokens_lower_bound']['total_tokens'],150)
++            self.assertTrue(result['token_accounting_complete'])
++
++
+ if __name__=='__main__':
+     unittest.main()

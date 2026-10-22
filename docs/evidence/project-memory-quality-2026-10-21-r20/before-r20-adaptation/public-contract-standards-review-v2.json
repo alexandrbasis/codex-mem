@@ -1,0 +1,29 @@
+{
+  "axis": "Standards",
+  "status": "public_author_reviewer_dispatch_clear_only",
+  "version": "V2-count-binding",
+  "pack_receipt_sha256": "261d52b0e772950e33d868cc4a2d6a8e32a27790f4e78284c20d98b7ac722bc5",
+  "reviewed_hashes": {
+    "prospective-gold-semantics-contract.json": "a3ceb608bc9d336cc0dd1d611f1294063f58f86cd651cf7e421a596510f6795e",
+    "public-fixture-contract.py": "96b9bcfdf12c4654243c2e57f54cba8fdbf6ae21d644849282aa9a57bf9c8877",
+    "run-experiment.py": "46296af7d87ae092f77946a5d8868129d375026821de0b242d620cbf4dc6bf8c",
+    "sealed-semantic-review-findings.schema.json": "1f179454dd4772956c0ab0d4bd9e9303fc14b071a83f830a16eb36b04d0767e8",
+    "sealed-semantic-review-metadata.schema.json": "8df15b220de0b83be4b6d280ece4289f10312677ae2bd943da21174d09d84d59",
+    "test-driver.py": "f215d7bb6d7a865066df5526d0d57a587898b464a3bdd980d32d737ff56dc313"
+  },
+  "documented_standard_violations": [],
+  "heuristic_smells": [],
+  "resolved_count_binding_issue": "Metadata question and required-fact counts must now exactly match counts computed from the same pinned fixture/gold bytes before any success receipt is written. Fixture/gold are rehashed before JSON parsing. Detailed findings remain opaque.",
+  "narrative": "The focused V2 delta resolves the count-binding gap. Positive completeness attestations no longer replace actual fixture question and gold fact denominators. The guard compares exact counts before writing validation success while preserving the existing hash-before-parse, fixed-path, strict metadata, nonoverwrite and pre-phase rejection behavior. Tests meaningfully reject understated/overstated facts and a missing fixture question, and retain acceptance of a valid97-fact packet independently of96 questions. No additional actionable Standards breach or heuristic smell found. Public guidance, schemas, mechanical contract and helper are unchanged; V1 source/reviews and red evidence remain historical. Clearance is limited to dispatching the author and independent reviewer with their public allowlists, not trial readiness, source freeze or semantic quality.",
+  "verification": [
+    "20 offline driver tests passed independently",
+    "14 unchanged mechanical tests passed independently",
+    "V2pack261d52b0 and every delivery/driver pin match",
+    "Preserved V1pack hash matches c47950d3 and old Standards review exists",
+    "Exact V1\u2192V2 driver/test delta inspected"
+  ],
+  "limits": [
+    "No actual author inputs, product worker files, private findings, old datasets or model calls accessed.",
+    "Only this NEW review artifact written; prior review and source outputs preserved."
+  ]
+}

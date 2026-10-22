@@ -1,0 +1,15 @@
+--- before-protocol-test.py
++++ scripts/consolidation_experiment/test_protocol.py
+@@ -1799,7 +1799,11 @@
+                         self.assertFalse((run / 'calls.jsonl').exists())
+                     else:
+                         capture({'prompt': 'Fictional test only.'})
+-                        runner.assert_called_once_with(timeout=limits['call_seconds'])
++                        runner.assert_called_once()
++                        self.assertEqual(runner.call_args.args, ())
++                        self.assertEqual(set(runner.call_args.kwargs), {'timeout', 'usage_checkpoint'})
++                        self.assertEqual(runner.call_args.kwargs['timeout'], limits['call_seconds'])
++                        self.assertTrue(callable(runner.call_args.kwargs['usage_checkpoint']))
+                         self.assertEqual(experiment.usage(experiment.ledger_calls(
+                             run / 'calls.jsonl'))['attempted_calls'], 1)
+ 

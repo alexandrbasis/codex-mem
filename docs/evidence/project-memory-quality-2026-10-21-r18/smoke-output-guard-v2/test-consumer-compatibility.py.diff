@@ -1,0 +1,30 @@
+--- pre-outputguard/test-consumer-compatibility.py
++++ outputguard/test-consumer-compatibility.py
+@@ -7,6 +7,7 @@
+ import types
+ import sys
+ import unittest
++from unittest.mock import patch
+ 
+ HERE=Path(__file__).parent
+ REPO=HERE.resolve().parents[2]
+@@ -140,6 +141,19 @@
+         with self.assertRaisesRegex(ValueError,'already_exists'):
+             smoke.smoke(self.protocol(),output,source_root=self.repo)
+ 
++    def test_smoke_cli_rejects_actual_run_and_sealed_output_before_read_or_mkdir(self):
++        smoke=load('r18_smoke_output_guard',HERE/'consumer-smoke.py')
++        targets=[Path('/private/tmp/codex-mem-quality-20261021-r18-experiment'),
++                 self.repo/'never-open-sealed'/'consumer-output']
++        for target in targets:
++            with self.subTest(target=target):
++                self.assertFalse(target.exists())
++                argv=['smoke','--protocol',str(self.repo/'must-not-open.json'),
++                      '--protocol-sha256','0'*64,'--output',str(target)]
++                with patch.object(sys,'argv',argv),self.assertRaisesRegex(ValueError,'output_must_be_inside'):
++                    smoke.main()
++                self.assertFalse(target.exists())
++
+     def test_root_final_history_receipt_is_accepted_by_unchanged_actual_consumer(self):
+         history=HERE/'historical-spend.json'
+         expected='5b2905e0d96e8a0fde73cb9c7a9f4d3d0c2a8d6e422891fd1b31aef690706cf1'

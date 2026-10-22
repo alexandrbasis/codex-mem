@@ -1,0 +1,18 @@
+{
+  "status": "source_inventory_timing_corrected_before_reviews",
+  "original_manifest_sha256": "b7d90943ec03936adac4f691b4df25be12c7e051358f1ab1cd93046f20d4762a",
+  "original_patch": "/private/tmp/codex-mem-quality-20261021-r21-before-source-inventory-fix.patch",
+  "original_patch_sha256": "639a708e0694e8181bbd9a8a99467f2757465d5d5faffdbf06eb49aa0c227058",
+  "drift": [
+    "docs/evidence/project-memory-quality-2026-10-21-r21-validation/source-review-preparation.log"
+  ],
+  "created_after_initial_inventory": [
+    "docs/evidence/project-memory-quality-2026-10-21-r21/test-evidence-original.json",
+    "docs/evidence/project-memory-quality-2026-10-21-r21-validation/package-verification-correction.json"
+  ],
+  "cause": "Initial verification script failed, but the shell proceeded to inventory before verification receipts existed. Redirected output log changed after its initial pin.",
+  "fix": "Rebuild complete inventory and binary patch only after all receipts and the previous output log are closed. Run generator without a repository output redirection.",
+  "reviews_started": false,
+  "native_calls": 0,
+  "runtime_changed": false
+}

@@ -10,6 +10,7 @@ from xml.etree import ElementTree
 from codex_mem.config import configure
 from codex_mem.project_memory_retrieval import build_project_brief, render_project_brief
 from codex_mem.store import Store
+from source_transport_assertions import SourceRegistry, effective_capture_basis
 
 
 class ProjectMemoryRetrievalTests(unittest.TestCase):
@@ -319,22 +320,22 @@ class ProjectMemoryRetrievalTests(unittest.TestCase):
             'summary': 'Importer passed locally; staging remains 2.0.',
             'source_capture_seq_min': 10, 'source_capture_seq_max': 12,
             'capture_order_basis': 'local_capture_sequence_not_event_time', 'revision': 3,
-            'evidence': {'outcome': [{'source_id': 'local-source', 'start': 0, 'end': 70,
+            'evidence': {'outcome': [{'source_id': 'local-source', 'start': 0, 'end': len('Importer version 2.1 passed locally. No deployment was performed.'),
                                       'quote': 'Importer version 2.1 passed locally. No deployment was performed.'}],
-                         'open_work': [{'source_id': 'staging-source', 'start': 0, 'end': 60,
+                         'open_work': [{'source_id': 'staging-source', 'start': 0, 'end': len('Staging is 2.0 and production version is unchecked.'),
                                        'quote': 'Staging is 2.0 and production version is unchecked.'}],
                          'summary': [{'source_id': 'local-source'}, {'source_id': 'staging-source'}]}}]
         brief = build_project_brief(self.store, self.project, query='Resume importer work.', budget=1500)
         root = ElementTree.fromstring(brief['xml'])
         for field in root.findall('./item/field'):
-            ids = [source.attrib['source_id'] for source in field.findall('source')]
+            ids = [source['source_id'] for source in SourceRegistry(root).field_sources(field)]
             if 'passed locally' in (field.findtext('derived_text') or ''):
                 self.assertIn('local-source', ids)
             if field.attrib['name'] == 'outcome':
                 self.assertNotIn('staging-source', ids)
         item = root.find('item')
         self.assertEqual('12', item.attrib['source_capture_seq_max'])
-        self.assertEqual('local_capture_sequence_not_event_time', item.attrib['capture_order_basis'])
+        self.assertEqual('local_capture_sequence_not_event_time', effective_capture_basis(root, item))
         self.assertEqual('3', item.attrib['revision'])
         self.assertNotIn('completed', brief['xml'])
 
@@ -682,10 +683,17 @@ class ProjectMemoryRetrievalTests(unittest.TestCase):
         self.assertIn('PRE-219 is not a continuation', xml)
         self.assertNotIn('NEVER_EXPAND_THIS_UNCITED_EVENT', xml)
         self.assertLessEqual(len(xml), 6000)
-        sources = ElementTree.fromstring(xml).findall('.//field[@name="source_context"]/source')
+        root = ElementTree.fromstring(xml)
+        fields = root.findall('.//field[@name="source_context"]')
+        self.assertEqual(len(fields), 1)
+        sources = SourceRegistry(root).field_sources(fields[0])
         self.assertEqual(1, len(sources))
-        self.assertEqual(entry['id'], sources[0].attrib['source_id'])
-        self.assertEqual('same_source_adjacent_user_statement', sources[0].attrib['context_basis'])
+        self.assertEqual(entry['id'], sources[0]['source_id'])
+        self.assertEqual('body', sources[0]['source_field'])
+        self.assertEqual('user_intent', sources[0]['source_role'])
+        self.assertEqual((len(lead), len(lead + boundary)), (sources[0]['start'], sources[0]['end']))
+        self.assertEqual(boundary, sources[0]['quote'])
+        self.assertEqual('same_source_adjacent_user_statement', sources[0]['context_basis'])
         scoped = build_project_brief(self.store, self.project, query=query,
                                       exclude_session_id='studio-second')
         self.assertNotIn('PRE-219', scoped['xml'])

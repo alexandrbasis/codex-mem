@@ -73,7 +73,10 @@ def _projection(exclude_session_id: str | None) -> tuple[str, tuple]:
 
 
 def snapshot(connection: sqlite3.Connection, project: str, limit: int,
-             exclude_session_id: str | None = None, *, fts_query: str = "") -> tuple[list[dict], dict]:
+             exclude_session_id: str | None = None, *, fts_query: str = "",
+             recent_unresolved: bool = False, recent_context: bool = False) -> tuple[list[dict], dict]:
+    if recent_unresolved or recent_context:
+        limit = max(0, min(int(limit), 16))
     state, args = _projection(exclude_session_id)
     base = ("SELECT c.*," + state + " disposition FROM pm_intent_custody c WHERE c.project=? "
             "AND (? IS NULL OR c.session_id!=?)")
@@ -89,10 +92,25 @@ def snapshot(connection: sqlite3.Connection, project: str, limit: int,
         selected += (" AND c.source_id IN (SELECT e.id FROM entries e WHERE e.project=? "
                      "AND e.rowid IN (SELECT rowid FROM entries_fts WHERE entries_fts MATCH ?))")
         selected_parameters = (*parameters, project, fts_query)
+    if recent_unresolved or recent_context:
+        # A bounded supplemental read returns only complete small consumed
+        # sources. Its excerpt is the entire body, so privacy and whole-source
+        # scope checks need no subsequent source-body fetch.
+        selected += ((" AND (" + state + ")='unresolved' " if recent_unresolved else " ") +
+                     "AND c.start=0 AND c.end<=600 AND EXISTS (SELECT 1 FROM entries whole "
+                     "WHERE whole.id=c.source_id AND whole.project=c.project "
+                     "AND length(whole.body)=c.end AND whole.superseded_by IS NULL)")
+        if recent_unresolved:
+            selected_parameters = (*selected_parameters, *args)
     matched = connection.execute("SELECT COUNT(*) FROM (" + selected + ")", selected_parameters).fetchone()[0]
+    metadata = (",e.title source_title,e.kind source_kind,e.source source_capture,e.tags_json source_tags_json,"
+                "(SELECT json_extract(o.data_json,'$.scope') FROM pm_objects o "
+                "WHERE o.id=q.claim_id AND o.project=q.project) source_scope"
+                if recent_unresolved or recent_context else "")
+    ordering = "seq DESC,start,id" if recent_unresolved or recent_context else "CASE disposition WHEN 'unresolved' THEN 0 ELSE 1 END,salient DESC,seq,start,id"
     rows = connection.execute(
-        "SELECT q.*,substr(e.body,q.start+1,min(q.end-q.start,1200)) excerpt FROM (" + selected +
-        " ORDER BY CASE disposition WHEN 'unresolved' THEN 0 ELSE 1 END,salient DESC,seq,start,id LIMIT ?) q "
+        "SELECT q.*" + metadata + ",substr(e.body,q.start+1,min(q.end-q.start,1200)) excerpt FROM (" + selected +
+        " ORDER BY " + ordering + " LIMIT ?) q "
         "JOIN entries e ON e.id=q.source_id AND e.project=q.project", (*selected_parameters, limit))
     values = []
     for row in rows:
@@ -111,11 +129,19 @@ def snapshot(connection: sqlite3.Connection, project: str, limit: int,
                        'source_role': 'user_intent', 'is_requirement_claim': False,
                        'meaning': 'original_user_source_with_unreconciled_representation',
                        'uncertainty': 'extracted_representation_completeness_unresolved' if row['disposition'] == 'unresolved' else None})
+        if recent_unresolved or recent_context:
+            values[-1]['source_record'] = {'id': row['source_id'], 'project': row['project'],
+                'session_id': row['session_id'], 'title': row['source_title'], 'kind': row['source_kind'],
+                'source': row['source_capture'], 'tags_json': row['source_tags_json'], 'body': row['excerpt']}
+            if row['disposition'] != 'unresolved' and row['source_scope']:
+                values[-1]['source_record']['scope'] = json.loads(row['source_scope'])
     total = sum(counts.values())
     return values, dict(counts, total=total, matched=matched, unmatched=total-matched,
                         matched_omitted=matched-len(values), matched_complete=matched == len(values),
                         query_filtered=bool(fts_query), returned=len(values), omitted=total-len(values),
                         complete=total == len(values), automatic_backfill=False,
+                        **({'selection_mode': 'recent_unresolved_whole_sources' if recent_unresolved else 'recent_original_context', 'candidate_limit': limit,
+                            'source_chars_limit': 600, 'source_order': 'capture_sequence_desc'} if recent_unresolved or recent_context else {}),
                         representation_rule='whole_source_exact_text_only', cancellation_inference=False)
 
 

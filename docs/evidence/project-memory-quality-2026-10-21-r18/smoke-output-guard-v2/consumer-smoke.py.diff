@@ -1,0 +1,41 @@
+--- pre-outputguard/consumer-smoke.py
++++ outputguard/consumer-smoke.py
+@@ -28,9 +28,20 @@
+     return module
+ 
+ 
++def cli_output_path(output):
++    path=Path(output).resolve()
++    require(path!=HERE and path.is_relative_to(HERE),'smoke_cli_output_must_be_inside_R18_evidence')
++    return path
++
++
+ def smoke(protocol,output,source_root=REPO):
+     """source_root is a toy dependency for unit tests; CLI always uses actual repo."""
+-    output=Path(output)
++    output=Path(output).resolve()
++    if Path(source_root).resolve()==REPO:
++        output=cli_output_path(output)
++    else:
++        require(output!=Path(source_root).resolve() and output.is_relative_to(Path(source_root).resolve()),
++                'synthetic_smoke_output_must_be_inside_toy_root')
+     require(not output.exists(),'smoke_output_already_exists')
+     helper_path=REPO/'scripts/project_memory_consolidation_experiment.py'
+     require(digest(helper_path)==HELPER_SHA,'unchanged_helper_required')
+@@ -41,6 +52,8 @@
+     pins=protocol['public_preflight']['file_sha256']
+     require(pins.get('scripts/project_memory_consolidation_experiment.py')==HELPER_SHA,'protocol_helper_pin_differs')
+     sealed=Path(protocol['authorship']['private_directory']).resolve()
++    require(not output.is_relative_to(sealed) and not sealed.is_relative_to(output),
++            'smoke_output_must_not_overlap_sealed_directory')
+     observed={}
+     for name,expected in pins.items():
+         path=(source_root/name).resolve()
+@@ -112,6 +125,7 @@
+     parser.add_argument('--protocol-sha256',required=True)
+     parser.add_argument('--output',type=Path,required=True)
+     args=parser.parse_args()
++    args.output=cli_output_path(args.output)
+     raw=args.protocol.read_bytes()
+     require(hashlib.sha256(raw).hexdigest()==args.protocol_sha256,'emitted_protocol_bytes_changed')
+     protocol=json.loads(raw)

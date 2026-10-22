@@ -1,0 +1,47 @@
+{
+  "status": "auditor_bug_fixed_synthetic_regression_passed_actual_audit_pending",
+  "finding": "CLI binding overwritten by final_gate_bindings loop; public_tokens lookup KeyError.",
+  "fix": "Rename only gate-loop local binding to gate_binding.",
+  "prior_files_sha256": {
+    "held-helper-preparation.py": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+    "audit-final-export.py": "55cfabfffd669f5258f9bbd7ea213072d9d12d568fb4a4a12e030ac29b605c6d",
+    "preparation.json": "38e17573aa8d53bee9b9b7c7714c63cf694f013c06c8a34ae0c21512a684ac2d",
+    "audit-archive-supplement.py": "b3b7e435d1f779fed906e1eb8460c78e70acbc95cbd8eb5915be756617a25874",
+    "test-audit-contracts.py": "0ce5cf5d1f35be78b6b98a341586872c2e8c97aea1149f256b30158c415b33d7",
+    "audit_contracts.py": "a22f98e3145704beea3de8960a61d700d09f6c094d6cccfc2f87598631c0195a"
+  },
+  "prior_script_snapshot_matches_preparation": {
+    "held-helper-preparation.py": true,
+    "audit-final-export.py": true,
+    "audit-archive-supplement.py": true,
+    "test-audit-contracts.py": true,
+    "audit_contracts.py": true
+  },
+  "previous_preparation_preserved_byte_exact": true,
+  "current_script_sha256": {
+    "held-helper-preparation.py": "ede2437d3a75b5c3ec8967409c44732ffa42b8873761cd3545590053b4c8d2b4",
+    "audit-final-export.py": "1d1f62051a72021097e1cd731601f02082a4ada7c9744bba84e643caef77e60c",
+    "audit-archive-supplement.py": "b3b7e435d1f779fed906e1eb8460c78e70acbc95cbd8eb5915be756617a25874",
+    "test-audit-contracts.py": "0ce5cf5d1f35be78b6b98a341586872c2e8c97aea1149f256b30158c415b33d7",
+    "audit_contracts.py": "a22f98e3145704beea3de8960a61d700d09f6c094d6cccfc2f87598631c0195a",
+    "test-main-binding-path.py": "33d888c7828a1ae3968ba48b53ea963297d3c613a96db313d66fcba20c85eab6"
+  },
+  "test_logs_sha256": {
+    "contracts-review-green.log": "5588b256ee4b948aa406c335ef3d6d9593702e739835e5d99e2b8255b3339813",
+    "main-binding-red.log": "b823d31aa570e2e6a85747bb63e7b80a0ac6b5acf0b59bb5a7d3447b838bef95",
+    "main-binding-green.log": "c3a83593d26384c7ba197fc59d784f63c97d392d7d404bd5e99e5f1e4a48395d"
+  },
+  "regression": {
+    "method": "Execute actual main source statement path (CLI binding load, final review gate iteration, public-token consumer) with temporary synthetic gate files and eight synthetic finished rows. AST only selects executable statements; outcome is runtime checks.",
+    "old_result": "KeyError: 'public_tokens' at owning consumer",
+    "repaired_result": "1 test PASS",
+    "existing_contract_tests": "14 PASS"
+  },
+  "total_passing_synthetic_tests": 15,
+  "no_r19_product_helper_protocol_harness_private_inputs_original_db_native_network_or_models_touched": true,
+  "limits": [
+    "Executable main path slice covers the reported failure; unrelated main stages still require actual released canonical export.",
+    "No actual R20 audit or quality outcome is claimed.",
+    "Formal release and complete export confirmation remain mandatory before actual final audit."
+  ]
+}

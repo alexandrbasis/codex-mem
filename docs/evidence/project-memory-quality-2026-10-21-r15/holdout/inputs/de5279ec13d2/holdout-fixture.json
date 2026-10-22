@@ -1,0 +1,2523 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "split": "holdout",
+  "histories": [
+    {
+      "id": "hold_1101",
+      "project_keys": [
+        "museum_audio_main",
+        "museum_audio_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1101_s1",
+          "project_key": "museum_audio_main",
+          "events": [
+            {
+              "id": "hold_1101_brief",
+              "type": "user",
+              "text": "For museum audio, Keep a printed transcript beside every listening station. Some visitors cannot use headphones. The opening-night narration must have a harp introduction. The pronunciation review by Iven is still required."
+            },
+            {
+              "id": "hold_1101_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1101-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1101_result1",
+              "type": "tool",
+              "text": "Local audio simulation: six sample clips played; no museum station was contacted.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1101-result1"
+                },
+                "tool_response": {
+                  "output": "Local audio simulation: six sample clips played; no museum station was contacted.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1101_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 3 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1101_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1101_other",
+          "project_key": "museum_audio_separate",
+          "events": [
+            {
+              "id": "hold_1101_other",
+              "type": "user",
+              "text": "The travelling exhibit uses headphones only; that decision belongs to its travelling kit."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1101_s2",
+          "project_key": "museum_audio_main",
+          "events": [
+            {
+              "id": "hold_1101_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: The opening-night narration must have a harp introduction. Keep a printed transcript beside every listening station. The pronunciation review by Iven is still required."
+            },
+            {
+              "id": "hold_1101_claim",
+              "type": "assistant",
+              "text": "The listening stations are ready for visitors."
+            },
+            {
+              "id": "hold_1101_result2",
+              "type": "tool",
+              "text": "Museum access probe: denied before playback; no station results collected.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1101-result2"
+                },
+                "tool_response": {
+                  "output": "Museum access probe: denied before playback; no station results collected.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1101_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1101_obsolete"
+            },
+            {
+              "id": "hold_1101_final",
+              "type": "user",
+              "text": "Ask Iven to review the two newly added names before we declare the narration ready."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1101_delete"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "museum_audio_main",
+          "text": "For museum audio, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "museum_audio_main",
+          "text": "What reason did the user give for this requirement: \"Keep a printed transcript beside every listening station.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "museum_audio_main",
+          "text": "Compare the assistant’s readiness claim with both recorded checks. What did each actually say?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "museum_audio_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "museum_audio_main",
+          "text": "Does the separate museum audio work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "museum_audio_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1102",
+      "project_keys": [
+        "orchard_routes_main",
+        "orchard_routes_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1102_s1",
+          "project_key": "orchard_routes_main",
+          "events": [
+            {
+              "id": "hold_1102_brief",
+              "type": "user",
+              "text": "For orchard routes, Route planning must retain the shaded rest stop. The afternoon volunteer group needs a cool place to pause. Every draft route must include a second loop through the eastern orchard. Obtaining the bridge load report remains a prerequisite for choosing the final route."
+            },
+            {
+              "id": "hold_1102_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 4 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1102_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1102-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1102_result1",
+              "type": "tool",
+              "text": "Desktop route calculation: distances fit the plan; bridge load was not measured.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1102-result1"
+                },
+                "tool_response": {
+                  "output": "Desktop route calculation: distances fit the plan; bridge load was not measured.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1102_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1102_other",
+          "project_key": "orchard_routes_separate",
+          "events": [
+            {
+              "id": "hold_1102_other",
+              "type": "user",
+              "text": "The separate nursery walk has no bridge and may bypass the rest stop."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1102_s2",
+          "project_key": "orchard_routes_main",
+          "events": [
+            {
+              "id": "hold_1102_claim",
+              "type": "assistant",
+              "text": "The bridge route has been approved."
+            },
+            {
+              "id": "hold_1102_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Every draft route must include a second loop through the eastern orchard. Route planning must retain the shaded rest stop. Obtaining the bridge load report remains a prerequisite for choosing the final route."
+            },
+            {
+              "id": "hold_1102_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1102_obsolete"
+            },
+            {
+              "id": "hold_1102_result2",
+              "type": "tool",
+              "text": "Bridge inspection register: latest inspection slot is unassigned; no load report is attached.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1102-result2"
+                },
+                "tool_response": {
+                  "output": "Bridge inspection register: latest inspection slot is unassigned; no load report is attached.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1102_result2"
+            }
+          ]
+        },
+        {
+          "id": "hold_1102_s3",
+          "project_key": "orchard_routes_main",
+          "events": [
+            {
+              "id": "hold_1102_final",
+              "type": "user",
+              "text": "Reopen route selection and assign someone to obtain the bridge load report."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "orchard_routes_main",
+          "text": "For orchard routes, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "orchard_routes_main",
+          "text": "What reason did the user give for this requirement: \"Route planning must retain the shaded rest stop.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "orchard_routes_main",
+          "text": "What success did the assistant report, and what are the narrower findings of the two tool captures?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "orchard_routes_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "orchard_routes_main",
+          "text": "Does the separate orchard routes work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "orchard_routes_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1103",
+      "project_keys": [
+        "theater_captions_main",
+        "theater_captions_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1103_s1",
+          "project_key": "theater_captions_main",
+          "events": [
+            {
+              "id": "hold_1103_brief",
+              "type": "user",
+              "text": "For theater captions, Use two caption lines at most. The rear seats lose the bottom of a taller caption block. All previews need a violet frame. Luma still has to review the timing of the final scene."
+            },
+            {
+              "id": "hold_1103_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1103-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1103_result1",
+              "type": "tool",
+              "text": "Local caption render: line count passed for the supplied scenes; timing was not reviewed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1103-result1"
+                },
+                "tool_response": {
+                  "output": "Local caption render: line count passed for the supplied scenes; timing was not reviewed.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1103_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 5 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1103_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1103_other",
+          "project_key": "theater_captions_separate",
+          "events": [
+            {
+              "id": "hold_1103_other",
+              "type": "user",
+              "text": "The lobby announcement screen allows four lines because it has a different viewing angle."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1103_s2",
+          "project_key": "theater_captions_main",
+          "events": [
+            {
+              "id": "hold_1103_claim",
+              "type": "assistant",
+              "text": "The whole caption sequence passed review."
+            },
+            {
+              "id": "hold_1103_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: All previews need a violet frame. Use two caption lines at most. Luma still has to review the timing of the final scene."
+            },
+            {
+              "id": "hold_1103_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1103_obsolete"
+            },
+            {
+              "id": "hold_1103_result2",
+              "type": "tool",
+              "text": "Review queue readback: final-scene timing remains awaiting Luma.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1103-result2"
+                },
+                "tool_response": {
+                  "output": "Review queue readback: final-scene timing remains awaiting Luma.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1103_final",
+              "type": "user",
+              "text": "Prepare a revised final-scene preview for Luma; leave the timing review open."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1103_result2"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "theater_captions_main",
+          "text": "For theater captions, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "theater_captions_main",
+          "text": "What reason did the user give for this requirement: \"Use two caption lines at most.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "theater_captions_main",
+          "text": "State the assistant’s completion claim alongside the findings and limits of both checks."
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "theater_captions_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "theater_captions_main",
+          "text": "Does the separate theater captions work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "theater_captions_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1104",
+      "project_keys": [
+        "seed_packets_main"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1104_s1",
+          "project_key": "seed_packets_main",
+          "events": [
+            {
+              "id": "hold_1104_brief",
+              "type": "user",
+              "text": "For seed packets, Each packet must retain its sowing month. Volunteers sort donations by planting season. Print a decorative leaf on every packet. The germination notice still needs approval from Neri."
+            },
+            {
+              "id": "hold_1104_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 6 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1104_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1104-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1104_result1",
+              "type": "tool",
+              "text": "Printer sandbox: sample labels rendered correctly; nothing sent to the exchange printer.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1104-result1"
+                },
+                "tool_response": {
+                  "output": "Printer sandbox: sample labels rendered correctly; nothing sent to the exchange printer.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1104_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1104_s2",
+          "project_key": "seed_packets_main",
+          "events": [
+            {
+              "id": "hold_1104_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Print a decorative leaf on every packet. Each packet must retain its sowing month. The germination notice still needs approval from Neri."
+            },
+            {
+              "id": "hold_1104_claim",
+              "type": "assistant",
+              "text": "The new packets are in use at the exchange."
+            },
+            {
+              "id": "hold_1104_result2",
+              "type": "tool",
+              "text": "Exchange printer status: queue paused; delivery state could not be read.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1104-result2"
+                },
+                "tool_response": {
+                  "output": "Exchange printer status: queue paused; delivery state could not be read.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1104_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1104_obsolete"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1104_delete"
+            }
+          ]
+        },
+        {
+          "id": "hold_1104_s3",
+          "project_key": "seed_packets_main",
+          "events": [
+            {
+              "id": "hold_1104_final",
+              "type": "user",
+              "text": "Send Neri the revised germination notice for review before authorizing a print run."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "seed_packets_main",
+          "text": "For seed packets, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "seed_packets_main",
+          "text": "What reason did the user give for this requirement: \"Each packet must retain its sowing month.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "seed_packets_main",
+          "text": "Compare the assistant’s readiness claim with both recorded checks. What did each actually say?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "seed_packets_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "seed_packets_main",
+          "text": "Did the partial withdrawal remove every obligation, or only a particular demand? Identify that demand and the obligation explicitly retained."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "seed_packets_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1105",
+      "project_keys": [
+        "harbor_signs_main",
+        "harbor_signs_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1105_s1",
+          "project_key": "harbor_signs_main",
+          "events": [
+            {
+              "id": "hold_1105_brief",
+              "type": "user",
+              "text": "For harbor signs, Keep the pedestrian detour visible on each replacement sign. The usual quay path is closed while the stonework settles. Replace the small boatyard direction signs in the same installation visit. The harbour steward must still approve the sign positions."
+            },
+            {
+              "id": "hold_1105_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1105-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1105_result1",
+              "type": "tool",
+              "text": "Workshop mock-up: lettering fits; installation was not inspected.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1105-result1"
+                },
+                "tool_response": {
+                  "output": "Workshop mock-up: lettering fits; installation was not inspected.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1105_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 7 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1105_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1105_other",
+          "project_key": "harbor_signs_separate",
+          "events": [
+            {
+              "id": "hold_1105_other",
+              "type": "user",
+              "text": "The marina visitor board has no pedestrian detour and is maintained separately."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1105_s2",
+          "project_key": "harbor_signs_main",
+          "events": [
+            {
+              "id": "hold_1105_claim",
+              "type": "assistant",
+              "text": "Every replacement sign is installed."
+            },
+            {
+              "id": "hold_1105_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Replace the small boatyard direction signs in the same installation visit. Keep the pedestrian detour visible on each replacement sign. The harbour steward must still approve the sign positions."
+            },
+            {
+              "id": "hold_1105_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1105_obsolete"
+            },
+            {
+              "id": "hold_1105_result2",
+              "type": "tool",
+              "text": "Quay visit record: gate locked and inspector turned away; installed signs not observed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1105-result2"
+                },
+                "tool_response": {
+                  "output": "Quay visit record: gate locked and inspector turned away; installed signs not observed.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1105_final",
+              "type": "user",
+              "text": "Book another position review with the harbour steward; installation status remains unverified."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1105_result2"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "harbor_signs_main",
+          "text": "For harbor signs, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "harbor_signs_main",
+          "text": "What reason did the user give for this requirement: \"Keep the pedestrian detour visible on each replacement sign.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "harbor_signs_main",
+          "text": "What success did the assistant report, and what are the narrower findings of the two tool captures?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "harbor_signs_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "harbor_signs_main",
+          "text": "Does the separate harbor signs work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "harbor_signs_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1106",
+      "project_keys": [
+        "bakery_allergens_main",
+        "bakery_allergens_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1106_s1",
+          "project_key": "bakery_allergens_main",
+          "events": [
+            {
+              "id": "hold_1106_brief",
+              "type": "user",
+              "text": "For bakery allergens, Write the nut warning as text, even when the nut symbol is shown. The market stall has customers who do not recognize the symbol. Translate every trial card into three languages before comparing ingredients. The ingredient comparison against the current recipe book remains due."
+            },
+            {
+              "id": "hold_1106_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 1 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1106_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1106-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1106_result1",
+              "type": "tool",
+              "text": "Local card check: warning text present; recipe comparison was not part of this check.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1106-result1"
+                },
+                "tool_response": {
+                  "output": "Local card check: warning text present; recipe comparison was not part of this check.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1106_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1106_other",
+          "project_key": "bakery_allergens_separate",
+          "events": [
+            {
+              "id": "hold_1106_other",
+              "type": "user",
+              "text": "The school baking worksheet uses symbols for a classroom exercise, not market labels."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1106_s2",
+          "project_key": "bakery_allergens_main",
+          "events": [
+            {
+              "id": "hold_1106_claim",
+              "type": "assistant",
+              "text": "The allergen cards match the current recipes."
+            },
+            {
+              "id": "hold_1106_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Translate every trial card into three languages before comparing ingredients. Write the nut warning as text, even when the nut symbol is shown. The ingredient comparison against the current recipe book remains due."
+            },
+            {
+              "id": "hold_1106_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1106_obsolete"
+            },
+            {
+              "id": "hold_1106_result2",
+              "type": "tool",
+              "text": "Recipe export request: source unavailable; no current ingredient list returned.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1106-result2"
+                },
+                "tool_response": {
+                  "output": "Recipe export request: source unavailable; no current ingredient list returned.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1106_result2"
+            }
+          ]
+        },
+        {
+          "id": "hold_1106_s3",
+          "project_key": "bakery_allergens_main",
+          "events": [
+            {
+              "id": "hold_1106_final",
+              "type": "user",
+              "text": "Resume the recipe comparison when the current recipe list is available; do not mark it complete."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "bakery_allergens_main",
+          "text": "For bakery allergens, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "bakery_allergens_main",
+          "text": "What reason did the user give for this requirement: \"Write the nut warning as text, even when the nut symbol is shown.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "bakery_allergens_main",
+          "text": "State the assistant’s completion claim alongside the findings and limits of both checks."
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "bakery_allergens_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "bakery_allergens_main",
+          "text": "Does the separate bakery allergens work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "bakery_allergens_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1107",
+      "project_keys": [
+        "bird_hide_main",
+        "bird_hide_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1107_s1",
+          "project_key": "bird_hide_main",
+          "events": [
+            {
+              "id": "hold_1107_brief",
+              "type": "user",
+              "text": "For bird hide, Retain a quiet waiting area on the access plan. Visitors arriving together can otherwise disturb nesting birds. The plan must include a painted welcome arch. The ranger still needs to confirm the opening hours."
+            },
+            {
+              "id": "hold_1107_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1107-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1107_result1",
+              "type": "tool",
+              "text": "Local calendar check: proposed hours do not overlap the draft maintenance slot.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1107-result1"
+                },
+                "tool_response": {
+                  "output": "Local calendar check: proposed hours do not overlap the draft maintenance slot.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1107_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 2 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1107_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1107_other",
+          "project_key": "bird_hide_separate",
+          "events": [
+            {
+              "id": "hold_1107_other",
+              "type": "user",
+              "text": "The unrelated lakeside picnic plan allows group gatherings and has its own hours."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1107_s2",
+          "project_key": "bird_hide_main",
+          "events": [
+            {
+              "id": "hold_1107_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: The plan must include a painted welcome arch. Retain a quiet waiting area on the access plan. The ranger still needs to confirm the opening hours."
+            },
+            {
+              "id": "hold_1107_claim",
+              "type": "assistant",
+              "text": "The hide can open on the proposed schedule."
+            },
+            {
+              "id": "hold_1107_result2",
+              "type": "tool",
+              "text": "Ranger response log: confirmation pending; no accepted opening hours recorded.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1107-result2"
+                },
+                "tool_response": {
+                  "output": "Ranger response log: confirmation pending; no accepted opening hours recorded.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1107_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1107_obsolete"
+            },
+            {
+              "id": "hold_1107_final",
+              "type": "user",
+              "text": "Keep the opening decision open and ask the ranger about the revised morning slot."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1107_delete"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "bird_hide_main",
+          "text": "For bird hide, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "bird_hide_main",
+          "text": "What reason did the user give for this requirement: \"Retain a quiet waiting area on the access plan.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "bird_hide_main",
+          "text": "Compare the assistant’s readiness claim with both recorded checks. What did each actually say?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "bird_hide_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "bird_hide_main",
+          "text": "Does the separate bird hide work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "bird_hide_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1108",
+      "project_keys": [
+        "costume_loans_main"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1108_s1",
+          "project_key": "costume_loans_main",
+          "events": [
+            {
+              "id": "hold_1108_brief",
+              "type": "user",
+              "text": "For costume loans, Record a return date on every loan slip. The wardrobe team must schedule cleaning between productions. Digitize the historical loan slips before reconciling this season. Sera must still reconcile the missing waistcoat entry."
+            },
+            {
+              "id": "hold_1108_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 3 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1108_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1108-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1108_result1",
+              "type": "tool",
+              "text": "Offline inventory pass: all supplied slips have dates; missing garment entries not checked.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1108-result1"
+                },
+                "tool_response": {
+                  "output": "Offline inventory pass: all supplied slips have dates; missing garment entries not checked.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1108_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1108_s2",
+          "project_key": "costume_loans_main",
+          "events": [
+            {
+              "id": "hold_1108_claim",
+              "type": "assistant",
+              "text": "The loan inventory is fully reconciled."
+            },
+            {
+              "id": "hold_1108_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Digitize the historical loan slips before reconciling this season. Record a return date on every loan slip. Sera must still reconcile the missing waistcoat entry."
+            },
+            {
+              "id": "hold_1108_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1108_obsolete"
+            },
+            {
+              "id": "hold_1108_result2",
+              "type": "tool",
+              "text": "Wardrobe ledger readback: waistcoat reconciliation remains assigned to Sera.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1108-result2"
+                },
+                "tool_response": {
+                  "output": "Wardrobe ledger readback: waistcoat reconciliation remains assigned to Sera.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1108_result2"
+            }
+          ]
+        },
+        {
+          "id": "hold_1108_s3",
+          "project_key": "costume_loans_main",
+          "events": [
+            {
+              "id": "hold_1108_final",
+              "type": "user",
+              "text": "Continue with Sera on the waistcoat discrepancy before closing the inventory task."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "costume_loans_main",
+          "text": "For costume loans, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "costume_loans_main",
+          "text": "What reason did the user give for this requirement: \"Record a return date on every loan slip.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "costume_loans_main",
+          "text": "What success did the assistant report, and what are the narrower findings of the two tool captures?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "costume_loans_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "costume_loans_main",
+          "text": "Did the partial withdrawal remove every obligation, or only a particular demand? Identify that demand and the obligation explicitly retained."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "costume_loans_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1109",
+      "project_keys": [
+        "watercolor_class_main",
+        "watercolor_class_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1109_s1",
+          "project_key": "watercolor_class_main",
+          "events": [
+            {
+              "id": "hold_1109_brief",
+              "type": "user",
+              "text": "For watercolor class, Keep the solvent-free materials rule for this class. The teaching room has no extraction fan. Each invitation must include an embossed crest. The tutor must still approve the brush substitutions."
+            },
+            {
+              "id": "hold_1109_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1109-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1109_result1",
+              "type": "tool",
+              "text": "Local materials sheet: substitutions listed; tutor approval column is empty.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1109-result1"
+                },
+                "tool_response": {
+                  "output": "Local materials sheet: substitutions listed; tutor approval column is empty.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1109_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 4 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1109_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1109_other",
+          "project_key": "watercolor_class_separate",
+          "events": [
+            {
+              "id": "hold_1109_other",
+              "type": "user",
+              "text": "The specialist studio course has extraction equipment and its own materials policy."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1109_s2",
+          "project_key": "watercolor_class_main",
+          "events": [
+            {
+              "id": "hold_1109_claim",
+              "type": "assistant",
+              "text": "All material substitutions have tutor approval."
+            },
+            {
+              "id": "hold_1109_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Each invitation must include an embossed crest. Keep the solvent-free materials rule for this class. The tutor must still approve the brush substitutions."
+            },
+            {
+              "id": "hold_1109_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1109_obsolete"
+            },
+            {
+              "id": "hold_1109_result2",
+              "type": "tool",
+              "text": "Tutor inbox query: unavailable; no approval messages retrieved.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1109-result2"
+                },
+                "tool_response": {
+                  "output": "Tutor inbox query: unavailable; no approval messages retrieved.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1109_final",
+              "type": "user",
+              "text": "Arrange a tutor review of the substitute brushes; approval is still outstanding."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1109_result2"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "watercolor_class_main",
+          "text": "For watercolor class, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "watercolor_class_main",
+          "text": "What reason did the user give for this requirement: \"Keep the solvent-free materials rule for this class.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "watercolor_class_main",
+          "text": "State the assistant’s completion claim alongside the findings and limits of both checks."
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "watercolor_class_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "watercolor_class_main",
+          "text": "Does the separate watercolor class work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "watercolor_class_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1110",
+      "project_keys": [
+        "tram_models_main",
+        "tram_models_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1110_s1",
+          "project_key": "tram_models_main",
+          "events": [
+            {
+              "id": "hold_1110_brief",
+              "type": "user",
+              "text": "For tram models, Preserve the removable roof in the display model. The education team needs to show the interior wiring. Each draft model needs a polished brass plinth. The curator must still sign off the wheel clearance."
+            },
+            {
+              "id": "hold_1110_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 5 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1110_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1110-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1110_result1",
+              "type": "tool",
+              "text": "Bench fit test: roof removes correctly; wheel clearance was not assessed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1110-result1"
+                },
+                "tool_response": {
+                  "output": "Bench fit test: roof removes correctly; wheel clearance was not assessed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1110_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1110_other",
+          "project_key": "tram_models_separate",
+          "events": [
+            {
+              "id": "hold_1110_other",
+              "type": "user",
+              "text": "The souvenir miniature has a fixed roof and is a separate retail design."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1110_s2",
+          "project_key": "tram_models_main",
+          "events": [
+            {
+              "id": "hold_1110_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Each draft model needs a polished brass plinth. Preserve the removable roof in the display model. The curator must still sign off the wheel clearance."
+            },
+            {
+              "id": "hold_1110_claim",
+              "type": "assistant",
+              "text": "The model is cleared for exhibition."
+            },
+            {
+              "id": "hold_1110_result2",
+              "type": "tool",
+              "text": "Curator review sheet: wheel clearance marked needs review.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1110-result2"
+                },
+                "tool_response": {
+                  "output": "Curator review sheet: wheel clearance marked needs review.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1110_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1110_obsolete"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1110_delete"
+            }
+          ]
+        },
+        {
+          "id": "hold_1110_s3",
+          "project_key": "tram_models_main",
+          "events": [
+            {
+              "id": "hold_1110_final",
+              "type": "user",
+              "text": "Reopen the exhibition-readiness task for the wheel-clearance review."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "tram_models_main",
+          "text": "For tram models, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "tram_models_main",
+          "text": "What reason did the user give for this requirement: \"Preserve the removable roof in the display model.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "tram_models_main",
+          "text": "Compare the assistant’s readiness claim with both recorded checks. What did each actually say?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "tram_models_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "tram_models_main",
+          "text": "Does the separate tram models work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "tram_models_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1111",
+      "project_keys": [
+        "choir_folders_main",
+        "choir_folders_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1111_s1",
+          "project_key": "choir_folders_main",
+          "events": [
+            {
+              "id": "hold_1111_brief",
+              "type": "user",
+              "text": "For choir folders, Keep large-print lyrics available for rehearsal. Two singers cannot comfortably read the standard lyric sheets. All folders need a ribbon bookmark. The conductor still needs to approve the revised verse order."
+            },
+            {
+              "id": "hold_1111_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1111-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1111_result1",
+              "type": "tool",
+              "text": "Local booklet preview: large-print pages render; verse order approval not checked.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1111-result1"
+                },
+                "tool_response": {
+                  "output": "Local booklet preview: large-print pages render; verse order approval not checked.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1111_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 6 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1111_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1111_other",
+          "project_key": "choir_folders_separate",
+          "events": [
+            {
+              "id": "hold_1111_other",
+              "type": "user",
+              "text": "The audience souvenir booklet follows the performance order and uses standard print."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1111_s2",
+          "project_key": "choir_folders_main",
+          "events": [
+            {
+              "id": "hold_1111_claim",
+              "type": "assistant",
+              "text": "The revised song order is approved."
+            },
+            {
+              "id": "hold_1111_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: All folders need a ribbon bookmark. Keep large-print lyrics available for rehearsal. The conductor still needs to approve the revised verse order."
+            },
+            {
+              "id": "hold_1111_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1111_obsolete"
+            },
+            {
+              "id": "hold_1111_result2",
+              "type": "tool",
+              "text": "Conductor review queue: revised verse order still awaiting a decision.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1111-result2"
+                },
+                "tool_response": {
+                  "output": "Conductor review queue: revised verse order still awaiting a decision.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1111_final",
+              "type": "user",
+              "text": "Prepare the revised verse sequence for the conductor and keep approval pending."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1111_result2"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "choir_folders_main",
+          "text": "For choir folders, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "choir_folders_main",
+          "text": "What reason did the user give for this requirement: \"Keep large-print lyrics available for rehearsal.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "choir_folders_main",
+          "text": "What success did the assistant report, and what are the narrower findings of the two tool captures?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "choir_folders_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "choir_folders_main",
+          "text": "Does the separate choir folders work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "choir_folders_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1112",
+      "project_keys": [
+        "ceramics_shelves_main"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1112_s1",
+          "project_key": "ceramics_shelves_main",
+          "events": [
+            {
+              "id": "hold_1112_brief",
+              "type": "user",
+              "text": "For ceramics shelves, Leave a labelled drying shelf clear for unfired pieces. Wet work must not be mixed with pieces ready for the kiln. All shelf labels need hand-lettered flourishes. The kiln technician must still check the proposed shelf spacing."
+            },
+            {
+              "id": "hold_1112_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 7 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1112_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1112-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1112_result1",
+              "type": "tool",
+              "text": "Local layout sketch check: drying shelf is labelled; physical spacing not measured.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1112-result1"
+                },
+                "tool_response": {
+                  "output": "Local layout sketch check: drying shelf is labelled; physical spacing not measured.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1112_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1112_s2",
+          "project_key": "ceramics_shelves_main",
+          "events": [
+            {
+              "id": "hold_1112_claim",
+              "type": "assistant",
+              "text": "The kiln shelving changes are accepted."
+            },
+            {
+              "id": "hold_1112_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: All shelf labels need hand-lettered flourishes. Leave a labelled drying shelf clear for unfired pieces. The kiln technician must still check the proposed shelf spacing."
+            },
+            {
+              "id": "hold_1112_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1112_obsolete"
+            },
+            {
+              "id": "hold_1112_result2",
+              "type": "tool",
+              "text": "Technician visit note: measurement postponed because the room was occupied.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1112-result2"
+                },
+                "tool_response": {
+                  "output": "Technician visit note: measurement postponed because the room was occupied.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1112_result2"
+            }
+          ]
+        },
+        {
+          "id": "hold_1112_s3",
+          "project_key": "ceramics_shelves_main",
+          "events": [
+            {
+              "id": "hold_1112_final",
+              "type": "user",
+              "text": "Reschedule the spacing measurement and leave the shelving acceptance unresolved."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "ceramics_shelves_main",
+          "text": "For ceramics shelves, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "ceramics_shelves_main",
+          "text": "What reason did the user give for this requirement: \"Leave a labelled drying shelf clear for unfired pieces.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "ceramics_shelves_main",
+          "text": "State the assistant’s completion claim alongside the findings and limits of both checks."
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "ceramics_shelves_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "ceramics_shelves_main",
+          "text": "Did the partial withdrawal remove every obligation, or only a particular demand? Identify that demand and the obligation explicitly retained."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "ceramics_shelves_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1113",
+      "project_keys": [
+        "walking_archive_main",
+        "walking_archive_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1113_s1",
+          "project_key": "walking_archive_main",
+          "events": [
+            {
+              "id": "hold_1113_brief",
+              "type": "user",
+              "text": "For walking archive, Keep consent notes attached to each interview excerpt. The archive needs to know which excerpts may be played in public. Include all eight neighbourhood interviews in the first walking-tour release. The archivist must still review the two shortened excerpts."
+            },
+            {
+              "id": "hold_1113_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1113-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1113_result1",
+              "type": "tool",
+              "text": "Local audio assembly: shortened excerpts exported; consent review not performed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1113-result1"
+                },
+                "tool_response": {
+                  "output": "Local audio assembly: shortened excerpts exported; consent review not performed.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1113_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 1 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1113_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1113_other",
+          "project_key": "walking_archive_separate",
+          "events": [
+            {
+              "id": "hold_1113_other",
+              "type": "user",
+              "text": "The private listening study uses research-only recordings and is outside the walking tour."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1113_s2",
+          "project_key": "walking_archive_main",
+          "events": [
+            {
+              "id": "hold_1113_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Include all eight neighbourhood interviews in the first walking-tour release. Keep consent notes attached to each interview excerpt. The archivist must still review the two shortened excerpts."
+            },
+            {
+              "id": "hold_1113_claim",
+              "type": "assistant",
+              "text": "The walking-tour audio is cleared for public playback."
+            },
+            {
+              "id": "hold_1113_result2",
+              "type": "tool",
+              "text": "Archive approval lookup: timed out without returning any review decisions.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1113-result2"
+                },
+                "tool_response": {
+                  "output": "Archive approval lookup: timed out without returning any review decisions.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1113_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1113_obsolete"
+            },
+            {
+              "id": "hold_1113_final",
+              "type": "user",
+              "text": "Return the two shortened excerpts to the archivist before clearing public playback."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1113_delete"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "walking_archive_main",
+          "text": "For walking archive, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "walking_archive_main",
+          "text": "What reason did the user give for this requirement: \"Keep consent notes attached to each interview excerpt.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "walking_archive_main",
+          "text": "Compare the assistant’s readiness claim with both recorded checks. What did each actually say?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "walking_archive_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "walking_archive_main",
+          "text": "Does the separate walking archive work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "walking_archive_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1114",
+      "project_keys": [
+        "community_kites_main",
+        "community_kites_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1114_s1",
+          "project_key": "community_kites_main",
+          "events": [
+            {
+              "id": "hold_1114_brief",
+              "type": "user",
+              "text": "For community kites, Keep the gust cancellation threshold in the event sheet. The small training kites cannot fly safely in gusty conditions even on otherwise calm days. Every handout must have a gold title. The field coordinator still needs to confirm the landing zone."
+            },
+            {
+              "id": "hold_1114_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 2 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1114_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1114-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1114_result1",
+              "type": "tool",
+              "text": "Local field diagram: landing zone drawn; coordinator confirmation not included.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1114-result1"
+                },
+                "tool_response": {
+                  "output": "Local field diagram: landing zone drawn; coordinator confirmation not included.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1114_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1114_other",
+          "project_key": "community_kites_separate",
+          "events": [
+            {
+              "id": "hold_1114_other",
+              "type": "user",
+              "text": "The indoor kite-making class has no flying zone or weather cancellation rule."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1114_s2",
+          "project_key": "community_kites_main",
+          "events": [
+            {
+              "id": "hold_1114_claim",
+              "type": "assistant",
+              "text": "The field layout is confirmed."
+            },
+            {
+              "id": "hold_1114_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Every handout must have a gold title. Keep the gust cancellation threshold in the event sheet. The field coordinator still needs to confirm the landing zone."
+            },
+            {
+              "id": "hold_1114_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1114_obsolete"
+            },
+            {
+              "id": "hold_1114_result2",
+              "type": "tool",
+              "text": "Coordinator checklist: landing zone entry remains unconfirmed.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1114-result2"
+                },
+                "tool_response": {
+                  "output": "Coordinator checklist: landing zone entry remains unconfirmed.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1114_result2"
+            }
+          ]
+        },
+        {
+          "id": "hold_1114_s3",
+          "project_key": "community_kites_main",
+          "events": [
+            {
+              "id": "hold_1114_final",
+              "type": "user",
+              "text": "Resume the landing-zone discussion with the field coordinator before closing the field plan."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "community_kites_main",
+          "text": "For community kites, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "community_kites_main",
+          "text": "What reason did the user give for this requirement: \"Keep the gust cancellation threshold in the event sheet.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "community_kites_main",
+          "text": "What success did the assistant report, and what are the narrower findings of the two tool captures?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "community_kites_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "community_kites_main",
+          "text": "Does the separate community kites work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "community_kites_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1115",
+      "project_keys": [
+        "chess_clock_main",
+        "chess_clock_separate"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1115_s1",
+          "project_key": "chess_clock_main",
+          "events": [
+            {
+              "id": "hold_1115_brief",
+              "type": "user",
+              "text": "For chess clock, Keep a manual time log as backup during the trial. The club needs to recover a game if the experimental clock loses power. Run the clock trial on all twelve boards at once. The arbiter still must approve the pause procedure."
+            },
+            {
+              "id": "hold_1115_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1115-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1115_result1",
+              "type": "tool",
+              "text": "Desk simulation: clock counts down; arbiter procedure approval not evaluated.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1115-result1"
+                },
+                "tool_response": {
+                  "output": "Desk simulation: clock counts down; arbiter procedure approval not evaluated.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1115_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 3 has a box of spare pencils. It does not change this task."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1115_aside"
+            }
+          ]
+        },
+        {
+          "id": "hold_1115_other",
+          "project_key": "chess_clock_separate",
+          "events": [
+            {
+              "id": "hold_1115_other",
+              "type": "user",
+              "text": "The casual chess evening does not use experimental clocks and follows separate arrangements."
+            }
+          ],
+          "checkpoints": []
+        },
+        {
+          "id": "hold_1115_s2",
+          "project_key": "chess_clock_main",
+          "events": [
+            {
+              "id": "hold_1115_claim",
+              "type": "assistant",
+              "text": "The clock trial is approved to start."
+            },
+            {
+              "id": "hold_1115_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: Run the clock trial on all twelve boards at once. Keep a manual time log as backup during the trial. The arbiter still must approve the pause procedure."
+            },
+            {
+              "id": "hold_1115_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1115_obsolete"
+            },
+            {
+              "id": "hold_1115_result2",
+              "type": "tool",
+              "text": "Arbiter decision record: pause procedure is still under review.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1115-result2"
+                },
+                "tool_response": {
+                  "output": "Arbiter decision record: pause procedure is still under review.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1115_final",
+              "type": "user",
+              "text": "Submit the clarified pause procedure to the arbiter and keep the trial start blocked."
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1115_result2"
+            }
+          ]
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "chess_clock_main",
+          "text": "For chess clock, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "chess_clock_main",
+          "text": "What reason did the user give for this requirement: \"Keep a manual time log as backup during the trial.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "chess_clock_main",
+          "text": "State the assistant’s completion claim alongside the findings and limits of both checks."
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "chess_clock_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "chess_clock_main",
+          "text": "Does the separate chess clock work change the main project’s retained constraint? State the main project constraint and whether the partial withdrawal retained it."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "chess_clock_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    },
+    {
+      "id": "hold_1116",
+      "project_keys": [
+        "lantern_walk_main"
+      ],
+      "sessions": [
+        {
+          "id": "hold_1116_s1",
+          "project_key": "lantern_walk_main",
+          "events": [
+            {
+              "id": "hold_1116_brief",
+              "type": "user",
+              "text": "For lantern walk, Keep an unlit exit path on the route drawing. Stewards need an exit option for visitors sensitive to flashing lights. All invitations must use metallic ink. The fire marshal still has to review the lantern spacing."
+            },
+            {
+              "id": "hold_1116_aside",
+              "type": "user",
+              "text": "Unrelated housekeeping: the meeting room 4 has a box of spare pencils. It does not change this task."
+            },
+            {
+              "id": "hold_1116_obsolete",
+              "type": "tool",
+              "text": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1116-obsolete"
+                },
+                "tool_response": {
+                  "output": "An informal planning note proposed assigning the next review to Tavin; this was never an appointment.",
+                  "exit_code": 0
+                }
+              }
+            },
+            {
+              "id": "hold_1116_result1",
+              "type": "tool",
+              "text": "Local route drawing check: exit path present; lantern spacing has no marshal review.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1116-result1"
+                },
+                "tool_response": {
+                  "output": "Local route drawing check: exit path present; lantern spacing has no marshal review.",
+                  "exit_code": 0
+                }
+              }
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1116_result1"
+            }
+          ]
+        },
+        {
+          "id": "hold_1116_s2",
+          "project_key": "lantern_walk_main",
+          "events": [
+            {
+              "id": "hold_1116_withdraw",
+              "type": "user",
+              "text": "Continue the same task. Withdraw only this demand: All invitations must use metallic ink. Keep an unlit exit path on the route drawing. The fire marshal still has to review the lantern spacing."
+            },
+            {
+              "id": "hold_1116_claim",
+              "type": "assistant",
+              "text": "The route is cleared for the public walk."
+            },
+            {
+              "id": "hold_1116_result2",
+              "type": "tool",
+              "text": "Marshal calendar readback: site review delayed; no clearance decision recorded.",
+              "tool_capture": {
+                "tool_name": "exec_command",
+                "tool_input": {
+                  "command": "inert-fictional-hold_1116-result2"
+                },
+                "tool_response": {
+                  "output": "Marshal calendar readback: site review delayed; no clearance decision recorded.",
+                  "exit_code": 1
+                }
+              }
+            },
+            {
+              "id": "hold_1116_delete",
+              "type": "delete_observation",
+              "text": "Delete the informal reviewer planning note from this project memory; do not use it to name an owner.",
+              "observation_event_id": "hold_1116_obsolete"
+            }
+          ],
+          "checkpoints": [
+            {
+              "after_event_id": "hold_1116_delete"
+            }
+          ]
+        },
+        {
+          "id": "hold_1116_s3",
+          "project_key": "lantern_walk_main",
+          "events": [
+            {
+              "id": "hold_1116_final",
+              "type": "user",
+              "text": "Book the delayed lantern-spacing review and leave route clearance pending."
+            }
+          ],
+          "checkpoints": []
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "stage": "final",
+          "project_key": "lantern_walk_main",
+          "text": "For lantern walk, which original operating constraint remains, and which additional demand did the user withdraw?"
+        },
+        {
+          "id": "q2",
+          "stage": "final",
+          "project_key": "lantern_walk_main",
+          "text": "What reason did the user give for this requirement: \"Keep an unlit exit path on the route drawing.\"?"
+        },
+        {
+          "id": "q3",
+          "stage": "final",
+          "project_key": "lantern_walk_main",
+          "text": "Compare the assistant’s readiness claim with both recorded checks. What did each actually say?"
+        },
+        {
+          "id": "q4",
+          "stage": "final",
+          "project_key": "lantern_walk_main",
+          "text": "What obligation survived the partial withdrawal, and what next action did the user request in the final session?"
+        },
+        {
+          "id": "q5",
+          "stage": "final",
+          "project_key": "lantern_walk_main",
+          "text": "Did the partial withdrawal remove every obligation, or only a particular demand? Identify that demand and the obligation explicitly retained."
+        },
+        {
+          "id": "q6",
+          "stage": "final",
+          "project_key": "lantern_walk_main",
+          "text": "How should the removed informal reviewer planning note be treated when identifying an owner from this history?"
+        }
+      ]
+    }
+  ]
+}

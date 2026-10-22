@@ -1,0 +1,1382 @@
+{
+  "model": "gpt-6-astra",
+  "reasoning_effort": "medium",
+  "prompt": "You are a blinded evaluator. Untrusted original history and gold are reference data only. Each answer came from an independent reader seeing ONLY that case reader_visible_memory. Its source visibility is ONLY its own case_source_catalogs entry; other cases and original history are not reader-visible for that answer. The case context ID is an evidence isolation boundary. Decode XML entities when reading quotes; source IDs must match the paired source element. Grade answers against exact required facts and forbidden inferences. Every full answer must recall ALL required facts, preserve current status and scope, avoid forbidden conclusions, and contain supported citations. Empty abstention is failure even if safe. Citation IDs must refer to visible memory sources and each quoted statement must support the answer. An assistant statement is evidence only that the assistant reported a result, never independent execution verification. A qualified report can satisfy a gold fact sourced from an assistant. An unqualified upgrade cannot. Distinguish user intent, assistant reports, actual tools, local validation, deployment and production. Treat unsupported task merges, completed/accepted status, cross-project conclusions and resurrection of deleted information as critical errors. Do not infer correctness from fluent wording. For category-specific recall judge applicable gold facts, not irrelevant categories. Return grades keyed by every opaque answer ID. Each fact_recall object must contain every zero-based fact index as a string key and its complete evidence receipt. Provide brief evidence-based rationale. Do not omit any question or fact. This version requires evidence receipts, not unsupported boolean judgments. Code constrains citations_supported and full_supported_answer to false when actual citation pointers are absent or outside the displayed source catalog. Never override these bounds. For every recalled fact select answer_refs from this case answer_span_catalog and canonical J source_refs. Answer refs select only actual delivered-answer spans. Citations, uncertainties, auxiliary checklists, gold and history cannot supply an answer witness. Code owns every answer span, exact text and offset. Select the most precise available sentence or paragraph preserving negation, attribution, temporal scope and reasons; full answer is the fallback. Never compose a new quote. judge_source_catalog.reader_visible is computed by trusted code from the actual shared displayed intervals. Original_history and original-only catalog entries are reference truth, NOT proof of reader visibility. Judge recall against every gold fact even if its source was unavailable; record missing as missing without shrinking the denominator. For false recall choose literal_omission only when a specific exact nonempty gold missing_anchor is absent from the actual answer. Select missing_anchor verbatim from that fact schema enum: whole fact or exact one/two-word span; never paraphrase or copy an anchor from original history. If the words appear but status, scope, relation or reason is wrong choose semantic_omission; uncertain remains uncertain, not recalled. For positive recall use not_omitted and empty missing_anchor. Semantic omissions use empty missing_anchor. Every critical label needs answer_ref selecting a contextual span from this case answer_span_catalog that asserts the forbidden conclusion, affirmative_current mode and asserts_forbidden_conclusion relation, tied to gold:N or policy:error_type. Mention, explicit denial, historical canceled scope, conditional language and attributed assistant reports alone do not assert a current forbidden conclusion. Keep actual unsupported causal conflation critical, even when the answer rejects neighboring completion. Do not supply contradictory receipt fields. No semantic verifier silently repairs this response.\n{\"cases\": [{\"id\": \"answer-01\", \"question\": \"Which deliverable did I cancel?\", \"answer\": {\"id\": \"answer-01\", \"answer\": \"You canceled the canal sampler’s weekly chart: “I no longer need the weekly chart.” You explicitly kept raw-reading retention and millimetre units, originally required because the crew compares the output directly with its paper gauge. [R0001, R0002]\\n\\nYou also kept the crew-lead review of the retained-reading sample and the live configuration write; the review must happen before any live write. [R0003]\\n\\nA chart draft had been saved in the sandbox: `inert-fictional-hold_1002-t1` exited 0 and reported retained raw readings, a saved weekly chart draft, and unchanged live configuration. Separately, `inert-fictional-hold_1002-t2` exited 0 and reported that the fixture check retained raw readings and matched millimetre labels, while skipping the live write. [R0006, R0007, R0004, R0005] The assistant claimed it had applied the changes to the live sampler, but that claim does not establish live execution. [R0008]\", \"citations\": [{\"catalog_ref\": \"R0001\", \"source_id\": \"6e1b6ddaa293436f90cd9244a65b4aef\", \"source_field\": \"body\", \"start\": 0, \"end\": 167, \"source_role\": \"user_intent\", \"quote\": \"For the canal sampler, preserve the raw readings and add a weekly chart. Keep units in millimetres because the crew compares this output directly with its paper gauge.\"}, {\"catalog_ref\": \"R0002\", \"source_id\": \"03d360497f3446a9aaf82bc77d68468e\", \"source_field\": \"body\", \"start\": 0, \"end\": 146, \"source_role\": \"user_intent\", \"quote\": \"Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.\"}, {\"catalog_ref\": \"R0003\", \"source_id\": \"35710ef7eaf249cdb77e5eecf7d73463\", \"source_field\": \"body\", \"start\": 0, \"end\": 129, \"source_role\": \"user_intent\", \"quote\": \"A crew lead must review the retained-reading sample before any live configuration write. Carry that review and the write forward.\"}, {\"catalog_ref\": \"R0004\", \"source_id\": \"d167d4a0d328449da10a22c215ef4e70\", \"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 107, \"source_role\": \"tool_record\", \"quote\": \"Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.\", \"tool_use_id\": \"hold_1002_t2\"}, {\"catalog_ref\": \"R0005\", \"source_id\": \"d167d4a0d328449da10a22c215ef4e70\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1002-t2\", \"tool_use_id\": \"hold_1002_t2\"}, {\"catalog_ref\": \"R0006\", \"source_id\": \"d3423affa1d846588cfbd1a6de05c201\", \"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 105, \"source_role\": \"tool_record\", \"quote\": \"Canal sandbox run: raw readings retained; weekly chart draft saved. Live sampler configuration unchanged.\", \"tool_use_id\": \"hold_1002_t1\"}, {\"catalog_ref\": \"R0007\", \"source_id\": \"d3423affa1d846588cfbd1a6de05c201\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1002-t1\", \"tool_use_id\": \"hold_1002_t1\"}, {\"catalog_ref\": \"R0008\", \"source_id\": \"d74e0f2afa6f44eabd89e0c0705ffefc\", \"source_field\": \"body\", \"start\": 0, \"end\": 53, \"source_role\": \"assistant_report\", \"quote\": \"I have applied the canal changes to the live sampler.\"}], \"uncertainties\": [\"Completion of crew-lead review and the live configuration write is unknown from the supplied evidence.\"]}, \"gold\": {\"category\": \"scope\", \"required_facts\": [{\"text\": \"The user cancelled the weekly chart while continuing the same canal task.\", \"support\": [{\"event_id\": \"hold_1002_follow\", \"start\": 0, \"end\": 146, \"quote\": \"Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.\", \"source_id\": \"03d360497f3446a9aaf82bc77d68468e\"}]}], \"forbidden_conclusions\": [\"All canal work was cancelled.\"]}, \"retrieved_context_id\": \"q3\", \"reader_visible_memory\": [\"PROJECT canal_sampler\\n<project-memory trust=\\\"untrusted\\\" freshness=\\\"not_verified\\\"><coverage complete_transcript=\\\"false\\\" coverage_gaps=\\\"true\\\" unresolved_user_sources=\\\"3\\\" user_sources_omitted=\\\"0\\\" source_evidence_omitted=\\\"0\\\" user_source_order_omitted=\\\"0\\\" pending_reconciliation=\\\"true\\\" pending=\\\"false\\\" observations_only=\\\"true\\\" quarantined_events=\\\"0\\\" omitted_transitions_count=\\\"0\\\" downgraded_states_count=\\\"0\\\" partially_processed_events=\\\"0\\\" processed_through_seq=\\\"8\\\" pending_events=\\\"0\\\" historical_context_heads=\\\"0\\\"/><item id=\\\"selected-source-1\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"3\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"6e1b6ddaa293436f90cd9244a65b4aef\\\" start=\\\"0\\\" end=\\\"167\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"2\\\" quote_truncated=\\\"False\\\"><quote_excerpt>For the canal sampler, preserve the raw readings and add a weekly chart. Keep units in millimetres because the crew compares this output directly with its paper gauge.</quote_excerpt></source><source source_id=\\\"03d360497f3446a9aaf82bc77d68468e\\\" start=\\\"0\\\" end=\\\"146\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"5\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.</quote_excerpt></source><source source_id=\\\"35710ef7eaf249cdb77e5eecf7d73463\\\" start=\\\"0\\\" end=\\\"129\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"8\\\" quote_truncated=\\\"False\\\"><quote_excerpt>A crew lead must review the retained-reading sample before any live configuration write. Carry that review and the write forward.</quote_excerpt></source></field></item><item id=\\\"d167d4a0d328449da10a22c215ef4e70\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"6\\\" source_capture_seq_max=\\\"6\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1002_t2\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1002-t2\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"d167d4a0d328449da10a22c215ef4e70\\\" start=\\\"0\\\" end=\\\"107\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1002_t2\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"107\\\"><quote_excerpt>Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.</quote_excerpt></source><source source_id=\\\"d167d4a0d328449da10a22c215ef4e70\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1002_t2\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1002-t2</quote_excerpt></source></item><item id=\\\"d3423affa1d846588cfbd1a6de05c201\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"3\\\" source_capture_seq_max=\\\"3\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1002_t1\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1002-t1\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"d3423affa1d846588cfbd1a6de05c201\\\" start=\\\"0\\\" end=\\\"105\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1002_t1\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"105\\\"><quote_excerpt>Canal sandbox run: raw readings retained; weekly chart draft saved. Live sampler configuration unchanged.</quote_excerpt></source><source source_id=\\\"d3423affa1d846588cfbd1a6de05c201\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1002_t1\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1002-t1</quote_excerpt></source></item><item id=\\\"d74e0f2afa6f44eabd89e0c0705ffefc\\\" lane=\\\"source_evidence\\\" project_memory_kind=\\\"note\\\" source_role=\\\"assistant_report\\\" source_capture_seq_min=\\\"7\\\" source_capture_seq_max=\\\"7\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\"><field name=\\\"assistant_report\\\"><source source_id=\\\"d74e0f2afa6f44eabd89e0c0705ffefc\\\" start=\\\"0\\\" end=\\\"53\\\" source_role=\\\"assistant_report\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_source\\\" source_chars=\\\"53\\\"><quote_excerpt>I have applied the canal changes to the live sampler.</quote_excerpt></source></field></item><item id=\\\"pm_0bc16f7bddbe6b33a33f2a695b77ef1d57df68fe\\\" lane=\\\"episode\\\" source_role=\\\"model_inference\\\" inferred=\\\"True\\\" revision=\\\"4\\\" source_capture_seq_min=\\\"8\\\" source_capture_seq_max=\\\"8\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" logical_episode_id=\\\"pm_0bc16f7bddbe6b33a33f2a695b77ef1d57df68fe\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"5\\\" fields_omitted=\\\"5\\\"></item><omitted records=\\\"3\\\" fields=\\\"13\\\"/></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 918, \"quote\": \"You canceled the canal sampler’s weekly chart: “I no longer need the weekly chart.” You explicitly kept raw-reading retention and millimetre units, originally required because the crew compares the output directly with its paper gauge. [R0001, R0002]\\n\\nYou also kept the crew-lead review of the retained-reading sample and the live configuration write; the review must happen before any live write. [R0003]\\n\\nA chart draft had been saved in the sandbox: `inert-fictional-hold_1002-t1` exited 0 and reported retained raw readings, a saved weekly chart draft, and unchanged live configuration. Separately, `inert-fictional-hold_1002-t2` exited 0 and reported that the fixture check retained raw readings and matched millimetre labels, while skipping the live write. [R0006, R0007, R0004, R0005] The assistant claimed it had applied the changes to the live sampler, but that claim does not establish live execution. [R0008]\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 250, \"quote\": \"You canceled the canal sampler’s weekly chart: “I no longer need the weekly chart.” You explicitly kept raw-reading retention and millimetre units, originally required because the crew compares the output directly with its paper gauge. [R0001, R0002]\"}, {\"ref\": \"A0003\", \"start\": 252, \"end\": 405, \"quote\": \"You also kept the crew-lead review of the retained-reading sample and the live configuration write; the review must happen before any live write. [R0003]\"}, {\"ref\": \"A0004\", \"start\": 407, \"end\": 918, \"quote\": \"A chart draft had been saved in the sandbox: `inert-fictional-hold_1002-t1` exited 0 and reported retained raw readings, a saved weekly chart draft, and unchanged live configuration. Separately, `inert-fictional-hold_1002-t2` exited 0 and reported that the fixture check retained raw readings and matched millimetre labels, while skipping the live write. [R0006, R0007, R0004, R0005] The assistant claimed it had applied the changes to the live sampler, but that claim does not establish live execution. [R0008]\"}, {\"ref\": \"A0005\", \"start\": 0, \"end\": 235, \"quote\": \"You canceled the canal sampler’s weekly chart: “I no longer need the weekly chart.” You explicitly kept raw-reading retention and millimetre units, originally required because the crew compares the output directly with its paper gauge.\"}, {\"ref\": \"A0006\", \"start\": 236, \"end\": 250, \"quote\": \"[R0001, R0002]\"}, {\"ref\": \"A0007\", \"start\": 252, \"end\": 397, \"quote\": \"You also kept the crew-lead review of the retained-reading sample and the live configuration write; the review must happen before any live write.\"}, {\"ref\": \"A0008\", \"start\": 398, \"end\": 405, \"quote\": \"[R0003]\"}, {\"ref\": \"A0009\", \"start\": 407, \"end\": 589, \"quote\": \"A chart draft had been saved in the sandbox: `inert-fictional-hold_1002-t1` exited 0 and reported retained raw readings, a saved weekly chart draft, and unchanged live configuration.\"}, {\"ref\": \"A0010\", \"start\": 590, \"end\": 761, \"quote\": \"Separately, `inert-fictional-hold_1002-t2` exited 0 and reported that the fixture check retained raw readings and matched millimetre labels, while skipping the live write.\"}, {\"ref\": \"A0011\", \"start\": 762, \"end\": 910, \"quote\": \"[R0006, R0007, R0004, R0005] The assistant claimed it had applied the changes to the live sampler, but that claim does not establish live execution.\"}, {\"ref\": \"A0012\", \"start\": 911, \"end\": 918, \"quote\": \"[R0008]\"}]}, {\"id\": \"answer-02\", \"question\": \"What should the next session do after the dry-run validation?\", \"answer\": {\"id\": \"answer-02\", \"answer\": \"The next session should ask the operations owner to approve the depot list before creating any service accounts; approval is still missing and creation remains due. After approval, create one account per depot, without a shared account, because depots reconcile separately. Omit the printed route booklet: the later user instruction removed it while retaining separate depot accounts.\\n\\nThe captured command `inert-fictional-hold_1003-t2` exited 0 and reported: “Copper validation: simulated depot totals balance independently. Service accounts created: 0.” This establishes the dry-run result within that execution’s scope. The assistant’s subsequent claim that all copper depot accounts were active is an assistant report, not verified execution evidence.\", \"citations\": [{\"catalog_ref\": \"R0001\", \"source_id\": \"ce40524987e94f9b9aaf02cb339a7973\", \"source_field\": \"body\", \"start\": 0, \"end\": 145, \"source_role\": \"user_intent\", \"quote\": \"Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.\"}, {\"catalog_ref\": \"R0002\", \"source_id\": \"c209f18eff3c40c2946a3603898165be\", \"source_field\": \"body\", \"start\": 0, \"end\": 162, \"source_role\": \"user_intent\", \"quote\": \"For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account.\"}, {\"catalog_ref\": \"R0003\", \"source_id\": \"08d62075f16c4912ac2085ec9ed46f00\", \"source_field\": \"body\", \"start\": 0, \"end\": 116, \"source_role\": \"user_intent\", \"quote\": \"This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope.\"}, {\"catalog_ref\": \"R0004\", \"source_id\": \"59ed811ced9a46a9856295a0b7199a17\", \"source_field\": \"body\", \"start\": 0, \"end\": 41, \"source_role\": \"assistant_report\", \"quote\": \"All copper depot accounts are now active.\"}, {\"catalog_ref\": \"R0005\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 93, \"source_role\": \"tool_record\", \"quote\": \"Copper validation: simulated depot totals balance independently. Service accounts created: 0.\", \"tool_use_id\": \"hold_1003_t2\"}, {\"catalog_ref\": \"R0006\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1003-t2\", \"tool_use_id\": \"hold_1003_t2\"}], \"uncertainties\": [\"The actual active-account state is unknown; the supplied execution does not verify the assistant’s activation claim.\"]}, \"gold\": {\"category\": \"obligation\", \"required_facts\": [{\"text\": \"Validation reports independently balanced simulated depot totals, with zero service accounts created.\", \"support\": [{\"event_id\": \"hold_1003_t2\", \"start\": 0, \"end\": 93, \"quote\": \"Copper validation: simulated depot totals balance independently. Service accounts created: 0.\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"reader_visible_equivalent\": {\"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 93}}]}, {\"text\": \"The operations owner must approve the depot list before the still-pending service account creation.\", \"support\": [{\"event_id\": \"hold_1003_tail\", \"start\": 0, \"end\": 145, \"quote\": \"Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.\", \"source_id\": \"ce40524987e94f9b9aaf02cb339a7973\"}]}], \"forbidden_conclusions\": [\"Creation may be treated as complete.\"]}, \"retrieved_context_id\": \"q4\", \"reader_visible_memory\": [\"PROJECT copper_routes\\n<project-memory trust=\\\"untrusted\\\" freshness=\\\"not_verified\\\"><coverage complete_transcript=\\\"false\\\" coverage_gaps=\\\"true\\\" unresolved_user_sources=\\\"3\\\" user_sources_omitted=\\\"3\\\" source_evidence_omitted=\\\"0\\\" user_source_order_omitted=\\\"0\\\" pending_reconciliation=\\\"true\\\" pending=\\\"false\\\" observations_only=\\\"true\\\" quarantined_events=\\\"0\\\" omitted_transitions_count=\\\"0\\\" downgraded_states_count=\\\"0\\\" partially_processed_events=\\\"0\\\" processed_through_seq=\\\"8\\\" pending_events=\\\"0\\\" historical_context_heads=\\\"0\\\"/><item id=\\\"unassociated-user-sources-1\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_user_context\\\" relationship_to_query=\\\"unresolved\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"2\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"ce40524987e94f9b9aaf02cb339a7973\\\" start=\\\"0\\\" end=\\\"145\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"8\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.</quote_excerpt></source><source source_id=\\\"c209f18eff3c40c2946a3603898165be\\\" start=\\\"0\\\" end=\\\"162\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"2\\\" quote_truncated=\\\"False\\\"><quote_excerpt>For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account.</quote_excerpt></source></field></item><item id=\\\"selected-source-2\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"1\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"08d62075f16c4912ac2085ec9ed46f00\\\" start=\\\"0\\\" end=\\\"116\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"5\\\" quote_truncated=\\\"False\\\"><quote_excerpt>This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\\\"2\\\" omitted=\\\"0\\\"/><item id=\\\"59ed811ced9a46a9856295a0b7199a17\\\" lane=\\\"source_evidence\\\" project_memory_kind=\\\"note\\\" source_role=\\\"assistant_report\\\" source_capture_seq_min=\\\"7\\\" source_capture_seq_max=\\\"7\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_source_context\\\" relationship_to_query=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_source_without_task_association\\\"><field name=\\\"assistant_report\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"original_source\\\"><source source_id=\\\"59ed811ced9a46a9856295a0b7199a17\\\" start=\\\"0\\\" end=\\\"41\\\" source_role=\\\"assistant_report\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_source\\\" source_chars=\\\"41\\\"><quote_excerpt>All copper depot accounts are now active.</quote_excerpt></source></field></item><item id=\\\"53e1e811c4de45be9de65c4bbd054375\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"6\\\" source_capture_seq_max=\\\"6\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1003_t2\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1003-t2\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"53e1e811c4de45be9de65c4bbd054375\\\" start=\\\"0\\\" end=\\\"93\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1003_t2\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"93\\\"><quote_excerpt>Copper validation: simulated depot totals balance independently. Service accounts created: 0.</quote_excerpt></source><source source_id=\\\"53e1e811c4de45be9de65c4bbd054375\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1003_t2\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1003-t2</quote_excerpt></source></item><item id=\\\"pm_6368380b82334c7946ab9231715d406e2f4d6785\\\" lane=\\\"episode\\\" source_role=\\\"model_inference\\\" inferred=\\\"True\\\" revision=\\\"2\\\" source_capture_seq_min=\\\"5\\\" source_capture_seq_max=\\\"6\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" logical_episode_id=\\\"pm_6368380b82334c7946ab9231715d406e2f4d6785\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"1\\\" fields_omitted=\\\"3\\\"><field name=\\\"open_work_source_excerpt\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"model_inference\\\" partial_context=\\\"False\\\"><source source_id=\\\"08d62075f16c4912ac2085ec9ed46f00\\\" start=\\\"41\\\" end=\\\"116\\\" source_role=\\\"user_intent\\\" field=\\\"open_work\\\" quote_truncated=\\\"False\\\"><quote_excerpt> Omit the printed booklet now; the separate depot accounts remain in scope.</quote_excerpt></source><source source_id=\\\"53e1e811c4de45be9de65c4bbd054375\\\" start=\\\"64\\\" end=\\\"93\\\" source_role=\\\"tool_record\\\" field=\\\"open_work\\\" quote_truncated=\\\"False\\\"><quote_excerpt> Service accounts created: 0.</quote_excerpt></source></field></item><omitted records=\\\"0\\\" fields=\\\"3\\\" original_context_sources=\\\"1\\\"/></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 756, \"quote\": \"The next session should ask the operations owner to approve the depot list before creating any service accounts; approval is still missing and creation remains due. After approval, create one account per depot, without a shared account, because depots reconcile separately. Omit the printed route booklet: the later user instruction removed it while retaining separate depot accounts.\\n\\nThe captured command `inert-fictional-hold_1003-t2` exited 0 and reported: “Copper validation: simulated depot totals balance independently. Service accounts created: 0.” This establishes the dry-run result within that execution’s scope. The assistant’s subsequent claim that all copper depot accounts were active is an assistant report, not verified execution evidence.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 384, \"quote\": \"The next session should ask the operations owner to approve the depot list before creating any service accounts; approval is still missing and creation remains due. After approval, create one account per depot, without a shared account, because depots reconcile separately. Omit the printed route booklet: the later user instruction removed it while retaining separate depot accounts.\"}, {\"ref\": \"A0003\", \"start\": 386, \"end\": 756, \"quote\": \"The captured command `inert-fictional-hold_1003-t2` exited 0 and reported: “Copper validation: simulated depot totals balance independently. Service accounts created: 0.” This establishes the dry-run result within that execution’s scope. The assistant’s subsequent claim that all copper depot accounts were active is an assistant report, not verified execution evidence.\"}, {\"ref\": \"A0004\", \"start\": 0, \"end\": 164, \"quote\": \"The next session should ask the operations owner to approve the depot list before creating any service accounts; approval is still missing and creation remains due.\"}, {\"ref\": \"A0005\", \"start\": 165, \"end\": 273, \"quote\": \"After approval, create one account per depot, without a shared account, because depots reconcile separately.\"}, {\"ref\": \"A0006\", \"start\": 274, \"end\": 384, \"quote\": \"Omit the printed route booklet: the later user instruction removed it while retaining separate depot accounts.\"}, {\"ref\": \"A0007\", \"start\": 386, \"end\": 526, \"quote\": \"The captured command `inert-fictional-hold_1003-t2` exited 0 and reported: “Copper validation: simulated depot totals balance independently.\"}, {\"ref\": \"A0008\", \"start\": 527, \"end\": 623, \"quote\": \"Service accounts created: 0.” This establishes the dry-run result within that execution’s scope.\"}, {\"ref\": \"A0009\", \"start\": 624, \"end\": 756, \"quote\": \"The assistant’s subsequent claim that all copper depot accounts were active is an assistant report, not verified execution evidence.\"}]}, {\"id\": \"answer-03\", \"question\": \"Why was the silence window requested?\", \"answer\": {\"id\": \"answer-03\", \"answer\": \"The silence window was requested because the caretaker sleeps beside the receiver, making overnight noise unacceptable. The user later dropped the daily graph but explicitly kept the overnight silence rule. Caretaker approval of the morning release example is still required before writing receiver settings; both approval and the write remain outstanding. The tool output describes simulated morning release of queued overnight events and says no receiver update was attempted. The assistant’s separate claim that the new schedule was running does not verify deployment.\", \"citations\": [{\"catalog_ref\": \"R0002\", \"source_id\": \"39d0103f1a194d7e9e030b04358769e4\", \"source_field\": \"body\", \"start\": 0, \"end\": 151, \"source_role\": \"user_intent\", \"quote\": \"Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.\"}, {\"catalog_ref\": \"R0003\", \"source_id\": \"c39bae846d6748b08098285334a44091\", \"source_field\": \"body\", \"start\": 0, \"end\": 93, \"source_role\": \"user_intent\", \"quote\": \"Continue the basalt alert work. Drop the daily graph. Keep the overnight silence rule intact.\"}, {\"catalog_ref\": \"R0001\", \"source_id\": \"727aa3e94c204e7b963c99c990b75b75\", \"source_field\": \"body\", \"start\": 0, \"end\": 136, \"source_role\": \"user_intent\", \"quote\": \"The caretaker must approve the morning release example before we write receiver settings. That approval is outstanding, as is the write.\"}, {\"catalog_ref\": \"R0004\", \"source_id\": \"7eb56b23db3044649b4293129319b3ee\", \"source_field\": \"body\", \"start\": 0, \"end\": 97, \"source_role\": \"tool_record\", \"quote\": \"Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.\"}, {\"catalog_ref\": \"R0005\", \"source_id\": \"5ee69eec83e346998ef8d9f0bdee39f0\", \"source_field\": \"body\", \"start\": 0, \"end\": 51, \"source_role\": \"assistant_report\", \"quote\": \"The receiver is now running the new alert schedule.\"}, {\"catalog_ref\": \"R0006\", \"source_id\": \"7eb56b23db3044649b4293129319b3ee\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1006-t2\", \"tool_use_id\": \"hold_1006_t2\"}], \"uncertainties\": [\"Actual deployment is not established by the supplied evidence.\"]}, \"gold\": {\"category\": \"reason\", \"required_facts\": [{\"text\": \"Overnight noise is unacceptable because the caretaker sleeps beside the receiver.\", \"support\": [{\"event_id\": \"hold_1006_start\", \"start\": 0, \"end\": 151, \"quote\": \"Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.\", \"source_id\": \"39d0103f1a194d7e9e030b04358769e4\"}]}], \"forbidden_conclusions\": [\"Silence is required to reduce bandwidth.\"]}, \"retrieved_context_id\": \"q2\", \"reader_visible_memory\": [\"PROJECT basalt_alerts\\n<project-memory trust=\\\"untrusted\\\" freshness=\\\"not_verified\\\"><coverage complete_transcript=\\\"false\\\" coverage_gaps=\\\"true\\\" unresolved_user_sources=\\\"3\\\" user_sources_omitted=\\\"3\\\" source_evidence_omitted=\\\"0\\\" user_source_order_omitted=\\\"0\\\" pending_reconciliation=\\\"true\\\" pending=\\\"false\\\" observations_only=\\\"true\\\" quarantined_events=\\\"0\\\" omitted_transitions_count=\\\"0\\\" downgraded_states_count=\\\"0\\\" partially_processed_events=\\\"0\\\" processed_through_seq=\\\"8\\\" pending_events=\\\"0\\\" historical_context_heads=\\\"0\\\"/><item id=\\\"unassociated-user-sources-1\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_user_context\\\" relationship_to_query=\\\"unresolved\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"2\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"727aa3e94c204e7b963c99c990b75b75\\\" start=\\\"0\\\" end=\\\"136\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"8\\\" quote_truncated=\\\"False\\\"><quote_excerpt>The caretaker must approve the morning release example before we write receiver settings. That approval is outstanding, as is the write.</quote_excerpt></source><source source_id=\\\"39d0103f1a194d7e9e030b04358769e4\\\" start=\\\"0\\\" end=\\\"151\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"2\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.</quote_excerpt></source></field></item><item id=\\\"selected-source-2\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"1\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"c39bae846d6748b08098285334a44091\\\" start=\\\"0\\\" end=\\\"93\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"5\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Continue the basalt alert work. Drop the daily graph. Keep the overnight silence rule intact.</quote_excerpt></source></field></item><item id=\\\"selected-source-3\\\" lane=\\\"source_excerpts\\\"><field name=\\\"source_excerpts\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"not_assessed\\\"><source source_id=\\\"7eb56b23db3044649b4293129319b3ee\\\" start=\\\"0\\\" end=\\\"97\\\" source_role=\\\"tool_record\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\\\"2\\\" omitted=\\\"0\\\"/><item id=\\\"5ee69eec83e346998ef8d9f0bdee39f0\\\" lane=\\\"source_evidence\\\" project_memory_kind=\\\"note\\\" source_role=\\\"assistant_report\\\" source_capture_seq_min=\\\"7\\\" source_capture_seq_max=\\\"7\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_source_context\\\" relationship_to_query=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_source_without_task_association\\\"><field name=\\\"assistant_report\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"original_source\\\"><source source_id=\\\"5ee69eec83e346998ef8d9f0bdee39f0\\\" start=\\\"0\\\" end=\\\"51\\\" source_role=\\\"assistant_report\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_source\\\" source_chars=\\\"51\\\"><quote_excerpt>The receiver is now running the new alert schedule.</quote_excerpt></source></field></item><item id=\\\"7eb56b23db3044649b4293129319b3ee\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"6\\\" source_capture_seq_max=\\\"6\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"unassociated_source_context\\\" relationship_to_query=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_source_without_task_association\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1006_t2\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1006-t2\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"7eb56b23db3044649b4293129319b3ee\\\" start=\\\"0\\\" end=\\\"97\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1006_t2\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"97\\\" quote_display=\\\"quoted_above\\\"/><source source_id=\\\"7eb56b23db3044649b4293129319b3ee\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1006_t2\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1006-t2</quote_excerpt></source></item><item id=\\\"pm_de63bf5b76134b858702a35c48905c60a513adb4\\\" lane=\\\"episode\\\" source_role=\\\"model_inference\\\" inferred=\\\"True\\\" revision=\\\"2\\\" source_capture_seq_min=\\\"5\\\" source_capture_seq_max=\\\"7\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" logical_episode_id=\\\"pm_de63bf5b76134b858702a35c48905c60a513adb4\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"2\\\" fields_omitted=\\\"4\\\"></item><omitted records=\\\"1\\\" fields=\\\"4\\\" original_context_sources=\\\"1\\\"/></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 571, \"quote\": \"The silence window was requested because the caretaker sleeps beside the receiver, making overnight noise unacceptable. The user later dropped the daily graph but explicitly kept the overnight silence rule. Caretaker approval of the morning release example is still required before writing receiver settings; both approval and the write remain outstanding. The tool output describes simulated morning release of queued overnight events and says no receiver update was attempted. The assistant’s separate claim that the new schedule was running does not verify deployment.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 119, \"quote\": \"The silence window was requested because the caretaker sleeps beside the receiver, making overnight noise unacceptable.\"}, {\"ref\": \"A0003\", \"start\": 120, \"end\": 206, \"quote\": \"The user later dropped the daily graph but explicitly kept the overnight silence rule.\"}, {\"ref\": \"A0004\", \"start\": 207, \"end\": 356, \"quote\": \"Caretaker approval of the morning release example is still required before writing receiver settings; both approval and the write remain outstanding.\"}, {\"ref\": \"A0005\", \"start\": 357, \"end\": 478, \"quote\": \"The tool output describes simulated morning release of queued overnight events and says no receiver update was attempted.\"}, {\"ref\": \"A0006\", \"start\": 479, \"end\": 571, \"quote\": \"The assistant’s separate claim that the new schedule was running does not verify deployment.\"}]}, {\"id\": \"answer-04\", \"question\": \"Has the classroom upload actually been demonstrated?\", \"answer\": {\"id\": \"answer-04\", \"answer\": \"No—the classroom upload has not been demonstrated. The assistant reported, “The updated lessons are uploaded to the classroom” (R0004). However, the observed command `inert-fictional-hold_1010-t2` exited with code 0 and output only: “Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.” That demonstrates the reported local audit result, not a classroom upload (R0005, R0006).\\n\\nThe user explicitly states that a tutor must approve the silent walkthrough before upload and that both review and upload remain uncompleted (R0002). The requested change is to remove the ending sound while keeping every text alternative; completion of the sound removal is not evidenced (R0001).\", \"citations\": [{\"catalog_ref\": \"R0001\", \"source_id\": \"5ed2b368457241ea875573b37cb64c24\", \"source_field\": \"body\", \"start\": 0, \"end\": 107, \"source_role\": \"user_intent\", \"quote\": \"Return to orbit lessons from our earlier session. Remove the ending sound, but keep every text alternative.\"}, {\"catalog_ref\": \"R0002\", \"source_id\": \"99ef3cb53add476789cad3d9007de33a\", \"source_field\": \"body\", \"start\": 0, \"end\": 115, \"source_role\": \"user_intent\", \"quote\": \"A tutor must approve the silent walkthrough before the classroom upload. That review and upload remain uncompleted.\"}, {\"catalog_ref\": \"R0004\", \"source_id\": \"a3c9f1f8a89a4cd49bd33fab20bab8de\", \"source_field\": \"body\", \"start\": 0, \"end\": 50, \"source_role\": \"assistant_report\", \"quote\": \"The updated lessons are uploaded to the classroom.\"}, {\"catalog_ref\": \"R0005\", \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\", \"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 95, \"source_role\": \"tool_record\", \"quote\": \"Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.\", \"tool_use_id\": \"hold_1010_t2\"}, {\"catalog_ref\": \"R0006\", \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1010-t2\", \"tool_use_id\": \"hold_1010_t2\"}], \"uncertainties\": [\"No observed classroom upload or tutor approval is supplied.\", \"The supplied evidence does not establish how the assistant’s upload claim relates to the captured local audit.\"]}, \"gold\": {\"category\": \"status\", \"required_facts\": [{\"text\": \"The assistant claimed the updated lessons were uploaded.\", \"support\": [{\"event_id\": \"hold_1010_claim\", \"start\": 0, \"end\": 50, \"quote\": \"The updated lessons are uploaded to the classroom.\", \"source_id\": \"a3c9f1f8a89a4cd49bd33fab20bab8de\"}]}, {\"text\": \"The tool output says classroom upload was disabled; upload is unverified.\", \"support\": [{\"event_id\": \"hold_1010_t2\", \"start\": 0, \"end\": 95, \"quote\": \"Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.\", \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\", \"reader_visible_equivalent\": {\"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 95}}]}], \"forbidden_conclusions\": [\"Upload is proven.\"]}, \"retrieved_context_id\": \"q6\", \"reader_visible_memory\": [\"PROJECT orbit_lessons\\n<project-memory trust=\\\"untrusted\\\" freshness=\\\"not_verified\\\" worktree=\\\"/private/tmp/codex-mem-quality-20261021-r13-experiment/projects/hold_1010/orbit_lessons\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\"><coverage complete_transcript=\\\"false\\\" coverage_gaps=\\\"true\\\" unresolved_user_sources=\\\"3\\\" user_sources_omitted=\\\"2\\\" source_evidence_omitted=\\\"2\\\" pending_reconciliation=\\\"true\\\" pending=\\\"false\\\" observations_only=\\\"true\\\" quarantined_events=\\\"0\\\" omitted_transitions_count=\\\"0\\\" downgraded_states_count=\\\"0\\\" partially_processed_events=\\\"0\\\" processed_through_seq=\\\"8\\\" pending_events=\\\"0\\\" historical_context_heads=\\\"0\\\"/><item id=\\\"selected-source-1\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"2\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"5ed2b368457241ea875573b37cb64c24\\\" start=\\\"0\\\" end=\\\"107\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"5\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Return to orbit lessons from our earlier session. Remove the ending sound, but keep every text alternative.</quote_excerpt></source><source source_id=\\\"99ef3cb53add476789cad3d9007de33a\\\" start=\\\"0\\\" end=\\\"115\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"8\\\" quote_truncated=\\\"False\\\"><quote_excerpt>A tutor must approve the silent walkthrough before the classroom upload. That review and upload remain uncompleted.</quote_excerpt></source></field></item><item id=\\\"unassociated-user-sources-2\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_user_context\\\" relationship_to_query=\\\"unresolved\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"1\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"c34cae7b0061405d8e0ff4ce4a0dd923\\\" start=\\\"0\\\" end=\\\"151\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"2\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\\\"1\\\" omitted=\\\"0\\\"/><item id=\\\"a3c9f1f8a89a4cd49bd33fab20bab8de\\\" lane=\\\"source_evidence\\\" project_memory_kind=\\\"note\\\" source_role=\\\"assistant_report\\\" source_capture_seq_min=\\\"7\\\" source_capture_seq_max=\\\"7\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_source_context\\\" relationship_to_query=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_source_without_task_association\\\"><field name=\\\"assistant_report\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"original_source\\\"><source source_id=\\\"a3c9f1f8a89a4cd49bd33fab20bab8de\\\" start=\\\"0\\\" end=\\\"50\\\" source_role=\\\"assistant_report\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_source\\\" source_chars=\\\"50\\\"><quote_excerpt>The updated lessons are uploaded to the classroom.</quote_excerpt></source></field></item><item id=\\\"pm_1d3fdef9f7ed1913f49a86dc846206ca8382d0f7\\\" lane=\\\"claim\\\" project_memory_kind=\\\"requirement\\\" workflow_state=\\\"open\\\" source_role=\\\"user_intent\\\" evidence_basis=\\\"exact_quote\\\" revision=\\\"4\\\" source_capture_seq=\\\"8\\\"><field name=\\\"text\\\"><source source_id=\\\"99ef3cb53add476789cad3d9007de33a\\\" start=\\\"0\\\" end=\\\"72\\\" source_role=\\\"user_intent\\\" field=\\\"text\\\" quote_truncated=\\\"False\\\" quote_display=\\\"quoted_in_context\\\"/></field></item><item id=\\\"dd4741c206e74356aa66ff1ef11a11ce\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"6\\\" source_capture_seq_max=\\\"6\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1010_t2\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1010-t2\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"dd4741c206e74356aa66ff1ef11a11ce\\\" start=\\\"0\\\" end=\\\"95\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1010_t2\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"95\\\"><quote_excerpt>Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.</quote_excerpt></source><source source_id=\\\"dd4741c206e74356aa66ff1ef11a11ce\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1010_t2\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1010-t2</quote_excerpt></source></item><item id=\\\"pm_f781b56def1468f9dfd686276fbe9df9f73fc842\\\" lane=\\\"episode\\\" source_role=\\\"model_inference\\\" inferred=\\\"True\\\" revision=\\\"4\\\" source_capture_seq_min=\\\"8\\\" source_capture_seq_max=\\\"8\\\" logical_episode_id=\\\"pm_f781b56def1468f9dfd686276fbe9df9f73fc842\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"5\\\" fields_omitted=\\\"5\\\"></item><item id=\\\"pm_374ca9d1c019d6e407b95bc2fd32847b65b7c9c8\\\" lane=\\\"episode\\\" source_role=\\\"model_inference\\\" inferred=\\\"True\\\" revision=\\\"2\\\" source_capture_seq_min=\\\"5\\\" source_capture_seq_max=\\\"6\\\" logical_episode_id=\\\"pm_374ca9d1c019d6e407b95bc2fd32847b65b7c9c8\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"2\\\" fields_omitted=\\\"4\\\"></item><omitted records=\\\"2\\\" fields=\\\"9\\\" original_context_sources=\\\"1\\\"/></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 718, \"quote\": \"No—the classroom upload has not been demonstrated. The assistant reported, “The updated lessons are uploaded to the classroom” (R0004). However, the observed command `inert-fictional-hold_1010-t2` exited with code 0 and output only: “Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.” That demonstrates the reported local audit result, not a classroom upload (R0005, R0006).\\n\\nThe user explicitly states that a tutor must approve the silent walkthrough before upload and that both review and upload remain uncompleted (R0002). The requested change is to remove the ending sound while keeping every text alternative; completion of the sound removal is not evidenced (R0001).\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 420, \"quote\": \"No—the classroom upload has not been demonstrated. The assistant reported, “The updated lessons are uploaded to the classroom” (R0004). However, the observed command `inert-fictional-hold_1010-t2` exited with code 0 and output only: “Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.” That demonstrates the reported local audit result, not a classroom upload (R0005, R0006).\"}, {\"ref\": \"A0003\", \"start\": 422, \"end\": 718, \"quote\": \"The user explicitly states that a tutor must approve the silent walkthrough before upload and that both review and upload remain uncompleted (R0002). The requested change is to remove the ending sound while keeping every text alternative; completion of the sound removal is not evidenced (R0001).\"}, {\"ref\": \"A0004\", \"start\": 0, \"end\": 50, \"quote\": \"No—the classroom upload has not been demonstrated.\"}, {\"ref\": \"A0005\", \"start\": 51, \"end\": 135, \"quote\": \"The assistant reported, “The updated lessons are uploaded to the classroom” (R0004).\"}, {\"ref\": \"A0006\", \"start\": 136, \"end\": 302, \"quote\": \"However, the observed command `inert-fictional-hold_1010-t2` exited with code 0 and output only: “Orbit local audit: text alternatives cover every spoken instruction.\"}, {\"ref\": \"A0007\", \"start\": 303, \"end\": 420, \"quote\": \"Classroom upload disabled.” That demonstrates the reported local audit result, not a classroom upload (R0005, R0006).\"}, {\"ref\": \"A0008\", \"start\": 422, \"end\": 571, \"quote\": \"The user explicitly states that a tutor must approve the silent walkthrough before upload and that both review and upload remain uncompleted (R0002).\"}, {\"ref\": \"A0009\", \"start\": 572, \"end\": 718, \"quote\": \"The requested change is to remove the ending sound while keeping every text alternative; completion of the sound removal is not evidenced (R0001).\"}]}, {\"id\": \"answer-05\", \"question\": \"What must happen to local-only notes during snowdrop sync?\", \"answer\": {\"id\": \"answer-05\", \"answer\": \"Snowdrop sync must preserve local-only notes, including notes absent from the server: field workers can remain offline for days, so missing notes may simply not have uploaded yet. The later user instruction retains this requirement, requests reopening sync to finish the field rollout, and says to skip the summary chart.\\n\\nLocal validation is limited: `inert-fictional-hold_1016-t1` exited 0 and reported that the Snowdrop sandbox retained local-only notes and drafted a summary chart; field device sync was not run. Separately, `inert-fictional-hold_1016-t2` exited 0 and reported that all local-only notes survived a local simulation, with field rollout executions at 0. These results do not establish completed field rollout.\", \"citations\": [{\"catalog_ref\": \"R0001\", \"source_id\": \"c43c53c07f484524b6ee360c712bdd2b\", \"source_field\": \"body\", \"start\": 0, \"end\": 175, \"source_role\": \"user_intent\", \"quote\": \"Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet.\"}, {\"catalog_ref\": \"R0002\", \"source_id\": \"48a70799c5e545f98631f58550d00a86\", \"source_field\": \"body\", \"start\": 0, \"end\": 104, \"source_role\": \"user_intent\", \"quote\": \"Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.\"}, {\"catalog_ref\": \"R0003\", \"source_id\": \"4c389ddf2a384db1923f203ab6026680\", \"source_field\": \"body\", \"start\": 0, \"end\": 85, \"source_role\": \"tool_record\", \"quote\": \"Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.\"}, {\"catalog_ref\": \"R0004\", \"source_id\": \"4c389ddf2a384db1923f203ab6026680\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1016-t2\", \"tool_use_id\": \"hold_1016_t2\"}, {\"catalog_ref\": \"R0005\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 94, \"source_role\": \"tool_record\", \"quote\": \"Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.\", \"tool_use_id\": \"hold_1016_t1\"}, {\"catalog_ref\": \"R0006\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"tool_input.command\", \"start\": 0, \"end\": 28, \"source_role\": \"tool_record\", \"quote\": \"inert-fictional-hold_1016-t1\", \"tool_use_id\": \"hold_1016_t1\"}], \"uncertainties\": [\"The simulation execution's association with the requested task is unresolved in the supplied memory.\", \"The memory has coverage gaps and unreconciled user sources; successful field or production sync is not evidenced.\"]}, \"gold\": {\"category\": \"constraint\", \"required_facts\": [{\"text\": \"Snowdrop sync must preserve local-only notes.\", \"support\": [{\"event_id\": \"hold_1016_follow\", \"start\": 0, \"end\": 104, \"quote\": \"Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.\", \"source_id\": \"48a70799c5e545f98631f58550d00a86\"}]}], \"forbidden_conclusions\": [\"Delete notes absent from the server.\"]}, \"retrieved_context_id\": \"q1\", \"reader_visible_memory\": [\"PROJECT snowdrop_sync\\n<project-memory trust=\\\"untrusted\\\" freshness=\\\"not_verified\\\"><coverage complete_transcript=\\\"false\\\" coverage_gaps=\\\"true\\\" unresolved_user_sources=\\\"3\\\" user_sources_omitted=\\\"1\\\" source_evidence_omitted=\\\"1\\\" user_source_order_omitted=\\\"0\\\" pending_reconciliation=\\\"true\\\" pending=\\\"false\\\" observations_only=\\\"true\\\"/><item id=\\\"selected-source-1\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"2\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"c43c53c07f484524b6ee360c712bdd2b\\\" start=\\\"0\\\" end=\\\"175\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"2\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet.</quote_excerpt></source><source source_id=\\\"48a70799c5e545f98631f58550d00a86\\\" start=\\\"0\\\" end=\\\"104\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"4\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.</quote_excerpt></source></field></item><item id=\\\"selected-source-2\\\" lane=\\\"source_excerpts\\\"><field name=\\\"source_excerpts\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"not_assessed\\\"><source source_id=\\\"4c389ddf2a384db1923f203ab6026680\\\" start=\\\"0\\\" end=\\\"85\\\" source_role=\\\"tool_record\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.</quote_excerpt></source></field></item><item id=\\\"4c389ddf2a384db1923f203ab6026680\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"5\\\" source_capture_seq_max=\\\"5\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"unassociated_source_context\\\" relationship_to_query=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_source_without_task_association\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1016_t2\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1016-t2\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"4c389ddf2a384db1923f203ab6026680\\\" start=\\\"0\\\" end=\\\"85\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1016_t2\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"85\\\" quote_display=\\\"quoted_above\\\"/><source source_id=\\\"4c389ddf2a384db1923f203ab6026680\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1016_t2\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1016-t2</quote_excerpt></source></item><item id=\\\"a11f2ef7a598462897191528835ae562\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"3\\\" source_capture_seq_max=\\\"3\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1016_t1\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1016-t1\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"a11f2ef7a598462897191528835ae562\\\" start=\\\"0\\\" end=\\\"94\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1016_t1\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"94\\\"><quote_excerpt>Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.</quote_excerpt></source><source source_id=\\\"a11f2ef7a598462897191528835ae562\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1016_t1\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1016-t1</quote_excerpt></source></item><item id=\\\"pm_4d7bc23deb0feb2a719f5124e5f37481063c9709\\\" lane=\\\"episode\\\" source_role=\\\"model_inference\\\" inferred=\\\"True\\\" revision=\\\"1\\\" source_capture_seq_min=\\\"2\\\" source_capture_seq_max=\\\"3\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" logical_episode_id=\\\"pm_4d7bc23deb0feb2a719f5124e5f37481063c9709\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"3\\\" fields_omitted=\\\"3\\\"><field name=\\\"open_work_source_excerpt\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"model_inference\\\" partial_context=\\\"False\\\"><source source_id=\\\"a11f2ef7a598462897191528835ae562\\\" start=\\\"67\\\" end=\\\"94\\\" source_role=\\\"tool_record\\\" field=\\\"open_work\\\" quote_truncated=\\\"False\\\"><quote_excerpt> Field device sync not run.</quote_excerpt></source></field><field name=\\\"outcome_source_excerpt\\\" basis=\\\"attributed_source_excerpts\\\" field_association=\\\"model_inference\\\" partial_context=\\\"False\\\"><source source_id=\\\"a11f2ef7a598462897191528835ae562\\\" start=\\\"0\\\" end=\\\"67\\\" source_role=\\\"tool_record\\\" field=\\\"outcome\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Snowdrop sandbox: local-only notes retained; summary chart drafted.</quote_excerpt></source></field></item><item lane=\\\"episode\\\" id=\\\"pm_3baadc9f0a79d772d20d3ee6f6e8fd48e8281276\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"5\\\" fields_omitted=\\\"5\\\"/><omitted records=\\\"1\\\" fields=\\\"8\\\"/></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 728, \"quote\": \"Snowdrop sync must preserve local-only notes, including notes absent from the server: field workers can remain offline for days, so missing notes may simply not have uploaded yet. The later user instruction retains this requirement, requests reopening sync to finish the field rollout, and says to skip the summary chart.\\n\\nLocal validation is limited: `inert-fictional-hold_1016-t1` exited 0 and reported that the Snowdrop sandbox retained local-only notes and drafted a summary chart; field device sync was not run. Separately, `inert-fictional-hold_1016-t2` exited 0 and reported that all local-only notes survived a local simulation, with field rollout executions at 0. These results do not establish completed field rollout.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 321, \"quote\": \"Snowdrop sync must preserve local-only notes, including notes absent from the server: field workers can remain offline for days, so missing notes may simply not have uploaded yet. The later user instruction retains this requirement, requests reopening sync to finish the field rollout, and says to skip the summary chart.\"}, {\"ref\": \"A0003\", \"start\": 323, \"end\": 728, \"quote\": \"Local validation is limited: `inert-fictional-hold_1016-t1` exited 0 and reported that the Snowdrop sandbox retained local-only notes and drafted a summary chart; field device sync was not run. Separately, `inert-fictional-hold_1016-t2` exited 0 and reported that all local-only notes survived a local simulation, with field rollout executions at 0. These results do not establish completed field rollout.\"}, {\"ref\": \"A0004\", \"start\": 0, \"end\": 179, \"quote\": \"Snowdrop sync must preserve local-only notes, including notes absent from the server: field workers can remain offline for days, so missing notes may simply not have uploaded yet.\"}, {\"ref\": \"A0005\", \"start\": 180, \"end\": 321, \"quote\": \"The later user instruction retains this requirement, requests reopening sync to finish the field rollout, and says to skip the summary chart.\"}, {\"ref\": \"A0006\", \"start\": 323, \"end\": 516, \"quote\": \"Local validation is limited: `inert-fictional-hold_1016-t1` exited 0 and reported that the Snowdrop sandbox retained local-only notes and drafted a summary chart; field device sync was not run.\"}, {\"ref\": \"A0007\", \"start\": 517, \"end\": 672, \"quote\": \"Separately, `inert-fictional-hold_1016-t2` exited 0 and reported that all local-only notes survived a local simulation, with field rollout executions at 0.\"}, {\"ref\": \"A0008\", \"start\": 673, \"end\": 728, \"quote\": \"These results do not establish completed field rollout.\"}]}, {\"id\": \"answer-06\", \"question\": \"When I reopened pebble, what did I withdraw?\", \"answer\": {\"id\": \"answer-06\", \"answer\": \"You withdrew the cover-sheet requirement: “Forget the cover sheet, but keep one file per household.” You reopened pebble to finish delivery, retaining separate household files because households collect their own envelopes and a combined file would mix deliveries. Dispatch-steward approval of the household-to-envelope mapping and queue submission remained on the todo list, with approval required first. The captured sample inspection reported one file per household and zero queue submissions; the assistant’s separate claim that all files were queued does not verify delivery.\", \"citations\": [{\"catalog_ref\": \"R0003\", \"source_id\": \"fa43d5bdb7ca4482be0a5a5eb2b197fc\", \"source_field\": \"body\", \"start\": 0, \"end\": 106, \"source_role\": \"user_intent\", \"quote\": \"Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.\"}, {\"catalog_ref\": \"R0002\", \"source_id\": \"f1be32a0f2d64381bb5320bf1dcfa892\", \"source_field\": \"body\", \"start\": 0, \"end\": 154, \"source_role\": \"user_intent\", \"quote\": \"Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries.\"}, {\"catalog_ref\": \"R0001\", \"source_id\": \"df81d6f9d1a34784a8c02c6d0463a0f7\", \"source_field\": \"body\", \"start\": 0, \"end\": 145, \"source_role\": \"user_intent\", \"quote\": \"The dispatch steward still must approve the household-to-envelope mapping before queue submission. Keep approval and submission on the todo list.\"}, {\"catalog_ref\": \"R0004\", \"source_id\": \"3616cb2ba4a7445ebd717e4e4669f702\", \"source_field\": \"tool_response.output\", \"start\": 0, \"end\": 89, \"source_role\": \"tool_record\", \"quote\": \"Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.\", \"tool_use_id\": \"hold_1007_t2\"}, {\"catalog_ref\": \"R0008\", \"source_id\": \"d2c543b6b05447cd8df49c30df00e445\", \"source_field\": \"body\", \"start\": 0, \"end\": 51, \"source_role\": \"assistant_report\", \"quote\": \"The pebble files have all been queued for delivery.\"}], \"uncertainties\": [\"Whether any queue submission occurred after the captured inspection is unknown; no observed result verifies the assistant’s queued-for-delivery claim.\"]}, \"gold\": {\"category\": \"scope\", \"required_facts\": [{\"text\": \"The cover sheet was withdrawn while reopening the same pebble task to finish delivery.\", \"support\": [{\"event_id\": \"hold_1007_follow\", \"start\": 0, \"end\": 106, \"quote\": \"Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.\", \"source_id\": \"fa43d5bdb7ca4482be0a5a5eb2b197fc\"}]}], \"forbidden_conclusions\": [\"Household separation was cancelled.\"]}, \"retrieved_context_id\": \"q3\", \"reader_visible_memory\": [\"PROJECT pebble_exports\\n<project-memory trust=\\\"untrusted\\\" freshness=\\\"not_verified\\\"><coverage complete_transcript=\\\"false\\\" coverage_gaps=\\\"true\\\" unresolved_user_sources=\\\"3\\\" user_sources_omitted=\\\"3\\\" source_evidence_omitted=\\\"0\\\" user_source_order_omitted=\\\"0\\\" pending_reconciliation=\\\"true\\\" pending=\\\"false\\\" observations_only=\\\"true\\\" quarantined_events=\\\"0\\\" omitted_transitions_count=\\\"0\\\" downgraded_states_count=\\\"0\\\" partially_processed_events=\\\"0\\\" processed_through_seq=\\\"8\\\" pending_events=\\\"0\\\" historical_context_heads=\\\"0\\\"/><item id=\\\"unassociated-user-sources-1\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" selection_basis=\\\"unassociated_user_context\\\" relationship_to_query=\\\"unresolved\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"1\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"df81d6f9d1a34784a8c02c6d0463a0f7\\\" start=\\\"0\\\" end=\\\"145\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"8\\\" quote_truncated=\\\"False\\\"><quote_excerpt>The dispatch steward still must approve the household-to-envelope mapping before queue submission. Keep approval and submission on the todo list.</quote_excerpt></source></field></item><item id=\\\"selected-source-2\\\" lane=\\\"intent_custody\\\" source_role=\\\"user_intent\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" disposition=\\\"unresolved\\\" is_requirement_claim=\\\"False\\\" meaning=\\\"original_user_source_with_unreconciled_representation\\\" uncertainty=\\\"extracted_representation_completeness_unresolved\\\" source_bundle=\\\"True\\\" source_count=\\\"2\\\"><field name=\\\"source_custody\\\"><source source_id=\\\"f1be32a0f2d64381bb5320bf1dcfa892\\\" start=\\\"0\\\" end=\\\"154\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"2\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries.</quote_excerpt></source><source source_id=\\\"fa43d5bdb7ca4482be0a5a5eb2b197fc\\\" start=\\\"0\\\" end=\\\"106\\\" source_role=\\\"user_intent\\\" source_capture_seq=\\\"5\\\" quote_truncated=\\\"False\\\"><quote_excerpt>Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.</quote_excerpt></source></field></item><source-context-coverage selected_source_count=\\\"1\\\" omitted=\\\"0\\\"/><item id=\\\"3616cb2ba4a7445ebd717e4e4669f702\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"6\\\" source_capture_seq_max=\\\"6\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1007_t2\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1007-t2\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"3616cb2ba4a7445ebd717e4e4669f702\\\" start=\\\"0\\\" end=\\\"89\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1007_t2\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"89\\\"><quote_excerpt>Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.</quote_excerpt></source><source source_id=\\\"3616cb2ba4a7445ebd717e4e4669f702\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1007_t2\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1007-t2</quote_excerpt></source></item><item id=\\\"c8a2348139e84c7bb30432e957136822\\\" lane=\\\"source_evidence\\\" source_role=\\\"tool_record\\\" source_capture_seq_min=\\\"3\\\" source_capture_seq_max=\\\"3\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\" signal_kind=\\\"observed_execution_result\\\" selection_basis=\\\"captured_execution_shape\\\" field_association=\\\"original_execution_capture\\\"><execution tool_use_id=\\\"hold_1007_t1\\\" tool_name=\\\"exec_command\\\" command=\\\"inert-fictional-hold_1007-t1\\\" exit_code=\\\"0\\\" result_field=\\\"tool_response.output\\\" command_field=\\\"tool_input.command\\\" exit_field=\\\"tool_response.exit_code\\\"/><source source_id=\\\"c8a2348139e84c7bb30432e957136822\\\" start=\\\"0\\\" end=\\\"101\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1007_t1\\\" source_field=\\\"tool_response.output\\\" field=\\\"execution_result\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"101\\\"><quote_excerpt>Pebble sample export: household separation preserved; cover sheet rendered. Envelope queue untouched.</quote_excerpt></source><source source_id=\\\"c8a2348139e84c7bb30432e957136822\\\" start=\\\"0\\\" end=\\\"28\\\" source_role=\\\"tool_record\\\" tool_use_id=\\\"hold_1007_t1\\\" source_field=\\\"tool_input.command\\\" field=\\\"execution_command\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_capture_field\\\" source_chars=\\\"28\\\"><quote_excerpt>inert-fictional-hold_1007-t1</quote_excerpt></source></item><item id=\\\"d2c543b6b05447cd8df49c30df00e445\\\" lane=\\\"source_evidence\\\" project_memory_kind=\\\"note\\\" source_role=\\\"assistant_report\\\" source_capture_seq_min=\\\"7\\\" source_capture_seq_max=\\\"7\\\" capture_order_basis=\\\"local_capture_sequence_not_event_time\\\"><field name=\\\"assistant_report\\\"><source source_id=\\\"d2c543b6b05447cd8df49c30df00e445\\\" start=\\\"0\\\" end=\\\"51\\\" source_role=\\\"assistant_report\\\" quote_truncated=\\\"False\\\" excerpt_status=\\\"complete_source\\\" source_chars=\\\"51\\\"><quote_excerpt>The pebble files have all been queued for delivery.</quote_excerpt></source></field></item><item lane=\\\"episode\\\" id=\\\"pm_8cd39d78b00741a70740c5c296c5df676403a5a2\\\" episode_version=\\\"1\\\" is_current_head=\\\"True\\\" continuity_basis=\\\"standalone\\\" retained_context_fields_omitted=\\\"0\\\" field_associations_omitted=\\\"2\\\" fields_omitted=\\\"5\\\"/><omitted records=\\\"2\\\" fields=\\\"10\\\"/></project-memory>\"], \"answer_span_catalog\": [{\"ref\": \"A0001\", \"start\": 0, \"end\": 580, \"quote\": \"You withdrew the cover-sheet requirement: “Forget the cover sheet, but keep one file per household.” You reopened pebble to finish delivery, retaining separate household files because households collect their own envelopes and a combined file would mix deliveries. Dispatch-steward approval of the household-to-envelope mapping and queue submission remained on the todo list, with approval required first. The captured sample inspection reported one file per household and zero queue submissions; the assistant’s separate claim that all files were queued does not verify delivery.\"}, {\"ref\": \"A0002\", \"start\": 0, \"end\": 264, \"quote\": \"You withdrew the cover-sheet requirement: “Forget the cover sheet, but keep one file per household.” You reopened pebble to finish delivery, retaining separate household files because households collect their own envelopes and a combined file would mix deliveries.\"}, {\"ref\": \"A0003\", \"start\": 265, \"end\": 405, \"quote\": \"Dispatch-steward approval of the household-to-envelope mapping and queue submission remained on the todo list, with approval required first.\"}, {\"ref\": \"A0004\", \"start\": 406, \"end\": 580, \"quote\": \"The captured sample inspection reported one file per household and zero queue submissions; the assistant’s separate claim that all files were queued does not verify delivery.\"}]}], \"case_source_catalogs\": {\"answer-01\": [{\"ref\": \"J0001\", \"source_id\": \"6e1b6ddaa293436f90cd9244a65b4aef\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 167, \"quote\": \"For the canal sampler, preserve the raw readings and add a weekly chart. Keep units in millimetres because the crew compares this output directly with its paper gauge.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"03d360497f3446a9aaf82bc77d68468e\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 146, \"quote\": \"Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.\", \"reader_visible\": true}, {\"ref\": \"J0003\", \"source_id\": \"35710ef7eaf249cdb77e5eecf7d73463\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 129, \"quote\": \"A crew lead must review the retained-reading sample before any live configuration write. Carry that review and the write forward.\", \"reader_visible\": true}, {\"ref\": \"J0004\", \"source_id\": \"d167d4a0d328449da10a22c215ef4e70\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 107, \"quote\": \"Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.\", \"reader_visible\": true}, {\"ref\": \"J0005\", \"source_id\": \"d167d4a0d328449da10a22c215ef4e70\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1002-t2\", \"reader_visible\": true}, {\"ref\": \"J0006\", \"source_id\": \"d3423affa1d846588cfbd1a6de05c201\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 105, \"quote\": \"Canal sandbox run: raw readings retained; weekly chart draft saved. Live sampler configuration unchanged.\", \"reader_visible\": true}, {\"ref\": \"J0007\", \"source_id\": \"d3423affa1d846588cfbd1a6de05c201\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1002-t1\", \"reader_visible\": true}, {\"ref\": \"J0008\", \"source_id\": \"d74e0f2afa6f44eabd89e0c0705ffefc\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 53, \"quote\": \"I have applied the canal changes to the live sampler.\", \"reader_visible\": true}, {\"ref\": \"J0009\", \"source_id\": \"3d39997c5f7f411cade8e797ef8650d8\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 60, \"quote\": \"Outdated canal note: discard all raw samples after plotting.\", \"reader_visible\": false}, {\"ref\": \"J0010\", \"source_id\": \"d3423affa1d846588cfbd1a6de05c201\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 105, \"quote\": \"Canal sandbox run: raw readings retained; weekly chart draft saved. Live sampler configuration unchanged.\", \"reader_visible\": false}, {\"ref\": \"J0011\", \"source_id\": \"fd070a59311f42c593142087167ab640\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 123, \"quote\": \"The greenhouse meter is a new request: centimetres are acceptable there. Its unit choice does not change the canal sampler.\", \"reader_visible\": false}, {\"ref\": \"J0012\", \"source_id\": \"d167d4a0d328449da10a22c215ef4e70\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 107, \"quote\": \"Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.\", \"reader_visible\": false}], \"answer-02\": [{\"ref\": \"J0001\", \"source_id\": \"ce40524987e94f9b9aaf02cb339a7973\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 145, \"quote\": \"Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"c209f18eff3c40c2946a3603898165be\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 162, \"quote\": \"For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account.\", \"reader_visible\": true}, {\"ref\": \"J0003\", \"source_id\": \"08d62075f16c4912ac2085ec9ed46f00\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 116, \"quote\": \"This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope.\", \"reader_visible\": true}, {\"ref\": \"J0004\", \"source_id\": \"59ed811ced9a46a9856295a0b7199a17\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 41, \"quote\": \"All copper depot accounts are now active.\", \"reader_visible\": true}, {\"ref\": \"J0005\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 93, \"quote\": \"Copper validation: simulated depot totals balance independently. Service accounts created: 0.\", \"reader_visible\": true}, {\"ref\": \"J0006\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1003-t2\", \"reader_visible\": true}, {\"ref\": \"J0007\", \"source_id\": \"08d62075f16c4912ac2085ec9ed46f00\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 41, \"end\": 116, \"quote\": \" Omit the printed booklet now; the separate depot accounts remain in scope.\", \"reader_visible\": true}, {\"ref\": \"J0008\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 64, \"end\": 93, \"quote\": \" Service accounts created: 0.\", \"reader_visible\": true}, {\"ref\": \"J0009\", \"source_id\": \"96514ece2c5b4863b1314eb9d1096e15\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 66, \"quote\": \"Retired route-planning note: put all routes in one shared account.\", \"reader_visible\": false}, {\"ref\": \"J0010\", \"source_id\": \"336c6c1b7f644387a18f27fea18a3bfa\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 118, \"quote\": \"Copper dry run: three depot accounts simulated; booklet draft produced. Account creation against the service disabled.\", \"reader_visible\": false}, {\"ref\": \"J0011\", \"source_id\": \"336c6c1b7f644387a18f27fea18a3bfa\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1003-t1\", \"reader_visible\": false}, {\"ref\": \"J0012\", \"source_id\": \"336c6c1b7f644387a18f27fea18a3bfa\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 118, \"quote\": \"Copper dry run: three depot accounts simulated; booklet draft produced. Account creation against the service disabled.\", \"reader_visible\": false}, {\"ref\": \"J0013\", \"source_id\": \"6c01373a29004d2eba563e4975424585\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 93, \"quote\": \"Linen delivery planning starts here as a different task. Use a shared account for linen only.\", \"reader_visible\": false}, {\"ref\": \"J0014\", \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 93, \"quote\": \"Copper validation: simulated depot totals balance independently. Service accounts created: 0.\", \"reader_visible\": false}], \"answer-03\": [{\"ref\": \"J0001\", \"source_id\": \"727aa3e94c204e7b963c99c990b75b75\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 136, \"quote\": \"The caretaker must approve the morning release example before we write receiver settings. That approval is outstanding, as is the write.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"39d0103f1a194d7e9e030b04358769e4\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 151, \"quote\": \"Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.\", \"reader_visible\": true}, {\"ref\": \"J0003\", \"source_id\": \"c39bae846d6748b08098285334a44091\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 93, \"quote\": \"Continue the basalt alert work. Drop the daily graph. Keep the overnight silence rule intact.\", \"reader_visible\": true}, {\"ref\": \"J0004\", \"source_id\": \"7eb56b23db3044649b4293129319b3ee\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 97, \"quote\": \"Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.\", \"reader_visible\": true}, {\"ref\": \"J0005\", \"source_id\": \"5ee69eec83e346998ef8d9f0bdee39f0\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 51, \"quote\": \"The receiver is now running the new alert schedule.\", \"reader_visible\": true}, {\"ref\": \"J0006\", \"source_id\": \"7eb56b23db3044649b4293129319b3ee\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1006-t2\", \"reader_visible\": true}, {\"ref\": \"J0007\", \"source_id\": \"35a40409b3fb4d12b9b7f1ebf4457151\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 51, \"quote\": \"Obsolete alerts note: send every alert immediately.\", \"reader_visible\": false}, {\"ref\": \"J0008\", \"source_id\": \"5d24181dd8d241e49257db2793c08b23\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 108, \"quote\": \"Basalt replay: overnight events queued silently; daily graph draft generated. Receiver settings not written.\", \"reader_visible\": false}, {\"ref\": \"J0009\", \"source_id\": \"5d24181dd8d241e49257db2793c08b23\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1006-t1\", \"reader_visible\": false}, {\"ref\": \"J0010\", \"source_id\": \"5d24181dd8d241e49257db2793c08b23\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 108, \"quote\": \"Basalt replay: overnight events queued silently; daily graph draft generated. Receiver settings not written.\", \"reader_visible\": false}, {\"ref\": \"J0011\", \"source_id\": \"4465d4501f8346409ee5110c2f9d6512\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 99, \"quote\": \"Start a separate pollen digest. Its alerts may sound overnight; that permission is only for pollen.\", \"reader_visible\": false}, {\"ref\": \"J0012\", \"source_id\": \"7eb56b23db3044649b4293129319b3ee\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 97, \"quote\": \"Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.\", \"reader_visible\": false}], \"answer-04\": [{\"ref\": \"J0001\", \"source_id\": \"5ed2b368457241ea875573b37cb64c24\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 107, \"quote\": \"Return to orbit lessons from our earlier session. Remove the ending sound, but keep every text alternative.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"99ef3cb53add476789cad3d9007de33a\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 115, \"quote\": \"A tutor must approve the silent walkthrough before the classroom upload. That review and upload remain uncompleted.\", \"reader_visible\": true}, {\"ref\": \"J0003\", \"source_id\": \"c34cae7b0061405d8e0ff4ce4a0dd923\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 151, \"quote\": \"Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.\", \"reader_visible\": true}, {\"ref\": \"J0004\", \"source_id\": \"a3c9f1f8a89a4cd49bd33fab20bab8de\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 50, \"quote\": \"The updated lessons are uploaded to the classroom.\", \"reader_visible\": true}, {\"ref\": \"J0005\", \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 95, \"quote\": \"Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.\", \"reader_visible\": true}, {\"ref\": \"J0006\", \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1010-t2\", \"reader_visible\": true}, {\"ref\": \"J0007\", \"source_id\": \"7ed5cecd1fd44e39b9f2912d3d0d1167\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 56, \"quote\": \"Withdrawn lesson note: require sound for every exercise.\", \"reader_visible\": false}, {\"ref\": \"J0008\", \"source_id\": \"7243e042715f40a88bccb826c09cf88f\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 126, \"quote\": \"Orbit lesson preview: all spoken instructions have text alternatives; ending sound demo available. Classroom server unchanged.\", \"reader_visible\": false}, {\"ref\": \"J0009\", \"source_id\": \"7243e042715f40a88bccb826c09cf88f\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1010-t1\", \"reader_visible\": false}, {\"ref\": \"J0010\", \"source_id\": \"7243e042715f40a88bccb826c09cf88f\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 126, \"quote\": \"Orbit lesson preview: all spoken instructions have text alternatives; ending sound demo available. Classroom server unchanged.\", \"reader_visible\": false}, {\"ref\": \"J0011\", \"source_id\": \"3d6c2c9379134a42a02623d6c3add43d\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 114, \"quote\": \"Harbor lessons are a separate listening exercise. Audio-only prompts are acceptable there, without changing orbit.\", \"reader_visible\": false}, {\"ref\": \"J0012\", \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 95, \"quote\": \"Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.\", \"reader_visible\": false}], \"answer-05\": [{\"ref\": \"J0001\", \"source_id\": \"c43c53c07f484524b6ee360c712bdd2b\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 175, \"quote\": \"Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"48a70799c5e545f98631f58550d00a86\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 104, \"quote\": \"Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.\", \"reader_visible\": true}, {\"ref\": \"J0003\", \"source_id\": \"4c389ddf2a384db1923f203ab6026680\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 85, \"quote\": \"Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.\", \"reader_visible\": true}, {\"ref\": \"J0004\", \"source_id\": \"4c389ddf2a384db1923f203ab6026680\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1016-t2\", \"reader_visible\": true}, {\"ref\": \"J0005\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 94, \"quote\": \"Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.\", \"reader_visible\": true}, {\"ref\": \"J0006\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1016-t1\", \"reader_visible\": true}, {\"ref\": \"J0007\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 67, \"end\": 94, \"quote\": \" Field device sync not run.\", \"reader_visible\": true}, {\"ref\": \"J0008\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 67, \"quote\": \"Snowdrop sandbox: local-only notes retained; summary chart drafted.\", \"reader_visible\": true}, {\"ref\": \"J0009\", \"source_id\": \"32a5ce1def604788bb44ff441f10e4cd\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 64, \"quote\": \"Withdrawn sync note: delete local notes missing from the server.\", \"reader_visible\": false}, {\"ref\": \"J0010\", \"source_id\": \"a11f2ef7a598462897191528835ae562\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 94, \"quote\": \"Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.\", \"reader_visible\": false}, {\"ref\": \"J0011\", \"source_id\": \"4c389ddf2a384db1923f203ab6026680\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 85, \"quote\": \"Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.\", \"reader_visible\": false}, {\"ref\": \"J0012\", \"source_id\": \"1ee51db1a4ab4406849301404bac4131\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 45, \"quote\": \"The field rollout has completed successfully.\", \"reader_visible\": false}, {\"ref\": \"J0013\", \"source_id\": \"460f2da1cdbe4a339689f4e2dc4fa396\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 133, \"quote\": \"A field coordinator must approve the offline-note example before rollout. That approval is absent, and rollout remains an obligation.\", \"reader_visible\": false}], \"answer-06\": [{\"ref\": \"J0001\", \"source_id\": \"df81d6f9d1a34784a8c02c6d0463a0f7\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 145, \"quote\": \"The dispatch steward still must approve the household-to-envelope mapping before queue submission. Keep approval and submission on the todo list.\", \"reader_visible\": true}, {\"ref\": \"J0002\", \"source_id\": \"f1be32a0f2d64381bb5320bf1dcfa892\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 154, \"quote\": \"Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries.\", \"reader_visible\": true}, {\"ref\": \"J0003\", \"source_id\": \"fa43d5bdb7ca4482be0a5a5eb2b197fc\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 106, \"quote\": \"Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.\", \"reader_visible\": true}, {\"ref\": \"J0004\", \"source_id\": \"3616cb2ba4a7445ebd717e4e4669f702\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 89, \"quote\": \"Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.\", \"reader_visible\": true}, {\"ref\": \"J0005\", \"source_id\": \"3616cb2ba4a7445ebd717e4e4669f702\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1007-t2\", \"reader_visible\": true}, {\"ref\": \"J0006\", \"source_id\": \"c8a2348139e84c7bb30432e957136822\", \"source_field\": \"tool_response.output\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 101, \"quote\": \"Pebble sample export: household separation preserved; cover sheet rendered. Envelope queue untouched.\", \"reader_visible\": true}, {\"ref\": \"J0007\", \"source_id\": \"c8a2348139e84c7bb30432e957136822\", \"source_field\": \"tool_input.command\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 28, \"quote\": \"inert-fictional-hold_1007-t1\", \"reader_visible\": true}, {\"ref\": \"J0008\", \"source_id\": \"d2c543b6b05447cd8df49c30df00e445\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 51, \"quote\": \"The pebble files have all been queued for delivery.\", \"reader_visible\": true}, {\"ref\": \"J0009\", \"source_id\": \"f18863dd41c14f79ac16b3b3353967be\", \"source_field\": \"body\", \"source_role\": \"assistant_report\", \"start\": 0, \"end\": 47, \"quote\": \"Expired export note: combine household records.\", \"reader_visible\": false}, {\"ref\": \"J0010\", \"source_id\": \"c8a2348139e84c7bb30432e957136822\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 101, \"quote\": \"Pebble sample export: household separation preserved; cover sheet rendered. Envelope queue untouched.\", \"reader_visible\": false}, {\"ref\": \"J0011\", \"source_id\": \"ab09ada222b64113848cd528e8686663\", \"source_field\": \"body\", \"source_role\": \"user_intent\", \"start\": 0, \"end\": 131, \"quote\": \"Willow imports are a separate task: one combined input file is appropriate there. This is not permission to combine pebble exports.\", \"reader_visible\": false}, {\"ref\": \"J0012\", \"source_id\": \"3616cb2ba4a7445ebd717e4e4669f702\", \"source_field\": \"body\", \"source_role\": \"tool_record\", \"start\": 0, \"end\": 89, \"quote\": \"Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.\", \"reader_visible\": false}]}, \"original_history\": [{\"id\": \"hold_1002_s1\", \"project_key\": \"canal_sampler\", \"events\": [{\"id\": \"hold_1002_old\", \"type\": \"assistant\", \"text\": \"Outdated canal note: discard all raw samples after plotting.\", \"source_id\": \"3d39997c5f7f411cade8e797ef8650d8\"}, {\"id\": \"hold_1002_start\", \"type\": \"user\", \"text\": \"For the canal sampler, preserve the raw readings and add a weekly chart. Keep units in millimetres because the crew compares this output directly with its paper gauge.\", \"source_id\": \"6e1b6ddaa293436f90cd9244a65b4aef\"}, {\"id\": \"hold_1002_t1\", \"type\": \"tool\", \"text\": \"Canal sandbox run: raw readings retained; weekly chart draft saved. Live sampler configuration unchanged.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1002-t1\"}, \"tool_response\": {\"output\": \"Canal sandbox run: raw readings retained; weekly chart draft saved. Live sampler configuration unchanged.\", \"exit_code\": 0}}, \"source_id\": \"d3423affa1d846588cfbd1a6de05c201\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1002_t1\"}]}, {\"id\": \"hold_1002_side\", \"project_key\": \"greenhouse_meter\", \"events\": [{\"id\": \"hold_1002_side\", \"type\": \"user\", \"text\": \"The greenhouse meter is a new request: centimetres are acceptable there. Its unit choice does not change the canal sampler.\", \"source_id\": \"fd070a59311f42c593142087167ab640\"}], \"checkpoints\": []}, {\"id\": \"hold_1002_s2\", \"project_key\": \"canal_sampler\", \"events\": [{\"id\": \"hold_1002_follow\", \"type\": \"user\", \"text\": \"Pick up the canal sampler again in this session. I no longer need the weekly chart. Retaining raw readings and millimetre units is still required.\", \"source_id\": \"03d360497f3446a9aaf82bc77d68468e\"}, {\"id\": \"hold_1002_t2\", \"type\": \"tool\", \"text\": \"Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1002-t2\"}, \"tool_response\": {\"output\": \"Canal fixture check: raw readings retained and millimetre labels matched. Live configuration write skipped.\", \"exit_code\": 0}}, \"source_id\": \"d167d4a0d328449da10a22c215ef4e70\"}, {\"id\": \"hold_1002_claim\", \"type\": \"assistant\", \"text\": \"I have applied the canal changes to the live sampler.\", \"source_id\": \"d74e0f2afa6f44eabd89e0c0705ffefc\"}, {\"id\": \"hold_1002_delete\", \"type\": \"delete_observation\", \"text\": \"Delete the obsolete observation; it is no longer a source for this project.\", \"observation_event_id\": \"hold_1002_old\", \"source_id\": null}, {\"id\": \"hold_1002_tail\", \"type\": \"user\", \"text\": \"A crew lead must review the retained-reading sample before any live configuration write. Carry that review and the write forward.\", \"source_id\": \"35710ef7eaf249cdb77e5eecf7d73463\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1002_claim\"}]}, {\"id\": \"hold_1003_s1\", \"project_key\": \"copper_routes\", \"events\": [{\"id\": \"hold_1003_old\", \"type\": \"assistant\", \"text\": \"Retired route-planning note: put all routes in one shared account.\", \"source_id\": \"96514ece2c5b4863b1314eb9d1096e15\"}, {\"id\": \"hold_1003_start\", \"type\": \"user\", \"text\": \"For copper deliveries, make one account per depot and include a printable route booklet. Depots reconcile separately, which is why I do not want a shared account.\", \"source_id\": \"c209f18eff3c40c2946a3603898165be\"}, {\"id\": \"hold_1003_t1\", \"type\": \"tool\", \"text\": \"Copper dry run: three depot accounts simulated; booklet draft produced. Account creation against the service disabled.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1003-t1\"}, \"tool_response\": {\"output\": \"Copper dry run: three depot accounts simulated; booklet draft produced. Account creation against the service disabled.\", \"exit_code\": 0}}, \"source_id\": \"336c6c1b7f644387a18f27fea18a3bfa\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1003_t1\"}]}, {\"id\": \"hold_1003_side\", \"project_key\": \"linen_routes\", \"events\": [{\"id\": \"hold_1003_side\", \"type\": \"user\", \"text\": \"Linen delivery planning starts here as a different task. Use a shared account for linen only.\", \"source_id\": \"6c01373a29004d2eba563e4975424585\"}], \"checkpoints\": []}, {\"id\": \"hold_1003_s2\", \"project_key\": \"copper_routes\", \"events\": [{\"id\": \"hold_1003_follow\", \"type\": \"user\", \"text\": \"This continues the copper delivery setup. Omit the printed booklet now; the separate depot accounts remain in scope.\", \"source_id\": \"08d62075f16c4912ac2085ec9ed46f00\"}, {\"id\": \"hold_1003_t2\", \"type\": \"tool\", \"text\": \"Copper validation: simulated depot totals balance independently. Service accounts created: 0.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1003-t2\"}, \"tool_response\": {\"output\": \"Copper validation: simulated depot totals balance independently. Service accounts created: 0.\", \"exit_code\": 0}}, \"source_id\": \"53e1e811c4de45be9de65c4bbd054375\"}, {\"id\": \"hold_1003_claim\", \"type\": \"assistant\", \"text\": \"All copper depot accounts are now active.\", \"source_id\": \"59ed811ced9a46a9856295a0b7199a17\"}, {\"id\": \"hold_1003_delete\", \"type\": \"delete_observation\", \"text\": \"Delete the obsolete observation; it is no longer a source for this project.\", \"observation_event_id\": \"hold_1003_old\", \"source_id\": null}, {\"id\": \"hold_1003_tail\", \"type\": \"user\", \"text\": \"Ask the operations owner to approve the depot list before creating any service accounts. The approval is still missing, and creation remains due.\", \"source_id\": \"ce40524987e94f9b9aaf02cb339a7973\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1003_claim\"}]}, {\"id\": \"hold_1006_s1\", \"project_key\": \"basalt_alerts\", \"events\": [{\"id\": \"hold_1006_old\", \"type\": \"assistant\", \"text\": \"Obsolete alerts note: send every alert immediately.\", \"source_id\": \"35a40409b3fb4d12b9b7f1ebf4457151\"}, {\"id\": \"hold_1006_start\", \"type\": \"user\", \"text\": \"Basalt alerts must stay silent overnight, and I would like a daily graph. The caretaker sleeps beside the receiver, so overnight noise is unacceptable.\", \"source_id\": \"39d0103f1a194d7e9e030b04358769e4\"}, {\"id\": \"hold_1006_t1\", \"type\": \"tool\", \"text\": \"Basalt replay: overnight events queued silently; daily graph draft generated. Receiver settings not written.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1006-t1\"}, \"tool_response\": {\"output\": \"Basalt replay: overnight events queued silently; daily graph draft generated. Receiver settings not written.\", \"exit_code\": 0}}, \"source_id\": \"5d24181dd8d241e49257db2793c08b23\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1006_t1\"}]}, {\"id\": \"hold_1006_side\", \"project_key\": \"pollen_digest\", \"events\": [{\"id\": \"hold_1006_side\", \"type\": \"user\", \"text\": \"Start a separate pollen digest. Its alerts may sound overnight; that permission is only for pollen.\", \"source_id\": \"4465d4501f8346409ee5110c2f9d6512\"}], \"checkpoints\": []}, {\"id\": \"hold_1006_s2\", \"project_key\": \"basalt_alerts\", \"events\": [{\"id\": \"hold_1006_follow\", \"type\": \"user\", \"text\": \"Continue the basalt alert work. Drop the daily graph. Keep the overnight silence rule intact.\", \"source_id\": \"c39bae846d6748b08098285334a44091\"}, {\"id\": \"hold_1006_t2\", \"type\": \"tool\", \"text\": \"Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1006-t2\"}, \"tool_response\": {\"output\": \"Basalt simulation: queued overnight events release in the morning. Receiver update attempted: no.\", \"exit_code\": 0}}, \"source_id\": \"7eb56b23db3044649b4293129319b3ee\"}, {\"id\": \"hold_1006_claim\", \"type\": \"assistant\", \"text\": \"The receiver is now running the new alert schedule.\", \"source_id\": \"5ee69eec83e346998ef8d9f0bdee39f0\"}, {\"id\": \"hold_1006_delete\", \"type\": \"delete_observation\", \"text\": \"Delete the obsolete observation; it is no longer a source for this project.\", \"observation_event_id\": \"hold_1006_old\", \"source_id\": null}, {\"id\": \"hold_1006_tail\", \"type\": \"user\", \"text\": \"The caretaker must approve the morning release example before we write receiver settings. That approval is outstanding, as is the write.\", \"source_id\": \"727aa3e94c204e7b963c99c990b75b75\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1006_claim\"}]}, {\"id\": \"hold_1010_s1\", \"project_key\": \"orbit_lessons\", \"events\": [{\"id\": \"hold_1010_old\", \"type\": \"assistant\", \"text\": \"Withdrawn lesson note: require sound for every exercise.\", \"source_id\": \"7ed5cecd1fd44e39b9f2912d3d0d1167\"}, {\"id\": \"hold_1010_start\", \"type\": \"user\", \"text\": \"Orbit lessons need a text alternative for every spoken instruction and a celebratory sound at the end. Learners in the quiet carriage cannot use audio.\", \"source_id\": \"c34cae7b0061405d8e0ff4ce4a0dd923\"}, {\"id\": \"hold_1010_t1\", \"type\": \"tool\", \"text\": \"Orbit lesson preview: all spoken instructions have text alternatives; ending sound demo available. Classroom server unchanged.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1010-t1\"}, \"tool_response\": {\"output\": \"Orbit lesson preview: all spoken instructions have text alternatives; ending sound demo available. Classroom server unchanged.\", \"exit_code\": 0}}, \"source_id\": \"7243e042715f40a88bccb826c09cf88f\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1010_t1\"}]}, {\"id\": \"hold_1010_side\", \"project_key\": \"harbor_lessons\", \"events\": [{\"id\": \"hold_1010_side\", \"type\": \"user\", \"text\": \"Harbor lessons are a separate listening exercise. Audio-only prompts are acceptable there, without changing orbit.\", \"source_id\": \"3d6c2c9379134a42a02623d6c3add43d\"}], \"checkpoints\": []}, {\"id\": \"hold_1010_s2\", \"project_key\": \"orbit_lessons\", \"events\": [{\"id\": \"hold_1010_follow\", \"type\": \"user\", \"text\": \"Return to orbit lessons from our earlier session. Remove the ending sound, but keep every text alternative.\", \"source_id\": \"5ed2b368457241ea875573b37cb64c24\"}, {\"id\": \"hold_1010_t2\", \"type\": \"tool\", \"text\": \"Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1010-t2\"}, \"tool_response\": {\"output\": \"Orbit local audit: text alternatives cover every spoken instruction. Classroom upload disabled.\", \"exit_code\": 0}}, \"source_id\": \"dd4741c206e74356aa66ff1ef11a11ce\"}, {\"id\": \"hold_1010_claim\", \"type\": \"assistant\", \"text\": \"The updated lessons are uploaded to the classroom.\", \"source_id\": \"a3c9f1f8a89a4cd49bd33fab20bab8de\"}, {\"id\": \"hold_1010_delete\", \"type\": \"delete_observation\", \"text\": \"Delete the obsolete observation; it is no longer a source for this project.\", \"observation_event_id\": \"hold_1010_old\", \"source_id\": null}, {\"id\": \"hold_1010_tail\", \"type\": \"user\", \"text\": \"A tutor must approve the silent walkthrough before the classroom upload. That review and upload remain uncompleted.\", \"source_id\": \"99ef3cb53add476789cad3d9007de33a\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1010_claim\"}]}, {\"id\": \"hold_1016_s1\", \"project_key\": \"snowdrop_sync\", \"events\": [{\"id\": \"hold_1016_old\", \"type\": \"assistant\", \"text\": \"Withdrawn sync note: delete local notes missing from the server.\", \"source_id\": \"32a5ce1def604788bb44ff441f10e4cd\"}, {\"id\": \"hold_1016_start\", \"type\": \"user\", \"text\": \"Snowdrop sync must retain local-only notes and offer a summary chart. Field workers can stay offline for days; a note missing from the server may simply not have uploaded yet.\", \"source_id\": \"c43c53c07f484524b6ee360c712bdd2b\"}, {\"id\": \"hold_1016_t1\", \"type\": \"tool\", \"text\": \"Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1016-t1\"}, \"tool_response\": {\"output\": \"Snowdrop sandbox: local-only notes retained; summary chart drafted. Field device sync not run.\", \"exit_code\": 0}}, \"source_id\": \"a11f2ef7a598462897191528835ae562\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1016_t1\"}]}, {\"id\": \"hold_1016_s2\", \"project_key\": \"snowdrop_sync\", \"events\": [{\"id\": \"hold_1016_follow\", \"type\": \"user\", \"text\": \"Reopen snowdrop sync to finish the field rollout. Skip the summary chart, but preserve local-only notes.\", \"source_id\": \"48a70799c5e545f98631f58550d00a86\"}, {\"id\": \"hold_1016_t2\", \"type\": \"tool\", \"text\": \"Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1016-t2\"}, \"tool_response\": {\"output\": \"Snowdrop local simulation: all local-only notes survive. Field rollout executions: 0.\", \"exit_code\": 0}}, \"source_id\": \"4c389ddf2a384db1923f203ab6026680\"}, {\"id\": \"hold_1016_claim\", \"type\": \"assistant\", \"text\": \"The field rollout has completed successfully.\", \"source_id\": \"1ee51db1a4ab4406849301404bac4131\"}, {\"id\": \"hold_1016_delete\", \"type\": \"delete_observation\", \"text\": \"Delete the obsolete observation; it is no longer a source for this project.\", \"observation_event_id\": \"hold_1016_old\", \"source_id\": null}, {\"id\": \"hold_1016_tail\", \"type\": \"user\", \"text\": \"A field coordinator must approve the offline-note example before rollout. That approval is absent, and rollout remains an obligation.\", \"source_id\": \"460f2da1cdbe4a339689f4e2dc4fa396\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1016_claim\"}]}, {\"id\": \"hold_1007_s1\", \"project_key\": \"pebble_exports\", \"events\": [{\"id\": \"hold_1007_old\", \"type\": \"assistant\", \"text\": \"Expired export note: combine household records.\", \"source_id\": \"f18863dd41c14f79ac16b3b3353967be\"}, {\"id\": \"hold_1007_start\", \"type\": \"user\", \"text\": \"Export pebble records one file per household, with a cover sheet as well. Households collect their own envelopes, so a combined file would mix deliveries.\", \"source_id\": \"f1be32a0f2d64381bb5320bf1dcfa892\"}, {\"id\": \"hold_1007_t1\", \"type\": \"tool\", \"text\": \"Pebble sample export: household separation preserved; cover sheet rendered. Envelope queue untouched.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1007-t1\"}, \"tool_response\": {\"output\": \"Pebble sample export: household separation preserved; cover sheet rendered. Envelope queue untouched.\", \"exit_code\": 0}}, \"source_id\": \"c8a2348139e84c7bb30432e957136822\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1007_t1\"}]}, {\"id\": \"hold_1007_side\", \"project_key\": \"willow_imports\", \"events\": [{\"id\": \"hold_1007_side\", \"type\": \"user\", \"text\": \"Willow imports are a separate task: one combined input file is appropriate there. This is not permission to combine pebble exports.\", \"source_id\": \"ab09ada222b64113848cd528e8686663\"}], \"checkpoints\": []}, {\"id\": \"hold_1007_s2\", \"project_key\": \"pebble_exports\", \"events\": [{\"id\": \"hold_1007_follow\", \"type\": \"user\", \"text\": \"Reopen the pebble export task to finish delivery. Forget the cover sheet, but keep one file per household.\", \"source_id\": \"fa43d5bdb7ca4482be0a5a5eb2b197fc\"}, {\"id\": \"hold_1007_t2\", \"type\": \"tool\", \"text\": \"Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.\", \"tool_capture\": {\"tool_name\": \"exec_command\", \"tool_input\": {\"command\": \"inert-fictional-hold_1007-t2\"}, \"tool_response\": {\"output\": \"Pebble sample inspection: each household has its own file. Envelope queue submissions: 0.\", \"exit_code\": 0}}, \"source_id\": \"3616cb2ba4a7445ebd717e4e4669f702\"}, {\"id\": \"hold_1007_claim\", \"type\": \"assistant\", \"text\": \"The pebble files have all been queued for delivery.\", \"source_id\": \"d2c543b6b05447cd8df49c30df00e445\"}, {\"id\": \"hold_1007_delete\", \"type\": \"delete_observation\", \"text\": \"Delete the obsolete observation; it is no longer a source for this project.\", \"observation_event_id\": \"hold_1007_old\", \"source_id\": null}, {\"id\": \"hold_1007_tail\", \"type\": \"user\", \"text\": \"The dispatch steward still must approve the household-to-envelope mapping before queue submission. Keep approval and submission on the todo list.\", \"source_id\": \"df81d6f9d1a34784a8c02c6d0463a0f7\"}], \"checkpoints\": [{\"after_event_id\": \"hold_1007_claim\"}]}]}",
+  "output_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "grades": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "answer-01": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006",
+                            "A0007",
+                            "A0008",
+                            "A0009",
+                            "A0010",
+                            "A0011",
+                            "A0012"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The user cancelled the weekly chart while continuing the same canal task.",
+                          "user",
+                          "cancelled",
+                          "continuing",
+                          "same",
+                          "task",
+                          "The user",
+                          "user cancelled",
+                          "cancelled the",
+                          "chart while",
+                          "while continuing",
+                          "continuing the",
+                          "the same",
+                          "same canal",
+                          "canal task"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004",
+                        "A0005",
+                        "A0006",
+                        "A0007",
+                        "A0008",
+                        "A0009",
+                        "A0010",
+                        "A0011",
+                        "A0012"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-02": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006",
+                            "A0007",
+                            "A0008",
+                            "A0009"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012",
+                            "J0013",
+                            "J0014"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Validation reports independently balanced simulated depot totals, with zero service accounts created.",
+                          "reports",
+                          "balanced",
+                          "zero",
+                          "Validation reports",
+                          "reports independently",
+                          "independently balanced",
+                          "balanced simulated",
+                          "totals, with",
+                          "with zero",
+                          "zero service"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006",
+                            "A0007",
+                            "A0008",
+                            "A0009"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012",
+                            "J0013",
+                            "J0014"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The operations owner must approve the depot list before the still-pending service account creation.",
+                          "must",
+                          "still-pending",
+                          "owner must",
+                          "must approve",
+                          "before the",
+                          "the still-pending",
+                          "still-pending service",
+                          "account creation"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004",
+                        "A0005",
+                        "A0006",
+                        "A0007",
+                        "A0008",
+                        "A0009"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-03": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Overnight noise is unacceptable because the caretaker sleeps beside the receiver.",
+                          "noise is",
+                          "is unacceptable",
+                          "unacceptable because"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004",
+                        "A0005",
+                        "A0006"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-04": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006",
+                            "A0007",
+                            "A0008",
+                            "A0009"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The assistant claimed the updated lessons were uploaded.",
+                          "claimed",
+                          "were",
+                          "assistant claimed",
+                          "claimed the",
+                          "lessons were",
+                          "were uploaded"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  },
+                  "1": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006",
+                            "A0007",
+                            "A0008",
+                            "A0009"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The tool output says classroom upload was disabled; upload is unverified.",
+                          "tool",
+                          "says",
+                          "was",
+                          "unverified",
+                          "The tool",
+                          "tool output",
+                          "output says",
+                          "says classroom",
+                          "upload was",
+                          "was disabled",
+                          "disabled; upload",
+                          "upload is",
+                          "is unverified"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0",
+                  "1"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004",
+                        "A0005",
+                        "A0006",
+                        "A0007",
+                        "A0008",
+                        "A0009"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-05": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004",
+                            "A0005",
+                            "A0006",
+                            "A0007",
+                            "A0008"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012",
+                            "J0013"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "Snowdrop sync must preserve local-only notes."
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004",
+                        "A0005",
+                        "A0006",
+                        "A0007",
+                        "A0008"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          },
+          "answer-06": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "full_supported_answer": {
+                "type": "boolean"
+              },
+              "current_state_actionable": {
+                "type": "boolean"
+              },
+              "constraints_obligations_reasons_recalled": {
+                "type": "boolean"
+              },
+              "citations_supported": {
+                "type": "boolean"
+              },
+              "empty_or_evasive": {
+                "type": "boolean"
+              },
+              "critical_errors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "false_merge",
+                    "false_closure",
+                    "project_mixing",
+                    "deleted_resurrection"
+                  ]
+                }
+              },
+              "fact_recall": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "0": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "recalled": {
+                        "type": "boolean"
+                      },
+                      "answer_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "A0001",
+                            "A0002",
+                            "A0003",
+                            "A0004"
+                          ]
+                        }
+                      },
+                      "source_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "J0001",
+                            "J0002",
+                            "J0003",
+                            "J0004",
+                            "J0005",
+                            "J0006",
+                            "J0007",
+                            "J0008",
+                            "J0009",
+                            "J0010",
+                            "J0011",
+                            "J0012"
+                          ]
+                        }
+                      },
+                      "omission_reason": {
+                        "type": "string",
+                        "enum": [
+                          "not_omitted",
+                          "literal_omission",
+                          "semantic_omission",
+                          "uncertain"
+                        ]
+                      },
+                      "missing_anchor": {
+                        "type": "string",
+                        "enum": [
+                          "",
+                          "The cover sheet was withdrawn while reopening the same pebble task to finish delivery.",
+                          "was",
+                          "withdrawn",
+                          "while",
+                          "reopening",
+                          "same",
+                          "task",
+                          "sheet was",
+                          "was withdrawn",
+                          "withdrawn while",
+                          "while reopening",
+                          "reopening the",
+                          "the same",
+                          "same pebble",
+                          "pebble task",
+                          "task to"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recalled",
+                      "answer_refs",
+                      "source_refs",
+                      "omission_reason",
+                      "missing_anchor"
+                    ]
+                  }
+                },
+                "required": [
+                  "0"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "critical_witnesses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "error_type": {
+                      "type": "string",
+                      "enum": [
+                        "false_merge",
+                        "false_closure",
+                        "project_mixing",
+                        "deleted_resurrection"
+                      ]
+                    },
+                    "answer_ref": {
+                      "type": "string",
+                      "enum": [
+                        "A0001",
+                        "A0002",
+                        "A0003",
+                        "A0004"
+                      ]
+                    },
+                    "assertion_mode": {
+                      "type": "string",
+                      "enum": [
+                        "affirmative_current",
+                        "negated",
+                        "historical",
+                        "quoted_report",
+                        "conditional",
+                        "uncertain"
+                      ]
+                    },
+                    "relation": {
+                      "type": "string",
+                      "enum": [
+                        "asserts_forbidden_conclusion",
+                        "does_not_assert",
+                        "uncertain"
+                      ]
+                    },
+                    "prohibition_ref": {
+                      "type": "string",
+                      "enum": [
+                        "policy:false_merge",
+                        "policy:false_closure",
+                        "policy:project_mixing",
+                        "policy:deleted_resurrection"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error_type",
+                    "answer_ref",
+                    "assertion_mode",
+                    "relation",
+                    "prohibition_ref"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "full_supported_answer",
+              "current_state_actionable",
+              "constraints_obligations_reasons_recalled",
+              "citations_supported",
+              "empty_or_evasive",
+              "critical_errors",
+              "fact_recall",
+              "rationale",
+              "critical_witnesses"
+            ]
+          }
+        },
+        "required": [
+          "answer-01",
+          "answer-02",
+          "answer-03",
+          "answer-04",
+          "answer-05",
+          "answer-06"
+        ]
+      }
+    },
+    "required": [
+      "grades"
+    ]
+  }
+}

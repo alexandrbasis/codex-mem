@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "trial": "R12",
+  "status": "complete_failed",
+  "quality_status": "failed_acceptance",
+  "decision": "fail",
+  "goal_achieved": false,
+  "primary_complete": true,
+  "repeats_complete": true,
+  "main_results_pending": false,
+  "main_quality_score": 0.8125,
+  "main_gain_percentage_points": 6.25,
+  "main_usage_final": {
+    "hypothetical_api_equivalent_usd": {
+      "standard": "20.8715993",
+      "fast": "41.7431986"
+    },
+    "pricing_snapshot": "openai-2026-10-07.1",
+    "attempted_calls": 317,
+    "finished_calls": 317,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 317,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "calls_with_partial_tokens": 0,
+    "partial_total_tokens_lower_bound": 0,
+    "reported_tokens_lower_bound": {
+      "input_tokens": 4741390,
+      "cached_input_tokens": 89600,
+      "output_tokens": 131892,
+      "total_tokens": 4873282
+    },
+    "tokens": {
+      "input_tokens": 4741390,
+      "cached_input_tokens": 89600,
+      "output_tokens": 131892,
+      "total_tokens": 4873282
+    },
+    "pricing_complete": false,
+    "token_accounting_complete": true,
+    "cost_usd": null
+  },
+  "main_answers_or_grades_read_for_draft": false,
+  "histories": 16,
+  "planned_questions_per_arm": 96,
+  "required_facts": 101,
+  "prior_usage": {
+    "attempted_calls": 1681,
+    "total_tokens": 27181658
+  },
+  "public_preflight_usage": {
+    "attempted_calls": 9,
+    "finished_calls": 9,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "total_tokens": 154431,
+    "included_in_running_trial_ledger": true
+  },
+  "public_preflight": {
+    "status": "passed_known_controls_only",
+    "producer": "passed",
+    "reader_fully_supported": 6,
+    "reader_questions": 6,
+    "critical_errors": 0,
+    "known_judge_controls_matched": 6,
+    "independent_quality_validation": false,
+    "source": "public-preflight/summary.json"
+  },
+  "comparison": {
+    "shared_generation_runtime": "candidate",
+    "baseline_retrieval": "dd60f1c8bc7788b856e80b626975b2f609aa394a",
+    "candidate_read_only": true,
+    "generation_advantage_between_arms_measured": false,
+    "canonical_storage_format_unchanged": true
+  },
+  "profiles": {
+    "generation": "gpt-6-luna medium",
+    "reader": "gpt-6.1-sol medium",
+    "judge": "gpt-6-astra medium",
+    "experiment_only": true
+  },
+  "original_started_at": 1792593689.827082,
+  "limits": {
+    "max_calls": 340,
+    "max_observed_tokens": 5500000,
+    "wall_seconds": 5400,
+    "call_seconds": 180,
+    "per_call_token_reservation": 100000
+  },
+  "historical_results_regraded": false,
+  "installed_loaded_source_verified": false,
+  "final_package_pending": true,
+  "user_review_pending": true,
+  "commit_pending": true,
+  "variants": {
+    "baseline": {
+      "questions_planned": 96,
+      "questions_graded": 96,
+      "full_supported_count": 72,
+      "full_supported_rate": 0.75,
+      "critical_errors": 2,
+      "critical_errors_by_type": {
+        "false_merge": 0,
+        "false_closure": 1,
+        "project_mixing": 0,
+        "deleted_resurrection": 1
+      },
+      "context_chars_max": 5921,
+      "reader_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 5,
+        "critical_errors": 0,
+        "source": "holdout/fictional-run-evidence.tar.gz: baseline/hold_902/judge-1.json"
+      },
+      "regeneration_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 5,
+        "critical_errors": 0
+      }
+    },
+    "candidate": {
+      "questions_planned": 96,
+      "questions_graded": 96,
+      "full_supported_count": 78,
+      "full_supported_rate": 0.8125,
+      "critical_errors": 2,
+      "critical_errors_by_type": {
+        "false_merge": 0,
+        "false_closure": 1,
+        "project_mixing": 0,
+        "deleted_resurrection": 1
+      },
+      "context_chars_max": 5922,
+      "reader_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 5,
+        "critical_errors": 0,
+        "source": "holdout/fictional-run-evidence.tar.gz: candidate/hold_902/judge-1.json"
+      },
+      "regeneration_repeat": {
+        "questions_graded": 6,
+        "full_supported_count": 5,
+        "critical_errors": 0
+      }
+    }
+  },
+  "pipeline_failures": [],
+  "combined_usage": {
+    "attempted_calls": 1998,
+    "finished_calls": 1998,
+    "failed_calls": 0,
+    "unresolved_calls": 0,
+    "calls_with_reported_tokens": 1998,
+    "calls_with_unknown_or_partial_tokens": 0,
+    "tokens": {
+      "input_tokens": 30857213,
+      "cached_input_tokens": 1928960,
+      "output_tokens": 1197727,
+      "total_tokens": 32054940
+    },
+    "token_accounting_complete": true,
+    "hypothetical_api_equivalent_usd": {
+      "standard": "47.57521740",
+      "fast": "95.15043480"
+    },
+    "cost_usd": null,
+    "scope": "Previous completed pilot plus every native attempt in this iteration. Current iteration limits apply only to its own ledger."
+  },
+  "main_result_source": "holdout/report.json",
+  "main_result_sha256": "8bc08d2748d2f8915a83029d358883945a818448b175a7ce86ff2eefb4a95eeb",
+  "failed_gates": [
+    "candidate_fully_supported_below_90_percent",
+    "gain_below_10_percentage_points",
+    "candidate_primary_critical_errors",
+    "individual_paired_constraint_fact_loss"
+  ],
+  "paired_fact_losses": [
+    {
+      "history_id": "hold_915",
+      "question_id": "q1",
+      "fact_index": 0,
+      "category": "constraint"
+    }
+  ],
+  "paired_recall_losses": [
+    {
+      "history_id": "hold_910",
+      "question_id": "q1"
+    },
+    {
+      "history_id": "hold_915",
+      "question_id": "q1"
+    }
+  ],
+  "public_usage_already_in_trial_total": true,
+  "normal_export": {
+    "manifest": "holdout/export-manifest.json",
+    "question_records": 96,
+    "archived_files": 1177
+  },
+  "critical_diagnosis": {
+    "source": "critical-source-diagnosis.json",
+    "grade_labels_unchanged": true,
+    "deleted_text_storage_leak_demonstrated": false,
+    "mechanisms": [
+      "withdrawn obligation revived from surviving independent user source; later withdrawal missing in view",
+      "later pass assigned to first check; initial failure missing in view"
+    ]
+  },
+  "noncritical_diagnosis_pending": false,
+  "goal_repair_continues": true,
+  "summary_final_audit_pending": false,
+  "final_audit_pending": false,
+  "final_export_audit": {
+    "path": "final-export-audit.json",
+    "status": "passed_with_limits",
+    "native_request_response_pairs": 317,
+    "archive_members": 1177,
+    "question_records": 96,
+    "graded_logical_attempts": 216,
+    "exact_reuses": 4,
+    "actual_counted_once": true,
+    "equivalent_usage_attributed_both_arms": true,
+    "audit_bound_summary_sha256": "7ad2f109901cc314cac0f1b3b15d6c142bd708c4cdd9381dc756eadc4c0d2f9a",
+    "current_update": "Diagnostic links and completed audit appended after audit; frozen results unchanged."
+  },
+  "noncritical_diagnosis": {
+    "path": "noncritical-retention-diagnosis.json",
+    "candidate_nonfull_total": 18,
+    "missing_fact_questions": 11,
+    "missing_facts": 12,
+    "pre_render_lexical_losses": 10,
+    "budget_losses": 2,
+    "other_hidden_revision_stale_scope_cases": 4,
+    "extra_citation_cases_with_required_fact_visible": 1,
+    "critical_cases_separate": 2,
+    "capture_generation_or_hard_guard_loss_shown": false,
+    "fully_visible_extra_citation_unfixed": "hold_915/q3"
+  },
+  "future_r13": {
+    "repair_underway": true,
+    "authoring_new_sealed_set": true,
+    "native_clock_started": false,
+    "native_calls": 0,
+    "r12_regraded": false
+  }
+}

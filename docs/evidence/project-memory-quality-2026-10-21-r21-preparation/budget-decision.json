@@ -1,0 +1,45 @@
+{
+  "status": "prospective_root_budget_decision_before_clock_or_native",
+  "decided_at": "2026-10-22T06:07:36.901324+00:00",
+  "limits": {
+    "max_calls": 420,
+    "max_reported_tokens": 7000000,
+    "max_seconds": 7200,
+    "per_call_seconds": 180,
+    "per_call_token_reservation": 100000
+  },
+  "planned_call_allocation": {
+    "main_generation": 144,
+    "regeneration_generation": 9,
+    "isolated_readers": 216,
+    "judges": 36,
+    "public_readers": 8,
+    "public_judges": 2,
+    "planned_total": 415,
+    "additional_call_capacity": 5
+  },
+  "resource_basis": {
+    "author_manifest_version": "v001",
+    "author_manifest_sha256": "589eb0a884d79c0dce2a97ff67ec3032e11007ae88f7b685bcdf66bb508b95c0",
+    "histories": 16,
+    "observations_per_history": 9,
+    "delete_actions_per_history": 1,
+    "sessions_per_history": 3,
+    "checkpoints_per_history": 2,
+    "observations_total": 144,
+    "deletions_total": 16,
+    "sessions_total": 48,
+    "checkpoints_total": 32
+  },
+  "new_round_count_cap_reason": "Prospective capacity for nine observations per history and two additional public readers; R20 max360 ledger and completed FAIL remain immutable. Token/time/per-call limits unchanged.",
+  "native_clock_started": false,
+  "native_calls": 0,
+  "parent_private_case_gold_rationale_fullreview_opened": false,
+  "semantic_review_accepted": false,
+  "limits_notes": [
+    "This plans resource capacity; one call per observation is a conservative allocation assumption, not a proof of every processor job count.",
+    "Actual protocol must bind the final accepted contents-free resource counts and exact public call count before any clock/native dispatch.",
+    "No automatic increase or clock reset after dispatch; preserve budget/unknown-usage stops as incomplete.",
+    "This is root authorization within the active user goal, not a request for a new user approval."
+  ]
+}

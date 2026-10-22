@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "fictional": true,
+  "author_role": "independent sealed author",
+  "counts": {
+    "histories": 16,
+    "questions": 96,
+    "sessions": 56,
+    "events": 176,
+    "tool_captures": 32,
+    "checkpoints": 32,
+    "deletions": 16
+  },
+  "input_pins": {
+    "author.py": "ca608b67c3c72965f9cb62d2866a9cf180e29dd6c7bb372e6de8bebe7181119d",
+    "holdout-fixture.json": "0c2db67532aa05ff74ace4200642728a13c8401531d8b091fd165bc3fb186ba2",
+    "holdout-gold.json": "e63e919406c83782e759dff987d404b3ae9315a73dc3abc2896bfd6d103c13d2",
+    "public_validator.py": "404ee7b4958a816fb38388154c67cf3ef4b294d5d28a8e5f23bd28114583a0dd"
+  },
+  "self_checks": "PASS: IDs; final question coverage; exact support offsets; source existence; same-project deletion order; deleted-source exclusion; capture shape; command inertness; project scope; checkpoint placement; continuation after checkpoint",
+  "public_validator": {
+    "source": "scripts/project_memory_consolidation_experiment.py",
+    "read_lines": "38-137 inclusive",
+    "execution": "runpy.run_path(public_validator.py), then fixture(holdout-fixture.json); standard imports only; no product module imports",
+    "validator_file_sha256": "404ee7b4958a816fb38388154c67cf3ef4b294d5d28a8e5f23bd28114583a0dd",
+    "source_span_sha256": "e07ae41f8ca96a97e40459010222342d562d8cb1fe3505bbc0e7e69882ab618d",
+    "result": "PASS; returned fixture equals generated fixture"
+  },
+  "disclosure": {
+    "injected_memory_summary_visible": true,
+    "injected_memory_summary_used": false,
+    "prior_fixtures_gold_results_read": false,
+    "product_runtime_or_judge_code_read": false,
+    "optional_capture_interface_read": false,
+    "model_dispatch": false,
+    "semantic_scoring": false,
+    "product_store_generation": false
+  },
+  "release_gate": "SEALED. Author must verify exact frozen protocol and product hashes before explicit freeze-plus-release; no release inferred from successful validation.",
+  "limitations": [
+    "No semantic scoring or runtime behavior tested.",
+    "Fictional captures are inert authored evidence, not executed commands.",
+    "Public validator span includes constant declarations and helper definitions; only fixture and its validation dependencies were invoked.",
+    "Exact implementation source span extraction read the source file into memory, retained only lines 38-137, and did not inspect or execute the remaining source."
+  ]
+}

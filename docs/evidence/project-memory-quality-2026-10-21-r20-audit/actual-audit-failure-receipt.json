@@ -1,0 +1,48 @@
+{
+  "status": "approved_main_audit_blocked_by_metadata_schema_mismatch_archive_reproduction_passed",
+  "actual_main_exit_code": 1,
+  "observed_failure": {
+    "type": "KeyError",
+    "key": "archive_sha256",
+    "line": 95,
+    "metadata": "R20/frozen-source-archive.json",
+    "actual_keys": [
+      "status",
+      "runtime_files",
+      "runtime_archive_sha256",
+      "helper_sha256",
+      "native_calls",
+      "actual_trial_freeze"
+    ],
+    "scope": "Approved auditor assumes prior source archive schema. Actual metadata uses different archive fingerprint key. No reviewed source was patched."
+  },
+  "authoritative_archive_supplement_sha256": "d2d772f75f32a10bcf7d5d8f026d7bd0813655a820b3593f1f57ae62be1a367e",
+  "archive_members_reproduced": 1223,
+  "archive_checks": {
+    "all_members_reproduced": true,
+    "changed_members_exact": true,
+    "private_archive_hash": true,
+    "public_archive_bytes": true,
+    "no_db_or_configs": true
+  },
+  "source_sha256": {
+    "audit-final-export.py": "54fe2614655154bd01ee3080e190e76843357b12181d04a25b925d59e9cd8c91",
+    "audit-final-export-v2.py": "a001f756c4d862d64ca628ab5886e44419ceb476a5351ed085eab06a86d1b235",
+    "release_schema_v2.py": "a68c05c9c1b6ceee2a740c97b3d8b5061502d2fcedadaf9ab104ac53e401b341",
+    "actual-audit-binding.json": "41602f2e80b458311205380b1f568f6571d7d774fb926ebd96c1478b78da055e",
+    "actual-main-audit.log": "ecd0d4f143e9ddfc1316e0c719519618a718d610d07f1430e04b0f6ce47a7a61",
+    "actual-archive-audit.log": "8b1c51bb24013490e6f88a6fd3de91b0e2be927791ad1aabef38ebd78695bdf8"
+  },
+  "export_sha256": {
+    "report.json": "c162dcd3674c4ba2cf940555e10bb01630e4588911c5e63268c5f858755e8ea0",
+    "export-manifest.json": "ba9d32797923a0e76804b0f2f186f5a2f27317ea1a805ac39976bc41cdf3802f",
+    "fictional-run-evidence.tar.gz": "baf64c631eaaee6fcca9d82a5b693c1b3233eaa0958e58217164e2bbd576b2e5"
+  },
+  "quality_decision_not_changed": "fail",
+  "actual_native_or_regrade_calls": 0,
+  "remaining_gaps": [
+    "Full independent main audit did not complete. No new claim about216slots/ledger/profiles/accounting/DB/grades/privacy beyond standalone archive reconstruction result.",
+    "Reviewed auditor requires an explicitly authorized append-only compatibility revision for source archive metadata before the full actual audit can run."
+  ],
+  "no_approved_script_or_trial_input_source_export_grade_changed": true
+}

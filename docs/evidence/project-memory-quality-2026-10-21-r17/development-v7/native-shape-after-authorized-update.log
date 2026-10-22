@@ -1,0 +1,25 @@
+.FF.
+======================================================================
+FAIL: test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 71, in test_exact_boundary_retains_all_three_execution_components_or_omits_whole_group
+    self.assertEqual(render_project_brief(brief, budget=len(full)), full)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '<pro[191 chars]e"/><omitted records="1" fields="2"/></project-memory>' != '<pro[191 chars]e"/><item id="a51b6ee24cac467e9322ed6e317ba942[896 chars]ory>'
+Diff is 1397 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_two_project_views_keep_atomic_originals_and_owner_fences_at_2900_each (test_project_memory_compact_execution_transport.CompactExecutionTransportTests.test_two_project_views_keep_atomic_originals_and_owner_fences_at_2900_each)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/alexandrbasis/Desktop/Coding/codex-mem-public/tests/test_project_memory_compact_execution_transport.py", line 123, in test_two_project_views_keep_atomic_originals_and_owner_fences_at_2900_each
+    self.assertEqual(brief['xml'], xml)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+AssertionError: '<pro[578 chars]ce" source_role="tool_record" signal_kind="obs[947 chars]ory>' != '<pro[578 chars]ce" selection_basis="captured_execution_shape"[784 chars]ory>'
+Diff is 5213 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.065s
+
+FAILED (failures=2)

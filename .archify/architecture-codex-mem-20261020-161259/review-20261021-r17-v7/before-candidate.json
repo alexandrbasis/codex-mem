@@ -1,0 +1,591 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Codex Mem 1.12.0 project memory",
+    "output": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/alexandrbasis/codex-mem.git",
+      "revision": "df01962a712de0d9aacbf2f20d05e41780755373",
+      "link_mode": "local-only"
+    },
+    "locale": "en"
+  },
+  "components": [
+    {
+      "id": "host",
+      "type": "external",
+      "label": "Codex session",
+      "sublabel": "Messages and tool calls",
+      "pos": [
+        20,
+        30
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "hooks/hooks.json",
+          "line": 1,
+          "end_line": 74,
+          "label": "Lifecycle events"
+        }
+      ]
+    },
+    {
+      "id": "capture",
+      "type": "security",
+      "label": "Capture observations",
+      "sublabel": "Selection, cleanup, limits",
+      "pos": [
+        20,
+        220
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/hooks.py",
+          "line": 926,
+          "end_line": 979,
+          "label": "Clean and save"
+        },
+        {
+          "path": "codex_mem/config.py",
+          "line": 220,
+          "end_line": 243,
+          "label": "Selected project access"
+        }
+      ]
+    },
+    {
+      "id": "sources",
+      "type": "database",
+      "label": "Sources and queue",
+      "sublabel": "SQLite: entries, events, jobs",
+      "pos": [
+        350,
+        220
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/store.py",
+          "line": 1910,
+          "end_line": 1979,
+          "label": "Atomic write"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 75,
+          "end_line": 86,
+          "label": "Queue an event"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 229,
+          "end_line": 254,
+          "label": "Signals from pending events"
+        }
+      ]
+    },
+    {
+      "id": "daemon",
+      "type": "backend",
+      "label": "Background service",
+      "sublabel": "Events, split heads, retries",
+      "pos": [
+        730,
+        220
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/service.py",
+          "line": 695,
+          "end_line": 706,
+          "label": "Two processing paths"
+        },
+        {
+          "path": "codex_mem/service.py",
+          "line": 905,
+          "end_line": 955,
+          "label": "Discover pending PM work"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 370,
+          "end_line": 472,
+          "label": "Bounded reconsideration and lease"
+        }
+      ]
+    },
+    {
+      "id": "generator",
+      "type": "backend",
+      "label": "Episode processing",
+      "sublabel": "New events or retained sources",
+      "pos": [
+        730,
+        460
+      ],
+      "size": [
+        220,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/episode_processor.py",
+          "line": 804,
+          "end_line": 969,
+          "label": "Proposal, preparation, assessment and commit"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 733,
+          "end_line": 788,
+          "label": "Isolated worker"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 1381,
+          "end_line": 1408,
+          "label": "Disabled tools"
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "cloud",
+      "label": "OpenAI model",
+      "sublabel": "Through Codex app-server",
+      "pos": [
+        350,
+        460
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/processor.py",
+          "line": 733,
+          "end_line": 788,
+          "label": "Provider call"
+        }
+      ]
+    },
+    {
+      "id": "legacy",
+      "type": "backend",
+      "label": "Note processor",
+      "sublabel": "Independent legacy path",
+      "pos": [
+        1000,
+        460
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/service.py",
+          "line": 791,
+          "end_line": 820,
+          "label": "Start the note processor"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 227,
+          "end_line": 248,
+          "label": "Lease observations"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 403,
+          "end_line": 422,
+          "label": "Save notes"
+        }
+      ]
+    },
+    {
+      "id": "commit",
+      "type": "security",
+      "label": "Validate and commit",
+      "sublabel": "Prepare, assess, fence writes",
+      "pos": [
+        730,
+        700
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 801,
+          "end_line": 922,
+          "label": "Shared final preparation and commit digest fence"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 599,
+          "end_line": 799,
+          "label": "State, continuity, scope and transition guards"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 1029,
+          "end_line": 1071,
+          "label": "Assemble attributed original excerpts"
+        }
+      ]
+    },
+    {
+      "id": "ledger",
+      "type": "database",
+      "label": "Project state",
+      "sublabel": "Episodes, claims, source custody",
+      "pos": [
+        350,
+        700
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 40,
+          "end_line": 145,
+          "label": "State schema, revocation and protected sources"
+        },
+        {
+          "path": "codex_mem/project_memory.py",
+          "line": 887,
+          "end_line": 971,
+          "label": "Atomic versions, custody and queue progress"
+        },
+        {
+          "path": "codex_mem/project_memory_custody.py",
+          "line": 12,
+          "end_line": 152,
+          "label": "Custody state and bounded unresolved reads"
+        }
+      ]
+    },
+    {
+      "id": "notes",
+      "type": "database",
+      "label": "Stored notes",
+      "sublabel": "The same SQLite and Store",
+      "pos": [
+        1000,
+        700
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/processor.py",
+          "line": 403,
+          "end_line": 422,
+          "label": "Save the result"
+        },
+        {
+          "path": "codex_mem/store.py",
+          "line": 3153,
+          "end_line": 3195,
+          "label": "Finish the leased observation batch"
+        }
+      ]
+    },
+    {
+      "id": "recall",
+      "type": "backend",
+      "label": "Select context",
+      "sublabel": "Whole quotes, obligations, custody",
+      "pos": [
+        350,
+        940
+      ],
+      "size": [
+        200,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/project_memory_retrieval.py",
+          "line": 30,
+          "end_line": 1807,
+          "label": "Scoped evidence, bounded custody and rendering"
+        },
+        {
+          "path": "codex_mem/store.py",
+          "line": 5556,
+          "end_line": 5795,
+          "label": "Selected scope validation and context budget"
+        },
+        {
+          "path": "codex_mem/project_memory_query.py",
+          "line": 24,
+          "end_line": 535,
+          "label": "Subjects, answer facets and capture order"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "type": "frontend",
+      "label": "Context and API",
+      "sublabel": "SessionStart · MCP · CLI",
+      "pos": [
+        20,
+        940
+      ],
+      "size": [
+        220,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/hooks.py",
+          "line": 872,
+          "end_line": 909,
+          "label": "Untrusted context"
+        },
+        {
+          "path": "codex_mem/mcp.py",
+          "line": 810,
+          "end_line": 822,
+          "label": "memory_project_state"
+        },
+        {
+          "path": "codex_mem/cli.py",
+          "line": 764,
+          "end_line": 788,
+          "label": "State commands"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "host-capture",
+      "from": "host",
+      "to": "capture",
+      "label": "hooks",
+      "variant": "default"
+    },
+    {
+      "id": "capture-sources",
+      "from": "capture",
+      "to": "sources",
+      "label": "if permitted",
+      "variant": "security"
+    },
+    {
+      "id": "sources-daemon",
+      "from": "sources",
+      "to": "daemon",
+      "label": "eligible work",
+      "variant": "dashed"
+    },
+    {
+      "id": "daemon-generator",
+      "from": "daemon",
+      "to": "generator",
+      "label": "event / repair job",
+      "variant": "emphasis"
+    },
+    {
+      "id": "generator-provider",
+      "from": "generator",
+      "to": "provider",
+      "label": "model call",
+      "variant": "default"
+    },
+    {
+      "id": "generator-commit",
+      "from": "generator",
+      "to": "commit",
+      "label": "proposal",
+      "variant": "default"
+    },
+    {
+      "id": "commit-ledger",
+      "from": "commit",
+      "to": "ledger",
+      "label": "if checks pass",
+      "variant": "security"
+    },
+    {
+      "id": "daemon-legacy",
+      "from": "daemon",
+      "to": "legacy",
+      "label": "legacy queue",
+      "variant": "dashed"
+    },
+    {
+      "id": "legacy-notes",
+      "from": "legacy",
+      "to": "notes",
+      "label": "notes",
+      "variant": "default"
+    },
+    {
+      "id": "ledger-recall",
+      "from": "ledger",
+      "to": "recall",
+      "label": "pilot / explicit shadow",
+      "variant": "default"
+    },
+    {
+      "id": "notes-recall",
+      "from": "notes",
+      "to": "recall",
+      "label": "note search",
+      "variant": "default"
+    },
+    {
+      "id": "recall-delivery",
+      "from": "recall",
+      "to": "delivery",
+      "label": "records + XML",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sources-fast-recall",
+      "from": "sources",
+      "to": "recall",
+      "label": "signals + original roles",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Document scope",
+      "items": [
+        "This document describes the 1.12.0 code in the working directory on October 21, 2026. It records local implementation, not installed-service or production state.",
+        "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
+        "The diagram, supporting text, Archify controls, and HTML language attribute use English."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "How memory accumulates",
+      "items": [
+        "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1910-1979, service.py:905-955.",
+        "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:288-324,1124-1129.",
+        "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:229-254,1098-1122,1272-1299.",
+        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:804-908.",
+        "After eligible event batches, discovery can schedule a bounded reconsideration job for split heads with the same positive task identity in original user evidence. It reuses pm_jobs and retained observations. It does not replay a transcript. A completed fingerprint prevents repeated no-op calls for unchanged candidates. Sources: project_memory.py:370-472,1330-1348.",
+        "Ordinary event jobs can disclose historical original sources for matching task IDs within their existing input budget. Historical sources do not advance the event queue again. Disclosure reports omitted heads, ancestor chains, and sources. Sources: project_memory.py:325-368,954-960.",
+        "Commit records neutral custody identities and offsets for newly consumed user source fragments in the same transaction as queue progress. Reconsideration and historical disclosure do not backfill custody. Source text stays in the existing source store. Sources: project_memory.py:954-962, project_memory_custody.py:12-37."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Who can change state",
+      "items": [
+        "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, revision, deletion generation, and current episode head. Objects, links, custody records, the current head, and queue progress commit in one transaction. Sources: project_memory.py:599-799,887-971.",
+        "ProjectMemory.prepare uses the same final assembly as commit, including historical prior_ fields. Optional assessment runs outside the write transaction. Commit rebuilds the records and compares the assessed digest. Preparation grants no lease and bypasses no source or revision guard. Sources: project_memory.py:801-922, episode_processor.py:909-922.",
+        "Unsupported completion or acceptance becomes a proposal. Unsupported links that close or replace records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the field purpose or full conclusion follows from the text. Sources: project_memory.py:654-687,779-799.",
+        "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Custody source references cascade on source deletion. Sources: project_memory.py:88-145, project_memory_custody.py:12-18, store.py:5797-5833.",
+        "A reconsideration proposal can continue one current head and consolidate other eligible heads. Exact source spans must support explicit continuity and the same task identity. Commit creates a new immutable version and dependency links. Original records stay addressable. Consolidation does not close open claims. Sources: project_memory.py:731-756,924-953,1390-1479.",
+        "Discovery inspects at most 100 heads and 64 identity sources totaling 24,000 characters. A job uses at most four heads, eight ancestors per head, 32 retained sources, and 24,000 source characters. Lower caller limits apply. A larger group uses the oldest three heads and newest head. Metadata reports omissions and incomplete history. Source: project_memory.py:370-472.",
+        "New heads rebuild earlier goals, reasons, outcomes, and open work in prior_ fields from each field's own disclosed original references. Earlier model prose is not copied. Missing or oversized historical context increments the omission count. Current validity stays unresolved. This does not create or reopen active claims. Source: project_memory.py:801-857.",
+        "Native output v12 excludes project membership and object identity from generated values. Code binds omitted worktree scope to the claimed project and object identity to array position. Each claim owns its required outgoing_relations. Trusted code supplies the origin and flattens them into unchanged canonical relations. Empty claims cannot express a native relation. Existing targets and evidence remain required. Explicit canonical foreign values still fail storage validation. Sources: episode_processor.py:44-138,412-462, project_memory.py:658-666.",
+        "Storage code assembles episode summary, goal, rationale, outcome, and open_work, plus claim rationale, from each field's own original source sentences. Text carries source-role labels, original offsets, and field_provenance. Field association remains model-selected. Assistant and tool statements retain their original roles. Sources: project_memory.py:757-762,1029-1071.",
+        "A current attributed field must fit 6,000 characters and 32 references. Assembled objects and relations must fit 180,000 serialized characters. Oversized current output is rejected atomically. Source sentences cut by a disclosed-body boundary carry partial-context labels. Earlier stored versions are not retroactively verified. Sources: project_memory.py:836-857,1029-1071.",
+        "A supported affirmative user command to reopen one confirmed task ID can support continuity. English accepts one short for/to/because explanation. Russian accepts для/чтобы/потому что. The recognizer rejects questions, known negations, conditions, approval-dependent wording, quoted examples, tool reports, and distinct-task wording. Unrecognized wording stays unresolved. Claim transitions use separate checks. Sources: project_memory.py:1307-1479.",
+        "A custody row is source bookkeeping, not a separate requirement claim. This does not negate an explicit request inside the original user source. Only eligible whole-source exact-text claims can establish complete representation. Paraphrases, overlap, and partial compound clauses leave custody unresolved. Closure links can project completion. Replacement returns custody to unresolved. Cancellation is not inferred. Session exclusion applies to the source, represented claim, and transition evidence. Source: project_memory_custody.py:40-140.",
+        "Event processing uses project-memory-v4. Reconsideration fingerprints use task-consolidation-v4. These policy identifiers do not migrate earlier records or prove deployment. Source: project_memory.py:20-21,313-317,407-452.",
+        "Native v11 indexed relations and mixed layouts reject the whole batch. Code neither invents an origin nor silently drops a malformed relation. Native arrays have per-owner bounds; code additionally enforces eight relations across all owners. Canonical injected outputs and storage remain unchanged, without migration or backfill. Structural ownership does not prove target relevance or semantic support. Sources: episode_processor.py:120-138,412-462,900-905."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "What the agent receives",
+      "items": [
+        "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. It includes history when requested. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807 integration.py:70-132.",
+        "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:220-243.",
+        "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5758-5795, hooks.py:872-909.",
+        "The brief renders prior_goal, prior_rationale, prior_outcome, and prior_open_work as historical fields. It includes their original source pointers and unresolved-current-validity status. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "The brief renders complete exact quotation groups with source IDs, roles, and original offsets. A group that cannot fit is omitted whole. The renderer reserves bounded room for later obligations, open work, reasons, and source custody before an early record consumes space with secondary outcomes. Oversized reservations do not block a fitting primary group. Omission counts remain visible when space permits. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Natural-language projections prefer open work and reasons before incidental outcomes and summaries. Rationale and environment projections keep separate priorities. Complete emitted intervals can suppress repeated quotations from the same source field and role. Suppressed inferred episode field associations remain counted in field_associations_omitted. Source availability is not complete representation of every inferred field. Oversized groups leave smaller alternatives eligible. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Unresolved custody sources remain render candidates even when candidate material covers their source. Only complete intervals actually emitted from the same source ID, field and role can suppress a redundant fallback. A candidate field that later fails to fit never counts as displayed evidence. Suppression changes display only and never discharges custody. Source rows remain original user text, without a separate requirement claim. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807 project_memory_custody.py:121-140.",
+        "Custody filters source identities through the existing entries_fts index before applying the candidate limit. This keeps matching later sources eligible without a body scan or a second search index. Coverage separately reports matched, unmatched, and matched-but-omitted sources. Matching does not infer a user obligation. Sources: project_memory_custody.py:75-146, project_memory.py:222-227.",
+        "The local planner recognizes conservative complete English frames for subject-free outcome, evidence-purpose, latest-request relation and assistant-role questions. A current assessment of an earlier assistant claim can include earlier episode versions and execution evidence. Explicit as-of wording keeps its historical scope. Residual topic words retain lexical matching. Exact task IDs, identifiers, versions and environments keep their constraints. Comparison inflections such as compared and comparing select comparative evidence rather than an as-of slice. This selects evidence without judging the claim. Sources: project_memory_query.py:131-342,371-535 project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Query-specific original assistant reports and validated execution records can reach the reader independently of extracted field citations. The source store applies project and query FTS constraints before selecting at most sixteen candidates per role and returning at most two. Privacy, task, version, environment, excluded-session and deletion guards still apply. Assistant reports must fit their complete source within 1,200 characters. Oversized or invalid source records remain omitted with coverage counts. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Original-role records preserve attribution. An assistant report proves only that the assistant reported it. Validated execution records carry captured command, exit and complete output together as one group. The renderer includes the whole group or counts its omission. Independent user constraints precede these records. Repeated tool quotes keep a source pointer with quote_display=quoted_above rather than repeating the text. Retrieval creates no completion, contradiction or lifecycle relation and changes no age-retention rule. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "A complete custody source of at most 600 characters can receive a compact whole-group reservation. The total reserve uses at most one third of the available brief, capped at 2,000 characters. For sources overlapping material, this reserve protects reason evidence. Quotations are never shortened to create that fallback. Larger groups fit whole or remain omitted. The budget does not guarantee every relevant source appears. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Already-cited compact original executions can move ahead of incidental material so captured command and result remain visible even when an extracted outcome loses its render allowance. Promotion across all tools uses at most one third of the brief budget, capped at 1,800 characters. Whole user-source fallback reservations still apply. Larger executions remain eligible for whole-group fit or omission. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "At least two eligible unresolved user-source intervals can share a neutral original-source bundle. Each chosen interval stays whole with source ID, role, offsets and capture sequence. Selection tries newest intervals first, then displays selected intervals in capture order. A bundle selects at most eight intervals of at most 600 characters each. Its XML uses at most 3,200 characters and must fit after reserved execution and current-head evidence. Missing intervals receive explicit omission counts. Partial consumed sources keep their interval status. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Hard task, identifier, version, environment, project, privacy, session and deletion guards still apply to original user sources. Soft relevance can keep a source already cited by eligible material only after hard query matching passes. Bundle presence creates no requirement, completion, continuity or contradiction relation, and extends no retention. Matching worktree and capture-order qualifiers move to the XML root only when opening and closing tags fit; otherwise record qualifiers remain subject to fit-or-omit. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Complete observed tool fields keep a bounded reservation when native execution shape is unavailable. A compact omitted latest-head identity is added after material rendering when it fits. It can trim lower-priority coverage counters but never a fitting quotation. Version and uncertainty metadata do not imply that omitted fields were shown. Default total budget remains 6,000 characters. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "The shared planner separates caller-selected project scope names from content in the brief builder and Store.context. The owner remains implicit. At most sixteen additional absolute canonical paths require enabled project memory. Only unique exact basenames in unquoted scope positions act as aliases. No project discovery or read-owner expansion occurs. Unknown, unselected, ambiguous, quoted and artifact-like names stay content constraints. The MCP state read accepts selected_project_scopes. ProjectMemory.snapshot remains literal. Sources: project_memory_query.py:131-342,371-535 store.py:5556-5569, mcp.py:810-822.",
+        "Complete requirement-state clauses describe answer fields without requiring words such as cancelled or retained in each source. Generic project-state selection requires no residual topic or exact subject; remaining topics remain content constraints. This selects evidence without inferring cancellation, replacement or current validity. Declared environment scope remains a hard boundary. User words do not establish an execution environment. Unscoped user quotes keep unknown scope and user attribution. Raw environment checks apply to tool and assistant evidence; inferred claims are checked against their own execution references. Environment projections reject complete groups containing incompatible execution and never restore all-filtered fields. Sources: project_memory_query.py:131-342,371-535 project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Neutral custody can use declared environment metadata only from a current whole-source exact user claim. Binding requires the same source ID, body field, user role, full body span and exact text, with all references on that original user source. Partial, mixed, historical, episode, report and retired associations cannot bind it. Owner, worktree, privacy, session and deletion guards apply. The metadata is an environment guard only; it assigns no quote scope, content anchor or custody fate. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Custody scope association is limited to sixty-four claim candidates per source. Overflow omits the source and reports custody_scope_binding_lookups_omitted. Conflicting exact declarations report custody_scope_conflicts: environment-scoped reads omit the source, while unscoped reads can keep its quote with conflicting_declared_environment_scopes uncertainty. No conflict becomes proof of unrestricted applicability. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Scope filtering preserves normative user text without promoting it to observed execution. Canonical declared scope is enforced, and actual assistant or tool quotations still cannot conceal an opposite execution environment. Inferred claims keep the scope of their own execution references. Mixed environment projections reject whole incompatible groups and provide no fallback to filtered original fields. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Original user sources share a bundle only when their record metadata match, including lane, kind, role, disposition, requirement-claim flag, meaning and uncertainty. Different markers remain in separate containers, including single-source groups. A conflict warning is neither discarded nor applied to an unrelated source. Capture-order and whole-group budget rules remain unchanged. Source: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Grammatical evidence questions allocate up to one third of the brief, capped at 1,800 characters, to complete selected episode-source intervals before inferred fragments. Groups retain source ID, field, role, scope and uncertainty. Only matching adjacent or overlapping text joins, with a 600-character interval limit. Custody and validated native execution IDs stay separate. Neutral source_excerpts explicitly leaves field_association not_assessed. This creates no execution validity or new field judgment. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Exact quoted-value duplication can omit derived prose only when same-source references reconstruct the value in their original contiguous order. Pointers, field metadata, roles and state/scope qualifiers remain. Paraphrases keep separate prose. Evidence questions can also reserve one sixth of the brief, capped at 900 characters, for small original assistant reports. More complete evidence can displace incidental quotations. These rules do not establish compression or quality acceptance. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Complete authorized, unfinished and continuation-requirement frames retain all residual topic terms. Evidence facets change allocation, not eligibility. Ordinary source words can use bounded plural-prefix matching; identifiers and versions remain exact. Bare original is not a historical request; explicit as-of and past-original questions keep history behavior. Source: project_memory_query.py:131-342,371-535; project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "The planner exposes answer_subject, answer_facets and source_order. Grammatical requirement, current-revision, reason and execution-assessment instructions do not replace residual topical matching. Positive or negative question wording does not filter the answer polarity. Exact owner, task, identifier, version, environment, session, privacy and deletion guards remain. Source: project_memory_query.py:131-342,371-535.",
+        "An early user-source pass uses only already-selected evidence, excludes historical prior_ source IDs and preserves scope, uncertainty and current-head qualifiers. Consistent complete intervals join up to 1,200 characters. Latest local capture comes first within the same one-third/1,800-character early allowance. A metadata-only lookup reads sequence for at most sixty-four selected source IDs and counts omitted IDs. This early pass adds no body lookup or storage mutation. The separate bounded custody supplement below is an additional read. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Recognized first/initial/earliest and last/latest operation queries order the existing scoped sixteen-candidate window before returning two records per role. Execution groups can be promoted before other records. Capture order is local ingestion order, not event time or proof of operation identity. Native atomic command/exit/full-output and all hard source guards remain. Sources: project_memory_query.py:131-342,371-535, project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Ordinary nonhistorical natural queries outside continuation and ordinal lookup can read a finite original-context pool even without soft lexical overlap. recent_context=True returns whole retained user originals of at most 600 characters before the newest-sixteen cap, including stored/completed dispositions without asserting current applicability. Default and recent_unresolved reads remain available. Guard metadata arrives with exact text; no raw-user FTS lane or extra Store.get body fetch is added. Sources: project_memory_custody.py:75-146, project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Unknown soft topics no longer imply empty transport. Neutral originals pass exact project, task-ID, literal, version, environment, session, privacy, deletion and history guards independently. Their query relationship stays unresolved; they establish no task association, active requirement or current truth. Previously represented user observations keep their disposition and current_applicability_unresolved uncertainty. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "At most three whole neutral user originals compete within min(1800,budget//3) and capacity after protecting selected original executions/reports. Latest capture is tried first, then earliest. Identical qualifiers alone can share a container; role, meaning, uncertainty and unresolved query relationship remain explicit. The finite neutral assistant/tool window has sixteen candidates per role, two returns per role and a 1,200-character body bound. Whole tool command/exit/output remains atomic. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "New complete source intervals compete before repeated qualifier wrappers. Unknown, local, current and historical associations keep separate metadata; a source quote cannot inherit another association qualifier. Original-operation assessment can use earliest capture ordering without proving event identity. Reads call no model and change no stored state, provider, profile or schema. Visibility replay is not answer-quality evidence. Sources: project_memory_query.py:131-342,371-535, project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "Checked original environment and version qualifiers survive record construction and rendering even for unscoped questions. Code carries scoped_original into the custody record, never the query scope or temporary environment guard. Known, unknown and differing original scopes remain separate without inferring current applicability. Sources: project_memory_retrieval.py:30-154,376-539,615-1312,1319-1807.",
+        "One render-owned plan allocates already-selected associated user originals and finite neutral context together. Per-source capture sequence wins over multi-source episode ranges. Lexical association gives an older source no unconditional priority over a later original. Complete source transport is deduplicated; distinct scope, role, uncertainty and historical/current association qualifiers remain separate. Neutral user transport permits three whole originals within min(1800,budget//3). Sources: project_memory_retrieval.py:770-877.",
+        "Unknown natural grammar does not establish policy-only intent. Bounded protection retains one eligible whole execution within min(1800,budget//3) and one small report within min(900,budget//6); explicit evidence requests can protect expanded evidence. The same compact atomic serializer measures fit and emits original command/output pointers. Helper citation and native producer contracts remain unchanged. Sources: project_memory_retrieval.py:615-658,947-1027.",
+        "Complete current request-fate and task-reference questions can remove incidental earlier/later historical interpretation. A relation question selects continuity projection without asserting continuation or task identity. Explicit as-of, genuine history, date, version and all hard source guards remain. Source visibility does not establish supported answers or current truth. Source: project_memory_query.py:170-188,421-535."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Boundaries and optional features",
+      "items": [
+        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:733-788,1381-1408.",
+        "The legacy note processor runs alongside project memory. It also uses NativeProcessorRunner. It operates independently of episode generation. Sources: service.py:695-706,791-820, processor.py:227-248,403-422.",
+        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35-45,532-608, store.py:5717-5725, episode_processor.py:909-916.",
+        "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:666-728,776-801,909-922, jev_quality.py:1-7.",
+        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:784-801,909-955, jev_quality.py:16-23."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Maintenance and limits",
+      "items": [
+        "When capture, processing, storage, retrieval, or provider boundaries change, review the diagram and source links. Update candidate.json and rebuild the HTML with Archify. AGENTS.md requires this work in the same task.",
+        "maintain.py check compares source files and hashes with the snapshot. It also compares the specification and HTML with their saved hashes. Code changes require a review of the architecture descriptions. Matching hashes alone do not prove that the diagram is complete.",
+        "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Bounded reconsideration does not repair every historical split or prove answer quality. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage.",
+        "The October 21 semantic development probe records its fixed policy, labels, failed first attempt, supervised retry, probabilities, and usage under docs/evidence/project-memory-quality-2026-10-21/field-*. The narrow check reduced false acceptance but left useful fields uncertain. It was not enabled as a blocking check. This disclosed development set is not an independent acceptance benchmark. Source hashes and rendered output do not establish semantic quality or production deployment."
+      ]
+    }
+  ]
+}

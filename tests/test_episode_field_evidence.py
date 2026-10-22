@@ -3,7 +3,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import tempfile
-import time
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -283,11 +283,14 @@ class FieldEvidenceTests(unittest.TestCase):
             result = base(request)
             result["output"]["episodes"] = [deepcopy(result["output"]["episodes"][0]) for _ in range(3)]
             return result
+        clock = [100.0]
         def slow_evaluate(payload):
             result = self.evaluate(payload)
-            time.sleep(.03)
+            clock[0] += .03
             return result
-        with mock.patch.object(jev_quality, "MAX_GATE_SECONDS", .02):
+        with mock.patch.object(jev_quality, "MAX_GATE_SECONDS", .02), \
+                mock.patch.object(jev_quality, "monotonic", lambda: clock[0]), \
+                mock.patch.object(ep, "time", SimpleNamespace(monotonic=lambda: clock[0])):
             result = ep.process_project_memory(self.project, self.data, runner=run,
                                                jev_quality_evaluator=slow_evaluate)
         self.assertEqual(result["status"], "failed", result)

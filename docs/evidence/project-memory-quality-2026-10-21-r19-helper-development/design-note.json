@@ -1,0 +1,50 @@
+{
+  "status": "isolated_prospective_design_not_applied",
+  "approved_public_seams": [
+    "Capture failed ledger and usage",
+    "historical_accounting with hash-pinned synthetic prior usage"
+  ],
+  "exact_repo_apply_files": [
+    "scripts/project_memory_consolidation_experiment.py",
+    "scripts/consolidation_experiment/test_protocol.py"
+  ],
+  "reason_code": {
+    "source": "Existing codex_mem.observation_diagnostics.safe_failure_reason(code,reason)",
+    "new_field": "reason_code, fixed allowlist or null",
+    "privacy": "No exception prose, worker/thread/turn IDs or arbitrary exception attributes are copied by this addition. Existing code/metrics/error_type behavior stays unchanged.",
+    "behavior": "Original failure re-raised. No retry. Unknown token usage continues to stop new Capture dispatch."
+  },
+  "reported_bounds": {
+    "fields": [
+      "input_tokens",
+      "cached_input_tokens",
+      "output_tokens",
+      "total_tokens"
+    ],
+    "validity": "Exact four-key map, nonnegative Python ints excluding bool, cached<=input, total=input+output. Complete valid totals constrain a contradictory provided subtotal; complete legacy valid totals may supply fallback.",
+    "known_subtotal": "Sum only valid known reported maps. With no usable contributor, null. Do not replace absent/invalid maps with zero.",
+    "coverage": "reported_tokens_lower_bound_coverage_complete means all cumulative components supplied usable reported-bound metadata, NOT full native usage. Full token_accounting_complete remains separate.",
+    "missing_components": "Nonnegative count of missing bound components, inherited through cumulative chains. Unknown/inconsistent inherited count stays null and coverage false. It is not a count of unreported native calls.",
+    "scope": "known_reported_receipts_only_not_total_usage",
+    "totals": "Full tokens are null unless both flags are true AND both complete token maps are coherent exact integers. This conservatively downgrades malformed metadata; it does not change native budget usage/gates.",
+    "partial_receipts": "Unreported/partial receipt counters are not promoted into reported token bounds."
+  },
+  "pricing": {
+    "behavior": "Existing API-hypothetical monetary arithmetic retained. Lower bounds are never priced. Explicit pricing completeness survives only when both sources explicitly say complete and full token maps are complete.",
+    "scope": "known_reported_priced_receipts_only_not_billing",
+    "actual_cost_usd": null
+  },
+  "compatibility": [
+    "Additional failed-ledger field is optional for old receipts; old rows remain readable.",
+    "Canonical historical pointer stays report/SHA, no input repair or alias is added.",
+    "Existing usage function, native budgets/profiles/caps/reuse/prompt/schema/grade and Store behavior are unchanged.",
+    "No frozen historical artifacts are edited or backfilled. The prospective helper hash will require new source pins for any future trial."
+  ],
+  "limits": [
+    "Historical report data remains a pinned accounting attestation, not an independent provider audit.",
+    "Known lower bounds cannot recover usage or reason codes absent from old receipts. Missing bounds remain explicit, and actual billing remains unknown.",
+    "Coverage complete for reported bounds never means unreported native usage is known. Reported subtotal may be zero while full totals are unknown if supplied known-receipt map is valid zero.",
+    "Legacy price completeness is not inferred when its metadata is missing. No API charge or subscription cost is inferred from these counters.",
+    "Focused tests only in isolated copy; root must review/apply then run the appropriate full protocol suite against combined patches. No native calls, repo edits, services, global config, commit or Roughdraft."
+  ]
+}

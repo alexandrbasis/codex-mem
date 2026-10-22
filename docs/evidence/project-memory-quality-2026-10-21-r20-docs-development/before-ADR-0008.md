@@ -1,0 +1,17 @@
+# Separate selected scope names from content
+
+Caller-selected project paths define the allowed read scopes. A project name in a natural question can repeat that metadata without appearing in the source text. Treating it as a required content identifier can hide every source. The [R18 diagnosis](../evidence/project-memory-quality-2026-10-21-r18/source-chain-diagnosis.md) found 23 candidate views with this failure. The fixed baseline has its own older capability boundary. Its results remain unchanged.
+
+The [shared query planner](../../codex_mem/project_memory_query.py) separates exact selected basenames from content. A unique structured basename can name a scope outside a fixed preceding phrase. Structure means an underscore, hyphen, digit or internal camel case in the canonical basename. Matching ignores case. Ordinary alphabetic names still need explicit scope syntax. An unmarked ordinary word keeps its prior content-matching strength because metadata alone cannot resolve a content-noun collision.
+
+A leading trusted scope clause followed by a comma can precede a recognized natural request. The planner examines that body before literal-query classification. A period-ended request can therefore remain natural. A quoted, unknown or ambiguous scope name, or a code-only request body, keeps its prior literal behavior. This is a bounded grammar rule, not unrestricted interpretation of arbitrary prose.
+
+Quoted names, explicit function, module, file, artifact and command positions, call syntax, paths and member names remain literal. Task, version and environment names are protected. Unknown and unselected names are never normalization candidates. Ambiguous basenames shared by different selected paths remain content. The caller still validates absolute enabled paths. Normalizing a name never discovers a project or changes the SQL read owner.
+
+A bare conjunction does not establish literal identity. An unprotected alphabetic hyphen compound after "and" remains in the original content query. Only its input to soft lexical matching splits into words. Syntactically introduced scope lists preserve their existing hard coordinated names, including unknown names after a selected name is removed. Explicit code, artifact and scope constraints keep their existing strength.
+
+## Consequences
+
+The rule is a bounded syntax convention. It does not prove what a source means, which task it concerns or whether it still applies. Unmarked ordinary names remain ambiguous. Scope-list syntax can also describe ordinary content, so that case keeps its prior conservative matching behavior. No semantic model resolves these ambiguities during reading.
+
+The [public contract tests](../../tests/test_project_memory_query_scope_contract.py) cover normalization, literal collisions, commands, calls, unknown scopes and descriptive compounds. The [initial development receipt](../evidence/project-memory-quality-2026-10-21-r19-query-development/final-query-receipt.json) retains its failing examples and checks. The [scoped-prefix receipt](../evidence/project-memory-quality-2026-10-21-r19-query-development/scoped-preface-v2/final-query-receipt.json) records 97 passing targeted checks. These checks and any replay of disclosed histories establish regressions only. A fresh independent comparison must still pass the existing answer-quality gates. No earlier history, answer or grade is repaired.

@@ -1,0 +1,32 @@
+FF..F.
+======================================================================
+FAIL: test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens (test_protocol.CumulativeReportedBoundsTests.test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens) (tokens={'input_tokens': True, 'cached_input_tokens': 0, 'output_tokens': 10, 'total_tokens': 100})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-helper-development/scripts/consolidation_experiment/test_protocol.py", line 2443, in test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens
+    self.assertFalse(result['token_accounting_complete'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens (test_protocol.CumulativeReportedBoundsTests.test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens) (tokens={'input_tokens': 90, 'cached_input_tokens': 0, 'output_tokens': 10, 'total_tokens': 101})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-helper-development/scripts/consolidation_experiment/test_protocol.py", line 2443, in test_complete_legacy_usage_falls_back_only_to_coherent_exact_integer_tokens
+    self.assertFalse(result['token_accounting_complete'])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+======================================================================
+FAIL: test_pricing_incompleteness_survives_unknown_prior_chains_without_billing_claim (test_protocol.CumulativeReportedBoundsTests.test_pricing_incompleteness_survives_unknown_prior_chains_without_billing_claim)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/codex-mem-quality-20261021-r19-helper-development/scripts/consolidation_experiment/test_protocol.py", line 2451, in test_pricing_incompleteness_survives_unknown_prior_chains_without_billing_claim
+    self.assertIs(result.get('pricing_complete'),False)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: None is not False
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.011s
+
+FAILED (failures=3)

@@ -1,0 +1,107 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q4",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "50e09565c36239368de53c91ed84f3ec672b8970503d8e929f666303b366e3e6",
+  "context_sha256": "d19136ecada570cf0826a7df43e68b3a2cf786cce377b58c42f4ce0ce88784c0",
+  "raw_output_sha256": "a1ac756553e94f92dd807f31b30db0c88b1017c736b5b8075a4afb1caa9cbbbd",
+  "native_receipt": {
+    "source_call_id": "call-0089",
+    "request_sha256": "c6121da26b53c48de9ddd5e121c7a0a908d803ec9fb43269eae5ac9867a9f819",
+    "response_sha256": "ad3142778251f8a0c91755d99526734fb2d2bb77352da54ed74cb6055230895c",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q4",
+        "answer": "The governing sample size is 12 parcels: the explicit correction replaces the initial instruction to use 18 parcels and states that the closed status remains unchanged. At the opening meeting, Vellum parcel index was waiting for review; that is the opening review status, distinct from the correction’s preserved closed status. The damaged-wrap appendix remains identified as a separate follow-up.",
+        "uncertainties": [
+          "The supplied excerpts do not establish when or why the status changed from waiting for review to closed."
+        ],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "21c22f901b17463ba8757d1480a2d3ee",
+            "source_field": "body",
+            "start": 0,
+            "end": 198,
+            "source_role": "user_intent",
+            "quote": "Correction for Vellum parcel index: use sample size of 12 parcels, replacing my initial value of 18 parcels. This correction changes the recorded value, not the closed status of Vellum parcel index."
+          },
+          {
+            "catalog_ref": "R0008",
+            "source_id": "cd756ef1da8c425cb022b33f2d5226f5",
+            "source_field": "body",
+            "start": 0,
+            "end": 375,
+            "source_role": "user_intent",
+            "quote": "For Vellum, open the parcel index work item. For Vellum parcel index, preserve original parcel numbers because replacement numbers break the return trail. At this opening meeting, Vellum parcel index is waiting for review. My initial instruction for Vellum parcel index sets sample size to 18 parcels. The damaged-wrap appendix is a separate follow-up to Vellum parcel index."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 8194,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 12304,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 214,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 12518
+      }
+    }
+  },
+  "latency_ms": 8218,
+  "native_dispatch": {
+    "key": "f623eccfb95f422e0417b14b8ecbdb5c436a0ef0b83f9697ec78d02fd251cb23",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F02",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q4",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0089",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "8df18b4cae5cc27357bf5f98db5a6992c6bdfadb2ae226f8caece1bd78af6529",
+    "request_file_sha256": "b6e7b7700f578e9df07a6864ddf62dafd7c83f229b87ea6e0acc5fff12918ca8",
+    "response_file_sha256": "80761af23d8a72e04cf9224d194a8f9d78a30928355dedb5161af576822dfcfb",
+    "reused": false,
+    "native_wall_ms": 8218
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F02",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q4"
+  },
+  "evidence_checks": {
+    "Q4": {
+      "accepted_results": "The user correction sets 12 parcels, replaces 18, and preserves the closed status.",
+      "open_work_and_reasons": "The opening meeting records review as pending; the damaged-wrap appendix is a separate follow-up, with no reason stated.",
+      "source_role_distinctions": "The values and statuses are user statements; the tool record covers only a local preview, and assistant reports are not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

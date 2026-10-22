@@ -1,0 +1,105 @@
+{
+  "reader_context_isolation": "per-question-v1",
+  "question_id": "Q4",
+  "repeat": 0,
+  "reader_citation_contract": "visible-span-refs-v1",
+  "catalog_sha256": "8a8ade31399e79fb934f88cc10329def008dc2277ae6006ccd8ec2a21d3aaa56",
+  "context_sha256": "d0e919d55f31e82f7abc1a44c3af8f77e36f9d61a2437e079d3675ad0274dc49",
+  "raw_output_sha256": "0620fcf0006314b4d6b8d6947fdd28069b7a4d98e6eb93ad0719049ad3ca91ab",
+  "native_receipt": {
+    "source_call_id": "call-0119",
+    "request_sha256": "db8b7b5c9330344292a149158c451b9ad0b6109ba6beee4db52f91c998dd51e6",
+    "response_sha256": "49d8242457604557e107edd8aa82463dafbb40f217c33c120d70f2068792dcb5",
+    "reused": false
+  },
+  "output": {
+    "answers": [
+      {
+        "id": "Q4",
+        "answer": "A6 governs now, replacing the initial instruction to use A5. The correction changes the recorded paper size and explicitly leaves the booklet’s closed status unchanged. Separately, at the opening meeting, the booklet was waiting for review.",
+        "uncertainties": [],
+        "citations": [
+          {
+            "catalog_ref": "R0001",
+            "source_id": "f388233e4d774edabc55e34ac740a80f",
+            "source_field": "body",
+            "start": 0,
+            "end": 187,
+            "source_role": "user_intent",
+            "quote": "Correction for Trellis bridge booklet: use paper size of A6, replacing my initial value of A5. This correction changes the recorded value, not the closed status of Trellis bridge booklet."
+          },
+          {
+            "catalog_ref": "R0002",
+            "source_id": "9b190a22b57d47a6bc550e028841f385",
+            "source_field": "body",
+            "start": 0,
+            "end": 374,
+            "source_role": "user_intent",
+            "quote": "For Trellis, open the bridge booklet work item. For Trellis bridge booklet, keep the inspection date on each page because loose pages otherwise lose their age. At this opening meeting, Trellis bridge booklet is waiting for review. My initial instruction for Trellis bridge booklet sets paper size to A5. The tide supplement is a separate follow-up to Trellis bridge booklet."
+          }
+        ]
+      }
+    ]
+  },
+  "metrics": {
+    "duration_ms": 11079,
+    "usage": {
+      "status": "reported",
+      "source": "app_server_thread_total",
+      "updates": 1,
+      "tokens": {
+        "input_tokens": 11586,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 315,
+        "reasoning_output_tokens": 153,
+        "total_tokens": 11901
+      }
+    }
+  },
+  "latency_ms": 11102,
+  "native_dispatch": {
+    "key": "7811b3262d510ed54d50ce7b1accc377959f2b60b5e3f43b79f867bb71c716e2",
+    "scope": {
+      "phase": "reader",
+      "history_id": "F06",
+      "run_id": "primary",
+      "repeat": 0,
+      "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+      "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+      "question_id": "Q4",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "medium",
+      "native_adapter_sha256": "25ac04ba47ced109067bf990cce236a8bacc6d88e9d91861562203fd3b9dab39"
+    },
+    "source_call_id": "call-0119",
+    "source_variant": "baseline",
+    "request_bytes_sha256": "3597ecf5e83a55b33db9cd4d19655cc3159cf868fe054719e17415b6d71d24a0",
+    "request_file_sha256": "f9db64a12a179928f8ec2730f4821829c4f28de00bcba4c97f7687a212d986dc",
+    "response_file_sha256": "927b185acc6581c2e3239519e7d7ce899b7b81fb683f05dc6e0072539505fdaa",
+    "reused": false,
+    "native_wall_ms": 11102
+  },
+  "attempt": {
+    "phase": "reader",
+    "variant": "baseline",
+    "history_id": "F06",
+    "run_id": "primary",
+    "repeat": 0,
+    "prompt_version": "role-attribution-per-question-v2",
+    "protocol_sha256": "961820bf89218870b20b169f77eb8954e7c0708d09beab6dbc1cb69bfc9a724c",
+    "helper_sha256": "d935fe07687571bf42271e4a9606c9a98a75a162beb8a050f4b7fcc95960a388",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "medium",
+    "question_id": "Q4"
+  },
+  "evidence_checks": {
+    "Q4": {
+      "accepted_results": "The user’s correction sets A6 and explicitly preserves the booklet’s closed status.",
+      "open_work_and_reasons": "At the opening meeting, the booklet awaited review; the tide supplement was a separate follow-up, with no reason stated.",
+      "source_role_distinctions": "Both sources are user statements; assistant reports, observed execution, and validation are not evidenced."
+    }
+  },
+  "reader_evidence_contract": "clause-support-v2",
+  "reader_prompt_version": "role-attribution-per-question-v2"
+}

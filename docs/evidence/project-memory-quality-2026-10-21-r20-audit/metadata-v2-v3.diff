@@ -1,0 +1,16 @@
+--- reviewed-v2
++++ append-only-v3
+@@ -92,7 +92,12 @@
+         check(sha(path.read_bytes()) == builder_inputs['sha256'], 'protocol_builder_inputs_pin')
+     product = archive(base / 'frozen-product.tar.gz')
+     source_archive = read(base / 'frozen-source-archive.json')
+-    check(sha((base / 'frozen-product.tar.gz').read_bytes()) == source_archive['archive_sha256'], 'product_archive_pin')
++    check(sha((base / 'frozen-product.tar.gz').read_bytes()) == source_archive['runtime_archive_sha256'], 'product_archive_pin')
++    check(source_archive['runtime_files'] == freeze['candidate_hashes'], 'held_archive_runtime_map_equals_actual_freeze')
++    check(source_archive['helper_sha256'] == helper_hash == freeze['helper_sha256'], 'held_archive_helper_matches_actual_freeze')
++    check(source_archive['actual_trial_freeze'] is False and source_archive['native_calls'] == 0
++          and source_archive['status'] == 'held_source_archive_not_actual_trial_freeze', 'held_archive_not_misrepresented_as_actual_freeze')
++
+     check(len(product) == len(freeze['candidate_hashes']) == 48, 'candidate_runtime_file_count')
+     for name, expected in freeze['candidate_hashes'].items():
+         check(sha(product[name]) == expected, 'candidate_archive:' + name)
