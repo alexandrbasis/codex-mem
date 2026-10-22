@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-10-22T13:38:16.990560+00:00",
+  "reason": "First authorized install activated and restarted the service, but the repository evidence copied into the current-version cache exceeded its 256 MiB verification bound. Its previous source and recovery backup were retained.",
+  "change": "Installer and archive builder share a distribution path filter. Repository-only docs/evidence and docs/handoffs stay in Git and are omitted from installed payloads. User guides and ADRs remain included.",
+  "changed_files": [
+    "scripts/install.py",
+    "scripts/package.py",
+    "tests/test_install.py"
+  ],
+  "validation": {
+    "installer_tests_passed": 39,
+    "includes_new_regressions": 2,
+    "archive_members": 297,
+    "archive_manifest_entries_checked": 296,
+    "archive_bytes": 2294747,
+    "archive_sha256": "79fbedde57bb6eccaabecdda4ae0889eeb29bf3fe69b38426d75d488e5c46dd2",
+    "runtime_files_checked": 48,
+    "runtime_drift": [],
+    "architecture_maintenance": "hashes_match",
+    "diff_whitespace_check": "passed"
+  },
+  "experimental_scope": "No change to the 48 frozen runtime files, closed R23 grades, helper, source archives or budget. No model calls.",
+  "local_recovery_plan": "Move only copied repository-only documentation from managed source and active cache into the retained recovery directory, then rerun the standard installer. Preserve the original repository files and all runtime/configuration files.",
+  "status": "ready_for_authorized_followup_commit_and_deployment"
+}

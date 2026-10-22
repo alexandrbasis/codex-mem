@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import zipfile
 
-from install import FILES, ROOT, manifest
+from install import FILES, ROOT, is_distribution_path, manifest
 
 
 def package() -> dict:
@@ -19,6 +19,8 @@ def package() -> dict:
             raise ValueError(f"Release component missing: {name}")
         candidates = path.rglob("*") if path.is_dir() else [path]
         for candidate in candidates:
+            if not is_distribution_path(candidate.relative_to(ROOT)):
+                continue
             if candidate.is_symlink():
                 raise ValueError("Release files must not be symlinks")
             if not candidate.is_file() or "__pycache__" in candidate.parts or candidate.suffix == ".pyc":

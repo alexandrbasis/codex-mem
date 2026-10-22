@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import io
 import itertools
@@ -11,12 +12,19 @@ import sys
 import tempfile
 import unittest
 from unittest import mock
+import zipfile
 
 from codex_mem import __version__
 
 _SPEC = importlib.util.spec_from_file_location("codex_mem_installer", Path(__file__).resolve().parents[1] / "scripts/install.py")
 installer = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(installer)
+_PACKAGE_SPEC = importlib.util.spec_from_file_location(
+    "codex_mem_packager", Path(__file__).resolve().parents[1] / "scripts/package.py"
+)
+packager = importlib.util.module_from_spec(_PACKAGE_SPEC)
+with mock.patch.dict(sys.modules, {"install": installer}):
+    _PACKAGE_SPEC.loader.exec_module(packager)
 
 
 class ReleaseVersionTests(unittest.TestCase):
@@ -133,6 +141,48 @@ class InstallTests(unittest.TestCase):
         result = self.run_install(False)
         self.assertFalse(result["applied"])
         self.assertFalse(self.home.exists())
+
+    def distribution_fixture(self):
+        for name in (
+            "docs/PROJECT_MEMORY.md", "docs/adr/0001-example.md",
+            "docs/reference/evidence/example.md", "docs/evidence/experiment.tar",
+            "docs/handoffs/task.md", "docs/__pycache__/cached.pyc", "docs/.DS_Store",
+        ):
+            path = self.source / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(name)
+
+    def test_install_keeps_guides_without_repository_only_material(self):
+        self.distribution_fixture()
+        self.run_install()
+        target = self.home / "plugins/codex-mem"
+        for name in ("docs/PROJECT_MEMORY.md", "docs/adr/0001-example.md",
+                     "docs/reference/evidence/example.md"):
+            self.assertEqual((target / name).read_bytes(), (self.source / name).read_bytes())
+        for name in ("docs/evidence", "docs/handoffs", "docs/__pycache__", "docs/.DS_Store"):
+            self.assertFalse((target / name).exists(), name)
+        self.assertTrue((self.source / "docs/evidence/experiment.tar").is_file())
+        self.assertTrue((self.source / "docs/handoffs/task.md").is_file())
+
+    def test_archive_matches_installed_payload_and_keeps_integrity_manifest(self):
+        self.distribution_fixture()
+        self.run_install()
+        with mock.patch.object(packager, "ROOT", self.source), mock.patch.object(
+            packager, "FILES", (".codex-plugin", ".mcp.json", "hooks", "scripts", "docs")
+        ):
+            first = packager.package()
+            second = packager.package()
+        self.assertEqual(first["sha256"], second["sha256"])
+        target = self.home / "plugins/codex-mem"
+        with zipfile.ZipFile(first["archive"]) as archive:
+            names = {name.removeprefix("codex-mem/") for name in archive.namelist()}
+            self.assertEqual(names - {"SHA256SUMS"}, {
+                str(path.relative_to(target)) for path in target.rglob("*")
+                if path.is_file() and path.name != installer.MARKER
+            })
+            for line in archive.read("codex-mem/SHA256SUMS").decode().splitlines():
+                digest, name = line.split("  ", 1)
+                self.assertEqual(hashlib.sha256(archive.read("codex-mem/" + name)).hexdigest(), digest)
 
     def test_registration_preserves_other_entries_and_metadata(self):
         existing = {"name": "mine", "interface": {"displayName": "My tools"},

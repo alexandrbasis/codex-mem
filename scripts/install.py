@@ -26,6 +26,17 @@ LEGACY_LAUNCHER_BACKUP = Path("scripts") / "codex-mem.py.codex-mem-original"
 _FORWARDER_MARKER = "# codex-mem managed legacy cache forwarder v1"
 SERVICE_COMMAND_TIMEOUT = 5.0
 SERVICE_REFRESH_TIMEOUT = 15.0
+REPOSITORY_ONLY_DOC_DIRS = frozenset({"evidence", "handoffs"})
+
+
+def is_distribution_path(relative: Path) -> bool:
+    """Keep experiment archives and handoffs outside installed packages."""
+
+    if (len(relative.parts) >= 2 and relative.parts[0] == "docs"
+            and relative.parts[1] in REPOSITORY_ONLY_DOC_DIRS):
+        return False
+    return (not any(part in {"__pycache__", ".DS_Store"} for part in relative.parts)
+            and relative.suffix != ".pyc")
 
 
 def _service_command(launcher: Path, data_dir: Path, action: str, *,
@@ -562,7 +573,12 @@ def install(source: Path, user_home: Path, *, apply: bool, register_only: bool =
                     if any(p.is_symlink() for p in item.rglob("*")):
                         raise ValueError("Source distribution cannot contain symlinks")
                     shutil.copytree(item, stage / name,
-                                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"))
+                                    ignore=lambda directory, names: {
+                                        entry for entry in names
+                                        if not is_distribution_path(
+                                            (Path(directory) / entry).relative_to(source)
+                                        )
+                                    })
                 else:
                     shutil.copy2(item, stage / name)
             (stage / MARKER).write_text("codex-mem personal installer v1\n")
