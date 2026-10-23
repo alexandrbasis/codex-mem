@@ -284,6 +284,10 @@ class ProjectMemoryProfileTests(unittest.TestCase):
         from pathlib import Path
         legacy = json.loads((Path(__file__).parent / 'fixtures/legacy_project_memory_profiles.json').read_text())
         self.project = legacy['project']
+        # The saved project key must work without the generator host's /tmp alias.
+        self.assertEqual([self.project], legacy['config']['project_memory_projects'])
+        for table in legacy['tables'].values():
+            self.assertEqual({self.project}, {row['project'] for row in table['rows']})
         with Store(self.data) as store:
             for name, table in legacy['tables'].items():
                 if name == 'pm_usage_attempts':

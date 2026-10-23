@@ -1,6 +1,6 @@
 {
   "base": "2b39521327dabfeb2c9f504e585595ed08f8c6c4",
-  "project": "/tmp/codex-mem-legacy-pm-profile",
+  "project": "/private/tmp/codex-mem-legacy-pm-profile",
   "tables": {
     "entries": {
       "schema": "CREATE TABLE entries (\n                id TEXT PRIMARY KEY NOT NULL,\n                project TEXT NOT NULL,\n                title TEXT NOT NULL,\n                body TEXT NOT NULL,\n                kind TEXT NOT NULL,\n                session_id TEXT,\n                turn_id TEXT,\n                source TEXT,\n                tags_json TEXT NOT NULL,\n                dedupe_hash TEXT,\n                created_at TEXT NOT NULL,\n                updated_at TEXT NOT NULL,\n                superseded_by TEXT REFERENCES entries(id) ON DELETE SET NULL,\n                superseded_at TEXT\n            )",
