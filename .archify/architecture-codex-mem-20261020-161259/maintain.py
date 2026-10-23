@@ -28,6 +28,12 @@ from urllib.parse import urlsplit, urlunsplit
 
 FORMAT_VERSION = 1
 FIXED_SOURCES = (
+    "package.json",
+    "scripts/install.py",
+    "scripts/install_pi.py",
+    "tests/test_pi_install.py",
+    "docs/PI_INSTALL.md",
+    "docs/PI_INSTALL_EVIDENCE.json",
     ".codex-plugin/plugin.json",
     ".mcp.json",
     "hooks/hooks.json",

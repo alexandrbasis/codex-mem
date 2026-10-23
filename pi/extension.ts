@@ -1,4 +1,5 @@
 /** Pi 1.4.0 lifecycle adapter. Shared policy and memory algorithms live in Python. */
+import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { StringDecoder } from "node:string_decoder";
@@ -12,10 +13,24 @@ const MAX_EVENTS = 256;
 const TIMEOUT_MS = 2000;
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
+// Installer metadata contains only local paths. Source checkouts keep the existing defaults.
+function runtime(): { python: string; data_dir?: string } | null {
+  try {
+    const value = JSON.parse(readFileSync(new URL("./runtime.json", import.meta.url), "utf8"));
+    if (typeof value.python === "string" && typeof value.data_dir === "string") return value;
+    return null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") return null;
+  }
+  return { python: process.env.CODEX_MEM_PYTHON || "python3" };
+}
+
 type Receipt = { status?: string; reason?: string; text?: string; events?: Receipt[]; omitted_chars?: number; user_observed?: boolean };
 
 /** No text or credentials are placed in argv or diagnostics. Each call is finite. */
 function request(payload: object): Promise<Receipt> {
+  const installed = runtime();
+  if (!installed) return Promise.resolve({ reason: "invalid_installation_metadata" });
   const raw = JSON.stringify({ version: 1, pi_version: VERSION, ...payload });
   if (Buffer.byteLength(raw) > MAX_BYTES) return Promise.resolve({ reason: "request_overflow" });
   return new Promise((resolve) => {
@@ -23,8 +38,8 @@ function request(payload: object): Promise<Receipt> {
     let outputBytes = 0;
     const decoder = new StringDecoder("utf8");
     let finished = false;
-    const child = spawn(process.env.CODEX_MEM_PYTHON || "python3", ["-m", "codex_mem.pi_host"],
-      { cwd: ROOT, stdio: ["pipe", "pipe", "ignore"] });
+    const child = spawn(installed.python, ["-m", "codex_mem.pi_host"],
+      { cwd: ROOT, env: { ...process.env, ...(installed.data_dir ? { CODEX_MEM_HOME: installed.data_dir } : {}) }, stdio: ["pipe", "pipe", "ignore"] });
     const finish = (value: Receipt) => {
       if (finished) return;
       finished = true;
@@ -65,7 +80,7 @@ function record(entry: SessionMessageEntry) {
 export default function (pi: ExtensionAPI) {
   // The installed owning API was checked at this exact version. Unknown APIs fail open.
   if (VERSION !== "1.4.0") {
-    pi.on("session_start", async (_event, ctx) => { ctx.ui.setStatus("codex-mem", "Memory unavailable: unsupported Pi version"); });
+    pi.on("session_start", async (_event, ctx) => { ctx.ui.setStatus("codex-mem", "Memory unavailable: unsupported Pi version; requires Pi 1.4.0"); });
     return;
   }
   let session = "";

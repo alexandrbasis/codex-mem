@@ -316,3 +316,6 @@ codex plugin list --marketplace personal --json
 Источники и отличия от Claude Mem описаны в [UPSTREAM.md](UPSTREAM.md). Границы проверки приведены в [VERIFICATION.md](docs/VERIFICATION.md).
 
 Прямое сравнение качества и расхода Claude и Luna остаётся непроведённым. Новый учёт не восстанавливает отсутствующие исторические данные и не доказывает общую экономию системы памяти.
+
+
+Установка Pi: [установщик проекта](docs/PI_INSTALL.md).

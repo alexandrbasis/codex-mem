@@ -10,6 +10,8 @@ pi --extension /absolute/path/to/codex-mem/pi/extension.ts
 
 `python3` must be available. `CODEX_MEM_PYTHON` can select an existing Python interpreter. The extension runs `python -m codex_mem.pi_host` from the checkout root. `CODEX_MEM_HOME` selects the shared data directory through the existing Python configuration. The default remains the normal Codex Mem directory. This command does not install a package or change Pi settings. Release installation and independent host disablement belong to issue #11.
 
+See [Pi installation](PI_INSTALL.md) for the complete project package and independent disablement.
+
 ## Completed sources and native identity
 
 `message_end` marks messages observed during this extension runtime. Pi persists the native entry after this handler returns. At `agent_settled`, the extension resolves only these observed message objects to their native entry IDs. It walks back to the previous settlement or startup entry, with a finite limit. Existing history does not become new evidence. Two messages with equal text retain different native IDs.

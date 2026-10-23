@@ -352,3 +352,6 @@ The local database remains on disk after plugin removal. Delete it separately on
 Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record. A live Claude-versus-Luna quality and cost comparison remains unmeasured. Observer accounting does not backfill missing historical receipts or establish net memory-system savings.
 
 Read [Upstream and implementation choices](UPSTREAM.md) for provenance and design differences. The project is licensed under the MIT license.
+
+
+Pi installation: [project installer](docs/PI_INSTALL.md).

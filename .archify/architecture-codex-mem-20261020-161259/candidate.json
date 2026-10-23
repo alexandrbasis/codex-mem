@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "44e9d69bc848cbee43d510d9d2eb2ff0c0da4284",
+      "revision": "13ce7dcc77200a53035786642d83ccc03e2ea042",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -35,9 +35,15 @@
         },
         {
           "path": "pi/extension.ts",
-          "line": 65,
-          "end_line": 176,
+          "line": 80,
+          "end_line": 192,
           "label": "Pi completed events and context"
+        },
+        {
+          "path": "scripts/install_pi.py",
+          "line": 68,
+          "end_line": 166,
+          "label": "Project installation and independent detach"
         }
       ]
     },
@@ -462,6 +468,12 @@
           "line": 185,
           "end_line": 305,
           "label": "Installed Pi public MCP checks"
+        },
+        {
+          "path": "scripts/install_pi.py",
+          "line": 147,
+          "end_line": 158,
+          "label": "One native MCP connection and packaged launcher"
         }
       ]
     }
@@ -587,9 +599,18 @@
       "dot": "cyan",
       "title": "Document scope",
       "items": [
-        "This document describes the local issue #9 transition on October 23, 2026. Installed Pi 1.4.0 passed deterministic host and runtime tests. It does not establish installed-service state, live providers, the full live matrix or answer quality.",
+        "This document includes issue #11 installation on October 23, 2026. Installed Pi 1.4.0 loaded the project package and native MCP, and Python service startup passed without Codex on PATH. Disposable local-provider tests do not establish live providers, the full live matrix or answer quality.",
         "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
         "The diagram, supporting text, Archify controls, and HTML language attribute use English."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Independent Pi installation",
+      "items": [
+        "The release root package declares pi/extension.ts and carries the shared Python payload. The project installer stages a managed .pi/codex-mem copy, records an absolute Python executable and shared memory directory, then merges one native MCP server and one local package declaration. Codex installation and executables are not required. Sources: package.json, scripts/install_pi.py:68-166, pi/extension.ts:16-42.",
+        "Updates retain the recorded shared memory selection when no override is supplied. Fresh and legacy resolved memory paths inside the replaceable package are rejected before mutation. Disable and uninstall retain even a legacy nested store, payload and shared service. Personal Pi settings and unrelated resources remain separate. Sources: scripts/install_pi.py:68-123,229-255, tests/test_pi_install.py, docs/PI_INSTALL.md.",
+        "Installation checks pin Pi 1.4.0, validate the recorded extension/MCP launch paths, exercise the recorded Python interpreter and report each selected background executable separately. Missing Codex does not block loading, capture or startup. Users select Pi profiles and native authorization explicitly. Full live matrix and quality remain issues #13/#14. Sources: scripts/install_pi.py:169-226, tests/test_pi_install.py, docs/PI_INSTALL.md."
       ]
     },
     {
@@ -609,9 +630,9 @@
       "dot": "cyan",
       "title": "Shared host events and context",
       "items": [
-        "Codex adapts native hooks to HostEvent. Pi 1.4.0 observes message_end, resolves native entry IDs after persistence, and submits only current-runtime sources at agent_settled. It never imports existing history or captures streaming updates. Python applies shared privacy, project policy, source identity and queue wake. Sources: host.py:68-212, hooks.py:882-929, pi/extension.ts:92-162, pi_host.py:24-125.",
+        "Codex adapts native hooks to HostEvent. Pi 1.4.0 observes message_end, resolves native entry IDs after persistence, and submits only current-runtime sources at agent_settled. It never imports existing history or captures streaming updates. Python applies shared privacy, project policy, source identity and queue wake. Sources: host.py:68-212, hooks.py:882-929, pi/extension.ts:107-177, pi_host.py:24-125.",
         "Legacy Codex source names and session IDs remain valid. Other host and branch sessions have separate namespaces. One classifier serves SQL queue and retrieval filters, processor summary validation, and project memory. Old dedupe aliases preserve existing entry IDs without a migration or replay. They remove injected memory before hashing, as the old Codex adapter did. Sources: host.py:21-65, store.py:1799-1956.",
-        "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns hook framing. Pi receives custom memory at startup and before prompts; only its current custom context reaches the model, and it is excluded from capture. Empty or failed refreshes remove prior automatic memory while preserving unrelated custom messages. Tiny budgets omit the frame and report a bounded native status. The local Python protocol has byte, event, response and deadline limits. Failure does not block conversation. Sources: host.py:228-295, hooks.py:823-879, pi/extension.ts:17-51,83-125,163-176, pi_host.py:128-164.",
+        "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns hook framing. Pi receives custom memory at startup and before prompts; only its current custom context reaches the model, and it is excluded from capture. Empty or failed refreshes remove prior automatic memory while preserving unrelated custom messages. Tiny budgets omit the frame and report a bounded native status. The local Python protocol has byte, event, response and deadline limits. Failure does not block conversation. Sources: host.py:228-295, hooks.py:823-879, pi/extension.ts:16-67,98-140,178-191, pi_host.py:128-164.",
         "Pi has no native private flag on UserMessage. Explicit private markers activate the shared gate for user, assistant and tool sources. Complete tool JSON is decoded before shared redaction. The shared safe payload reader checks both stored raw reads and new Pi source bodies. Incoming or generated truncation wrappers and derived excerpts are omitted with an explicit reason. UTF-8 subprocess decoding preserves split characters within the byte limit. Native MCP tools remain separate. Branch markers survive resume and reload. Fork copies remain historical. Tree navigation creates a new activation; compaction preserves pending sources until settlement. Sources: docs/PI_HOST.md, tests/test_pi_host.py.",
         "Pi requires a fresh user after activation before assistant/tool capture. Historical automatic continuation is omitted because its privacy state is unknown. Shutdown clears pending observations and automatic context. Common ancestry cannot establish episode identity. Sources: pi/extension.ts:92-177, pi_host.py:43-78, docs/PI_HOST.md.",
         "The shared capture boundary claims hashed native identity before privacy transitions. Replays return body-free receipts without rewinding gates. Deleted sources cannot resurrect. Interrupted claims have an unknown outcome and are not replayed. Existing source and queue transactions remain authoritative. Sources: host.py:140-154, store.py:1801-1859.",

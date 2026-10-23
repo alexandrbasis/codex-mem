@@ -339,17 +339,18 @@ class InstalledPiHostTests(unittest.TestCase):
         self.http.server_close()
         self.thread.join(timeout=3)
 
-    def start(self, *, python=None, extra_extension=None, session_file=None):
+    def start(self, *, python=None, extra_extension=None, session_file=None, package=None, execution_path=None, installed_project=False):
         import threading
         self.stderr = tempfile.TemporaryFile()
         self.addCleanup(self.stderr.close)
         session_args = ['--session', str(session_file)] if session_file else ['--no-session']
         extension_args = ['--extension', str(extra_extension)] if extra_extension else []
+        memory_args = [] if installed_project else ['--no-mcp', '--extension', str(package or ROOT / 'pi/extension.ts')]
         self.process = subprocess.Popen([os.environ['CODEX_MEM_PI'], '--mode', 'rpc', *session_args,
-            '--no-approve', '--provider', 'fixture', '--model', 'fixture', '--thinking', 'off',
-            '--no-builtin-tools', '--no-mcp', '--no-skills', '--no-prompt-templates', '--no-context-files',
-            '--no-themes', '--extension', str(ROOT / 'pi/extension.ts'), *extension_args], cwd=self.project,
-            env={'PATH': os.environ['PATH'], 'HOME': str(self.root), 'PI_CODING_AGENT_DIR': str(self.agent),
+            '--approve' if installed_project else '--no-approve', '--provider', 'fixture', '--model', 'fixture', '--thinking', 'off',
+            '--no-builtin-tools', '--no-skills', '--no-prompt-templates', '--no-context-files',
+            '--no-themes', *memory_args, *extension_args], cwd=self.project,
+            env={'PATH': execution_path or os.environ['PATH'], 'HOME': str(self.root), 'PI_CODING_AGENT_DIR': str(self.agent),
                  'CODEX_MEM_HOME': str(self.data), 'CODEX_MEM_PYTHON': python or sys.executable},
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.stderr)
         self.addCleanup(self.stop)

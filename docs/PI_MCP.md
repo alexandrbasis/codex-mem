@@ -4,11 +4,13 @@ Pi can connect directly to the existing Codex Mem MCP server. The connection use
 
 ## Configure a connection
 
+For a complete release installation, use [the Pi project installer](PI_INSTALL.md). The following manual configuration is for a source checkout or an existing service.
+
 1. Copy [pi-mcp.example.json](pi-mcp.example.json) into the target project's `.pi/mcp.json`. Merge the `codex-mem` entry if the file already exists. Replace `command` with an absolute Python executable and `cwd` with the absolute installed Codex Mem directory that contains `codex_mem/`. Keep `args` as separate arguments.
 2. Use the same memory directory as Codex. The server uses the existing default directory. If Codex uses a custom directory, add `"env": {"CODEX_MEM_HOME": "/absolute/path/to/memory"}` to the server entry. Do not put credentials in this file.
 3. Review the project configuration and grant Pi project trust. Run `pi mcp list` to check the connection, then start Pi. Use `/mcp` to inspect the tools. Run `/reload` after an external configuration change.
 
-These steps configure a connection from source or an existing installation. Issue #11 owns package installation and independent host disablement. This task does not install a service or change the user's Pi settings.
+The project installer manages package installation and independent host disablement. Manual connections remain under your own configuration control.
 
 Use the server name `codex-mem` once. Pi exposes names such as `mcp__codex_mem__memory_search`. The configuration uses `direct` exposure, so the model sees the read tools without a search step. Keep built-in MCP enabled. A replacement `/mcp` extension, `--no-mcp`, or `-builtin:mcp` can prevent the connection. SDK applications must load `createMcpExtension()` and bind the session extensions themselves; the CLI does this already.
 
