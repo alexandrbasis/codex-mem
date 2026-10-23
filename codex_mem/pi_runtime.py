@@ -401,7 +401,12 @@ def _prepared(pi, profile, deadline, run):
                 raise ProcessorFailure("protocol_error")
             if level not in levels:
                 raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
-            client.request("set_thinking_level", level=level)
+            def thinking_changed(event):
+                # Pi 1.4.0 emits this before acknowledging a changed level.
+                # Only our exact requested change is valid at this boundary.
+                if event != {"type": "thinking_level_changed", "level": level}:
+                    raise ProcessorFailure("protocol_error", reason_code="pi_unexpected_event")
+            client.request("set_thinking_level", thinking_changed, level=level)
             run.state(client.request("get_state"), initial=True)
             yield client
         finally:

@@ -75,6 +75,39 @@ class PiProjectMemoryTests(unittest.TestCase):
         with Store(self.data) as store:
             ProjectMemory(store).retry_failed(self.project, include_quarantined=True)
 
+    def test_native_thinking_level_notification_allows_public_memory_delivery(self):
+        self.scenario(thinking_notification={'type': 'thinking_level_changed', 'level': 'low'})
+        result = self.process()
+        self.assertEqual('processed', result['status'], result)
+        with Store(self.data) as store:
+            delivered = handle_hook(dict(hook_event_name='SessionStart', source='startup',
+                cwd=str(self.project), session_id='reader'), store)
+            self.assertIn('Use local import.', json.dumps(delivered))
+
+    def test_thinking_notification_rejects_mismatch_extra_fields_and_other_events(self):
+        for event in ({'type': 'thinking_level_changed', 'level': 'high'},
+                      {'type': 'thinking_level_changed', 'level': 'low', 'extra': True},
+                      {'type': 'agent_start'}):
+            with self.subTest(event=event):
+                self.scenario(thinking_notification=event)
+                result = self.process()
+                self.assertEqual('failed', result['status'], result)
+                with Store(self.data) as store:
+                    memory = ProjectMemory(store)
+                    self.assertEqual([], memory.snapshot(self.project)['episodes'])
+                    self.assertGreater(memory.snapshot(self.project)['coverage']['pending_events'], 0)
+                self.retry()
+
+    def test_unsolicited_thinking_notification_during_generation_rejects_packet(self):
+        self.scenario(generation_thinking_notification=True)
+        result = self.process()
+        self.assertEqual('failed', result['status'], result)
+        with Store(self.data) as store:
+            memory = ProjectMemory(store)
+            self.assertEqual([], memory.snapshot(self.project)['episodes'])
+            self.assertGreater(memory.snapshot(self.project)['coverage']['pending_events'], 0)
+
+
     def test_failed_packets_leave_no_memory_keep_measured_usage_and_can_retry(self):
         for mode in ('invalid_json', 'schema', 'unknown_ref', 'provider_error', 'cancelled',
                      'tool', 'rerouted', 'disconnect', 'timeout', 'no_settlement', 'overflow', 'stderr_overflow', 'malformed'):

@@ -39,6 +39,8 @@ for raw in sys.stdin:
     elif kind == 'get_available_thinking_levels':
         data = {'levels': scenario.get('levels', ['off', 'low'])}
     elif kind == 'set_thinking_level':
+        if 'thinking_notification' in scenario:
+            emit(scenario['thinking_notification'])
         level = scenario.get('clamped', command['level'])
     elif kind == 'get_state':
         data = {'sessionId': 'fixture-session', 'model': model, 'thinkingLevel': level,
@@ -139,6 +141,8 @@ for raw in sys.stdin:
         message = {'role': 'assistant', 'provider': model['provider'], 'model': model['id'],
             'content': [{'type': 'text', 'text': text}], 'usage': {} if scenario.get('omit_usage') or (count == 1 and scenario.get('first_usage_unknown')) or (count == 2 and scenario.get('last_usage_unknown')) else usage,
             'stopReason': 'aborted' if mode == 'cancelled' else 'error' if mode == 'provider_error' else 'stop'}
+        if scenario.get('generation_thinking_notification'):
+            emit({'type': 'thinking_level_changed', 'level': level})
         emit({'type': 'message_end', 'message': message})
         emit({'type': 'turn_end', 'message': message, 'toolResults': []})
         emit({'type': 'agent_end', 'messages': [message]})

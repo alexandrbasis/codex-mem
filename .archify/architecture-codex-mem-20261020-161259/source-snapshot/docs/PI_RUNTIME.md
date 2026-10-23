@@ -8,6 +8,8 @@ The supported CLI package is `@earendil-works/pi-coding-agent` version **1.4.0**
 
 Use the existing five-field execution profile. Supply exact provider and model identifiers. Before catalog discovery, the adapter runs `pi auth check --provider <provider> --json --no-refresh`. It never requests `--credentials`. A missing provider and unavailable native authorization have separate failure reasons. This read-only check does not establish remote acceptance of a credential. The adapter then reads Pi's available catalog, selects the exact pair with RPC `set_model`, and reads the model's available thinking levels. It sets the requested level and checks the returned session state before sending evidence. It repeats the state check after completion. There is no fuzzy model dispatch or fallback to Codex.
 
+Pi 1.4.0 can emit `thinking_level_changed` before the `set_thinking_level` response. The adapter accepts only the exact requested level at that command, then verifies session state. A mismatched notification or a reasoning change during generation rejects the attempt.
+
 The profile value `none` means Pi's `off`. These are explicit names for disabled reasoning. Other levels must appear exactly in `get_available_thinking_levels`. A `null` level fails because it cannot establish an exact requested setting.
 
 Credentials remain in Pi's native authorization system. The adapter uses `PI_CODING_AGENT_DIR`, or Pi's standard `~/.pi/agent` directory, only to locate `auth.json` and `models.json`. A temporary agent directory links these two files. Pi reads them through its normal authorization and model loading code. Codex Mem does not copy credentials into its configuration, database, arguments, receipts, or logs. Pi can refresh its own authorization during a real call.
@@ -48,4 +50,4 @@ Ordinary tests replace only the external executable. They use real temporary sto
 CODEX_MEM_PI=/absolute/path/to/pi python3 -m unittest discover -s tests -p 'test_pi_*.py' -k installed -v
 ```
 
-These tests use a deterministic local HTTP provider, the installed Pi CLI, and real observation and project-memory processing. They check actual protocol compatibility, disabled tools, resource exclusion, and unknown usage. They make no live provider call. They do not establish live model quality, the four-way host/runtime matrix, deployment, or provider-extension compatibility. Issues #13 and #14 own live matrix and quality evidence.
+These tests use a deterministic local HTTP provider, the installed Pi CLI, and real observation and project-memory processing. They check actual protocol compatibility, disabled tools, resource exclusion, and unknown usage. They make no live provider call. They do not establish live model quality, the four-way host/runtime matrix, deployment, or provider-extension compatibility. See the [host/runtime matrix](HOST_RUNTIME_MATRIX.md) for separate public-adapter smoke with genuine remote execution. Issue #14 owns the quality comparison.

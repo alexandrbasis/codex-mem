@@ -1,0 +1,91 @@
+{
+  "native_versions": {
+    "pi": "1.4.0",
+    "codex": "0.163.0"
+  },
+  "pi_provider_native_status": "openai-codex locally ready; no-refresh metadata only",
+  "sandbox_codex_account_read_error": "workspace routing discovery failed",
+  "network_comparison": "Elevated network allowed both native runtimes to process remote calls; sandbox failures do not establish invalid credentials.",
+  "pi_protocol_reproduction": [
+    {
+      "command": "get_available_models",
+      "response_id": "1",
+      "success": true,
+      "data_keys": [
+        "models"
+      ]
+    },
+    {
+      "command": "set_model",
+      "response_id": "2",
+      "success": true,
+      "data_keys": [
+        "id",
+        "name",
+        "api",
+        "provider",
+        "baseUrl",
+        "reasoning",
+        "input",
+        "cost",
+        "contextWindow",
+        "maxTokens",
+        "thinkingLevelMap",
+        "compat",
+        "inputLimits",
+        "type"
+      ]
+    },
+    {
+      "command": "get_available_thinking_levels",
+      "response_id": "3",
+      "success": true,
+      "data_keys": [
+        "levels"
+      ]
+    },
+    {
+      "command": "set_thinking_level",
+      "event_type": "thinking_level_changed",
+      "event_keys": [
+        "type",
+        "level"
+      ]
+    },
+    {
+      "command": "set_thinking_level",
+      "response_id": "4",
+      "success": true,
+      "data_keys": []
+    },
+    {
+      "command": "get_state",
+      "response_id": "5",
+      "success": true,
+      "data_keys": [
+        "model",
+        "thinkingLevel",
+        "isStreaming",
+        "isCompacting",
+        "steeringMode",
+        "followUpMode",
+        "sessionId",
+        "autoCompactionEnabled",
+        "messageCount",
+        "pendingMessageCount"
+      ]
+    }
+  ],
+  "validation_logs": {
+    "thinking-red.log": "test_native_thinking_level_notification_allows_public_memory_delivery (tests.test_pi_project_memory.PiProjectMemoryTests.test_native_thinking_level_notification_allows_public_memory_delivery) ... FAIL\n\n======================================================================\nFAIL: test_native_thinking_level_notification_allows_public_memory_delivery (tests.test_pi_project_memory.PiProjectMemoryTests.test_native_thinking_level_notification_allows_public_memory_delivery)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/alexandrbasis/.codex/worktrees/pi-spec-issue-13/codex-mem-public/tests/test_pi_project_memory.py\", line 81, in test_native_thinking_level_notification_allows_public_memory_delivery\n    self.assertEqual('processed', result['status'], result)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'processed' != 'failed'\n- processed\n+ failed\n : {'processor_id': 'codex-mem-project-episode-v2', 'output_schema_version': 'project-memory-output-v12', 'model': 'fixture', 'reasoning_effort': 'low', 'mode': 'pilot', 'execution_profile': {'runtime': 'pi', 'provider': 'fixture', 'model': 'fixture', 'reasoning_effort': 'low', 'timeout': 3.0}, 'job_id': 'pmj_13f96f4453df7089524722b740009b2b6e8791bb', 'job_kind': 'events', 'historical_context': {'disclosed_sources': 0, 'omitted_sources': 0, 'omitted_ancestor_chains': 0, 'omitted_heads': 0, 'complete_history': False, 'source_char_limit': 24000, 'source_limit': 32}, 'historical_sources_omitted': 0, 'usage_attempt_id': 'pma_72344909a17d4ab5a6285b3089ec44bc', 'usage_status': 'unavailable', 'runner_duration_ms': 1112, 'execution_receipt': {'runtime': 'pi', 'version': '1.4.0', 'protocol': 'rpc-jsonl-1.4.0', 'session_id': None, 'generation': 0, 'settled': False, 'identity_verified': False, 'tools_policy': 'cli_disabled', 'tool_calls_observed': 0, 'extensions_policy': 'cli_disabled', 'state_checked': False, 'agent_end_observed': False, 'system_message_verified': False, 'assistant_stop_reason': None}, 'usage_source': 'pi_assistant_usage', 'usage_updates': 0, 'reason_code': 'pi_unexpected_event', 'status': 'failed', 'code': 'invalid_response', 'attempts': 1, 'retry_after': 1792791673.394202, 'usage_recording_status': 'recorded', 'duration_ms': 1118}\n\n----------------------------------------------------------------------\nRan 1 test in 1.156s\n\nFAILED (failures=1)\n",
+    "thinking-green.log": "test_native_thinking_level_notification_allows_public_memory_delivery (tests.test_pi_project_memory.PiProjectMemoryTests.test_native_thinking_level_notification_allows_public_memory_delivery) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 1.210s\n\nOK\n",
+    "thinking-focused.log": "test_unsolicited_thinking_notification_during_generation_rejects_packet (tests.test_pi_project_memory.PiProjectMemoryTests.test_unsolicited_thinking_notification_during_generation_rejects_packet) ... ok\ntest_thinking_notification_rejects_mismatch_extra_fields_and_other_events (tests.test_pi_project_memory.PiProjectMemoryTests.test_thinking_notification_rejects_mismatch_extra_fields_and_other_events) ... ok\ntest_native_thinking_level_notification_allows_public_memory_delivery (tests.test_pi_project_memory.PiProjectMemoryTests.test_native_thinking_level_notification_allows_public_memory_delivery) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 5.078s\n\nOK\n",
+    "classifier-focused.log": "test_live_smoke_requires_processed_exact_identity_and_delivered_context (tests.test_live_host_runtime_smoke.LiveHostRuntimeSmokeTests.test_live_smoke_requires_processed_exact_identity_and_delivered_context) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.044s\n\nOK\n"
+  },
+  "source_hashes": {
+    "codex_mem/pi_runtime.py": "379293ab9d26ee1ab9af0ae5883ee5889cf2e697bd93a922ce6c9f0c70f03024",
+    "tests/fixtures/execution_pi.py": "1a6b400e0faa5310915119e09fdfcd5c8a5132c7e22759482206b8c9cbd6e785",
+    "tests/test_pi_project_memory.py": "e7eed6eb36a5aad11008e92e12fedfc6d0bfe12791a3ab53c0251d065834c90b",
+    "tests/test_live_host_runtime_smoke.py": "331cf197259735d95f8b313a0fc96b3a7b7079688b92a6974df16580a70804ce"
+  }
+}

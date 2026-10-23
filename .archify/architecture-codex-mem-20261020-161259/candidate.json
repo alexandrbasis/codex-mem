@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "eb3e3bb9fdbb281f8f5706246223e7b7df502e98",
+      "revision": "474f6651eeb65d8b9909bb3aedf9210991e0b03b",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -438,8 +438,8 @@
         {
           "path": "codex_mem/pi_runtime.py",
           "line": 362,
-          "end_line": 476,
-          "label": "Native preflight, isolated Pi RPC and settlement"
+          "end_line": 481,
+          "label": "Exact Pi profile, bounded RPC and settlement"
         }
       ]
     },
@@ -647,7 +647,7 @@
       "dot": "cyan",
       "title": "Document scope",
       "items": [
-        "This document includes issue #12 diagnostics and mixed-runtime usage on October 23, 2026. Installed Pi 1.4.0 passed isolated local-provider checks. Native readiness metadata does not prove remote authorization, the full live matrix, or answer quality.",
+        "This document includes issue #13 public host/runtime matrix coverage on October 24, 2026, in addition to issue #12 diagnostics and mixed-runtime usage. Routine tests replace external executables. Installed Pi 1.4.0 tests use a local provider. Separate live observation smoke records pass all four public-adapter pairs. Native interactive event emission and model quality remain outside those live results. Sources: docs/HOST_RUNTIME_MATRIX.md, tests/test_host_runtime_matrix.py, docs/evidence/host-runtime-matrix-2026-10-24/live-final.json.",
         "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
         "The diagram, supporting text, Archify controls, and HTML language attribute use English."
       ]
@@ -666,8 +666,18 @@
       "title": "Execution diagnostics and usage",
       "items": [
         "CLI doctor and the dashboard read saved profiles and bounded attempt metadata without dispatching a model. Default and processor overrides remain visible beside requested and actual identity. Latest failures have fixed content-free actions. Explicit doctor --check-execution shares native preparation with the processors. Sources: codex_mem/execution_diagnostics.py, codex_mem/dashboard_data.py, docs/EXECUTION.md.",
-        "Pi checks the exact 1.4.0 version and uses auth check --json --no-refresh before RPC selection. Codex reads account/read without requesting refresh, then validates the exact catalog model and reasoning. Missing executables, native authorization, model or reasoning support have separate reasons. Codex required-protocol support does not establish universal version compatibility. Local credential readiness does not prove remote acceptance. Sources: codex_mem/processor.py:1387-1450, codex_mem/pi_runtime.py:181-198,362-408, docs/PI_RUNTIME_EVIDENCE.json.",
+        "Pi checks the exact 1.4.0 version and uses auth check --json --no-refresh before RPC selection. Codex reads account/read without requesting refresh, then validates the exact catalog model and reasoning. Missing executables, native authorization, model or reasoning support have separate reasons. Codex required-protocol support does not establish universal version compatibility. Local credential readiness does not prove remote acceptance. Sources: codex_mem/processor.py:1387-1450, codex_mem/pi_runtime.py:181-198,362-414, docs/PI_RUNTIME_EVIDENCE.json.",
         "Reports combine historical Codex and new observation/project-memory attempts. Runtime-qualified worker identifiers preserve collisions across runtimes. Per-counter known subtotals remain separate from unknown totals. Failed measured usage, cumulative counter replacement, and original provenance remain visible. API estimates do not establish actual charges, and Pi receives no Codex-credit estimate. Sources: codex_mem/cost_report.py, codex_mem/pricing.py, codex_mem/observer_usage_store.py, tests/test_execution_usage_reports.py."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Host/runtime evidence boundaries",
+      "items": [
+        "The common matrix submits Codex hooks or the public Pi local protocol into a real temporary Store. Observation cases drain the durable service queue in a fresh process. Project-memory cases drain the durable project-memory queue through its public explicit processor in a fresh process, without bypassing the service quiet period. Only external executables are deterministic. Pi/Pi excludes Codex from PATH. Sources: tests/test_host_runtime_matrix.py:25-122, docs/HOST_RUNTIME_MATRIX.md.",
+        "All four pairs exercise roles, source references, project scope, duplicates, privacy, injected-memory exclusion, atomic protocol failure, retained-source retry, and deletion during generation. Concurrent Codex/Pi events exercise two worker slots and retain the active profile while a later attempt reloads changed configuration. Existing suites own native lifecycle, tools, legacy migration and usage coverage. Sources: tests/test_host_runtime_matrix.py:124-319, docs/HOST_RUNTIME_MATRIX.md.",
+        "Installed Pi lifecycle and MCP tests use real native Pi with a deterministic local HTTP provider. The separate live helper sends synthetic public-adapter events through real background executables and remote providers into disposable memory. All four observation pairs recorded processed derived notes with exact execution identity, source/project references, and next-request delivery. Pi/Pi excluded Codex. Pi was 1.4.0 and Codex CLI was 0.163.0. These runs do not establish native interactive event emission, hook trust, other processors or model quality. Sources: docs/evidence/host-runtime-matrix-2026-10-24/live-final.json, scripts/live_host_runtime_smoke.py, docs/HOST_RUNTIME_MATRIX.md.",
+        "The final live report identifies its adapter boundary and uncovered processors. The executed helper was reconstructed from the recorded edit sequence after the run, not captured before it. Later helper edits strengthened future classification, audit fields and safe failure diagnostics without another remote run. Failures record the stage and allowlisted cause metadata without raw exception text, process output or paths. The provenance file records both hashes and the exact prior pass predicates. Current classifier and diagnostic coverage uses routine tests. Sources: docs/evidence/host-runtime-matrix-2026-10-24/snapshot-provenance.json, scripts/live_host_runtime_smoke.py:64-92, tests/test_live_host_runtime_smoke.py."
       ]
     },
     {
@@ -675,8 +685,9 @@
       "title": "Host and background execution",
       "items": [
         "Codex and Pi are interactive hosts. Their model selection does not select the background runtime. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:397-431, episode_processor.py:898-910.",
-        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:710-928, pi_runtime.py:412-476.",
-        "The resolver chooses the processor override, default profile, then legacy Codex. Observations, summaries, project memory, reconsideration, and consolidation can use Pi with independent profiles. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:897-925, pi_runtime.py:450-462, docs/EXECUTION.md.",
+        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:710-928, pi_runtime.py:417-481.",
+        "The resolver chooses the processor override, default profile, then legacy Codex. Observations, summaries, project memory, reconsideration, and consolidation can use Pi with independent profiles. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:897-925, pi_runtime.py:390-410,445-464, docs/EXECUTION.md.",
+        "Pi 1.4.0 can emit thinking_level_changed before the set_thinking_level response. Preparation accepts only the exact requested level and only during that command. A mismatched notification or another event fails the attempt. Initial and completed state checks still require the exact profile. Sources: codex_mem/pi_runtime.py:398-410, tests/fixtures/execution_pi.py, tests/test_pi_observations.py, tests/test_pi_project_memory.py.",
         "Observation jobs keep their source identity across profile changes. The claim transaction stores each requested profile with its lease. Corrections retain it; later attempts reload current configuration. Legacy receipts preserve requested-only provenance and measured usage. Successful sources do not replay, including overlapping historical jobs. Explicit maintenance recovery retains its separate fingerprint and opt-in. Explicit retry_failed with a different processor can create distinct work; successful sources and one-shot recovery remain protected. Sources: store.py:2421-2904, observer_usage_store.py:80-146,263-305, tests/test_observation_profiles.py. Project memory retains its existing profile-independent source fingerprint and stores requested and verified execution separately. Additive migration preserves historical values; failed usage survives source deletion. Sources: project_memory.py:494-599, tests/test_project_memory_profiles.py.",
         "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:432-451, episode_processor.py:938-965.",
         "Pi creates a fresh temporary working directory, agent profile, and in-memory session. Only native auth/models are linked. Tools, MCP, extension discovery, skills, instructions, automatic retries and compaction are disabled. No capture extension or database-write API is loaded. These are runtime restrictions, not an OS sandbox. Provider extensions remain unsupported. Sources: pi_runtime.py:20-22,163-177,361-377, docs/PI_RUNTIME.md.",
