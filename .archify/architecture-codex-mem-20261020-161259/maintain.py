@@ -63,6 +63,16 @@ FIXED_SOURCES = (
     "tests/test_project_memory_profiles.py",
     "docs/pi-mcp.example.json",
     "tests/test_pi_mcp.py",
+    "tests/test_execution_diagnostics.py",
+    "tests/test_execution_usage_reports.py",
+    "tests/test_dashboard_data.py",
+    "tests/test_dashboard_presentation.py",
+    "tests/test_usage_interfaces.py",
+    "tests/test_processor_execution_path.py",
+    "tests/fixtures/execution_codex.py",
+    "tests/test_jev_quality_correction.py",
+    "codex_mem/ui_static/app.js",
+    "scripts/demo_execution_dashboard.py",
     "tests/test_mcp.py",
 )
 DOCUMENTS = ("candidate.json", "codex-mem.html")

@@ -12,6 +12,11 @@ if '--version' in sys.argv:
         time.sleep(30)
     print(scenario.get('version', '1.4.0'), flush=True)
     sys.exit(0)
+if sys.argv[1:3] == ['auth', 'check']:
+    status = scenario.get('auth_status', 'ready')
+    print(json.dumps({'status': status, 'provider': sys.argv[sys.argv.index('--provider') + 1],
+                      'reason': scenario.get('auth_reason')}), flush=True)
+    sys.exit(0 if status == 'ready' else 1)
 model = {'id': 'fixture', 'provider': 'fixture', 'reasoning': True}
 level = 'low'
 count = 0

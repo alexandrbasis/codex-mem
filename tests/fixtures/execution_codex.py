@@ -17,8 +17,13 @@ for line in sys.stdin:
         trace.write(json.dumps(message) + '\n')
     if 'id' not in message:
         continue
+    if method == scenario.get('missing_method'):
+        send({'id': message['id'], 'error': {'code': -32601, 'message': 'PRIVATE_ERROR'}})
+        continue
     result = {}
-    if method == 'model/list':
+    if method == 'account/read':
+        result = scenario.get('account', {'account': {'type': 'apiKey'}, 'requiresOpenaiAuth': True})
+    elif method == 'model/list':
         result = {'data': scenario.get('models', [{'id': 'gpt-6-luna', 'model': 'gpt-6-luna', 'supportedReasoningEfforts': [{'reasoningEffort': 'medium'}]}])}
         if scenario.get('model_pages'):
             result = scenario['model_pages'].get(params.get('cursor', 'first'), {})

@@ -566,7 +566,7 @@ class EpisodeProcessorTests(unittest.TestCase):
         if jsonschema is not None:
             jsonschema.Draft202012Validator.check_schema(request["output_schema"])
         client = mock.Mock()
-        responses = {"initialize": {}, "config/read": {"config": {}},
+        responses = {"initialize": {}, "account/read": {"account": {"type": "apiKey"}, "requiresOpenaiAuth": True}, "config/read": {"config": {}},
                      "model/list": {"data": [{"id": ep.MODEL, "model": ep.MODEL, "supportedReasoningEfforts": [{"reasoningEffort": ep.REASONING_EFFORT}]}]},
                      "thread/start": {"thread": {"id": "worker"}, "model": ep.MODEL,
                                       "reasoningEffort": ep.REASONING_EFFORT, "modelProvider": "openai"},

@@ -33,6 +33,7 @@ FIELDS = {
     'usage_events': 'event_key thread_id session_id response_id model model_source model_provider service_tier requested_service_tier requested_service_tier_source service_tier_source recorded_at source_kind quality context_input_tokens context_cached_input_tokens context_cache_write_input_tokens context_output_tokens context_total_tokens context_window_tokens ' + ' '.join(TOKEN_FIELDS),
     'observation_jobs': 'id project processor_id model reasoning_effort session_id status disposition attempt_count worker_thread_id error_code created_at updated_at completed_at',
     'observer_usage_attempts': 'runtime provider requested_model reasoning_effort timeout profile_basis actual_runtime actual_provider actual_model actual_reasoning_effort job_id attempt_count outcome error_code worker_thread_id duration_ms usage_status usage_source usage_updates started_at finished_at ' + ' '.join(TOKEN_FIELDS),
+    'pm_usage_attempts': 'attempt_id project session_id job_id processor_id model reasoning_effort requested_runtime requested_provider requested_model requested_reasoning_effort runtime provider actual_model actual_reasoning_effort profile_basis worker_thread_id started_at finished_at updated_at outcome error_code reason_code duration_ms usage_status usage_source usage_updates cache_write_tokens reasoning_tokens ' + ' '.join(TOKEN_FIELDS),
     'observation_failure_receipts': 'job_id attempt_count error_code reason_code created_at',
     'jev_filter_attempts': 'job_id attempt_count audit_json updated_at',
     'jev_judgment_audits': 'id project owner_id audit_json created_at',
@@ -146,15 +147,20 @@ class DashboardReader:
             # workers whose attempt rows fall outside this project or period.
             # Read this dependency first so a later timeout cannot double count.
             result['_observer_workers'] = []
-            if 'observer_usage_attempts' in available:
-                observer_columns = {row[1] for row in connection.execute('PRAGMA table_info(observer_usage_attempts)')}
-                if 'worker_thread_id' in observer_columns:
+            workers_complete = True
+            for worker_table in ('observer_usage_attempts', 'pm_usage_attempts'):
+                if worker_table not in available:
+                    continue
+                worker_columns = {row[1] for row in connection.execute(f'PRAGMA table_info({worker_table})')}
+                if 'worker_thread_id' in worker_columns:
                     start_query()
-                    runtime_filter = " AND COALESCE(runtime,'codex')='codex'" if 'runtime' in observer_columns else ''
-                    workers = [row[0] for row in connection.execute('SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL' + runtime_filter + ' LIMIT ?', (ROW_LIMIT + 1,))]
+                    runtime_fields = [field for field in ('actual_runtime', 'runtime', 'requested_runtime') if field in worker_columns]
+                    runtime = "COALESCE(" + ','.join(runtime_fields + ["'codex'"]) + ")" if runtime_fields else "'codex'"
+                    workers = [row[0] for row in connection.execute(f"SELECT DISTINCT worker_thread_id FROM {worker_table} WHERE worker_thread_id IS NOT NULL AND {runtime}='codex' LIMIT ?", (ROW_LIMIT + 1,))]
                     finish_query()
-                    result['_observer_workers'] = workers[:ROW_LIMIT]
-                    result['coverage']['observer_workers_complete'] = len(workers) <= ROW_LIMIT
+                    result['_observer_workers'].extend(workers[:ROW_LIMIT])
+                    workers_complete = workers_complete and len(workers) <= ROW_LIMIT
+            result['coverage']['observer_workers_complete'] = workers_complete
             for table, whitelist in FIELDS.items():
                 start_query()
                 if table not in available:
@@ -315,7 +321,22 @@ class DashboardReader:
                 source = sessions.get(job.get('session_id'), {})
                 if source.get('project') != job.get('project'):
                     source = {}
-                attempts.append({**row, 'project': job.get('project'), **attempt_model_metadata(row, job), 'session_id': source.get('session_id') or job.get('session_id'), 'source_session_id': job.get('session_id'), 'session_attribution_basis': 'usage_session_mapping' if source else 'unmapped_source_session'})
+                attempts.append({**row, 'requested_runtime': row.get('runtime') or 'codex', 'requested_provider': row.get('provider') or 'openai', 'requested_model': row.get('requested_model') or job.get('model'), 'requested_reasoning_effort': row.get('reasoning_effort') or job.get('reasoning_effort'), 'processor': 'observation', 'project': job.get('project'), **attempt_model_metadata(row, job), 'session_id': source.get('session_id') or job.get('session_id'), 'source_session_id': job.get('session_id'), 'session_attribution_basis': 'usage_session_mapping' if source else 'unmapped_source_session'})
+            for row in tables['pm_usage_attempts']:
+                source = sessions.get(row.get('session_id'), {})
+                if source.get('project') != row.get('project'):
+                    source = {}
+                attempts.append({**row, 'processor': 'project_memory', 'source_kind': 'project_memory_processor',
+                    'runtime': row.get('requested_runtime') or 'codex',
+                    'provider': row.get('requested_provider') or 'openai',
+                    'requested_model': row.get('requested_model') or row.get('model'),
+                    'reasoning_effort': row.get('requested_reasoning_effort') or row.get('reasoning_effort'),
+                    'actual_runtime': row.get('runtime'), 'actual_provider': row.get('provider'),
+                    'cache_write_input_tokens': row.get('cache_write_tokens'),
+                    'reasoning_output_tokens': row.get('reasoning_tokens'),
+                    'session_id': source.get('session_id') or row.get('session_id'),
+                    'source_session_id': row.get('session_id'),
+                    'session_attribution_basis': 'usage_session_mapping' if source else 'unmapped_source_session'})
             event_projects, attempt_projects = defaultdict(list), defaultdict(list)
             for row in events:
                 event_projects[row.get('project')].append(row)
@@ -330,7 +351,8 @@ class DashboardReader:
             events = [row for row in events if row.get('session_id') == session_id]
             attempts = [row for row in attempts if row.get('session_id') == session_id]
         report = build_report(events, attempts, from_date=snapshot['period']['from'], to_date=snapshot['period']['to'], timezone=ZONE, project=project, session_id=session_id, group_by=group_by, max_groups=1000, observer_thread_ids=snapshot.get('_observer_workers', ()), coverage=snapshot['coverage'])
-        for stream, required in (('main', ('usage_events', 'usage_sessions')), ('observer', ('observer_usage_attempts', 'observation_jobs'))):
+        pm_present = 'pm_usage_attempts' in snapshot['coverage'].get('present_tables', ())
+        for stream, required in (('main', ('usage_events', 'usage_sessions')), ('observer', ('observer_usage_attempts', 'observation_jobs') + (('pm_usage_attempts',) if pm_present else ()))):
             unavailable = snapshot['status'] == 'unavailable' or not all(table in snapshot['coverage']['available_tables'] for table in required) or (stream == 'main' and snapshot['coverage'].get('observer_workers_complete') is False)
             if unavailable or snapshot['coverage']['truncated_tables']:
                 if unavailable:
@@ -339,9 +361,20 @@ class DashboardReader:
                     for field in TOKEN_FIELDS:
                         report[stream][field] = None
                         report['combined'][field] = None
+                for section in (report[stream], report['combined']):
+                    for counter in section.get('token_totals', {}).values():
+                        counter['total'] = None
+                        counter['collection_complete'] = False
                 for metric in ('api_equivalent_usd', 'estimated_codex_credits'):
                     report[stream][metric]['total'] = None
                     report['combined'][metric]['total'] = None
+        if snapshot['coverage']['truncated_tables'] or snapshot['status'] == 'unavailable':
+            for stream_groups in report['groups'].values():
+                for group in stream_groups.values():
+                    for row in group['rows']:
+                        for counter in row.get('token_totals', {}).values():
+                            counter['total'] = None
+                            counter['collection_complete'] = False
         if snapshot['coverage']['truncated_tables']:
             report['completeness']['tokens_basis'] = 'retained_rows_lower_bound'
         report_cache[cache_key] = report
@@ -467,7 +500,7 @@ class DashboardReader:
 
     def overview(self, period='all'):
         snapshot = self._snapshot(period)
-        report = self._report(snapshot)
+        report = self._report(snapshot, group_by=('execution',))
         sizes = {}
         for name in ('memory.sqlite3', 'memory.sqlite3-wal', 'memory.sqlite3-shm'):
             try:
@@ -500,7 +533,13 @@ class DashboardReader:
                     service['status'] = 'running' if service['running'] else 'stale_owner'
         except (OSError, ValueError, TypeError, AttributeError):
             pass
-        return {**self._base(snapshot), **{key: report[key] for key in ('main', 'observer', 'combined', 'pricing', 'completeness', 'actual_billing', 'caveats')}, 'storage': {'files_bytes': sizes, 'basis': 'current_local_file_sizes'}, 'capture': self._capture(snapshot), 'queue': self._queue(snapshot), 'service': service, 'jev': self._jev(snapshot)}
+        return {**self._base(snapshot), **{key: report[key] for key in ('main', 'observer', 'combined', 'pricing', 'completeness', 'actual_billing', 'caveats')}, 'storage': {'files_bytes': sizes, 'basis': 'current_local_file_sizes'}, 'capture': self._capture(snapshot), 'queue': self._queue(snapshot), 'service': service, 'execution': self._execution_status(snapshot), 'execution_groups': report['groups']['observer']['execution'], 'jev': self._jev(snapshot)}
+
+    def _execution_status(self, snapshot):
+        if '_execution_status' not in snapshot:
+            from .execution_diagnostics import execution_status
+            snapshot['_execution_status'] = execution_status(self.data_dir)
+        return snapshot['_execution_status']
 
     @staticmethod
     def _activity_maps(snapshot):
@@ -520,7 +559,7 @@ class DashboardReader:
                     session = source.get('session_id') or session
                 key = (project, session)
                 session_activity[key] = max(stamp, session_activity.get(key, 0))
-        for table, field in (('entries', 'created_at'), ('observation_jobs', 'updated_at'), ('usage_sessions', 'started_at')):
+        for table, field in (('entries', 'created_at'), ('observation_jobs', 'updated_at'), ('usage_sessions', 'started_at'), ('pm_usage_attempts', 'started_at')):
             for row in snapshot['tables'][table]:
                 record(row.get('project'), row.get('session_id'), row.get(field))
         for row in snapshot['tables']['usage_events']:
@@ -533,7 +572,7 @@ class DashboardReader:
         if not isinstance(query, str) or len(query) > 500:
             raise ValueError('query must be a string of at most 500 characters')
         snapshot = self._snapshot(period)
-        keys = {row.get('project') for table in ('entries', 'usage_sessions', 'observation_jobs') for row in snapshot['tables'][table] if row.get('project')}
+        keys = {row.get('project') for table in ('entries', 'usage_sessions', 'observation_jobs', 'pm_usage_attempts') for row in snapshot['tables'][table] if row.get('project')}
         project_activity, _ = self._activity_maps(snapshot)
         keys = sorted((key for key in keys if query.casefold() in key.casefold()), key=lambda key: (-project_activity.get(key, 0), key))
         chosen, pagination = _page(keys, page, limit)
@@ -547,7 +586,7 @@ class DashboardReader:
     def project(self, project, period='all', page=1, limit=50):
         key = project_key(project)
         snapshot = self._snapshot(period, key)
-        sessions = {row.get('session_id') for table in ('usage_sessions', 'entries', 'observation_jobs') for row in snapshot['tables'][table] if row.get('project') == key and row.get('session_id')}
+        sessions = {row.get('session_id') for table in ('usage_sessions', 'entries', 'observation_jobs', 'pm_usage_attempts') for row in snapshot['tables'][table] if row.get('project') == key and row.get('session_id')}
         # Jobs may point to a child thread rather than the canonical session.
         mapping = {row['thread_id']: row['session_id'] for row in snapshot['tables']['usage_sessions'] if row.get('project') == key}
         _, session_activity = self._activity_maps(snapshot)
@@ -586,7 +625,6 @@ class DashboardReader:
         ids = {session_id, *(row['thread_id'] for row in threads)}
         jobs = [row for row in snapshot['tables']['observation_jobs'] if row.get('project') == key and row.get('session_id') in ids]
         job_ids = {row['id'] for row in jobs}
-        attempts = [row for row in snapshot['tables']['observer_usage_attempts'] if row.get('job_id') in job_ids and self._in_period(row, 'started_at', snapshot)]
         report = self._report(snapshot, key, session_id, group_by=('agent', 'model'))
         agent_usage = {row['value']: row for row in report['groups']['main']['agent']['rows']}
         thread_models = defaultdict(set)
@@ -595,9 +633,11 @@ class DashboardReader:
                 thread_models[row['thread_id']].add(row['model'])
         jobs_by_id = {row['id']: row for row in jobs}
         priced_attempts = []
-        for row in attempts:
-            job = jobs_by_id[row['job_id']]
-            metadata = attempt_model_metadata(row, job)
+        for row in snapshot['_normalized'][1]:
+            if row.get('project') != key or row.get('session_id') != session_id or not self._in_period(row, 'started_at', snapshot):
+                continue
+            job = jobs_by_id.get(row['job_id'], {})
+            metadata = attempt_model_metadata(row, job) if row['processor'] == 'observation' else {}
             pricing_row = {**row, **metadata}
             if row.get('usage_status') not in ('reported', 'partial'):
                 pricing_row.update({field: None for field in TOKEN_FIELDS})

@@ -100,7 +100,9 @@ class PiProjectMemoryTests(unittest.TestCase):
         self.assertEqual('processed', self.process()['status'])
 
     def test_configuration_failures_never_send_prepared_input(self):
-        for scenario, reason in (({'version': '1.3.0'}, 'unsupported_pi_version'),
+        for scenario, reason in (({'auth_status': 'not_ready'}, 'authentication_unavailable'),
+                ({'auth_status': 'not_ready', 'auth_reason': 'provider_not_found'}, 'unsupported_provider'),
+                ({'version': '1.3.0'}, 'unsupported_pi_version'),
                 ({'models': []}, 'exact_model_unavailable'), ({'levels': ['off']}, 'unsupported_reasoning'),
                 ({'clamped': 'off'}, 'pi_identity_mismatch')):
             with self.subTest(scenario=scenario):
@@ -108,7 +110,9 @@ class PiProjectMemoryTests(unittest.TestCase):
                 failed = self.process()
                 self.assertEqual(reason, failed['reason_code'], failed)
                 with Store(self.data) as store:
-                    self.assertIsNone(ProjectMemory(store).attempts(self.project)[0]['total_tokens'])
+                    attempt = ProjectMemory(store).attempts(self.project)[0]
+                    self.assertIsNone(attempt['total_tokens'])
+                    self.assertEqual(reason, attempt['reason_code'])
                 self.retry()
         trace = self.pi.with_suffix('.trace')
         self.assertNotIn('prompt', [json.loads(line)['type'] for line in trace.read_text().splitlines()])

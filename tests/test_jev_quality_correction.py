@@ -30,6 +30,8 @@ class FakeServer:
         pass
 
     def request(self, method, params, notification_handler=None):
+        if method == "account/read":
+            return {"account": {"type": "apiKey"}, "requiresOpenaiAuth": True}
         if method == "thread/start":
             return {"model": processor.MODEL, "reasoningEffort": processor.REASONING_EFFORT,
                     "modelProvider": "openai"}

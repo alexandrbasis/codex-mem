@@ -1,7 +1,7 @@
 """Shared CLI/MCP boundary for cached reports and explicit bounded refreshes."""
 from __future__ import annotations
 
-from .cost_report import build_cost_report, resolve_period
+from .cost_report import SUPPORTED_DIMENSIONS, build_cost_report, resolve_period
 
 
 def usage_refresh(data_dir=None, *, from_date=None, to_date=None, timezone="UTC",
@@ -28,8 +28,8 @@ def usage_report(data_dir=None, *, from_date=None, to_date=None, timezone="UTC",
                  refresh=False, codex_home=None, max_files=32, max_bytes=8 * 1024 * 1024):
     # Freeze the cutoff before optional collection so both phases describe the
     # same time window. The normal report path never constructs a writer.
-    if (not isinstance(group_by, (tuple, list)) or not 1 <= len(group_by) <= 5
-            or any(not isinstance(item, str) or item not in {"day", "project", "task", "agent", "model"} for item in group_by)
+    if (not isinstance(group_by, (tuple, list)) or not 1 <= len(group_by) <= len(SUPPORTED_DIMENSIONS)
+            or any(not isinstance(item, str) or item not in SUPPORTED_DIMENSIONS for item in group_by)
             or len(set(group_by)) != len(group_by)):
         raise ValueError("group_by must contain distinct supported dimensions")
     period = resolve_period(from_date, to_date, timezone)

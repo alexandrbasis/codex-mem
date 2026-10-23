@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import time
 from collections.abc import Mapping
+from contextlib import contextmanager
 
 from .execution import ExecutionFailure, ExecutionIdentity, ExecutionResult
 from .processor import (MAX_SERVER_LINE_BYTES, MAX_SERVER_OUTPUT_BYTES, MAX_MODEL_OUTPUT_CHARS,
@@ -178,6 +179,22 @@ def _environment(directory):
     return environment
 
 
+def _check_auth(executable, directory, environment, deadline, provider):
+    """Read native credential readiness without refreshing or returning secrets."""
+    client = _Process([executable, "auth", "check", "--provider", provider,
+                       "--json", "--no-refresh"], directory, environment, deadline)
+    try:
+        result = client.message()
+        if result.get("provider") != provider or result.get("status") not in ("ready", "not_ready", "invalid"):
+            raise ProcessorFailure("protocol_error", reason_code="pi_auth_check_unavailable")
+        if result.get("reason") == "provider_not_found":
+            raise ProcessorFailure("model_unavailable", reason_code="unsupported_provider")
+        if result["status"] != "ready":
+            raise ProcessorFailure("runner_failure", reason_code="authentication_unavailable")
+    finally:
+        client.close()
+
+
 class _Run:
     def __init__(self, profile, checkpoint):
         self.profile = profile
@@ -341,12 +358,68 @@ class _Run:
             agent_end_observed=self.ended, system_message_verified=self.system_count == 1, assistant_stop_reason=self.message.get("stopReason") if self.message else None)
 
 
+@contextmanager
+def _prepared(pi, profile, deadline, run):
+    if profile.runtime != "pi":
+        raise ProcessorFailure("runner_unavailable", reason_code="unsupported_runtime")
+    if profile.reasoning_effort is None:
+        raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
+    executable = shutil.which(pi)
+    if not executable:
+        raise ProcessorFailure("runner_unavailable", reason_code="pi_not_found")
+    client = None
+    with tempfile.TemporaryDirectory(prefix="codex-mem-pi-") as temporary:
+        directory = Path(temporary).resolve()
+        run.cwd = directory
+        environment = _environment(directory)
+        try:
+            client = _Process([executable, "--version"], directory, environment, deadline)
+            if client.line().decode().strip() != PI_VERSION:
+                raise ProcessorFailure("runner_unavailable", reason_code="unsupported_pi_version")
+            run.version_verified = True
+        finally:
+            if client:
+                client.close()
+                client = None
+        _check_auth(executable, directory, environment, deadline, profile.provider)
+        try:
+            client = _Process([executable, "--mode", "rpc", *RESTRICTIONS,
+                "--system-prompt", SYSTEM_PROMPT],
+                directory, environment, deadline)
+            run.launched = True
+            available = client.request("get_available_models").get("models")
+            if not isinstance(available, list) or any(not isinstance(m, dict) for m in available):
+                raise ProcessorFailure("protocol_error")
+            if sum(m.get("id") == profile.model and m.get("provider") == profile.provider for m in available) != 1:
+                raise ProcessorFailure("model_unavailable", reason_code="exact_model_unavailable")
+            selected = client.request("set_model", provider=profile.provider, modelId=profile.model)
+            if selected.get("id") != profile.model or selected.get("provider") != profile.provider:
+                raise ProcessorFailure("model_mismatch", reason_code="pi_identity_mismatch")
+            level = "off" if profile.reasoning_effort == "none" else profile.reasoning_effort
+            levels = client.request("get_available_thinking_levels").get("levels")
+            if not isinstance(levels, list) or any(not isinstance(item, str) for item in levels):
+                raise ProcessorFailure("protocol_error")
+            if level not in levels:
+                raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
+            client.request("set_thinking_level", level=level)
+            run.state(client.request("get_state"), initial=True)
+            yield client
+        finally:
+            if client:
+                client.close()
+
+
 class PiProcessorRunner:
     """One ephemeral Pi subprocess per attempt, at most one correction."""
     def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None):
         self.pi = pi
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
+
+    def check_profile(self, profile, *, timeout=10):
+        run = _Run(profile, lambda: None)
+        with _prepared(self.pi, profile, time.monotonic() + timeout, run):
+            pass
 
     def execute(self, request):
         started = time.monotonic()
@@ -361,77 +434,32 @@ class PiProcessorRunner:
                 checkpointer.save(dict(worker_thread_id=run.session, worker_turn_id=f"generation-{run.number}",
                     identity=dict(runtime="pi", provider=request.profile.provider, model=request.profile.model,
                                   reasoning_effort=request.profile.reasoning_effort), metrics=metrics()), force=True)
-        client = None
         try:
             if started >= deadline:
                 raise ProcessorFailure("timeout")
-            if request.profile.runtime != "pi":
-                raise ProcessorFailure("runner_unavailable", reason_code="unsupported_runtime")
-            if request.profile.reasoning_effort is None:
-                raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
-            executable = shutil.which(self.pi)
-            if not executable:
-                raise ProcessorFailure("runner_unavailable", reason_code="pi_not_found")
-            with tempfile.TemporaryDirectory(prefix="codex-mem-pi-") as temporary:
-                directory = Path(temporary).resolve()
-                run.cwd = directory
-                environment = _environment(directory)
-                try:
-                    client = _Process([executable, "--version"], directory, environment, deadline)
-                    if client.line().decode().strip() != PI_VERSION:
-                        raise ProcessorFailure("runner_unavailable", reason_code="unsupported_pi_version")
-                    run.version_verified = True
-                finally:
-                    if client:
-                        client.close()
-                        client = None
-                try:
-                    client = _Process([executable, "--mode", "rpc", *RESTRICTIONS,
-                        "--system-prompt", SYSTEM_PROMPT],
-                        directory, environment, deadline)
-                    run.launched = True
-                    available = client.request("get_available_models").get("models")
-                    if not isinstance(available, list) or any(not isinstance(m, dict) for m in available):
-                        raise ProcessorFailure("protocol_error")
-                    if sum(m.get("id") == request.profile.model and m.get("provider") == request.profile.provider for m in available) != 1:
-                        raise ProcessorFailure("model_unavailable", reason_code="exact_model_unavailable")
-                    selected = client.request("set_model", provider=request.profile.provider, modelId=request.profile.model)
-                    if selected.get("id") != request.profile.model or selected.get("provider") != request.profile.provider:
-                        raise ProcessorFailure("model_mismatch", reason_code="pi_identity_mismatch")
-                    level = "off" if request.profile.reasoning_effort == "none" else request.profile.reasoning_effort
-                    levels = client.request("get_available_thinking_levels").get("levels")
-                    if not isinstance(levels, list) or any(not isinstance(item, str) for item in levels):
-                        raise ProcessorFailure("protocol_error")
-                    if level not in levels:
-                        raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
-                    client.request("set_thinking_level", level=level)
-                    run.state(client.request("get_state"), initial=True)
+            with _prepared(self.pi, request.profile, deadline, run) as client:
+                checkpoint()
+                prompt = "Output schema: " + json.dumps(dict(request.output_schema)) + "\n\n" + request.prompt
+                for generation in range(2):
+                    run.begin()
+                    response = client.request("prompt", run.observe, message=prompt)
+                    if response.get("disposition") != "started":
+                        raise ProcessorFailure("protocol_error", reason_code="pi_prompt_not_started")
+                    while not run.settled:
+                        run.observe(client.message())
+                    run.state(client.request("get_state"))
                     checkpoint()
-                    prompt = "Output schema: " + json.dumps(dict(request.output_schema)) + "\n\n" + request.prompt
-                    for generation in range(2):
-                        run.begin()
-                        response = client.request("prompt", run.observe, message=prompt)
-                        if response.get("disposition") != "started":
-                            raise ProcessorFailure("protocol_error", reason_code="pi_prompt_not_started")
-                        while not run.settled:
-                            run.observe(client.message())
-                        run.state(client.request("get_state"))
-                        checkpoint()
-                        output = run.output()
-                        remaining = client.remaining()
-                        correction = self.candidate_review(output, remaining) if self.candidate_review else None
-                        client.remaining()
-                        if correction is None:
-                            run.finished = True
-                            return ExecutionResult(output=output, identity=ExecutionIdentity("pi", request.profile.provider,
-                                request.profile.model, request.profile.reasoning_effort, run.session, f"generation-{run.number}"), metrics=metrics())
-                        if generation or not isinstance(correction, str) or not correction or len(correction) > MAX_PROMPT_CHARS:
-                            raise ProcessorFailure("invalid_response", reason_code="jev_quality_uncertain")
-                        prompt = correction
-                finally:
-                    if client:
-                        client.close()
-                        client = None
+                    output = run.output()
+                    remaining = client.remaining()
+                    correction = self.candidate_review(output, remaining) if self.candidate_review else None
+                    client.remaining()
+                    if correction is None:
+                        run.finished = True
+                        return ExecutionResult(output=output, identity=ExecutionIdentity("pi", request.profile.provider,
+                            request.profile.model, request.profile.reasoning_effort, run.session, f"generation-{run.number}"), metrics=metrics())
+                    if generation or not isinstance(correction, str) or not correction or len(correction) > MAX_PROMPT_CHARS:
+                        raise ProcessorFailure("invalid_response", reason_code="jev_quality_uncertain")
+                    prompt = correction
         except Exception as error:
             run.finished = True
             if not isinstance(error, ProcessorFailure):
@@ -446,5 +474,3 @@ class PiProcessorRunner:
                 run.session, f"generation-{run.number}" if run.number else None))
         finally:
             checkpoint()
-            if client:
-                client.close()

@@ -8,6 +8,7 @@ input and output cannot enter this table through this API.
 from __future__ import annotations
 
 import sqlite3
+from collections import Counter
 import json
 from collections.abc import Mapping
 from datetime import datetime, timezone
@@ -850,12 +851,12 @@ def attempt_model_metadata(attempt: Mapping[str, Any], job: Mapping[str, Any]) -
     """Choose observed identity when present and label requested-only evidence."""
     actual = attempt.get("actual_model")
     return {
-        "runtime": attempt.get("runtime") or attempt.get("requested_runtime") or "codex",
-        "provider": attempt.get("provider") or attempt.get("requested_provider") or "openai",
+        "runtime": attempt.get("actual_runtime") or attempt.get("runtime") or attempt.get("requested_runtime") or "codex",
+        "provider": attempt.get("actual_provider") or attempt.get("provider") or attempt.get("requested_provider") or "openai",
         "model": actual or attempt.get("requested_model") or job.get("model"),
         "model_source": "runtime_verified" if actual else attempt.get("profile_basis") or "requested_job_profile",
         "reasoning_effort": (attempt.get("actual_reasoning_effort") if actual
-                             else attempt.get("reasoning_effort", job.get("reasoning_effort"))),
+                             else attempt.get("requested_reasoning_effort", attempt.get("reasoning_effort", job.get("reasoning_effort")))),
     }
 
 
@@ -872,16 +873,22 @@ def _profile_model_rows(connection, workspace, aggregate_parts):
              .replace("attempts.job_id IS NOT NULL", "attempts.attempt_count IS NOT NULL")
              for part in aggregate_parts]
     parts[1] = "COUNT(attempts.attempt_count) + SUM(attempts.missing) AS attempt_count"
-    dimensions = ("jobs.processor_id, attempts.runtime, attempts.provider, "
-                  "attempts.requested_model, attempts.reasoning_effort")
+    expressions = {
+        "runtime": "COALESCE(attempts.actual_runtime,attempts.runtime,'codex')",
+        "provider": "COALESCE(attempts.actual_provider,attempts.provider,'openai')",
+        "model": "COALESCE(attempts.actual_model,attempts.requested_model)",
+        "reasoning_effort": "CASE WHEN attempts.actual_model IS NOT NULL THEN attempts.actual_reasoning_effort ELSE attempts.reasoning_effort END",
+    }
+    dimensions = "jobs.processor_id," + ",".join(expressions.values())
+    selected_dimensions = "jobs.processor_id," + ",".join(value + " AS " + key for key, value in expressions.items())
+    basis = "CASE WHEN attempts.actual_model IS NOT NULL THEN 'runtime_verified' ELSE attempts.profile_basis END"
     sql = ("WITH profile_attempts AS (SELECT a.*,0 AS missing FROM observer_usage_attempts a "
            "JOIN observation_jobs j ON j.id=a.job_id WHERE j.project=? UNION ALL SELECT " + gap_columns +
            ",j.attempt_count-COALESCE(n.receipts,0) AS missing FROM observation_jobs j "
            "LEFT JOIN (SELECT job_id,COUNT(*) receipts FROM observer_usage_attempts GROUP BY job_id) n ON n.job_id=j.id "
-           "WHERE j.project=? AND j.attempt_count>COALESCE(n.receipts,0)) SELECT " + dimensions +
-           ",attempts.requested_model AS model, "
-           "CASE WHEN MIN(attempts.profile_basis)=MAX(attempts.profile_basis) THEN MIN(attempts.profile_basis) "
-           "ELSE 'requested_attempt_profile' END AS model_basis," + ",".join(parts) +
+           "WHERE j.project=? AND j.attempt_count>COALESCE(n.receipts,0)) SELECT " + selected_dimensions +
+           ",CASE WHEN MIN(" + basis + ")=MAX(" + basis + ") THEN MIN(" + basis + ") "
+           "ELSE 'mixed_attempt_evidence' END AS model_basis,GROUP_CONCAT(attempts.error_code) AS error_codes," + ",".join(parts) +
            " FROM observation_jobs jobs JOIN profile_attempts attempts ON attempts.job_id=jobs.id "
            "WHERE jobs.project=? GROUP BY " + dimensions + " ORDER BY " + dimensions)
     cursor = connection.execute(sql, (workspace, workspace, workspace))
@@ -1014,6 +1021,7 @@ def observer_usage_summary(
                 "processor_id": row["processor_id"],
                 "model": row["model"],
                 "model_basis": row.get("model_basis", "requested_job_profile"),
+                "error_code_counts": dict(Counter(filter(None, (row.get("error_codes") or "").split(",")))),
                 "runtime": row.get("runtime", "codex"), "provider": row.get("provider", "openai"),
                 "reasoning_effort": row["reasoning_effort"],
                 "attempts": {

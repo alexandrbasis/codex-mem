@@ -47,6 +47,24 @@
     {
       "path": "dist/bundle/chunks/openai-completions-27RKPL37.js",
       "sha256": "243dd1a344d81e1758b155e58e53a0109bedb2178ae87c5b25481a425ffe965e"
+    },
+    {
+      "path": "dist/cli/auth-check.js",
+      "sha256": "15f1601346f1ee9da3d560b133fb65aa9654fa002a5474224913e6ca99517aed"
+    },
+    {
+      "path": "dist/cli/auth-command.js",
+      "sha256": "c212933e6afc64c011ef065b8588ce9e67e6f29a383e096c77a264cebdfe404a"
+    },
+    {
+      "path": "dist/main.js",
+      "sha256": "08b91f9eb3adf9a5027c18732d1e4de70999bd15c445b65cb0ddd0cd68f2746b"
     }
-  ]
+  ],
+  "preflight": {
+    "command": "pi auth check --provider <provider> --json --no-refresh",
+    "credential_output": false,
+    "evidence": "docs/cli.md credential commands; dist/main.js selects ReadOnlyAuthStorage; dist/cli/auth-check.js returns readiness metadata",
+    "limit": "Native readiness is not a live provider authorization or quality test."
+  }
 }

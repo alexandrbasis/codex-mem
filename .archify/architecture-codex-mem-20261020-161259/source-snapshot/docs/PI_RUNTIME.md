@@ -6,7 +6,7 @@ The supported CLI package is `@earendil-works/pi-coding-agent` version **1.4.0**
 
 ## Profile and authorization
 
-Use the existing five-field execution profile. Supply exact provider and model identifiers. The adapter reads Pi's available catalog, selects the exact pair with RPC `set_model`, and reads the model's available thinking levels. It sets the requested level and checks the returned session state before sending evidence. It repeats the state check after completion. There is no fuzzy model dispatch or fallback to Codex.
+Use the existing five-field execution profile. Supply exact provider and model identifiers. Before catalog discovery, the adapter runs `pi auth check --provider <provider> --json --no-refresh`. It never requests `--credentials`. A missing provider and unavailable native authorization have separate failure reasons. This read-only check does not establish remote acceptance of a credential. The adapter then reads Pi's available catalog, selects the exact pair with RPC `set_model`, and reads the model's available thinking levels. It sets the requested level and checks the returned session state before sending evidence. It repeats the state check after completion. There is no fuzzy model dispatch or fallback to Codex.
 
 The profile value `none` means Pi's `off`. These are explicit names for disabled reasoning. Other levels must appear exactly in `get_available_thinking_levels`. A `null` level fails because it cannot establish an exact requested setting.
 

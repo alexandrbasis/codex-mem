@@ -122,6 +122,8 @@ class RejectedNativeOutputTests(unittest.TestCase):
                 ])
 
             def request(self, method, params, *, notification_handler=None):
+                if method == "account/read":
+                    return {"account": {"type": "apiKey"}, "requiresOpenaiAuth": True}
                 if method == "model/list":
                     return {"data": [{"id": MODEL, "model": MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]}
                 if method == "config/read":
@@ -218,7 +220,7 @@ class ObserverCheckpointTests(unittest.TestCase):
                 saved = []
                 client = mock.Mock()
                 responses = {
-                    "initialize": {}, "config/read": {"config": {}},
+                    "initialize": {}, "account/read": {"account": {"type": "apiKey"}, "requiresOpenaiAuth": True}, "config/read": {"config": {}},
                     "model/list": {"data": [{"id": MODEL, "model": MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]},
                     "thread/start": {"thread": {"id": "thread-test"}, "model": MODEL,
                                      "reasoningEffort": "medium", "modelProvider": "openai"},

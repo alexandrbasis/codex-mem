@@ -68,7 +68,7 @@ def install_schema(connection: sqlite3.Connection) -> None:
         "requested_runtime": "TEXT", "requested_provider": "TEXT", "requested_model": "TEXT",
         "requested_reasoning_effort": "TEXT", "requested_timeout": "REAL",
         "runtime": "TEXT", "provider": "TEXT", "actual_model": "TEXT",
-        "actual_reasoning_effort": "TEXT", "profile_basis": "TEXT", "execution_receipt": "TEXT",
+        "actual_reasoning_effort": "TEXT", "profile_basis": "TEXT", "execution_receipt": "TEXT", "reason_code": "TEXT",
     }.items():
         if name not in columns:
             connection.execute(f"ALTER TABLE pm_usage_attempts ADD COLUMN {name} {declaration}")
@@ -586,6 +586,10 @@ class ProjectMemory:
         updated["usage_updates"] = max(old["usage_updates"] + int(token_changed), observed["usage_updates"])
         if old["error_code"] is None and observed.get("error_code"):
             updated["error_code"] = observed["error_code"]
+        from .observation_diagnostics import safe_failure_reason
+        reason = safe_failure_reason(receipt.get("code"), receipt.get("reason_code"))
+        if old["reason_code"] is None and reason is not None:
+            updated["reason_code"] = reason
         if outcome is not None and old["finished_at"] is None:
             updated.update(outcome=outcome, finished_at=_attempt_now())
         changed = {key: value for key, value in updated.items() if value != old[key]}

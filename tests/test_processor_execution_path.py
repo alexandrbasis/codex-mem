@@ -33,6 +33,18 @@ class ProcessorExecutionPathTests(unittest.TestCase):
             return handle_hook(dict(hook_event_name='SessionStart', source='startup', cwd=str(self.project),
                                     session_id='reader-session'), store)
 
+    def test_unavailable_codex_auth_preserves_work_before_dispatch(self):
+        self.capture(prompt='Use local import.')
+        self.scenario(account={'account': None, 'requiresOpenaiAuth': True})
+        result = process_pending(self.project, self.data, codex=str(self.executable), timeout=10)
+        self.assertEqual('failed', result['status'], result)
+        with Store(self.data) as store:
+            job = store.observation_job_status(self.project, result['job_id'])
+            self.assertEqual('authentication_unavailable', job['failure_receipts'][-1]['reason_code'])
+            self.assertEqual(1, job['source_count'])
+            self.assertEqual([], store.search(self.project, 'import'))
+        self.assertNotIn('turn/start', self.executable.with_suffix('.trace').read_text())
+
     def test_observation_and_summary_survive_capture_execution_and_retrieval(self):
         self.capture('Stop', last_assistant_message='Use local import.')
         summary = dict(title='Import choice', request=None, investigated='', learned='Use local import.',

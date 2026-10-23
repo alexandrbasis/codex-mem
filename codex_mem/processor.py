@@ -720,6 +720,21 @@ class NativeProcessorRunner:
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
 
+    def check_profile(self, profile, *, timeout=10):
+        if profile.provider != "openai" or profile.reasoning_effort is None:
+            raise ProcessorFailure("model_unavailable", reason_code=(
+                "unsupported_provider" if profile.provider != "openai" else "unsupported_reasoning"))
+        executable = shutil.which(self.codex)
+        if executable is None:
+            raise ProcessorFailure("runner_unavailable", reason_code="codex_not_found")
+        with tempfile.TemporaryDirectory(prefix="codex-mem-preflight-") as directory:
+            environment = dict(os.environ, CODEX_MEM_DISABLED="1")
+            client = _AppServer(executable, Path(directory).resolve(), environment, timeout)
+            try:
+                _initialize_execution(client, profile)
+            finally:
+                client.close()
+
     def execute(self, request: ExecutionRequest) -> ExecutionResult:
         from .execution import execute_codex
         return execute_codex(request, self.run)
@@ -751,7 +766,7 @@ class NativeProcessorRunner:
             raise ProcessorFailure("timeout")
         executable = shutil.which(self.codex)
         if executable is None:
-            raise ProcessorFailure("runner_unavailable")
+            raise ProcessorFailure("runner_unavailable", reason_code="codex_not_found")
 
         thread_id: str | None = None
         turn_id: str | None = None
@@ -792,16 +807,7 @@ class NativeProcessorRunner:
                 environment["CODEX_MEM_DISABLED"] = "1"
                 client = _AppServer(executable, worker_cwd, environment, min(budget, deadline - time.monotonic()))
                 try:
-                    client.request(
-                        "initialize",
-                        {
-                            "clientInfo": {"name": "codex-mem-processor", "version": "1"},
-                            "capabilities": {"experimentalApi": True},
-                        },
-                    )
-                    client.send({"jsonrpc": "2.0", "method": "initialized"})
-
-                    _verify_model_available(client, profile.model, profile.reasoning_effort)
+                    _initialize_execution(client, profile)
                     config_read = client.request(
                         "config/read", {"cwd": str(worker_cwd), "includeLayers": False}
                     )
@@ -994,6 +1000,10 @@ class _AppServer:
             if message.get("id") != request_id:
                 raise ProcessorFailure("protocol_error")
             if "error" in message:
+                error = message["error"]
+                if (method in ("initialize", "account/read", "model/list")
+                        and isinstance(error, Mapping) and error.get("code") == -32601):
+                    raise ProcessorFailure("runner_unavailable", reason_code="unsupported_codex_protocol")
                 raise ProcessorFailure("protocol_error")
             result = message.get("result")
             if not isinstance(result, Mapping):
@@ -1376,6 +1386,31 @@ def _normalized_usage_totals(value: object) -> dict[str, int] | None:
     ):
         return None
     return result
+
+
+def _initialize_execution(client, profile):
+    client.request(
+        "initialize",
+        {
+            "clientInfo": {"name": "codex-mem-processor", "version": "1"},
+            "capabilities": {"experimentalApi": True},
+        },
+    )
+    client.send({"jsonrpc": "2.0", "method": "initialized"})
+
+    _verify_auth_available(client)
+    _verify_model_available(client, profile.model, profile.reasoning_effort)
+
+
+def _verify_auth_available(client: _AppServer) -> None:
+    """Read bounded native account metadata without persisting account details."""
+    response = client.request("account/read", {"refreshToken": False})
+    if type(response.get("requiresOpenaiAuth")) is not bool or "account" not in response:
+        raise ProcessorFailure("runner_unavailable", reason_code="unsupported_codex_protocol")
+    account = response["account"]
+    if response["requiresOpenaiAuth"] and (not isinstance(account, Mapping)
+            or account.get("type") not in ("apiKey", "chatgpt")):
+        raise ProcessorFailure("runner_failure", reason_code="authentication_unavailable")
 
 
 def _verify_model_available(client: _AppServer, model: str, effort: str) -> None:

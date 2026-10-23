@@ -125,7 +125,7 @@ class NativeEnvelopeTests(unittest.TestCase):
         flat = {"notes": [], "disposition": "skipped", "session_summary": None}
         client = mock.Mock()
         responses = {
-            "initialize": {}, "config/read": {"config": {}},
+            "initialize": {}, "account/read": {"account": {"type": "apiKey"}, "requiresOpenaiAuth": True}, "config/read": {"config": {}},
             "model/list": {"data": [{"id": processor.MODEL, "model": processor.MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]},
             "thread/start": {"thread": {"id": "worker"}, "model": processor.MODEL,
                              "reasoningEffort": "medium", "modelProvider": "openai"},

@@ -50,6 +50,19 @@ class PiObservationTests(unittest.TestCase):
         with Store(self.data) as store:
             return store.observation_attempts(self.project, result['job_id'])
 
+    def test_missing_auth_fails_before_prompt_and_preserves_sources(self):
+        self.scenario(auth_status='not_ready')
+        result = self.process()
+        self.assertEqual('failed', result['status'], result)
+        with Store(self.data) as store:
+            job = store.observation_job_status(self.project, result['job_id'])
+            self.assertEqual(1, job['source_count'])
+            self.assertEqual([], store.search(self.project, 'local import'))
+            receipts = store.observation_job_status(self.project, result['job_id'])['failure_receipts']
+        self.assertEqual('authentication_unavailable', receipts[-1]['reason_code'])
+        trace = self.pi.with_suffix('.trace')
+        self.assertFalse(trace.exists() and '"type": "prompt"' in trace.read_text())
+
     def test_capture_pi_observation_summary_and_context_delivery(self):
         result = self.process()
         self.assertEqual('processed', result['status'], result)
