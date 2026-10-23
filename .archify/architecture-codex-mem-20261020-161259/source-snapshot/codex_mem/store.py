@@ -68,7 +68,7 @@ OBSERVATION_REASONING_EFFORT = "medium"
 _LEGACY_OBSERVATION_MODEL = "gpt-5.6-luna"
 
 
-def _observation_fingerprint(
+def _profile_observation_fingerprint(
     workspace: str,
     processor_id: str,
     model: str,
@@ -78,6 +78,18 @@ def _observation_fingerprint(
     """Bind an observation input snapshot to its processor execution profile."""
     parts = (workspace, processor_id, model, reasoning_effort, *source_ids)
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
+
+
+def _observation_fingerprint(
+    workspace: str, processor_id: str, model: str, reasoning_effort: str,
+    source_ids: Sequence[str],
+) -> str:
+    """Bind logical work to its sources, independently of execution choice.
+
+    Model arguments remain accepted for callers from older package versions.
+    Historical profile-bound fingerprints are validated separately, never rewritten.
+    """
+    return _legacy_observation_fingerprint(workspace, processor_id, source_ids)
 
 
 def _legacy_observation_fingerprint(
@@ -1997,6 +2009,7 @@ class Store:
                 "disposition": row["disposition"],
                 "attempt_count": row["attempt_count"],
                 "input_limit": row["input_limit"],
+                "input_fingerprint": row["input_fingerprint"],
                 "lease_expires_at": row["lease_expires_at"],
                 "worker_thread_id": row["worker_thread_id"],
                 "worker_turn_id": row["worker_turn_id"],
@@ -2297,6 +2310,20 @@ class Store:
             ).fetchone())
             return None if row is None else row[0]
 
+    def observation_attempts(self, project: str | Path, job_id: str) -> list[dict[str, Any]]:
+        """Read immutable requested and observed attempt metadata, without source text."""
+        workspace = project_key(project)
+        checked_job_id = _validate_ids([job_id], "job_id")[0]
+        with self._lock:
+            self._require_open()
+            if self._connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE name='observer_usage_attempts'"
+            ).fetchone() is None:
+                return []
+            return self._read(lambda: [dict(row) for row in self._connection.execute(
+                "SELECT a.* FROM observer_usage_attempts a JOIN observation_jobs j ON j.id=a.job_id "
+                "WHERE j.project=? AND j.id=? ORDER BY a.attempt_count", (workspace, checked_job_id))])
+
     def observation_job_status(self, project: str | Path, job_id: str) -> dict[str, Any] | None:
         """Read one project's job receipt without including source content."""
         workspace = project_key(project)
@@ -2347,6 +2374,7 @@ class Store:
         retry_previous_profile: bool = False,
         retry_one_shot: bool = False,
         parallel_sessions: bool = False,
+        execution_profile: Mapping[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         """Atomically lease one bounded, project-local raw hook batch.
 
@@ -2369,15 +2397,16 @@ class Store:
         Default and unknown-session leases remain exclusive to the project.
         """
 
+        from .execution import ExecutionProfile, normalize_profile
+        profile = (ExecutionProfile(**normalize_profile(execution_profile))
+                   if execution_profile is not None else None)
+        if profile is not None and (model != profile.model or reasoning_effort != (profile.reasoning_effort or "none")):
+            raise ValueError("claim profile does not match requested model")
         workspace = project_key(project)
         processor = _validate_processor_value(processor_id, "processor_id")
-        required_model = _validate_processor_value(model, "model")
+        required_model = _validate_text(model, "model", 256)
+        assert required_model is not None
         required_effort = _validate_processor_value(reasoning_effort, "reasoning_effort")
-        if (
-            required_model != OBSERVATION_MODEL
-            or required_effort != OBSERVATION_REASONING_EFFORT
-        ):
-            raise ValueError("observation processing requires gpt-6-luna with medium reasoning")
         thread_id = _validate_optional_processor_value(worker_thread_id, "worker_thread_id")
         turn_id = _validate_optional_processor_value(worker_turn_id, "worker_turn_id")
         entries_limit, chars_limit, checked_lease = _validate_observation_limits(
@@ -2440,29 +2469,6 @@ class Store:
                         "AND disposition='recovery_one_shot' AND lease_expires_at<=?",
                         [(now, now, str(job["id"]), workspace, now) for job in exhausted],
                     )
-                # A lease from a retired profile cannot be reused for the
-                # current model. Close expired legacy attempts before looking
-                # for fresh sources; keep their original profile and receipt.
-                legacy_expired = connection.execute(
-                    "SELECT id, attempt_count FROM observation_jobs "
-                    "WHERE project=? AND status='running' AND lease_expires_at<=? "
-                    "AND (model<>? OR reasoning_effort<>?)",
-                    (workspace, now, required_model, required_effort),
-                ).fetchall()
-                if legacy_expired:
-                    from .observer_usage_store import recover_attempt
-                    for job in legacy_expired:
-                        recover_attempt(
-                            connection, str(job["id"]), int(job["attempt_count"]),
-                            outcome="lease_expired", error_code="lease_expired",
-                        )
-                    connection.executemany(
-                        "UPDATE observation_jobs SET status='failed', disposition='profile_retired', "
-                        "lease_token=NULL, lease_expires_at=NULL, error_code='lease_expired', updated_at=?, "
-                        "completed_at=? WHERE id=? AND project=? AND status='running' "
-                        "AND lease_expires_at<=?",
-                        [(now, now, str(job["id"]), workspace, now) for job in legacy_expired],
-                    )
                 # Encode scope in the opaque token, avoiding a schema change.
                 # Old and default callers issue unmarked tokens, so parallel
                 # workers also respect their project-wide exclusive leases.
@@ -2509,8 +2515,13 @@ class Store:
                 if guarded_retry:
                     reusable = connection.execute(
                         "SELECT * FROM observation_jobs AS j WHERE id=? AND project=? "
-                        "AND processor_id=? AND model=? AND reasoning_effort=? "
+                        "AND processor_id=? "
                         "AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=j.id) "
+                        "AND NOT EXISTS (SELECT 1 FROM observation_job_sources own "
+                        "JOIN observation_job_sources other ON other.source_id=own.source_id "
+                        "JOIN observation_jobs done ON done.id=other.job_id "
+                        "WHERE own.job_id=j.id AND done.project=j.project "
+                        "AND done.status IN ('processed','skipped')) "
                         "AND status='failed' AND error_code=? AND attempt_count=? "
                         "AND (error_code NOT IN ('runner_unavailable', 'protocol_error') "
                         "OR (worker_thread_id IS NULL AND worker_turn_id IS NULL)) "
@@ -2520,16 +2531,21 @@ class Store:
                         "LEFT JOIN entries AS e ON e.id=links.source_id AND e.project=j.project "
                         "WHERE links.job_id=j.id AND (e.id IS NULL OR e.superseded_by IS NOT NULL)) "
                         "AND " + free_lane.format(session="j.session_id"),
-                        (retry_job, workspace, processor,
-                         _LEGACY_OBSERVATION_MODEL if retry_previous_profile else required_model,
-                         required_effort, retry_error_code, retry_attempt_count, *lane_args),
+                        (retry_job, workspace, processor, retry_error_code, retry_attempt_count, *lane_args),
                     ).fetchone()
                 else:
                     reusable = connection.execute(
                     f"""
                     SELECT * FROM observation_jobs
-                    WHERE project = ? AND processor_id = ? AND model = ?
-                      AND reasoning_effort = ?
+                    WHERE project = ? AND processor_id = ?
+                      AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=observation_jobs.id)
+                      AND NOT EXISTS (
+                          SELECT 1 FROM observation_job_sources own
+                          JOIN observation_job_sources other ON other.source_id=own.source_id
+                          JOIN observation_jobs done ON done.id=other.job_id
+                          WHERE own.job_id=observation_jobs.id AND done.project=observation_jobs.project
+                            AND done.status IN ('processed','skipped')
+                      )
                       AND COALESCE(disposition,'') NOT IN ('recovery_one_shot','recovery_exhausted')
                       AND ((status = 'running' AND lease_expires_at <= ?)
                         OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code IN ('timeout', 'runner_failure', 'storage_failure')))))
@@ -2544,8 +2560,6 @@ class Store:
                     (
                         workspace,
                         processor,
-                        required_model,
-                        required_effort,
                         now,
                         1 if retry_failed else 0,
                         retry_job,
@@ -2555,6 +2569,13 @@ class Store:
                     ),
                     ).fetchone()
                 if reusable is not None:
+                    # Fingerprint-bound maintenance approvals retain their
+                    # separate legacy-profile opt-in. Ordinary retries use the
+                    # current profile without widening that older permission.
+                    if (retry_input_fingerprint is not None and not retry_previous_profile
+                            and (reusable["model"] != required_model
+                                 or reusable["reasoning_effort"] != required_effort)):
+                        return None
                     if (retry_input_fingerprint is not None
                             and reusable["input_fingerprint"] != retry_input_fingerprint):
                         return None
@@ -2571,11 +2592,11 @@ class Store:
                         return None
                     reusable_records = self._records_from_rows(reusable_sources)
                     if guarded_retry:
-                        fingerprint = _observation_fingerprint(
+                        fingerprint = _profile_observation_fingerprint(
                             workspace, processor, str(reusable["model"]), str(reusable["reasoning_effort"]),
                             [str(row["id"]) for row in reusable_sources],
                         )
-                        legacy_valid = (retry_previous_profile and reusable["input_fingerprint"]
+                        legacy_valid = (reusable["input_fingerprint"]
                                         == _legacy_observation_fingerprint(
                                             workspace, processor,
                                             [str(row["id"]) for row in reusable_sources]))
@@ -2604,7 +2625,7 @@ class Store:
                     now = _utc_now()
                     if retry_previous_profile:
                         source_ids = [str(row["id"]) for row in reusable_sources]
-                        fingerprint = _observation_fingerprint(
+                        fingerprint = _profile_observation_fingerprint(
                             workspace, processor, required_model, required_effort, source_ids,
                         )
                         if connection.execute(
@@ -2647,8 +2668,8 @@ class Store:
                         UPDATE observation_jobs
                         SET status = 'running', disposition = ?, lease_token = ?,
                             lease_expires_at = ?, input_limit = ?, attempt_count = attempt_count + 1,
-                            worker_thread_id = COALESCE(?, worker_thread_id),
-                            worker_turn_id = COALESCE(?, worker_turn_id), error_code = NULL,
+                            worker_thread_id = ?,
+                            worker_turn_id = ?, error_code = NULL,
                             updated_at = ?
                         WHERE id = ? AND project = ?
                         """,
@@ -2689,14 +2710,9 @@ class Store:
                         SELECT 1 FROM observation_job_sources AS links
                         CROSS JOIN observation_jobs AS jobs ON jobs.id = links.job_id
                         WHERE links.source_id = e.id AND jobs.project = e.project
-                          AND (
-                            jobs.status IN ('processed', 'skipped', 'running')
-                            OR COALESCE(jobs.disposition,'')='recovery_exhausted'
-                            OR (? = 0 AND jobs.status = 'failed'
-                                AND NOT (COALESCE(jobs.disposition,'')='profile_retired'
-                                    AND jobs.error_code='lease_expired'
-                                    AND (jobs.model<>? OR jobs.reasoning_effort<>?)))
-                          )
+                          AND NOT (? = 1 AND jobs.status = 'failed' AND jobs.processor_id <> ?
+                            AND COALESCE(jobs.disposition,'') NOT IN ('recovery_one_shot','recovery_exhausted')
+                            AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=jobs.id))
                       )
                     ORDER BY e.created_at ASC, e.id ASC LIMIT 100
                     """,
@@ -2704,8 +2720,7 @@ class Store:
                         workspace,
                         *lane_args,
                         1 if retry_failed else 0,
-                        required_model,
-                        required_effort,
+                        processor,
                     ),
                 ).fetchall()
                 if not candidates:
@@ -2803,7 +2818,15 @@ class Store:
                 )
                 return job_id, max(chars_limit, selected_chars)
 
-            claimed = self._write(claim)
+            def claim_with_profile():
+                result = claim()
+                if result is not None and profile is not None:
+                    from .observer_usage_store import begin_claim_attempt
+                    job = connection.execute("SELECT * FROM observation_jobs WHERE id=?", (result[0],)).fetchone()
+                    begin_claim_attempt(connection, job, profile=profile)
+                return result
+
+            claimed = self._write(claim_with_profile)
             if claimed is None:
                 return None
             job_id, input_limit = claimed
@@ -3199,12 +3222,9 @@ class Store:
                     workspace, str(job["processor_id"]), str(job["model"]),
                     str(job["reasoning_effort"]), source_ids,
                 )
-                legacy_fingerprint_valid = (
-                    job["model"] == _LEGACY_OBSERVATION_MODEL
-                    and job["input_fingerprint"]
-                    == _legacy_observation_fingerprint(
-                        workspace, str(job["processor_id"]), source_ids,
-                    )
+                legacy_fingerprint_valid = job["input_fingerprint"] == _profile_observation_fingerprint(
+                    workspace, str(job["processor_id"]), str(job["model"]),
+                    str(job["reasoning_effort"]), source_ids,
                 )
                 if (
                     not source_ids

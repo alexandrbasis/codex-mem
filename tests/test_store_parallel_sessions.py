@@ -253,7 +253,7 @@ class StoreParallelSessionTests(unittest.TestCase):
         self.fail(next_job)
         self.assertIsNone(self.claim()["session_id"])
 
-    def test_parallel_retires_expired_profile_and_reclaims_whole_source(self):
+    def test_parallel_reclaims_same_job_and_whole_source_across_profiles(self):
         original = self.raw("a", body="Whole evidence " * 120)
         retired = self.claim()
         self.store._connection.execute(
@@ -269,7 +269,8 @@ class StoreParallelSessionTests(unittest.TestCase):
         row = self.store._connection.execute(
             "SELECT status, disposition FROM observation_jobs WHERE id=?", (retired["job_id"],),
         ).fetchone()
-        self.assertEqual(("failed", "profile_retired"), tuple(row))
+        self.assertEqual(retired["job_id"], replacement["job_id"])
+        self.assertEqual(("running", None), tuple(row))
 
     def test_parallel_flag_requires_boolean(self):
         with self.assertRaises(ValueError):

@@ -35,6 +35,8 @@ FIXED_SOURCES = (
     "scripts/codex-mem.py",
     "docs/PROJECT_MEMORY.md",
     "docs/PI_MCP.md",
+    "docs/EXECUTION.md",
+    "tests/test_observation_profiles.py",
     "docs/pi-mcp.example.json",
     "tests/test_pi_mcp.py",
     "tests/test_mcp.py",

@@ -69,10 +69,12 @@ class ObservationClaimQueryTests(unittest.TestCase):
                 # Remove only this test's latest claim so both candidate selectors
                 # can be compared on the same fixture snapshot.
                 store._connection.execute('DELETE FROM observation_jobs WHERE id=?', (claimed['job_id'],))
+                # Failed work reuses its job; it never re-enters fresh candidates.
+                self.assertIn('(0 = 1 AND jobs.status', query)
                 for retry, expected in ((False, {local['id'], fresh['id']}),
-                                        (True, {local['id'], fresh['id'], sources['failed']})):
-                    variant = query.replace('(0 = 0 AND jobs.status',
-                                            f'({int(retry)} = 0 AND jobs.status')
+                                        (True, {local['id'], fresh['id']})):
+                    variant = query.replace('(0 = 1 AND jobs.status',
+                                            f'({int(retry)} = 1 AND jobs.status')
                     actual = {r['id'] for r in store._connection.execute(variant)}
                     original = {r['id'] for r in store._connection.execute(variant.replace('CROSS JOIN', 'JOIN'))}
                     self.assertEqual(expected, actual)

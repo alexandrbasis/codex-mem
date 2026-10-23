@@ -1,6 +1,7 @@
 """Read-only, metadata-only dashboard snapshots of the existing local ledgers."""
 from __future__ import annotations
 
+from .observer_usage_store import attempt_model_metadata
 from .host import register_source_functions
 
 from collections import Counter, defaultdict
@@ -31,7 +32,7 @@ FIELDS = {
     'usage_sessions': 'thread_id session_id parent_thread_id project agent_path agent_role agent_nickname thread_source model_provider started_at',
     'usage_events': 'event_key thread_id session_id response_id model model_source model_provider service_tier requested_service_tier requested_service_tier_source service_tier_source recorded_at source_kind quality context_input_tokens context_cached_input_tokens context_cache_write_input_tokens context_output_tokens context_total_tokens context_window_tokens ' + ' '.join(TOKEN_FIELDS),
     'observation_jobs': 'id project processor_id model reasoning_effort session_id status disposition attempt_count worker_thread_id error_code created_at updated_at completed_at',
-    'observer_usage_attempts': 'job_id attempt_count outcome error_code worker_thread_id duration_ms usage_status usage_source usage_updates started_at finished_at ' + ' '.join(TOKEN_FIELDS),
+    'observer_usage_attempts': 'runtime provider requested_model reasoning_effort timeout profile_basis actual_runtime actual_provider actual_model actual_reasoning_effort job_id attempt_count outcome error_code worker_thread_id duration_ms usage_status usage_source usage_updates started_at finished_at ' + ' '.join(TOKEN_FIELDS),
     'observation_failure_receipts': 'job_id attempt_count error_code reason_code created_at',
     'jev_filter_attempts': 'job_id attempt_count audit_json updated_at',
     'jev_judgment_audits': 'id project owner_id audit_json created_at',
@@ -149,7 +150,8 @@ class DashboardReader:
                 observer_columns = {row[1] for row in connection.execute('PRAGMA table_info(observer_usage_attempts)')}
                 if 'worker_thread_id' in observer_columns:
                     start_query()
-                    workers = [row[0] for row in connection.execute('SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL LIMIT ?', (ROW_LIMIT + 1,))]
+                    runtime_filter = " AND COALESCE(runtime,'codex')='codex'" if 'runtime' in observer_columns else ''
+                    workers = [row[0] for row in connection.execute('SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL' + runtime_filter + ' LIMIT ?', (ROW_LIMIT + 1,))]
                     finish_query()
                     result['_observer_workers'] = workers[:ROW_LIMIT]
                     result['coverage']['observer_workers_complete'] = len(workers) <= ROW_LIMIT
@@ -313,7 +315,7 @@ class DashboardReader:
                 source = sessions.get(job.get('session_id'), {})
                 if source.get('project') != job.get('project'):
                     source = {}
-                attempts.append({**row, **{key: job.get(key) for key in ('project', 'model', 'reasoning_effort')}, 'session_id': source.get('session_id') or job.get('session_id'), 'source_session_id': job.get('session_id'), 'session_attribution_basis': 'usage_session_mapping' if source else 'unmapped_source_session'})
+                attempts.append({**row, 'project': job.get('project'), **attempt_model_metadata(row, job), 'session_id': source.get('session_id') or job.get('session_id'), 'source_session_id': job.get('session_id'), 'session_attribution_basis': 'usage_session_mapping' if source else 'unmapped_source_session'})
             event_projects, attempt_projects = defaultdict(list), defaultdict(list)
             for row in events:
                 event_projects[row.get('project')].append(row)
@@ -595,8 +597,9 @@ class DashboardReader:
         priced_attempts = []
         for row in attempts:
             job = jobs_by_id[row['job_id']]
-            pricing_row = {**row, 'model': job.get('model'), 'model_source': 'requested_job_profile'}
+            metadata = attempt_model_metadata(row, job)
+            pricing_row = {**row, **metadata}
             if row.get('usage_status') not in ('reported', 'partial'):
                 pricing_row.update({field: None for field in TOKEN_FIELDS})
-            priced_attempts.append({**row, 'model': job.get('model'), 'model_source': 'requested_job_profile', 'priced_usage': price_event(pricing_row)})
+            priced_attempts.append({**row, **metadata, 'priced_usage': price_event(pricing_row)})
         return {**self._base(snapshot), 'project': key, 'session_id': session_id, 'title': None, 'title_status': 'not_recorded_in_local_usage_metadata', **{name: report[name] for name in ('main', 'observer', 'combined', 'pricing', 'completeness')}, 'threads': [{**row, 'usage': agent_usage.get(row['thread_id']), 'models': sorted(thread_models[row['thread_id']]), 'models_basis': 'Observed response metadata within selected period', 'is_child': bool(row.get('parent_thread_id'))} for row in threads], 'jobs': jobs, 'jobs_basis': 'current_state_all_dates', 'models': {stream: report['groups'][stream]['model']['rows'] for stream in ('main', 'observer')}, 'model_coverage': {stream: {field: report['groups'][stream]['model'][field] for field in ('total_groups', 'omitted_groups', 'limit')} for stream in ('main', 'observer')}, 'processor_attempts': priced_attempts, 'failure_receipts': [row for row in snapshot['tables']['observation_failure_receipts'] if row.get('job_id') in job_ids], 'jev': self._jev(snapshot, key, job_ids)}

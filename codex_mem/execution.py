@@ -172,17 +172,18 @@ def execute_codex(request: ExecutionRequest, runner: Any) -> ExecutionResult:
     try:
         profile = request.profile
         if profile.runtime != 'codex':
-            raise ProcessorFailure('runner_unavailable')
-        # This transition preserves the current exact Codex capability contract.
-        # Configured profile selection belongs to the processor queue migrations.
-        if profile != legacy_profile(profile.timeout):
-            raise ProcessorFailure('model_unavailable')
+            raise ProcessorFailure('runner_unavailable', reason_code='unsupported_runtime')
+        # The Codex catalog exposes no provider-qualified capability discovery.
+        # Support its OpenAI catalog only, without guessing custom providers.
+        if profile.provider != 'openai' or profile.reasoning_effort is None:
+            raise ProcessorFailure('model_unavailable', reason_code=(
+                'unsupported_provider' if profile.provider != 'openai' else 'unsupported_reasoning'))
         if time.monotonic() >= request.deadline:
             raise ProcessorFailure('timeout')
         value = _invoke_runner(runner, request.legacy_request())
         if isinstance(value.get('metrics'), Mapping):
             metrics = value['metrics']
-        output, evidence, thread_id, turn_id = _validate_runner_receipt(value)
+        output, evidence, thread_id, turn_id = _validate_runner_receipt(value, profile=profile)
         if time.monotonic() >= request.deadline:
             raise ProcessorFailure('timeout')
         actual = evidence['thread_start']

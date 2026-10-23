@@ -123,7 +123,7 @@ class RejectedNativeOutputTests(unittest.TestCase):
 
             def request(self, method, params, *, notification_handler=None):
                 if method == "model/list":
-                    return {"data": [{"id": MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]}
+                    return {"data": [{"id": MODEL, "model": MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]}
                 if method == "config/read":
                     return {"config": {}}
                 if method == "thread/start":
@@ -219,7 +219,7 @@ class ObserverCheckpointTests(unittest.TestCase):
                 client = mock.Mock()
                 responses = {
                     "initialize": {}, "config/read": {"config": {}},
-                    "model/list": {"data": [{"id": MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]},
+                    "model/list": {"data": [{"id": MODEL, "model": MODEL, "supportedReasoningEfforts": [{"reasoningEffort": "medium"}]}]},
                     "thread/start": {"thread": {"id": "thread-test"}, "model": MODEL,
                                      "reasoningEffort": "medium", "modelProvider": "openai"},
                     "mcpServerStatus/list": {"data": []},

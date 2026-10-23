@@ -1,8 +1,8 @@
 # Background execution profiles
 
-An execution profile selects a runtime, provider, exact model, reasoning level, and timeout. The interactive host is a separate choice. The shared contract currently connects only `NativeProcessorRunner` with the existing Codex model and reasoning level.
+An execution profile selects a runtime, provider, exact model, reasoning level, and timeout. The interactive host is a separate choice. The shared contract connects `NativeProcessorRunner` to Codex. Observation extraction and summaries use the configured profile.
 
-Profile configuration and its resolver are available in this transition. Processor selection remains on legacy Codex until the queue and accounting changes in issues #5 and #6. Saving a Pi profile does not activate Pi in this version. No database migration or automatic reprocessing occurs here.
+Project memory still uses legacy Codex until its separate queue and accounting change in issue #6. Saving a Pi profile does not activate Pi. Profile changes do not reprocess successful sources.
 
 ## Configuration contract
 
@@ -28,7 +28,17 @@ Every profile requires these fields:
 
 Identifiers retain their case and spelling. Whitespace and wildcard selection are rejected. Unknown fields, including credential fields, are rejected. A runtime must establish that its provider, exact model, and reasoning level are supported before dispatch. A recognized reasoning label does not prove model support. `null` means that the profile requests no reasoning setting.
 
-The current Codex adapter accepts only the legacy provider, model, and reasoning combination. It returns a configuration failure for other combinations and an unavailable-runtime failure for Pi. It does not silently substitute another runtime or model.
+The Codex adapter pins `model_provider="openai"` before reading the native `model/list` catalog. It matches the exact returned `model` field and an advertised `supportedReasoningEfforts` value. The catalog `id` is a picker identity, not evidence of a dispatch model. Discovery follows at most 16 pages under the attempt deadline. Malformed catalogs, disconnects, repeated cursors, and timeouts fail closed.
+
+The current boundary cannot verify custom providers or a `null` reasoning setting. These profiles fail before model dispatch, as does an unavailable exact model or effort. Pi returns an unavailable-runtime failure. No runtime, provider, model, or reasoning substitution occurs. The job remains pending as failed work with a diagnostic and can be retried after correction. Catalog evidence establishes advertised support; it does not guarantee a successful live call.
+
+## Queue and attempt identity
+
+The logical job belongs to its processor and exact source set, independent of its execution profile. Source revisions retain their existing IDs and custody checks. A retry or expired lease reuses the job. Successful processed or skipped sources do not become new work when a profile changes. Explicit maintenance recovery keeps its separate fingerprint, legacy-profile opt-in, and one-shot guards. An explicit `retry_failed` with a different processor ID can create a distinct processor-owned job, as before. It cannot bypass one-shot recovery or replay successful sources.
+
+Each claim stores an immutable requested profile in the usage ledger in the same transaction as the lease. A correction or extra generation call uses that profile and the original deadline. A later attempt reloads current configuration, including in a long-lived service. The job's creation model and historical fingerprints remain unchanged.
+
+Existing ledgers migrate their requested identity from the original job before any retry. They retain historical usage and mark the identity as `legacy_requested_job_profile`; unknown actual identity stays unknown. New attempts record requested and verified runtime, provider, model, reasoning, execution IDs, and usage provenance separately. Failed, rejected, canceled, and expired attempts retain measured usage. Unknown token counts stay unknown. Source deletion, lease replacement, and revision checks still prevent partial or stale commits.
 
 ## CLI format
 

@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from .config import data_dir_path
 from .pricing import TOKEN_FIELDS, decimal_text, has_partial_counters, price_event, snapshot_metadata
 from .store import project_key
+from .observer_usage_store import attempt_model_metadata
 
 UTC = datetime_timezone.utc
 DIMENSIONS = ("day", "project", "task", "agent", "model")
@@ -217,7 +218,7 @@ def build_report(events: Iterable[Mapping[str, Any]], observer_attempts: Iterabl
     start, end, zone = _timestamp(period["from"]), _timestamp(period["to"]), ZoneInfo(timezone)
     main_rows, duplicate_events = _dedupe(events)
     observer_rows, duplicate_attempts = _dedupe(observer_attempts, observer=True)
-    workers = set(observer_thread_ids) | {row["worker_thread_id"] for row in observer_rows if row.get("worker_thread_id")}
+    workers = set(observer_thread_ids) | {row["worker_thread_id"] for row in observer_rows if row.get("worker_thread_id") and row.get("runtime", "codex") == "codex"}
     native_threads = {row.get("thread_id") for row in main_rows if row.get("source_kind") == "response"}
     overlap, dropped_legacy, unknown_time = 0, 0, Counter()
     totals = {stream: _Accumulator() for stream in ("main", "observer", "combined")}
@@ -245,6 +246,7 @@ def build_report(events: Iterable[Mapping[str, Any]], observer_attempts: Iterabl
                     dropped_legacy += 1
                     continue
                 if stream == "observer":
+                    row.update(attempt_model_metadata(row, row))
                     row["_observer_attempt"] = True
                     row.setdefault("source_session_id", row.get("session_id"))
                     row["model_source"] = row.get("model_source") or "requested_job_profile"
@@ -394,7 +396,8 @@ def build_cost_report(data_dir: str | Path | None = None, *, from_date: str | No
                 attempts = [dict(row) for row in connection.execute(query, attempt_args)]
                 # Across all dates: a worker that started yesterday can emit a
                 # response today. Never count that response as foreground work.
-                workers = [row[0] for row in connection.execute("SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL")]
+                runtime_filter = " AND COALESCE(runtime,'codex')='codex'" if "runtime" in _columns(connection, "observer_usage_attempts") else ""
+                workers = [row[0] for row in connection.execute("SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL" + runtime_filter)]
                 coverage["observer_first_receipt_at"] = connection.execute("SELECT MIN(started_at) FROM observer_usage_attempts").fetchone()[0]
                 # Old jobs have only their last update time. These indicate a
                 # gap but are not assigned to a date as if it were call time.

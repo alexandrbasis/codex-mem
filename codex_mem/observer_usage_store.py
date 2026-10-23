@@ -1,8 +1,9 @@
 """Bounded per-attempt metrics for the observation processor.
 
-The ledger contains operational metadata only. Project, processor, model, and
-reasoning effort remain owned by ``observation_jobs`` and are joined at read
-time, so model input and output can never enter this table through this API.
+The ledger contains operational metadata only. Each claim stores its requested
+profile before dispatch. Verified runtime identity and measured usage belong to
+that attempt. Project and processor remain owned by ``observation_jobs``; model
+input and output cannot enter this table through this API.
 """
 from __future__ import annotations
 
@@ -76,6 +77,11 @@ def _safe_code(value: Any) -> str | None:
 
 
 def _install_schema(connection: sqlite3.Connection) -> None:
+    existing = connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='observer_usage_attempts'").fetchone()
+    migrate = existing is not None and "requested_model" not in existing[0]
+    if migrate:
+        connection.execute("ALTER TABLE observer_usage_attempts RENAME TO observer_usage_attempts_legacy")
+        connection.execute("DROP INDEX IF EXISTS observer_usage_running")
     connection.execute(
         """
         CREATE TABLE IF NOT EXISTS observer_usage_attempts (
@@ -90,7 +96,7 @@ def _install_schema(connection: sqlite3.Connection) -> None:
             usage_status TEXT CHECK(usage_status IS NULL OR usage_status IN
                 ('reported', 'partial', 'unavailable', 'invalid')),
             usage_source TEXT CHECK(usage_source IS NULL OR
-                usage_source = 'app_server_thread_total'),
+                usage_source IN ('app_server_thread_total', 'pi_runtime_total')),
             usage_updates INTEGER CHECK(usage_updates IS NULL OR usage_updates >= 0),
             input_tokens INTEGER CHECK(input_tokens IS NULL OR input_tokens >= 0),
             cached_input_tokens INTEGER CHECK(cached_input_tokens IS NULL OR cached_input_tokens >= 0),
@@ -98,12 +104,35 @@ def _install_schema(connection: sqlite3.Connection) -> None:
             output_tokens INTEGER CHECK(output_tokens IS NULL OR output_tokens >= 0),
             reasoning_output_tokens INTEGER CHECK(reasoning_output_tokens IS NULL OR reasoning_output_tokens >= 0),
             total_tokens INTEGER CHECK(total_tokens IS NULL OR total_tokens >= 0),
+            runtime TEXT,
+            provider TEXT,
+            requested_model TEXT,
+            reasoning_effort TEXT,
+            timeout REAL,
+            profile_basis TEXT,
+            actual_runtime TEXT,
+            actual_provider TEXT,
+            actual_model TEXT,
+            actual_reasoning_effort TEXT,
             started_at TEXT NOT NULL,
             finished_at TEXT,
             PRIMARY KEY(job_id, attempt_count)
         )
         """
     )
+    if migrate:
+        columns = [row[1] for row in connection.execute("PRAGMA table_info(observer_usage_attempts_legacy)")]
+        names = ",".join(columns)
+        connection.execute(f"INSERT INTO observer_usage_attempts ({names}) SELECT {names} FROM observer_usage_attempts_legacy")
+        connection.execute("DROP TABLE observer_usage_attempts_legacy")
+        # Old job fields never change. Backfill requested identity only: no
+        # receipt proves the actual model of a historical failed attempt.
+        connection.execute("""
+            UPDATE observer_usage_attempts SET runtime='codex', provider='openai',
+                requested_model=(SELECT model FROM observation_jobs WHERE id=job_id),
+                reasoning_effort=(SELECT reasoning_effort FROM observation_jobs WHERE id=job_id),
+                profile_basis='legacy_requested_job_profile'
+        """)
     connection.execute(
         "CREATE INDEX IF NOT EXISTS observer_usage_running "
         "ON observer_usage_attempts(started_at, job_id) WHERE outcome = 'running'"
@@ -222,12 +251,12 @@ def _job(
     connection: sqlite3.Connection, workspace: str, job_id: str
 ) -> sqlite3.Row | None:
     return connection.execute(
-        "SELECT id, project, attempt_count FROM observation_jobs WHERE id = ? AND project = ?",
+        "SELECT id, project, attempt_count, model, reasoning_effort FROM observation_jobs WHERE id = ? AND project = ?",
         (job_id, workspace),
     ).fetchone()
 
 
-def begin_attempt(store: Store, project: str | Path, job_id: str, attempt_count: int) -> None:
+def begin_attempt(store: Store, project: str | Path, job_id: str, attempt_count: int, *, profile=None) -> None:
     """Create the receipt for the currently claimed attempt before model work."""
 
     if not isinstance(store, Store):
@@ -246,18 +275,30 @@ def begin_attempt(store: Store, project: str | Path, job_id: str, attempt_count:
                 raise ValueError("observation job is unavailable")
             if job["attempt_count"] != checked_attempt:
                 raise ValueError("observation attempt is stale")
-            _install_schema(connection)
-            now = _utc_now()
-            connection.execute(
-                """
-                INSERT OR IGNORE INTO observer_usage_attempts(
-                    job_id, attempt_count, outcome, started_at
-                ) VALUES (?, ?, 'running', ?)
-                """,
-                (checked_job_id, checked_attempt, now),
-            )
+            begin_claim_attempt(connection, job, profile=profile)
 
         store._write(operation)
+
+
+def begin_claim_attempt(connection: sqlite3.Connection, job: Mapping[str, Any], *, profile=None) -> None:
+    """Snapshot a claimed profile inside the owning lease transaction."""
+    _install_schema(connection)
+    now = _utc_now()
+    connection.execute(
+        """
+        INSERT OR IGNORE INTO observer_usage_attempts(
+            job_id, attempt_count, outcome, started_at, runtime, provider,
+            requested_model, reasoning_effort, timeout, profile_basis
+        ) VALUES (?, ?, 'running', ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (job["id"], job["attempt_count"], now,
+         profile.runtime if profile else "codex", profile.provider if profile else "openai",
+         profile.model if profile else job["model"],
+         profile.reasoning_effort if profile else job["reasoning_effort"],
+         profile.timeout if profile else None,
+         "requested_attempt_profile" if profile else "requested_job_profile"),
+    )
+
 
 
 def _normalize_metrics(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -279,10 +320,10 @@ def _normalize_metrics(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     status = usage["status"]
     if status not in USAGE_STATUSES:
         raise ValueError("invalid usage status")
-    if usage["source"] != USAGE_SOURCE:
+    if usage["source"] not in {USAGE_SOURCE, "pi_runtime_total"}:
         raise ValueError("invalid usage source")
     result["usage_status"] = status
-    result["usage_source"] = USAGE_SOURCE
+    result["usage_source"] = usage["source"]
     result["usage_updates"] = _integer(usage["updates"], "usage updates")
     tokens = usage["tokens"]
     if status in {"unavailable", "invalid"}:
@@ -380,6 +421,7 @@ def finish_attempt(
     worker_thread_id: str | None = None,
     worker_turn_id: str | None = None,
     metrics: Mapping[str, Any] | None = None,
+    identity: Mapping[str, Any] | None = None,
 ) -> None:
     """Finish or enrich one attempt without replacing a known final snapshot."""
 
@@ -390,6 +432,12 @@ def finish_attempt(
     checked_attempt = _integer(attempt_count, "attempt_count", positive=True)
     if outcome not in OUTCOMES:
         raise ValueError("invalid observer outcome")
+    actual = None
+    if identity is not None:
+        if set(identity) != {"runtime", "provider", "model", "reasoning_effort"}:
+            raise ValueError("invalid execution identity")
+        actual = {key: _identifier(value, key, required=key != "reasoning_effort")
+                  for key, value in identity.items()}
     normalized = _normalize_metrics(metrics)
     normalized.update(
         error_code=_safe_code(error_code),
@@ -417,6 +465,17 @@ def finish_attempt(
                 # A superseded worker cannot keep mutating its recovered
                 # receipt through intermediate progress callbacks.
                 return
+            if actual is not None:
+                # Identity is immutable once observed, including late receipts.
+                keys = ("runtime", "provider", "model", "reasoning_effort")
+                old = tuple(existing["actual_" + key] for key in keys)
+                new = tuple(actual[key] for key in keys)
+                if any(value is not None for value in old) and old != new:
+                    raise ValueError("execution identity changed")
+                connection.execute(
+                    "UPDATE observer_usage_attempts SET actual_runtime=?, actual_provider=?, "
+                    "actual_model=?, actual_reasoning_effort=? WHERE job_id=? AND attempt_count=?",
+                    (*new, checked_job_id, checked_attempt))
             merged = _merge(existing, normalized, outcome)
             terminal_at = existing["finished_at"]
             if merged["outcome"] != "running" and terminal_at is None:
@@ -458,6 +517,7 @@ def snapshot_attempt(
     worker_thread_id: str | None = None,
     worker_turn_id: str | None = None,
     metrics: Mapping[str, Any] | None = None,
+    identity: Mapping[str, Any] | None = None,
 ) -> None:
     """Persist one cumulative progress snapshot without finalizing the attempt.
 
@@ -469,7 +529,7 @@ def snapshot_attempt(
     finish_attempt(
         store, project, job_id, attempt_count, outcome="running",
         worker_thread_id=worker_thread_id, worker_turn_id=worker_turn_id,
-        metrics=metrics,
+        metrics=metrics, identity=identity,
     )
 
 
@@ -759,6 +819,49 @@ def _efficiency_summary(
     }
 
 
+def attempt_model_metadata(attempt: Mapping[str, Any], job: Mapping[str, Any]) -> dict[str, Any]:
+    """Choose observed identity when present and label requested-only evidence."""
+    actual = attempt.get("actual_model")
+    return {
+        "runtime": attempt.get("runtime") or "codex",
+        "provider": attempt.get("provider") or "openai",
+        "model": actual or attempt.get("requested_model") or job.get("model"),
+        "model_source": "runtime_verified" if actual else attempt.get("profile_basis") or "requested_job_profile",
+        "reasoning_effort": (attempt.get("actual_reasoning_effort") if actual
+                             else attempt.get("reasoning_effort", job.get("reasoning_effort"))),
+    }
+
+
+def _profile_model_rows(connection, workspace, aggregate_parts):
+    """Aggregate attempt profiles and retain missing historical receipts as gaps."""
+    columns = [row[1] for row in connection.execute("PRAGMA table_info(observer_usage_attempts)")]
+    if "requested_model" not in columns:
+        return None
+    gap_values = {"job_id": "j.id", "runtime": "'codex'", "provider": "'openai'",
+                  "requested_model": "j.model", "reasoning_effort": "j.reasoning_effort",
+                  "profile_basis": "'requested_job_profile'"}
+    gap_columns = ",".join(gap_values.get(column, "NULL") for column in columns)
+    parts = [part.replace("COUNT(attempts.job_id)", "COUNT(attempts.attempt_count)")
+             .replace("attempts.job_id IS NOT NULL", "attempts.attempt_count IS NOT NULL")
+             for part in aggregate_parts]
+    parts[1] = "COUNT(attempts.attempt_count) + SUM(attempts.missing) AS attempt_count"
+    dimensions = ("jobs.processor_id, attempts.runtime, attempts.provider, "
+                  "attempts.requested_model, attempts.reasoning_effort")
+    sql = ("WITH profile_attempts AS (SELECT a.*,0 AS missing FROM observer_usage_attempts a "
+           "JOIN observation_jobs j ON j.id=a.job_id WHERE j.project=? UNION ALL SELECT " + gap_columns +
+           ",j.attempt_count-COALESCE(n.receipts,0) AS missing FROM observation_jobs j "
+           "LEFT JOIN (SELECT job_id,COUNT(*) receipts FROM observer_usage_attempts GROUP BY job_id) n ON n.job_id=j.id "
+           "WHERE j.project=? AND j.attempt_count>COALESCE(n.receipts,0)) SELECT " + dimensions +
+           ",attempts.requested_model AS model, "
+           "CASE WHEN MIN(attempts.profile_basis)=MAX(attempts.profile_basis) THEN MIN(attempts.profile_basis) "
+           "ELSE 'requested_attempt_profile' END AS model_basis," + ",".join(parts) +
+           " FROM observation_jobs jobs JOIN profile_attempts attempts ON attempts.job_id=jobs.id "
+           "WHERE jobs.project=? GROUP BY " + dimensions + " ORDER BY " + dimensions)
+    cursor = connection.execute(sql, (workspace, workspace, workspace))
+    names = [column[0] for column in cursor.description]
+    return [dict(zip(names, row)) for row in cursor]
+
+
 def observer_usage_summary(
     connection: sqlite3.Connection, project: str | Path
 ) -> dict[str, Any]:
@@ -876,13 +979,15 @@ def observer_usage_summary(
     }
     result["duration_ms"] = grouped["duration_ms"]
     result["totals"] = grouped["totals"]
-    for row in rows:
+    model_rows = _profile_model_rows(connection, workspace, aggregate_parts)
+    for row in model_rows if model_rows is not None else rows:
         model_group = _group([row])
         result["models"].append(
             {
                 "processor_id": row["processor_id"],
                 "model": row["model"],
-                "model_basis": "requested_job_profile",
+                "model_basis": row.get("model_basis", "requested_job_profile"),
+                "runtime": row.get("runtime", "codex"), "provider": row.get("provider", "openai"),
                 "reasoning_effort": row["reasoning_effort"],
                 "attempts": {
                     key: model_group[key]

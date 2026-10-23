@@ -99,7 +99,7 @@ class QueueRecoveryTests(unittest.TestCase):
 
     def test_recover_expired_legacy_jev_timeout_rejects_unsafe_claims(self):
         for case in ("wrong_job", "wrong_reason", "missing_detail", "inflight", "nonexpired", "missing",
-                     "wrong_model", "missing_source", "failed", "disabled"):
+                     "wrong_processor", "missing_source", "failed", "disabled"):
             with self.subTest(case=case):
                 project, base, clock, job, quarantined = self._legacy_expired_runner_block()
                 path = base / SERVICE_STATE_FILENAME
@@ -119,8 +119,8 @@ class QueueRecoveryTests(unittest.TestCase):
                     if case == "nonexpired":
                         store._connection.execute("UPDATE observation_jobs SET lease_expires_at=? WHERE id=?",
                                                   ("2099-01-01T00:01:00Z", job["job_id"]))
-                    elif case == "wrong_model":
-                        store._connection.execute("UPDATE observation_jobs SET model='wrong' WHERE id=?", (job["job_id"],))
+                    elif case == "wrong_processor":
+                        store._connection.execute("UPDATE observation_jobs SET processor_id='wrong' WHERE id=?", (job["job_id"],))
                     elif case == "missing_source":
                         store._connection.execute("DELETE FROM observation_job_sources WHERE job_id=?", (job["job_id"],))
                     elif case == "failed":
@@ -285,11 +285,11 @@ class QueueRecoveryTests(unittest.TestCase):
                 result = recover(project, data_dir, job_id=wrong_id, clock=clock)
                 self.assertEqual("failed_claim_unavailable", result["code"])
             with Store(data_dir) as store:
-                store._connection.execute("UPDATE observation_jobs SET model='wrong' WHERE id=?", (jobs["runner"],))
+                store._connection.execute("UPDATE observation_jobs SET processor_id='wrong' WHERE id=?", (jobs["runner"],))
             self.assertEqual("failed_claim_unavailable", recover(
                 project, data_dir, job_id=jobs["runner"], clock=clock)["code"])
             with Store(data_dir) as store:
-                store._connection.execute("UPDATE observation_jobs SET model=? WHERE id=?", (MODEL, jobs["runner"]))
+                store._connection.execute("UPDATE observation_jobs SET processor_id=? WHERE id=?", (PROCESSOR_ID, jobs["runner"]))
             state_path = data_dir / SERVICE_STATE_FILENAME
             state = json.loads(state_path.read_text())
             record = state["projects"][str(project.resolve())]

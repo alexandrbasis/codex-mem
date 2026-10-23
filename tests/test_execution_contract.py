@@ -77,3 +77,36 @@ class ExecutionContractTests(unittest.TestCase):
         result = NativeProcessorRunner(codex='/missing/executable').execute(self.request(deadline=time.monotonic() - 1))
         self.assertEqual('timeout', result.failure.reason)
         self.assertIsNone(result.usage['tokens'])
+
+    def test_catalog_requires_exact_model_field_and_follows_bounded_pages(self):
+        from codex_mem.execution import ExecutionProfile
+        selected = ExecutionProfile('codex', 'openai', 'fixture-exact', 'low', 5)
+        candidate = {'id': 'picker-id', 'model': 'fixture-exact',
+                     'supportedReasoningEfforts': [{'reasoningEffort': 'low'}]}
+        self.scenario(model_pages={'first': {'data': [], 'nextCursor': 'page2'},
+                                   'page2': {'data': [candidate]}})
+        result = NativeProcessorRunner(codex=str(self.executable)).execute(self.request(profile=selected))
+        self.assertIsNone(result.failure)
+        self.assertEqual('fixture-exact', result.identity.model)
+        for invalid in ({**candidate, 'id': 'fixture-exact', 'model': 'substitute'},
+                        {'id': 'fixture-exact', 'supportedReasoningEfforts': [{'reasoningEffort': 'low'}]}):
+            with self.subTest(candidate=invalid):
+                self.scenario(models=[invalid])
+                result = NativeProcessorRunner(codex=str(self.executable)).execute(self.request(profile=selected))
+                self.assertEqual('configuration', result.failure.reason)
+                self.assertIsNone(result.identity)
+
+    def test_catalog_failures_share_attempt_deadline_and_page_bound(self):
+        for scenario, expected in (({'model_pages': {'first': {'data': 'malformed'}}}, 'protocol'),
+                                   ({'catalog_mode': 'disconnect'}, 'protocol'),
+                                   ({'catalog_mode': 'timeout'}, 'timeout'),
+                                   ({'model_pages': {'first': {'data': [], 'nextCursor': 'loop'},
+                                                     'loop': {'data': [], 'nextCursor': 'loop'}}}, 'configuration')):
+            with self.subTest(scenario=scenario):
+                self.scenario(**scenario)
+                started = time.monotonic()
+                result = NativeProcessorRunner(codex=str(self.executable)).execute(
+                    self.request(deadline=started + 2))
+                self.assertEqual(expected, result.failure.reason)
+                self.assertIsNone(result.usage['tokens'])
+                self.assertLess(time.monotonic() - started, 4)

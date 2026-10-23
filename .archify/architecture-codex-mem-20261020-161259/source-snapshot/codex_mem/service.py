@@ -42,7 +42,7 @@ except ImportError:  # pragma: no cover - Windows does not provide flock
 from .config import automatic_capture_enabled, data_dir_path, hooks_disabled, load_config, project_memory_enabled
 from . import __version__
 from .processor import (
-    DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, MODEL, PROCESSOR_ID, REASONING_EFFORT, process_pending,
+    DEFAULT_TIMEOUT, INVALID_RESPONSE_REASONS, PROCESSOR_ID, process_pending,
 )
 from .store import MAX_LEASE_SECONDS, project_key
 from .observation_diagnostics import RUNNER_FAILURE_REASONS as _RUNNER_REASONS, safe_storage_failure_detail
@@ -471,9 +471,9 @@ def reconcile_batch_recovery(
             connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
             recovered = connection.execute(
                 "SELECT status,error_code FROM observation_jobs WHERE id=? AND project=? AND processor_id=? "
-                "AND model=? AND reasoning_effort=? AND status IN ('processed','skipped','failed') "
+                "AND status IN ('processed','skipped','failed') "
                 "AND attempt_count=? AND lease_token IS NULL AND lease_expires_at IS NULL",
-                (job_id, workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT, expected_attempt_count),
+                (job_id, workspace, PROCESSOR_ID, expected_attempt_count),
             ).fetchone()
             if recovered is None:
                 return {"status": "blocked", "code": "recovery_unavailable"}
@@ -483,8 +483,8 @@ def reconcile_batch_recovery(
                               and recovered_failures[-1]["attempt_count"] == expected_attempt_count else None)
             failures = connection.execute(
                 "SELECT id,error_code FROM observation_jobs WHERE project=? AND processor_id=? "
-                "AND model=? AND reasoning_effort=? AND status='failed' ORDER BY updated_at DESC,id DESC",
-                (workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+                "AND status='failed' ORDER BY updated_at DESC,id DESC",
+                (workspace, PROCESSOR_ID),
             ).fetchall()
             rejected = [row[0] for row in failures if row[1] == "invalid_response"]
             previous_rejected_job = record["last_rejected_job"]
@@ -2150,13 +2150,13 @@ def _persisted_expired_claim(base: Path, project: str, job_id: Any, now: float) 
         connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
         row = connection.execute(
             "SELECT j.lease_expires_at FROM observation_jobs AS j WHERE j.id = ? AND j.project = ? "
-            "AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
+            "AND j.processor_id = ? "
             "AND j.status = 'running' AND j.lease_token IS NOT NULL "
             "AND EXISTS (SELECT 1 FROM observation_job_sources AS links WHERE links.job_id = j.id) "
             "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
             "LEFT JOIN entries AS e ON e.id = links.source_id AND e.project = j.project "
             "WHERE links.job_id = j.id AND e.id IS NULL)",
-            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+            (job_id, project, PROCESSOR_ID),
         ).fetchone()
         if row is None or not isinstance(row[0], str):
             return False
@@ -2189,14 +2189,14 @@ def _persisted_failed_batch(base: Path, project: str, job_id: Any, code: str) ->
         connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
         row = connection.execute(
             "SELECT j.id FROM observation_jobs AS j WHERE j.id = ? AND j.project = ? "
-            "AND j.processor_id = ? AND j.model = ? AND j.reasoning_effort = ? "
+            "AND j.processor_id = ? "
             "AND j.status = 'failed' AND j.error_code = ? "
             "AND j.lease_token IS NULL AND j.lease_expires_at IS NULL "
             "AND EXISTS (SELECT 1 FROM observation_job_sources AS links WHERE links.job_id = j.id) "
             "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
             "LEFT JOIN entries AS e ON e.id = links.source_id AND e.project = j.project "
             "WHERE links.job_id = j.id AND e.id IS NULL)",
-            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT, code),
+            (job_id, project, PROCESSOR_ID, code),
         ).fetchone()
         return row is not None
     except (OSError, sqlite3.Error, ServiceError, ValueError):
@@ -2220,15 +2220,15 @@ def _runner_failure_snapshot(base: Path, project: str, job_id: Any = None, *, co
         _reject_link_or_nonfile(database)
         connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
         if job_id is None and connection.execute(
-            "SELECT 1 FROM observation_jobs WHERE project=? AND processor_id=? AND model=? "
-            "AND reasoning_effort=? AND (status='running' OR (status='failed' "
+            "SELECT 1 FROM observation_jobs WHERE project=? AND processor_id=? "
+            "AND (status='running' OR (status='failed' "
             "AND error_code NOT IN (?,'invalid_response'))) LIMIT 1",
-            (project, PROCESSOR_ID, MODEL, REASONING_EFFORT, code),
+            (project, PROCESSOR_ID, code),
         ).fetchone() is not None:
             return None
         rows = connection.execute(
             "SELECT j.id,j.attempt_count,j.worker_thread_id,j.worker_turn_id FROM observation_jobs AS j WHERE j.project=? "
-            "AND j.processor_id=? AND j.model=? AND j.reasoning_effort=? "
+            "AND j.processor_id=? "
             "AND j.status='failed' AND j.error_code=? "
             "AND j.lease_token IS NULL AND j.lease_expires_at IS NULL "
             "AND (? IS NULL OR j.id=?) "
@@ -2236,7 +2236,7 @@ def _runner_failure_snapshot(base: Path, project: str, job_id: Any = None, *, co
             "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS s "
             "LEFT JOIN entries AS e ON e.id=s.source_id AND e.project=j.project "
             "WHERE s.job_id=j.id AND e.id IS NULL) LIMIT 2",
-            (project, PROCESSOR_ID, MODEL, REASONING_EFFORT, code, job_id, job_id),
+            (project, PROCESSOR_ID, code, job_id, job_id),
         ).fetchall()
         if len(rows) != 1:
             return None
@@ -2273,8 +2273,8 @@ def _reconcile_retry_snapshot(base: Path, project: str, job_id: Any, now: float)
         connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
         row = connection.execute(
             "SELECT status,error_code,attempt_count,lease_expires_at,lease_token IS NOT NULL "
-            "FROM observation_jobs WHERE id=? AND project=? AND processor_id=? AND model=? AND reasoning_effort=?",
-            (job_id, project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+            "FROM observation_jobs WHERE id=? AND project=? AND processor_id=?",
+            (job_id, project, PROCESSOR_ID),
         ).fetchone()
         if row is None:
             return unavailable
@@ -2344,35 +2344,6 @@ def _schedule_runner_retry(
     return True
 
 
-def _only_retired_operational_failures(base: Path, project: str, code: str) -> bool:
-    """Permit fresh work after a profile upgrade without replaying old batches."""
-    connection = None
-    try:
-        database = base / "memory.sqlite3"
-        _reject_link_or_nonfile(database)
-        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
-        # A running claim under any profile or a current operational failure
-        # keeps the project blocked. Content rejections stay quarantined.
-        if connection.execute(
-            "SELECT 1 FROM observation_jobs WHERE project=? AND (status='running' OR "
-            "(status='failed' AND error_code<>'invalid_response' AND "
-            "processor_id=? AND model=? AND reasoning_effort=?)) LIMIT 1",
-            (project, PROCESSOR_ID, MODEL, REASONING_EFFORT),
-        ).fetchone() is not None:
-            return False
-        return connection.execute(
-            "SELECT 1 FROM observation_jobs WHERE project=? AND status='failed' AND error_code=? "
-            "AND processor_id=? AND (model<>? OR reasoning_effort<>?) "
-            "AND lease_token IS NULL AND lease_expires_at IS NULL LIMIT 1",
-            (project, code, PROCESSOR_ID, MODEL, REASONING_EFFORT),
-        ).fetchone() is not None
-    except (OSError, sqlite3.Error, ServiceError, ValueError):
-        return False
-    finally:
-        if connection is not None:
-            connection.close()
-
-
 def _recover_legacy_runner_blocks(base: Path, now: float, retry_backoff: float) -> None:
     """Reconcile blocked records against the current durable retry policy."""
     with _state_lock(base):
@@ -2388,13 +2359,6 @@ def _recover_legacy_runner_blocks(base: Path, now: float, retry_backoff: float) 
             changed = True
             snapshot = _runner_failure_snapshot(base, project, record["last_failure_job"], code=record["last_code"])
             if snapshot is None:
-                if _only_retired_operational_failures(base, project, record["last_code"]):
-                    # Ordinary claims exclude every old failed source. The new
-                    # profile can drain independent captures without retry_failed.
-                    record["blocked"] = False
-                    record["attempts"] = 0
-                    record["due_at"] = now
-                    _clear_retry_target(record)
                 continue
             record["last_failure_job"] = snapshot["job_id"]
             record["last_failure_detail"] = _runner_failure_detail(snapshot["reason_code"])
@@ -2417,9 +2381,9 @@ def _rejection_counts(base: Path, projects: list[str]) -> dict[str, int] | None:
         placeholders = ",".join("?" for _ in projects)
         rows = connection.execute(
             "SELECT project, COUNT(*) FROM observation_jobs "
-            f"WHERE project IN ({placeholders}) AND processor_id = ? AND model = ? "
-            "AND reasoning_effort = ? AND status = 'failed' AND error_code = 'invalid_response' "
-            "GROUP BY project", (*projects, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+            f"WHERE project IN ({placeholders}) AND processor_id = ? "
+            "AND status = 'failed' AND error_code = 'invalid_response' "
+            "GROUP BY project", (*projects, PROCESSOR_ID),
         ).fetchall()
         return {project: count for project, count in rows}
     except (OSError, sqlite3.Error, ServiceError, ValueError):

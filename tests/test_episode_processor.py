@@ -567,7 +567,7 @@ class EpisodeProcessorTests(unittest.TestCase):
             jsonschema.Draft202012Validator.check_schema(request["output_schema"])
         client = mock.Mock()
         responses = {"initialize": {}, "config/read": {"config": {}},
-                     "model/list": {"data": [{"id": ep.MODEL, "supportedReasoningEfforts": [{"reasoningEffort": ep.REASONING_EFFORT}]}]},
+                     "model/list": {"data": [{"id": ep.MODEL, "model": ep.MODEL, "supportedReasoningEfforts": [{"reasoningEffort": ep.REASONING_EFFORT}]}]},
                      "thread/start": {"thread": {"id": "worker"}, "model": ep.MODEL,
                                       "reasoningEffort": ep.REASONING_EFFORT, "modelProvider": "openai"},
                      "mcpServerStatus/list": {"data": []}, "turn/start": {"turn": {"id": "turn"}}}

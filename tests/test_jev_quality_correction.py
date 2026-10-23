@@ -82,9 +82,9 @@ class QualityCorrectionTests(unittest.TestCase):
         stack = ExitStack()
         self.addCleanup(stack.close)
         for name, value in (
-            ("_AppServer", FakeServer), ("_verify_luna_available", lambda _: None),
+            ("_AppServer", FakeServer), ("_verify_model_available", lambda *_: None),
             ("_isolated_config_overrides", lambda _: {}),
-            ("_verify_thread_start", lambda _: "thread-test"),
+            ("_verify_thread_start", lambda _, **kwargs: "thread-test"),
             ("_verify_empty_mcp_inventory", lambda *_: None),
         ):
             stack.enter_context(mock.patch.object(processor, name, value))

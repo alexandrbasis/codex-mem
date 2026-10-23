@@ -140,5 +140,8 @@ def read_failure_receipts(connection: sqlite3.Connection, job_id: str) -> list[d
 
 def safe_failure_reason(code: object, reason: object) -> str | None:
     allowed = (INVALID_RESPONSE_REASONS if code == "invalid_response" else
-               RUNNER_FAILURE_REASONS if code == "runner_failure" else frozenset())
+               RUNNER_FAILURE_REASONS if code == "runner_failure" else
+               frozenset({"unsupported_provider", "unsupported_reasoning", "exact_model_unavailable"})
+               if code == "model_unavailable" else
+               frozenset({"unsupported_runtime"}) if code == "runner_unavailable" else frozenset())
     return reason if isinstance(reason, str) and reason in allowed else None
