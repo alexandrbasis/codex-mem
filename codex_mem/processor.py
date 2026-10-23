@@ -1,8 +1,8 @@
-"""Bounded native Codex processing for raw hook observations.
+"""Bounded background processing for raw hook observations.
 
 The processor is deliberately separate from hook capture and normal memory
-writes.  It leases one small batch, gives it to a fresh isolated app-server
-thread, and commits only a locally validated result through Store's atomic
+writes. It leases one small batch, gives it to a fresh isolated runtime,
+and commits only a locally validated result through Store's atomic
 observation API.  Source text is evidence, never instructions.
 """
 
@@ -189,9 +189,9 @@ def process_pending(
     """Process at most one leased observation batch.
 
     ``runner`` is an explicit deterministic-test seam.  It receives a mapping
-    with the bounded prompt, output schema, and fixed model contract and must
+    with the bounded prompt, output schema, and selected model contract and must
     return ``{"output": ..., "evidence": ...}``.  The production default is
-    :class:`NativeProcessorRunner`; tests never need to launch Codex.
+    runtime-selected Codex or Pi adapter; tests can replace its executable.
 
     The returned receipt intentionally contains no source text, prompt, model
     output, raw configuration, or exception text. Storage failures retain only
@@ -380,7 +380,8 @@ def process_pending(
                 def review_candidate(candidate, remaining):
                     nonlocal reviewed_output, review_count
                     review_count += 1
-                    canonical = _resolve_source_handles(candidate, sources)
+                    canonical = _resolve_source_handles(
+                        _unwrap_model_output(candidate) if profile.runtime == "pi" else candidate, sources)
                     candidate_notes, _, candidate_summary = _validate_model_output(
                         canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
                     if filter_audit is not None:
@@ -398,10 +399,17 @@ def process_pending(
                     def checkpoint(snapshot: Mapping[str, Any]) -> None:
                         snapshot_attempt(store, workspace, job_id, attempt_count, **snapshot)
 
-                    active_runner = NativeProcessorRunner(
-                        codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
-                        candidate_review=review_candidate if quality_enabled else None,
-                    )
+                    if profile.runtime == "pi":
+                        from .pi_runtime import PiProcessorRunner
+                        active_runner = PiProcessorRunner(
+                            usage_checkpoint=checkpoint,
+                            candidate_review=review_candidate if quality_enabled else None,
+                        )
+                    else:
+                        active_runner = NativeProcessorRunner(
+                            codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
+                            candidate_review=review_candidate if quality_enabled else None,
+                        )
                 execution_request = ExecutionRequest(
                     prompt=request["prompt"], output_schema=request["output_schema"],
                     context={key: value for key, value in request.items()
@@ -417,7 +425,7 @@ def process_pending(
                 execution.require_success()
                 output = execution.output
                 thread_id, turn_id = execution.identity.execution_id, execution.identity.turn_id
-                if "result" in output:
+                if profile.runtime == "pi" or "result" in output:
                     output = _unwrap_model_output(output)
                 output = _resolve_source_handles(output, sources)
                 notes, disposition, summary = _validate_model_output(

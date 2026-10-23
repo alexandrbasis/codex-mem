@@ -207,8 +207,7 @@ class ObservationProfileTests(unittest.TestCase):
         self.capture()
         for selected, reason in ((profile('not-listed'), 'exact_model_unavailable'),
                                  (profile('gpt-6-luna', 'high'), 'unsupported_reasoning'),
-                                 ({**profile(), 'provider': 'unverified'}, 'unsupported_provider'),
-                                 ({**profile(), 'runtime': 'pi'}, 'unsupported_runtime')):
+                                 ({**profile(), 'provider': 'unverified'}, 'unsupported_provider')):
             with self.subTest(reason=reason):
                 configure(self.data, observation_profile=selected)
                 failed = self.process(retry_failed=True)

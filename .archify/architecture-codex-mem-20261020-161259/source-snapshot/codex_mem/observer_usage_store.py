@@ -8,6 +8,7 @@ input and output cannot enter this table through this API.
 from __future__ import annotations
 
 import sqlite3
+import json
 from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
@@ -133,6 +134,9 @@ def _install_schema(connection: sqlite3.Connection) -> None:
                 reasoning_effort=(SELECT reasoning_effort FROM observation_jobs WHERE id=job_id),
                 profile_basis='legacy_requested_job_profile'
         """)
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(observer_usage_attempts)")}
+    if "execution_receipt" not in columns:
+        connection.execute("ALTER TABLE observer_usage_attempts ADD COLUMN execution_receipt TEXT")
     connection.execute(
         "CREATE INDEX IF NOT EXISTS observer_usage_running "
         "ON observer_usage_attempts(started_at, job_id) WHERE outcome = 'running'"
@@ -304,6 +308,7 @@ def begin_claim_attempt(connection: sqlite3.Connection, job: Mapping[str, Any], 
 def _normalize_metrics(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     result = {
         "duration_ms": None,
+        "execution_receipt": None,
         "usage_status": "unavailable",
         "usage_source": None,
         "usage_updates": None,
@@ -311,8 +316,13 @@ def _normalize_metrics(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     }
     if metrics is None:
         return result
-    if not isinstance(metrics, Mapping) or set(metrics) != {"duration_ms", "usage"}:
+    if not isinstance(metrics, Mapping) or set(metrics) not in (
+            {"duration_ms", "usage"}, {"duration_ms", "usage", "execution_receipt"}):
         raise ValueError("metrics must contain duration_ms and usage")
+    from .execution import pi_execution_receipt
+    evidence = pi_execution_receipt(metrics.get("execution_receipt"))
+    if evidence is not None:
+        result["execution_receipt"] = json.dumps(evidence, sort_keys=True)
     result["duration_ms"] = _integer(metrics["duration_ms"], "duration_ms")
     usage = metrics["usage"]
     if not isinstance(usage, Mapping) or set(usage) != {"status", "source", "updates", "tokens"}:
@@ -320,26 +330,29 @@ def _normalize_metrics(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     status = usage["status"]
     if status not in USAGE_STATUSES:
         raise ValueError("invalid usage status")
-    if usage["source"] not in {USAGE_SOURCE, "pi_runtime_total"}:
+    pi_usage = usage["source"] == "pi_assistant_usage"
+    if usage["source"] not in {USAGE_SOURCE, "pi_runtime_total", "pi_assistant_usage"}:
         raise ValueError("invalid usage source")
     result["usage_status"] = status
-    result["usage_source"] = usage["source"]
+    result["usage_source"] = "pi_runtime_total" if pi_usage else usage["source"]
     result["usage_updates"] = _integer(usage["updates"], "usage updates")
     tokens = usage["tokens"]
     if status in {"unavailable", "invalid"}:
         if tokens is not None:
             raise ValueError("unknown usage counters must be null")
         return result
-    if not isinstance(tokens, Mapping) or set(tokens) != set(COUNTERS):
+    if not isinstance(tokens, Mapping) or (not pi_usage and set(tokens) != set(COUNTERS)) or set(tokens) - set(COUNTERS):
         raise ValueError("reported usage must contain every token counter")
     for counter in COUNTERS:
-        result[counter] = _integer(tokens[counter], counter)
+        if counter in tokens:
+            result[counter] = _integer(tokens[counter], counter)
     if (
-        result["cached_input_tokens"] + result["cache_write_input_tokens"]
-        > result["input_tokens"]
-        or result["reasoning_output_tokens"] > result["output_tokens"]
-        or result["total_tokens"]
-        != result["input_tokens"] + result["output_tokens"]
+        (all(result[key] is not None for key in ("cached_input_tokens", "cache_write_input_tokens", "input_tokens"))
+         and result["cached_input_tokens"] + result["cache_write_input_tokens"] > result["input_tokens"])
+        or (result["reasoning_output_tokens"] is not None and result["output_tokens"] is not None
+            and result["reasoning_output_tokens"] > result["output_tokens"])
+        or (all(result[key] is not None for key in ("total_tokens", "input_tokens", "output_tokens"))
+            and result["total_tokens"] != result["input_tokens"] + result["output_tokens"])
     ):
         raise ValueError("inconsistent usage counters")
     return result
@@ -351,6 +364,7 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
     merged: dict[str, Any] = {"outcome": merged_outcome}
     fields = (
         "error_code",
+        "execution_receipt",
         "worker_thread_id",
         "worker_turn_id",
         "duration_ms",
@@ -370,8 +384,9 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
     old_status = existing["usage_status"]
     new_status = incoming["usage_status"]
     monotonic_counters = all(
-        incoming[counter] is not None
-        and (existing[counter] is None or incoming[counter] >= existing[counter])
+        (incoming[counter] is None and (existing[counter] is None or incoming["usage_source"] == "pi_runtime_total"))
+        or (incoming[counter] is not None
+            and (existing[counter] is None or incoming[counter] >= existing[counter]))
         for counter in COUNTERS
     )
     same_worker = all(
@@ -390,6 +405,12 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
         if merged["usage_status"] in {"unavailable", "invalid"}:
             for counter in COUNTERS:
                 merged[counter] = None
+        elif incoming["usage_source"] == "pi_runtime_total" and new_status in {"reported", "partial"}:
+            # Pi can omit an optional counter in a later generation. A prior
+            # value is not the cumulative value of that now-unknown field.
+            for counter in COUNTERS:
+                if incoming[counter] is None:
+                    merged[counter] = None
     elif old_status == "reported":
         merged["usage_status"] = old_status
     elif old_status == "partial":
@@ -398,7 +419,12 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
         if new_status in {"reported", "partial"} and monotonic_counters and same_worker:
             merged["usage_status"] = new_status
             for field in (*COUNTERS, "duration_ms", "usage_updates"):
-                merged[field] = max(existing[field] or 0, incoming[field] or 0)
+                if field in COUNTERS and incoming["usage_source"] == "pi_runtime_total":
+                    # The late Pi sample is cumulative. A missing optional
+                    # counter must remain unknown, including after recovery.
+                    merged[field] = incoming[field]
+                else:
+                    merged[field] = max(existing[field] or 0, incoming[field] or 0)
         else:
             merged["usage_status"] = old_status
     elif new_status in {"reported", "partial"} and any(
@@ -484,7 +510,7 @@ def finish_attempt(
                 "outcome = ?, error_code = ?, worker_thread_id = ?, worker_turn_id = ?, "
                 "duration_ms = ?, usage_status = ?, usage_source = ?, usage_updates = ?, "
                 + ", ".join(f"{counter} = ?" for counter in COUNTERS)
-                + ", finished_at = ?"
+                + ", finished_at = ?, execution_receipt = ?"
             )
             connection.execute(
                 f"UPDATE observer_usage_attempts SET {assignments} "
@@ -500,6 +526,7 @@ def finish_attempt(
                     merged["usage_updates"],
                     *(merged[counter] for counter in COUNTERS),
                     terminal_at,
+                    merged["execution_receipt"],
                     checked_job_id,
                     checked_attempt,
                 ),

@@ -49,7 +49,12 @@ for raw in sys.stdin:
         if scenario.get('modes'):
             mode = scenario['modes'][min(count - 1, len(scenario['modes']) - 1)]
         if count == 1:
-            supplied = json.loads(command['message'].split('\n')[-1])
+            if scenario.get('observation'):
+                import re
+                sources = json.loads(re.search(r'<untrusted_observations>\n(.*?)\n</untrusted_observations>', command['message'], re.S).group(1))
+                supplied = {'events': [{'spans': [{'ref': source['id'], 'text': source['body']} for source in sources]}]}
+            else:
+                supplied = json.loads(command['message'].split('\n')[-1])
         emit({'id': command['id'], 'type': 'response', 'command': kind, 'success': True,
               'data': {'disposition': scenario.get('disposition', 'started')}})
         emit({'type': 'agent_start'})
@@ -61,7 +66,7 @@ for raw in sys.stdin:
             emit({'type': 'message_start', 'message': system})
             emit({'type': 'message_end', 'message': system})
         emit({'type': 'message_start', 'message': {'role': 'assistant', **model, 'model': model['id']}})
-        usage = scenario.get('usage', {'input': 10, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 12})
+        usage = (scenario['usages'][min(count - 1, len(scenario['usages']) - 1)] if scenario.get('usages') else scenario.get('usage', {'input': 10, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 12}))
         for _ in range(2):
             emit({'type': 'message_update', 'usage': {} if scenario.get('omit_usage') or (count == 1 and scenario.get('first_usage_unknown')) or (count == 2 and scenario.get('last_usage_unknown')) else usage,
                   'assistantMessageEvent': {'type': 'text_delta', 'contentIndex': 0, 'delta': ''}})
@@ -105,6 +110,20 @@ for raw in sys.stdin:
                 'evidence': {'summary': refs, 'goal': refs[:1], 'rationale': [], 'outcome': [],
                     'open_work': [], 'continuation_of': refs if merging else [],
                     'consolidation_of': refs if merging else []}}], 'claims': []}
+        if scenario.get('observation'):
+            note = {'title': 'Local import decision', 'body': 'The user requests local import.', 'tags': ['import'],
+                'source_ids': [ref], 'observation': {'type': 'decision', 'subtitle': '',
+                'narrative': 'The user requests local import.', 'facts': [], 'concepts': [], 'files_read': [], 'files_modified': []}}
+            summary = None
+            if any(s.get('evidence_role') == 'assistant_report' for s in sources):
+                stop = next(s['id'] for s in sources if s.get('evidence_role') == 'assistant_report')
+                summary = dict(title='Import session', request='Use local import.', investigated='',
+                    learned='The user requests local import.' if count == 1 else 'The assistant reported that the user requests local import.', completed='', next_steps='', notes='', source_ids=[stop])
+            output = {'result': {'notes': [note] if summary is None else [], 'disposition': 'processed', 'session_summary': summary}}
+            if mode == 'unknown_ref':
+                output['result']['notes'][0]['source_ids'] = ['unknown']
+            if mode == 'schema':
+                output['result']['extra'] = True
         if scenario.get('gate'):
             gate = Path(scenario['gate'])
             gate.with_suffix('.ready').touch()

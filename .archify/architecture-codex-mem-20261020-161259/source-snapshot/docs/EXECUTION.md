@@ -1,8 +1,8 @@
 # Background execution profiles
 
-An execution profile selects a runtime, provider, exact model, reasoning level, and timeout. The interactive host is a separate choice. The shared contract connects `NativeProcessorRunner` to Codex and `PiProcessorRunner` to Pi for project memory. Observation extraction, summaries, project memory, reconsideration, and consolidation use the configured profile.
+An execution profile selects a runtime, provider, exact model, reasoning level, and timeout. The interactive host is a separate choice. The shared contract connects `NativeProcessorRunner` to Codex and `PiProcessorRunner` to Pi for both processors. Observation extraction, summaries, project memory, reconsideration, and consolidation use the configured profile.
 
-Each processor resolves its own override. A Pi profile activates Pi for project memory, reconsideration, and consolidation. Observation processing still requires Codex. Profile changes do not reprocess successful sources.
+Each processor resolves its own override. A Pi profile activates Pi for observations, summaries, project memory, reconsideration, and consolidation. The processors can use different runtimes. Profile changes do not reprocess successful sources.
 
 ## Configuration contract
 
@@ -30,7 +30,7 @@ Identifiers retain their case and spelling. Whitespace and wildcard selection ar
 
 The Codex adapter pins `model_provider="openai"` before reading the native `model/list` catalog. It matches the exact returned `model` field and an advertised `supportedReasoningEfforts` value. The catalog `id` is a picker identity, not evidence of a dispatch model. Discovery follows at most 16 pages under the attempt deadline. Malformed catalogs, disconnects, repeated cursors, and timeouts fail closed.
 
-The current boundary cannot verify custom providers or a `null` reasoning setting. These profiles fail before model dispatch, as does an unavailable exact model or effort. Pi uses its separate pinned RPC adapter for project memory. See [Pi runtime](PI_RUNTIME.md) for supported providers and restrictions. No runtime, provider, model, or reasoning substitution occurs. The job remains pending as failed work with a diagnostic and can be retried after correction. Catalog evidence establishes advertised support; it does not guarantee a successful live call.
+The Codex boundary cannot verify custom providers or a `null` reasoning setting. These profiles fail before model dispatch, as does an unavailable exact model or effort. Pi uses its separate pinned RPC adapter for both processors. See [Pi runtime](PI_RUNTIME.md) for supported providers and restrictions. No runtime, provider, model, or reasoning substitution occurs. The job remains pending as failed work with a diagnostic and can be retried after correction. Catalog evidence establishes advertised support; it does not guarantee a successful live call.
 
 ## Queue and attempt identity
 

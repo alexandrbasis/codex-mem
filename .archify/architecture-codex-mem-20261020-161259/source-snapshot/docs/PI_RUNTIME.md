@@ -1,6 +1,6 @@
-# Pi for project memory
+# Pi for background memory
 
-Project memory can use a separate Pi subprocess. Select `runtime: "pi"` in `project_memory_profile`, or in the shared profile. Observation processing still requires Codex in this release. A later task connects observations to Pi.
+Both processors can use a separate Pi subprocess. Select `runtime: "pi"` in `processing_profile` for both, or use `observation_profile` and `project_memory_profile` independently. The observation override also controls session summaries.
 
 The supported CLI package is `@earendil-works/pi-coding-agent` version **1.4.0**. The adapter checks this exact version under the attempt deadline. Other versions fail before the prepared input is sent. Pi is an optional executable on `PATH`; Codex Mem does not install or update it.
 
@@ -24,7 +24,7 @@ These settings restrict model capabilities. They do not provide an operating-sys
 
 A `prompt` response must say `started`. Acceptance alone does not establish completion. The adapter consumes the event stream until `agent_settled`, requires `agent_end` and one completed assistant response with `stopReason: "stop"`, then checks the idle session and its exact identity again. The native system frame must contain only the fixed preamble and temporary working directory. Added tools or later system instructions reject the candidate. Cancellation, provider failure, tool blocks or tool events, rerouting, automatic restarts, unexpected events, malformed records, output overflow, and disconnects reject the whole candidate.
 
-The adapter permits one correction. The correction uses the same process, profile, overall deadline, and cumulative attempt usage. A second correction request fails. Existing project-memory JSON, schema, reference, role, evidence, source-custody, revision, and atomic-commit checks still decide whether to store the candidate. Source deletion or a replaced lease can invalidate a completed answer.
+The adapter permits one correction. The correction uses the same process, profile, overall deadline, and cumulative attempt usage. A second correction request fails. Existing observation and project-memory JSON, schema, reference, role, evidence, source-custody, revision, and atomic-commit checks still decide whether to store the candidate. Source deletion or a replaced lease can invalidate a completed answer.
 
 ## Receipts and usage
 
@@ -32,7 +32,7 @@ The attempt ledger adds `execution_receipt` without changing historical rows. It
 
 No Codex thread-start or MCP-inventory receipt is manufactured for Pi. The original requested profile and separately observed identity remain in the existing attempt columns. Historical attempts have no Pi receipt. Receipt validation keeps arbitrary model text and diagnostic prose out of the ledger.
 
-`pi_assistant_usage` identifies Pi's provider-reported assistant counters. Streaming updates replace the current generation's cumulative counters. Completed generations are summed once. Pi's uncached input, cache-read input, and cache-write input form normalized input tokens. Reasoning tokens already belong to output tokens and are not added again. Missing generations make the total partial. Failed or rejected candidates retain measured usage.
+`pi_assistant_usage` identifies Pi's provider-reported assistant counters. The observation ledger records these as `pi_runtime_total`, its existing Pi provenance value. Streaming updates replace the current generation's cumulative counters. Completed generations are summed once. Pi's uncached input, cache-read input, and cache-write input form normalized input tokens. Reasoning tokens already belong to output tokens and are not added again. Missing generations make the total partial. Failed or rejected candidates retain measured usage. Omitted optional counters remain null, including when a correction omits a previously available counter. Late receipts after lease recovery follow the same rule. Measured zero remains zero. Observation checkpoints preserve measured totals before validation and commit.
 
 Pi initializes absent provider usage with zero counters. Those all-zero placeholders remain unknown because this protocol cannot distinguish them from measured zero. Provider cost fields are not billing evidence and are not saved as charges. Existing pricing estimates remain separate.
 
@@ -42,10 +42,10 @@ Installed documentation states: "A successful `prompt` response means the prompt
 
 The owning sources are Pi's [CLI reference](https://github.com/earendil-works/pi/blob/v1.4.0/packages/coding-agent/docs/cli.md), [RPC commands](https://github.com/earendil-works/pi/blob/v1.4.0/packages/coding-agent/docs/rpc-commands.md), [event stream](https://github.com/earendil-works/pi/blob/v1.4.0/packages/coding-agent/docs/json.md), and [message types](https://github.com/earendil-works/pi/blob/v1.4.0/packages/coding-agent/docs/message-types.md). Local package hashes and source locations are in [PI_RUNTIME_EVIDENCE.json](PI_RUNTIME_EVIDENCE.json). The installed package is the verified source. A documentation search returned no matching versioned result, so web availability of these URLs is not established here.
 
-Ordinary tests replace only the external executable. They use real temporary stores, public host capture, processing, service, and context interfaces. Run the installed CLI test separately:
+Ordinary tests replace only the external executable. They use real temporary stores, public host capture, processing, service, and context interfaces. Run the installed CLI tests separately:
 
 ```sh
-CODEX_MEM_PI=/absolute/path/to/pi python3 -m unittest discover -s tests -p test_pi_project_memory.py -k installed -v
+CODEX_MEM_PI=/absolute/path/to/pi python3 -m unittest discover -s tests -p 'test_pi_*.py' -k installed -v
 ```
 
-This test uses a deterministic local HTTP provider, the installed Pi CLI, and real project-memory processing. It checks actual protocol compatibility, disabled tools, resource exclusion, and unknown usage. It makes no live provider call. It does not establish live model quality, the four-way host/runtime matrix, deployment, or provider-extension compatibility. Issues #13 and #14 own live matrix and quality evidence.
+These tests use a deterministic local HTTP provider, the installed Pi CLI, and real observation and project-memory processing. They check actual protocol compatibility, disabled tools, resource exclusion, and unknown usage. They make no live provider call. They do not establish live model quality, the four-way host/runtime matrix, deployment, or provider-extension compatibility. Issues #13 and #14 own live matrix and quality evidence.

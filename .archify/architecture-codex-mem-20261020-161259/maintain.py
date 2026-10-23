@@ -39,6 +39,7 @@ FIXED_SOURCES = (
     "docs/PI_RUNTIME.md",
     "docs/PI_RUNTIME_EVIDENCE.json",
     "tests/test_pi_project_memory.py",
+    "tests/test_pi_observations.py",
     "tests/fixtures/execution_pi.py",
     "tests/test_observation_profiles.py",
     "tests/test_project_memory_profiles.py",
