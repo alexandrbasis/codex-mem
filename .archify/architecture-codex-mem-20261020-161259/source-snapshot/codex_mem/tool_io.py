@@ -25,7 +25,7 @@ import re
 import sqlite3
 from typing import Any
 
-from .privacy import REDACTED, redact_text
+from .privacy import REDACTED, is_secret_field, redact_text
 
 
 # The upstream tool-use side index uses a 64 KiB soft cap.  Keep the limit in
@@ -429,7 +429,8 @@ def _sanitize(value: Any, *, key: str = "", depth: int = 0,
             if not isinstance(raw_key, str) or "\x00" in raw_key:
                 continue
             safe_key = redact_text(raw_key)
-            clean = _sanitize(child, key=safe_key, depth=depth + 1, _text_cache=_text_cache)
+            clean = (REDACTED if is_secret_field(raw_key) else
+                     _sanitize(child, key=safe_key, depth=depth + 1, _text_cache=_text_cache))
             if clean is not _OPAQUE:
                 result[safe_key] = clean
         return result
@@ -508,7 +509,7 @@ def _canonical_json(value: Any) -> tuple[str | None, dict[str, Any], str | None]
 def _canonical_stored_json(
     value: str | None,
 ) -> tuple[str | None, dict[str, Any], str | None] | None:
-    """Validate a previously canonicalized JSON payload before DB writes.
+    """Validate a canonical JSON payload before persistence or readback.
 
     ``Store.remember`` is also a public API, so a caller can bypass hooks and
     supply a plain mapping.  Re-parsing that text here prevents raw secrets,
@@ -1036,6 +1037,28 @@ def _row_to_capture(row: sqlite3.Row | Mapping[str, Any]) -> dict[str, Any]:
         except (TypeError, ValueError, json.JSONDecodeError):
             value = {}
         result[field] = value if isinstance(value, Mapping) else {}
+    # Old databases may contain fields captured before the current policy.
+    # Sanitize the response view, never rewrite provenance or stored bytes.
+    for payload, excerpt, metadata in (
+        ("tool_input", "input_excerpt", "input_metadata"),
+        ("tool_response", "response_excerpt", "response_metadata"),
+    ):
+        canonical = _canonical_stored_json(result[payload])
+        if canonical is None or canonical[1].get("truncated"):
+            # A wrapper contains incomplete JSON strings. Text regexes cannot
+            # prove that an object/array credential spanning them was removed.
+            reason = "malformed_payload" if canonical is None else "incomplete_json_fragments"
+            result[payload] = result[excerpt] = None
+            result[metadata] = {**result[metadata], "read_sanitized": True,
+                                "read_omitted": True, "read_omitted_reason": reason}
+            continue
+        text, read_metadata, safe_excerpt = canonical
+        safe_excerpt = safe_excerpt[:MAX_TOOL_EXCERPT_CHARS] if safe_excerpt else None
+        if text != result[payload] or safe_excerpt != result[excerpt]:
+            result[metadata] = {**result[metadata], "read_sanitized": True}
+        if read_metadata.get("redacted"):
+            result[metadata] = {**result[metadata], "read_redacted": True}
+        result[payload], result[excerpt] = text, safe_excerpt
     return result
 
 

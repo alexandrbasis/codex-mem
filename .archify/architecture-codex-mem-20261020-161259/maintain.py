@@ -34,6 +34,10 @@ FIXED_SOURCES = (
     "pyproject.toml",
     "scripts/codex-mem.py",
     "docs/PROJECT_MEMORY.md",
+    "docs/PI_MCP.md",
+    "docs/pi-mcp.example.json",
+    "tests/test_pi_mcp.py",
+    "tests/test_mcp.py",
 )
 DOCUMENTS = ("candidate.json", "codex-mem.html")
 HERE = Path(__file__).resolve().parent

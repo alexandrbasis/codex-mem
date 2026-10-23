@@ -45,6 +45,14 @@ _SECRET_NAME = (
     r"(?:[_-][A-Za-z0-9]+)*"
 )
 
+_SECRET_FIELD_RE = re.compile(_SECRET_NAME, re.IGNORECASE)
+
+
+def is_secret_field(name: str) -> bool:
+    """Recognize structured credential fields with the shared secret-name policy."""
+    return _SECRET_FIELD_RE.fullmatch(name) is not None
+
+
 _JSON_QUOTED_SECRET_RE = re.compile(
     rf"([\"']{_SECRET_NAME}[\"']\s*:\s*)"
     r"(\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*')",

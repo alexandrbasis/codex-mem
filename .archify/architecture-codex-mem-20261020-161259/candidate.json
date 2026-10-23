@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "954de9d3e50da6d25fbfe029b184f7f840c78f99",
+      "revision": "23d7c11797694b1eef2fa815822db33cdca92423",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -400,6 +400,34 @@
           "label": "Native execution and deadline"
         }
       ]
+    },
+    {
+      "id": "pi-mcp",
+      "type": "external",
+      "label": "Pi memory tools",
+      "sublabel": "Native MCP; writes opt-in",
+      "pos": [
+        20,
+        940
+      ],
+      "size": [
+        220,
+        76
+      ],
+      "sources": [
+        {
+          "path": "docs/pi-mcp.example.json",
+          "line": 1,
+          "end_line": 17,
+          "label": "Native MCP connection and capability gates"
+        },
+        {
+          "path": "tests/test_pi_mcp.py",
+          "line": 185,
+          "end_line": 305,
+          "label": "Installed Pi public MCP checks"
+        }
+      ]
     }
   ],
   "connections": [
@@ -508,6 +536,13 @@
       "from": "legacy",
       "to": "execution",
       "label": "prepared input",
+      "variant": "default"
+    },
+    {
+      "id": "pi-mcp-api",
+      "from": "pi-mcp",
+      "to": "delivery",
+      "label": "native MCP",
       "variant": "default"
     }
   ],
@@ -638,6 +673,15 @@
         "maintain.py check compares source files and hashes with the snapshot. It also compares the specification and HTML with their saved hashes. Code changes require a review of the architecture descriptions. Matching hashes alone do not prove that the diagram is complete.",
         "Memory covers saved observations. It does not contain the complete transcript. An empty queue does not prove that external project information is current. Bounded reconsideration does not repair every historical split or prove answer quality. Prompt changes do not automatically repair old records. Source: docs/PROJECT_MEMORY.md, Understand evidence and coverage.",
         "The October 21 semantic development probe records its fixed policy, labels, failed first attempt, supervised retry, probabilities, and usage under docs/evidence/project-memory-quality-2026-10-21/field-*. The narrow check reduced false acceptance but left useful fields uncertain. It was not enabled as a blocking check. This disclosed development set is not an independent acceptance benchmark. Source hashes and rendered output do not establish semantic quality or production deployment."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Pi native MCP tools",
+      "items": [
+        "Pi 1.4.0 connects to the existing Python MCP server. One configured server owns tool discovery and calls. Lifecycle capture is a later task and must not register duplicate tools. Explicit reads need no background runtime. Sources: docs/pi-mcp.example.json:1-17, docs/PI_MCP.md:1-25.",
+        "The example hides mutation capabilities until the user enables them. Project arguments retain the existing Store partition; this is not a current-directory sandbox. Deterministic installed-Pi RPC tests cover real native MCP and a temporary Store, not live-provider quality or Pi background execution. Sources: docs/PI_MCP.md:15-25, tests/test_pi_mcp.py:185-305.",
+        "Shared raw-tool sanitization redacts credential-named structured fields before serialization, including object and array values. Readback sanitizes legacy rows and regenerates excerpts without mutating stored bytes, source IDs, or historical hashes; view metadata discloses changes. Malformed payloads and all truncation-wrapper fragments plus derived excerpts are omitted with bounded reasons, because incomplete JSON cannot prove nested-secret removal. Ordinary nonsecret values keep their types. This applies to Codex and Pi source reads. Sources: codex_mem/privacy.py:40-53, codex_mem/tool_io.py:425-437,1041-1066, tests/test_mcp.py:166-274."
       ]
     }
   ]
