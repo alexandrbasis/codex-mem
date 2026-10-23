@@ -56,7 +56,8 @@ for line in sys.stdin:
         def event(name, **values):
             send({'method': name, 'params': dict(threadId='fixture-worker', turnId=turn_id, **values)})
         event('turn/started', turn={'id': turn_id})
-        event('thread/tokenUsage/updated', tokenUsage={'total': {'inputTokens': 10 * turn_number,
+        if not scenario.get('omit_usage'):
+            event('thread/tokenUsage/updated', tokenUsage={'total': {'inputTokens': 10 * turn_number,
             'cachedInputTokens': 0, 'cacheWriteInputTokens': 0, 'outputTokens': 2 * turn_number,
             'reasoningOutputTokens': 0, 'totalTokens': 12 * turn_number}})
         mode = scenario.get('mode', 'valid')
@@ -76,14 +77,33 @@ for line in sys.stdin:
         if scenario.get('outputs'):
             output = scenario['outputs'][min(turn_number - 1, len(scenario['outputs']) - 1)]
         if mode == 'project_memory':
-            evidence = json.loads(params['input'][0]['text'].split('\n')[-1])
+            if turn_number == 1:
+                evidence = json.loads(params['input'][0]['text'].split('\n')[-1])
             ref = next(span['ref'] for event in evidence['events'] for span in event['spans']
                        if 'Use local import.' in span['text'])
             output = {'episodes': [{'summary': 'Use local import.', 'goal': '', 'rationale': '',
                 'outcome': '', 'open_work': '', 'continuation_of': None, 'consolidation_of': [],
                 'evidence': {'summary': [ref], 'goal': [], 'rationale': [], 'outcome': [],
                     'open_work': [], 'continuation_of': [], 'consolidation_of': []}}], 'claims': []}
-        text = '{invalid' if mode == 'invalid_json' else json.dumps(output)
+        if mode == 'project_memory' and scenario.get('claim'):
+            output['claims'] = [{'text': 'Use local import.', 'kind': 'requirement',
+                'workflow_state': 'open', 'scope': {'environment': '', 'version': ''},
+                'rationale': '', 'evidence': {'text': [ref], 'workflow_state': [ref], 'rationale': []},
+                'outgoing_relations': []}]
+        if mode in ('pm_task', 'pm_consolidate', 'pm_continue'):
+            supplied = json.loads(params['input'][0]['text'].split('\n')[-1])
+            spans = [span for event in supplied['events'] for span in event['spans']]
+            refs = [span['ref'] for span in spans]
+            heads = supplied['current_state']['episodes']
+            merging = mode == 'pm_consolidate'
+            output = {'episodes': [{'summary': ' '.join(span['text'] for span in spans),
+                'goal': 'Task JOB-17', 'rationale': '', 'outcome': '', 'open_work': '',
+                'continuation_of': heads[0]['id'] if merging or mode == 'pm_continue' else None,
+                'consolidation_of': [head['id'] for head in heads[1:]] if merging else [],
+                'evidence': {'summary': refs, 'goal': refs[:1], 'rationale': [], 'outcome': [],
+                    'open_work': [], 'continuation_of': refs if merging or mode == 'pm_continue' else [],
+                    'consolidation_of': refs if merging else []}}], 'claims': []}
+        text = '{invalid'  if mode == 'invalid_json' else json.dumps(output)
         event('item/completed', item={'id': 'answer-' + str(turn_number), 'type': 'agentMessage', 'text': text, 'phase': 'final_answer'})
         event('turn/completed', turn={'id': turn_id, 'status': 'completed'})
         continue

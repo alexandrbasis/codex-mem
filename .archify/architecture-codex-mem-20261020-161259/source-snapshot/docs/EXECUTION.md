@@ -1,8 +1,8 @@
 # Background execution profiles
 
-An execution profile selects a runtime, provider, exact model, reasoning level, and timeout. The interactive host is a separate choice. The shared contract connects `NativeProcessorRunner` to Codex. Observation extraction and summaries use the configured profile.
+An execution profile selects a runtime, provider, exact model, reasoning level, and timeout. The interactive host is a separate choice. The shared contract connects `NativeProcessorRunner` to Codex. Observation extraction, summaries, project memory, reconsideration, and consolidation use the configured profile.
 
-Project memory still uses legacy Codex until its separate queue and accounting change in issue #6. Saving a Pi profile does not activate Pi. Profile changes do not reprocess successful sources.
+Each processor resolves its own override. Saving a Pi profile does not activate Pi. Profile changes do not reprocess successful sources.
 
 ## Configuration contract
 
@@ -36,9 +36,9 @@ The current boundary cannot verify custom providers or a `null` reasoning settin
 
 The logical job belongs to its processor and exact source set, independent of its execution profile. Source revisions retain their existing IDs and custody checks. A retry or expired lease reuses the job. Successful processed or skipped sources do not become new work when a profile changes. Explicit maintenance recovery keeps its separate fingerprint, legacy-profile opt-in, and one-shot guards. An explicit `retry_failed` with a different processor ID can create a distinct processor-owned job, as before. It cannot bypass one-shot recovery or replay successful sources.
 
-Each claim stores an immutable requested profile in the usage ledger in the same transaction as the lease. A correction or extra generation call uses that profile and the original deadline. A later attempt reloads current configuration, including in a long-lived service. The job's creation model and historical fingerprints remain unchanged.
+Observation claims store an immutable requested profile with the lease. Project memory records the profile before dispatch after checking its live lease. A correction or extra generation call uses that profile and the original deadline. A later attempt reloads current configuration, including in a long-lived service. Observation jobs retain their creation model. Project memory fingerprints retain their existing source, revision, deletion-generation, and processor-version fields.
 
-Existing ledgers migrate their requested identity from the original job before any retry. They retain historical usage and mark the identity as `legacy_requested_job_profile`; unknown actual identity stays unknown. New attempts record requested and verified runtime, provider, model, reasoning, execution IDs, and usage provenance separately. Failed, rejected, canceled, and expired attempts retain measured usage. Unknown token counts stay unknown. Source deletion, lease replacement, and revision checks still prevent partial or stale commits.
+Existing observation ledgers migrate requested identity from the original job and mark it as `legacy_requested_job_profile`. Project memory migrates the original attempt fields and marks them as `legacy_requested_profile`. Historical values remain unchanged. Unknown actual identity and historical timeout stay unknown. New attempts record requested and verified runtime, provider, model, reasoning, execution IDs, and usage provenance separately. Failed, rejected, canceled, and expired attempts retain measured usage. Unknown token counts stay unknown. Source deletion, lease replacement, and revision checks still prevent partial or stale commits.
 
 ## CLI format
 
@@ -54,7 +54,7 @@ To remove an override, set it to `null`:
 codex-mem config --set 'observation_profile=null'
 ```
 
-`codex-mem config` shows the saved configuration. Invalid updates fail before the file is replaced. An invalid existing file remains disabled under the existing fail-closed configuration policy. Processing switches, project selection, privacy rules, Jev, and embeddings retain their separate controls.
+`codex-mem config` shows the saved configuration. Invalid updates fail before the file is replaced. An invalid existing file remains disabled under the existing fail-closed configuration policy. Project memory returns `configuration_error` with `invalid_configuration` for an invalid existing file. Unsupported runtime capabilities retain failed work without consuming its invalid-output quarantine policy. Processing switches, project selection, privacy rules, Jev, and embeddings retain their separate controls.
 
 ## Runtime boundary
 

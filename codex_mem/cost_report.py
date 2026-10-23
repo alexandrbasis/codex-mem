@@ -327,8 +327,9 @@ def _project_memory_attempts(connection: sqlite3.Connection, tables: set[str],
         attempts.append(item)
     # A worker can emit a response after this report's period or source session.
     # Exclude that overlap even when its own attempt falls outside the report.
+    runtime_filter = " AND COALESCE(runtime,'codex')='codex'" if "runtime" in _columns(connection, "pm_usage_attempts") else ""
     workers = [row[0] for row in connection.execute(
-        "SELECT DISTINCT worker_thread_id FROM pm_usage_attempts WHERE worker_thread_id IS NOT NULL")]
+        "SELECT DISTINCT worker_thread_id FROM pm_usage_attempts WHERE worker_thread_id IS NOT NULL" + runtime_filter)]
     scoped_where = " WHERE " + " AND ".join(scoped) if scoped else ""
     unknown_where = " WHERE " + " AND ".join(["julianday(a.started_at) IS NULL", *scoped])
     coverage = {"project_memory_ledger_available": True,

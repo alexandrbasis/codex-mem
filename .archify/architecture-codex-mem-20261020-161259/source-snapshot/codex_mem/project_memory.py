@@ -63,6 +63,16 @@ def install_schema(connection: sqlite3.Connection) -> None:
     )
     for statement in statements:
         connection.execute(statement)
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(pm_usage_attempts)")}
+    for name, declaration in {
+        "requested_runtime": "TEXT", "requested_provider": "TEXT", "requested_model": "TEXT",
+        "requested_reasoning_effort": "TEXT", "requested_timeout": "REAL",
+        "runtime": "TEXT", "provider": "TEXT", "actual_model": "TEXT",
+        "actual_reasoning_effort": "TEXT", "profile_basis": "TEXT",
+    }.items():
+        if name not in columns:
+            connection.execute(f"ALTER TABLE pm_usage_attempts ADD COLUMN {name} {declaration}")
+    connection.execute("UPDATE pm_usage_attempts SET requested_runtime='codex',requested_provider='openai',requested_model=model,requested_reasoning_effort=reasoning_effort,profile_basis='legacy_requested_profile' WHERE profile_basis IS NULL")
     from .project_memory_custody import install_schema as install_custody_schema
     install_custody_schema(connection)
     if "blocked_job_id" not in {r[1] for r in connection.execute("PRAGMA table_info(pm_events)")}:
@@ -482,18 +492,25 @@ class ProjectMemory:
         return bool(job and project and job["status"] == "running" and job["token"] == supplied.get("token") and job["fingerprint"] == supplied.get("input_fingerprint") and job["lease_until"] > time.time() and job["revision"] == project["revision"] and job["generation"] == project["deletion_generation"])
 
     def begin_attempt(self, snapshot: dict[str, Any], *, model: str, reasoning_effort: str,
-                      processor_id: str = "", attempt_id: str | None = None) -> dict[str, Any]:
+                      processor_id: str = "", attempt_id: str | None = None, profile=None) -> dict[str, Any]:
         """Record one native invocation before dispatch, independently of its job.
 
         A caller can reuse an explicit attempt ID after an uncertain write. A
         new invocation, including a retry of one job, must receive a new ID.
         No prompts, source text, or generated text enter this ledger.
         """
-        model = _attempt_identifier(model, "model")
+        from .execution import normalize_profile
+        requested = normalize_profile(profile.to_dict()) if profile is not None else None
+        if requested is not None:
+            model, reasoning_effort = requested["model"], requested["reasoning_effort"] or "none"
+        else:
+            model = _attempt_identifier(model, "model")
         processor_id = _attempt_identifier(processor_id, "processor_id", empty=True)
         if reasoning_effort not in {"none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"}:
             raise ValueError("unsupported attempt reasoning effort")
         identity = _attempt_identifier(attempt_id or "pma_"+uuid.uuid4().hex, "attempt_id")
+        values = requested or dict(runtime="codex", provider="openai", model=model,
+                                   reasoning_effort=reasoning_effort, timeout=None)
         with self.store._lock:
             def begin():
                 connection = self.store._connection
@@ -504,11 +521,14 @@ class ProjectMemory:
                 if old:
                     expected = (snapshot.get("project"), snapshot.get("job_id"), snapshot.get("token"), model, reasoning_effort, processor_id)
                     actual = tuple(old[key] for key in ("project", "job_id", "claim_token", "model", "reasoning_effort", "processor_id"))
-                    if expected != actual:
+                    if expected != actual or any(old["requested_" + key] != value for key, value in values.items()):
                         raise ValueError("attempt ID already belongs to another invocation")
                     return dict(old)
                 now = _attempt_now()
                 connection.execute("INSERT INTO pm_usage_attempts(attempt_id,project,session_id,job_id,claim_token,processor_id,model,reasoning_effort,started_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)", (identity, job["project"], job["session_id"], job["id"], job["token"], processor_id, model, reasoning_effort, now, now))
+                connection.execute("UPDATE pm_usage_attempts SET requested_runtime=?,requested_provider=?,requested_model=?,requested_reasoning_effort=?,requested_timeout=?,profile_basis=? WHERE attempt_id=?",
+                    (values["runtime"], values["provider"], values["model"], values["reasoning_effort"], values["timeout"],
+                     "attempt_profile" if requested else "legacy_requested_profile", identity))
                 return dict(connection.execute("SELECT * FROM pm_usage_attempts WHERE attempt_id=?", (identity,)).fetchone())
             return self.store._write(begin)
 
@@ -533,6 +553,16 @@ class ProjectMemory:
         old = dict(old_row)
         observed = _attempt_metrics(receipt)
         updated = dict(old)
+        identity = receipt.get("identity")
+        if isinstance(identity, dict):
+            fields = {"runtime": "runtime", "provider": "provider", "model": "actual_model",
+                      "reasoning_effort": "actual_reasoning_effort"}
+            if set(identity) != set(fields) or any(identity[key] != old["requested_" + key] for key in fields):
+                raise ValueError("execution identity does not match requested profile")
+            for key, field in fields.items():
+                if old[field] is not None and old[field] != identity[key]:
+                    raise ValueError("execution identity changed")
+                updated[field] = identity[key]
         token_changed = False
         for field in _ATTEMPT_COUNTERS:
             incoming = observed.get(field)
@@ -576,10 +606,10 @@ class ProjectMemory:
                     if job and job["token"] == snapshot.get("token") and job["status"] == "running":
                         self.store._connection.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
                     return {"status": "stale"}
-                status = "quarantined" if reason == "invalid_response" or job["attempts"] >= 5 else "failed"
+                status = "quarantined" if reason != "configuration_error" and (reason == "invalid_response" or job["attempts"] >= 5) else "failed"
                 # Do not persist arbitrary model/runner errors: they may contain
                 # sensitive inputs. Only a bounded error category is durable.
-                category = reason if reason in {"invalid_response", "timeout", "runner_failure", "unavailable"} else "processing_failed"
+                category = reason if reason in {"configuration_error", "invalid_response", "timeout", "runner_failure", "unavailable"} else "processing_failed"
                 retry_after = time.time()+min(300, 2**job["attempts"])
                 if status == "quarantined":
                     durable = json.loads(job["input_json"])
@@ -1092,7 +1122,7 @@ def _explicit_transition(evidence: list[dict], relation: str, contexts: dict[str
 
 def _safe_receipt(receipt: dict[str, Any] | None) -> dict[str, Any]:
     """Persist accounting/profile fields, never arbitrary response/error text."""
-    allowed = {"job_kind", "historical_sources_omitted", "reconsideration_sources_omitted", "processor_id", "output_schema_version", "model", "reasoning_effort", "worker_thread_id", "worker_turn_id", "duration_ms", "input_tokens", "output_tokens", "cached_input_tokens", "cost_usd", "model_calls", "omitted_fields_count", "omitted_fields_reason", "omitted_fields"}
+    allowed = {"code", "reason_code", "job_kind", "historical_sources_omitted", "reconsideration_sources_omitted", "processor_id", "output_schema_version", "model", "reasoning_effort", "worker_thread_id", "worker_turn_id", "duration_ms", "input_tokens", "output_tokens", "cached_input_tokens", "cost_usd", "model_calls", "omitted_fields_count", "omitted_fields_reason", "omitted_fields"}
     return {k: v for k, v in (receipt or {}).items() if k in allowed and isinstance(v, (str, int, float, bool)) and (not isinstance(v, str) or len(v) <= 200)}
 
 
@@ -1254,11 +1284,11 @@ def _attempt_metrics(receipt: dict[str, Any]) -> dict[str, Any]:
         normalized["duration_ms"] = round(duration)
     for field in ("worker_thread_id", "worker_turn_id"):
         value = receipt.get(field)
-        if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value):
+        if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9._:-]{1,256}", value):
             normalized[field] = value
     error = receipt.get("error_code", receipt.get("code"))
     if error is not None:
-        normalized["error_code"] = error if isinstance(error, str) and error in {"invalid_response", "timeout", "runner_failure", "unavailable", "storage_failure", "source_changed", "configuration_changed", "jev_quality_uncertain", "unsupported_model", "auth_error", "cli_not_found", "interrupted", "cancelled", "unknown"} else "processing_failed"
+        normalized["error_code"] = error if isinstance(error, str) and error in {"configuration_error", "invalid_response", "timeout", "runner_failure", "unavailable", "storage_failure", "source_changed", "configuration_changed", "jev_quality_uncertain", "unsupported_model", "auth_error", "cli_not_found", "interrupted", "cancelled", "unknown"} else "processing_failed"
     return normalized
 
 

@@ -823,8 +823,8 @@ def attempt_model_metadata(attempt: Mapping[str, Any], job: Mapping[str, Any]) -
     """Choose observed identity when present and label requested-only evidence."""
     actual = attempt.get("actual_model")
     return {
-        "runtime": attempt.get("runtime") or "codex",
-        "provider": attempt.get("provider") or "openai",
+        "runtime": attempt.get("runtime") or attempt.get("requested_runtime") or "codex",
+        "provider": attempt.get("provider") or attempt.get("requested_provider") or "openai",
         "model": actual or attempt.get("requested_model") or job.get("model"),
         "model_source": "runtime_verified" if actual else attempt.get("profile_basis") or "requested_job_profile",
         "reasoning_effort": (attempt.get("actual_reasoning_effort") if actual

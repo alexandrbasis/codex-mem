@@ -1,0 +1,270 @@
+{
+  "base": "2b39521327dabfeb2c9f504e585595ed08f8c6c4",
+  "project": "/tmp/codex-mem-legacy-pm-profile",
+  "tables": {
+    "entries": {
+      "schema": "CREATE TABLE entries (\n                id TEXT PRIMARY KEY NOT NULL,\n                project TEXT NOT NULL,\n                title TEXT NOT NULL,\n                body TEXT NOT NULL,\n                kind TEXT NOT NULL,\n                session_id TEXT,\n                turn_id TEXT,\n                source TEXT,\n                tags_json TEXT NOT NULL,\n                dedupe_hash TEXT,\n                created_at TEXT NOT NULL,\n                updated_at TEXT NOT NULL,\n                superseded_by TEXT REFERENCES entries(id) ON DELETE SET NULL,\n                superseded_at TEXT\n            )",
+      "rows": [
+        {
+          "id": "6519a0f779df4f59a2ae378e96ea5286",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "title": "Import",
+          "body": "Use local import.",
+          "kind": "note",
+          "session_id": "completed",
+          "turn_id": null,
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-23T13:52:24.132495Z",
+          "updated_at": "2026-10-23T13:52:24.132495Z",
+          "superseded_by": null,
+          "superseded_at": null
+        },
+        {
+          "id": "b6f6adf1885941aeb0d99f158c99d42a",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "title": "Import",
+          "body": "Use local import.",
+          "kind": "note",
+          "session_id": "failed",
+          "turn_id": null,
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-23T13:52:24.169244Z",
+          "updated_at": "2026-10-23T13:52:24.169244Z",
+          "superseded_by": null,
+          "superseded_at": null
+        },
+        {
+          "id": "a7aee98f84694648ab70d7188090993b",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "title": "Import",
+          "body": "Use local import.",
+          "kind": "note",
+          "session_id": "running",
+          "turn_id": null,
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-23T13:52:24.171079Z",
+          "updated_at": "2026-10-23T13:52:24.171079Z",
+          "superseded_by": null,
+          "superseded_at": null
+        }
+      ]
+    },
+    "pm_projects": {
+      "schema": "CREATE TABLE pm_projects (project TEXT PRIMARY KEY, revision INTEGER NOT NULL DEFAULT 0, deletion_generation INTEGER NOT NULL DEFAULT 0)",
+      "rows": [
+        {
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "revision": 1,
+          "deletion_generation": 0
+        }
+      ]
+    },
+    "pm_events": {
+      "schema": "CREATE TABLE pm_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL, source_id TEXT NOT NULL UNIQUE REFERENCES entries(id) ON DELETE CASCADE, session_id TEXT NOT NULL, offset INTEGER NOT NULL DEFAULT 0, done INTEGER NOT NULL DEFAULT 0, salient INTEGER NOT NULL DEFAULT 0, blocked_job_id TEXT)",
+      "rows": [
+        {
+          "seq": 1,
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "source_id": "6519a0f779df4f59a2ae378e96ea5286",
+          "session_id": "completed",
+          "offset": 17,
+          "done": 1,
+          "salient": 0,
+          "blocked_job_id": null
+        },
+        {
+          "seq": 2,
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "source_id": "b6f6adf1885941aeb0d99f158c99d42a",
+          "session_id": "failed",
+          "offset": 0,
+          "done": 0,
+          "salient": 0,
+          "blocked_job_id": null
+        },
+        {
+          "seq": 3,
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "source_id": "a7aee98f84694648ab70d7188090993b",
+          "session_id": "running",
+          "offset": 0,
+          "done": 0,
+          "salient": 0,
+          "blocked_job_id": null
+        }
+      ]
+    },
+    "pm_jobs": {
+      "schema": "CREATE TABLE pm_jobs (id TEXT PRIMARY KEY, project TEXT NOT NULL, session_id TEXT NOT NULL, fingerprint TEXT NOT NULL, token TEXT NOT NULL, status TEXT NOT NULL, lease_until REAL NOT NULL, retry_after REAL NOT NULL DEFAULT 0, attempts INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL, generation INTEGER NOT NULL, input_json TEXT NOT NULL, receipt_json TEXT, error TEXT)",
+      "rows": [
+        {
+          "id": "pmj_7be4426e307b93bdbe21b9e0cb0da9e0135e6981",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "session_id": "completed",
+          "fingerprint": "7b471af35ce7b4d5b5ede8f83a735d47f72e100d9042cf778fc7ac1211309456",
+          "token": "6d4008ba17504031aee88dc30abe2b4f",
+          "status": "completed",
+          "lease_until": 1792763664.1337469,
+          "retry_after": 0.0,
+          "attempts": 1,
+          "revision": 0,
+          "generation": 0,
+          "input_json": "{}",
+          "receipt_json": "{\"downgraded_states_count\":0,\"downgraded_states_reason\":\"\",\"job_id\":\"pmj_7be4426e307b93bdbe21b9e0cb0da9e0135e6981\",\"job_kind\":\"events\",\"object_ids\":[],\"omitted_continuities_count\":0,\"omitted_continuities_reason\":\"\",\"omitted_transitions_count\":0,\"omitted_transitions_reason\":\"\",\"pending_reconciliation\":false,\"processing\":{},\"relation_ids\":[],\"revision\":1,\"status\":\"committed\"}",
+          "error": null
+        },
+        {
+          "id": "pmj_ec35e610617263d5e90b4582e67b91c7e7abfa58",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "session_id": "failed",
+          "fingerprint": "4591b65d6ea3a7d654dc800218c3679ba8d0021aa9ac378d789faaacec8cf1cc",
+          "token": "e77545d5a2b640f69a0b6f6adef1ec3b",
+          "status": "failed",
+          "lease_until": 1792763664.169557,
+          "retry_after": 1792763546.1706848,
+          "attempts": 1,
+          "revision": 1,
+          "generation": 0,
+          "input_json": "{}",
+          "receipt_json": "{}",
+          "error": "timeout"
+        },
+        {
+          "id": "pmj_7990252117294c16684e9db9e9dcc938ff2b9c33",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "session_id": "running",
+          "fingerprint": "4124409e4f926b7b76a09a9baf51d83466fb4914cd6a9836be12c13565590155",
+          "token": "1e9ea5edcc174dda910c94f96d86b544",
+          "status": "running",
+          "lease_until": 0.0,
+          "retry_after": 0.0,
+          "attempts": 1,
+          "revision": 1,
+          "generation": 0,
+          "input_json": "{\"deletion_generation\":0,\"historical_context\":{\"complete_history\":false,\"disclosed_sources\":0,\"omitted_ancestor_chains\":0,\"omitted_heads\":0,\"omitted_sources\":0,\"source_char_limit\":24000,\"source_limit\":32},\"input_fingerprint\":\"4124409e4f926b7b76a09a9baf51d83466fb4914cd6a9836be12c13565590155\",\"job_id\":\"pmj_7990252117294c16684e9db9e9dcc938ff2b9c33\",\"processor_version\":\"project-memory-v4\",\"project\":\"/private/tmp/codex-mem-legacy-pm-profile\",\"revision\":1,\"session_id\":\"running\",\"sources\":[{\"body\":\"Use local import.\",\"body_length\":17,\"body_offset\":0,\"created_at\":\"2026-10-23T13:52:24.171079Z\",\"id\":\"a7aee98f84694648ab70d7188090993b\",\"seq\":3,\"session_id\":\"running\",\"source\":\"hook:UserPromptSubmit\",\"source_role\":\"user_intent\",\"title\":\"Import\",\"truncated\":false,\"turn_id\":null}],\"state\":{\"claims\":[],\"context_selection\":{\"budget_ascii_chars\":24000,\"candidate_window_bounded\":true,\"considered_records\":{\"claims\":0,\"episodes\":0,\"relations\":0},\"method\":\"reserved_heads_and_open_obligations\",\"omitted_records\":{\"claims\":0,\"episodes\":0,\"relations\":0},\"serialized_ascii_chars\":1568},\"coverage\":{\"captured_events\":3,\"complete_transcript\":false,\"coverage_gaps\":false,\"downgraded_states_count\":0,\"event_time_basis\":\"source_capture_time\",\"failed_jobs\":1,\"historical_context_heads\":0,\"latest_event_seq\":3,\"observations_only\":true,\"omitted_continuities_count\":0,\"omitted_transitions_count\":0,\"partially_processed_events\":0,\"pending_events\":2,\"pending_reconciliation\":false,\"processed_events\":1,\"processed_through_seq\":1,\"quarantined_events\":0,\"quarantined_jobs\":0,\"reconsideration\":{\"ambiguous_heads\":0,\"candidate_head_ids\":[],\"candidate_window_bounded\":true,\"complete_history\":false,\"head_limit\":100,\"identity_char_limit\":24000,\"identity_source_limit\":64,\"identity_sources_omitted\":0,\"omitted_sources\":0},\"running_jobs\":0},\"deletion_generation\":0,\"episodes\":[],\"intent_custody\":[],\"intent_custody_coverage\":{\"automatic_backfill\":false,\"cancellation_inference\":false,\"cancelled\":0,\"complete\":false,\"completed\":0,\"matched\":1,\"matched_complete\":false,\"matched_omitted\":1,\"omitted\":1,\"query_filtered\":false,\"representation_rule\":\"whole_source_exact_text_only\",\"returned\":0,\"stored\":0,\"total\":1,\"unmatched\":0,\"unresolved\":1},\"pending\":true,\"project\":\"/private/tmp/codex-mem-legacy-pm-profile\",\"project_obligations\":[],\"provisional_signals\":[],\"relations\":[],\"revision\":1},\"token\":\"1e9ea5edcc174dda910c94f96d86b544\"}",
+          "receipt_json": null,
+          "error": null
+        }
+      ]
+    },
+    "pm_usage_attempts": {
+      "schema": "CREATE TABLE pm_usage_attempts (attempt_id TEXT PRIMARY KEY, project TEXT NOT NULL, session_id TEXT NOT NULL, job_id TEXT NOT NULL, claim_token TEXT NOT NULL, processor_id TEXT NOT NULL, model TEXT NOT NULL, reasoning_effort TEXT NOT NULL, started_at TEXT NOT NULL, updated_at TEXT NOT NULL, finished_at TEXT, outcome TEXT NOT NULL DEFAULT 'running', error_code TEXT, worker_thread_id TEXT, worker_turn_id TEXT, duration_ms INTEGER, usage_status TEXT NOT NULL DEFAULT 'unknown', usage_source TEXT NOT NULL DEFAULT 'unknown', usage_updates INTEGER NOT NULL DEFAULT 0, input_tokens INTEGER, cached_input_tokens INTEGER, cache_write_tokens INTEGER, output_tokens INTEGER, reasoning_tokens INTEGER, total_tokens INTEGER)",
+      "rows": [
+        {
+          "attempt_id": "pma_4fcce3f6c51849e0a8c9fd18aa3a38da",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "session_id": "completed",
+          "job_id": "pmj_7be4426e307b93bdbe21b9e0cb0da9e0135e6981",
+          "claim_token": "6d4008ba17504031aee88dc30abe2b4f",
+          "processor_id": "",
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "medium",
+          "started_at": "2026-10-23T13:52:24.168+00:00",
+          "updated_at": "2026-10-23T13:52:24.168+00:00",
+          "finished_at": "2026-10-23T13:52:24.168+00:00",
+          "outcome": "processed",
+          "error_code": null,
+          "worker_thread_id": "historic-completed",
+          "worker_turn_id": null,
+          "duration_ms": null,
+          "usage_status": "reported",
+          "usage_source": "app_server_thread_total",
+          "usage_updates": 1,
+          "input_tokens": 10,
+          "cached_input_tokens": null,
+          "cache_write_tokens": null,
+          "output_tokens": 2,
+          "reasoning_tokens": null,
+          "total_tokens": 12
+        },
+        {
+          "attempt_id": "pma_e3644172cf1b44c49e30c1856047a558",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "session_id": "failed",
+          "job_id": "pmj_ec35e610617263d5e90b4582e67b91c7e7abfa58",
+          "claim_token": "e77545d5a2b640f69a0b6f6adef1ec3b",
+          "processor_id": "",
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "medium",
+          "started_at": "2026-10-23T13:52:24.170+00:00",
+          "updated_at": "2026-10-23T13:52:24.170+00:00",
+          "finished_at": "2026-10-23T13:52:24.170+00:00",
+          "outcome": "failed",
+          "error_code": null,
+          "worker_thread_id": "historic-failed",
+          "worker_turn_id": null,
+          "duration_ms": null,
+          "usage_status": "reported",
+          "usage_source": "app_server_thread_total",
+          "usage_updates": 1,
+          "input_tokens": 10,
+          "cached_input_tokens": null,
+          "cache_write_tokens": null,
+          "output_tokens": 2,
+          "reasoning_tokens": null,
+          "total_tokens": 12
+        },
+        {
+          "attempt_id": "pma_29326eb11ef0401e828c3a5eefa8af0c",
+          "project": "/private/tmp/codex-mem-legacy-pm-profile",
+          "session_id": "running",
+          "job_id": "pmj_7990252117294c16684e9db9e9dcc938ff2b9c33",
+          "claim_token": "1e9ea5edcc174dda910c94f96d86b544",
+          "processor_id": "",
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "medium",
+          "started_at": "2026-10-23T13:52:24.172+00:00",
+          "updated_at": "2026-10-23T13:52:24.172+00:00",
+          "finished_at": null,
+          "outcome": "running",
+          "error_code": null,
+          "worker_thread_id": null,
+          "worker_turn_id": null,
+          "duration_ms": null,
+          "usage_status": "unknown",
+          "usage_source": "unknown",
+          "usage_updates": 0,
+          "input_tokens": null,
+          "cached_input_tokens": null,
+          "cache_write_tokens": null,
+          "output_tokens": null,
+          "reasoning_tokens": null,
+          "total_tokens": null
+        }
+      ]
+    }
+  },
+  "config": {
+    "capture_enabled": true,
+    "capture_scope": "all",
+    "capture_tools": true,
+    "context_chars": 6000,
+    "excluded_projects": [],
+    "included_projects": [],
+    "jev_excluded_projects": [],
+    "jev_filter_enabled": false,
+    "jev_filter_key_file": "",
+    "jev_filter_projects": [],
+    "jev_quality_enabled": false,
+    "jev_quality_projects": [],
+    "jev_retrieval_enabled": false,
+    "jev_retrieval_projects": [],
+    "private_prompt_gate": true,
+    "processor_enabled": true,
+    "processor_workers": 2,
+    "project_memory_mode": "pilot",
+    "project_memory_projects": [
+      "/private/tmp/codex-mem-legacy-pm-profile"
+    ],
+    "semantic_enabled": false,
+    "service_enabled": false,
+    "tool_skip_list": [],
+    "usage_enabled": true
+  }
+}

@@ -211,9 +211,9 @@ Age-based `prune` retains sources backing stored objects, relations, or pending 
 
 ## Inspect processing costs
 
-Each PM native invocation receives an independent attempt record before dispatch. Usage checkpoints and finalization retain failed, successful, interrupted, and retried attempts. Retrying one job does not overwrite prior costs. A hard crash can leave a running receipt with partial observed tokens. Unrecorded usage remains unknown. Source deletion preserves content-free accounting records.
+Project memory resolves its processor override, default profile, then legacy Codex. Each invocation records an immutable requested profile before dispatch. The next attempt reloads configuration, including in a retained service. Active calls and corrections keep their original deadline. Usage checkpoints and finalization retain failed, successful, interrupted, and retried attempts. Retrying one job does not overwrite prior costs. A hard crash can leave a running receipt with partial observed tokens. Unrecorded usage remains unknown. Source deletion preserves content-free accounting records.
 
-CLI `usage report` and MCP `memory_usage_report` include PM attempts in the existing observer stream. `source_kind_counts` distinguishes PM from ordinary observation processing. Reports filter by project, session, and period. They exclude duplicate foreground records for known worker threads.
+CLI `usage report` and MCP `memory_usage_report` include PM attempts in the existing observer stream. `source_kind_counts` distinguishes PM from ordinary observation processing. Reports filter by project, session, and period. They exclude duplicate foreground records for known Codex worker threads. Equal worker IDs from another runtime do not hide Codex usage.
 
 Amounts are estimates from recorded tokens and the existing rate snapshot. Missing usage or tier evidence leaves totals unknown or partial. They are not actual charges. Earlier attempts without ledger records cannot be reconstructed.
 
