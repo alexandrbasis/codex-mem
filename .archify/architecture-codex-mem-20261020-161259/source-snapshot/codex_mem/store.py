@@ -980,11 +980,8 @@ class Store:
 
     @staticmethod
     def _is_busy(error: sqlite3.OperationalError) -> bool:
-        code = getattr(error, "sqlite_errorcode", None)
-        if isinstance(code, int):
-            return code & 255 in {getattr(sqlite3, "SQLITE_BUSY", 5), getattr(sqlite3, "SQLITE_LOCKED", 6)}
-        message = str(error).lower()
-        return "locked" in message or "busy" in message
+        from .observation_diagnostics import storage_error_metadata
+        return storage_error_metadata(error)["reason_code"] in {"sqlite_busy", "sqlite_locked"}
 
     def _rollback_quietly(self) -> None:
         connection = self._conn

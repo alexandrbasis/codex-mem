@@ -49,7 +49,7 @@ def normalize_profile(value: Any) -> dict[str, Any] | None:
         raise ValueError('execution profile reasoning_effort is invalid')
     timeout = value['timeout']
     if (isinstance(timeout, bool) or not isinstance(timeout, (int, float))
-            or not math.isfinite(timeout) or not 1 <= timeout <= 600):
+            or not 1 <= timeout <= 600 or not math.isfinite(timeout)):
         raise ValueError('execution profile timeout must be between 1 and 600 seconds')
     return dict(value, timeout=float(timeout))
 

@@ -43,6 +43,12 @@ _STORAGE_SQLITE_REASONS = {
     getattr(sqlite3, "SQLITE_IOERR", 10): "sqlite_io", getattr(sqlite3, "SQLITE_CANTOPEN", 14): "sqlite_cantopen",
     getattr(sqlite3, "SQLITE_CONSTRAINT", 19): "sqlite_constraint",
 }
+# Python 3.10 omits numeric SQLite metadata. Accept only exact built-in
+# contention messages, never substrings or arbitrary exception text.
+_LEGACY_SQLITE_CONTENTION_CODES = {
+    "database is locked": 5,
+    "database table is locked": 6,
+}
 _STORAGE_OS_REASONS = {
     errno.EACCES: "permission_denied", errno.EPERM: "permission_denied",
     errno.ENOENT: "path_unavailable", errno.ENOTDIR: "path_unavailable",
@@ -54,8 +60,11 @@ _PRECLAIM_OPERATIONS = frozenset({"open", "reconcile", "claim", "lease_lookup"})
 
 
 def storage_error_metadata(error: BaseException) -> dict[str, Any]:
-    """Extract numeric OS/SQLite evidence only; exception text stays private."""
+    """Normalize OS/SQLite evidence with an exact legacy contention fallback."""
     sqlite_code = getattr(error, "sqlite_errorcode", None)
+    if (sqlite_code is None and type(error) is sqlite3.OperationalError
+            and len(error.args) == 1 and type(error.args[0]) is str):
+        sqlite_code = _LEGACY_SQLITE_CONTENTION_CODES.get(error.args[0])
     if isinstance(sqlite_code, bool) or not isinstance(sqlite_code, int) or not 0 < sqlite_code <= 0x7fffffff:
         sqlite_code = None
     os_code = error.errno if isinstance(error, OSError) else getattr(error, "os_errno", None)

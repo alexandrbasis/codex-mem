@@ -47,8 +47,9 @@ class ExecutionContractTests(unittest.TestCase):
                                ('disconnect', 'protocol'), ('timeout', 'timeout')):
             with self.subTest(mode=mode):
                 self.scenario(mode=mode)
-                result = NativeProcessorRunner(codex=str(self.executable)).execute(
-                    self.request(deadline=time.monotonic() + (2 if mode == 'timeout' else 5)))
+                # Keep the normal startup budget so usage can arrive before the
+                # timeout fixture withholds completion for thirty seconds.
+                result = NativeProcessorRunner(codex=str(self.executable)).execute(self.request())
                 self.assertIsNone(result.output)
                 self.assertEqual(expected, result.failure.reason)
                 self.assertEqual(12, result.usage['tokens']['total_tokens'])

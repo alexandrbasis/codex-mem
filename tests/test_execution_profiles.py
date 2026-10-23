@@ -1,8 +1,11 @@
 """Public configuration preserves old installations and exact profile choices."""
 import io
 import json
+import os
 from contextlib import redirect_stdout
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -56,6 +59,47 @@ class ExecutionProfileTests(unittest.TestCase):
             self.assertFalse(settings.valid)
             with self.assertRaises(ValueError):
                 resolve_profile(settings, 'observation')
+
+    def test_cli_rejects_oversized_integer_timeouts_without_overwriting_configuration(self):
+        from codex_mem.execution import PROFILE_KEYS, legacy_profile
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            valid = legacy_profile().to_dict()
+            configure(directory, processing_profile=valid)
+            path = Path(directory) / 'config.json'
+            before = path.read_bytes()
+            for key in PROFILE_KEYS:
+                for timeout in (10 ** 400, -(10 ** 400)):
+                    with self.subTest(key=key, timeout=timeout):
+                        profile = dict(valid, timeout=timeout)
+                        result = subprocess.run(
+                            [sys.executable, str(root / 'scripts' / 'codex-mem.py'),
+                             '--data-dir', directory, 'config', '--set', key + '=' + json.dumps(profile)],
+                            cwd=root, env=dict(os.environ, HOME=directory),
+                            capture_output=True, text=True, timeout=10)
+                        self.assertEqual(2, result.returncode, result.stderr)
+                        self.assertEqual({'ok': False, 'error': {
+                            'code': 'invalid_arguments', 'message': 'Invalid arguments'}}, json.loads(result.stdout))
+                        self.assertEqual('', result.stderr)
+                        self.assertEqual(before, path.read_bytes())
+
+    def test_persisted_oversized_integer_timeouts_disable_invalid_configuration(self):
+        from codex_mem.execution import PROFILE_KEYS, legacy_profile, resolve_profile
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'config.json'
+            for key in PROFILE_KEYS:
+                for timeout in (10 ** 400, -(10 ** 400)):
+                    with self.subTest(key=key, timeout=timeout):
+                        path.write_text(json.dumps({key: dict(legacy_profile().to_dict(), timeout=timeout)}))
+                        before = path.read_bytes()
+                        settings = load_config(directory)
+                        self.assertFalse(settings.valid)
+                        self.assertFalse(settings['processor_enabled'])
+                        self.assertFalse(settings['capture_enabled'])
+                        for processor in ('observation', 'project_memory'):
+                            with self.assertRaises(ValueError):
+                                resolve_profile(settings, processor)
+                        self.assertEqual(before, path.read_bytes())
 
     def test_profile_resolution_copies_exact_identifiers_and_keeps_disabled_switches(self):
         from codex_mem.execution import resolve_profile
