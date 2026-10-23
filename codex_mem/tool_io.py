@@ -559,6 +559,21 @@ def _canonical_stored_json(
     return _canonical_json(decoded)
 
 
+def read_tool_payload(value: str | None) -> tuple[str | None, dict[str, Any], str | None]:
+    """Return only complete sanitized JSON and its excerpt, or an omission reason.
+
+    Capture adapters use this same read policy before deriving source evidence.
+    A valid outer truncation wrapper never makes its fragments complete JSON.
+    """
+    canonical = _canonical_stored_json(value)
+    if canonical is None or canonical[1].get("truncated"):
+        reason = "malformed_payload" if canonical is None else "incomplete_json_fragments"
+        return None, {"read_sanitized": True, "read_omitted": True,
+                      "read_omitted_reason": reason}, None
+    text, metadata, excerpt = canonical
+    return text, metadata, excerpt[:MAX_TOOL_EXCERPT_CHARS] if excerpt else None
+
+
 def _json_without_redaction(value: Any) -> str | None:
     """Best-effort comparison string without exposing it to callers."""
 
@@ -1043,17 +1058,11 @@ def _row_to_capture(row: sqlite3.Row | Mapping[str, Any]) -> dict[str, Any]:
         ("tool_input", "input_excerpt", "input_metadata"),
         ("tool_response", "response_excerpt", "response_metadata"),
     ):
-        canonical = _canonical_stored_json(result[payload])
-        if canonical is None or canonical[1].get("truncated"):
-            # A wrapper contains incomplete JSON strings. Text regexes cannot
-            # prove that an object/array credential spanning them was removed.
-            reason = "malformed_payload" if canonical is None else "incomplete_json_fragments"
+        text, read_metadata, safe_excerpt = read_tool_payload(result[payload])
+        if read_metadata.get("read_omitted"):
             result[payload] = result[excerpt] = None
-            result[metadata] = {**result[metadata], "read_sanitized": True,
-                                "read_omitted": True, "read_omitted_reason": reason}
+            result[metadata] = {**result[metadata], **read_metadata}
             continue
-        text, read_metadata, safe_excerpt = canonical
-        safe_excerpt = safe_excerpt[:MAX_TOOL_EXCERPT_CHARS] if safe_excerpt else None
         if text != result[payload] or safe_excerpt != result[excerpt]:
             result[metadata] = {**result[metadata], "read_sanitized": True}
         if read_metadata.get("redacted"):

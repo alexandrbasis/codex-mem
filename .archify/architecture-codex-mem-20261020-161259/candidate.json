@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "aefba6d3e3df27d1ac2a2a11cae8de48fae8bd91",
+      "revision": "c66e9b215a6e1979ecff4fd8553aa815d6b05656",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -16,7 +16,7 @@
     {
       "id": "host",
       "type": "external",
-      "label": "Codex session",
+      "label": "Codex or Pi session",
       "sublabel": "Messages and tool calls",
       "pos": [
         20,
@@ -32,6 +32,12 @@
           "line": 1,
           "end_line": 74,
           "label": "Lifecycle events"
+        },
+        {
+          "path": "pi/extension.ts",
+          "line": 63,
+          "end_line": 141,
+          "label": "Pi completed events and context"
         }
       ]
     },
@@ -60,6 +66,12 @@
           "line": 895,
           "end_line": 942,
           "label": "Codex adaptation and queue wake"
+        },
+        {
+          "path": "codex_mem/pi_host.py",
+          "line": 24,
+          "end_line": 108,
+          "label": "Pi protocol, shared policy and queue"
         }
       ]
     },
@@ -361,7 +373,7 @@
       "id": "delivery",
       "type": "frontend",
       "label": "Context and API",
-      "sublabel": "SessionStart · MCP · CLI",
+      "sublabel": "Hooks, Pi context, MCP and CLI",
       "pos": [
         20,
         1180
@@ -378,10 +390,10 @@
           "label": "Shared bounded untrusted context"
         },
         {
-          "path": "codex_mem/mcp.py",
-          "line": 810,
-          "end_line": 822,
-          "label": "memory_project_state"
+          "path": "codex_mem/pi_host.py",
+          "line": 111,
+          "end_line": 129,
+          "label": "Pi untrusted bounded framing"
         },
         {
           "path": "codex_mem/hooks.py",
@@ -459,8 +471,8 @@
       "id": "host-capture",
       "from": "host",
       "to": "capture",
-      "label": "hooks",
-      "variant": "default"
+      "label": "completed events",
+      "variant": "security"
     },
     {
       "id": "capture-sources",
@@ -575,7 +587,7 @@
       "dot": "cyan",
       "title": "Document scope",
       "items": [
-        "This document describes the local issue #8 transition on October 23, 2026. Installed Pi 1.4.0 passed a deterministic local-provider protocol test. It does not establish installed-service state, live provider behavior, matrix completion, or answer quality.",
+        "This document describes the local issue #9 transition on October 23, 2026. Installed Pi 1.4.0 passed deterministic host and runtime tests. It does not establish installed-service state, live providers, the full live matrix or answer quality.",
         "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
         "The diagram, supporting text, Archify controls, and HTML language attribute use English."
       ]
@@ -584,7 +596,7 @@
       "dot": "cyan",
       "title": "Host and background execution",
       "items": [
-        "The Codex session is the interactive host. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:397-431, episode_processor.py:898-910.",
+        "Codex and Pi are interactive hosts. Their model selection does not select the background runtime. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:397-431, episode_processor.py:898-910.",
         "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:710-922, pi_runtime.py:344-450.",
         "The resolver chooses the processor override, default profile, then legacy Codex. Observations, summaries, project memory, reconsideration, and consolidation can use Pi with independent profiles. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:897-925, pi_runtime.py:391-428, docs/EXECUTION.md.",
         "Observation jobs keep their source identity across profile changes. The claim transaction stores each requested profile with its lease. Corrections retain it; later attempts reload current configuration. Legacy receipts preserve requested-only provenance and measured usage. Successful sources do not replay, including overlapping historical jobs. Explicit maintenance recovery retains its separate fingerprint and opt-in. Explicit retry_failed with a different processor can create distinct work; successful sources and one-shot recovery remain protected. Sources: store.py:2357-2840, observer_usage_store.py:79-145,263-305, tests/test_observation_profiles.py. Project memory retains its existing profile-independent source fingerprint and stores requested and verified execution separately. Additive migration preserves historical values; failed usage survives source deletion. Sources: project_memory.py:494-595, tests/test_project_memory_profiles.py.",
@@ -597,16 +609,17 @@
       "dot": "cyan",
       "title": "Shared host events and context",
       "items": [
-        "Codex adapts native hooks to HostEvent. Shared capture applies project and privacy policy, preserves source roles and IDs, and excludes injected memory. The adapter requests a service wake after writing. Pi event values are accepted by the contract, but no Pi extension is connected in this task. Sources: host.py:68-191, hooks.py:895-942.",
+        "Codex adapts native hooks to HostEvent. Pi 1.4.0 observes message_end, resolves native entry IDs after persistence, and submits only current-runtime sources at agent_settled. It never imports existing history or captures streaming updates. Python applies shared privacy, project policy, source identity and queue wake. Sources: host.py:68-191, hooks.py:895-942, pi/extension.ts:88-127, pi_host.py:24-108.",
         "Legacy Codex source names and session IDs remain valid. Other host and branch sessions have separate namespaces. One classifier serves SQL queue and retrieval filters, processor summary validation, and project memory. Old dedupe aliases preserve existing entry IDs without a migration or replay. They remove injected memory before hashing, as the old Codex adapter did. Sources: host.py:21-65, store.py:1792-1892.",
-        "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns the hook response and trusted policy framing. Unavailable storage does not block the interactive host. Sources: host.py:207-274, hooks.py:836-892."
+        "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns hook framing. Pi receives custom memory at startup and before prompts; only its current custom context reaches the model, and it is excluded from capture. Empty or failed refreshes remove prior automatic memory while preserving unrelated custom messages. Tiny budgets omit the frame and report a bounded native status. The local Python protocol has byte, event, response and deadline limits. Failure does not block conversation. Sources: host.py:207-274, hooks.py:836-892, pi/extension.ts:15-49,79-96,128-141, pi_host.py:111-147.",
+        "Pi has no native private flag on UserMessage. Explicit private markers activate the shared gate for user, assistant and tool sources. Complete tool JSON is decoded before shared redaction. The shared safe payload reader checks both stored raw reads and new Pi source bodies. Incoming or generated truncation wrappers and derived excerpts are omitted with an explicit reason. UTF-8 subprocess decoding preserves split characters within the byte limit. Native MCP tools remain separate. Branch/fork/compaction semantics belong to issue #10. Sources: docs/PI_HOST.md, tests/test_pi_host.py."
       ]
     },
     {
       "dot": "emerald",
       "title": "How memory accumulates",
       "items": [
-        "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1907-1976, service.py:907-957.",
+        "Each host adapter saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1907-1976, service.py:907-957.",
         "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:299-335,1125-1130.",
         "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:240-265,1099-1123,1273-1300.",
         "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:828-948.",
@@ -708,7 +721,7 @@
       "items": [
         "Pi 1.4.0 connects to the existing Python MCP server. One configured server owns tool discovery and calls. Lifecycle capture is a later task and must not register duplicate tools. Explicit reads need no background runtime. Sources: docs/pi-mcp.example.json:1-17, docs/PI_MCP.md:1-25.",
         "The example hides mutation capabilities until the user enables them. Project arguments retain the existing Store partition; this is not a current-directory sandbox. Deterministic installed-Pi RPC tests cover real native MCP and a temporary Store, not live-provider quality or Pi background execution. Sources: docs/PI_MCP.md:15-25, tests/test_pi_mcp.py:185-305.",
-        "Shared raw-tool sanitization redacts credential-named structured fields before serialization, including object and array values. Readback sanitizes legacy rows and regenerates excerpts without mutating stored bytes, source IDs, or historical hashes; view metadata discloses changes. Malformed payloads and all truncation-wrapper fragments plus derived excerpts are omitted with bounded reasons, because incomplete JSON cannot prove nested-secret removal. Ordinary nonsecret values keep their types. This applies to Codex and Pi source reads. Sources: codex_mem/privacy.py:40-53, codex_mem/tool_io.py:425-437,1041-1066, tests/test_mcp.py:166-274."
+        "Shared raw-tool sanitization redacts credential-named structured fields before serialization, including object and array values. Readback sanitizes legacy rows and regenerates excerpts without mutating stored bytes, source IDs, or historical hashes; view metadata discloses changes. Malformed payloads and all truncation-wrapper fragments plus derived excerpts are omitted with bounded reasons, because incomplete JSON cannot prove nested-secret removal. Ordinary nonsecret values keep their types. This applies to Codex and Pi source reads. Sources: codex_mem/privacy.py:40-53, codex_mem/tool_io.py:425-437,562-572,1055-1071, tests/test_mcp.py:166-274."
       ]
     }
   ]
