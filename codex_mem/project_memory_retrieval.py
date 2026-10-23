@@ -5,6 +5,8 @@ and evidence remain visible, including provisional signals and conflicts.
 """
 from __future__ import annotations
 
+from .host import source_role
+
 from collections.abc import Mapping, Sequence
 import json
 from pathlib import Path
@@ -69,10 +71,7 @@ def _environment_evidence_matches(item: Mapping[str, Any], requested: Sequence[s
     role = item.get('source_role')
     if not role:
         capture = str(item.get('source') or '')
-        if capture == 'hook:PostToolUse' or capture.startswith('hook:PostToolUse:'):
-            role = 'tool_record'
-        elif capture == 'hook:Stop' or capture.startswith('hook:Stop:'):
-            role = 'assistant_report'
+        role = source_role(capture)
     if role not in {'tool_record', 'assistant_report'}:
         if role == 'model_inference' and item.get('object_type') == 'claim':
             # A paraphrase cannot conceal the execution scope of its own
@@ -235,7 +234,7 @@ def _continuity_context(store: Any, project: str, episodes: list[dict[str, Any]]
     result: dict[str, list[dict[str, Any]]] = {}
     relation = re.compile(r'\b(?:distinct|separate|different|independent)\s+task\b|\bnot\s+a\s+continuation\b|отдельн[а-яё]*\s+задач|другая\s+задача|не\s+продолж', re.I)
     for source in sources:
-        if not _safe(source, project, exclude_session_id) or not str(source.get('source') or '').startswith('hook:UserPromptSubmit'):
+        if not _safe(source, project, exclude_session_id) or source_role(source.get('source')) != 'user_intent':
             continue
         body = source.get('body')
         if not isinstance(body, str):
@@ -407,7 +406,7 @@ def _source_evidence(store: Any, project: str, query_plan: Any, exclude_session_
         parameters.extend(expression for expression in expressions if expression)
     elif not unassociated_context and not query_plan.generic_project_state and any(query_plan.candidate_queries):
         return [], {'returned': 0, 'omitted': 0, 'roles': {}}
-    roles = {'assistant_report': 'hook:Stop', 'tool_record': 'hook:PostToolUse'}
+    roles = ('assistant_report', 'tool_record')
     selected, coverage = {}, {}
     def scoped(value: Mapping[str, Any]) -> bool:
         from .project_memory_query import environment_names
@@ -425,11 +424,11 @@ def _source_evidence(store: Any, project: str, query_plan: Any, exclude_session_
         return query_plan.matches(value) and (relevant(value) or unassociated_context)
     def read():
         connection = store._connection
-        for role, source in roles.items():
+        for role in roles:
             predicate = (" FROM entries e JOIN pm_events v ON v.source_id=e.id AND v.project=e.project "
                 "WHERE e.project=? AND (? IS NULL OR COALESCE(e.session_id,'')!=?) "
-                "AND e.superseded_by IS NULL" + match + " AND (e.source=? OR e.source LIKE ?)")
-            args = (*parameters, source, source + ':%')
+                "AND e.superseded_by IS NULL" + match + " AND codex_mem_source_role(e.source)=?")
+            args = (*parameters, role)
             total = connection.execute('SELECT COUNT(*)' + predicate, args).fetchone()[0]
             order = 'ASC' if query_plan.source_order == 'earliest' else 'DESC'
             columns = ('e.id,e.project,e.title,e.kind,e.session_id,e.source,e.tags_json,e.created_at,'

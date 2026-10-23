@@ -1,11 +1,14 @@
 """Known injected memory cannot become fresh hook or tool evidence."""
 import json
 import sqlite3
-from types import SimpleNamespace
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
-from codex_mem.hooks import _remember_safely, _safe_prompt, _tool_output
+from codex_mem.hooks import handle_hook, _safe_prompt, _tool_output
+from codex_mem.config import configure
+from codex_mem.store import Store
 from codex_mem.tool_io import normalize_capture, strip_injected_memory, insert_capture, get_tool_capture
 
 
@@ -51,10 +54,14 @@ class RecursiveMemoryCaptureTests(unittest.TestCase):
             self.assertEqual('Current result\n\n\nNew error', _tool_output(
                 {'output': 'Current result\n' + old + '\nNew error'}, command='cat report'))
             trace.assert_called_with('memory_context_omitted', wrapper_count=1)
-        captured = []
-        store = SimpleNamespace(remember=lambda project, **kwargs: captured.append(kwargs))
-        _remember_safely(store, '/tmp/project', title='Report', body='Before '+old+' After',
-            kind='session', payload={}, source='hook:Stop', tags=[], dedupe_prefix='stop')
+        with tempfile.TemporaryDirectory() as temporary:
+            home = Path(temporary) / 'memory'
+            project = Path(temporary) / 'project'
+            configure(home, capture_scope='all', service_enabled=False)
+            with Store(home) as store:
+                handle_hook(dict(hook_event_name='Stop', cwd=str(project), session_id='session',
+                    last_assistant_message='Before '+old+' After'), store)
+                captured = store.get(project, [row['id'] for row in store.timeline(project)])
         self.assertNotIn('Old obligation', captured[0]['body'])
         self.assertIn('Before', captured[0]['body'])
         self.assertIn('After', captured[0]['body'])

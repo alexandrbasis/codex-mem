@@ -15,6 +15,8 @@ signals to a PID that might have been reused by an unrelated process.
 
 from __future__ import annotations
 
+from .host import register_source_functions
+
 from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -1852,10 +1854,10 @@ def _has_fresh_retry_work(base: Path, project: str) -> bool:
         database = base / "memory.sqlite3"
         _reject_link_or_nonfile(database)
         connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        register_source_functions(connection)
         return connection.execute(
             "SELECT 1 FROM entries AS e WHERE e.project=? AND e.superseded_by IS NULL "
-            "AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse') "
-            "OR e.source LIKE 'hook:PostToolUse:%') "
+            "AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record')) "
             "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
             "WHERE links.source_id=e.id) "
             "AND NOT EXISTS (SELECT 1 FROM observation_jobs AS j WHERE j.project=e.project "

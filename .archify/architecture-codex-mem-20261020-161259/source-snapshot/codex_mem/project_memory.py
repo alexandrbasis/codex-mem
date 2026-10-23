@@ -5,6 +5,8 @@ helpers deliberately use the caller's transaction so capture/deletion is atomic.
 """
 from __future__ import annotations
 
+from .host import source_role
+
 import hashlib
 import json
 import re
@@ -33,8 +35,7 @@ def _hash(value: Any) -> str:
 
 
 def _role(source: str | None) -> str:
-    from .store import _evidence_role
-    return _evidence_role(source)
+    return source_role(source)
 
 
 def install_schema(connection: sqlite3.Connection) -> None:
@@ -231,7 +232,7 @@ class ProjectMemory:
             return []
         connection = self.store._connection
         ranked = []
-        for source in connection.execute("SELECT e.*,v.seq,v.salient FROM pm_events v JOIN entries e ON e.id=v.source_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id IS NULL OR e.session_id!=?) AND (e.source='hook:UserPromptSubmit' OR e.source LIKE 'hook:UserPromptSubmit:%') ORDER BY v.salient DESC,CASE WHEN v.salient>=5 THEN -v.seq WHEN v.salient>0 THEN v.seq ELSE -v.seq END LIMIT ?", (project, exclude_session_id, exclude_session_id, limit)):
+        for source in connection.execute("SELECT e.*,v.seq,v.salient FROM pm_events v JOIN entries e ON e.id=v.source_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id IS NULL OR e.session_id!=?) AND (codex_mem_source_role(e.source)='user_intent') ORDER BY v.salient DESC,CASE WHEN v.salient>=5 THEN -v.seq WHEN v.salient>0 THEN v.seq ELSE -v.seq END LIMIT ?", (project, exclude_session_id, exclude_session_id, limit)):
             salient = source["salient"]
             signal = {"id": source["id"], "source_id": source["id"], "text": source["body"][:1200], "truncated": len(source["body"])>1200, "source_role": "user_intent", "provisional": True, "signal_kind": _user_signal_kind(source["body"]), "selection_basis": "explicit_user_marker" if salient else "recent_user_message", "seq": source["seq"], "session_id": source["session_id"]}
             rank = (0, -salient, -source["seq"] if salient>=5 else source["seq"]) if salient else (2, 0, -source["seq"])
@@ -240,7 +241,7 @@ class ProjectMemory:
         # establishes this provenance. Parse only a bounded recent candidate set.
         placeholders = ",".join("?" for _ in _EXECUTION_TOOLS)
         rows = connection.execute(
-            f"SELECT e.*,v.seq FROM pm_events v JOIN entries e ON e.id=v.source_id JOIN tool_uses t ON t.entry_id=e.id AND t.project=v.project AND t.session_id=e.session_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id!=?) AND (e.source='hook:PostToolUse' OR e.source LIKE 'hook:PostToolUse:%') AND lower(t.tool_name) IN ({placeholders}) AND json_type(t.tool_input)='object' AND json_type(t.tool_response)='object' AND COALESCE(json_extract(t.input_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.input_metadata_json,'$.excluded'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.excluded'),0)=0 ORDER BY v.seq DESC LIMIT ?",
+            f"SELECT e.*,v.seq FROM pm_events v JOIN entries e ON e.id=v.source_id JOIN tool_uses t ON t.entry_id=e.id AND t.project=v.project AND t.session_id=e.session_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id!=?) AND (codex_mem_source_role(e.source)='tool_record') AND lower(t.tool_name) IN ({placeholders}) AND json_type(t.tool_input)='object' AND json_type(t.tool_response)='object' AND COALESCE(json_extract(t.input_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.input_metadata_json,'$.excluded'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.excluded'),0)=0 ORDER BY v.seq DESC LIMIT ?",
             (project, exclude_session_id, exclude_session_id, *sorted(_EXECUTION_TOOLS), min(32, limit*4)))
         seen = set()
         for source in rows:
@@ -1125,7 +1126,7 @@ def _readiness_sql() -> str:
     """The same durable lane condition is shared by discovery and leasing."""
     return (" AND EXISTS (SELECT 1 FROM pm_events rv JOIN entries re ON re.id=rv.source_id WHERE rv.project=v.project AND rv.session_id=v.session_id AND rv.done=0 AND rv.blocked_job_id IS NULL GROUP BY rv.project,rv.session_id HAVING "
             "MAX(CAST(strftime('%s',re.created_at) AS INTEGER))<=? OR MIN(CAST(strftime('%s',re.created_at) AS INTEGER))<=? OR COUNT(*)>=32 OR SUM(MAX(0,length(re.body)-rv.offset))>=24000 OR "
-            "(MAX(CASE WHEN re.source='hook:Stop' OR re.source LIKE 'hook:Stop:%' OR re.source='hook:PreCompact' OR re.source LIKE 'hook:PreCompact:%' THEN 1 ELSE 0 END)=1 AND MAX(CAST(strftime('%s',re.created_at) AS INTEGER))<=?))")
+            "(MAX(CASE WHEN codex_mem_source_role(re.source)='assistant_report' OR codex_mem_source_role(re.source)='lifecycle_marker' THEN 1 ELSE 0 END)=1 AND MAX(CAST(strftime('%s',re.created_at) AS INTEGER))<=?))")
 
 
 def _nonassertive_context(text: str, decision: bool = False) -> bool:

@@ -7,6 +7,8 @@ and keeps durable source records when a later summary consolidates them.
 
 from __future__ import annotations
 
+from .host import source_role, is_capture_source, register_source_functions
+
 import hashlib
 import html
 import json
@@ -141,20 +143,7 @@ _EMBEDDING_STATUSES = ("running", "failed", "completed")
 
 def _evidence_role(source: object) -> str:
     """Describe provenance, never infer whether a claim is true."""
-    value = str(source or "")
-    if value == "hook:Stop" or value.startswith("hook:Stop:"):
-        return "assistant_report"
-    if value == "hook:UserPromptSubmit" or value.startswith("hook:UserPromptSubmit:"):
-        return "user_intent"
-    if value == "hook:PostToolUse" or value.startswith("hook:PostToolUse:"):
-        return "tool_record"
-    if value == "hook:PreCompact" or value.startswith("hook:PreCompact:"):
-        return "lifecycle_marker"
-    if value.startswith("processor:"):
-        return "derived_note"
-    if value.startswith("import:"):
-        return "imported_memory"
-    return "unclassified"
+    return source_role(source)
 
 
 def _context_priority_sql() -> str:
@@ -175,11 +164,6 @@ _FTS_TOKEN_RE = re.compile(
 _VERSION_TOKEN_RE = re.compile(r"[vV]?([0-9]+(?:\.[0-9]+)+)\Z")
 _HASH_RE = re.compile(r"[0-9a-f]{64}\Z")
 
-_OBSERVATION_SOURCES = (
-    "hook:UserPromptSubmit",
-    "hook:Stop",
-)
-_OBSERVATION_TOOL_SOURCE = "hook:PostToolUse"
 _OBSERVATION_STATUSES = ("running", "failed", "processed", "skipped")
 
 _T = TypeVar("_T")
@@ -915,6 +899,7 @@ class Store:
                 check_same_thread=False,
             )
             connection.row_factory = sqlite3.Row
+            register_source_functions(connection)
             connection.execute("PRAGMA busy_timeout = 2000")
             connection.execute("PRAGMA foreign_keys = ON")
             self._conn = connection
@@ -1809,6 +1794,7 @@ class Store:
         observation: Mapping[str, Any] | None = None,
         session_summary: Mapping[str, Any] | None = None,
         tool_capture: Mapping[str, Any] | None = None,
+        dedupe_alias: str | None = None,
     ) -> dict[str, Any]:
         """Store a redacted memory entry and optionally consolidate source entries."""
 
@@ -1825,6 +1811,7 @@ class Store:
         clean_source = _validate_text(source, "source", MAX_SOURCE_CHARS, required=False)
         clean_tags = _validate_tags(tags)
         clean_dedupe = _dedupe_hash(workspace, dedupe_key)
+        alias_dedupe = _dedupe_hash(workspace, dedupe_alias)
         clean_source_ids = (
             _validate_ids(source_ids, "source_ids", allow_empty=True) if source_ids is not None else []
         )
@@ -1855,8 +1842,9 @@ class Store:
 
                 if clean_dedupe is not None:
                     existing = connection.execute(
-                        "SELECT id FROM entries WHERE project = ? AND dedupe_hash = ?",
-                        (workspace, clean_dedupe),
+                        "SELECT id FROM entries WHERE project = ? AND dedupe_hash IN (?, ?) "
+                        "ORDER BY dedupe_hash = ? DESC LIMIT 1",
+                        (workspace, clean_dedupe, alias_dedupe, clean_dedupe),
                     ).fetchone()
                     if existing is not None:
                         existing_id = str(existing["id"])
@@ -2695,7 +2683,7 @@ class Store:
                     f"""
                     SELECT e.* FROM entries AS e
                     WHERE e.project = ? AND e.superseded_by IS NULL
-                      AND (e.source IN (?, ?) OR e.source = ? OR e.source LIKE ?)
+                      AND codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record')
                       AND {free_lane.format(session="e.session_id")}
                       AND NOT EXISTS (
                         SELECT 1 FROM observation_job_sources AS links
@@ -2714,10 +2702,6 @@ class Store:
                     """,
                     (
                         workspace,
-                        _OBSERVATION_SOURCES[0],
-                        _OBSERVATION_SOURCES[1],
-                        _OBSERVATION_TOOL_SOURCE,
-                        _OBSERVATION_TOOL_SOURCE + ":%",
                         *lane_args,
                         1 if retry_failed else 0,
                         required_model,
@@ -2773,8 +2757,7 @@ class Store:
                     selected_chars += source_chars
                     remaining -= source_chars
                     if (
-                        str(row["source"] or "") == "hook:Stop"
-                        or str(row["source"] or "").startswith("hook:Stop:")
+                        source_role(row["source"]) == "assistant_report"
                     ):
                         stop_reached = True
                         break
@@ -2867,8 +2850,7 @@ class Store:
         """
 
         has_stop = any(
-            str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            source_role(row["source"]) == "assistant_report"
             for row in sources
         )
         if not has_stop:
@@ -2892,7 +2874,7 @@ class Store:
             provenance_positions = {
                 str(row["id"]): (str(row["created_at"]), str(row["id"]))
                 for row in provenance_rows
-                if str(row["source"] or "").startswith("hook:")
+                if is_capture_source(row["source"])
             }
 
         def position(item: Mapping[str, Any]) -> tuple[str, str]:
@@ -2935,15 +2917,13 @@ class Store:
         first = sources[0]
         session_id = first["session_id"]
         has_stop = any(
-            str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            source_role(row["source"]) == "assistant_report"
             for row in sources
         )
         stop_rows = [
             row
             for row in sources
-            if str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            if source_role(row["source"]) == "assistant_report"
         ]
         first_stop = min(
             stop_rows,
@@ -2965,8 +2945,7 @@ class Store:
             return connection.execute(
                 f"""SELECT e.* FROM entries AS e
                     WHERE {base_clause}
-                      AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop')
-                           OR e.source LIKE 'hook:PostToolUse%'
+                      AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record')
                            OR (e.source LIKE 'processor:%' AND e.superseded_by IS NULL))
                     ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
                 base_parameters,
@@ -2985,8 +2964,7 @@ class Store:
         raw_rows = connection.execute(
             f"""SELECT e.* FROM entries AS e
                 WHERE {base_clause}{raw_exclusion}
-                  AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop')
-                       OR e.source LIKE 'hook:PostToolUse%')
+                  AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record'))
                 ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
             tuple(raw_parameters),
         ).fetchall()
@@ -2997,11 +2975,11 @@ class Store:
             "AND EXISTS ("
             "SELECT 1 FROM entry_sources AS links "
             "JOIN entries AS source_events ON source_events.id = links.source_id "
-            "WHERE links.summary_id = e.id AND source_events.source LIKE 'hook:%'"
+            "WHERE links.summary_id = e.id AND codex_mem_is_capture(source_events.source)"
             ") AND NOT EXISTS ("
             "SELECT 1 FROM entry_sources AS links "
             "JOIN entries AS source_events ON source_events.id = links.source_id "
-            "WHERE links.summary_id = e.id AND source_events.source LIKE 'hook:%' "
+            "WHERE links.summary_id = e.id AND codex_mem_is_capture(source_events.source) "
             "AND (source_events.project != ? OR source_events.session_id IS NULL "
             "OR source_events.session_id != ? OR source_events.created_at > ? "
             "OR (source_events.created_at = ? AND source_events.id >= ?))"
@@ -3059,8 +3037,7 @@ class Store:
             return []
         rows = self._read(lambda: self._observation_context_rows(workspace, sources))
         has_stop = any(
-            str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            source_role(row["source"]) == "assistant_report"
             for row in sources
         )
         records = self._records_from_rows(rows)
@@ -3211,8 +3188,7 @@ class Store:
                 stop_rows = [
                     row
                     for row in source_rows
-                    if str(row["source"] or "") == "hook:Stop"
-                    or str(row["source"] or "").startswith("hook:Stop:")
+                    if source_role(row["source"]) == "assistant_report"
                 ]
                 first_stop_key = min(
                     ((str(row["created_at"]), str(row["id"])) for row in stop_rows),
@@ -3593,7 +3569,7 @@ class Store:
                 return [], "source_deleted"
             if row["superseded_by"] is not None:
                 return [], "source_superseded"
-            if isinstance(row["source"], str) and row["source"].startswith("hook:"):
+            if is_capture_source(row["source"]):
                 return [], "raw_observation"
             payload = self._embedding_entry_payload(row)
             if (
@@ -3757,7 +3733,7 @@ class Store:
                         AND vectors.project = e.project AND vectors.model = ?
                         AND vectors.revision = ? AND vectors.dimensions = ?
                     WHERE e.project = ? AND e.superseded_by IS NULL
-                      AND COALESCE(e.source, '') NOT GLOB 'hook:*'
+                      AND NOT codex_mem_is_capture(e.source)
                       AND (
                           documents.entry_id IS NULL OR documents.text_version IS NULL
                           OR documents.text_version != ? OR vectors.entry_id IS NULL
@@ -4171,7 +4147,7 @@ class Store:
                 "vectors.dimensions = ?",
                 "e.project = vectors.project",
                 "e.superseded_by IS NULL",
-                "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                "NOT codex_mem_is_capture(e.source)",
             ]
             parameters: list[object] = [
                 workspace,
@@ -4271,7 +4247,7 @@ class Store:
                         AND vectors.project = e.project AND vectors.model = ?
                         AND vectors.revision = ? AND vectors.dimensions = ?
                     WHERE e.project = ? AND e.superseded_by IS NULL
-                      AND COALESCE(e.source, '') NOT GLOB 'hook:*'
+                      AND NOT codex_mem_is_capture(e.source)
                       AND (
                           documents.entry_id IS NULL OR documents.text_version IS NULL
                           OR documents.text_version != ? OR vectors.entry_id IS NULL
@@ -4313,7 +4289,7 @@ class Store:
                         "FROM embedding_vectors AS vectors "
                         "JOIN entries AS e ON e.id = vectors.entry_id "
                         "AND e.project = vectors.project "
-                        "WHERE COALESCE(e.source, '') NOT GLOB 'hook:*'"
+                        "WHERE NOT codex_mem_is_capture(e.source)"
                         + (" AND vectors.project = ?" if workspace is not None else ""),
                         (() if workspace is None else (workspace,)),
                     ).fetchone()
@@ -4351,7 +4327,7 @@ class Store:
 
             checked_model, checked_revision, checked_dimensions = profile
             entry_clauses = ["e.superseded_by IS NULL"]
-            entry_clauses.append("COALESCE(e.source, '') NOT GLOB 'hook:*'")
+            entry_clauses.append("NOT codex_mem_is_capture(e.source)")
             # Join placeholders precede the WHERE scope placeholder.
             entry_parameters: list[object] = [
                 checked_model,
@@ -4417,7 +4393,7 @@ class Store:
                             "vectors.model = ?",
                             "vectors.revision = ?",
                             "vectors.dimensions = ?",
-                            "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                            "NOT codex_mem_is_capture(e.source)",
                         ]
                         + (["vectors.project = ?"] if workspace is not None else [])
                     ),
@@ -4536,7 +4512,7 @@ class Store:
         base_clauses = [
             "e.project = ?",
             "e.superseded_by IS NULL",
-            "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+            "NOT codex_mem_is_capture(e.source)",
         ]
         base_parameters: list[object] = [workspace]
         if literal_plan and literal_plan["identifiers"]:
@@ -4696,7 +4672,7 @@ class Store:
         metadata_search, metadata_parameters = self._metadata_search_sql(
             "m", query_tokens, any_token=True)
         clauses = ["e.project = ?", "e.superseded_by IS NULL",
-                   "COALESCE(e.source, '') NOT GLOB 'hook:*'"]
+                   "NOT codex_mem_is_capture(e.source)"]
         parameters: list[object] = [workspace]
         if kinds:
             clauses.append("e.kind IN (" + ",".join("?" for _ in kinds) + ")")
@@ -4753,30 +4729,30 @@ class Store:
             "WITH scope AS (SELECT ? AS project, ? AS excluded_session), "
             "selected AS (SELECT e.id, e.session_id FROM entries AS e "
             f"WHERE e.project = ? AND e.id IN ({placeholders}) "
-            "AND e.superseded_by IS NULL AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
+            "AND e.superseded_by IS NULL AND NOT codex_mem_is_capture(e.source) "
             "AND ((SELECT excluded_session FROM scope) IS NULL OR e.session_id IS NULL "
             "OR e.session_id != (SELECT excluded_session FROM scope))), "
             "followups AS (SELECT e.id FROM entries AS e "
             "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             "WHERE e.project = (SELECT project FROM scope) AND e.superseded_by IS NULL "
-            "AND COALESCE(e.source, '') NOT GLOB 'hook:*' AND COALESCE(e.session_id, '') != '' "
+            "AND NOT codex_mem_is_capture(e.source) AND COALESCE(e.session_id, '') != '' "
             "AND ((SELECT excluded_session FROM scope) IS NULL "
             "OR e.session_id != (SELECT excluded_session FROM scope)) "
             "AND (m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL) "
             "AND EXISTS (SELECT 1 FROM entry_sources AS links CROSS JOIN entries AS raw ON raw.id = links.source_id "
             "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
-            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*')) "
+            "AND (codex_mem_source_role(raw.source)='tool_record')) "
             "ORDER BY codex_mem_event_instant(e.created_at) DESC, e.id DESC LIMIT 200), "
             "candidates AS (SELECT e.id, e.session_id, e.created_at, e.title, e.body, "
             "m.observation_json, m.session_summary_json, "
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary, "
             "(SELECT raw.created_at FROM entry_sources AS links CROSS JOIN entries AS raw ON raw.id = links.source_id "
             "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
-            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*') "
+            "AND (codex_mem_source_role(raw.source)='tool_record') "
             "ORDER BY codex_mem_event_instant(raw.created_at) DESC, raw.id DESC LIMIT 1) AS latest_tool_at "
             "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             "WHERE e.project = ? AND e.superseded_by IS NULL "
-            "AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
+            "AND NOT codex_mem_is_capture(e.source) "
             "AND (e.id IN (SELECT id FROM selected) OR e.id IN (SELECT id FROM followups) OR ("
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) "
             "AND e.session_id IN (SELECT session_id FROM selected "
@@ -4786,11 +4762,11 @@ class Store:
             # for each derived candidate before applying the source link.
             "source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
             "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
-            "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
+            "CASE WHEN codex_mem_source_role(raw.source)='assistant_report' "
             "THEN 0 ELSE 1 END, codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
             "FROM candidates AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
             "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = ? "
-            "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
+            "AND raw.session_id IS derived.session_id WHERE codex_mem_is_capture(raw.source)), "
             "dated AS (SELECT c.*, COALESCE(s.event_at, c.created_at) AS event_at, "
             "COALESCE(s.event_id, c.id) AS event_id, "
             "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
@@ -4943,7 +4919,7 @@ class Store:
                 ids = self._read(lambda: self._connection.execute(
                     "SELECT e.id FROM entries e LEFT JOIN entry_metadata m ON m.entry_id=e.id "
                     "WHERE e.project=? AND e.session_id=? AND e.superseded_by IS NULL "
-                    "AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
+                    "AND NOT codex_mem_is_capture(e.source) "
                     "AND e.kind NOT IN ('session','tool','checkpoint')" + match_sql +
                     " AND " + score + ">0 ORDER BY " + score + " DESC,e.created_at ASC,e.id ASC LIMIT ?",
                     (workspace, session, *match_parameters, limit),
@@ -4952,7 +4928,7 @@ class Store:
                 return self.get(workspace, [row["id"] for row in ids]) if ids else []
             rows = self._read(lambda: self._connection.execute(
                 "SELECT e.* FROM entries e WHERE e.project=? AND e.session_id=? "
-                "AND e.superseded_by IS NULL AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
+                "AND e.superseded_by IS NULL AND NOT codex_mem_is_capture(e.source) "
                 "AND e.kind NOT IN ('session','tool','checkpoint') "
                 "ORDER BY e.created_at ASC,e.id ASC LIMIT ?",
                 (workspace, session, limit),
@@ -5372,7 +5348,7 @@ class Store:
         topic_plan = state_scope_plan(state_scope)
         match_plan = topic_plan or (constraints if constraints["identifiers"] else None)
         clauses = ["e.project = ?", "e.superseded_by IS NULL",
-                   "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                   "NOT codex_mem_is_capture(e.source)",
                    "(e.kind NOT IN ('session', 'tool', 'checkpoint') "
                    "OR m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL)"]
         parameters: list[Any] = [workspace]
@@ -5413,11 +5389,11 @@ class Store:
                 + " AND ".join(where)
                 + "), source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
                 "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
-                "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' THEN 0 ELSE 1 END, "
+                "CASE WHEN codex_mem_source_role(raw.source)='assistant_report' THEN 0 ELSE 1 END, "
                 "codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
                 "FROM scoped AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
                 "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
-                "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
+                "AND raw.session_id IS derived.session_id WHERE codex_mem_is_capture(raw.source)), "
                 "dated AS (SELECT scoped.*, COALESCE(s.event_at, scoped.created_at) AS event_at, "
                 "COALESCE(s.event_id, scoped.id) AS event_id, "
                 "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
@@ -5485,7 +5461,7 @@ class Store:
             latest: dict[str, sqlite3.Row] = {}
             if sessions:
                 peer_clauses = ["e.project = ?", "e.superseded_by IS NULL",
-                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                    "NOT codex_mem_is_capture(e.source)",
                     "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL)",
                     "e.session_id IN (" + ", ".join("?" for _ in sessions) + ")"]
                 peers = self._read(lambda: self._connection.execute(
@@ -5580,7 +5556,7 @@ class Store:
             active_clauses = [
                 "e.project = ?",
                 "e.superseded_by IS NULL",
-                "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                "NOT codex_mem_is_capture(e.source)",
             ]
             # The first workspace parameter scopes source-position lookup;
             # the second scopes active rows before any ranking or filters.
@@ -5656,13 +5632,13 @@ class Store:
                 "WITH source_order AS ("
                 "SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
                 "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
-                "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
+                "CASE WHEN codex_mem_source_role(raw.source)='assistant_report' "
                 "THEN 0 ELSE 1 END, codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
                 "FROM entries AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
                 "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
                 "AND raw.session_id IS derived.session_id "
                 "WHERE derived.project = ? AND derived.superseded_by IS NULL "
-                "AND COALESCE(derived.source, '') NOT GLOB 'hook:*' AND raw.source GLOB 'hook:*'"
+                "AND NOT codex_mem_is_capture(derived.source) AND codex_mem_is_capture(raw.source)"
                 "), active AS (SELECT e.rowid AS context_rowid, e.*, "
                 "m.observation_json, m.session_summary_json, "
                 "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL THEN 0 "
@@ -5917,7 +5893,7 @@ class Store:
             }
             inventory_where = "" if workspace is None else "WHERE project = ?"
             inventory = self._read(lambda: self._connection.execute(
-                "SELECT CASE WHEN source GLOB 'hook:*' THEN 'raw_capture' "
+                "SELECT CASE WHEN codex_mem_is_capture(source) THEN 'raw_capture' "
                 "WHEN kind = 'session_summary' THEN 'session_summary' "
                 "WHEN kind IN ('session', 'tool', 'checkpoint') THEN 'other_history' "
                 "ELSE 'durable_note' END AS category, "

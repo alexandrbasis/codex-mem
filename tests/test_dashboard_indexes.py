@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from codex_mem.dashboard_data import DashboardReader
+from codex_mem.host import register_source_functions
 from codex_mem.store import SCHEMA_VERSION, Store
 
 
@@ -24,6 +25,7 @@ class DashboardIndexTests(unittest.TestCase):
 
     def connection(self):
         connection = sqlite3.connect(self.path)
+        register_source_functions(connection)
         self.addCleanup(connection.close)
         return connection
 

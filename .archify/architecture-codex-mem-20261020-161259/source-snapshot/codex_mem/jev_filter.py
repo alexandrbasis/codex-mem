@@ -1,6 +1,8 @@
 """Fail-closed TypeSafe eligibility gate; source evidence is never rewritten."""
 from __future__ import annotations
 
+from .host import source_role
+
 from collections.abc import Callable, Mapping
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
@@ -174,12 +176,10 @@ def _validate(response: Any) -> tuple[dict[str, Any], dict[str, int]]:
 
 
 def _role(source: Mapping[str, Any]) -> str:
-    channel = str(source.get("source", ""))
-    for prefix, role in (("hook:Stop", "assistant_report"), ("hook:UserPromptSubmit", "user_intent"),
-                         ("hook:PostToolUse", "tool_record"), ("hook:PreCompact", "lifecycle_marker")):
-        if channel == prefix or channel.startswith(prefix + ":"):
-            return role
-    return "derived_note" if channel.startswith("processor:") or source.get("kind") == "session_summary" else "unspecified"
+    role = source_role(source.get("source"))
+    if source.get("kind") == "session_summary":
+        return "derived_note"
+    return "unspecified" if role == "unclassified" else role
 
 
 def _payloads(source: Mapping[str, Any], location: str, required: bool):

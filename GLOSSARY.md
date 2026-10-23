@@ -44,3 +44,7 @@ _Avoid_: Interactive model, host settings
 **Execution identity**:
 The observed runtime, provider, model, reasoning level, and execution identifiers for a background call.
 _Avoid_: Requested profile, configured model
+
+**Host event**:
+Completed interactive activity with its host, project, session, role, and available source identifiers.
+_Avoid_: Memory claim, model result

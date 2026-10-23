@@ -1,6 +1,8 @@
 """Read-only, metadata-only dashboard snapshots of the existing local ledgers."""
 from __future__ import annotations
 
+from .host import register_source_functions
+
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 import json
@@ -116,6 +118,8 @@ class DashboardReader:
         connection = None
         try:
             connection = sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=.2)
+
+            register_source_functions(connection)
             connection.row_factory = sqlite3.Row
             snapshot_deadline = time.monotonic() + SNAPSHOT_SECONDS
             deadline = snapshot_deadline
@@ -201,7 +205,7 @@ class DashboardReader:
                     project_clause = ' AND e.project=?' if project else ''
                     parameters = [OBSERVATION_MODEL, OBSERVATION_REASONING_EFFORT] + ([project] if project else [])
                     start_query()
-                    pending = connection.execute("SELECT e.project,COUNT(*),MIN(e.created_at) FROM entries e WHERE e.superseded_by IS NULL AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse') OR e.source LIKE 'hook:PostToolUse:%') AND NOT EXISTS (SELECT 1 FROM observation_job_sources links CROSS JOIN observation_jobs jobs ON jobs.id=links.job_id WHERE links.source_id=e.id AND jobs.project=e.project AND (jobs.status IN ('processed','skipped','running') OR (jobs.status='failed' AND NOT (COALESCE(jobs.disposition,'')='profile_retired' AND jobs.error_code='lease_expired' AND (jobs.model<>? OR jobs.reasoning_effort<>?)))))" + project_clause + ' GROUP BY e.project', parameters).fetchall()
+                    pending = connection.execute("SELECT e.project,COUNT(*),MIN(e.created_at) FROM entries e WHERE e.superseded_by IS NULL AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record')) AND NOT EXISTS (SELECT 1 FROM observation_job_sources links CROSS JOIN observation_jobs jobs ON jobs.id=links.job_id WHERE links.source_id=e.id AND jobs.project=e.project AND (jobs.status IN ('processed','skipped','running') OR (jobs.status='failed' AND NOT (COALESCE(jobs.disposition,'')='profile_retired' AND jobs.error_code='lease_expired' AND (jobs.model<>? OR jobs.reasoning_effort<>?)))))" + project_clause + ' GROUP BY e.project', parameters).fetchall()
                     finish_query()
                     result['pending_observations'] = {row[0]: row[1] for row in pending}
                     result['pending_oldest_at'] = {row[0]: row[2] for row in pending}
@@ -247,8 +251,7 @@ class DashboardReader:
             SELECT 1 FROM observation_job_sources s JOIN entries e ON e.id = s.source_id
             WHERE s.job_id = observation_jobs.id AND e.project = observation_jobs.project
                 AND e.superseded_by IS NULL
-                AND (e.source IN ('hook:UserPromptSubmit','hook:Stop','hook:PostToolUse')
-                     OR e.source LIKE 'hook:PostToolUse:%')
+                AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record'))
                 AND NOT EXISTS (
                     SELECT 1 FROM observation_job_sources s2
                     CROSS JOIN observation_jobs j2 ON j2.id = s2.job_id

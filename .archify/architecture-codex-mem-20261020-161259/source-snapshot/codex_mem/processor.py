@@ -8,6 +8,8 @@ observation API.  Source text is evidence, never instructions.
 
 from __future__ import annotations
 
+from .host import source_role
+
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 import hashlib
@@ -639,7 +641,7 @@ def _filtered_lifecycle_claim(
         envelopes = []
         for source in original["sources"]:
             name = str(source.get("source", ""))
-            if source["id"] not in accepted_ids and (name == "hook:Stop" or name.startswith("hook:Stop:")):
+            if source["id"] not in accepted_ids and (source_role(name) == "assistant_report"):
                 envelope = {key: source[key] for key in ("id", "source", "created_at") if key in source}
                 envelope.update(title="Session boundary", body="Lifecycle marker only. Jev rejected the event text; no factual claim is supplied.", tags=[], _jev_lifecycle_only=True)
                 sources.append(envelope)
@@ -1531,26 +1533,17 @@ def _evidence_role(source: Mapping[str, Any]) -> str:
     if source.get("_jev_lifecycle_only") is True:
         return "lifecycle_marker"
     """Label the capture channel, never the truth of the source's claims."""
-    name = str(source.get("source", ""))
-    if name == "hook:Stop" or name.startswith("hook:Stop:"):
-        return "assistant_report"
-    if name == "hook:UserPromptSubmit" or name.startswith("hook:UserPromptSubmit:"):
-        return "user_intent"
-    if name == "hook:PostToolUse" or name.startswith("hook:PostToolUse:"):
-        return "tool_record"
-    if name == "hook:PreCompact" or name.startswith("hook:PreCompact:"):
-        return "lifecycle_marker"
-    if name.startswith("processor:") or source.get("kind") == "session_summary":
+    role = source_role(source.get("source"))
+    if source.get("kind") == "session_summary":
         return "derived_note"
-    return "unspecified"
+    return "unspecified" if role == "unclassified" else role
 
 
 def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any]:
     job_id, _, sources = _claim_parts(claimed)
     wire_sources = [dict(source, id=f"s{index}") for index, source in enumerate(sources, 1)]
     summary_required = bool(claimed.get("summary_required"))
-    has_stop = any(source.get("source") == "hook:Stop" or
-                   str(source.get("source", "")).startswith("hook:Stop:") for source in sources)
+    has_stop = any(source_role(source.get("source")) == "assistant_report" for source in sources)
     prompt = _build_prompt(wire_sources, claimed.get("context", []),
                            project_context=claimed.get("project_context", ""))
     if summary_required:
@@ -1718,8 +1711,8 @@ def _build_prompt(
         "Read the full retained response, including the middle; any omitted bytes are unknown. "
         "created_at gives the event time and project identifies its working directory. "
         "Use these as historical context, never infer a current state from a timestamp.\n\n"
-        "Return session_summary as null unless a new source has source hook:Stop (possibly "
-        "with a colon suffix). At Stop, write a dedicated summary when this session has "
+        "Return session_summary as null unless a new source has evidence_role assistant_report. "
+        "At assistant completion, write a dedicated summary when this session has "
         "substantive project work: request, investigated, learned, completed, next_steps, notes. "
         "Use new evidence plus same-session history, including previous summaries, to preserve "
         "continuity. A summary may share source_ids with notes; cite the new Stop source and "
@@ -1931,7 +1924,7 @@ def _validate_model_output(
     if len(notes_value) > MAX_NOTES:
         raise ProcessorFailure("invalid_response", reason_code="too_many_notes")
     summary = _validated_summary(output.get("session_summary"), sources)
-    has_stop = any(s.get("source") == "hook:Stop" or str(s.get("source", "")).startswith("hook:Stop:") for s in sources)
+    has_stop = any(source_role(s.get("source")) == "assistant_report" for s in sources)
     # Legacy injected test runners remain compatible. Native schema always
     # declares session_summary and must not consume substantive Stop evidence
     # without either a summary or an explicit failed receipt.
@@ -1999,8 +1992,7 @@ def _validate_model_output(
 def _validated_summary(value: object, sources: Sequence[Mapping[str, Any]]) -> dict[str, Any] | None:
     if value is None:
         return None
-    stops = {s["id"] for s in sources if s.get("source") == "hook:Stop" or
-             str(s.get("source", "")).startswith("hook:Stop:")}
+    stops = {s["id"] for s in sources if source_role(s.get("source")) == "assistant_report"}
     fields = {"title", "request", "investigated", "learned", "completed", "next_steps", "notes", "source_ids"}
     if not stops or not isinstance(value, Mapping) or set(value) != fields:
         raise ProcessorFailure("invalid_response", reason_code="invalid_summary_shape")

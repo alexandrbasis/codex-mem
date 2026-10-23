@@ -1,0 +1,15 @@
+# Interactive host contract
+
+`codex_mem.host` accepts completed host events and returns bounded memory data. The Codex hook adapter uses this contract. A Pi adapter is a later task. This module does not start a model, choose an execution profile, or define a new database.
+
+`HostEvent` carries the host, canonical project, session, optional branch, event, source role, and available event, message, tool, and turn identifiers. The four events are `user_message`, `assistant_message`, `tool_result`, and `compaction`. Their roles are `user_intent`, `assistant_report`, `tool_record`, and `lifecycle_marker`. A mismatched role is invalid.
+
+The shared capture operation applies project selection, capture switches, redaction, private-turn gates, and injected-context exclusion. It returns a receipt for saved, omitted, or unavailable capture. A receipt reports body truncation and removed injected sections. Tool records retain the existing sanitized side index. The Codex adapter also retains its native tool selection and response handling. It requests a durable service wake after a permitted write. Project memory can discover retained pending events without that notification.
+
+Event identity controls repeated delivery. Text alone never supplies identity. When no identifier exists, each delivery creates a separate record. For legacy Codex events, the turn and event type identify the completion. Event and message identifiers take precedence when supplied. The store recognizes old Codex dedupe keys as aliases during the same write transaction. Existing successful sources therefore keep their entry IDs and processing state.
+
+Unbranched Codex session IDs retain their existing namespace. Other host and branch sessions use a host prefix, a separator excluded from Codex IDs, and a digest of the session and branch. New source strings retain the original identifiers. This preserves old session references while separating host and branch lanes. The classifier recognizes both old `hook:*` sources and new host sources. Capture, queue selection, summaries, project memory, search, semantic retrieval, and backlog readers share it.
+
+`ContextRequest` selects a host, canonical project, session, optional branch, query, and budget. `retrieve_context` returns `ContextResult`, which always labels returned text as untrusted. The result also reports unavailable context or a budget omission. A host adapter supplies its own wire format and framing. Codex retains its bounded untrusted-context wrapper and freshness notice. Private or disabled capture does not grant permission for an explicit memory write. Explicit writes retain their existing separate API and user-authorization rules.
+
+Tests use a temporary Store and the real queue, decoder, processor, and retrieval path. They replace the external Codex process with a deterministic executable. These tests establish shared contract behavior and Codex compatibility. They do not establish installed Pi compatibility, live model quality, or the state of an installed service.
