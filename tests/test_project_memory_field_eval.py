@@ -20,6 +20,11 @@ def response(payload, probability=.95, input_tokens=10):
 
 
 class FieldEvalTests(unittest.TestCase):
+    def temporary_path(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        return Path(temporary.name)
+
     def test_fixture_is_balanced_final_assembly_and_hides_labels(self):
         cases = evalmod.load_cases()
         assert len(cases) == 24
@@ -36,7 +41,7 @@ class FieldEvalTests(unittest.TestCase):
 
 
     def test_bad_final_assembly_fails_before_dispatch(self):
-        tmp_path = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        tmp_path = self.temporary_path()
         raw = json.loads(evalmod.FIXTURE.read_text())
         raw['cases'][0]['final_value'] += ' invented'
         path = tmp_path / 'cases.json'
@@ -46,7 +51,7 @@ class FieldEvalTests(unittest.TestCase):
 
 
     def test_budget_counts_failed_attempts_and_stops_unknown_usage(self):
-        tmp_path = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        tmp_path = self.temporary_path()
         def fail(payload):
             raise TimeoutError('never persist this sensitive text')
         ledger = evalmod.Ledger(tmp_path / 'ledger.json', fail)
@@ -63,7 +68,7 @@ class FieldEvalTests(unittest.TestCase):
 
 
     def test_exact_attempt_and_input_budget(self):
-        tmp_path = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        tmp_path = self.temporary_path()
         payload = evalmod.purpose_payload(evalmod.load_cases()[:1])
         ledger = evalmod.Ledger(tmp_path / 'ledger.json', response, max_requests=1)
         ledger(payload)
@@ -76,7 +81,7 @@ class FieldEvalTests(unittest.TestCase):
 
 
     def test_invalid_response_preserves_reported_usage(self):
-        tmp_path = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        tmp_path = self.temporary_path()
         def invalid(payload):
             return dict(response(payload, input_tokens=17), answers={})
         ledger = evalmod.Ledger(tmp_path / 'ledger.json', invalid)
@@ -87,7 +92,7 @@ class FieldEvalTests(unittest.TestCase):
 
 
     def test_full_run_alignment_usage_and_all_planned_denominator(self):
-        tmp_path = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        tmp_path = self.temporary_path()
         cases = evalmod.load_cases()
         # The deterministic evaluator assigns probabilities by batch position.
         # This checks alignment only; it does not reproduce the gold-label policy.
@@ -110,7 +115,7 @@ class FieldEvalTests(unittest.TestCase):
 
 
     def test_partial_run_keeps_all_planned_cases(self):
-        tmp_path = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        tmp_path = self.temporary_path()
         cases = evalmod.load_cases()
         ledger = evalmod.Ledger(tmp_path / 'ledger.json', response, max_requests=1)
         report = evalmod.run(cases, ledger)

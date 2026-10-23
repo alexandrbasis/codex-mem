@@ -12,8 +12,8 @@ from codex_mem.store import Store
 
 class NeutralOriginalScopeTransportTests(unittest.TestCase):
     def check_pair(self, scopes, completed):
-        with tempfile.TemporaryDirectory(dir='/private/tmp', prefix='scope-') as temporary:
-            project = Path(temporary) / 'p'
+        with tempfile.TemporaryDirectory(prefix='scope-') as temporary:
+            project = Path(temporary).resolve() / 'p'
             project.mkdir()
             data = Path(temporary) / 'data'
             configure(data, capture_scope='all', project_memory_mode='pilot',

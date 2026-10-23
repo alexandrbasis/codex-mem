@@ -14,15 +14,20 @@ from codex_mem.store import Store, StoreError
 from codex_mem.observation_diagnostics import safe_storage_failure_detail
 
 
+# SQLite result codes are stable; Python 3.10 does not export these names.
+SQLITE_BUSY = getattr(sqlite3, "SQLITE_BUSY", 5)
+SQLITE_CORRUPT = getattr(sqlite3, "SQLITE_CORRUPT", 11)
+
+
 def sqlite_failure(code):
     error = sqlite3.OperationalError("database is busy; private SQL and secret-access-token")
     error.sqlite_errorcode = code
     return error
 
 
-def storage_failure(*, safe=True, code=sqlite3.SQLITE_BUSY):
+def storage_failure(*, safe=True, code=SQLITE_BUSY):
     error = StoreError("private SQL and secret-access-token")
-    error.reason_code = "sqlite_busy" if code == sqlite3.SQLITE_BUSY else "sqlite_corrupt"
+    error.reason_code = "sqlite_busy" if code == SQLITE_BUSY else "sqlite_corrupt"
     error.sqlite_errorcode = code
     error.os_errno = None
     error.retry_safe = safe
@@ -60,7 +65,7 @@ class StorageResilienceTests(unittest.TestCase):
                 store._write(operation)
             self.assertEqual("sqlite_busy", getattr(raised.exception, "reason_code", None))
             self.assertTrue(getattr(raised.exception, "retry_safe", False))
-            self.assertEqual(sqlite3.SQLITE_BUSY, raised.exception.sqlite_errorcode)
+            self.assertEqual(SQLITE_BUSY, raised.exception.sqlite_errorcode)
             operation.assert_not_called()
             blocker.execute("ROLLBACK")
 
@@ -71,7 +76,7 @@ class StorageResilienceTests(unittest.TestCase):
 
             def execute(sql):
                 if sql == "COMMIT":
-                    raise sqlite_failure(sqlite3.SQLITE_BUSY)
+                    raise sqlite_failure(SQLITE_BUSY)
                 return connection.execute(sql)
 
             proxy.execute.side_effect = execute
@@ -147,7 +152,7 @@ class StorageResilienceTests(unittest.TestCase):
     def test_invalid_metadata_cannot_grant_retry_or_persist_private_text(self):
         self.assertIsNone(safe_storage_failure_detail({"stage": "storage", "code": "storage_failure", "operation": ["private"]}))
         checked = safe_storage_failure_detail({"stage": "storage", "code": "storage_failure", "operation": "claim",
-            "reason_code": "sqlite_busy", "sqlite_errorcode": sqlite3.SQLITE_CORRUPT, "retry_safe": True,
+            "reason_code": "sqlite_busy", "sqlite_errorcode": SQLITE_CORRUPT, "retry_safe": True,
             "os_errno": "secret-access-token", "private": "secret-access-token"})
         self.assertFalse(checked["retry_safe"])
         self.assertNotIn("secret-access-token", json.dumps(checked))
@@ -156,7 +161,7 @@ class StorageResilienceTests(unittest.TestCase):
         enqueue(self.project, self.data_dir, clock=self.clock)
         receipt = {"status": "failed", "code": "storage_failure", "failure_detail": {
             "stage": "storage", "code": "storage_failure", "operation": "claim", "reason_code": "sqlite_busy",
-            "sqlite_errorcode": sqlite3.SQLITE_BUSY, "os_errno": None, "retry_safe": True}}
+            "sqlite_errorcode": SQLITE_BUSY, "os_errno": None, "retry_safe": True}}
         for attempt in range(3):
             run_service(self.data_dir, processor=lambda *a, **k: receipt, processor_workers=2,
                         clock=self.clock, sleeper=self.sleep, max_cycles=1)
@@ -307,7 +312,7 @@ class StorageResilienceTests(unittest.TestCase):
 
     def test_unknown_corrupt_and_postclaim_errors_remain_blocked(self):
         for error, job_id in ((StoreError("private SQL"), None),
-                              (storage_failure(code=sqlite3.SQLITE_CORRUPT), None),
+                              (storage_failure(code=SQLITE_CORRUPT), None),
                               (storage_failure(safe=False), None),
                               (storage_failure(), "uncertain-job")):
             with self.subTest(error=type(error), job_id=job_id):
