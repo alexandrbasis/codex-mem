@@ -1,0 +1,61 @@
+{
+  "failure": null,
+  "identity": {
+    "execution_id": "01a16ae8-1388-741a-9d60-80a73c526a9a",
+    "model": "gpt-6-luna",
+    "provider": "openai-codex",
+    "reasoning_effort": "low",
+    "runtime": "pi",
+    "turn_id": "generation-1"
+  },
+  "metrics": {
+    "duration_ms": 2768,
+    "execution_receipt": {
+      "agent_end_observed": true,
+      "assistant_stop_reason": "stop",
+      "extensions_policy": "cli_disabled",
+      "generation": 1,
+      "identity_verified": true,
+      "protocol": "rpc-jsonl-1.4.0",
+      "runtime": "pi",
+      "session_id": "01a16ae8-1388-741a-9d60-80a73c526a9a",
+      "settled": true,
+      "state_checked": true,
+      "system_message_verified": true,
+      "tool_calls_observed": 0,
+      "tools_policy": "cli_disabled",
+      "version": "1.4.0"
+    },
+    "usage": {
+      "source": "pi_assistant_usage",
+      "status": "reported",
+      "tokens": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 4091,
+        "output_tokens": 168,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 4259
+      },
+      "updates": 2
+    }
+  },
+  "output": {
+    "result": {
+      "disposition": "processed",
+      "notes": [],
+      "session_summary": {
+        "completed": "",
+        "investigated": "",
+        "learned": "For ORC-42, the user required semicolon-delimited CSV invoice exports because the local accounting importer treats commas as decimal separators. A dry-run preview and rollback procedure are separate requirements; production rollout is blocked pending accounting sign-off. An assistant later reported implementing the exporter and preview and believed the task was production-ready, but provided no verification evidence. The report does not establish that the rollback procedure or accounting sign-off is complete.",
+        "next_steps": "Confirm implementation and verification, and establish whether the rollback procedure and accounting sign-off are complete before treating production rollout as ready.",
+        "notes": "",
+        "request": null,
+        "source_ids": [
+          "s1"
+        ],
+        "title": "ORC-42 export requirements and unverified readiness report"
+      }
+    }
+  }
+}

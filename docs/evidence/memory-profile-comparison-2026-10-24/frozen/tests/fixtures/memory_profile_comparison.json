@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "classification": "new synthetic wording; disclosed regression themes; diagnostic comparison, not independent holdout",
+  "profiles": [
+    {
+      "runtime": "codex",
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "timeout": 60
+    },
+    {
+      "runtime": "pi",
+      "provider": "openai-codex",
+      "model": "gpt-6-luna",
+      "reasoning_effort": "low",
+      "timeout": 60
+    }
+  ],
+  "planned_invocations": 12,
+  "planned_cells": 12,
+  "max_execution_calls_per_invocation": 1,
+  "max_native_generations_per_execution": 2,
+  "manual_retries": 0,
+  "corrections": "Native adapters permit at most two generations. This comparison supplies no correction callback and disables optional Jev gates, so at most one generation is dispatched per execution.",
+  "summary_design": "Identical external source histories; summary receives its own profile-specific preceding generated observations. It is an end-to-end comparison, not identical summary prompt isolation.",
+  "rubric": {
+    "dimensions": [
+      "requirement_retention",
+      "reason_retention",
+      "current_status",
+      "role_and_evidence",
+      "project_and_scope"
+    ],
+    "ratings": [
+      "pass",
+      "partial",
+      "fail",
+      "unavailable"
+    ],
+    "rule": "Grade meaning with cited output/source IDs and exact excerpts. Substring presence or schema validity is not sufficient. Initial observation excludes later cancellation. Summary/project memory must reflect later cancellation and conflicting assistant/tool evidence. No output is unavailable and counts unpassed. Any fail/partial/unavailable makes the cell unpassed; no weighted average can hide a role/status failure.",
+    "blind": "Independent grader receives source roles and outputs but no runtime/model labels, runtime status, tokens, or implementer judgments. Runtime/structural results joined afterwards.",
+    "summary": "Only generated session_summary is the summary candidate; ordinary notes or source custody do not fill a missing summary.",
+    "project_memory": "Grade typed episodes/claims and their source associations; neutral source custody alone does not count as represented requirement.",
+    "typesafe": "Use narrow independent evidence questions from TypeSafe citation guidance. No Jev API run or production dependency is planned. Independent reasoning agent supplies semantic judgments with evidence."
+  },
+  "failure_policy": "All planned cells remain denominator. Setup/transport/schema/empty/skipped/upstream failures remain visible. No manual repeat, fixture edit, or selection after results. Repairs require separately labelled phases, retain original outcomes.",
+  "limits": [
+    "Two synthetic scenarios cannot establish general quality or equivalence.",
+    "Same model name across providers does not establish identical backend weights.",
+    "No reconsideration, consolidation, long context, native interactive quality, or production claim.",
+    "Native auth links can be refreshed by native runtimes. Credentials and native logs are not read by the helper.",
+    "ExecutionResult preserves parsed output, not original JSON whitespace. Invalid raw text is unavailable at this public boundary."
+  ],
+  "cases": [
+    {
+      "id": "orchid",
+      "initial": [
+        {
+          "role": "user",
+          "message_id": "u1",
+          "text": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+        },
+        {
+          "role": "user",
+          "message_id": "u2",
+          "text": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+        }
+      ],
+      "continuation": [
+        {
+          "role": "assistant",
+          "message_id": "a1",
+          "stop_reason": "stop",
+          "text": "I implemented the semicolon exporter and preview. I believe ORC-42 is ready for production."
+        },
+        {
+          "role": "toolResult",
+          "message_id": "t1",
+          "tool_id": "test1",
+          "tool_name": "bash",
+          "text": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+        },
+        {
+          "role": "user",
+          "message_id": "u3",
+          "text": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+        }
+      ],
+      "distractor": "In the unrelated Cedar project, exports must use tab-separated TSV and production is approved.",
+      "expected": [
+        "Retain semicolon CSV and staging/version 3 scope.",
+        "Retain decimal-comma importer as the reason.",
+        "Preview is cancelled only in later state; rollback remains required.",
+        "Production is blocked pending accounting sign-off.",
+        "Assistant readiness is a report, not verified deployment; tool proves four staging tests only.",
+        "No Cedar TSV requirement or approval transfers to Orchid."
+      ]
+    },
+    {
+      "id": "harbor",
+      "initial": [
+        {
+          "role": "user",
+          "message_id": "u1",
+          "text": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+        },
+        {
+          "role": "user",
+          "message_id": "u2",
+          "text": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+        }
+      ],
+      "continuation": [
+        {
+          "role": "assistant",
+          "message_id": "a1",
+          "stop_reason": "stop",
+          "text": "I completed the cache, button, and audit record. I think all tests pass and HBR-81 can be released."
+        },
+        {
+          "role": "toolResult",
+          "message_id": "t1",
+          "tool_id": "test1",
+          "tool_name": "bash",
+          "text": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+        },
+        {
+          "role": "user",
+          "message_id": "u3",
+          "text": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+        }
+      ],
+      "distractor": "In unrelated Larch, cache prices for one hour and omit audit records.",
+      "expected": [
+        "Retain five-minute cache and sandbox/version 2 scope.",
+        "Retain upstream rate limit as the reason.",
+        "Refresh button is cancelled only in later state; audit record remains required.",
+        "Release is blocked on the failed retry test.",
+        "Assistant completion is a report; tool establishes test failure, not a release.",
+        "No Larch one-hour cache or audit omission transfers to Harbor."
+      ]
+    }
+  ]
+}

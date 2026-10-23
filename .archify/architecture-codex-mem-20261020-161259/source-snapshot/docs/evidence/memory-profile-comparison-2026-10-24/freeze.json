@@ -1,0 +1,161 @@
+{
+  "baseline": "211a341d85ddc71722eb00e40d880dd983b3dc60",
+  "created_at": "2026-10-23T22:34:58Z",
+  "design": {
+    "cases": [
+      {
+        "continuation": [
+          {
+            "message_id": "a1",
+            "role": "assistant",
+            "stop_reason": "stop",
+            "text": "I implemented the semicolon exporter and preview. I believe ORC-42 is ready for production."
+          },
+          {
+            "message_id": "t1",
+            "role": "toolResult",
+            "text": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked.",
+            "tool_id": "test1",
+            "tool_name": "bash"
+          },
+          {
+            "message_id": "u3",
+            "role": "user",
+            "text": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+          }
+        ],
+        "distractor": "In the unrelated Cedar project, exports must use tab-separated TSV and production is approved.",
+        "expected": [
+          "Retain semicolon CSV and staging/version 3 scope.",
+          "Retain decimal-comma importer as the reason.",
+          "Preview is cancelled only in later state; rollback remains required.",
+          "Production is blocked pending accounting sign-off.",
+          "Assistant readiness is a report, not verified deployment; tool proves four staging tests only.",
+          "No Cedar TSV requirement or approval transfers to Orchid."
+        ],
+        "id": "orchid",
+        "initial": [
+          {
+            "message_id": "u1",
+            "role": "user",
+            "text": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+          },
+          {
+            "message_id": "u2",
+            "role": "user",
+            "text": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+          }
+        ]
+      },
+      {
+        "continuation": [
+          {
+            "message_id": "a1",
+            "role": "assistant",
+            "stop_reason": "stop",
+            "text": "I completed the cache, button, and audit record. I think all tests pass and HBR-81 can be released."
+          },
+          {
+            "message_id": "t1",
+            "role": "toolResult",
+            "text": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run.",
+            "tool_id": "test1",
+            "tool_name": "bash"
+          },
+          {
+            "message_id": "u3",
+            "role": "user",
+            "text": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+          }
+        ],
+        "distractor": "In unrelated Larch, cache prices for one hour and omit audit records.",
+        "expected": [
+          "Retain five-minute cache and sandbox/version 2 scope.",
+          "Retain upstream rate limit as the reason.",
+          "Refresh button is cancelled only in later state; audit record remains required.",
+          "Release is blocked on the failed retry test.",
+          "Assistant completion is a report; tool establishes test failure, not a release.",
+          "No Larch one-hour cache or audit omission transfers to Harbor."
+        ],
+        "id": "harbor",
+        "initial": [
+          {
+            "message_id": "u1",
+            "role": "user",
+            "text": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+          },
+          {
+            "message_id": "u2",
+            "role": "user",
+            "text": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+          }
+        ]
+      }
+    ],
+    "classification": "new synthetic wording; disclosed regression themes; diagnostic comparison, not independent holdout",
+    "corrections": "Native adapters permit at most two generations. This comparison supplies no correction callback and disables optional Jev gates, so at most one generation is dispatched per execution.",
+    "failure_policy": "All planned cells remain denominator. Setup/transport/schema/empty/skipped/upstream failures remain visible. No manual repeat, fixture edit, or selection after results. Repairs require separately labelled phases, retain original outcomes.",
+    "limits": [
+      "Two synthetic scenarios cannot establish general quality or equivalence.",
+      "Same model name across providers does not establish identical backend weights.",
+      "No reconsideration, consolidation, long context, native interactive quality, or production claim.",
+      "Native auth links can be refreshed by native runtimes. Credentials and native logs are not read by the helper.",
+      "ExecutionResult preserves parsed output, not original JSON whitespace. Invalid raw text is unavailable at this public boundary."
+    ],
+    "manual_retries": 0,
+    "max_execution_calls_per_invocation": 1,
+    "max_native_generations_per_execution": 2,
+    "planned_cells": 12,
+    "planned_invocations": 12,
+    "profiles": [
+      {
+        "model": "gpt-6-luna",
+        "provider": "openai",
+        "reasoning_effort": "low",
+        "runtime": "codex",
+        "timeout": 60
+      },
+      {
+        "model": "gpt-6-luna",
+        "provider": "openai-codex",
+        "reasoning_effort": "low",
+        "runtime": "pi",
+        "timeout": 60
+      }
+    ],
+    "rubric": {
+      "blind": "Independent grader receives source roles and outputs but no runtime/model labels, runtime status, tokens, or implementer judgments. Runtime/structural results joined afterwards.",
+      "dimensions": [
+        "requirement_retention",
+        "reason_retention",
+        "current_status",
+        "role_and_evidence",
+        "project_and_scope"
+      ],
+      "project_memory": "Grade typed episodes/claims and their source associations; neutral source custody alone does not count as represented requirement.",
+      "ratings": [
+        "pass",
+        "partial",
+        "fail",
+        "unavailable"
+      ],
+      "rule": "Grade meaning with cited output/source IDs and exact excerpts. Substring presence or schema validity is not sufficient. Initial observation excludes later cancellation. Summary/project memory must reflect later cancellation and conflicting assistant/tool evidence. No output is unavailable and counts unpassed. Any fail/partial/unavailable makes the cell unpassed; no weighted average can hide a role/status failure.",
+      "summary": "Only generated session_summary is the summary candidate; ordinary notes or source custody do not fill a missing summary.",
+      "typesafe": "Use narrow independent evidence questions from TypeSafe citation guidance. No Jev API run or production dependency is planned. Independent reasoning agent supplies semantic judgments with evidence."
+    },
+    "schema_version": 1,
+    "summary_design": "Identical external source histories; summary receives its own profile-specific preceding generated observations. It is an end-to-end comparison, not identical summary prompt isolation."
+  },
+  "files": {
+    "codex_mem/episode_processor.py": "06ff8c86c5bef668ef120de14927413781cc448f26f2826a73b1be23d3353310",
+    "codex_mem/execution.py": "11bc21b25e7cc901a8696e14324dfa6b3a4f4042f99b13f03e520e90a1c91c7a",
+    "codex_mem/pi_runtime.py": "379293ab9d26ee1ab9af0ae5883ee5889cf2e697bd93a922ce6c9f0c70f03024",
+    "codex_mem/processor.py": "e4b98ca827530262ab43bc93a74e5afbfcd6531aed1b99652a8090949ae05dc5",
+    "scripts/memory_profile_comparison.py": "4a3ae1cb049e50506c62ea7c7ae9469888952eabc277036c6222badded590652",
+    "tests/fixtures/memory_profile_comparison.json": "a7fa6b0234daaaa11d9afec768581a33bd899054553a44c26e5a6c9b8a0eca1d"
+  },
+  "versions": {
+    "codex": "codex-cli 0.163.0",
+    "pi": "1.4.0"
+  }
+}

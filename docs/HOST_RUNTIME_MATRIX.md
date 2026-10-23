@@ -81,7 +81,7 @@ python3 scripts/live_host_runtime_smoke.py --live --timeout 60 --output /tmp/hos
 
 Use the recorded provider/model profile only where the native runtime supports it. Missing authorization, model support, or network access produces an unpassed check. The final helper includes additional diagnostic fields added after the recorded live batch. See the evidence notes for the executed helper reconstruction and this audit limit. No extra live success is inferred from those later fields. On failure, the current helper keeps completed progress, the failed stage, and a fixed cause code. It can include numeric exit, timeout, file-error, or JSON-position details. It excludes exception messages, commands, output, and paths.
 
-Live execution establishes compatibility for the recorded environment and profile. Memory quality requires the separate common-task comparison in issue #14. Keep omissions, failures, latency, and usage in that comparison. Schema validity alone does not establish equivalent quality.
+Live execution establishes compatibility for the recorded environment and profile. The separate [memory quality comparison](MEMORY_PROFILE_COMPARISON.md) records issue #14's exact profiles, failures, semantic judgments, and evidence limits. It does not establish equivalent quality. Schema validity alone does not establish memory quality.
 
 ## Limits and recovery
 

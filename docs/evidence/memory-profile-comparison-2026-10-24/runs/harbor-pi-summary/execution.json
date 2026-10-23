@@ -1,0 +1,61 @@
+{
+  "failure": null,
+  "identity": {
+    "execution_id": "01a16ae8-7e68-726a-9ac7-6e9bf87aff8f",
+    "model": "gpt-6-luna",
+    "provider": "openai-codex",
+    "reasoning_effort": "low",
+    "runtime": "pi",
+    "turn_id": "generation-1"
+  },
+  "metrics": {
+    "duration_ms": 3791,
+    "execution_receipt": {
+      "agent_end_observed": true,
+      "assistant_stop_reason": "stop",
+      "extensions_policy": "cli_disabled",
+      "generation": 1,
+      "identity_verified": true,
+      "protocol": "rpc-jsonl-1.4.0",
+      "runtime": "pi",
+      "session_id": "01a16ae8-7e68-726a-9ac7-6e9bf87aff8f",
+      "settled": true,
+      "state_checked": true,
+      "system_message_verified": true,
+      "tool_calls_observed": 0,
+      "tools_policy": "cli_disabled",
+      "version": "1.4.0"
+    },
+    "usage": {
+      "source": "pi_assistant_usage",
+      "status": "reported",
+      "tokens": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 3951,
+        "output_tokens": 211,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 4162
+      },
+      "updates": 2
+    }
+  },
+  "output": {
+    "result": {
+      "disposition": "processed",
+      "notes": [],
+      "session_summary": {
+        "completed": "Implementation was reported as complete; it was not independently verified by the evidence.",
+        "investigated": "",
+        "learned": "The assistant reported completing the cache, button, and audit record, but said only that it thought all tests passed. No test results verify that claim, and release readiness remains unconfirmed against the stated retry-test gate.",
+        "next_steps": "Confirm the retry test passes before treating HBR-81 as releasable.",
+        "notes": "Earlier session findings recorded the user's requirements and release gate; this summary preserves them without treating the assistant's implementation or test claims as verified.",
+        "request": "For HBR-81, the user required pricing to be cached for exactly five minutes, an audit record for each refresh, and initially requested a manual refresh button. Release was blocked until the retry test passed; the cache and audit requirements remain even if the button is removed.",
+        "source_ids": [
+          "s1"
+        ],
+        "title": "HBR-81 requirements and unverified completion report"
+      }
+    }
+  }
+}
