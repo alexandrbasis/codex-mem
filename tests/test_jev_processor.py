@@ -42,10 +42,17 @@ class JevProcessorTests(unittest.TestCase):
         with Store(self.home) as store:
             return store.observation_job_status(self.project, result['job_id'])
 
-    def usage_count(self, job_id):
+    def assert_no_generator_usage(self, job_id):
         with Store(self.home) as store:
-            exists = store._connection.execute("SELECT 1 FROM sqlite_master WHERE name='observer_usage_attempts'").fetchone()
-            return store._connection.execute('SELECT COUNT(*) FROM observer_usage_attempts WHERE job_id=?', (job_id,)).fetchone()[0] if exists else 0
+            attempts = store.observation_attempts(self.project, job_id)
+        self.assertEqual(1, len(attempts))
+        attempt = attempts[0]
+        self.assertEqual('gpt-6-luna', attempt['requested_model'])
+        self.assertIsNone(attempt['actual_model'])
+        self.assertIsNone(attempt['worker_thread_id'])
+        self.assertEqual('unavailable', attempt['usage_status'])
+        for field in ('input_tokens', 'output_tokens', 'total_tokens'):
+            self.assertIsNone(attempt[field])
 
     def test_mixed_sources_and_raw_history_are_screened_before_generator(self):
         history = self.remember('REJECT_HISTORY_SENTINEL')
@@ -82,7 +89,7 @@ class JevProcessorTests(unittest.TestCase):
                                  jev_evaluator=lambda _: answer(0.01, 'routine'))
         self.assertEqual('skipped', result['status'], result)
         runner.assert_not_called()
-        self.assertEqual(0, self.usage_count(result['job_id']))
+        self.assert_no_generator_usage(result['job_id'])
         self.assertFalse(self.status(result)['jev_filter_attempts'][0]['generator_started'])
         with Store(self.home) as store:
             original = store.get(self.project, [raw['id']])[0]
@@ -122,7 +129,7 @@ class JevProcessorTests(unittest.TestCase):
                 result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
                 self.assertEqual('failed', result['status'], result)
                 runner.assert_not_called()
-                self.assertEqual(0, self.usage_count(result['job_id']))
+                self.assert_no_generator_usage(result['job_id'])
                 job = self.status(result)
                 audit = job['jev_filter_attempts'][0]
                 self.assertEqual('failure', audit['status'])
@@ -215,7 +222,7 @@ class JevProcessorTests(unittest.TestCase):
         runner.assert_not_called()
         self.assertTrue(derived_ids.issubset(set(evaluated)))
         self.assertIn(unrelated['id'], evaluated)
-        self.assertEqual(0, self.usage_count(result['job_id']))
+        self.assert_no_generator_usage(result['job_id'])
         audit = self.status(result)['jev_filter_attempts'][0]
         self.assertFalse(audit['generator_started'])
         decisions = {item['source_id']: item['route'] for item in audit['decisions']}
@@ -274,7 +281,7 @@ class JevProcessorTests(unittest.TestCase):
         self.assertEqual([ack['id']], seen)
         self.assertNotIn(history['id'], seen)
         runner.assert_not_called()
-        self.assertEqual(0, self.usage_count(result['job_id']))
+        self.assert_no_generator_usage(result['job_id'])
         audit = self.status(result)['jev_filter_attempts'][0]
         self.assertTrue(audit['history_skipped'])
         self.assertEqual(1, audit['counts']['requests'])

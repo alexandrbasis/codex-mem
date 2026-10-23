@@ -1,0 +1,192 @@
+/** Pi 1.4.0 lifecycle adapter. Shared policy and memory algorithms live in Python. */
+import { readFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+import { spawn } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
+import { fileURLToPath } from "node:url";
+import { VERSION, type ExtensionAPI, type ExtensionContext, type SessionMessageEntry } from "@earendil-works/pi-coding-agent";
+
+const CUSTOM_TYPE = "codex-mem-context";
+const BRANCH_TYPE = "codex-mem-branch";
+const MAX_BYTES = 256 * 1024;
+const MAX_EVENTS = 256;
+const TIMEOUT_MS = 2000;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
+
+// Installer metadata contains only local paths. Source checkouts keep the existing defaults.
+function runtime(): { python: string; data_dir?: string } | null {
+  try {
+    const value = JSON.parse(readFileSync(new URL("./runtime.json", import.meta.url), "utf8"));
+    if (typeof value.python === "string" && typeof value.data_dir === "string") return value;
+    return null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") return null;
+  }
+  return { python: process.env.CODEX_MEM_PYTHON || "python3" };
+}
+
+type Receipt = { status?: string; reason?: string; text?: string; events?: Receipt[]; omitted_chars?: number; user_observed?: boolean };
+
+/** No text or credentials are placed in argv or diagnostics. Each call is finite. */
+function request(payload: object): Promise<Receipt> {
+  const installed = runtime();
+  if (!installed) return Promise.resolve({ reason: "invalid_installation_metadata" });
+  const raw = JSON.stringify({ version: 1, pi_version: VERSION, ...payload });
+  if (Buffer.byteLength(raw) > MAX_BYTES) return Promise.resolve({ reason: "request_overflow" });
+  return new Promise((resolve) => {
+    let output = "";
+    let outputBytes = 0;
+    const decoder = new StringDecoder("utf8");
+    let finished = false;
+    const child = spawn(installed.python, ["-m", "codex_mem.pi_host"],
+      { cwd: ROOT, env: { ...process.env, ...(installed.data_dir ? { CODEX_MEM_HOME: installed.data_dir } : {}) }, stdio: ["pipe", "pipe", "ignore"] });
+    const finish = (value: Receipt) => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      child.kill("SIGKILL");
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish({ reason: "service_timeout" }), TIMEOUT_MS);
+    child.on("error", () => finish({ reason: "service_unavailable" }));
+    child.stdin.on("error", () => finish({ reason: "service_unavailable" }));
+    child.stdout.on("data", (data: Buffer) => {
+      outputBytes += data.length;
+      if (outputBytes > 64 * 1024) return finish({ reason: "response_overflow" });
+      output += decoder.write(data);
+    });
+    child.on("close", (code) => {
+      if (code !== 0) return finish({ reason: "service_unavailable" });
+      try {
+        const value: unknown = JSON.parse(output + decoder.end());
+        finish(value && typeof value === "object" ? value as Receipt : { reason: "invalid_response" });
+      } catch { finish({ reason: "invalid_response" }); }
+    });
+    child.stdin.end(raw);
+  });
+}
+
+function record(entry: SessionMessageEntry) {
+  const message = entry.message;
+  if (message.role !== "user" && message.role !== "assistant" && message.role !== "toolResult") return null;
+  // Do not copy images, thinking, provider signatures, tool arguments or usage.
+  const text = typeof message.content === "string" ? message.content : message.content
+    .filter((block) => block.type === "text").map((block) => block.text).join("\n");
+  return { message_id: entry.id, role: message.role, text,
+    ...(message.role === "assistant" ? { stop_reason: message.stopReason } : {}),
+    ...(message.role === "toolResult" ? { tool_id: message.toolCallId, tool_name: message.toolName } : {}) };
+}
+
+export default function (pi: ExtensionAPI) {
+  // The installed owning API was checked at this exact version. Unknown APIs fail open.
+  if (VERSION !== "1.4.0") {
+    pi.on("session_start", async (_event, ctx) => { ctx.ui.setStatus("codex-mem", "Memory unavailable: unsupported Pi version; requires Pi 1.4.0"); });
+    return;
+  }
+  let session = "";
+  let cwd = "";
+  let branch: string | undefined;
+  let requiresUser = true;
+  let anchor: string | null = null;
+  let observed = new Set<object>();
+  let overflow = false;
+  let activeContext: string | undefined;
+
+  const identity = (ctx: ExtensionContext) => ({ project: ctx.cwd, session_id: ctx.sessionManager.getSessionId(), branch });
+  const matches = (ctx: ExtensionContext) => branch !== undefined && ctx.cwd === cwd && ctx.sessionManager.getSessionId() === session;
+  const status = (ctx: ExtensionContext, reason: string) => ctx.ui.setStatus("codex-mem", `Memory: ${reason}`);
+  const context = async (ctx: ExtensionContext, phase: "start" | "prompt", query = "") => {
+    activeContext = undefined;
+    const response = await request({ ...identity(ctx), operation: "context", phase, query });
+    if (response.status !== "ok" || response.reason) status(ctx, response.reason || "service_unavailable");
+    if (typeof response.text !== "string" || response.text.length > 6000 || !response.text) return;
+    activeContext = response.text;
+    return { customType: CUSTOM_TYPE, content: response.text, display: false };
+  };
+
+  const checkpoint = () => pi.appendEntry(BRANCH_TYPE, { version: 1, sessionId: session, branch });
+  const restoreBranch = (ctx: ExtensionContext): string | undefined => {
+    let cursor = ctx.sessionManager.getLeafId();
+    let traversed = 0;
+    while (cursor && traversed++ < 1024) {
+      const entry = ctx.sessionManager.getEntry(cursor);
+      if (!entry) return undefined;
+      if (entry.type === "custom" && entry.customType === BRANCH_TYPE) {
+        const value = entry.data as { version?: unknown; sessionId?: unknown; branch?: unknown } | undefined;
+        // A copied marker belongs to its original session. A fork starts a new
+        // scope; copied messages themselves never become newly observed events.
+        if (value?.version === 1 && value.sessionId !== session) return "root";
+        if (value?.version === 1 && value.sessionId === session &&
+            typeof value.branch === "string" && /^(root|[0-9a-f-]{36})$/.test(value.branch)) return value.branch;
+        return undefined;
+      }
+      cursor = entry.parentId;
+    }
+    return cursor === null ? "root" : undefined;
+  };
+  const activate = async (ctx: ExtensionContext, newBranch: boolean) => {
+    session = ctx.sessionManager.getSessionId();
+    cwd = ctx.cwd;
+    branch = newBranch ? randomUUID() : restoreBranch(ctx);
+    requiresUser = true;
+    observed.clear();
+    overflow = false;
+    activeContext = undefined;
+    if (!branch) { status(ctx, "branch identity unavailable"); return; }
+    checkpoint();
+    anchor = ctx.sessionManager.getLeafId();
+    const message = await context(ctx, "start");
+    if (message) pi.sendMessage(message, { triggerTurn: false });
+  };
+  pi.on("session_start", async (_event, ctx) => activate(ctx, false));
+  // Only a completed navigation creates a new activation. Cancelled navigation
+  // and compaction keep the old identity and pending observed-message set.
+  pi.on("session_tree", async (_event, ctx) => activate(ctx, true));
+  pi.on("message_end", async (event, ctx) => {
+    if (!matches(ctx) || overflow) return;
+    const role = event.message.role;
+    if (role !== "user" && role !== "assistant" && role !== "toolResult") return;
+    observed.add(event.message);
+    if (observed.size > MAX_EVENTS) { observed.clear(); overflow = true; }
+  });
+  pi.on("agent_settled", async (_event, ctx) => {
+    if (!matches(ctx)) return;
+    const entries: SessionMessageEntry[] = [];
+    let cursor = ctx.sessionManager.getLeafId();
+    let traversed = 0;
+    while (cursor && cursor !== anchor && traversed++ < 1024) {
+      const entry = ctx.sessionManager.getEntry(cursor);
+      if (!entry) break;
+      if (entry.type === "message" && observed.has(entry.message)) entries.push(entry);
+      cursor = entry.parentId;
+    }
+    const complete = !overflow && cursor === anchor && entries.length === observed.size;
+    const events = entries.reverse().map(record).filter((entry) => entry !== null);
+    observed.clear();
+    checkpoint();
+    anchor = ctx.sessionManager.getLeafId();
+    overflow = false;
+    if (!complete) { status(ctx, "capture omitted: event limit or native identity unavailable"); return; }
+    if (!events.length) return;
+    const response = await request({ ...identity(ctx), operation: "capture", settled: true, requires_user: requiresUser, events });
+    requiresUser = response.user_observed !== true;
+    if (response.status !== "ok") status(ctx, response.reason || "service_unavailable");
+    else if (response.events?.some((event) => event.status !== "captured" || event.omitted_chars || event.reason))
+      status(ctx, "some source content omitted by policy or size limit");
+    else status(ctx, "captured");
+  });
+  pi.on("before_agent_start", async (event, ctx) => {
+    if (!matches(ctx) || event.messageType !== "user") return;
+    const message = await context(ctx, "prompt", event.prompt);
+    if (message) return { message };
+  });
+  pi.on("context", async (event) => {
+    // Replace old automatic context on each provider request. Custom memory is
+    // never part of the observed completed-source set.
+    const last = event.messages.findLastIndex((message) => message.role === "custom" && message.customType === CUSTOM_TYPE);
+    return { messages: event.messages.filter((message, index) =>
+      message.role !== "custom" || message.customType !== CUSTOM_TYPE ||
+      (index === last && activeContext !== undefined && message.content === activeContext)) };
+  });
+  pi.on("session_shutdown", async () => { observed.clear(); activeContext = undefined; branch = undefined; session = ""; cwd = ""; });
+}

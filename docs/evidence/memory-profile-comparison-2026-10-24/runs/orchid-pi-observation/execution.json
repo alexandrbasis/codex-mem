@@ -1,0 +1,108 @@
+{
+  "failure": null,
+  "identity": {
+    "execution_id": "01a16ae7-ff3d-7532-a0c8-5435f4dff914",
+    "model": "gpt-6-luna",
+    "provider": "openai-codex",
+    "reasoning_effort": "low",
+    "runtime": "pi",
+    "turn_id": "generation-1"
+  },
+  "metrics": {
+    "duration_ms": 5244,
+    "execution_receipt": {
+      "agent_end_observed": true,
+      "assistant_stop_reason": "stop",
+      "extensions_policy": "cli_disabled",
+      "generation": 1,
+      "identity_verified": true,
+      "protocol": "rpc-jsonl-1.4.0",
+      "runtime": "pi",
+      "session_id": "01a16ae7-ff3d-7532-a0c8-5435f4dff914",
+      "settled": true,
+      "state_checked": true,
+      "system_message_verified": true,
+      "tool_calls_observed": 0,
+      "tools_policy": "cli_disabled",
+      "version": "1.4.0"
+    },
+    "usage": {
+      "source": "pi_assistant_usage",
+      "status": "reported",
+      "tokens": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 3657,
+        "output_tokens": 439,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 4096
+      },
+      "updates": 2
+    }
+  },
+  "output": {
+    "result": {
+      "disposition": "processed",
+      "notes": [
+        {
+          "body": "The user confirmed that invoice exports in Orchid staging version 3 must remain CSV with a semicolon delimiter because the local accounting importer treats commas as decimal separators, which corrupts amounts. This is a requirement, not evidence of implementation.",
+          "observation": {
+            "concepts": [
+              "format-constraint",
+              "problem-solution"
+            ],
+            "facts": [
+              "The requirement applies to invoice exports in Orchid staging version 3.",
+              "The user stated that the local importer treats commas as decimal separators and comma-delimited exports corrupt amounts."
+            ],
+            "files_modified": [],
+            "files_read": [],
+            "narrative": "For task ORC-42, the user specified semicolon-delimited CSV exports to avoid amount corruption in the local accounting importer. No implementation or verification evidence was provided.",
+            "subtitle": "User-confirmed export format requirement; implementation not established",
+            "type": "decision"
+          },
+          "source_ids": [
+            "s1"
+          ],
+          "tags": [
+            "ORC-42",
+            "invoice-export",
+            "CSV"
+          ],
+          "title": "ORC-42: CSV exports must use semicolon delimiters"
+        },
+        {
+          "body": "The user stated that ORC-42 requires a dry-run preview and a rollback procedure, and that production rollout is blocked until the accounting team signs off. These are separate obligations; completion of any is not evidenced.",
+          "observation": {
+            "concepts": [
+              "rollout-gate",
+              "operational-safety",
+              "requirements"
+            ],
+            "facts": [
+              "A dry-run preview is required.",
+              "A rollback procedure is required.",
+              "Production rollout is blocked until the accounting team signs off.",
+              "The user explicitly said to keep these obligations separate."
+            ],
+            "files_modified": [],
+            "files_read": [],
+            "narrative": "The user identified three distinct rollout obligations for ORC-42: provide a dry-run preview, provide a rollback procedure, and obtain accounting-team sign-off before production rollout. Production rollout remains conditional on sign-off per the stated requirement; no completion evidence was supplied.",
+            "subtitle": "User-stated rollout prerequisites; completion not established",
+            "type": "change"
+          },
+          "source_ids": [
+            "s2"
+          ],
+          "tags": [
+            "ORC-42",
+            "rollout",
+            "accounting"
+          ],
+          "title": "ORC-42 rollout requires preview, rollback, and accounting sign-off"
+        }
+      ],
+      "session_summary": null
+    }
+  }
+}

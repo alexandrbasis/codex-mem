@@ -1,0 +1,244 @@
+{
+  "baseline": "96a785b507d77802025fcde9f9f6fc6131a2c65b",
+  "project": "/private/tmp/observation-profile-migration-project",
+  "tables": {
+    "entries": {
+      "schema": "CREATE TABLE entries (\n                id TEXT PRIMARY KEY NOT NULL,\n                project TEXT NOT NULL,\n                title TEXT NOT NULL,\n                body TEXT NOT NULL,\n                kind TEXT NOT NULL,\n                session_id TEXT,\n                turn_id TEXT,\n                source TEXT,\n                tags_json TEXT NOT NULL,\n                dedupe_hash TEXT,\n                created_at TEXT NOT NULL,\n                updated_at TEXT NOT NULL,\n                superseded_by TEXT REFERENCES entries(id) ON DELETE SET NULL,\n                superseded_at TEXT\n            )",
+      "rows": [
+        {
+          "id": "feb17a0a1ec64db1b409289de7894e8a",
+          "project": "/private/tmp/observation-profile-migration-project",
+          "title": "failed",
+          "body": "Keep local import.",
+          "kind": "note",
+          "session_id": "failed",
+          "turn_id": null,
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-23T12:30:54.489268Z",
+          "updated_at": "2026-10-23T12:30:54.489268Z",
+          "superseded_by": null,
+          "superseded_at": null
+        },
+        {
+          "id": "983e89d888484a2e9355b65e53ff7494",
+          "project": "/private/tmp/observation-profile-migration-project",
+          "title": "skipped",
+          "body": "Keep local import.",
+          "kind": "note",
+          "session_id": "skipped",
+          "turn_id": null,
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-23T12:30:54.525360Z",
+          "updated_at": "2026-10-23T12:30:54.525360Z",
+          "superseded_by": null,
+          "superseded_at": null
+        },
+        {
+          "id": "22358d019e994e958af1cf721472ec40",
+          "project": "/private/tmp/observation-profile-migration-project",
+          "title": "running",
+          "body": "Keep local import.",
+          "kind": "note",
+          "session_id": "running",
+          "turn_id": null,
+          "source": "hook:UserPromptSubmit",
+          "tags_json": "[]",
+          "dedupe_hash": null,
+          "created_at": "2026-10-23T12:30:54.527711Z",
+          "updated_at": "2026-10-23T12:30:54.527711Z",
+          "superseded_by": null,
+          "superseded_at": null
+        }
+      ]
+    },
+    "entry_sources": {
+      "schema": "CREATE TABLE entry_sources (\n                summary_id TEXT NOT NULL REFERENCES entries(id) ON DELETE CASCADE,\n                source_id TEXT NOT NULL REFERENCES entries(id) ON DELETE CASCADE,\n                PRIMARY KEY (summary_id, source_id)\n            )",
+      "rows": []
+    },
+    "observation_jobs": {
+      "schema": "CREATE TABLE observation_jobs (\n                id TEXT PRIMARY KEY NOT NULL,\n                project TEXT NOT NULL,\n                processor_id TEXT NOT NULL,\n                model TEXT NOT NULL,\n                reasoning_effort TEXT NOT NULL,\n                session_id TEXT,\n                input_fingerprint TEXT NOT NULL,\n                input_limit INTEGER NOT NULL,\n                status TEXT NOT NULL,\n                disposition TEXT,\n                lease_token TEXT,\n                lease_expires_at TEXT,\n                attempt_count INTEGER NOT NULL,\n                worker_thread_id TEXT,\n                worker_turn_id TEXT,\n                error_code TEXT,\n                output_ids_json TEXT NOT NULL,\n                created_at TEXT NOT NULL,\n                updated_at TEXT NOT NULL,\n                completed_at TEXT,\n                UNIQUE(project, processor_id, input_fingerprint)\n            )",
+      "rows": [
+        {
+          "id": "1df007112f9141349fe4d8e68e5611b3",
+          "project": "/private/tmp/observation-profile-migration-project",
+          "processor_id": "codex-mem-native-observation-v1",
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "medium",
+          "session_id": "failed",
+          "input_fingerprint": "b7f8c65cb9122b6e109afc608062b7d409100c5f00cf169fd5b96fec240a1b88",
+          "input_limit": 24000,
+          "status": "failed",
+          "disposition": null,
+          "lease_token": null,
+          "lease_expires_at": null,
+          "attempt_count": 1,
+          "worker_thread_id": null,
+          "worker_turn_id": null,
+          "error_code": "runner_failure",
+          "output_ids_json": "[]",
+          "created_at": "2026-10-23T12:30:54.489783Z",
+          "updated_at": "2026-10-23T12:30:54.524590Z",
+          "completed_at": null
+        },
+        {
+          "id": "4364de9022454230be77b9d132c808f4",
+          "project": "/private/tmp/observation-profile-migration-project",
+          "processor_id": "codex-mem-native-observation-v1",
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "medium",
+          "session_id": "skipped",
+          "input_fingerprint": "f086e818d52c6bf8e5a4168fa333c8090ba4c4646d6293db4afee842a09367a2",
+          "input_limit": 24000,
+          "status": "skipped",
+          "disposition": "skipped",
+          "lease_token": null,
+          "lease_expires_at": null,
+          "attempt_count": 1,
+          "worker_thread_id": null,
+          "worker_turn_id": null,
+          "error_code": null,
+          "output_ids_json": "[]",
+          "created_at": "2026-10-23T12:30:54.525731Z",
+          "updated_at": "2026-10-23T12:30:54.527347Z",
+          "completed_at": "2026-10-23T12:30:54.527347Z"
+        },
+        {
+          "id": "b51aff25bef1473d82487c82bc79ea33",
+          "project": "/private/tmp/observation-profile-migration-project",
+          "processor_id": "codex-mem-native-observation-v1",
+          "model": "gpt-5.6-luna",
+          "reasoning_effort": "medium",
+          "session_id": "running",
+          "input_fingerprint": "bcb02abcc04394aca2460fc5de3a59085f2d515927030dc9c3abfa10bd465940",
+          "input_limit": 24000,
+          "status": "running",
+          "disposition": null,
+          "lease_token": "1dfd1de79a514aa9899c2526ed7fee91",
+          "lease_expires_at": "2000-01-01T00:00:00Z",
+          "attempt_count": 1,
+          "worker_thread_id": null,
+          "worker_turn_id": null,
+          "error_code": null,
+          "output_ids_json": "[]",
+          "created_at": "2026-10-23T12:30:54.528103Z",
+          "updated_at": "2026-10-23T12:30:54.528103Z",
+          "completed_at": null
+        }
+      ]
+    },
+    "observation_job_sources": {
+      "schema": "CREATE TABLE observation_job_sources (\n                job_id TEXT NOT NULL REFERENCES observation_jobs(id) ON DELETE CASCADE,\n                source_id TEXT NOT NULL REFERENCES entries(id) ON DELETE CASCADE,\n                PRIMARY KEY (job_id, source_id)\n            )",
+      "rows": [
+        {
+          "job_id": "1df007112f9141349fe4d8e68e5611b3",
+          "source_id": "feb17a0a1ec64db1b409289de7894e8a"
+        },
+        {
+          "job_id": "4364de9022454230be77b9d132c808f4",
+          "source_id": "983e89d888484a2e9355b65e53ff7494"
+        },
+        {
+          "job_id": "b51aff25bef1473d82487c82bc79ea33",
+          "source_id": "22358d019e994e958af1cf721472ec40"
+        }
+      ]
+    },
+    "observer_usage_attempts": {
+      "schema": "CREATE TABLE observer_usage_attempts (\n            job_id TEXT NOT NULL REFERENCES observation_jobs(id) ON DELETE CASCADE,\n            attempt_count INTEGER NOT NULL CHECK(attempt_count > 0),\n            outcome TEXT NOT NULL CHECK(outcome IN\n                ('running', 'processed', 'skipped', 'failed', 'lease_expired')),\n            error_code TEXT,\n            worker_thread_id TEXT,\n            worker_turn_id TEXT,\n            duration_ms INTEGER CHECK(duration_ms IS NULL OR duration_ms >= 0),\n            usage_status TEXT CHECK(usage_status IS NULL OR usage_status IN\n                ('reported', 'partial', 'unavailable', 'invalid')),\n            usage_source TEXT CHECK(usage_source IS NULL OR\n                usage_source = 'app_server_thread_total'),\n            usage_updates INTEGER CHECK(usage_updates IS NULL OR usage_updates >= 0),\n            input_tokens INTEGER CHECK(input_tokens IS NULL OR input_tokens >= 0),\n            cached_input_tokens INTEGER CHECK(cached_input_tokens IS NULL OR cached_input_tokens >= 0),\n            cache_write_input_tokens INTEGER CHECK(cache_write_input_tokens IS NULL OR cache_write_input_tokens >= 0),\n            output_tokens INTEGER CHECK(output_tokens IS NULL OR output_tokens >= 0),\n            reasoning_output_tokens INTEGER CHECK(reasoning_output_tokens IS NULL OR reasoning_output_tokens >= 0),\n            total_tokens INTEGER CHECK(total_tokens IS NULL OR total_tokens >= 0),\n            started_at TEXT NOT NULL,\n            finished_at TEXT,\n            PRIMARY KEY(job_id, attempt_count)\n        )",
+      "rows": [
+        {
+          "job_id": "1df007112f9141349fe4d8e68e5611b3",
+          "attempt_count": 1,
+          "outcome": "failed",
+          "error_code": null,
+          "worker_thread_id": "historic-failed",
+          "worker_turn_id": null,
+          "duration_ms": 12,
+          "usage_status": "reported",
+          "usage_source": "app_server_thread_total",
+          "usage_updates": 1,
+          "input_tokens": 10,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 12,
+          "started_at": "2026-10-23T12:30:54.524415Z",
+          "finished_at": "2026-10-23T12:30:54.525107Z"
+        },
+        {
+          "job_id": "4364de9022454230be77b9d132c808f4",
+          "attempt_count": 1,
+          "outcome": "skipped",
+          "error_code": null,
+          "worker_thread_id": "historic-skipped",
+          "worker_turn_id": null,
+          "duration_ms": 12,
+          "usage_status": "reported",
+          "usage_source": "app_server_thread_total",
+          "usage_updates": 1,
+          "input_tokens": 10,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 12,
+          "started_at": "2026-10-23T12:30:54.527240Z",
+          "finished_at": "2026-10-23T12:30:54.527498Z"
+        },
+        {
+          "job_id": "b51aff25bef1473d82487c82bc79ea33",
+          "attempt_count": 1,
+          "outcome": "running",
+          "error_code": null,
+          "worker_thread_id": null,
+          "worker_turn_id": null,
+          "duration_ms": null,
+          "usage_status": null,
+          "usage_source": null,
+          "usage_updates": null,
+          "input_tokens": null,
+          "cached_input_tokens": null,
+          "cache_write_input_tokens": null,
+          "output_tokens": null,
+          "reasoning_output_tokens": null,
+          "total_tokens": null,
+          "started_at": "2026-10-23T12:30:54.529348Z",
+          "finished_at": null
+        }
+      ]
+    }
+  },
+  "config": {
+    "capture_enabled": true,
+    "capture_scope": "all",
+    "capture_tools": true,
+    "context_chars": 6000,
+    "excluded_projects": [],
+    "included_projects": [],
+    "jev_excluded_projects": [],
+    "jev_filter_enabled": false,
+    "jev_filter_key_file": "",
+    "jev_filter_projects": [],
+    "jev_quality_enabled": false,
+    "jev_quality_projects": [],
+    "jev_retrieval_enabled": false,
+    "jev_retrieval_projects": [],
+    "observation_profile": null,
+    "private_prompt_gate": true,
+    "processing_profile": null,
+    "processor_enabled": true,
+    "processor_workers": 2,
+    "project_memory_mode": "off",
+    "project_memory_profile": null,
+    "project_memory_projects": [],
+    "semantic_enabled": false,
+    "service_enabled": false,
+    "tool_skip_list": [],
+    "usage_enabled": true
+  }
+}

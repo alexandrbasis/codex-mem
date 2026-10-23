@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
+import json
 from collections import Counter
 from contextlib import closing
 from datetime import date, datetime, timedelta, timezone as datetime_timezone
@@ -13,9 +14,11 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from .config import data_dir_path
 from .pricing import TOKEN_FIELDS, decimal_text, has_partial_counters, price_event, snapshot_metadata
 from .store import project_key
+from .observer_usage_store import attempt_model_metadata
 
 UTC = datetime_timezone.utc
 DIMENSIONS = ("day", "project", "task", "agent", "model")
+SUPPORTED_DIMENSIONS = (*DIMENSIONS, "runtime", "provider", "execution")
 METRICS = ("api_equivalent_usd", "estimated_codex_credits")
 
 
@@ -88,6 +91,8 @@ class _Accumulator:
         self.first_at: datetime | None = None
         self.last_at: datetime | None = None
         self.tokens = Counter({name: 0 for name in TOKEN_FIELDS})
+        self.known_tokens = Counter()
+        self.provenance = {name: Counter() for name in ("runtime", "provider", "outcome", "error_code", "model_source", "usage_source")}
         self.gaps = Counter({name: 0 for name in (
             "invalid_or_unavailable_usage_events", "unknown_tier_events",
             "requested_tier_events", "confirmed_tier_events", "legacy_usage_events",
@@ -104,13 +109,19 @@ class _Accumulator:
 
     def add(self, row: Mapping[str, Any], priced: Mapping[str, Any], moment: datetime) -> None:
         self.events += 1
+        for name, counts in self.provenance.items():
+            if row.get(name) is not None:
+                counts[row[name]] += 1
+        for field in TOKEN_FIELDS:
+            value = row.get(field)
+            if type(value) is int and 0 <= value <= 2**63 - 1:
+                self.tokens[field] += value
+                self.known_tokens[field] += 1
         self.source_kinds[row.get("source_kind") or ("observation_processor" if row.get("_observer_attempt") else "unknown")] += 1
         self.first_at = min(self.first_at, moment) if self.first_at else moment
         self.last_at = max(self.last_at, moment) if self.last_at else moment
         if priced["tokens"] is None:
             self.gaps["invalid_or_unavailable_usage_events"] += 1
-        else:
-            self.tokens.update(priced["tokens"])
         self.gaps["unknown_tier_events"] += priced["tier"]["status"] == "unknown"
         self.gaps["requested_tier_events"] += priced["tier"]["status"] == "requested"
         self.gaps["confirmed_tier_events"] += priced["tier"]["status"] == "confirmed"
@@ -151,6 +162,11 @@ class _Accumulator:
         unknown_models = sorted(self.models.items(), key=lambda item: (-item[1], item[0]))
         result: dict[str, Any] = {"event_count": self.events, "observed_from": _utc_text(self.first_at) if self.first_at else None, "observed_through": _utc_text(self.last_at) if self.last_at else None, **self.tokens, "completeness": dict(self.gaps), "unknown_models": dict(unknown_models[:20]), "unknown_models_omitted_count": max(0, len(unknown_models) - 20)}
         result["source_kind_counts"] = dict(self.source_kinds)
+        result.update({name + "_counts": dict(counts) for name, counts in self.provenance.items()})
+        result["token_totals"] = {field: {"known_subtotal": self.tokens[field],
+            "total": self.tokens[field] if self.known_tokens[field] == self.events and not self.gaps["observed_only_events"] else None,
+            "known_events": self.known_tokens[field], "unknown_events": self.events - self.known_tokens[field]}
+            for field in TOKEN_FIELDS}
         for name in METRICS:
             money, counts = self.money[name], self.metric_counts[name]
             selected = money["confirmed_tier_subtotal"] + money["requested_tier_subtotal"]
@@ -172,7 +188,10 @@ def _group_row(value: Any, accumulator: _Accumulator, dimension: str) -> dict[st
     """Keep breakdowns compact; full confidence details remain in totals."""
     detailed = accumulator.result()
     result = {"value": value, "event_count": detailed["event_count"], **{field: detailed[field] for field in TOKEN_FIELDS}}
-    amount_fields = ("selected_subtotal", "total", "standard_scenario_subtotal", "fast_scenario_subtotal", "unpriced_events", "scenario_unpriced_events")
+    result.update({key: value for key, value in detailed.items() if key.endswith("_counts") or key == "token_totals"})
+    if dimension == "execution":
+        result["execution"] = json.loads(value)
+    amount_fields = ("selected_subtotal", "total", "standard_scenario_subtotal", "fast_scenario_subtotal", "unpriced_events", "scenario_unpriced_events", "selected_events", "scenario_only_events", "observed_only_events")
     for name in METRICS:
         result[name] = {field: detailed[name][field] for field in amount_fields}
     if dimension == "task" and "session_attribution" in detailed:
@@ -210,14 +229,14 @@ def build_report(events: Iterable[Mapping[str, Any]], observer_attempts: Iterabl
     """Build JSON-safe aggregates from observed metadata without modifying it."""
     period = resolve_period(from_date, to_date, timezone, now)
     dimensions = tuple(dict.fromkeys(group_by))
-    if any(dimension not in DIMENSIONS for dimension in dimensions):
-        raise ValueError("group_by supports day, project, task, agent, model")
+    if any(dimension not in SUPPORTED_DIMENSIONS for dimension in dimensions):
+        raise ValueError("group_by supports day, project, task, agent, model, runtime, provider, execution")
     if isinstance(max_groups, bool) or not isinstance(max_groups, int) or not 1 <= max_groups <= 1000:
         raise ValueError("max_groups must be between 1 and 1000")
     start, end, zone = _timestamp(period["from"]), _timestamp(period["to"]), ZoneInfo(timezone)
     main_rows, duplicate_events = _dedupe(events)
     observer_rows, duplicate_attempts = _dedupe(observer_attempts, observer=True)
-    workers = set(observer_thread_ids) | {row["worker_thread_id"] for row in observer_rows if row.get("worker_thread_id")}
+    workers = set(observer_thread_ids) | {row["worker_thread_id"] for row in observer_rows if row.get("worker_thread_id") and attempt_model_metadata(row, row)["runtime"] == "codex"}
     native_threads = {row.get("thread_id") for row in main_rows if row.get("source_kind") == "response"}
     overlap, dropped_legacy, unknown_time = 0, 0, Counter()
     totals = {stream: _Accumulator() for stream in ("main", "observer", "combined")}
@@ -245,16 +264,21 @@ def build_report(events: Iterable[Mapping[str, Any]], observer_attempts: Iterabl
                     dropped_legacy += 1
                     continue
                 if stream == "observer":
+                    row.update(attempt_model_metadata(row, row))
                     row["_observer_attempt"] = True
                     row.setdefault("source_session_id", row.get("session_id"))
                     row["model_source"] = row.get("model_source") or "requested_job_profile"
                     if row.get("usage_status") not in {"reported", "partial"}:
                         for counter in TOKEN_FIELDS:
                             row[counter] = None
+                else:
+                    row["runtime"] = row.get("runtime") or "codex"
+                    row["provider"] = row.get("provider") or row.get("model_provider") or "openai"
                 priced = price_event(row)
                 totals[stream].add(row, priced, moment)
                 totals["combined"].add(row, priced, moment)
-                values = {"day": moment.astimezone(zone).date().isoformat(), "project": row.get("project"), "task": row.get("session_id"), "agent": row.get("worker_thread_id") if stream == "observer" else row.get("thread_id"), "model": row.get("model")}
+                values = {"day": moment.astimezone(zone).date().isoformat(), "project": row.get("project"), "task": row.get("session_id"), "agent": row.get("worker_thread_id") if stream == "observer" else row.get("thread_id"), "model": row.get("model"), "runtime": row.get("runtime"), "provider": row.get("provider"),
+                          "execution": json.dumps({field: row.get(field) for field in ("runtime", "provider", "model", "reasoning_effort")}, sort_keys=True)}
                 for dimension in dimensions:
                     accumulator = grouped[stream][dimension].setdefault(values[dimension], _Accumulator())
                     accumulator.add(row, priced, moment)
@@ -325,8 +349,11 @@ def _project_memory_attempts(connection: sqlite3.Connection, tables: set[str],
         attempts.append(item)
     # A worker can emit a response after this report's period or source session.
     # Exclude that overlap even when its own attempt falls outside the report.
+    pm_columns = _columns(connection, "pm_usage_attempts")
+    runtime_fields = [field for field in ("actual_runtime", "runtime", "requested_runtime") if field in pm_columns]
+    runtime_filter = " AND COALESCE(" + ",".join([*runtime_fields, "'codex'"]) + ")='codex'" if runtime_fields else ""
     workers = [row[0] for row in connection.execute(
-        "SELECT DISTINCT worker_thread_id FROM pm_usage_attempts WHERE worker_thread_id IS NOT NULL")]
+        "SELECT DISTINCT worker_thread_id FROM pm_usage_attempts WHERE worker_thread_id IS NOT NULL" + runtime_filter)]
     scoped_where = " WHERE " + " AND ".join(scoped) if scoped else ""
     unknown_where = " WHERE " + " AND ".join(["julianday(a.started_at) IS NULL", *scoped])
     coverage = {"project_memory_ledger_available": True,
@@ -394,7 +421,8 @@ def build_cost_report(data_dir: str | Path | None = None, *, from_date: str | No
                 attempts = [dict(row) for row in connection.execute(query, attempt_args)]
                 # Across all dates: a worker that started yesterday can emit a
                 # response today. Never count that response as foreground work.
-                workers = [row[0] for row in connection.execute("SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL")]
+                runtime_filter = " AND COALESCE(runtime,'codex')='codex'" if "runtime" in _columns(connection, "observer_usage_attempts") else ""
+                workers = [row[0] for row in connection.execute("SELECT DISTINCT worker_thread_id FROM observer_usage_attempts WHERE worker_thread_id IS NOT NULL" + runtime_filter)]
                 coverage["observer_first_receipt_at"] = connection.execute("SELECT MIN(started_at) FROM observer_usage_attempts").fetchone()[0]
                 # Old jobs have only their last update time. These indicate a
                 # gap but are not assigned to a date as if it were call time.
@@ -427,6 +455,10 @@ def build_cost_report(data_dir: str | Path | None = None, *, from_date: str | No
     # A missing ledger means no observations are available, not zero spending.
     for stream, available in (("main", coverage.get("usage_ledger_available", False)), ("observer", coverage.get("observer_stream_available", coverage.get("observer_ledger_available", False)))):
         if not available:
+            for section in (report[stream], report["combined"]):
+                for counter in section["token_totals"].values():
+                    counter["total"] = None
+                    counter["collection_complete"] = False
             for metric in METRICS:
                 report[stream][metric]["total"] = None
                 report["combined"][metric]["total"] = None

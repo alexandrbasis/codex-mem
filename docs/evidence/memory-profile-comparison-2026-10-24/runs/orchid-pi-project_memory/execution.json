@@ -1,0 +1,90 @@
+{
+  "failure": null,
+  "identity": {
+    "execution_id": "01a16ae8-1f47-7704-9651-1c18d7c8c547",
+    "model": "gpt-6-luna",
+    "provider": "openai-codex",
+    "reasoning_effort": "low",
+    "runtime": "pi",
+    "turn_id": "generation-1"
+  },
+  "metrics": {
+    "duration_ms": 4233,
+    "execution_receipt": {
+      "agent_end_observed": true,
+      "assistant_stop_reason": "stop",
+      "extensions_policy": "cli_disabled",
+      "generation": 1,
+      "identity_verified": true,
+      "protocol": "rpc-jsonl-1.4.0",
+      "runtime": "pi",
+      "session_id": "01a16ae8-1f47-7704-9651-1c18d7c8c547",
+      "settled": true,
+      "state_checked": true,
+      "system_message_verified": true,
+      "tool_calls_observed": 0,
+      "tools_policy": "cli_disabled",
+      "version": "1.4.0"
+    },
+    "usage": {
+      "source": "pi_assistant_usage",
+      "status": "reported",
+      "tokens": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 4268,
+        "output_tokens": 361,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 4629
+      },
+      "updates": 2
+    }
+  },
+  "output": {
+    "claims": [],
+    "episodes": [
+      {
+        "consolidation_of": [],
+        "continuation_of": null,
+        "evidence": {
+          "consolidation_of": [],
+          "continuation_of": [],
+          "goal": [
+            "r721eef352a",
+            "rf00009c085",
+            "r03e4c95262",
+            "r2fc27759b4"
+          ],
+          "open_work": [
+            "r2fc27759b4",
+            "r161ea020cb",
+            "rc28a6f74fc"
+          ],
+          "outcome": [
+            "r0f29af9310",
+            "rf295694640",
+            "ra4e2eb921c"
+          ],
+          "rationale": [
+            "rbdcaaa0317"
+          ],
+          "summary": [
+            "r721eef352a",
+            "rf00009c085",
+            "rc28a6f74fc",
+            "r03e4c95262",
+            "r2fc27759b4",
+            "r161ea020cb",
+            "r0f29af9310",
+            "rf295694640"
+          ]
+        },
+        "goal": "Maintain semicolon-delimited CSV invoice exports for ORC-42 in Orchid staging version 3, while retaining the rollback requirement. The dry-run preview requirement was canceled.",
+        "open_work": "The rollback procedure remains required. Production rollout remains blocked pending accounting sign-off. The dry-run preview requirement is canceled.",
+        "outcome": "The recorded staging test run reports 4 tests passed. No deployment command was executed, and accounting sign-off was not checked.",
+        "rationale": "The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts.",
+        "summary": "ORC-42 requires semicolon-delimited CSV invoice exports in Orchid staging version 3, a rollback procedure, and production rollout only after accounting sign-off. The dry-run preview requirement was canceled. Staging tests passed; no deployment was executed, and accounting sign-off was not checked."
+      }
+    ]
+  }
+}

@@ -389,13 +389,16 @@ class CLITests(unittest.TestCase):
                         "tool_name": "shell",
                         "tool_use_id": f"large-{index}",
                         "session_id": "large-session",
-                        "tool_input": {"payload": "x" * 70_000},
-                        "tool_response": {"payload": "y" * 70_000},
+                        "tool_input": {"payload": "x" * 60_000},
+                        "tool_response": {"payload": "y" * 60_000},
                     },
                     project=str(self.project),
                 )
                 self.assertIsNotNone(capture)
                 assert capture is not None
+                # Complete per-row JSON still exceeds the aggregate page cap.
+                self.assertFalse(capture.input_metadata["truncated"])
+                self.assertFalse(capture.response_metadata["truncated"])
                 store.remember(
                     self.project,
                     f"Large raw capture {index}",

@@ -193,6 +193,11 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
             updates[key] = _parse_string_array(value, field=key)
         elif key in {"skip_tools", "tool_skip_list"}:
             updates[key] = _parse_string_array(value, field=key)
+        elif key in {"processing_profile", "observation_profile", "project_memory_profile"}:
+            try:
+                updates[key] = json.loads(value)
+            except (TypeError, ValueError):
+                raise CLIError("execution profile must be a JSON object or null") from None
         elif key == "capture_scope":
             capture_scope = value.strip()
             if capture_scope not in {"selected", "all", "manual"}:
@@ -247,8 +252,9 @@ def _observation_metadata(namespace: argparse.Namespace) -> dict[str, Any] | Non
     return {key: value for key, value in fields.items() if value is not None}
 
 
-def _doctor(data_dir: str | None = None) -> dict[str, Any]:
+def _doctor(data_dir: str | None = None, *, check_execution: bool = False) -> dict[str, Any]:
     """Return local, non-mutating diagnostics without claiming host integration."""
+    from .execution_diagnostics import execution_status
     runtime_ok = sys.version_info >= (3, 10)
     sqlite_fts = False
     sqlite_error: str | None = None
@@ -296,6 +302,7 @@ def _doctor(data_dir: str | None = None) -> dict[str, Any]:
             "detail": "Host hook registration was not checked by this local command.",
         },
         "hook_logs": recent_hook_logs(data_dir),
+        "execution": execution_status(data_dir, check=check_execution),
     }
 
 
@@ -430,7 +437,7 @@ def _build_parser() -> _ArgumentParser:
         item.add_argument("--session-id", help="Root task/session ID")
         if action == "report":
             item.add_argument("--group-by", default="day,project,task,agent,model",
-                              help="Comma-separated day,project,task,agent,model dimensions")
+                              help="Comma-separated day,project,task,agent,model,runtime,provider,execution dimensions")
             item.add_argument("--refresh", action="store_true", help="Refresh a bounded batch before reporting")
         item.add_argument("--codex-home", help="Codex state directory containing sessions")
         item.add_argument("--max-files", type=lambda value: _positive(value, field="max_files", maximum=128), default=32)
@@ -548,7 +555,8 @@ def _build_parser() -> _ArgumentParser:
         default=1_000,
     )
 
-    commands.add_parser("doctor", help="Check local runtime, SQLite, and plugin files")
+    doctor = commands.add_parser("doctor", help="Check local runtime, SQLite, and plugin files")
+    doctor.add_argument("--check-execution", action="store_true", help="Check native profiles without sending model input")
     return parser
 
 
@@ -889,7 +897,7 @@ def main(args: Sequence[str] | None = None) -> int:
             updates = _config_updates(namespace)
             value = configure(namespace.data_dir, **updates) if updates else load_config(namespace.data_dir)
         elif namespace.command == "doctor":
-            value = _doctor(namespace.data_dir)
+            value = _doctor(namespace.data_dir, check_execution=namespace.check_execution)
         else:
             value = _run_store_command(namespace)
     except CLIError as exc:

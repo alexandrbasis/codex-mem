@@ -211,9 +211,9 @@ Age-based `prune` retains sources backing stored objects, relations, or pending 
 
 ## Inspect processing costs
 
-Each PM native invocation receives an independent attempt record before dispatch. Usage checkpoints and finalization retain failed, successful, interrupted, and retried attempts. Retrying one job does not overwrite prior costs. A hard crash can leave a running receipt with partial observed tokens. Unrecorded usage remains unknown. Source deletion preserves content-free accounting records.
+Project memory resolves its processor override, default profile, then legacy Codex. Each invocation records an immutable requested profile before dispatch. The next attempt reloads configuration, including in a retained service. Active calls and corrections keep their original deadline. Usage checkpoints and finalization retain failed, successful, interrupted, and retried attempts. Retrying one job does not overwrite prior costs. A hard crash can leave a running receipt with partial observed tokens. Unrecorded usage remains unknown. Source deletion preserves content-free accounting records.
 
-CLI `usage report` and MCP `memory_usage_report` include PM attempts in the existing observer stream. `source_kind_counts` distinguishes PM from ordinary observation processing. Reports filter by project, session, and period. They exclude duplicate foreground records for known worker threads.
+CLI `usage report` and MCP `memory_usage_report` include PM attempts in the existing observer stream. `source_kind_counts` distinguishes PM from ordinary observation processing. Reports filter by project, session, and period. They exclude duplicate foreground records for known Codex worker threads. Equal worker IDs from another runtime do not hide Codex usage.
 
 Amounts are estimates from recorded tokens and the existing rate snapshot. Missing usage or tier evidence leaves totals unknown or partial. They are not actual charges. Earlier attempts without ledger records cannot be reconstructed.
 
@@ -285,3 +285,7 @@ See the [architecture proposal](project-memory-architecture-2026-10-20.md) for t
 The opt-in experimental `clause-support-v2` reader contract belongs to the quality experiment helper. It does not change the production reader API, model profiles or service configuration.
 
 The [earlier coverage decision](adr/0005-bounded-source-coverage-in-reader-context.md) records the R13 boundary. [ADR 0006](adr/0006-expanded-neutral-original-context.md) records its revision for finite neutral original context without a soft topical match.
+
+## Pi background processing
+
+A project-memory profile can select the pinned Pi 1.4.0 RPC runtime. Ordinary processing, reconsideration, consolidation, and one correction retain the same packet and atomic commit checks. Each attempt uses a separate ephemeral Pi session. The attempt ledger preserves the Pi receipt and `pi_assistant_usage` separately from historical Codex provenance. See [Pi runtime](PI_RUNTIME.md) for exact capability checks, authorization, limits, and installed-CLI evidence.

@@ -1,0 +1,70 @@
+{
+  "package": "@earendil-works/pi-coding-agent",
+  "version": "1.4.0",
+  "checked_date": "2026-10-23",
+  "basis": "installed package documentation and owning source; deterministic local-provider compatibility; no live provider",
+  "sources": [
+    {
+      "path": "package.json",
+      "sha256": "df6883685382d6a914e5797232744c26579fe7db5576ea0e9c859d018ca2d54e"
+    },
+    {
+      "path": "docs/cli.md",
+      "sha256": "c45e59f31574de71770a71c9a7c9b6ac03bf9cad4928aa31bb6614d661733679"
+    },
+    {
+      "path": "docs/rpc.md",
+      "sha256": "37a03d180115460a0a275022f4aeabef1e5345458df6a9b6e8a6de18474de720"
+    },
+    {
+      "path": "docs/rpc-commands.md",
+      "sha256": "4deeee367852f4633ef594bc079f9e9fb14640a4e3ba8a69b7c89b6f54740838"
+    },
+    {
+      "path": "docs/json.md",
+      "sha256": "f103191816fdcf3627dfc98b89acad8a28eee737697130ddaeb2581131213543"
+    },
+    {
+      "path": "docs/message-types.md",
+      "sha256": "b832893fb762f87fdbbfd694241d484592942823791f3e81a6c4d915421ff5db"
+    },
+    {
+      "path": "docs/settings.md",
+      "sha256": "2915d26f91f4c46ab1b92e63cbc46b8d48888fa0e491168642a5a90f973bd814"
+    },
+    {
+      "path": "dist/modes/rpc/rpc-mode.js",
+      "sha256": "631697cd35928fc827f4a423538c43ff227b8cbf63c2a2f11060616f55eba6db"
+    },
+    {
+      "path": "dist/cli/args.js",
+      "sha256": "231eca0304b149165a35b12730052586603f23208667e3a57355638017450175"
+    },
+    {
+      "path": "dist/core/resource-loader.js",
+      "sha256": "ad50235884ea6d5ee14cdae1efcfe6afef58b22b18ce574e81886d57ca9f4642"
+    },
+    {
+      "path": "dist/bundle/chunks/openai-completions-27RKPL37.js",
+      "sha256": "243dd1a344d81e1758b155e58e53a0109bedb2178ae87c5b25481a425ffe965e"
+    },
+    {
+      "path": "dist/cli/auth-check.js",
+      "sha256": "15f1601346f1ee9da3d560b133fb65aa9654fa002a5474224913e6ca99517aed"
+    },
+    {
+      "path": "dist/cli/auth-command.js",
+      "sha256": "c212933e6afc64c011ef065b8588ce9e67e6f29a383e096c77a264cebdfe404a"
+    },
+    {
+      "path": "dist/main.js",
+      "sha256": "08b91f9eb3adf9a5027c18732d1e4de70999bd15c445b65cb0ddd0cd68f2746b"
+    }
+  ],
+  "preflight": {
+    "command": "pi auth check --provider <provider> --json --no-refresh",
+    "credential_output": false,
+    "evidence": "docs/cli.md credential commands; dist/main.js selects ReadOnlyAuthStorage; dist/cli/auth-check.js returns readiness metadata",
+    "limit": "Native readiness is not a live provider authorization or quality test."
+  }
+}

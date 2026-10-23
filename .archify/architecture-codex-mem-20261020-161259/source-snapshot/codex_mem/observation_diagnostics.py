@@ -26,10 +26,10 @@ RUNNER_FAILURE_REASONS = frozenset({
     "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_invalid_input",
     "native_turn_failed", "native_turn_cancelled", "native_rate_limit", "native_auth",
     "native_context_limit", "native_server_error", "native_connection_error",
-    "native_usage_limit", "native_bad_request", "native_policy",
+    "authentication_unavailable", "native_usage_limit", "native_bad_request", "native_policy",
 })
 _FAILURE_CODES = frozenset({
-    "invalid_request", "invalid_response", "model_mismatch", "model_unavailable", "protocol_error",
+    "configuration_error", "invalid_request", "invalid_response", "model_mismatch", "model_unavailable", "protocol_error",
     "rerouted", "runner_failure", "runner_unavailable", "storage_failure", "lease_expired",
     "timeout", "tool_called", "tools_available",
 })
@@ -43,6 +43,12 @@ _STORAGE_SQLITE_REASONS = {
     getattr(sqlite3, "SQLITE_IOERR", 10): "sqlite_io", getattr(sqlite3, "SQLITE_CANTOPEN", 14): "sqlite_cantopen",
     getattr(sqlite3, "SQLITE_CONSTRAINT", 19): "sqlite_constraint",
 }
+# Python 3.10 omits numeric SQLite metadata. Accept only exact built-in
+# contention messages, never substrings or arbitrary exception text.
+_LEGACY_SQLITE_CONTENTION_CODES = {
+    "database is locked": 5,
+    "database table is locked": 6,
+}
 _STORAGE_OS_REASONS = {
     errno.EACCES: "permission_denied", errno.EPERM: "permission_denied",
     errno.ENOENT: "path_unavailable", errno.ENOTDIR: "path_unavailable",
@@ -54,8 +60,11 @@ _PRECLAIM_OPERATIONS = frozenset({"open", "reconcile", "claim", "lease_lookup"})
 
 
 def storage_error_metadata(error: BaseException) -> dict[str, Any]:
-    """Extract numeric OS/SQLite evidence only; exception text stays private."""
+    """Normalize OS/SQLite evidence with an exact legacy contention fallback."""
     sqlite_code = getattr(error, "sqlite_errorcode", None)
+    if (sqlite_code is None and type(error) is sqlite3.OperationalError
+            and len(error.args) == 1 and type(error.args[0]) is str):
+        sqlite_code = _LEGACY_SQLITE_CONTENTION_CODES.get(error.args[0])
     if isinstance(sqlite_code, bool) or not isinstance(sqlite_code, int) or not 0 < sqlite_code <= 0x7fffffff:
         sqlite_code = None
     os_code = error.errno if isinstance(error, OSError) else getattr(error, "os_errno", None)
@@ -129,7 +138,23 @@ def read_failure_receipts(connection: sqlite3.Connection, job_id: str) -> list[d
              "created_at": row[3]} for row in reversed(rows)]
 
 
+PI_FAILURE_REASONS = frozenset({"pi_output_limit", "pi_disconnected", "pi_unexpected_event",
+    "pi_command_failed", "pi_identity_mismatch", "pi_session_changed", "pi_not_ephemeral_idle",
+    "pi_automatic_restart", "pi_multiple_answers", "pi_cancelled", "pi_incomplete_run",
+    "pi_provider_failure", "pi_forbidden_event", "pi_not_found", "unsupported_pi_version",
+    "pi_auth_check_unavailable", "pi_prompt_not_started", "pi_launch_failed", "pi_malformed_record"})
+
+
 def safe_failure_reason(code: object, reason: object) -> str | None:
+    if isinstance(reason, str) and isinstance(code, str) and code in _FAILURE_CODES and reason in PI_FAILURE_REASONS:
+        return reason
+    if code == "configuration_error":
+        allowed = {"unsupported_provider", "unsupported_reasoning", "exact_model_unavailable",
+                   "unsupported_runtime", "codex_not_found", "unsupported_codex_protocol", "invalid_configuration"}
+        return reason if isinstance(reason, str) and reason in allowed else None
     allowed = (INVALID_RESPONSE_REASONS if code == "invalid_response" else
-               RUNNER_FAILURE_REASONS if code == "runner_failure" else frozenset())
+               RUNNER_FAILURE_REASONS if code == "runner_failure" else
+               frozenset({"unsupported_provider", "unsupported_reasoning", "exact_model_unavailable"})
+               if code == "model_unavailable" else
+               frozenset({"unsupported_runtime", "codex_not_found", "unsupported_codex_protocol"}) if code == "runner_unavailable" else frozenset())
     return reason if isinstance(reason, str) and reason in allowed else None

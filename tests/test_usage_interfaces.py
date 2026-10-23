@@ -32,14 +32,14 @@ class UsageInterfaceTests(unittest.TestCase):
     def test_cli_and_mcp_period_report_agree_without_scanning(self):
         from codex_mem.usage_api import usage_report
         args = {"from_date": "2026-09-12", "to_date": "2026-09-13", "timezone": "Asia/Jerusalem",
-                "project": str(self.project), "group_by": ["day", "model"]}
+                "project": str(self.project), "group_by": ["day", "project", "task", "agent", "model", "runtime", "provider", "execution"]}
         with patch("codex_mem.usage.UsageCollector", side_effect=AssertionError("cached report must not scan")):
             direct = usage_report(self.data_dir, **args)
             output = io.StringIO()
             with contextlib.redirect_stdout(output):
                 code = main(["--data-dir", str(self.data_dir), "usage", "report", "--from", args["from_date"],
                              "--to", args["to_date"], "--timezone", args["timezone"], "--project", str(self.project),
-                             "--group-by", "day,model"])
+                             "--group-by", ",".join(args["group_by"])])
             self.assertEqual(0, code)
             cli = json.loads(output.getvalue())
             with Store(self.data_dir) as store, MemoryMCPServer(store=store) as server:
@@ -47,6 +47,7 @@ class UsageInterfaceTests(unittest.TestCase):
             for result in (cli, mcp):
                 self.assertEqual(direct["period"], result["period"])
                 self.assertEqual(direct["main"], result["main"])
+                self.assertEqual(direct["groups"], result["groups"])
                 self.assertEqual("not_requested", result["refresh"]["status"])
 
     def test_report_and_refresh_have_distinct_effect_annotations(self):

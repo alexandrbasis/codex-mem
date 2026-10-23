@@ -15,7 +15,7 @@ import time
 
 NAME = "codex-mem"
 ROOT = Path(__file__).resolve().parents[1]
-FILES = (".codex-plugin", ".mcp.json", "codex_mem", "hooks", "skills", "scripts",
+FILES = ("package.json", "pi", ".codex-plugin", ".mcp.json", "codex_mem", "hooks", "skills", "scripts",
          "tests", "docs", "fixtures", "assets", "README.md", "README.ru.md", "UPSTREAM.md", "LICENSE", "pyproject.toml")
 MARKER = ".codex-mem-managed"
 _CACHE_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}\Z")

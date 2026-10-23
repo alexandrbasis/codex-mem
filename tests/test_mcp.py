@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+from contextlib import closing
 import json
 from pathlib import Path
 import select
+import sqlite3
 import subprocess
 import sys
 import tempfile
 import unittest
 
 from codex_mem.mcp import MAX_LINE_BYTES, MemoryMCPServer
-from codex_mem.store import Store
+from codex_mem.store import MAX_OBSERVATION_CHARS, Store
 from codex_mem.tool_io import normalize_capture
 
 
@@ -160,6 +162,112 @@ class MCPSubprocessTests(unittest.TestCase):
 
         forgotten = self._call(5, "memory_forget", {"project": str(self.project), "ids": [entry_id]})
         self.assertIn(entry_id, self._content(forgotten)["ids"])
+
+    def test_raw_structured_secrets_are_redacted_before_public_source_readback(self) -> None:
+        self._initialize()
+        payload = {"API_KEY": "synthetic-secret", "nested": [
+            {"client_secret": {"credential": "nested-secret"}, "result": 7, "ok": True},
+            {"refresh_token": ["array-secret"], "output": "public result"},
+        ], "count": 2}
+        with Store(self.data_dir) as store:
+            capture = normalize_capture({
+                "tool_name": "shell", "tool_use_id": "structured-credentials",
+                "tool_input": payload, "tool_response": payload,
+            }, project=str(self.project))
+            store.remember(self.project, "Source", "Structured evidence.", tool_capture=capture)
+        result = self._content(self._call(1, "memory_get_tool_uses", {
+            "project": str(self.project), "ids": ["structured-credentials"],
+        }))[0]
+        for field in ("tool_input", "tool_response"):
+            clean = json.loads(result[field])
+            self.assertEqual("[REDACTED]", clean["API_KEY"])
+            self.assertEqual("[REDACTED]", clean["nested"][0]["client_secret"])
+            self.assertEqual("[REDACTED]", clean["nested"][1]["refresh_token"])
+            self.assertEqual({"result": 7, "ok": True, "client_secret": "[REDACTED]"}, clean["nested"][0])
+            self.assertEqual("public result", clean["nested"][1]["output"])
+            self.assertEqual(2, clean["count"])
+            self.assertNotIn("synthetic-secret", result[field])
+            self.assertNotIn("nested-secret", result[field])
+            self.assertNotIn("array-secret", result[field])
+        # Simulate persisted captures produced before structured-field redaction.
+        legacy = json.dumps(payload)
+        database = self.data_dir / "memory.sqlite3"
+        with closing(sqlite3.connect(database, isolation_level=None)) as connection:
+            connection.execute("UPDATE tool_uses SET tool_input=?, input_excerpt=? WHERE tool_use_id=?",
+                               (legacy, "synthetic-secret", "structured-credentials"))
+        reread = self._content(self._call(2, "memory_get_tool_uses", {
+            "project": str(self.project), "ids": ["structured-credentials"],
+        }))[0]
+        self.assertEqual(result["entry_id"], reread["entry_id"])
+        self.assertEqual(result["content_hash"], reread["content_hash"])
+        self.assertTrue(reread["input_metadata"]["read_redacted"])
+        self.assertNotIn("synthetic-secret", json.dumps(reread))
+        self.assertNotIn("nested-secret", json.dumps(reread))
+        with closing(sqlite3.connect(database, isolation_level=None)) as connection:
+            retained = connection.execute("SELECT tool_input FROM tool_uses WHERE tool_use_id=?",
+                                          ("structured-credentials",)).fetchone()[0]
+        self.assertEqual(legacy, retained)
+        with closing(sqlite3.connect(database, isolation_level=None)) as connection:
+            connection.execute("UPDATE tool_uses SET tool_input=?, input_excerpt=? WHERE tool_use_id=?",
+                               ('{"API_KEY": "unfinished', "unsafe legacy excerpt", "structured-credentials"))
+        omitted = self._content(self._call(3, "memory_get_tool_uses", {
+            "project": str(self.project), "ids": ["structured-credentials"],
+        }))[0]
+        self.assertIsNone(omitted["tool_input"])
+        self.assertIsNone(omitted["input_excerpt"])
+        self.assertTrue(omitted["input_metadata"]["read_omitted"])
+        self.assertNotIn("unsafe legacy excerpt", json.dumps(omitted))
+
+    def test_legacy_truncated_raw_fragments_and_excerpts_are_explicitly_omitted(self) -> None:
+        self._initialize()
+        with Store(self.data_dir) as store:
+            capture = normalize_capture({
+                "tool_name": "shell", "tool_use_id": "legacy-truncated", "session_id": "privacy-fixture",
+                "tool_input": {"text": "x" * 90_000},
+                "tool_response": {"text": "x" * 90_000},
+            }, project=str(self.project))
+            entry = store.remember(self.project, "Legacy source", "Retained source.",
+                                   source="hook:PostToolUse", session_id="privacy-fixture", tool_capture=capture)
+        wrapper = json.loads(capture.tool_input)
+        self.assertTrue(wrapper["__codex_mem_truncated__"])
+        wrapper["head"] = '{"API_KEY":{"client_id":"public","value":"wrapped-secret"},"text":"' + wrapper["head"][100:]
+        wrapper["tail"] = wrapper["tail"][:-100] + '","refresh_token":["tail-secret"]}'
+        legacy = json.dumps(wrapper, separators=(",", ":"))
+        self.assertLessEqual(len(legacy.encode()), 65_536)
+        database = self.data_dir / "memory.sqlite3"
+        with closing(sqlite3.connect(database, isolation_level=None)) as connection:
+            connection.execute("UPDATE tool_uses SET tool_input=?, tool_response=?, input_excerpt=?, response_excerpt=? WHERE tool_use_id=?",
+                               (legacy, legacy, "wrapped-secret", "tail-secret", "legacy-truncated"))
+        result = self._content(self._call(1, "memory_get_tool_uses", {
+            "project": str(self.project), "ids": ["legacy-truncated"],
+        }))[0]
+        self.assertEqual(entry["id"], result["entry_id"])
+        self.assertEqual(capture.content_hash, result["content_hash"])
+        for payload, excerpt, metadata in (("tool_input", "input_excerpt", "input_metadata"),
+                                           ("tool_response", "response_excerpt", "response_metadata")):
+            self.assertIsNone(result[payload])
+            self.assertIsNone(result[excerpt])
+            self.assertTrue(result[metadata]["read_omitted"])
+            self.assertEqual("incomplete_json_fragments", result[metadata]["read_omitted_reason"])
+        self.assertNotIn("wrapped-secret", json.dumps(result))
+        self.assertNotIn("tail-secret", json.dumps(result))
+        with closing(sqlite3.connect(database, isolation_level=None)) as connection:
+            retained = connection.execute("SELECT tool_input, tool_response FROM tool_uses WHERE tool_use_id=?",
+                                          ("legacy-truncated",)).fetchone()
+        self.assertEqual((legacy, legacy), retained)
+        # The observer receives omission metadata, not fragments as evidence.
+        with Store(self.data_dir) as store:
+            batch = store.claim_observation_batch(self.project, "privacy-check", "gpt-6-luna", "medium")
+        self.assertEqual([entry["id"]], [source["id"] for source in batch["sources"]])
+        tool_io = batch["sources"][0]["tool_io"]
+        self.assertIsNone(tool_io["tool_input"])
+        self.assertIsNone(tool_io["tool_response"])
+        self.assertTrue(tool_io["input_metadata"]["read_omitted"])
+        self.assertTrue(tool_io["response_metadata"]["read_omitted"])
+        serialized = json.dumps(batch["sources"][0], ensure_ascii=False, separators=(",", ":"))
+        self.assertLessEqual(len(serialized), MAX_OBSERVATION_CHARS)
+        self.assertNotIn("wrapped-secret", serialized)
+        self.assertNotIn("tail-secret", serialized)
 
     def test_resume_intent_is_exposed_ranked_and_validated(self) -> None:
         self._initialize()

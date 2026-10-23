@@ -1,0 +1,2141 @@
+{
+  "cells": [
+    {
+      "id": "C01",
+      "kind": "project_memory",
+      "ratings": {
+        "requirement_retention": "pass",
+        "reason_retention": "pass",
+        "current_status": "fail",
+        "role_and_evidence": "partial",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "fail",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The typed episode and claims retain the obligations, rationale, and scope, but the preview claim still says it is required with proposed state after cancellation. Assistant implementation is attributed; the specific production-readiness assertion is not retained as a conflicting report."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "fail",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "All five submitted sources are in the prompt, so the status contradiction and incomplete conflict account are output-level issues."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "a26fb21978c940d29ff202e4327c8022",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "9f82c6826b274b969a77a68d351d2651",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            },
+            {
+              "source_id": "1c6564a5de224bdfb619a2346fc03887",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_fbccee9b7027e26bb6c675dea8258cb3ba47d2bf",
+              "field": "text",
+              "quote": "Keep invoice exports as CSV with a semicolon delimiter for ORC-42 in Orchid staging version 3."
+            },
+            {
+              "output_id": "pm_f80569e441fd751a690ec165a372ef101236a856",
+              "field": "text",
+              "quote": "ORC-42 requires a rollback procedure."
+            },
+            {
+              "output_id": "pm_21c199ed2b69f924e80cfddd5cbbe44937658462",
+              "field": "text",
+              "quote": "Production rollout is blocked until the accounting team signs off for ORC-42."
+            }
+          ],
+          "explanation": "Semicolon CSV, separate rollback obligation, and accounting production gate are represented as typed claims. Preview state is graded under current_status."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "a26fb21978c940d29ff202e4327c8022",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_fbccee9b7027e26bb6c675dea8258cb3ba47d2bf",
+              "field": "rationale",
+              "quote": "User intent: The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "explanation": "The decimal-comma importer and amount-corruption reason are tied to the semicolon requirement."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "1c6564a5de224bdfb619a2346fc03887",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_ff3f84628adacbd173d9d2c0b783e54389cf7355",
+              "field": "text",
+              "quote": "ORC-42 requires a dry-run preview."
+            },
+            {
+              "output_id": "pm_ff3f84628adacbd173d9d2c0b783e54389cf7355",
+              "field": "workflow_state",
+              "quote": "proposed"
+            },
+            {
+              "output_id": "pm_88342f33219fd49179824254d154112191195ecd",
+              "field": "open_work",
+              "quote": "User intent: ORC-42 also requires a dry-run preview and a rollback procedure.\nUser intent: Production rollout is blocked until the accounting team signs off.\nUser intent: Keep these separate obligations.\nUser intent: For ORC-42 cancel only the dry-run preview requirement.\nUser intent: Keep the semicolon CSV and rollback requirements.\nUser intent: Production remains blocked pending accounting sign-off.\nUser intent: Passing staging tests does not authorize production.\nTool record: Accounting sign-off was not checked."
+            },
+            {
+              "output_id": "C01:original_parsed_candidate",
+              "field": "episodes.0.open_work",
+              "quote": "Provide the rollback procedure and obtain accounting sign-off before production rollout. The dry-run preview requirement was canceled. Production deployment and sign-off remain unverified; staging test success does not authorize production."
+            }
+          ],
+          "explanation": "The episode includes cancellation, but the stored claim independently presents a proposed dry-run-preview requirement. A proposed requirement is not a cancelled requirement; the prose cancellation does not resolve this contradictory typed status."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "dd4b2430fc324eb497638ebbea689398",
+              "role": "assistant",
+              "quote": "I implemented the semicolon exporter and preview. I believe ORC-42 is ready for production."
+            },
+            {
+              "source_id": "7f3f2c2784ba48c7bc85b41d22a845d1",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_88342f33219fd49179824254d154112191195ecd",
+              "field": "outcome",
+              "quote": "Assistant report: I implemented the semicolon exporter and preview.\nTool record: Command: pytest tests/test_invoice_csv.py.\nTool record: Exit code: 0.\nTool record: 4 tests passed in staging.\nTool record: No deployment command was executed.\nTool record: Accounting sign-off was not checked."
+            }
+          ],
+          "explanation": "The implementation is correctly labeled Assistant report, and the four staging tests, no deployment, and unchecked sign-off are labeled Tool record. However, the assistant assertion that the task is production-ready is omitted, so the conflicting readiness report is not fully preserved."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "a26fb21978c940d29ff202e4327c8022",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "7f3f2c2784ba48c7bc85b41d22a845d1",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_fbccee9b7027e26bb6c675dea8258cb3ba47d2bf",
+              "field": "text",
+              "quote": "Keep invoice exports as CSV with a semicolon delimiter for ORC-42 in Orchid staging version 3."
+            },
+            {
+              "output_id": "pm_fbccee9b7027e26bb6c675dea8258cb3ba47d2bf",
+              "field": "scope.environment",
+              "quote": "Orchid staging"
+            },
+            {
+              "output_id": "pm_fbccee9b7027e26bb6c675dea8258cb3ba47d2bf",
+              "field": "scope.version",
+              "quote": "3"
+            },
+            {
+              "output_id": "pm_88342f33219fd49179824254d154112191195ecd",
+              "field": "outcome",
+              "quote": "Assistant report: I implemented the semicolon exporter and preview.\nTool record: Command: pytest tests/test_invoice_csv.py.\nTool record: Exit code: 0.\nTool record: 4 tests passed in staging.\nTool record: No deployment command was executed.\nTool record: Accounting sign-off was not checked."
+            }
+          ],
+          "explanation": "Orchid, ORC-42, staging version 3, and staging-only test scope are retained; no production completion is asserted."
+        }
+      ],
+      "limitations": [
+        "PM episode material fields are attributed selected excerpts; original generated prose alone does not prove stored-field retention.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C02",
+      "kind": "observation",
+      "ratings": {
+        "requirement_retention": "partial",
+        "reason_retention": "pass",
+        "current_status": "partial",
+        "role_and_evidence": "pass",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "pass",
+          "current_status": "partial",
+          "role_and_evidence": "pass",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The initial observation preserves cache, audit, reason, scope, and release gate, but weakens the still-current manual button requirement into possible removal."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "pass",
+          "current_status": "partial",
+          "role_and_evidence": "pass",
+          "project_and_scope": "pass"
+        },
+        "explanation": "Both initial user messages are supplied. Later cancellation must not be inferred. The omission and weakening of the button requirement occur despite its presence in the prompt."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "5f6d156c6175466784045c3e9d99442f",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95f3196cfcbb4dd5a61479f98a5b14a5",
+              "field": "observation.facts",
+              "quote": [
+                "User specified exactly five minutes of pricing cache in Harbor sandbox version 2 due to upstream rate limits; implementation is not verified.",
+                "User required an audit record for each refresh; implementation is not verified.",
+                "User stated HBR-81 release is blocked until the retry test passes; no test outcome is provided.",
+                "User said the five-minute cache and audit record remain required even if the manual refresh button is removed."
+              ]
+            }
+          ],
+          "explanation": "Exactly five minutes and per-refresh audit are retained. The explicit instruction to provide a button is not retained as an affirmative obligation; the output only discusses what survives its removal."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95f3196cfcbb4dd5a61479f98a5b14a5",
+              "field": "observation.facts.0",
+              "quote": "User specified exactly five minutes of pricing cache in Harbor sandbox version 2 due to upstream rate limits; implementation is not verified."
+            }
+          ],
+          "explanation": "Upstream rate limits remain the reason for the cache."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "5f6d156c6175466784045c3e9d99442f",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95f3196cfcbb4dd5a61479f98a5b14a5",
+              "field": "observation.narrative",
+              "quote": "The user established a five-minute pricing cache and per-refresh audit record as required behavior, motivated by upstream rate limits. Release remains blocked pending a passing retry test. The manual refresh button may be removed without removing the cache or audit requirements."
+            }
+          ],
+          "explanation": "The release gate remains, but “The manual refresh button may be removed” weakens the current button requirement. The input only states a conditional future removal; it does not yet authorize or enact cancellation."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "5f6d156c6175466784045c3e9d99442f",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95f3196cfcbb4dd5a61479f98a5b14a5",
+              "field": "observation.facts",
+              "quote": [
+                "User specified exactly five minutes of pricing cache in Harbor sandbox version 2 due to upstream rate limits; implementation is not verified.",
+                "User required an audit record for each refresh; implementation is not verified.",
+                "User stated HBR-81 release is blocked until the retry test passes; no test outcome is provided.",
+                "User said the five-minute cache and audit record remain required even if the manual refresh button is removed."
+              ]
+            }
+          ],
+          "explanation": "Requirements are attributed to the user; implementation and test outcomes are not invented."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95f3196cfcbb4dd5a61479f98a5b14a5",
+              "field": "observation.facts.0",
+              "quote": "User specified exactly five minutes of pricing cache in Harbor sandbox version 2 due to upstream rate limits; implementation is not verified."
+            },
+            {
+              "output_id": "95f3196cfcbb4dd5a61479f98a5b14a5",
+              "field": "title",
+              "quote": "HBR-81 release requires retry test; five-minute pricing cache and refresh audit"
+            }
+          ],
+          "explanation": "Harbor sandbox version 2 and HBR-81 are retained."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Initial-observation boundary: only the two initial user messages are relevant; no later test result, assistant report, or cancellation is expected.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C03",
+      "kind": "project_memory",
+      "ratings": {
+        "requirement_retention": "pass",
+        "reason_retention": "pass",
+        "current_status": "pass",
+        "role_and_evidence": "partial",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "Typed episode fields retain the requirement, reason, cancellation, retained rollback obligation, and production gate. The assistant implementation/readiness report and its conflict with the limited tool evidence are omitted."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "All five sources were supplied. The missing assistant report is an output omission; the typed episode is substantive representation, not neutral source custody."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "d48c8d0d5064433a87ca7fd8a25bdcae",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "670ab537663c4290886c2ba79cf75370",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            },
+            {
+              "source_id": "1b57fb15ab4b4a15965dfa8bb983806f",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "goal",
+              "quote": "User intent: Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter.\nUser intent: ORC-42 also requires a dry-run preview and a rollback procedure.\nUser intent: For ORC-42 cancel only the dry-run preview requirement.\nUser intent: Keep the semicolon CSV and rollback requirements."
+            },
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "open_work",
+              "quote": "User intent: Keep the semicolon CSV and rollback requirements.\nUser intent: Production remains blocked pending accounting sign-off.\nUser intent: Production rollout is blocked until the accounting team signs off."
+            }
+          ],
+          "explanation": "The typed goal and open_work explicitly represent semicolon CSV, rollback, and the accounting gate. Empty claims do not erase this substantive typed episode representation."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "d48c8d0d5064433a87ca7fd8a25bdcae",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "rationale",
+              "quote": "User intent: The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "explanation": "The importer and amount-corruption reason survive in the rationale field."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "1b57fb15ab4b4a15965dfa8bb983806f",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "summary",
+              "quote": "User intent: Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter.\nUser intent: ORC-42 also requires a dry-run preview and a rollback procedure.\nUser intent: Production rollout is blocked until the accounting team signs off.\nUser intent: For ORC-42 cancel only the dry-run preview requirement.\nUser intent: Keep the semicolon CSV and rollback requirements.\nUser intent: Production remains blocked pending accounting sign-off.\nTool record: 4 tests passed in staging.\nTool record: No deployment command was executed."
+            },
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "open_work",
+              "quote": "User intent: Keep the semicolon CSV and rollback requirements.\nUser intent: Production remains blocked pending accounting sign-off.\nUser intent: Production rollout is blocked until the accounting team signs off."
+            }
+          ],
+          "explanation": "The episode states the preview cancellation, retained CSV/rollback, and production block; there is no independently surviving active preview claim."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "344552c1bbc94d1891225ef8ec2564f1",
+              "role": "assistant",
+              "quote": "I implemented the semicolon exporter and preview. I believe ORC-42 is ready for production."
+            },
+            {
+              "source_id": "fde07e9b6c6a481cabe93e31ca6d8b67",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "outcome",
+              "quote": "Tool record: 4 tests passed in staging.\nTool record: No deployment command was executed.\nTool record: Accounting sign-off was not checked."
+            },
+            {
+              "output_id": "C03:original_parsed_candidate",
+              "field": "episodes.0.outcome",
+              "quote": "The recorded staging test run reports 4 tests passed. No deployment command was executed, and accounting sign-off was not checked."
+            }
+          ],
+          "explanation": "The tool result remains scoped to four staging tests with no deployment and unchecked sign-off. The assistant implementation and readiness report is absent from the typed episode and claims, so the conflicting report is lost, even though it is not promoted to verification."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "d48c8d0d5064433a87ca7fd8a25bdcae",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "fde07e9b6c6a481cabe93e31ca6d8b67",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "goal",
+              "quote": "User intent: Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter.\nUser intent: ORC-42 also requires a dry-run preview and a rollback procedure.\nUser intent: For ORC-42 cancel only the dry-run preview requirement.\nUser intent: Keep the semicolon CSV and rollback requirements."
+            },
+            {
+              "output_id": "pm_e75b6c40a41f9a4f630318f30445a5d55ee91143",
+              "field": "outcome",
+              "quote": "Tool record: 4 tests passed in staging.\nTool record: No deployment command was executed.\nTool record: Accounting sign-off was not checked."
+            }
+          ],
+          "explanation": "ORC-42, Orchid staging version 3, and staging-only execution remain explicit."
+        }
+      ],
+      "limitations": [
+        "There are no typed claims; retention here is supported by actual typed episode fields, not source custody.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C04",
+      "kind": "observation",
+      "ratings": {
+        "requirement_retention": "pass",
+        "reason_retention": "pass",
+        "current_status": "pass",
+        "role_and_evidence": "pass",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "passed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The initial observation retains all requested behavior, reason, scope, and release condition without inventing implementation or an already-effective cancellation."
+      },
+      "input_conditioned_verdict": {
+        "status": "passed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "pass"
+        },
+        "explanation": "Both initial user messages are supplied and adequately represented."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "4f5ec3686b1d4de5a64affbd94496c15",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "b895aca1dc6742a08c7df1f6faa4ac7e",
+              "field": "observation.facts",
+              "quote": [
+                "The user specified exactly five minutes of pricing caching for Harbor sandbox version 2 task HBR-81 due to upstream rate limits.",
+                "The user required an audit record for each refresh.",
+                "The user requested a manual refresh button, while clarifying that its removal would not remove the cache or audit requirements.",
+                "The user said release is blocked until the retry test passes; no test outcome is provided."
+              ]
+            }
+          ],
+          "explanation": "Five-minute caching, per-refresh audit, manual button, and retry-test gate are explicit."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "b895aca1dc6742a08c7df1f6faa4ac7e",
+              "field": "observation.facts.0",
+              "quote": "The user specified exactly five minutes of pricing caching for Harbor sandbox version 2 task HBR-81 due to upstream rate limits."
+            }
+          ],
+          "explanation": "The upstream rate-limit rationale is preserved."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "4f5ec3686b1d4de5a64affbd94496c15",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "b895aca1dc6742a08c7df1f6faa4ac7e",
+              "field": "observation.narrative",
+              "quote": "The user established a five-minute pricing-cache duration and per-refresh audit record as required behavior, motivated by upstream rate limits. A manual refresh button was initially requested, but the user explicitly said the cache and audit requirements stand even if that button is later removed. Release remains blocked until the retry test passes; the evidence does not establish whether implementation or testing has occurred."
+            }
+          ],
+          "explanation": "Button removal is conditional and future; release remains blocked until the retry test passes. No later cancellation or failure is predicted."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "4f5ec3686b1d4de5a64affbd94496c15",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "b895aca1dc6742a08c7df1f6faa4ac7e",
+              "field": "observation.facts.3",
+              "quote": "The user said release is blocked until the retry test passes; no test outcome is provided."
+            },
+            {
+              "output_id": "b895aca1dc6742a08c7df1f6faa4ac7e",
+              "field": "observation.subtitle",
+              "quote": "User requirements and release gate for HBR-81; implementation and retry-test outcome unknown"
+            }
+          ],
+          "explanation": "The user requirement is distinct from an unknown test result and unknown implementation."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "b895aca1dc6742a08c7df1f6faa4ac7e",
+              "field": "observation.facts.0",
+              "quote": "The user specified exactly five minutes of pricing caching for Harbor sandbox version 2 task HBR-81 due to upstream rate limits."
+            }
+          ],
+          "explanation": "HBR-81, Harbor sandbox, and version 2 are preserved."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Initial-observation boundary: later assistant/tool/cancellation messages are outside the candidate’s source history.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C05",
+      "kind": "summary",
+      "ratings": {
+        "requirement_retention": "partial",
+        "reason_retention": "fail",
+        "current_status": "fail",
+        "role_and_evidence": "partial",
+        "project_and_scope": "partial"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "fail",
+          "current_status": "fail",
+          "role_and_evidence": "partial",
+          "project_and_scope": "partial"
+        },
+        "explanation": "Unpassed as a summary of the entire submitted history: later cancellation and tool evidence are absent. upstream rate-limit rationale is absent."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "fail",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "partial"
+        },
+        "explanation": "The late tool result and cancellation were not supplied, so they are not model omissions. Evaluate the earlier history plus assistant report: upstream rate-limit rationale is absent."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "4f5ec3686b1d4de5a64affbd94496c15",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            },
+            {
+              "source_id": "694d0c77b49f457cac018b76c411a2a8",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes, an audit record for each refresh, and initially requested a manual refresh button. Release was blocked until the retry test passed; the cache and audit requirements remain even if the button is removed."
+            }
+          ],
+          "explanation": "The five-minute cache, audit record, and retry gate are retained, but effective button cancellation is absent. The initial button request is also retained."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes, an audit record for each refresh, and initially requested a manual refresh button. Release was blocked until the retry test passed; the cache and audit requirements remain even if the button is removed."
+            }
+          ],
+          "explanation": "The supplied upstream rate-limit reason is entirely absent from session_summary; earlier notes cannot fill this summary omission."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "4f5ec3686b1d4de5a64affbd94496c15",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            },
+            {
+              "source_id": "d51c83f61b234900ae0ee85ebbea722d",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            },
+            {
+              "source_id": "694d0c77b49f457cac018b76c411a2a8",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes, an audit record for each refresh, and initially requested a manual refresh button. Release was blocked until the retry test passed; the cache and audit requirements remain even if the button is removed."
+            },
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.next_steps",
+              "quote": "Confirm the retry test passes before treating HBR-81 as releasable."
+            }
+          ],
+          "explanation": "Against the full submitted history, the summary leaves refresh button cancellation unstated and treats the retry outcome as unknown despite the later failed test. Against the actual prompt, preserving the earlier gate and uncertainty is correct; it must not predict those later events."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "f65e5202041743d88e4f6e5f97f3142c",
+              "role": "assistant",
+              "quote": "I completed the cache, button, and audit record. I think all tests pass and HBR-81 can be released."
+            },
+            {
+              "source_id": "d51c83f61b234900ae0ee85ebbea722d",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.learned",
+              "quote": "The assistant reported completing the cache, button, and audit record, but said only that it thought all tests passed. No test results verify that claim, and release readiness remains unconfirmed against the stated retry-test gate."
+            }
+          ],
+          "explanation": "The assistant completion and passing-tests belief are properly reported as unverified. The failed retry test and explicit no-release result are missing from full-history coverage because that tool source was not supplied."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "1e09cbffb2e9488fba96a12800560d49",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes, an audit record for each refresh, and initially requested a manual refresh button. Release was blocked until the retry test passed; the cache and audit requirements remain even if the button is removed."
+            },
+            {
+              "output_id": "e32c6a09a8bf48d193ce993dbb91b092",
+              "field": "session_summary.title",
+              "quote": "HBR-81 requirements and unverified completion report"
+            }
+          ],
+          "explanation": "The task identifier survives, but the named project and sandbox version 2 do not. A generic project path on the container record does not preserve the natural-language environment and version scope inside the summary."
+        },
+        {
+          "dimension": "input_coverage",
+          "sources": [
+            {
+              "source_id": "d51c83f61b234900ae0ee85ebbea722d",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            },
+            {
+              "source_id": "694d0c77b49f457cac018b76c411a2a8",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "C05:prepared_prompt",
+              "field": "supplied_source_ids",
+              "quote": [
+                "1e09cbffb2e9488fba96a12800560d49",
+                "4f5ec3686b1d4de5a64affbd94496c15",
+                "b895aca1dc6742a08c7df1f6faa4ac7e",
+                "s1"
+              ]
+            }
+          ],
+          "explanation": "The prompt contains initial user history, derived observations, and the assistant Stop report. The tool result and later cancellation source IDs are absent. Their missing information is a submitted-history coverage gap, not a model omission given this prompt."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Only session_summary is scored. Earlier observations do not compensate for its omissions.",
+        "Missing from actual prompt: d51c83f61b234900ae0ee85ebbea722d, 694d0c77b49f457cac018b76c411a2a8.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C06",
+      "kind": "observation",
+      "ratings": {
+        "requirement_retention": "pass",
+        "reason_retention": "pass",
+        "current_status": "pass",
+        "role_and_evidence": "partial",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The initial requirements, rationale, scope, and gate are retained. The rollout observation is classified as change despite containing only user intent; prose correctly says completion is not established."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The two supplied user messages support requirements but no observed change. The unsupported semantic type prevents a full role/evidence pass."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "09f1bda3b8c44de7953ebffc5a3934cf",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "2d859b8fa55e48cd9a70d9d8ffd568da",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "64fd62c6ba9e4e4598bd300bba54e54d",
+              "field": "observation.narrative",
+              "quote": "For task ORC-42, the user specified semicolon-delimited CSV exports to avoid amount corruption in the local accounting importer. No implementation or verification evidence was provided."
+            },
+            {
+              "output_id": "3b0ad1ee41184e5e9b9ace7851fc67ca",
+              "field": "observation.facts",
+              "quote": [
+                "A dry-run preview is required.",
+                "A rollback procedure is required.",
+                "Production rollout is blocked until the accounting team signs off.",
+                "The user explicitly said to keep these obligations separate."
+              ]
+            }
+          ],
+          "explanation": "Semicolon CSV, preview, rollback, and production sign-off are explicit separate obligations."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "09f1bda3b8c44de7953ebffc5a3934cf",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "64fd62c6ba9e4e4598bd300bba54e54d",
+              "field": "observation.facts.1",
+              "quote": "The user stated that the local importer treats commas as decimal separators and comma-delimited exports corrupt amounts."
+            },
+            {
+              "output_id": "64fd62c6ba9e4e4598bd300bba54e54d",
+              "field": "observation.narrative",
+              "quote": "For task ORC-42, the user specified semicolon-delimited CSV exports to avoid amount corruption in the local accounting importer. No implementation or verification evidence was provided."
+            }
+          ],
+          "explanation": "Decimal-comma treatment and amount-corruption rationale are retained."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "2d859b8fa55e48cd9a70d9d8ffd568da",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "3b0ad1ee41184e5e9b9ace7851fc67ca",
+              "field": "observation.narrative",
+              "quote": "The user identified three distinct rollout obligations for ORC-42: provide a dry-run preview, provide a rollback procedure, and obtain accounting-team sign-off before production rollout. Production rollout remains conditional on sign-off per the stated requirement; no completion evidence was supplied."
+            }
+          ],
+          "explanation": "The requirements remain pending and sign-off is a gate; no later cancellation is predicted."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "2d859b8fa55e48cd9a70d9d8ffd568da",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "3b0ad1ee41184e5e9b9ace7851fc67ca",
+              "field": "observation.type",
+              "quote": "change"
+            },
+            {
+              "output_id": "3b0ad1ee41184e5e9b9ace7851fc67ca",
+              "field": "observation.subtitle",
+              "quote": "User-stated rollout prerequisites; completion not established"
+            },
+            {
+              "output_id": "3b0ad1ee41184e5e9b9ace7851fc67ca",
+              "field": "observation.narrative",
+              "quote": "The user identified three distinct rollout obligations for ORC-42: provide a dry-run preview, provide a rollback procedure, and obtain accounting-team sign-off before production rollout. Production rollout remains conditional on sign-off per the stated requirement; no completion evidence was supplied."
+            }
+          ],
+          "explanation": "The type value is change, although the only source is a user request and the narrative explicitly says no completion evidence was supplied. This is a semantic label mismatch, not a schema/runtime finding; the cautious prose limits but does not eliminate the mismatch."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "09f1bda3b8c44de7953ebffc5a3934cf",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "64fd62c6ba9e4e4598bd300bba54e54d",
+              "field": "observation.facts.0",
+              "quote": "The requirement applies to invoice exports in Orchid staging version 3."
+            },
+            {
+              "output_id": "64fd62c6ba9e4e4598bd300bba54e54d",
+              "field": "observation.narrative",
+              "quote": "For task ORC-42, the user specified semicolon-delimited CSV exports to avoid amount corruption in the local accounting importer. No implementation or verification evidence was provided."
+            }
+          ],
+          "explanation": "Orchid staging version 3 and ORC-42 are preserved."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Initial-observation boundary: later cancellation or test results must not be anticipated.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C07",
+      "kind": "project_memory",
+      "ratings": {
+        "requirement_retention": "pass",
+        "reason_retention": "pass",
+        "current_status": "pass",
+        "role_and_evidence": "partial",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The typed episode preserves current requirements, reason, cancellation, and failing-test gate. It omits the conflicting assistant completion/readiness report and the tool’s explicit no-release statement."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "partial",
+          "project_and_scope": "pass"
+        },
+        "explanation": "All five submitted sources are present in the prompt, so the incomplete conflict account is an output omission."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "dc01169a5e0a4381aac690601d13ce37",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "60bcace0ccca48bea8ee456bb4ed6255",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            },
+            {
+              "source_id": "6f95d7975b5a4778b2d57c9b1251a46a",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "goal",
+              "quote": "User intent: Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited.\nUser intent: Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "summary",
+              "quote": "User intent: Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited.\nUser intent: Keep the five-minute cache and audit record.\nUser intent: For HBR-81 cancel only the refresh button.\nTool record: test_retry_after_timeout FAILED.\nTool record: This command ran in the sandbox.\nUser intent: The retry test is still failing, so the release remains blocked."
+            },
+            {
+              "output_id": "pm_1d75b3ff87d512ad293948bb11b917c3ff11b83b",
+              "field": "text",
+              "quote": "retry test failure blocks release"
+            }
+          ],
+          "explanation": "The episode represents the five-minute cache and per-refresh audit; its summary cancels only the button. The typed requirement claim preserves the retry release gate."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "dc01169a5e0a4381aac690601d13ce37",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "rationale",
+              "quote": "User intent: Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited.\nUser intent: The five-minute cache and audit record are required even if the button is later removed."
+            }
+          ],
+          "explanation": "Rate limits remain the reason for caching; the independence of cache/audit from button removal also survives."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "a6573b005b1a4ea8ac29549512a9f8ad",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            },
+            {
+              "source_id": "6f95d7975b5a4778b2d57c9b1251a46a",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "summary",
+              "quote": "User intent: Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited.\nUser intent: Keep the five-minute cache and audit record.\nUser intent: For HBR-81 cancel only the refresh button.\nTool record: test_retry_after_timeout FAILED.\nTool record: This command ran in the sandbox.\nUser intent: The retry test is still failing, so the release remains blocked."
+            },
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "open_work",
+              "quote": "User intent: For HBR-81, release is blocked until the retry test passes.\nUser intent: The retry test is still failing, so the release remains blocked."
+            },
+            {
+              "output_id": "pm_1d75b3ff87d512ad293948bb11b917c3ff11b83b",
+              "field": "workflow_state",
+              "quote": "open"
+            }
+          ],
+          "explanation": "The summary explicitly cancels the button and retains the cache/audit, and the failing retry test keeps release blocked. The original button goal is historical context resolved by this explicit later statement; no active button claim survives separately."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "70964fa5d7274007900a5701efc27dc2",
+              "role": "assistant",
+              "quote": "I completed the cache, button, and audit record. I think all tests pass and HBR-81 can be released."
+            },
+            {
+              "source_id": "a6573b005b1a4ea8ac29549512a9f8ad",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "outcome",
+              "quote": "Tool record: Command: pytest tests/test_retry.py.\nTool record: Exit code: 1.\nTool record: test_retry_after_timeout FAILED.\nTool record: This command ran in the sandbox."
+            },
+            {
+              "output_id": "C07:original_parsed_candidate",
+              "field": "episodes.0.outcome",
+              "quote": "The retry test command ran in the sandbox and failed: test_retry_after_timeout FAILED."
+            }
+          ],
+          "explanation": "The failed command is correctly attributed to tool evidence in sandbox scope. The assistant claim of completion/all tests passing/releasability is absent, as is “No release command was run.” No false release is asserted, but the conflicting evidence account is incomplete."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "dc01169a5e0a4381aac690601d13ce37",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "a6573b005b1a4ea8ac29549512a9f8ad",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "goal",
+              "quote": "User intent: Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited.\nUser intent: Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "output_id": "pm_c70a706d6ebdd784992f9c710e6b9d35e3658e56",
+              "field": "outcome",
+              "quote": "Tool record: Command: pytest tests/test_retry.py.\nTool record: Exit code: 1.\nTool record: test_retry_after_timeout FAILED.\nTool record: This command ran in the sandbox."
+            },
+            {
+              "output_id": "pm_1d75b3ff87d512ad293948bb11b917c3ff11b83b",
+              "field": "scope.environment",
+              "quote": "Harbor sandbox"
+            },
+            {
+              "output_id": "pm_1d75b3ff87d512ad293948bb11b917c3ff11b83b",
+              "field": "scope.version",
+              "quote": "2"
+            }
+          ],
+          "explanation": "HBR-81, Harbor sandbox version 2, and sandbox test execution are retained."
+        }
+      ],
+      "limitations": [
+        "Typed episode representation counts; the source inventory alone would not.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C08",
+      "kind": "summary",
+      "ratings": {
+        "requirement_retention": "partial",
+        "reason_retention": "pass",
+        "current_status": "fail",
+        "role_and_evidence": "partial",
+        "project_and_scope": "partial"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "pass",
+          "current_status": "fail",
+          "role_and_evidence": "partial",
+          "project_and_scope": "partial"
+        },
+        "explanation": "Unpassed as a summary of the entire submitted history: later cancellation and tool evidence are absent. reason retained; environment/version omitted."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "partial"
+        },
+        "explanation": "The late tool result and cancellation were not supplied, so they are not model omissions. Evaluate the earlier history plus assistant report: reason retained; environment/version omitted."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "09f1bda3b8c44de7953ebffc5a3934cf",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "2d859b8fa55e48cd9a70d9d8ffd568da",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            },
+            {
+              "source_id": "b078cc399d664455bac17d7cdea69bf8",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.learned",
+              "quote": "For ORC-42, the user required semicolon-delimited CSV invoice exports because the local accounting importer treats commas as decimal separators. A dry-run preview and rollback procedure are separate requirements; production rollout is blocked pending accounting sign-off. An assistant later reported implementing the exporter and preview and believed the task was production-ready, but provided no verification evidence. The report does not establish that the rollback procedure or accounting sign-off is complete."
+            }
+          ],
+          "explanation": "The current CSV/rollback obligations and gate are retained, but the later preview cancellation is absent from this summary. Before cancellation, all initial obligations are represented."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "09f1bda3b8c44de7953ebffc5a3934cf",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.learned",
+              "quote": "For ORC-42, the user required semicolon-delimited CSV invoice exports because the local accounting importer treats commas as decimal separators. A dry-run preview and rollback procedure are separate requirements; production rollout is blocked pending accounting sign-off. An assistant later reported implementing the exporter and preview and believed the task was production-ready, but provided no verification evidence. The report does not establish that the rollback procedure or accounting sign-off is complete."
+            }
+          ],
+          "explanation": "The summary retains the decimal-comma importer reason, though it compresses the corruption consequence."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "2d859b8fa55e48cd9a70d9d8ffd568da",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            },
+            {
+              "source_id": "659a3d336734412580389e6a9d1b6f3e",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            },
+            {
+              "source_id": "b078cc399d664455bac17d7cdea69bf8",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.learned",
+              "quote": "For ORC-42, the user required semicolon-delimited CSV invoice exports because the local accounting importer treats commas as decimal separators. A dry-run preview and rollback procedure are separate requirements; production rollout is blocked pending accounting sign-off. An assistant later reported implementing the exporter and preview and believed the task was production-ready, but provided no verification evidence. The report does not establish that the rollback procedure or accounting sign-off is complete."
+            },
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.next_steps",
+              "quote": "Confirm implementation and verification, and establish whether the rollback procedure and accounting sign-off are complete before treating production rollout as ready."
+            }
+          ],
+          "explanation": "Against the full submitted history, the summary leaves preview cancellation unstated and treats verification as unknown despite the later limited staging result. Against the actual prompt, preserving the earlier gate and uncertainty is correct; it must not predict those later events."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "e8e297ca627b423c9d5defba17f4af60",
+              "role": "assistant",
+              "quote": "I implemented the semicolon exporter and preview. I believe ORC-42 is ready for production."
+            },
+            {
+              "source_id": "659a3d336734412580389e6a9d1b6f3e",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.learned",
+              "quote": "For ORC-42, the user required semicolon-delimited CSV invoice exports because the local accounting importer treats commas as decimal separators. A dry-run preview and rollback procedure are separate requirements; production rollout is blocked pending accounting sign-off. An assistant later reported implementing the exporter and preview and believed the task was production-ready, but provided no verification evidence. The report does not establish that the rollback procedure or accounting sign-off is complete."
+            }
+          ],
+          "explanation": "The assistant readiness and implementation statements are properly attributed and unverified. The actual four-test staging result and explicit no-deployment statement are missing from full-history coverage because that tool source was not supplied."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "09f1bda3b8c44de7953ebffc5a3934cf",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.learned",
+              "quote": "For ORC-42, the user required semicolon-delimited CSV invoice exports because the local accounting importer treats commas as decimal separators. A dry-run preview and rollback procedure are separate requirements; production rollout is blocked pending accounting sign-off. An assistant later reported implementing the exporter and preview and believed the task was production-ready, but provided no verification evidence. The report does not establish that the rollback procedure or accounting sign-off is complete."
+            },
+            {
+              "output_id": "153d9962230643fbae89251f06ec976d",
+              "field": "session_summary.title",
+              "quote": "ORC-42 export requirements and unverified readiness report"
+            }
+          ],
+          "explanation": "The task identifier survives, but the named project and staging version 3 do not. A generic project path on the container record does not preserve the natural-language environment and version scope inside the summary."
+        },
+        {
+          "dimension": "input_coverage",
+          "sources": [
+            {
+              "source_id": "659a3d336734412580389e6a9d1b6f3e",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            },
+            {
+              "source_id": "b078cc399d664455bac17d7cdea69bf8",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "C08:prepared_prompt",
+              "field": "supplied_source_ids",
+              "quote": [
+                "09f1bda3b8c44de7953ebffc5a3934cf",
+                "2d859b8fa55e48cd9a70d9d8ffd568da",
+                "3b0ad1ee41184e5e9b9ace7851fc67ca",
+                "64fd62c6ba9e4e4598bd300bba54e54d",
+                "s1"
+              ]
+            }
+          ],
+          "explanation": "The prompt contains initial user history, derived observations, and the assistant Stop report. The tool result and later cancellation source IDs are absent. Their missing information is a submitted-history coverage gap, not a model omission given this prompt."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Only session_summary is scored. Earlier observations do not compensate for its omissions.",
+        "Missing from actual prompt: 659a3d336734412580389e6a9d1b6f3e, b078cc399d664455bac17d7cdea69bf8.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C09",
+      "kind": "project_memory",
+      "ratings": {
+        "requirement_retention": "unavailable",
+        "reason_retention": "unavailable",
+        "current_status": "unavailable",
+        "role_and_evidence": "unavailable",
+        "project_and_scope": "unavailable"
+      },
+      "full_history_verdict": {
+        "status": "unavailable",
+        "ratings": {
+          "requirement_retention": "unavailable",
+          "reason_retention": "unavailable",
+          "current_status": "unavailable",
+          "role_and_evidence": "unavailable",
+          "project_and_scope": "unavailable"
+        },
+        "explanation": "No original parsed candidate or stored episode/claim output is available. Every dimension is unavailable and the cell is unpassed."
+      },
+      "input_conditioned_verdict": {
+        "status": "unavailable",
+        "ratings": {
+          "requirement_retention": "unavailable",
+          "reason_retention": "unavailable",
+          "current_status": "unavailable",
+          "role_and_evidence": "unavailable",
+          "project_and_scope": "unavailable"
+        },
+        "explanation": "The prompt includes the five sources, but absent output cannot be judged. No cause is inferred."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "2804ddcc32864128bbf0ff53613fdf1e",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "736fca7042494ca1af3b1f7fa081015c",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            },
+            {
+              "source_id": "6c1269eb30504398998e75b2f1b172b6",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [],
+          "explanation": "original_parsed_candidate is null and stored episodes/claims are empty; no output ID exists to cite. This is unavailable, not a guessed semantic failure."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "2804ddcc32864128bbf0ff53613fdf1e",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [],
+          "explanation": "original_parsed_candidate is null and stored episodes/claims are empty; no output ID exists to cite. This is unavailable, not a guessed semantic failure."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "9a363a035e7e4001aac0ab2e8f7572ad",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            },
+            {
+              "source_id": "6c1269eb30504398998e75b2f1b172b6",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [],
+          "explanation": "original_parsed_candidate is null and stored episodes/claims are empty; no output ID exists to cite. This is unavailable, not a guessed semantic failure."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "0b93f9db42c84a049e11f5b5b9c37ceb",
+              "role": "assistant",
+              "quote": "I completed the cache, button, and audit record. I think all tests pass and HBR-81 can be released."
+            },
+            {
+              "source_id": "9a363a035e7e4001aac0ab2e8f7572ad",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            }
+          ],
+          "outputs": [],
+          "explanation": "original_parsed_candidate is null and stored episodes/claims are empty; no output ID exists to cite. This is unavailable, not a guessed semantic failure."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "2804ddcc32864128bbf0ff53613fdf1e",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "9a363a035e7e4001aac0ab2e8f7572ad",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            }
+          ],
+          "outputs": [],
+          "explanation": "original_parsed_candidate is null and stored episodes/claims are empty; no output ID exists to cite. This is unavailable, not a guessed semantic failure."
+        }
+      ],
+      "limitations": [
+        "No diagnosis of the missing candidate, runtime, structural correctness, or latency is made.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "summary",
+      "ratings": {
+        "requirement_retention": "partial",
+        "reason_retention": "pass",
+        "current_status": "fail",
+        "role_and_evidence": "partial",
+        "project_and_scope": "partial"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "pass",
+          "current_status": "fail",
+          "role_and_evidence": "partial",
+          "project_and_scope": "partial"
+        },
+        "explanation": "Unpassed as a summary of the entire submitted history: later cancellation and tool evidence are absent. reason retained; environment/version omitted."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "partial"
+        },
+        "explanation": "The late tool result and cancellation were not supplied, so they are not model omissions. Evaluate the earlier history plus assistant report: reason retained; environment/version omitted."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "3a042f9819254f2dbeb08a0ca5c38303",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            },
+            {
+              "source_id": "f1db9ab000ed4f79be990def99ede0b8",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.request",
+              "quote": "The user specified that ORC-42 invoice CSV exports use semicolon delimiters because the local accounting importer treats commas as decimal separators. They also required a dry-run preview and rollback procedure, with production rollout blocked pending accounting team sign-off."
+            }
+          ],
+          "explanation": "The current CSV/rollback obligations and gate are retained, but the later preview cancellation is absent from this summary. Before cancellation, all initial obligations are represented."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.request",
+              "quote": "The user specified that ORC-42 invoice CSV exports use semicolon delimiters because the local accounting importer treats commas as decimal separators. They also required a dry-run preview and rollback procedure, with production rollout blocked pending accounting team sign-off."
+            }
+          ],
+          "explanation": "The summary retains the decimal-comma importer reason, though it compresses the corruption consequence."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "3a042f9819254f2dbeb08a0ca5c38303",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            },
+            {
+              "source_id": "0f705d2ab8db4e0c9db85812d1948604",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            },
+            {
+              "source_id": "f1db9ab000ed4f79be990def99ede0b8",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.request",
+              "quote": "The user specified that ORC-42 invoice CSV exports use semicolon delimiters because the local accounting importer treats commas as decimal separators. They also required a dry-run preview and rollback procedure, with production rollout blocked pending accounting team sign-off."
+            },
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.next_steps",
+              "quote": "Confirm the rollback procedure is complete and obtain accounting sign-off before production rollout; verify the reported exporter and preview implementation."
+            }
+          ],
+          "explanation": "Against the full submitted history, the summary leaves preview cancellation unstated and treats verification as unknown despite the later limited staging result. Against the actual prompt, preserving the earlier gate and uncertainty is correct; it must not predict those later events."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "6a7a6bda88ca4db58e89f2423007609c",
+              "role": "assistant",
+              "quote": "I implemented the semicolon exporter and preview. I believe ORC-42 is ready for production."
+            },
+            {
+              "source_id": "0f705d2ab8db4e0c9db85812d1948604",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.learned",
+              "quote": "Implementation and readiness are reported, not independently verified. The report does not address the required rollback procedure or accounting sign-off, so production readiness remains uncertain."
+            }
+          ],
+          "explanation": "The assistant readiness and implementation statements are properly attributed and unverified. The actual four-test staging result and explicit no-deployment statement are missing from full-history coverage because that tool source was not supplied."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.request",
+              "quote": "The user specified that ORC-42 invoice CSV exports use semicolon delimiters because the local accounting importer treats commas as decimal separators. They also required a dry-run preview and rollback procedure, with production rollout blocked pending accounting team sign-off."
+            },
+            {
+              "output_id": "f18fc3ca552d4c7b9dfbdf5c247581d3",
+              "field": "session_summary.title",
+              "quote": "ORC-42 implementation reported; production readiness remains unconfirmed"
+            }
+          ],
+          "explanation": "The task identifier survives, but the named project and staging version 3 do not. A generic project path on the container record does not preserve the natural-language environment and version scope inside the summary."
+        },
+        {
+          "dimension": "input_coverage",
+          "sources": [
+            {
+              "source_id": "0f705d2ab8db4e0c9db85812d1948604",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_invoice_csv.py. Exit code: 0. 4 tests passed in staging. No deployment command was executed. Accounting sign-off was not checked."
+            },
+            {
+              "source_id": "f1db9ab000ed4f79be990def99ede0b8",
+              "role": "user",
+              "quote": "For ORC-42 cancel only the dry-run preview requirement. Keep the semicolon CSV and rollback requirements. Production remains blocked pending accounting sign-off. Passing staging tests does not authorize production."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "C10:prepared_prompt",
+              "field": "supplied_source_ids",
+              "quote": [
+                "242f11f9ad234b588eee9097d7c2ea0b",
+                "3a042f9819254f2dbeb08a0ca5c38303",
+                "95ee448ede80496ebee516409655a75e",
+                "c610b12f437d4db8b10a1d5cf24c0513",
+                "s1"
+              ]
+            }
+          ],
+          "explanation": "The prompt contains initial user history, derived observations, and the assistant Stop report. The tool result and later cancellation source IDs are absent. Their missing information is a submitted-history coverage gap, not a model omission given this prompt."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Only session_summary is scored. Earlier observations do not compensate for its omissions.",
+        "Missing from actual prompt: 0f705d2ab8db4e0c9db85812d1948604, f1db9ab000ed4f79be990def99ede0b8.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C11",
+      "kind": "summary",
+      "ratings": {
+        "requirement_retention": "partial",
+        "reason_retention": "pass",
+        "current_status": "fail",
+        "role_and_evidence": "partial",
+        "project_and_scope": "partial"
+      },
+      "full_history_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "pass",
+          "current_status": "fail",
+          "role_and_evidence": "partial",
+          "project_and_scope": "partial"
+        },
+        "explanation": "Unpassed as a summary of the entire submitted history: later cancellation and tool evidence are absent. initial button requirement is not stated affirmatively; environment/version omitted."
+      },
+      "input_conditioned_verdict": {
+        "status": "unpassed",
+        "ratings": {
+          "requirement_retention": "partial",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "partial"
+        },
+        "explanation": "The late tool result and cancellation were not supplied, so they are not model omissions. Evaluate the earlier history plus assistant report: initial button requirement is not stated affirmatively; environment/version omitted."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            },
+            {
+              "source_id": "5f6d156c6175466784045c3e9d99442f",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            },
+            {
+              "source_id": "ffd6ce8c431a468cac180fcc5959c535",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes due to upstream rate limits, an audit record for each refresh, and a passing retry test before release. The cache and audit requirements remain if the manual refresh button is removed."
+            }
+          ],
+          "explanation": "The five-minute cache, audit record, and retry gate are retained, but effective button cancellation is absent. Even for the earlier prompt, the explicit button request is not stated as a requirement; it only appears in conditional-removal language and the assistant report."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes due to upstream rate limits, an audit record for each refresh, and a passing retry test before release. The cache and audit requirements remain if the manual refresh button is removed."
+            }
+          ],
+          "explanation": "The upstream rate-limit reason is retained."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "5f6d156c6175466784045c3e9d99442f",
+              "role": "user",
+              "quote": "For HBR-81, release is blocked until the retry test passes. The five-minute cache and audit record are required even if the button is later removed."
+            },
+            {
+              "source_id": "d44f88f2b5da41a4a11336cfa8391b32",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            },
+            {
+              "source_id": "ffd6ce8c431a468cac180fcc5959c535",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes due to upstream rate limits, an audit record for each refresh, and a passing retry test before release. The cache and audit requirements remain if the manual refresh button is removed."
+            },
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.next_steps",
+              "quote": "Verify the five-minute cache, per-refresh audit records, and retry test before treating HBR-81 as ready for release."
+            }
+          ],
+          "explanation": "Against the full submitted history, the summary leaves refresh button cancellation unstated and treats the retry outcome as unknown despite the later failed test. Against the actual prompt, preserving the earlier gate and uncertainty is correct; it must not predict those later events."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "646cc4f92dd34767b894212e1bf0d77d",
+              "role": "assistant",
+              "quote": "I completed the cache, button, and audit record. I think all tests pass and HBR-81 can be released."
+            },
+            {
+              "source_id": "d44f88f2b5da41a4a11336cfa8391b32",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.completed",
+              "quote": "The assistant reported completing the cache, button, and audit record, and said it thought all tests passed and HBR-81 could be released. Those outcomes and release readiness are unverified in the available evidence."
+            }
+          ],
+          "explanation": "The assistant completion and passing-tests belief are properly reported as unverified. The failed retry test and explicit no-release result are missing from full-history coverage because that tool source was not supplied."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "7d7597d30afa46379dea12b9a5b927f7",
+              "role": "user",
+              "quote": "Confirmed requirement for task HBR-81 in Harbor sandbox version 2: cache pricing for exactly five minutes because upstream requests are rate limited. Provide a manual refresh button and keep an audit record for each refresh."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.request",
+              "quote": "For HBR-81, the user required pricing to be cached for exactly five minutes due to upstream rate limits, an audit record for each refresh, and a passing retry test before release. The cache and audit requirements remain if the manual refresh button is removed."
+            },
+            {
+              "output_id": "630e45ad0bf445abbc30b1819a0afdc0",
+              "field": "session_summary.title",
+              "quote": "HBR-81 requirements and unverified completion report"
+            }
+          ],
+          "explanation": "The task identifier survives, but the named project and sandbox version 2 do not. A generic project path on the container record does not preserve the natural-language environment and version scope inside the summary."
+        },
+        {
+          "dimension": "input_coverage",
+          "sources": [
+            {
+              "source_id": "d44f88f2b5da41a4a11336cfa8391b32",
+              "role": "toolResult",
+              "quote": "Command: pytest tests/test_retry.py. Exit code: 1. test_retry_after_timeout FAILED. This command ran in the sandbox. No release command was run."
+            },
+            {
+              "source_id": "ffd6ce8c431a468cac180fcc5959c535",
+              "role": "user",
+              "quote": "For HBR-81 cancel only the refresh button. Keep the five-minute cache and audit record. The retry test is still failing, so the release remains blocked."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "C11:prepared_prompt",
+              "field": "supplied_source_ids",
+              "quote": [
+                "7d7597d30afa46379dea12b9a5b927f7",
+                "5f6d156c6175466784045c3e9d99442f",
+                "95f3196cfcbb4dd5a61479f98a5b14a5",
+                "s1"
+              ]
+            }
+          ],
+          "explanation": "The prompt contains initial user history, derived observations, and the assistant Stop report. The tool result and later cancellation source IDs are absent. Their missing information is a submitted-history coverage gap, not a model omission given this prompt."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Only session_summary is scored. Earlier observations do not compensate for its omissions.",
+        "Missing from actual prompt: d44f88f2b5da41a4a11336cfa8391b32, ffd6ce8c431a468cac180fcc5959c535.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    },
+    {
+      "id": "C12",
+      "kind": "observation",
+      "ratings": {
+        "requirement_retention": "pass",
+        "reason_retention": "pass",
+        "current_status": "pass",
+        "role_and_evidence": "pass",
+        "project_and_scope": "pass"
+      },
+      "full_history_verdict": {
+        "status": "passed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "pass"
+        },
+        "explanation": "The initial observation set retains all obligations, their reason, task/environment/version, and user-intent provenance without inventing implementation or future cancellation."
+      },
+      "input_conditioned_verdict": {
+        "status": "passed",
+        "ratings": {
+          "requirement_retention": "pass",
+          "reason_retention": "pass",
+          "current_status": "pass",
+          "role_and_evidence": "pass",
+          "project_and_scope": "pass"
+        },
+        "explanation": "Both initial user sources are fully supplied and adequately represented."
+      },
+      "evidence": [
+        {
+          "dimension": "requirement_retention",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "3a042f9819254f2dbeb08a0ca5c38303",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95ee448ede80496ebee516409655a75e",
+              "field": "observation.facts.0",
+              "quote": "The user confirmed ORC-42 in Orchid staging version 3 requires CSV invoice exports with a semicolon delimiter."
+            },
+            {
+              "output_id": "c610b12f437d4db8b10a1d5cf24c0513",
+              "field": "observation.facts",
+              "quote": [
+                "The user said ORC-42 requires a dry-run preview and a rollback procedure; completion is not established.",
+                "The user said production rollout is blocked until accounting team sign-off; sign-off is not established."
+              ]
+            }
+          ],
+          "explanation": "Semicolon CSV, dry-run preview, rollback, and accounting production gate are explicit."
+        },
+        {
+          "dimension": "reason_retention",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95ee448ede80496ebee516409655a75e",
+              "field": "observation.facts.1",
+              "quote": "The user said the local accounting importer treats commas as decimal separators, causing comma-delimited exports to corrupt amounts; this rationale is user-reported, not independently verified."
+            }
+          ],
+          "explanation": "The decimal-comma importer and amount-corruption rationale are preserved as user-reported."
+        },
+        {
+          "dimension": "current_status",
+          "sources": [
+            {
+              "source_id": "3a042f9819254f2dbeb08a0ca5c38303",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "c610b12f437d4db8b10a1d5cf24c0513",
+              "field": "observation.facts",
+              "quote": [
+                "The user said ORC-42 requires a dry-run preview and a rollback procedure; completion is not established.",
+                "The user said production rollout is blocked until accounting team sign-off; sign-off is not established."
+              ]
+            },
+            {
+              "output_id": "c610b12f437d4db8b10a1d5cf24c0513",
+              "field": "observation.narrative",
+              "quote": "Keep the preview and rollback work distinct from the accounting team's production sign-off. The sign-off is an explicit production gate, and no completion evidence was provided."
+            }
+          ],
+          "explanation": "All initial obligations remain required with no completion evidence; no later preview cancellation is anticipated."
+        },
+        {
+          "dimension": "role_and_evidence",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            },
+            {
+              "source_id": "3a042f9819254f2dbeb08a0ca5c38303",
+              "role": "user",
+              "quote": "ORC-42 also requires a dry-run preview and a rollback procedure. Production rollout is blocked until the accounting team signs off. Keep these separate obligations."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95ee448ede80496ebee516409655a75e",
+              "field": "observation.subtitle",
+              "quote": "User-confirmed export requirement; implementation not established"
+            },
+            {
+              "output_id": "95ee448ede80496ebee516409655a75e",
+              "field": "observation.narrative",
+              "quote": "The delimiter choice is tied to a stated importer constraint and amount-corruption risk. Future work on ORC-42 should preserve the semicolon delimiter; these observations provide no evidence that it was implemented or tested."
+            },
+            {
+              "output_id": "c610b12f437d4db8b10a1d5cf24c0513",
+              "field": "observation.subtitle",
+              "quote": "User-stated rollout gates; completion not established"
+            }
+          ],
+          "explanation": "User-confirmed requirements remain distinct from implementation and verification. Source associations link each observation to the matching user message."
+        },
+        {
+          "dimension": "project_and_scope",
+          "sources": [
+            {
+              "source_id": "242f11f9ad234b588eee9097d7c2ea0b",
+              "role": "user",
+              "quote": "Confirmed requirement for task ORC-42 in Orchid staging version 3: keep invoice exports as CSV with a semicolon delimiter. The local accounting importer treats commas as decimal separators, so comma-delimited exports corrupt amounts."
+            }
+          ],
+          "outputs": [
+            {
+              "output_id": "95ee448ede80496ebee516409655a75e",
+              "field": "observation.facts.0",
+              "quote": "The user confirmed ORC-42 in Orchid staging version 3 requires CSV invoice exports with a semicolon delimiter."
+            }
+          ],
+          "explanation": "ORC-42, Orchid staging, and version 3 are preserved."
+        }
+      ],
+      "limitations": [
+        "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+        "Initial-observation boundary: later assistant/tool/cancellation messages are outside the candidate’s source history.",
+        "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor."
+      ]
+    }
+  ],
+  "method": {
+    "rubric": {
+      "blind": "Independent grader receives source roles and outputs but no runtime/model labels, runtime status, tokens, or implementer judgments. Runtime/structural results joined afterwards.",
+      "dimensions": [
+        "requirement_retention",
+        "reason_retention",
+        "current_status",
+        "role_and_evidence",
+        "project_and_scope"
+      ],
+      "project_memory": "Grade typed episodes/claims and their source associations; neutral source custody alone does not count as represented requirement.",
+      "ratings": [
+        "pass",
+        "partial",
+        "fail",
+        "unavailable"
+      ],
+      "rule": "Grade meaning with cited output/source IDs and exact excerpts. Substring presence or schema validity is not sufficient. Initial observation excludes later cancellation. Summary/project memory must reflect later cancellation and conflicting assistant/tool evidence. No output is unavailable and counts unpassed. Any fail/partial/unavailable makes the cell unpassed; no weighted average can hide a role/status failure.",
+      "summary": "Only generated session_summary is the summary candidate; ordinary notes or source custody do not fill a missing summary.",
+      "typesafe": "Use narrow independent evidence questions from TypeSafe citation guidance. No Jev API run or production dependency is planned. Independent reasoning agent supplies semantic judgments with evidence."
+    },
+    "ratings_basis": "Top-level ratings are full_submitted_history coverage. input_conditioned_verdict.ratings separately scores semantics against actual prepared_prompt, including its earlier session history. Both use the same five frozen dimensions.",
+    "cell_rule": "Only five pass ratings produce passed. Any partial, fail, or unavailable makes the cell unpassed; there is no weighted mean.",
+    "evidence_method": "Direct semantic comparison of the single blind bundle, inspected in portions. Exact source IDs and excerpts are paired with stored output IDs/structured fields or original parsed candidate field pointers. No model/API calls, code tests, fixtures, or external reports were used.",
+    "typed_representation": "For PM, substantive typed episode goal/rationale/outcome/open_work/summary fields and typed claims are graded. Source custody alone does not count. Empty claims do not by themselves fail meaningful typed episode representation; contradictory surviving claims do affect current status.",
+    "semantics": "A direct contradiction or wholly missing required rationale is fail. Incomplete retention or an unsupported label alongside correct qualified prose is partial. Unavailable is reserved for absent candidate and absent output.",
+    "initial_boundary": "Initial observations are evaluated against the initial two user messages only. They must not foresee later cancellation or execution outcomes."
+  },
+  "limits": [
+    "new synthetic wording; disclosed regression themes; diagnostic comparison, not independent holdout",
+    "This diagnostic is neither statistical equivalence evidence nor an independent holdout. No general model-quality or production claim follows from 12 cells.",
+    "The grader remained blind to runtime/model labels, latency, token counts, runtime status, and implementer judgments. No attempt was made to infer them.",
+    "Stored timeline readback provides previews and full structured metadata, not a confirmed full stored body. Judgments use those structured fields and the complete original parsed candidate; raw body content is not proof of complete persisted body.",
+    "All four summary prompts omit the later tool result and cancellation. Their full-history failures do not establish model errors on information they never received.",
+    "No Cedar/Larch distractor content appears in the supplied prompt. Absence of leakage is observable here, but this does not test resistance to a visible cross-project distractor.",
+    "No runtime or schema validity scoring, and no causal diagnosis of unavailable output."
+  ]
+}

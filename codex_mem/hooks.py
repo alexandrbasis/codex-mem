@@ -304,10 +304,18 @@ def _handle_hook(
                 and is_private_prompt(payload.get("prompt"))):
             # Persist before SQLite or the shared hook-state lock can stall.
             # A cancelled worker must leave later tool hooks protected.
-            from .private_gate import mark_private
+            from .private_gate import mark_private_delivery
+            from .host import HostEvent
             session_key = _session_key(payload, project)
+            identity = HostEvent(host="codex", project=project,
+                session_id=_optional_id(payload.get("session_id")), branch=_optional_branch(payload.get("branch")),
+                event="user_message", role="user_intent", body="",
+                event_id=_optional_id(payload.get("event_id")), message_id=_optional_id(payload.get("message_id")),
+                turn_id=_optional_id(payload.get("turn_id")))
             try:
-                mark_private(session_key, active_data_dir)
+                applied = mark_private_delivery(session_key, identity.dedupe_key, active_data_dir)
+                if not applied:
+                    trace_event("hook_skipped", reason="private_redelivery")
             except OSError as exc:
                 trace_error("private_marker_failed", exc)
                 # A marker-directory permission failure need not prevent the
@@ -600,7 +608,7 @@ def _session_start(
     with trace_stage("context_read"):
         context = _prior_context(
             store, project, config, active_session_id=active_session_id,
-            exclude_session=exclude_session, query="",
+            exclude_session=exclude_session, query="", branch=_optional_branch(payload.get("branch")),
         )
     trace_event("context_result", context_chars=len(context))
     message = _trusted_context_message(
@@ -635,31 +643,10 @@ def _user_prompt(
     private_query = is_private_prompt(payload.get("prompt"))
     prompt = _safe_prompt(payload.get("prompt"))
     session_key = _session_key(payload, project)
-    # The marker is detected before _safe_prompt/redact_text replaces private
-    # content.  A public prompt starts a fresh turn and clears the prior gate;
-    # the key includes the canonical project and session, so another session
-    # cannot inherit the privacy decision.
-    if private_prompt_gate_enabled(config):
-        try:
-            if private_query:
-                mark_private_prompt_gate(
-                    session_key,
-                    turn_id=_optional_id(payload.get("turn_id")),
-                    data_dir=data_dir,
-                )
-            else:
-                clear_private_prompt_gate(session_key, data_dir=data_dir)
-                from .private_gate import clear_private
-                clear_private(session_key, data_dir)
-        except Exception as exc:
-            trace_error("privacy_state_write_failed", exc)
-            _stderr("codex-mem hook: privacy state unavailable")
-    else:
-        try:
-            clear_private_prompt_gate(session_key, data_dir=data_dir)
-        except Exception as exc:
-            trace_error("privacy_state_clear_failed", exc)
-    if config.get("capture_enabled") and prompt:
+    # Private prompts were protected before Store opened. Do not replay that
+    # transition here or reinterpret a redacted private body as a public user.
+    # The shared delivery receipt owns every public gate transition.
+    if config.get("capture_enabled") and prompt and not private_query:
         _remember_safely(
             store,
             project,
@@ -684,7 +671,7 @@ def _user_prompt(
             store, project, config,
             active_session_id=_optional_id(payload.get("session_id")),
             exclude_session=_optional_id(payload.get("session_id")),
-            query=prompt, allow_remote=allow_remote,
+            query=prompt, allow_remote=allow_remote, branch=_optional_branch(payload.get("branch")),
             remote_deadline=remote_deadline,
         )
     trace_event("context_result", context_chars=len(context))
@@ -841,6 +828,7 @@ def _prior_context(
     active_session_id: str | None,
     exclude_session: str | None,
     query: str,
+    branch: str | None = None,
     allow_remote: bool = True,
     remote_deadline: float | None = None,
 ) -> str:
@@ -857,33 +845,15 @@ def _prior_context(
     if memory_budget < 128:
         trace_event("context_skipped", reason="budget_too_small")
         return ""
-    try:
-        from .query import normalize_retrieval_query
-        normalized_query = normalize_retrieval_query(query)
-        if query.strip() and not normalized_query.strip():
-            trace_event("context_skipped", reason="routing_only_query")
-            return ""  # A routing-only prompt is not an unfiltered startup query.
-        remote_options = {"hook_mode": True}
-        if config.get("jev_retrieval_enabled"):
-            if not allow_remote:
-                remote_options["allow_remote"] = False
-            if remote_deadline is not None:
-                remote_options["remote_deadline"] = remote_deadline
-        context = store.context(
-            project,
-            query=_truncate(normalized_query, 1_000),
-            budget=memory_budget,
-            exclude_session=exclude_session,
-            **remote_options,
-        )
-    except Exception as exc:
-        trace_error("context_read_failed", exc)
-        _stderr("codex-mem hook: context unavailable")
-        return ""
-    if not isinstance(context, str):
-        trace_event("context_skipped", reason="invalid_context")
-        return ""
-    return _truncate(context, memory_budget)
+    from .host import ContextRequest, retrieve_context
+    result = retrieve_context(ContextRequest(host="codex", project=project,
+        session_id=exclude_session, branch=branch, query=query, budget=memory_budget,
+        exclude_current_session=exclude_session is not None,
+        allow_remote=allow_remote, remote_deadline=remote_deadline), store)
+    if result.reason:
+        trace_event("context_skipped", reason=result.reason, omitted_chars=result.omitted_chars)
+    return result.text
+
 
 
 def _trusted_context_message(context: str, *, session_id: str | None, budget: int) -> str:
@@ -923,48 +893,36 @@ def _remember_safely(
     provenance_id: str | None = None,
     tool_capture: ToolCapture | Mapping[str, Any] | None = None,
 ) -> None:
-    body = _without_injected_memory(body)
-    session_id = _optional_id(payload.get("session_id"))
-    turn_id = _optional_id(payload.get("turn_id"))
-    fingerprint = "|".join(
-        [dedupe_prefix, session_id or "", turn_id or "", provenance_id or "", body]
-    )
-    dedupe_key = f"hook:{dedupe_prefix}:{hashlib.sha256(fingerprint.encode('utf-8')).hexdigest()}"
-    try:
-        remember_kwargs: dict[str, Any] = {
-            "title": _truncate(redact_text(title), 300),
-            "body": _truncate(redact_text(body), MAX_CAPTURE_CHARS),
-            "kind": kind,
-            "session_id": session_id,
-            "turn_id": turn_id,
-            "source": source,
-            "tags": list(tags),
-            "dedupe_key": dedupe_key,
-        }
-        if tool_capture is not None:
-            remember_kwargs["tool_capture"] = tool_capture
-        with trace_stage("capture_remember"):
-            store.remember(project, **remember_kwargs)
-        trace_event("capture_result", recorded=True, body_chars=len(remember_kwargs["body"]))
-    except Exception as exc:
-        trace_error("capture_remember_failed", exc)
-        _stderr("codex-mem hook: capture unavailable")
+    from .host import HostEvent, capture_event, source_event, source_role
+    event = HostEvent(host="codex", project=project,
+        session_id=_optional_id(payload.get("session_id")),
+        event=source_event(source), role=source_role(source), body=body, title=title,
+        branch=_optional_branch(payload.get("branch")),
+        event_id=_optional_id(payload.get("event_id")),
+        message_id=_optional_id(payload.get("message_id")), tool_id=provenance_id,
+        turn_id=_optional_id(payload.get("turn_id")), tool_capture=tool_capture, tags=tuple(tags))
+    with trace_stage("capture_remember"):
+        receipt = capture_event(event, store)
+    if receipt.get("status") != "captured":
+        trace_event("capture_result", recorded=False, reason=receipt.get("reason"))
         return
+    trace_event("capture_result", recorded=True, body_chars=min(len(body), MAX_CAPTURE_CHARS),
+                omitted_chars=receipt.get("omitted_chars", 0))
 
     # Commit evidence first. A long or interrupted turn must not depend on a
     # later Stop event to wake the durable queue. Scope/configuration gates and
     # detached startup remain owned by integration; never run the model here.
     data_dir = _store_data_dir(store)
     prompt_wake = False
-    if source == "hook:UserPromptSubmit" and data_dir is not None:
+    if source_role(source) == "user_intent" and data_dir is not None:
         try:
             prompt_wake = project_memory_enabled(project, load_config(data_dir))
         except Exception:
             pass
-    if prompt_wake or source in {"hook:Stop", "hook:PreCompact"} or source.startswith("hook:PostToolUse"):
+    if prompt_wake or source_role(source) in {"assistant_report", "lifecycle_marker", "tool_record"}:
         if data_dir is not None:
             _wake_capture_queue(project, data_dir,
-                                coalesce_seconds=5 if source.startswith("hook:PostToolUse") else 0)
+                                coalesce_seconds=5 if source_role(source) == "tool_record" else 0)
         else:
             trace_event("queue_skipped", reason="store_data_dir_unavailable")
 
@@ -1030,11 +988,11 @@ def _context_budget(config: Mapping[str, Any]) -> int:
 
 
 def _session_key(payload: Mapping[str, Any], project: str) -> str:
-    session_id = _optional_id(payload.get("session_id"))
-    project_digest = hashlib.sha256(project.encode("utf-8")).hexdigest()[:16]
-    if session_id:
-        return f"project:{project_digest}:session:{session_id}"
-    return f"project:{project_digest}:anonymous"
+    from .host import session_namespace, session_state_key
+    session_id = session_namespace("codex", _optional_id(payload.get("session_id")),
+                                   _optional_branch(payload.get("branch")))
+    return session_state_key(project, session_id)
+
 
 
 def _context_marker(context: str) -> str:
@@ -1069,6 +1027,15 @@ def _mark_context_delivery(
     mark_context_injected(
         session_key, source=_context_marker(context), data_dir=data_dir
     )
+
+
+def _optional_branch(value: Any) -> str | None:
+    from .host import validate_identifier
+    try:
+        validate_identifier(value)
+    except ValueError:
+        return None
+    return value
 
 
 def _optional_id(value: Any) -> str | None:

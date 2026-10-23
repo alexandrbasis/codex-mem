@@ -231,7 +231,7 @@ class ServiceRunnerRecoveryTests(unittest.TestCase):
         processor.assert_not_called()
         self.assertTrue(self.state()["projects"][self.workspace]["blocked"])
 
-    def test_profile_upgrade_drains_fresh_work_without_replaying_old_failure(self) -> None:
+    def test_profile_change_cannot_bypass_uncertain_transport_failure(self) -> None:
         old_model = "gpt-5.6-luna"
         with Store(self.data_dir) as store:
             job = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT)
@@ -249,12 +249,12 @@ class ServiceRunnerRecoveryTests(unittest.TestCase):
         processor = lambda project, **kwargs: process_pending(project, runner=runner, **kwargs)
         run_service(self.data_dir, processor=processor, clock=self.clock,
                     sleeper=self.sleep, max_cycles=3)
-        self.assertEqual(1, runner.call_count)
+        self.assertEqual(0, runner.call_count)
         with Store(self.data_dir) as store:
             previous = store.observation_job_status(self.project, job["job_id"])
         self.assertEqual(("failed", 1, old_model),
                          (previous["status"], previous["attempt_count"], previous["model"]))
-        self.assertEqual(0, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
+        self.assertEqual(1, service_status(self.data_dir, clock=self.clock)["blocked_projects"])
 
     def test_unknown_runner_failure_stops_after_one_retry(self) -> None:
         enqueue(self.project, self.data_dir, clock=self.clock)

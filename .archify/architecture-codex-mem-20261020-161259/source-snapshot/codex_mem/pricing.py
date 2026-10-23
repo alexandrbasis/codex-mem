@@ -132,7 +132,9 @@ def price_event(event: Mapping[str, Any]) -> dict[str, Any]:
 def _price_event(event: Mapping[str, Any]) -> dict[str, Any]:
     counts = token_counts(event)
     model = event.get("model")
-    rates = CATALOG.get(model) if isinstance(model, str) else None
+    provider = event.get("provider") or event.get("model_provider") or "openai"
+    runtime = event.get("runtime") or "codex"
+    rates = CATALOG.get(model) if isinstance(model, str) and provider == "openai" else None
     tier_source = event.get("service_tier_source")
     provider_evidence = isinstance(tier_source, str) and tier_source in {"token_usage_record", "response", "provider"}
     confirmed_raw = event.get("service_tier") if provider_evidence else None
@@ -152,9 +154,9 @@ def _price_event(event: Mapping[str, Any]) -> dict[str, Any]:
         input_cost = (uncached * rates.input + counts["cached_input_tokens"] * rates.cache_read + counts["cache_write_input_tokens"] * rates.cache_write)
         output_cost = counts["output_tokens"] * rates.output
         api_standard = (input_cost * (2 if long_context else 1) + output_cost * (Decimal("1.5") if long_context else 1)) / MILLION
-        if counts["cache_write_input_tokens"] == 0:
+        if counts["cache_write_input_tokens"] == 0 and runtime == "codex" and provider == "openai":
             credit_standard = (uncached * rates.credit_input + counts["cached_input_tokens"] * rates.credit_cache_read + counts["output_tokens"] * rates.credit_output) / MILLION
-    credit_reason = reason or ("cache_write_credit_rate_unavailable" if counts and counts["cache_write_input_tokens"] else None)
+    credit_reason = ("not_codex_execution" if runtime != "codex" else None) or reason or ("cache_write_credit_rate_unavailable" if counts and counts["cache_write_input_tokens"] else None)
     return {
         "model": model,
         "model_rate_known": rates is not None,

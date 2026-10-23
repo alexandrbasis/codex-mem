@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/alexandrbasis/.codex/worktrees/pi-spec-issue-2/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "sha256": "156ba856274e4242a87da0b62fe08ba1012a164f71d11d5a09d861a5fd281d78",
+    "bytes": 45315
+  },
+  "artifact": {
+    "path": "/Users/alexandrbasis/.codex/worktrees/pi-spec-issue-2/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "sha256": "9007d2a8670507d4f8f82e54e798c9e027d3a523feee3ca215faf727acd6fb31",
+    "bytes": 875160
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/alexandrbasis/.codex/worktrees/pi-spec-issue-2/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/issue-2-review-1/codex-mem.finalize.json",
+    "summaryReceipt": "/Users/alexandrbasis/.codex/worktrees/pi-spec-issue-2/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/issue-2-review-1/codex-mem.finalize-summary.json",
+    "browserCheckReceipt": "/Users/alexandrbasis/.codex/worktrees/pi-spec-issue-2/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/issue-2-review-1/codex-mem.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-23T09:19:21.591Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 11714,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 2,
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "generator-commit",
+            "from": "generator",
+            "to": "commit",
+            "label": "proposal",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "right": {
+            "id": "legacy-execution",
+            "from": "legacy",
+            "to": "execution",
+            "label": "prepared input",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "point": [
+            840,
+            560
+          ]
+        },
+        {
+          "left": {
+            "id": "sources-fast-recall",
+            "from": "sources",
+            "to": "recall",
+            "label": "signals + original roles",
+            "collectionIndex": 12,
+            "artifactIndex": 13
+          },
+          "right": {
+            "id": "execution-provider",
+            "from": "execution",
+            "to": "provider",
+            "label": "app-server",
+            "collectionIndex": 13,
+            "artifactIndex": 14
+          },
+          "point": [
+            326,
+            498
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "legacy-execution",
+            "from": "legacy",
+            "to": "execution",
+            "label": "prepared input",
+            "collectionIndex": 14,
+            "artifactIndex": 15
+          },
+          "bends": 3,
+          "stretch": 1.088,
+          "directCorridorBlockers": [
+            {
+              "id": "generator",
+              "label": "Episode processing",
+              "box": [
+                730,
+                460,
+                220,
+                76
+              ]
+            }
+          ]
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "generator → commit crosses legacy → execution: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "sources → recall crosses execution → provider: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

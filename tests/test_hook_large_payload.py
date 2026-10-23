@@ -62,11 +62,21 @@ class LargeHookPayloadTests(unittest.TestCase):
                     self.assertEqual(1, len(entries))
                     capture = get_tool_capture(store._connection, str(project), name,
                                                session_id="long-session-fixture")
+                    # The read view withholds fragments. Verify the existing
+                    # capture/storage guarantee independently of that view.
+                    persisted = store._connection.execute(
+                        "SELECT tool_response FROM tool_uses WHERE tool_use_id=?", (name,),
+                    ).fetchone()[0]
                 self.assertIsNotNone(capture)
-                response = capture["tool_response"]
-                self.assertLessEqual(len(response.encode()), MAX_TOOL_PAYLOAD_BYTES)
-                self.assertIn("FIRST verification row", response)
-                self.assertIn("FINAL verification passed", response)
+                self.assertIsNone(capture["tool_response"])
+                self.assertIsNone(capture["response_excerpt"])
+                self.assertTrue(capture["response_metadata"]["truncated"])
+                self.assertTrue(capture["response_metadata"]["read_omitted"])
+                self.assertEqual("incomplete_json_fragments", capture["response_metadata"]["read_omitted_reason"])
+                self.assertLessEqual(len(persisted.encode()), MAX_TOOL_PAYLOAD_BYTES)
+                self.assertIn("FIRST verification row", persisted)
+                self.assertIn("FINAL verification passed", persisted)
+                self.assertNotIn(secret, persisted)
                 self.assertNotIn(secret, json.dumps(capture))
                 self.assertNotIn(secret, json.dumps(entries))
 

@@ -7,6 +7,8 @@ and keeps durable source records when a later summary consolidates them.
 
 from __future__ import annotations
 
+from .host import source_role, is_capture_source, register_source_functions
+
 import hashlib
 import html
 import json
@@ -66,7 +68,7 @@ OBSERVATION_REASONING_EFFORT = "medium"
 _LEGACY_OBSERVATION_MODEL = "gpt-5.6-luna"
 
 
-def _observation_fingerprint(
+def _profile_observation_fingerprint(
     workspace: str,
     processor_id: str,
     model: str,
@@ -76,6 +78,18 @@ def _observation_fingerprint(
     """Bind an observation input snapshot to its processor execution profile."""
     parts = (workspace, processor_id, model, reasoning_effort, *source_ids)
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
+
+
+def _observation_fingerprint(
+    workspace: str, processor_id: str, model: str, reasoning_effort: str,
+    source_ids: Sequence[str],
+) -> str:
+    """Bind logical work to its sources, independently of execution choice.
+
+    Model arguments remain accepted for callers from older package versions.
+    Historical profile-bound fingerprints are validated separately, never rewritten.
+    """
+    return _legacy_observation_fingerprint(workspace, processor_id, source_ids)
 
 
 def _legacy_observation_fingerprint(
@@ -141,20 +155,7 @@ _EMBEDDING_STATUSES = ("running", "failed", "completed")
 
 def _evidence_role(source: object) -> str:
     """Describe provenance, never infer whether a claim is true."""
-    value = str(source or "")
-    if value == "hook:Stop" or value.startswith("hook:Stop:"):
-        return "assistant_report"
-    if value == "hook:UserPromptSubmit" or value.startswith("hook:UserPromptSubmit:"):
-        return "user_intent"
-    if value == "hook:PostToolUse" or value.startswith("hook:PostToolUse:"):
-        return "tool_record"
-    if value == "hook:PreCompact" or value.startswith("hook:PreCompact:"):
-        return "lifecycle_marker"
-    if value.startswith("processor:"):
-        return "derived_note"
-    if value.startswith("import:"):
-        return "imported_memory"
-    return "unclassified"
+    return source_role(source)
 
 
 def _context_priority_sql() -> str:
@@ -175,11 +176,6 @@ _FTS_TOKEN_RE = re.compile(
 _VERSION_TOKEN_RE = re.compile(r"[vV]?([0-9]+(?:\.[0-9]+)+)\Z")
 _HASH_RE = re.compile(r"[0-9a-f]{64}\Z")
 
-_OBSERVATION_SOURCES = (
-    "hook:UserPromptSubmit",
-    "hook:Stop",
-)
-_OBSERVATION_TOOL_SOURCE = "hook:PostToolUse"
 _OBSERVATION_STATUSES = ("running", "failed", "processed", "skipped")
 
 _T = TypeVar("_T")
@@ -915,6 +911,7 @@ class Store:
                 check_same_thread=False,
             )
             connection.row_factory = sqlite3.Row
+            register_source_functions(connection)
             connection.execute("PRAGMA busy_timeout = 2000")
             connection.execute("PRAGMA foreign_keys = ON")
             self._conn = connection
@@ -980,11 +977,8 @@ class Store:
 
     @staticmethod
     def _is_busy(error: sqlite3.OperationalError) -> bool:
-        code = getattr(error, "sqlite_errorcode", None)
-        if isinstance(code, int):
-            return code & 255 in {getattr(sqlite3, "SQLITE_BUSY", 5), getattr(sqlite3, "SQLITE_LOCKED", 6)}
-        message = str(error).lower()
-        return "locked" in message or "busy" in message
+        from .observation_diagnostics import storage_error_metadata
+        return storage_error_metadata(error)["reason_code"] in {"sqlite_busy", "sqlite_locked"}
 
     def _rollback_quietly(self) -> None:
         connection = self._conn
@@ -1091,6 +1085,13 @@ class Store:
         def migrate_and_install_indexes() -> None:
             migrate()
             self._create_dashboard_indexes(connection)
+            # Body-free delivery tombstones survive source deletion. Replaying
+            # an old native event must not reset a newer private-turn gate.
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS host_deliveries ("
+                "project TEXT NOT NULL, delivery_hash TEXT NOT NULL, receipt_json TEXT, "
+                "PRIMARY KEY(project, delivery_hash))"
+            )
             from .project_memory import install_schema
             install_schema(connection)
             connection.execute(
@@ -1797,6 +1798,63 @@ class Store:
                 }
         return records
 
+    def claim_host_delivery(self, project: str, dedupe_key: str,
+                            dedupe_alias: str | None = None) -> dict[str, Any] | None:
+        """Claim a native delivery once, or return its body-free prior outcome.
+
+        A claim without a receipt has an unknown outcome after interruption.
+        It is never replayed: that could rewind the session's privacy state.
+        """
+        workspace = project_key(project)
+        delivery_hash = _dedupe_hash(workspace, dedupe_key)
+        alias_hash = _dedupe_hash(workspace, dedupe_alias)
+        with self._lock:
+            self._require_open()
+            connection = self._connection
+
+            def claim() -> dict[str, Any] | None:
+                previous = connection.execute(
+                    "SELECT receipt_json FROM host_deliveries WHERE project = ? AND delivery_hash = ?",
+                    (workspace, delivery_hash),
+                ).fetchone()
+                if previous is not None:
+                    if not previous['receipt_json']:
+                        return {'status': 'omitted', 'reason': 'delivery_outcome_unknown', 'deduplicated': True}
+                    receipt = dict(json.loads(previous['receipt_json']), deduplicated=True)
+                    if receipt.get('id') and connection.execute(
+                            "SELECT id FROM entries WHERE project = ? AND id = ?",
+                            (workspace, receipt['id'])).fetchone() is None:
+                        return {'status': 'omitted', 'reason': 'source_deleted', 'deduplicated': True}
+                    return receipt
+                # Existing sources, including pre-upgrade legacy aliases, retain
+                # their identity and completed processing without gate changes.
+                existing = connection.execute(
+                    "SELECT id FROM entries WHERE project = ? AND dedupe_hash IN (?, ?)",
+                    (workspace, delivery_hash, alias_hash),
+                ).fetchone()
+                receipt = ({'status': 'captured', 'id': existing['id'], 'deduplicated': True}
+                           if existing is not None else None)
+                connection.execute(
+                    "INSERT INTO host_deliveries(project, delivery_hash, receipt_json) VALUES (?, ?, ?)",
+                    (workspace, delivery_hash, json.dumps(receipt) if receipt else None),
+                )
+                return receipt
+
+            return self._write(claim)
+
+    def finish_host_delivery(self, project: str, dedupe_key: str, receipt: Mapping[str, Any]) -> None:
+        """Persist only a delivery outcome, never private text or native IDs."""
+        workspace = project_key(project)
+        delivery_hash = _dedupe_hash(workspace, dedupe_key)
+        safe = {key: receipt[key] for key in
+                ('status', 'reason', 'id', 'omitted_chars', 'injected_sections_removed') if key in receipt}
+        with self._lock:
+            self._require_open()
+            self._write(lambda: self._connection.execute(
+                "UPDATE host_deliveries SET receipt_json = ? WHERE project = ? AND delivery_hash = ?",
+                (json.dumps(safe, ensure_ascii=False), workspace, delivery_hash),
+            ))
+
     def remember(
         self,
         project: str | Path,
@@ -1812,6 +1870,7 @@ class Store:
         observation: Mapping[str, Any] | None = None,
         session_summary: Mapping[str, Any] | None = None,
         tool_capture: Mapping[str, Any] | None = None,
+        dedupe_alias: str | None = None,
     ) -> dict[str, Any]:
         """Store a redacted memory entry and optionally consolidate source entries."""
 
@@ -1828,6 +1887,7 @@ class Store:
         clean_source = _validate_text(source, "source", MAX_SOURCE_CHARS, required=False)
         clean_tags = _validate_tags(tags)
         clean_dedupe = _dedupe_hash(workspace, dedupe_key)
+        alias_dedupe = _dedupe_hash(workspace, dedupe_alias)
         clean_source_ids = (
             _validate_ids(source_ids, "source_ids", allow_empty=True) if source_ids is not None else []
         )
@@ -1858,8 +1918,9 @@ class Store:
 
                 if clean_dedupe is not None:
                     existing = connection.execute(
-                        "SELECT id FROM entries WHERE project = ? AND dedupe_hash = ?",
-                        (workspace, clean_dedupe),
+                        "SELECT id FROM entries WHERE project = ? AND dedupe_hash IN (?, ?) "
+                        "ORDER BY dedupe_hash = ? DESC LIMIT 1",
+                        (workspace, clean_dedupe, alias_dedupe, clean_dedupe),
                     ).fetchone()
                     if existing is not None:
                         existing_id = str(existing["id"])
@@ -2012,6 +2073,7 @@ class Store:
                 "disposition": row["disposition"],
                 "attempt_count": row["attempt_count"],
                 "input_limit": row["input_limit"],
+                "input_fingerprint": row["input_fingerprint"],
                 "lease_expires_at": row["lease_expires_at"],
                 "worker_thread_id": row["worker_thread_id"],
                 "worker_turn_id": row["worker_turn_id"],
@@ -2312,6 +2374,20 @@ class Store:
             ).fetchone())
             return None if row is None else row[0]
 
+    def observation_attempts(self, project: str | Path, job_id: str) -> list[dict[str, Any]]:
+        """Read immutable requested and observed attempt metadata, without source text."""
+        workspace = project_key(project)
+        checked_job_id = _validate_ids([job_id], "job_id")[0]
+        with self._lock:
+            self._require_open()
+            if self._connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE name='observer_usage_attempts'"
+            ).fetchone() is None:
+                return []
+            return self._read(lambda: [dict(row) for row in self._connection.execute(
+                "SELECT a.* FROM observer_usage_attempts a JOIN observation_jobs j ON j.id=a.job_id "
+                "WHERE j.project=? AND j.id=? ORDER BY a.attempt_count", (workspace, checked_job_id))])
+
     def observation_job_status(self, project: str | Path, job_id: str) -> dict[str, Any] | None:
         """Read one project's job receipt without including source content."""
         workspace = project_key(project)
@@ -2362,6 +2438,7 @@ class Store:
         retry_previous_profile: bool = False,
         retry_one_shot: bool = False,
         parallel_sessions: bool = False,
+        execution_profile: Mapping[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         """Atomically lease one bounded, project-local raw hook batch.
 
@@ -2384,15 +2461,16 @@ class Store:
         Default and unknown-session leases remain exclusive to the project.
         """
 
+        from .execution import ExecutionProfile, normalize_profile
+        profile = (ExecutionProfile(**normalize_profile(execution_profile))
+                   if execution_profile is not None else None)
+        if profile is not None and (model != profile.model or reasoning_effort != (profile.reasoning_effort or "none")):
+            raise ValueError("claim profile does not match requested model")
         workspace = project_key(project)
         processor = _validate_processor_value(processor_id, "processor_id")
-        required_model = _validate_processor_value(model, "model")
+        required_model = _validate_text(model, "model", 256)
+        assert required_model is not None
         required_effort = _validate_processor_value(reasoning_effort, "reasoning_effort")
-        if (
-            required_model != OBSERVATION_MODEL
-            or required_effort != OBSERVATION_REASONING_EFFORT
-        ):
-            raise ValueError("observation processing requires gpt-6-luna with medium reasoning")
         thread_id = _validate_optional_processor_value(worker_thread_id, "worker_thread_id")
         turn_id = _validate_optional_processor_value(worker_turn_id, "worker_turn_id")
         entries_limit, chars_limit, checked_lease = _validate_observation_limits(
@@ -2455,29 +2533,6 @@ class Store:
                         "AND disposition='recovery_one_shot' AND lease_expires_at<=?",
                         [(now, now, str(job["id"]), workspace, now) for job in exhausted],
                     )
-                # A lease from a retired profile cannot be reused for the
-                # current model. Close expired legacy attempts before looking
-                # for fresh sources; keep their original profile and receipt.
-                legacy_expired = connection.execute(
-                    "SELECT id, attempt_count FROM observation_jobs "
-                    "WHERE project=? AND status='running' AND lease_expires_at<=? "
-                    "AND (model<>? OR reasoning_effort<>?)",
-                    (workspace, now, required_model, required_effort),
-                ).fetchall()
-                if legacy_expired:
-                    from .observer_usage_store import recover_attempt
-                    for job in legacy_expired:
-                        recover_attempt(
-                            connection, str(job["id"]), int(job["attempt_count"]),
-                            outcome="lease_expired", error_code="lease_expired",
-                        )
-                    connection.executemany(
-                        "UPDATE observation_jobs SET status='failed', disposition='profile_retired', "
-                        "lease_token=NULL, lease_expires_at=NULL, error_code='lease_expired', updated_at=?, "
-                        "completed_at=? WHERE id=? AND project=? AND status='running' "
-                        "AND lease_expires_at<=?",
-                        [(now, now, str(job["id"]), workspace, now) for job in legacy_expired],
-                    )
                 # Encode scope in the opaque token, avoiding a schema change.
                 # Old and default callers issue unmarked tokens, so parallel
                 # workers also respect their project-wide exclusive leases.
@@ -2524,8 +2579,13 @@ class Store:
                 if guarded_retry:
                     reusable = connection.execute(
                         "SELECT * FROM observation_jobs AS j WHERE id=? AND project=? "
-                        "AND processor_id=? AND model=? AND reasoning_effort=? "
+                        "AND processor_id=? "
                         "AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=j.id) "
+                        "AND NOT EXISTS (SELECT 1 FROM observation_job_sources own "
+                        "JOIN observation_job_sources other ON other.source_id=own.source_id "
+                        "JOIN observation_jobs done ON done.id=other.job_id "
+                        "WHERE own.job_id=j.id AND done.project=j.project "
+                        "AND done.status IN ('processed','skipped')) "
                         "AND status='failed' AND error_code=? AND attempt_count=? "
                         "AND (error_code NOT IN ('runner_unavailable', 'protocol_error') "
                         "OR (worker_thread_id IS NULL AND worker_turn_id IS NULL)) "
@@ -2535,16 +2595,21 @@ class Store:
                         "LEFT JOIN entries AS e ON e.id=links.source_id AND e.project=j.project "
                         "WHERE links.job_id=j.id AND (e.id IS NULL OR e.superseded_by IS NOT NULL)) "
                         "AND " + free_lane.format(session="j.session_id"),
-                        (retry_job, workspace, processor,
-                         _LEGACY_OBSERVATION_MODEL if retry_previous_profile else required_model,
-                         required_effort, retry_error_code, retry_attempt_count, *lane_args),
+                        (retry_job, workspace, processor, retry_error_code, retry_attempt_count, *lane_args),
                     ).fetchone()
                 else:
                     reusable = connection.execute(
                     f"""
                     SELECT * FROM observation_jobs
-                    WHERE project = ? AND processor_id = ? AND model = ?
-                      AND reasoning_effort = ?
+                    WHERE project = ? AND processor_id = ?
+                      AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=observation_jobs.id)
+                      AND NOT EXISTS (
+                          SELECT 1 FROM observation_job_sources own
+                          JOIN observation_job_sources other ON other.source_id=own.source_id
+                          JOIN observation_jobs done ON done.id=other.job_id
+                          WHERE own.job_id=observation_jobs.id AND done.project=observation_jobs.project
+                            AND done.status IN ('processed','skipped')
+                      )
                       AND COALESCE(disposition,'') NOT IN ('recovery_one_shot','recovery_exhausted')
                       AND ((status = 'running' AND lease_expires_at <= ?)
                         OR (status = 'failed' AND (? = 1 OR (id = ? AND error_code IN ('timeout', 'runner_failure', 'storage_failure')))))
@@ -2559,8 +2624,6 @@ class Store:
                     (
                         workspace,
                         processor,
-                        required_model,
-                        required_effort,
                         now,
                         1 if retry_failed else 0,
                         retry_job,
@@ -2570,6 +2633,13 @@ class Store:
                     ),
                     ).fetchone()
                 if reusable is not None:
+                    # Fingerprint-bound maintenance approvals retain their
+                    # separate legacy-profile opt-in. Ordinary retries use the
+                    # current profile without widening that older permission.
+                    if (retry_input_fingerprint is not None and not retry_previous_profile
+                            and (reusable["model"] != required_model
+                                 or reusable["reasoning_effort"] != required_effort)):
+                        return None
                     if (retry_input_fingerprint is not None
                             and reusable["input_fingerprint"] != retry_input_fingerprint):
                         return None
@@ -2586,11 +2656,11 @@ class Store:
                         return None
                     reusable_records = self._records_from_rows(reusable_sources)
                     if guarded_retry:
-                        fingerprint = _observation_fingerprint(
+                        fingerprint = _profile_observation_fingerprint(
                             workspace, processor, str(reusable["model"]), str(reusable["reasoning_effort"]),
                             [str(row["id"]) for row in reusable_sources],
                         )
-                        legacy_valid = (retry_previous_profile and reusable["input_fingerprint"]
+                        legacy_valid = (reusable["input_fingerprint"]
                                         == _legacy_observation_fingerprint(
                                             workspace, processor,
                                             [str(row["id"]) for row in reusable_sources]))
@@ -2619,7 +2689,7 @@ class Store:
                     now = _utc_now()
                     if retry_previous_profile:
                         source_ids = [str(row["id"]) for row in reusable_sources]
-                        fingerprint = _observation_fingerprint(
+                        fingerprint = _profile_observation_fingerprint(
                             workspace, processor, required_model, required_effort, source_ids,
                         )
                         if connection.execute(
@@ -2662,8 +2732,8 @@ class Store:
                         UPDATE observation_jobs
                         SET status = 'running', disposition = ?, lease_token = ?,
                             lease_expires_at = ?, input_limit = ?, attempt_count = attempt_count + 1,
-                            worker_thread_id = COALESCE(?, worker_thread_id),
-                            worker_turn_id = COALESCE(?, worker_turn_id), error_code = NULL,
+                            worker_thread_id = ?,
+                            worker_turn_id = ?, error_code = NULL,
                             updated_at = ?
                         WHERE id = ? AND project = ?
                         """,
@@ -2698,33 +2768,23 @@ class Store:
                     f"""
                     SELECT e.* FROM entries AS e
                     WHERE e.project = ? AND e.superseded_by IS NULL
-                      AND (e.source IN (?, ?) OR e.source = ? OR e.source LIKE ?)
+                      AND codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record')
                       AND {free_lane.format(session="e.session_id")}
                       AND NOT EXISTS (
                         SELECT 1 FROM observation_job_sources AS links
                         CROSS JOIN observation_jobs AS jobs ON jobs.id = links.job_id
                         WHERE links.source_id = e.id AND jobs.project = e.project
-                          AND (
-                            jobs.status IN ('processed', 'skipped', 'running')
-                            OR COALESCE(jobs.disposition,'')='recovery_exhausted'
-                            OR (? = 0 AND jobs.status = 'failed'
-                                AND NOT (COALESCE(jobs.disposition,'')='profile_retired'
-                                    AND jobs.error_code='lease_expired'
-                                    AND (jobs.model<>? OR jobs.reasoning_effort<>?)))
-                          )
+                          AND NOT (? = 1 AND jobs.status = 'failed' AND jobs.processor_id <> ?
+                            AND COALESCE(jobs.disposition,'') NOT IN ('recovery_one_shot','recovery_exhausted')
+                            AND NOT EXISTS (SELECT 1 FROM observation_job_recoveries r WHERE r.parent_job_id=jobs.id))
                       )
                     ORDER BY e.created_at ASC, e.id ASC LIMIT 100
                     """,
                     (
                         workspace,
-                        _OBSERVATION_SOURCES[0],
-                        _OBSERVATION_SOURCES[1],
-                        _OBSERVATION_TOOL_SOURCE,
-                        _OBSERVATION_TOOL_SOURCE + ":%",
                         *lane_args,
                         1 if retry_failed else 0,
-                        required_model,
-                        required_effort,
+                        processor,
                     ),
                 ).fetchall()
                 if not candidates:
@@ -2776,8 +2836,7 @@ class Store:
                     selected_chars += source_chars
                     remaining -= source_chars
                     if (
-                        str(row["source"] or "") == "hook:Stop"
-                        or str(row["source"] or "").startswith("hook:Stop:")
+                        source_role(row["source"]) == "assistant_report"
                     ):
                         stop_reached = True
                         break
@@ -2823,7 +2882,15 @@ class Store:
                 )
                 return job_id, max(chars_limit, selected_chars)
 
-            claimed = self._write(claim)
+            def claim_with_profile():
+                result = claim()
+                if result is not None and profile is not None:
+                    from .observer_usage_store import begin_claim_attempt
+                    job = connection.execute("SELECT * FROM observation_jobs WHERE id=?", (result[0],)).fetchone()
+                    begin_claim_attempt(connection, job, profile=profile)
+                return result
+
+            claimed = self._write(claim_with_profile)
             if claimed is None:
                 return None
             job_id, input_limit = claimed
@@ -2870,8 +2937,7 @@ class Store:
         """
 
         has_stop = any(
-            str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            source_role(row["source"]) == "assistant_report"
             for row in sources
         )
         if not has_stop:
@@ -2895,7 +2961,7 @@ class Store:
             provenance_positions = {
                 str(row["id"]): (str(row["created_at"]), str(row["id"]))
                 for row in provenance_rows
-                if str(row["source"] or "").startswith("hook:")
+                if is_capture_source(row["source"])
             }
 
         def position(item: Mapping[str, Any]) -> tuple[str, str]:
@@ -2938,15 +3004,13 @@ class Store:
         first = sources[0]
         session_id = first["session_id"]
         has_stop = any(
-            str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            source_role(row["source"]) == "assistant_report"
             for row in sources
         )
         stop_rows = [
             row
             for row in sources
-            if str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            if source_role(row["source"]) == "assistant_report"
         ]
         first_stop = min(
             stop_rows,
@@ -2968,8 +3032,7 @@ class Store:
             return connection.execute(
                 f"""SELECT e.* FROM entries AS e
                     WHERE {base_clause}
-                      AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop')
-                           OR e.source LIKE 'hook:PostToolUse%'
+                      AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record')
                            OR (e.source LIKE 'processor:%' AND e.superseded_by IS NULL))
                     ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
                 base_parameters,
@@ -2988,8 +3051,7 @@ class Store:
         raw_rows = connection.execute(
             f"""SELECT e.* FROM entries AS e
                 WHERE {base_clause}{raw_exclusion}
-                  AND (e.source IN ('hook:UserPromptSubmit', 'hook:Stop')
-                       OR e.source LIKE 'hook:PostToolUse%')
+                  AND (codex_mem_source_role(e.source) IN ('user_intent','assistant_report','tool_record'))
                 ORDER BY e.created_at DESC, e.id DESC LIMIT 12""",
             tuple(raw_parameters),
         ).fetchall()
@@ -3000,11 +3062,11 @@ class Store:
             "AND EXISTS ("
             "SELECT 1 FROM entry_sources AS links "
             "JOIN entries AS source_events ON source_events.id = links.source_id "
-            "WHERE links.summary_id = e.id AND source_events.source LIKE 'hook:%'"
+            "WHERE links.summary_id = e.id AND codex_mem_is_capture(source_events.source)"
             ") AND NOT EXISTS ("
             "SELECT 1 FROM entry_sources AS links "
             "JOIN entries AS source_events ON source_events.id = links.source_id "
-            "WHERE links.summary_id = e.id AND source_events.source LIKE 'hook:%' "
+            "WHERE links.summary_id = e.id AND codex_mem_is_capture(source_events.source) "
             "AND (source_events.project != ? OR source_events.session_id IS NULL "
             "OR source_events.session_id != ? OR source_events.created_at > ? "
             "OR (source_events.created_at = ? AND source_events.id >= ?))"
@@ -3062,8 +3124,7 @@ class Store:
             return []
         rows = self._read(lambda: self._observation_context_rows(workspace, sources))
         has_stop = any(
-            str(row["source"] or "") == "hook:Stop"
-            or str(row["source"] or "").startswith("hook:Stop:")
+            source_role(row["source"]) == "assistant_report"
             for row in sources
         )
         records = self._records_from_rows(rows)
@@ -3214,8 +3275,7 @@ class Store:
                 stop_rows = [
                     row
                     for row in source_rows
-                    if str(row["source"] or "") == "hook:Stop"
-                    or str(row["source"] or "").startswith("hook:Stop:")
+                    if source_role(row["source"]) == "assistant_report"
                 ]
                 first_stop_key = min(
                     ((str(row["created_at"]), str(row["id"])) for row in stop_rows),
@@ -3226,12 +3286,9 @@ class Store:
                     workspace, str(job["processor_id"]), str(job["model"]),
                     str(job["reasoning_effort"]), source_ids,
                 )
-                legacy_fingerprint_valid = (
-                    job["model"] == _LEGACY_OBSERVATION_MODEL
-                    and job["input_fingerprint"]
-                    == _legacy_observation_fingerprint(
-                        workspace, str(job["processor_id"]), source_ids,
-                    )
+                legacy_fingerprint_valid = job["input_fingerprint"] == _profile_observation_fingerprint(
+                    workspace, str(job["processor_id"]), str(job["model"]),
+                    str(job["reasoning_effort"]), source_ids,
                 )
                 if (
                     not source_ids
@@ -3596,7 +3653,7 @@ class Store:
                 return [], "source_deleted"
             if row["superseded_by"] is not None:
                 return [], "source_superseded"
-            if isinstance(row["source"], str) and row["source"].startswith("hook:"):
+            if is_capture_source(row["source"]):
                 return [], "raw_observation"
             payload = self._embedding_entry_payload(row)
             if (
@@ -3760,7 +3817,7 @@ class Store:
                         AND vectors.project = e.project AND vectors.model = ?
                         AND vectors.revision = ? AND vectors.dimensions = ?
                     WHERE e.project = ? AND e.superseded_by IS NULL
-                      AND COALESCE(e.source, '') NOT GLOB 'hook:*'
+                      AND NOT codex_mem_is_capture(e.source)
                       AND (
                           documents.entry_id IS NULL OR documents.text_version IS NULL
                           OR documents.text_version != ? OR vectors.entry_id IS NULL
@@ -4174,7 +4231,7 @@ class Store:
                 "vectors.dimensions = ?",
                 "e.project = vectors.project",
                 "e.superseded_by IS NULL",
-                "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                "NOT codex_mem_is_capture(e.source)",
             ]
             parameters: list[object] = [
                 workspace,
@@ -4274,7 +4331,7 @@ class Store:
                         AND vectors.project = e.project AND vectors.model = ?
                         AND vectors.revision = ? AND vectors.dimensions = ?
                     WHERE e.project = ? AND e.superseded_by IS NULL
-                      AND COALESCE(e.source, '') NOT GLOB 'hook:*'
+                      AND NOT codex_mem_is_capture(e.source)
                       AND (
                           documents.entry_id IS NULL OR documents.text_version IS NULL
                           OR documents.text_version != ? OR vectors.entry_id IS NULL
@@ -4316,7 +4373,7 @@ class Store:
                         "FROM embedding_vectors AS vectors "
                         "JOIN entries AS e ON e.id = vectors.entry_id "
                         "AND e.project = vectors.project "
-                        "WHERE COALESCE(e.source, '') NOT GLOB 'hook:*'"
+                        "WHERE NOT codex_mem_is_capture(e.source)"
                         + (" AND vectors.project = ?" if workspace is not None else ""),
                         (() if workspace is None else (workspace,)),
                     ).fetchone()
@@ -4354,7 +4411,7 @@ class Store:
 
             checked_model, checked_revision, checked_dimensions = profile
             entry_clauses = ["e.superseded_by IS NULL"]
-            entry_clauses.append("COALESCE(e.source, '') NOT GLOB 'hook:*'")
+            entry_clauses.append("NOT codex_mem_is_capture(e.source)")
             # Join placeholders precede the WHERE scope placeholder.
             entry_parameters: list[object] = [
                 checked_model,
@@ -4420,7 +4477,7 @@ class Store:
                             "vectors.model = ?",
                             "vectors.revision = ?",
                             "vectors.dimensions = ?",
-                            "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                            "NOT codex_mem_is_capture(e.source)",
                         ]
                         + (["vectors.project = ?"] if workspace is not None else [])
                     ),
@@ -4539,7 +4596,7 @@ class Store:
         base_clauses = [
             "e.project = ?",
             "e.superseded_by IS NULL",
-            "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+            "NOT codex_mem_is_capture(e.source)",
         ]
         base_parameters: list[object] = [workspace]
         if literal_plan and literal_plan["identifiers"]:
@@ -4699,7 +4756,7 @@ class Store:
         metadata_search, metadata_parameters = self._metadata_search_sql(
             "m", query_tokens, any_token=True)
         clauses = ["e.project = ?", "e.superseded_by IS NULL",
-                   "COALESCE(e.source, '') NOT GLOB 'hook:*'"]
+                   "NOT codex_mem_is_capture(e.source)"]
         parameters: list[object] = [workspace]
         if kinds:
             clauses.append("e.kind IN (" + ",".join("?" for _ in kinds) + ")")
@@ -4756,30 +4813,30 @@ class Store:
             "WITH scope AS (SELECT ? AS project, ? AS excluded_session), "
             "selected AS (SELECT e.id, e.session_id FROM entries AS e "
             f"WHERE e.project = ? AND e.id IN ({placeholders}) "
-            "AND e.superseded_by IS NULL AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
+            "AND e.superseded_by IS NULL AND NOT codex_mem_is_capture(e.source) "
             "AND ((SELECT excluded_session FROM scope) IS NULL OR e.session_id IS NULL "
             "OR e.session_id != (SELECT excluded_session FROM scope))), "
             "followups AS (SELECT e.id FROM entries AS e "
             "LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             "WHERE e.project = (SELECT project FROM scope) AND e.superseded_by IS NULL "
-            "AND COALESCE(e.source, '') NOT GLOB 'hook:*' AND COALESCE(e.session_id, '') != '' "
+            "AND NOT codex_mem_is_capture(e.source) AND COALESCE(e.session_id, '') != '' "
             "AND ((SELECT excluded_session FROM scope) IS NULL "
             "OR e.session_id != (SELECT excluded_session FROM scope)) "
             "AND (m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL) "
             "AND EXISTS (SELECT 1 FROM entry_sources AS links CROSS JOIN entries AS raw ON raw.id = links.source_id "
             "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
-            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*')) "
+            "AND (codex_mem_source_role(raw.source)='tool_record')) "
             "ORDER BY codex_mem_event_instant(e.created_at) DESC, e.id DESC LIMIT 200), "
             "candidates AS (SELECT e.id, e.session_id, e.created_at, e.title, e.body, "
             "m.observation_json, m.session_summary_json, "
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) AS is_summary, "
             "(SELECT raw.created_at FROM entry_sources AS links CROSS JOIN entries AS raw ON raw.id = links.source_id "
             "WHERE links.summary_id = e.id AND raw.project = e.project AND raw.session_id = e.session_id "
-            "AND (raw.source = 'hook:PostToolUse' OR raw.source GLOB 'hook:PostToolUse:*') "
+            "AND (codex_mem_source_role(raw.source)='tool_record') "
             "ORDER BY codex_mem_event_instant(raw.created_at) DESC, raw.id DESC LIMIT 1) AS latest_tool_at "
             "FROM entries AS e LEFT JOIN entry_metadata AS m ON m.entry_id = e.id "
             "WHERE e.project = ? AND e.superseded_by IS NULL "
-            "AND COALESCE(e.source, '') NOT GLOB 'hook:*' "
+            "AND NOT codex_mem_is_capture(e.source) "
             "AND (e.id IN (SELECT id FROM selected) OR e.id IN (SELECT id FROM followups) OR ("
             "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL) "
             "AND e.session_id IN (SELECT session_id FROM selected "
@@ -4789,11 +4846,11 @@ class Store:
             # for each derived candidate before applying the source link.
             "source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
             "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
-            "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
+            "CASE WHEN codex_mem_source_role(raw.source)='assistant_report' "
             "THEN 0 ELSE 1 END, codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
             "FROM candidates AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
             "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = ? "
-            "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
+            "AND raw.session_id IS derived.session_id WHERE codex_mem_is_capture(raw.source)), "
             "dated AS (SELECT c.*, COALESCE(s.event_at, c.created_at) AS event_at, "
             "COALESCE(s.event_id, c.id) AS event_id, "
             "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
@@ -4946,7 +5003,7 @@ class Store:
                 ids = self._read(lambda: self._connection.execute(
                     "SELECT e.id FROM entries e LEFT JOIN entry_metadata m ON m.entry_id=e.id "
                     "WHERE e.project=? AND e.session_id=? AND e.superseded_by IS NULL "
-                    "AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
+                    "AND NOT codex_mem_is_capture(e.source) "
                     "AND e.kind NOT IN ('session','tool','checkpoint')" + match_sql +
                     " AND " + score + ">0 ORDER BY " + score + " DESC,e.created_at ASC,e.id ASC LIMIT ?",
                     (workspace, session, *match_parameters, limit),
@@ -4955,7 +5012,7 @@ class Store:
                 return self.get(workspace, [row["id"] for row in ids]) if ids else []
             rows = self._read(lambda: self._connection.execute(
                 "SELECT e.* FROM entries e WHERE e.project=? AND e.session_id=? "
-                "AND e.superseded_by IS NULL AND COALESCE(e.source,'') NOT GLOB 'hook:*' "
+                "AND e.superseded_by IS NULL AND NOT codex_mem_is_capture(e.source) "
                 "AND e.kind NOT IN ('session','tool','checkpoint') "
                 "ORDER BY e.created_at ASC,e.id ASC LIMIT ?",
                 (workspace, session, limit),
@@ -5375,7 +5432,7 @@ class Store:
         topic_plan = state_scope_plan(state_scope)
         match_plan = topic_plan or (constraints if constraints["identifiers"] else None)
         clauses = ["e.project = ?", "e.superseded_by IS NULL",
-                   "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                   "NOT codex_mem_is_capture(e.source)",
                    "(e.kind NOT IN ('session', 'tool', 'checkpoint') "
                    "OR m.observation_json IS NOT NULL OR m.session_summary_json IS NOT NULL)"]
         parameters: list[Any] = [workspace]
@@ -5416,11 +5473,11 @@ class Store:
                 + " AND ".join(where)
                 + "), source_order AS (SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
                 "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
-                "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' THEN 0 ELSE 1 END, "
+                "CASE WHEN codex_mem_source_role(raw.source)='assistant_report' THEN 0 ELSE 1 END, "
                 "codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
                 "FROM scoped AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
                 "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
-                "AND raw.session_id IS derived.session_id WHERE raw.source GLOB 'hook:*'), "
+                "AND raw.session_id IS derived.session_id WHERE codex_mem_is_capture(raw.source)), "
                 "dated AS (SELECT scoped.*, COALESCE(s.event_at, scoped.created_at) AS event_at, "
                 "COALESCE(s.event_id, scoped.id) AS event_id, "
                 "CASE WHEN s.event_id IS NULL THEN 'recorded_at' ELSE 'source_event' END AS event_time_basis "
@@ -5488,7 +5545,7 @@ class Store:
             latest: dict[str, sqlite3.Row] = {}
             if sessions:
                 peer_clauses = ["e.project = ?", "e.superseded_by IS NULL",
-                    "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                    "NOT codex_mem_is_capture(e.source)",
                     "(e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL)",
                     "e.session_id IN (" + ", ".join("?" for _ in sessions) + ")"]
                 peers = self._read(lambda: self._connection.execute(
@@ -5583,7 +5640,7 @@ class Store:
             active_clauses = [
                 "e.project = ?",
                 "e.superseded_by IS NULL",
-                "COALESCE(e.source, '') NOT GLOB 'hook:*'",
+                "NOT codex_mem_is_capture(e.source)",
             ]
             # The first workspace parameter scopes source-position lookup;
             # the second scopes active rows before any ranking or filters.
@@ -5659,13 +5716,13 @@ class Store:
                 "WITH source_order AS ("
                 "SELECT links.summary_id, raw.created_at AS event_at, raw.id AS event_id, "
                 "ROW_NUMBER() OVER (PARTITION BY links.summary_id ORDER BY "
-                "CASE WHEN raw.source = 'hook:Stop' OR raw.source GLOB 'hook:Stop:*' "
+                "CASE WHEN codex_mem_source_role(raw.source)='assistant_report' "
                 "THEN 0 ELSE 1 END, codex_mem_event_instant(raw.created_at) DESC, raw.id DESC) AS event_rank "
                 "FROM entries AS derived CROSS JOIN entry_sources AS links ON links.summary_id = derived.id "
                 "CROSS JOIN entries AS raw ON raw.id = links.source_id AND raw.project = derived.project "
                 "AND raw.session_id IS derived.session_id "
                 "WHERE derived.project = ? AND derived.superseded_by IS NULL "
-                "AND COALESCE(derived.source, '') NOT GLOB 'hook:*' AND raw.source GLOB 'hook:*'"
+                "AND NOT codex_mem_is_capture(derived.source) AND codex_mem_is_capture(raw.source)"
                 "), active AS (SELECT e.rowid AS context_rowid, e.*, "
                 "m.observation_json, m.session_summary_json, "
                 "CASE WHEN e.kind = 'session_summary' OR m.session_summary_json IS NOT NULL THEN 0 "
@@ -5920,7 +5977,7 @@ class Store:
             }
             inventory_where = "" if workspace is None else "WHERE project = ?"
             inventory = self._read(lambda: self._connection.execute(
-                "SELECT CASE WHEN source GLOB 'hook:*' THEN 'raw_capture' "
+                "SELECT CASE WHEN codex_mem_is_capture(source) THEN 'raw_capture' "
                 "WHEN kind = 'session_summary' THEN 'session_summary' "
                 "WHEN kind IN ('session', 'tool', 'checkpoint') THEN 'other_history' "
                 "ELSE 'durable_note' END AS category, "

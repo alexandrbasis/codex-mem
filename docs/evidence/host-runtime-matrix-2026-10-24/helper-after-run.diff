@@ -1,0 +1,173 @@
+--- executed-helper-reconstructed.py
++++ scripts/live_host_runtime_smoke.py
+@@ -9,6 +9,7 @@
+ 
+ import argparse
+ from contextlib import contextmanager
++import hashlib
+ import json
+ import os
+ from pathlib import Path
+@@ -23,6 +24,7 @@
+ 
+ from codex_mem.config import configure
+ from codex_mem.hooks import handle_hook
++from codex_mem.host import source_role
+ from codex_mem.pi_host import handle_request
+ from codex_mem.service import enqueue, run_service
+ from codex_mem.store import Store
+@@ -30,7 +32,12 @@
+ 
+ def passed(report):
+     profile = report['profile']
+-    return (report['initial_entry_count'] == 0 and report['source_count'] == 1 and report['enqueue_status'] == 'queued'
++    pi_only = report['host'] == report['runtime'] == 'pi'
++    versions = report['versions']
++    return (versions.get('pi') == '1.4.0'
++        and (pi_only and report['codex_executable_available'] is False
++             or not pi_only and versions.get('codex') == 'codex-cli 0.163.0')
++        and report['initial_entry_count'] == 0 and report['source_count'] == 1 and report['enqueue_status'] == 'queued'
+         and report['queue_file_created'] and report['next_request_memory_contains_fact']
+         and report['generated_note_count'] > 0 and report['generated_note_delivered']
+         and report['generated_outputs_distinct_from_sources'] and report['generated_source_project_refs_valid']
+@@ -58,8 +65,35 @@
+     profile = dict(runtime=runtime, provider='openai-codex' if runtime == 'pi' else 'openai',
+                    model='gpt-6-luna', reasoning_effort='low', timeout=timeout)
+     report = dict(host=host, runtime=runtime, profile=profile, status='unpassed',
++                  processor='observation extraction',
++                  live_scope='one user source to generated observation to next context',
++                  other_processors='not exercised by this live smoke',
+                   boundary='public_adapter_synthetic_host_event',
+                   native_interactive_emission='not_tested', model_process='real_native_remote')
++    try:
++        _pair(report, host, runtime, timeout=timeout, native_pi=native_pi,
++              native_codex=native_codex, executables=executables)
++    except Exception as error:
++        report.update(failure_stage=report.pop('stage', 'setup'),
++                      failure_type=type(error).__name__, failure_code='unexpected_exception')
++        # Exception messages, commands, output and paths can contain native credentials.
++        if isinstance(error, subprocess.TimeoutExpired):
++            report.update(failure_code='process_timeout', timeout_seconds=error.timeout)
++        elif isinstance(error, subprocess.CalledProcessError):
++            report.update(failure_code='process_exit', returncode=error.returncode)
++        elif isinstance(error, json.JSONDecodeError):
++            report.update(failure_code='invalid_json', line=error.lineno, column=error.colno)
++        elif isinstance(error, OSError):
++            report.update(failure_code='filesystem_error', errno=error.errno)
++        elif type(error) is RuntimeError and error.args == ('Pi/Pi must exclude the Codex executable',):
++            report['failure_code'] = 'codex_executable_present'
++        report['status'] = 'unpassed'
++    return report
++
++
++def _pair(report, host, runtime, *, timeout, native_pi, native_codex, executables):
++    profile = report['profile']
++    report['stage'] = 'setup'
+     with tempfile.TemporaryDirectory(prefix='codex-mem-live-matrix-') as temporary:
+         root = Path(temporary).resolve()
+         for name in ('home', 'pi', 'codex', 'project', 'bin'):
+@@ -77,6 +111,7 @@
+                       PATH=str(root / 'bin'), NO_COLOR='1')
+         with environment(values):
+             project, data = root / 'project', root / 'memory'
++            report['stage'] = 'version_discovery'
+             report['versions'] = {}
+             for name in ('pi', 'codex'):
+                 if shutil.which(name):
+@@ -86,11 +121,13 @@
+             report['codex_executable_available'] = shutil.which('codex') is not None
+             if host == runtime == 'pi' and report['codex_executable_available']:
+                 raise RuntimeError('Pi/Pi must exclude the Codex executable')
++            report['stage'] = 'configuration'
+             configure(data, capture_scope='all', service_enabled=False, semantic_enabled=False,
+                       usage_enabled=False, processing_profile=profile, processor_workers=1)
+             text = ('IMPORTANT: Confirmed decision for the synthetic Orchid project. '
+                     'The invoice export must use CSV format and the delimiter must be a semicolon. '
+                     'Keep this requirement for future invoice export work.')
++            report['stage'] = 'capture'
+             with Store(data) as store:
+                 report['initial_entry_count'] = len(store.timeline(project, limit=20))
+                 if host == 'codex':
+@@ -104,24 +141,33 @@
+                 source_ids = {entry['id'] for entry in sources}
+                 report['source_count'] = len(sources)
+             report['capture_status'] = capture.get('status', 'hook_returned')
++            report['stage'] = 'enqueue'
+             configure(data, service_enabled=True)
+             report['enqueue_status'] = enqueue(project, data).get('status')
+             report['queue_file_created'] = (data / 'service-state.json').is_file()
++            report['stage'] = 'processing'
+             started = time.monotonic()
+             service = run_service(data, max_cycles=1, poll_interval=0, max_timeout_retries=0,
+                                   processor_timeout=timeout, processor_workers=1)
+             report['elapsed_seconds'] = round(time.monotonic() - started, 2)
+             report['service_status'] = service.get('status')
++            report['stage'] = 'readback'
+             with Store(data) as store:
+                 with sqlite3.connect(store.db_path) as connection:
+                     connection.row_factory = sqlite3.Row
+                     jobs = connection.execute('SELECT id,status,error_code FROM observation_jobs').fetchall()
+-                report['jobs'] = [dict(row) for row in jobs]
++                report['jobs'] = [{key: row[key] for key in ('status', 'error_code')} for row in jobs]
+                 output_ids = []
++                report['job_output_links'] = []
+                 for row in jobs:
+-                    output_ids.extend(store.observation_job_status(project, row['id'])['output_ids'])
++                    job = store.observation_job_status(project, row['id'])
++                    output_ids.extend(job['output_ids'])
++                    report['job_output_links'].append(dict(job_id=row['id'],
++                        output_ids=job['output_ids'], source_ids=sorted(source_ids)))
+                 generated = store.get(project, output_ids) if output_ids else []
+                 report['generated_note_count'] = len(generated)
++                report['generated_record_kinds'] = sorted({note.get('kind', 'unknown') for note in generated})
++                report['generated_record_sources'] = sorted({note.get('source', 'unknown') for note in generated})
+                 report['attempts'] = []
+                 for row in jobs:
+                     for attempt in store.observation_attempts(project, row['id']):
+@@ -137,6 +183,7 @@
+                             'tool_calls_observed', 'state_checked', 'agent_end_observed',
+                             'system_message_verified', 'assistant_stop_reason') if key in receipt}
+                         report['attempts'].append(saved)
++                report['stage'] = 'next_context'
+                 if host == 'codex':
+                     context = handle_hook(dict(hook_event_name='SessionStart', source='startup',
+                         cwd=str(project), session_id='live-reader'), store)
+@@ -149,14 +196,22 @@
+                     note['id'].lower() in serialized and 'semicolon' in note['body'].lower()
+                     and note['source'].startswith('processor:') for note in generated)
+                 report['generated_outputs_distinct_from_sources'] = all(
+-                    note['id'] not in note.get('source_ids', []) for note in generated)
++                    note['id'] not in source_ids for note in generated)
+                 report['generated_source_project_refs_valid'] = bool(generated) and all(
+                     note['project'] == str(project) and set(note.get('source_ids', [])) == source_ids
+                     for note in generated)
++                report['generated_readback'] = [dict(id=note['id'], source_ids=note.get('source_ids', []),
++                    kind=note.get('kind'), source=note.get('source'), source_role=source_role(note.get('source')),
++                    project_canonical_match=note['project'] == str(project),
++                    body_sha256=hashlib.sha256(note['body'].encode()).hexdigest(),
++                    fact_present='semicolon' in note['body'].lower(),
++                    context_references_id=note['id'].lower() in serialized) for note in generated]
++                report['stage'] = 'validation'
+                 if passed(report):
+                     report['status'] = 'passed'
++        report['stage'] = 'cleanup'
+     report['temporary_state_removed'] = True
+-    return report
++    report['stage'] = 'complete'
+ 
+ 
+ def main():
+@@ -185,11 +240,8 @@
+     args.output.parent.mkdir(parents=True, exist_ok=True)
+     for host, runtime in (('codex', 'pi'), ('pi', 'pi'), ('codex', 'codex'), ('pi', 'codex')):
+         print(f'Live smoke {host}/{runtime}', file=sys.stderr, flush=True)
+-        try:
+-            result = pair(host, runtime, timeout=args.timeout, native_pi=native_pi,
+-                          native_codex=native_codex, executables=executables)
+-        except Exception as error:
+-            result = dict(host=host, runtime=runtime, status='unpassed', failure_type=type(error).__name__)
++        result = pair(host, runtime, timeout=args.timeout, native_pi=native_pi,
++                      native_codex=native_codex, executables=executables)
+         report['pairs'].append(result)
+         args.output.write_text(json.dumps(report, indent=2) + '\n')
+     return 0 if all(row['status'] == 'passed' for row in report['pairs']) else 1

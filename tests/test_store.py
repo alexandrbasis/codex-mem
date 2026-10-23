@@ -1249,33 +1249,18 @@ class StoreTests(unittest.TestCase):
             )
         )
 
-    def test_observation_claim_rejects_legacy_model_or_non_medium_before_writing(self) -> None:
-        self.store.remember(
-            self.project_a,
-            "Raw session",
-            "A raw record remains pending after a wrong model request.",
-            source="hook:UserPromptSubmit",
-        )
-        with self.assertRaises(ValueError):
-            self.store.claim_observation_batch(
-                self.project_a, "processor-v4", "gpt-5.6-terra", "medium"
-            )
-        with self.assertRaises(ValueError):
-            self.store.claim_observation_batch(
-                self.project_a, "processor-v4", "gpt-5.6-luna", "medium"
-            )
-        with self.assertRaises(ValueError):
-            self.store.claim_observation_batch(
-                self.project_a, "processor-v4", "gpt-6-luna", "max"
-            )
+    def test_observation_claim_rejects_invalid_identifiers_before_writing(self) -> None:
+        self.store.remember(self.project_a, "Raw session", "Retain pending raw material.",
+                            source="hook:UserPromptSubmit")
+        for model, effort in (("", "medium"), ("gpt-6-luna", ""), (None, "medium")):
+            with self.assertRaises(ValueError):
+                self.store.claim_observation_batch(self.project_a, "processor-v4", model, effort)
         self.assertEqual(0, self.store.status(self.project_a)["observation_jobs"]["jobs"])
-        self.assertIsNotNone(
-            self.store.claim_observation_batch(
-                self.project_a, "processor-v4", "gpt-6-luna", "medium"
-            )
-        )
+        # Runtime capability checks own model support. Queue identity accepts an exact profile.
+        self.assertIsNotNone(self.store.claim_observation_batch(
+            self.project_a, "processor-v4", "fixture-exact", "low"))
 
-    def test_expired_legacy_lease_is_closed_before_new_profile_claim(self) -> None:
+    def test_expired_legacy_lease_reuses_logical_job_with_original_provenance(self) -> None:
         from codex_mem.observer_usage_store import begin_attempt
 
         source = self.store.remember(
@@ -1315,14 +1300,14 @@ class StoreTests(unittest.TestCase):
         )
         self.assertIsNotNone(current)
         assert current is not None
-        self.assertNotEqual(old["job_id"], current["job_id"])
+        self.assertEqual(old["job_id"], current["job_id"])
         historic = self.store._connection.execute(
             "SELECT model, status, disposition, error_code, lease_token, lease_expires_at "
             "FROM observation_jobs WHERE id=?",
             (old["job_id"],),
         ).fetchone()
         self.assertEqual(
-            ("gpt-5.6-luna", "failed", "profile_retired", "lease_expired", None, None),
+            ("gpt-5.6-luna", "running", None, None, current["lease_token"], current["lease_expires_at"]),
             tuple(historic),
         )
         usage = self.store._connection.execute(
@@ -1388,9 +1373,12 @@ class StoreTests(unittest.TestCase):
             (old["job_id"],),
         )
 
+        self.assertIsNone(self.store.claim_observation_batch(
+            self.project_a, "processor-new", "gpt-6-luna", "medium"))
         current = self.store.claim_observation_batch(
-            self.project_a, "processor-new", "gpt-6-luna", "medium"
+            self.project_a, "processor-old", "fixture-exact", "low"
         )
+        self.assertEqual(old["job_id"], current["job_id"])
         self.assertIsNotNone(current)
         assert current is not None
         self.assertEqual([expired_source["id"]], [row["id"] for row in current["sources"]])

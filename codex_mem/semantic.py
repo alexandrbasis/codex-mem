@@ -12,6 +12,8 @@ the embedding model, and results are previews supplied by :class:`Store`.
 
 from __future__ import annotations
 
+from .host import is_capture_source
+
 from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -1072,7 +1074,7 @@ def _resume_recent_candidates(
     records = []
     for record in _preview_list(read(project, query=query)):
         if (record.get("project") != project or record.get("superseded_by")
-            or str(record.get("source") or "").startswith("hook:")
+            or is_capture_source(record.get("source"))
             or not state_scope_matches(record, scope, project)):
             continue
         record = dict(record)
@@ -1188,7 +1190,7 @@ def _resume_linked_handoffs(
     for entry_id in ids:
         record = records_by_id.get(entry_id)
         if (not record or record.get("project") != project or record.get("superseded_by")
-            or str(record.get("source") or "").startswith("hook:")
+            or is_capture_source(record.get("source"))
             or not (record.get("kind") == "session_summary" or record.get("session_summary"))
             or not any(record.get("session_id") == origin.get("session_id") for origin in origins[entry_id])
             or not (state_scope_matches(record, scope, project) if scope else

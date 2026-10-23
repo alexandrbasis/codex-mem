@@ -18,9 +18,10 @@ import time
 from typing import Any
 
 from .config import load_config, project_memory_enabled
+from .execution import ExecutionRequest, execute, resolve_profile
 from .processor import (
     DEFAULT_TIMEOUT, MODEL, REASONING_EFFORT, NativeProcessorRunner,
-    ProcessorFailure, _validate_runner_receipt,
+    ProcessorFailure,
 )
 from .store import Store, StoreError, project_key
 
@@ -626,9 +627,13 @@ def _metrics(value: object) -> dict[str, Any]:
     duration = value.get("duration_ms")
     if isinstance(duration, (int, float)) and not isinstance(duration, bool) and math.isfinite(duration) and duration >= 0:
         result["runner_duration_ms"] = round(duration)
+    from .execution import pi_execution_receipt
+    evidence = pi_execution_receipt(value.get("execution_receipt"))
+    if evidence is not None:
+        result["execution_receipt"] = evidence
     usage = value.get("usage")
     if isinstance(usage, Mapping):
-        if usage.get("source") in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner"}:
+        if usage.get("source") in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner", "pi_assistant_usage"}:
             result["usage_source"] = usage["source"]
         if type(usage.get("updates")) is int and usage["updates"] >= 0:
             result["usage_updates"] = usage["updates"]
@@ -827,9 +832,14 @@ def process_project_memory(
                                "model": MODEL, "reasoning_effort": REASONING_EFFORT}
     settings = load_config(data_dir)
     mode = settings.get("project_memory_mode", "off")
-    if not getattr(settings, "valid", True) or not project_memory_enabled(workspace, settings):
+    if not getattr(settings, "valid", True):
+        return dict(receipt, status="failed", code="configuration_error", reason_code="invalid_configuration")
+    if not project_memory_enabled(workspace, settings):
         return dict(receipt, status="disabled", mode=mode)
-    receipt["mode"] = mode
+    profile = resolve_profile(settings, "project_memory", timeout=float(timeout))
+    timeout = profile.timeout
+    receipt.update(mode=mode, model=profile.model, reasoning_effort=profile.reasoning_effort,
+                   execution_profile=profile.to_dict())
     def accounting() -> dict[str, Any]:
         return dict(receipt, duration_ms=max(0, round((time.monotonic() - started) * 1000)))
 
@@ -865,6 +875,8 @@ def process_project_memory(
                     item = value.get(key)
                     if isinstance(item, str) and re.fullmatch(r"[A-Za-z0-9._:-]{1,256}", item):
                         counters[key] = item
+                if isinstance(value.get("identity"), Mapping):
+                    counters["identity"] = dict(value["identity"])
                 memory.checkpoint_attempt(workspace, attempt_id, counters)
 
             try:
@@ -878,7 +890,7 @@ def process_project_memory(
                 request = runner_request(snapshot, float(timeout))
                 try:
                     attempt = memory.begin_attempt(snapshot, model=MODEL, reasoning_effort=REASONING_EFFORT,
-                                                   processor_id=PROCESSOR_ID)
+                                                   processor_id=PROCESSOR_ID, profile=profile)
                     attempt_id = attempt.get("attempt_id") if isinstance(attempt, Mapping) else None
                     if not isinstance(attempt_id, str) or not attempt_id:
                         attempt_id = None
@@ -886,13 +898,28 @@ def process_project_memory(
                 except (StoreError, OSError, ValueError):
                     raise ProcessorFailure("storage_failure") from None
                 receipt["usage_attempt_id"] = attempt_id
-                active_runner = runner if runner is not None else NativeProcessorRunner(timeout=timeout, usage_checkpoint=checkpoint)
-                returned = active_runner.run(request) if hasattr(active_runner, "run") else active_runner(request)
-                if isinstance(returned, Mapping):
-                    receipt.update(_metrics(returned.get("metrics")))
-                output, _, thread_id, turn_id = _validate_runner_receipt(returned)
+                if runner is not None:
+                    active_runner = runner
+                elif profile.runtime == "pi":
+                    from .pi_runtime import PiProcessorRunner
+                    active_runner = PiProcessorRunner(usage_checkpoint=checkpoint)
+                else:
+                    active_runner = NativeProcessorRunner(timeout=timeout, usage_checkpoint=checkpoint)
+                execution_request = ExecutionRequest(
+                    prompt=request["prompt"], output_schema=request["output_schema"], profile=profile,
+                    context={key: value for key, value in request.items()
+                             if key not in {"prompt", "output_schema", "model", "reasoning_effort", "timeout"}},
+                    job_type="reconsideration" if snapshot.get("job_kind") == "reconsideration" else "project_memory",
+                    attempt_id=attempt_id, deadline=started + timeout,
+                )
+                execution = execute(execution_request, active_runner)
+                receipt.update(_metrics(execution.metrics))
+                execution.require_success()
+                output = execution.output
+                thread_id, turn_id = execution.identity.execution_id, execution.identity.turn_id
                 receipt.update(worker_thread_id=thread_id, worker_turn_id=turn_id,
-                               **_metrics(returned.get("metrics")))
+                    identity={key: getattr(execution.identity, key) for key in
+                              ("runtime", "provider", "model", "reasoning_effort")})
                 if time.monotonic() - started > timeout:
                     raise ProcessorFailure("timeout")
                 if len(json.dumps(output)) > MAX_OUTPUT_CHARS:
@@ -928,7 +955,10 @@ def process_project_memory(
             except Exception as exc:
                 from .jev_quality import JevQualityError
                 if isinstance(exc, ProcessorFailure):
-                    code = exc.code if exc.code in {"timeout", "runner_unavailable", "runner_failure", "storage_failure"} else "invalid_response"
+                    configuration_failure = exc.code in {"model_unavailable", "invalid_request", "runner_unavailable"}
+                    code = "configuration_error" if configuration_failure else (exc.code if exc.code in {"timeout", "runner_failure", "storage_failure"} else "invalid_response")
+                    if exc.reason_code or configuration_failure:
+                        receipt["reason_code"] = exc.reason_code or exc.code
                     if exc.metrics:
                         receipt.update(_metrics(exc.metrics))
                     for key in ("worker_thread_id", "worker_turn_id"):

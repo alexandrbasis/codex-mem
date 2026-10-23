@@ -141,3 +141,20 @@ class ProjectMemoryCostReportTests(unittest.TestCase):
             self.assertEqual(0, current['observer']['event_count'])
             self.assertIsNone(current['observer']['api_equivalent_usd']['total'])
             self.assertEqual(original['observer']['api_equivalent_usd'], current['observer']['api_equivalent_usd'])
+
+    def test_other_runtime_worker_id_cannot_hide_codex_usage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with sqlite3.connect(Path(directory) / 'memory.sqlite3') as connection:
+                write_attempts(connection, [attempt()])
+                connection.execute("ALTER TABLE pm_usage_attempts ADD COLUMN runtime TEXT")
+                connection.execute("UPDATE pm_usage_attempts SET runtime='pi'")
+                connection.execute('CREATE TABLE usage_sessions(thread_id TEXT,project TEXT,parent_thread_id TEXT,agent_path TEXT,agent_role TEXT,agent_nickname TEXT)')
+                connection.execute("INSERT INTO usage_sessions VALUES('worker-attempt-1','/project',NULL,NULL,NULL,NULL)")
+                event = response(thread_id='worker-attempt-1')
+                connection.execute('CREATE TABLE usage_events (' + ','.join(
+                    key + (' INTEGER' if isinstance(value, int) else ' TEXT') for key, value in event.items()) + ')')
+                connection.execute('INSERT INTO usage_events VALUES (' + ','.join('?' for _ in event) + ')', tuple(event.values()))
+            report = build_cost_report(directory, project='/project', **PERIOD)
+            self.assertEqual(1, report['main']['event_count'])
+            self.assertEqual(1, report['observer']['event_count'])
+            self.assertEqual(0, report['completeness']['observer_overlap_events_excluded_from_main'])

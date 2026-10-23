@@ -61,6 +61,48 @@ class DashboardDataTests(unittest.TestCase):
             connection.execute('INSERT INTO jev_judgment_audits VALUES (?,?,?,?,?)', (1, self.project, 'job', json.dumps(dict(audit, route='quality_refinement_commit')), self.now))
             connection.execute('INSERT INTO jev_judgment_audits VALUES (?,?,?,?,?)', (2, self.project, None, json.dumps(dict(audit, route='retrieval_rank_success')), self.now))
 
+    def test_project_memory_attempts_are_scoped_private_and_runtime_aware(self):
+        self.seed()
+        with self.connection() as connection:
+            connection.execute("CREATE TABLE pm_usage_attempts(attempt_id TEXT,project TEXT,session_id TEXT,job_id TEXT,requested_runtime TEXT,requested_provider TEXT,requested_model TEXT,requested_reasoning_effort TEXT,runtime TEXT,provider TEXT,actual_model TEXT,profile_basis TEXT,worker_thread_id TEXT,started_at TEXT,outcome TEXT,usage_status TEXT,usage_source TEXT,total_tokens INT,cache_write_tokens INT,reasoning_tokens INT,execution_receipt TEXT)")
+            connection.execute("INSERT INTO pm_usage_attempts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", ('pm-a', self.project, 'child', 'pm-job', 'pi', 'anthropic', 'claude-test', 'low', 'pi', 'anthropic', 'claude-test', 'attempt_profile', 'main', self.now, 'failed', 'unknown', 'unknown', None, None, None, 'PRIVATE_SENTINEL'))
+            connection.execute('ALTER TABLE pm_usage_attempts ADD COLUMN reason_code TEXT')
+            connection.execute("UPDATE pm_usage_attempts SET reason_code='unsupported_reasoning' WHERE attempt_id='pm-a'")
+            connection.execute("INSERT INTO pm_usage_attempts(attempt_id,project,session_id,job_id,requested_runtime,worker_thread_id,started_at) VALUES ('other','/projects/beta','beta','pm-other','codex','child',?)", (self.old,))
+        reader = DashboardReader(self.home)
+        overview = reader.overview()
+        self.assertEqual(110, overview['main']['total_tokens'])
+        detail = reader.session(self.project, 'session')
+        self.assertEqual(2, len(detail['processor_attempts']))
+        attempt = next(row for row in detail['processor_attempts'] if row.get('attempt_id') == 'pm-a')
+        self.assertEqual('project_memory', attempt['processor'])
+        self.assertEqual('pi', attempt['runtime'])
+        self.assertEqual('anthropic', attempt['provider'])
+        self.assertEqual('claude-test', attempt['requested_model'])
+        self.assertEqual('unsupported_reasoning', attempt['reason_code'])
+        self.assertNotIn('PRIVATE_SENTINEL', json.dumps(detail))
+        scoped = reader.project(self.project)
+        self.assertEqual(2, scoped['observer']['event_count'])
+        self.assertEqual(1, len(scoped['sessions']))
+
+    def test_execution_overview_uses_saved_profiles_without_runtime_dispatch(self):
+        from codex_mem.config import configure
+        self.seed()
+        profile = dict(runtime='pi', provider='anthropic', model='claude-test', reasoning_effort='low', timeout=120)
+        configure(self.home, processing_profile=profile)
+        database_before = (self.home / 'memory.sqlite3').read_bytes()
+        config_before = (self.home / 'config.json').read_bytes()
+        with patch('codex_mem.execution_diagnostics.check_profile', side_effect=AssertionError('runtime dispatch')):
+            reader = DashboardReader(self.home)
+            execution = reader.overview()['execution']
+            again = reader.overview()['execution']
+        self.assertEqual(profile, execution['default_profile'])
+        self.assertEqual(profile, execution['processors']['project_memory']['profile'])
+        self.assertEqual('not_checked', execution['processors']['project_memory']['availability']['model'])
+        self.assertEqual(execution, again)
+        self.assertEqual(database_before, (self.home / 'memory.sqlite3').read_bytes())
+        self.assertEqual(config_before, (self.home / 'config.json').read_bytes())
+
     def test_failure_reasons_without_new_sqlite_attributes(self):
         (self.home / 'memory.sqlite3').touch()
         constants = ('SQLITE_INTERRUPT', 'SQLITE_BUSY', 'SQLITE_LOCKED', 'SQLITE_CORRUPT', 'SQLITE_NOTADB')

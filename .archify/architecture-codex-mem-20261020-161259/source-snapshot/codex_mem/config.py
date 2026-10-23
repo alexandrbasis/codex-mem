@@ -29,6 +29,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "processor_enabled": True,
     # Session lanes preserve turn order while overlapping model requests.
     "processor_workers": 2,
+    "processing_profile": None,
+    "observation_profile": None,
+    "project_memory_profile": None,
     "service_enabled": True,
     "semantic_enabled": True,
     "usage_enabled": True,
@@ -505,6 +508,8 @@ def _normalise_config(raw: Any, *, strict: bool) -> dict[str, Any]:
             strict,
         ),
     }
+    from .execution import PROFILE_KEYS, normalize_profile
+    result.update({key: normalize_profile(raw.get(key)) for key in PROFILE_KEYS})
     return LoadedConfig(result, valid=True)
 
 
@@ -526,6 +531,9 @@ def _has_valid_present_fields(raw: Mapping[str, Any]) -> bool:
     """Validate every present field so invalid exclusions never disappear."""
 
     try:
+        from .execution import PROFILE_KEYS, normalize_profile
+        for key in PROFILE_KEYS:
+            normalize_profile(raw.get(key))
         if "project_memory_mode" in raw:
             _validate_project_memory_mode(raw["project_memory_mode"], True)
         if "project_memory_projects" in raw:

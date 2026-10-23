@@ -5,6 +5,8 @@ helpers deliberately use the caller's transaction so capture/deletion is atomic.
 """
 from __future__ import annotations
 
+from .host import source_role
+
 import hashlib
 import json
 import re
@@ -33,8 +35,7 @@ def _hash(value: Any) -> str:
 
 
 def _role(source: str | None) -> str:
-    from .store import _evidence_role
-    return _evidence_role(source)
+    return source_role(source)
 
 
 def install_schema(connection: sqlite3.Connection) -> None:
@@ -62,6 +63,16 @@ def install_schema(connection: sqlite3.Connection) -> None:
     )
     for statement in statements:
         connection.execute(statement)
+    columns = {row[1] for row in connection.execute("PRAGMA table_info(pm_usage_attempts)")}
+    for name, declaration in {
+        "requested_runtime": "TEXT", "requested_provider": "TEXT", "requested_model": "TEXT",
+        "requested_reasoning_effort": "TEXT", "requested_timeout": "REAL",
+        "runtime": "TEXT", "provider": "TEXT", "actual_model": "TEXT",
+        "actual_reasoning_effort": "TEXT", "profile_basis": "TEXT", "execution_receipt": "TEXT", "reason_code": "TEXT",
+    }.items():
+        if name not in columns:
+            connection.execute(f"ALTER TABLE pm_usage_attempts ADD COLUMN {name} {declaration}")
+    connection.execute("UPDATE pm_usage_attempts SET requested_runtime='codex',requested_provider='openai',requested_model=model,requested_reasoning_effort=reasoning_effort,profile_basis='legacy_requested_profile' WHERE profile_basis IS NULL")
     from .project_memory_custody import install_schema as install_custody_schema
     install_custody_schema(connection)
     if "blocked_job_id" not in {r[1] for r in connection.execute("PRAGMA table_info(pm_events)")}:
@@ -231,7 +242,7 @@ class ProjectMemory:
             return []
         connection = self.store._connection
         ranked = []
-        for source in connection.execute("SELECT e.*,v.seq,v.salient FROM pm_events v JOIN entries e ON e.id=v.source_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id IS NULL OR e.session_id!=?) AND (e.source='hook:UserPromptSubmit' OR e.source LIKE 'hook:UserPromptSubmit:%') ORDER BY v.salient DESC,CASE WHEN v.salient>=5 THEN -v.seq WHEN v.salient>0 THEN v.seq ELSE -v.seq END LIMIT ?", (project, exclude_session_id, exclude_session_id, limit)):
+        for source in connection.execute("SELECT e.*,v.seq,v.salient FROM pm_events v JOIN entries e ON e.id=v.source_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id IS NULL OR e.session_id!=?) AND (codex_mem_source_role(e.source)='user_intent') ORDER BY v.salient DESC,CASE WHEN v.salient>=5 THEN -v.seq WHEN v.salient>0 THEN v.seq ELSE -v.seq END LIMIT ?", (project, exclude_session_id, exclude_session_id, limit)):
             salient = source["salient"]
             signal = {"id": source["id"], "source_id": source["id"], "text": source["body"][:1200], "truncated": len(source["body"])>1200, "source_role": "user_intent", "provisional": True, "signal_kind": _user_signal_kind(source["body"]), "selection_basis": "explicit_user_marker" if salient else "recent_user_message", "seq": source["seq"], "session_id": source["session_id"]}
             rank = (0, -salient, -source["seq"] if salient>=5 else source["seq"]) if salient else (2, 0, -source["seq"])
@@ -240,7 +251,7 @@ class ProjectMemory:
         # establishes this provenance. Parse only a bounded recent candidate set.
         placeholders = ",".join("?" for _ in _EXECUTION_TOOLS)
         rows = connection.execute(
-            f"SELECT e.*,v.seq FROM pm_events v JOIN entries e ON e.id=v.source_id JOIN tool_uses t ON t.entry_id=e.id AND t.project=v.project AND t.session_id=e.session_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id!=?) AND (e.source='hook:PostToolUse' OR e.source LIKE 'hook:PostToolUse:%') AND lower(t.tool_name) IN ({placeholders}) AND json_type(t.tool_input)='object' AND json_type(t.tool_response)='object' AND COALESCE(json_extract(t.input_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.input_metadata_json,'$.excluded'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.excluded'),0)=0 ORDER BY v.seq DESC LIMIT ?",
+            f"SELECT e.*,v.seq FROM pm_events v JOIN entries e ON e.id=v.source_id JOIN tool_uses t ON t.entry_id=e.id AND t.project=v.project AND t.session_id=e.session_id WHERE v.project=? AND v.done=0 AND (? IS NULL OR e.session_id!=?) AND (codex_mem_source_role(e.source)='tool_record') AND lower(t.tool_name) IN ({placeholders}) AND json_type(t.tool_input)='object' AND json_type(t.tool_response)='object' AND COALESCE(json_extract(t.input_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.truncated'),0)=0 AND COALESCE(json_extract(t.input_metadata_json,'$.excluded'),0)=0 AND COALESCE(json_extract(t.response_metadata_json,'$.excluded'),0)=0 ORDER BY v.seq DESC LIMIT ?",
             (project, exclude_session_id, exclude_session_id, *sorted(_EXECUTION_TOOLS), min(32, limit*4)))
         seen = set()
         for source in rows:
@@ -481,18 +492,25 @@ class ProjectMemory:
         return bool(job and project and job["status"] == "running" and job["token"] == supplied.get("token") and job["fingerprint"] == supplied.get("input_fingerprint") and job["lease_until"] > time.time() and job["revision"] == project["revision"] and job["generation"] == project["deletion_generation"])
 
     def begin_attempt(self, snapshot: dict[str, Any], *, model: str, reasoning_effort: str,
-                      processor_id: str = "", attempt_id: str | None = None) -> dict[str, Any]:
+                      processor_id: str = "", attempt_id: str | None = None, profile=None) -> dict[str, Any]:
         """Record one native invocation before dispatch, independently of its job.
 
         A caller can reuse an explicit attempt ID after an uncertain write. A
         new invocation, including a retry of one job, must receive a new ID.
         No prompts, source text, or generated text enter this ledger.
         """
-        model = _attempt_identifier(model, "model")
+        from .execution import normalize_profile
+        requested = normalize_profile(profile.to_dict()) if profile is not None else None
+        if requested is not None:
+            model, reasoning_effort = requested["model"], requested["reasoning_effort"] or "none"
+        else:
+            model = _attempt_identifier(model, "model")
         processor_id = _attempt_identifier(processor_id, "processor_id", empty=True)
         if reasoning_effort not in {"none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"}:
             raise ValueError("unsupported attempt reasoning effort")
         identity = _attempt_identifier(attempt_id or "pma_"+uuid.uuid4().hex, "attempt_id")
+        values = requested or dict(runtime="codex", provider="openai", model=model,
+                                   reasoning_effort=reasoning_effort, timeout=None)
         with self.store._lock:
             def begin():
                 connection = self.store._connection
@@ -503,11 +521,14 @@ class ProjectMemory:
                 if old:
                     expected = (snapshot.get("project"), snapshot.get("job_id"), snapshot.get("token"), model, reasoning_effort, processor_id)
                     actual = tuple(old[key] for key in ("project", "job_id", "claim_token", "model", "reasoning_effort", "processor_id"))
-                    if expected != actual:
+                    if expected != actual or any(old["requested_" + key] != value for key, value in values.items()):
                         raise ValueError("attempt ID already belongs to another invocation")
                     return dict(old)
                 now = _attempt_now()
                 connection.execute("INSERT INTO pm_usage_attempts(attempt_id,project,session_id,job_id,claim_token,processor_id,model,reasoning_effort,started_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)", (identity, job["project"], job["session_id"], job["id"], job["token"], processor_id, model, reasoning_effort, now, now))
+                connection.execute("UPDATE pm_usage_attempts SET requested_runtime=?,requested_provider=?,requested_model=?,requested_reasoning_effort=?,requested_timeout=?,profile_basis=? WHERE attempt_id=?",
+                    (values["runtime"], values["provider"], values["model"], values["reasoning_effort"], values["timeout"],
+                     "attempt_profile" if requested else "legacy_requested_profile", identity))
                 return dict(connection.execute("SELECT * FROM pm_usage_attempts WHERE attempt_id=?", (identity,)).fetchone())
             return self.store._write(begin)
 
@@ -532,6 +553,20 @@ class ProjectMemory:
         old = dict(old_row)
         observed = _attempt_metrics(receipt)
         updated = dict(old)
+        identity = receipt.get("identity")
+        if isinstance(identity, dict):
+            fields = {"runtime": "runtime", "provider": "provider", "model": "actual_model",
+                      "reasoning_effort": "actual_reasoning_effort"}
+            if set(identity) != set(fields) or any(identity[key] != old["requested_" + key] for key in fields):
+                raise ValueError("execution identity does not match requested profile")
+            for key, field in fields.items():
+                if old[field] is not None and old[field] != identity[key]:
+                    raise ValueError("execution identity changed")
+                updated[field] = identity[key]
+        from .execution import pi_execution_receipt
+        evidence = pi_execution_receipt(receipt.get("execution_receipt"))
+        if evidence is not None:
+            updated["execution_receipt"] = json.dumps(evidence, sort_keys=True)
         token_changed = False
         for field in _ATTEMPT_COUNTERS:
             incoming = observed.get(field)
@@ -551,6 +586,10 @@ class ProjectMemory:
         updated["usage_updates"] = max(old["usage_updates"] + int(token_changed), observed["usage_updates"])
         if old["error_code"] is None and observed.get("error_code"):
             updated["error_code"] = observed["error_code"]
+        from .observation_diagnostics import safe_failure_reason
+        reason = safe_failure_reason(receipt.get("code"), receipt.get("reason_code"))
+        if old["reason_code"] is None and reason is not None:
+            updated["reason_code"] = reason
         if outcome is not None and old["finished_at"] is None:
             updated.update(outcome=outcome, finished_at=_attempt_now())
         changed = {key: value for key, value in updated.items() if value != old[key]}
@@ -575,10 +614,10 @@ class ProjectMemory:
                     if job and job["token"] == snapshot.get("token") and job["status"] == "running":
                         self.store._connection.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
                     return {"status": "stale"}
-                status = "quarantined" if reason == "invalid_response" or job["attempts"] >= 5 else "failed"
+                status = "quarantined" if reason != "configuration_error" and (reason == "invalid_response" or job["attempts"] >= 5) else "failed"
                 # Do not persist arbitrary model/runner errors: they may contain
                 # sensitive inputs. Only a bounded error category is durable.
-                category = reason if reason in {"invalid_response", "timeout", "runner_failure", "unavailable"} else "processing_failed"
+                category = reason if reason in {"configuration_error", "invalid_response", "timeout", "runner_failure", "unavailable"} else "processing_failed"
                 retry_after = time.time()+min(300, 2**job["attempts"])
                 if status == "quarantined":
                     durable = json.loads(job["input_json"])
@@ -1091,7 +1130,7 @@ def _explicit_transition(evidence: list[dict], relation: str, contexts: dict[str
 
 def _safe_receipt(receipt: dict[str, Any] | None) -> dict[str, Any]:
     """Persist accounting/profile fields, never arbitrary response/error text."""
-    allowed = {"job_kind", "historical_sources_omitted", "reconsideration_sources_omitted", "processor_id", "output_schema_version", "model", "reasoning_effort", "worker_thread_id", "worker_turn_id", "duration_ms", "input_tokens", "output_tokens", "cached_input_tokens", "cost_usd", "model_calls", "omitted_fields_count", "omitted_fields_reason", "omitted_fields"}
+    allowed = {"code", "reason_code", "job_kind", "historical_sources_omitted", "reconsideration_sources_omitted", "processor_id", "output_schema_version", "model", "reasoning_effort", "worker_thread_id", "worker_turn_id", "duration_ms", "input_tokens", "output_tokens", "cached_input_tokens", "cost_usd", "model_calls", "omitted_fields_count", "omitted_fields_reason", "omitted_fields"}
     return {k: v for k, v in (receipt or {}).items() if k in allowed and isinstance(v, (str, int, float, bool)) and (not isinstance(v, str) or len(v) <= 200)}
 
 
@@ -1125,7 +1164,7 @@ def _readiness_sql() -> str:
     """The same durable lane condition is shared by discovery and leasing."""
     return (" AND EXISTS (SELECT 1 FROM pm_events rv JOIN entries re ON re.id=rv.source_id WHERE rv.project=v.project AND rv.session_id=v.session_id AND rv.done=0 AND rv.blocked_job_id IS NULL GROUP BY rv.project,rv.session_id HAVING "
             "MAX(CAST(strftime('%s',re.created_at) AS INTEGER))<=? OR MIN(CAST(strftime('%s',re.created_at) AS INTEGER))<=? OR COUNT(*)>=32 OR SUM(MAX(0,length(re.body)-rv.offset))>=24000 OR "
-            "(MAX(CASE WHEN re.source='hook:Stop' OR re.source LIKE 'hook:Stop:%' OR re.source='hook:PreCompact' OR re.source LIKE 'hook:PreCompact:%' THEN 1 ELSE 0 END)=1 AND MAX(CAST(strftime('%s',re.created_at) AS INTEGER))<=?))")
+            "(MAX(CASE WHEN codex_mem_source_role(re.source)='assistant_report' OR codex_mem_source_role(re.source)='lifecycle_marker' THEN 1 ELSE 0 END)=1 AND MAX(CAST(strftime('%s',re.created_at) AS INTEGER))<=?))")
 
 
 def _nonassertive_context(text: str, decision: bool = False) -> bool:
@@ -1245,7 +1284,7 @@ def _attempt_metrics(receipt: dict[str, Any]) -> dict[str, Any]:
     status = receipt.get("usage_status", usage.get("status", metrics.get("usage_status")))
     normalized["usage_status"] = ("reported" if status == "reported" and normalized.get("input_tokens") is not None and normalized.get("output_tokens") is not None else "partial" if known else "unknown")
     source = receipt.get("usage_source", usage.get("source", metrics.get("usage_source")))
-    normalized["usage_source"] = source if isinstance(source, str) and source in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner"} else "runner_receipt" if known else "unknown"
+    normalized["usage_source"] = source if isinstance(source, str) and source in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner", "pi_assistant_usage"} else "runner_receipt" if known else "unknown"
     updates = receipt.get("usage_updates", usage.get("updates", 0))
     normalized["usage_updates"] = updates if type(updates) is int and 0 <= updates <= 2**31-1 else 0
     duration = metrics.get("duration_ms", receipt.get("runner_duration_ms", receipt.get("duration_ms")))
@@ -1253,11 +1292,11 @@ def _attempt_metrics(receipt: dict[str, Any]) -> dict[str, Any]:
         normalized["duration_ms"] = round(duration)
     for field in ("worker_thread_id", "worker_turn_id"):
         value = receipt.get(field)
-        if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,128}", value):
+        if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9._:-]{1,256}", value):
             normalized[field] = value
     error = receipt.get("error_code", receipt.get("code"))
     if error is not None:
-        normalized["error_code"] = error if isinstance(error, str) and error in {"invalid_response", "timeout", "runner_failure", "unavailable", "storage_failure", "source_changed", "configuration_changed", "jev_quality_uncertain", "unsupported_model", "auth_error", "cli_not_found", "interrupted", "cancelled", "unknown"} else "processing_failed"
+        normalized["error_code"] = error if isinstance(error, str) and error in {"configuration_error", "invalid_response", "timeout", "runner_failure", "unavailable", "storage_failure", "source_changed", "configuration_changed", "jev_quality_uncertain", "unsupported_model", "auth_error", "cli_not_found", "interrupted", "cancelled", "unknown"} else "processing_failed"
     return normalized
 
 

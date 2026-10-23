@@ -14,15 +14,20 @@ from codex_mem.store import Store, StoreError
 from codex_mem.observation_diagnostics import safe_storage_failure_detail
 
 
+# SQLite result codes are stable; Python 3.10 does not export these names.
+SQLITE_BUSY = getattr(sqlite3, "SQLITE_BUSY", 5)
+SQLITE_CORRUPT = getattr(sqlite3, "SQLITE_CORRUPT", 11)
+
+
 def sqlite_failure(code):
     error = sqlite3.OperationalError("database is busy; private SQL and secret-access-token")
     error.sqlite_errorcode = code
     return error
 
 
-def storage_failure(*, safe=True, code=sqlite3.SQLITE_BUSY):
+def storage_failure(*, safe=True, code=SQLITE_BUSY):
     error = StoreError("private SQL and secret-access-token")
-    error.reason_code = "sqlite_busy" if code == sqlite3.SQLITE_BUSY else "sqlite_corrupt"
+    error.reason_code = "sqlite_busy" if code == SQLITE_BUSY else "sqlite_corrupt"
     error.sqlite_errorcode = code
     error.os_errno = None
     error.retry_safe = safe
@@ -60,7 +65,7 @@ class StorageResilienceTests(unittest.TestCase):
                 store._write(operation)
             self.assertEqual("sqlite_busy", getattr(raised.exception, "reason_code", None))
             self.assertTrue(getattr(raised.exception, "retry_safe", False))
-            self.assertEqual(sqlite3.SQLITE_BUSY, raised.exception.sqlite_errorcode)
+            self.assertEqual(SQLITE_BUSY, raised.exception.sqlite_errorcode)
             operation.assert_not_called()
             blocker.execute("ROLLBACK")
 
@@ -71,7 +76,7 @@ class StorageResilienceTests(unittest.TestCase):
 
             def execute(sql):
                 if sql == "COMMIT":
-                    raise sqlite_failure(sqlite3.SQLITE_BUSY)
+                    raise sqlite_failure(SQLITE_BUSY)
                 return connection.execute(sql)
 
             proxy.execute.side_effect = execute
@@ -83,6 +88,80 @@ class StorageResilienceTests(unittest.TestCase):
             self.assertEqual(1, operation.call_count)
             self.assertFalse(getattr(raised.exception, "retry_safe", False))
             self.assertNotIn("secret-access-token", str(raised.exception))
+            store._conn = connection
+
+    def test_legacy_sqlite_begin_contention_retains_safe_numeric_diagnostic(self):
+        for message, code, reason in (("database is locked", SQLITE_BUSY, "sqlite_busy"),
+                                      ("database table is locked", 6, "sqlite_locked")):
+            with self.subTest(message=message), Store(self.data_dir) as store:
+                connection = store._connection
+                proxy = mock.Mock(wraps=connection)
+                proxy.execute.side_effect = sqlite3.OperationalError(message)
+                proxy.in_transaction = False
+                store._conn = proxy
+                self.addCleanup(setattr, store, "_conn", connection)
+                operation = mock.Mock()
+                with mock.patch("codex_mem.store.time.sleep"), self.assertRaises(StoreError) as raised:
+                    store._write(operation)
+                self.assertEqual(reason, raised.exception.reason_code)
+                self.assertEqual(code, raised.exception.sqlite_errorcode)
+                self.assertTrue(raised.exception.retry_safe)
+                self.assertEqual(5, proxy.execute.call_count)
+                operation.assert_not_called()
+                store._conn = connection
+
+    def test_legacy_sqlite_text_variants_cannot_grant_retry(self):
+        class CustomOperationalError(sqlite3.OperationalError):
+            pass
+
+        corrupt = sqlite3.OperationalError("database is locked")
+        corrupt.sqlite_errorcode = SQLITE_CORRUPT
+        invalid = sqlite3.OperationalError("database is locked")
+        invalid.sqlite_errorcode = "private-code"
+        errors = [sqlite3.OperationalError(text) for text in (
+            "database is locked; secret-access-token", "private database is locked",
+            "database is busy", "DATABASE IS LOCKED", "database table is locked: private")]
+        errors.extend((CustomOperationalError("database is locked"), corrupt, invalid))
+        for error in errors:
+            with self.subTest(error=type(error), args=error.args), Store(self.data_dir) as store:
+                connection = store._connection
+                proxy = mock.Mock(wraps=connection)
+                proxy.execute.side_effect = error
+                proxy.in_transaction = False
+                store._conn = proxy
+                self.addCleanup(setattr, store, "_conn", connection)
+                operation = mock.Mock()
+                with mock.patch("codex_mem.store.time.sleep"), self.assertRaises(StoreError) as raised:
+                    store._write(operation)
+                self.assertFalse(raised.exception.retry_safe)
+                self.assertEqual("sqlite_corrupt" if error is corrupt else "unknown", raised.exception.reason_code)
+                self.assertEqual(1, proxy.execute.call_count)
+                operation.assert_not_called()
+                self.assertNotIn("secret-access-token", str(raised.exception))
+                self.assertNotIn("private", str(raised.exception))
+                store._conn = connection
+
+    def test_legacy_sqlite_commit_failure_never_replays_operation(self):
+        with Store(self.data_dir) as store:
+            connection = store._connection
+            proxy = mock.Mock(wraps=connection)
+
+            def execute(sql):
+                if sql == "COMMIT":
+                    raise sqlite3.OperationalError("database is locked")
+                return connection.execute(sql)
+
+            proxy.execute.side_effect = execute
+            proxy.in_transaction = True
+            store._conn = proxy
+            self.addCleanup(setattr, store, "_conn", connection)
+            operation = mock.Mock()
+            with mock.patch("codex_mem.store.time.sleep"), self.assertRaises(StoreError) as raised:
+                store._write(operation)
+            self.assertEqual(1, operation.call_count)
+            self.assertEqual("sqlite_busy", raised.exception.reason_code)
+            self.assertEqual(SQLITE_BUSY, raised.exception.sqlite_errorcode)
+            self.assertFalse(raised.exception.retry_safe)
             store._conn = connection
 
     def test_inner_store_error_cannot_grant_outer_transaction_retry(self):
@@ -147,7 +226,7 @@ class StorageResilienceTests(unittest.TestCase):
     def test_invalid_metadata_cannot_grant_retry_or_persist_private_text(self):
         self.assertIsNone(safe_storage_failure_detail({"stage": "storage", "code": "storage_failure", "operation": ["private"]}))
         checked = safe_storage_failure_detail({"stage": "storage", "code": "storage_failure", "operation": "claim",
-            "reason_code": "sqlite_busy", "sqlite_errorcode": sqlite3.SQLITE_CORRUPT, "retry_safe": True,
+            "reason_code": "sqlite_busy", "sqlite_errorcode": SQLITE_CORRUPT, "retry_safe": True,
             "os_errno": "secret-access-token", "private": "secret-access-token"})
         self.assertFalse(checked["retry_safe"])
         self.assertNotIn("secret-access-token", json.dumps(checked))
@@ -156,7 +235,7 @@ class StorageResilienceTests(unittest.TestCase):
         enqueue(self.project, self.data_dir, clock=self.clock)
         receipt = {"status": "failed", "code": "storage_failure", "failure_detail": {
             "stage": "storage", "code": "storage_failure", "operation": "claim", "reason_code": "sqlite_busy",
-            "sqlite_errorcode": sqlite3.SQLITE_BUSY, "os_errno": None, "retry_safe": True}}
+            "sqlite_errorcode": SQLITE_BUSY, "os_errno": None, "retry_safe": True}}
         for attempt in range(3):
             run_service(self.data_dir, processor=lambda *a, **k: receipt, processor_workers=2,
                         clock=self.clock, sleeper=self.sleep, max_cycles=1)
@@ -307,7 +386,7 @@ class StorageResilienceTests(unittest.TestCase):
 
     def test_unknown_corrupt_and_postclaim_errors_remain_blocked(self):
         for error, job_id in ((StoreError("private SQL"), None),
-                              (storage_failure(code=sqlite3.SQLITE_CORRUPT), None),
+                              (storage_failure(code=SQLITE_CORRUPT), None),
                               (storage_failure(safe=False), None),
                               (storage_failure(), "uncertain-job")):
             with self.subTest(error=type(error), job_id=job_id):

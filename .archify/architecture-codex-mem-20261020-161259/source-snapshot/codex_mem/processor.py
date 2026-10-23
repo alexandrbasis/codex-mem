@@ -1,12 +1,14 @@
-"""Bounded native Codex processing for raw hook observations.
+"""Bounded background processing for raw hook observations.
 
 The processor is deliberately separate from hook capture and normal memory
-writes.  It leases one small batch, gives it to a fresh isolated app-server
-thread, and commits only a locally validated result through Store's atomic
+writes. It leases one small batch, gives it to a fresh isolated runtime,
+and commits only a locally validated result through Store's atomic
 observation API.  Source text is evidence, never instructions.
 """
 
 from __future__ import annotations
+
+from .host import source_role
 
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
@@ -26,6 +28,8 @@ import tempfile
 import time
 from typing import Any
 from xml.etree import ElementTree
+
+from .execution import ExecutionRequest, ExecutionResult, execute
 
 from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason, storage_failure_detail
 
@@ -141,8 +145,7 @@ def recover_failed_batch(
     if (before is None or before["status"] != "failed"
             or before["error_code"] != expected_error_code
             or before["attempt_count"] != expected_attempt_count
-            or before["processor_id"] != PROCESSOR_ID or before["model"] != MODEL
-            or before["reasoning_effort"] != REASONING_EFFORT):
+            or before["processor_id"] != PROCESSOR_ID):
         return {"status": "blocked", "code": "recovery_unavailable", "project": workspace,
                 "job_id": job_id, "before": before, "after": before}
     result = process_pending(
@@ -186,9 +189,9 @@ def process_pending(
     """Process at most one leased observation batch.
 
     ``runner`` is an explicit deterministic-test seam.  It receives a mapping
-    with the bounded prompt, output schema, and fixed model contract and must
+    with the bounded prompt, output schema, and selected model contract and must
     return ``{"output": ..., "evidence": ...}``.  The production default is
-    :class:`NativeProcessorRunner`; tests never need to launch Codex.
+    runtime-selected Codex or Pi adapter; tests can replace its executable.
 
     The returned receipt intentionally contains no source text, prompt, model
     output, raw configuration, or exception text. Storage failures retain only
@@ -212,6 +215,9 @@ def process_pending(
     settings = load_config(data_dir)
     if not getattr(settings, "valid", True):
         return _failed_receipt(None, "invalid_request", None, None)
+    from .execution import resolve_profile
+    profile = resolve_profile(settings, "observation", timeout=checked_timeout)
+    checked_timeout = profile.timeout
     from .jev_client import enabled
     from .jev_quality import MAX_GATE_SECONDS
     jev_enabled = enabled(settings, "jev_filter_enabled", workspace)
@@ -232,8 +238,9 @@ def process_pending(
             claimed = store.claim_observation_batch(
                 workspace,
                 PROCESSOR_ID,
-                MODEL,
-                REASONING_EFFORT,
+                profile.model,
+                profile.reasoning_effort or "none",
+                execution_profile=profile.to_dict(),
                 max_entries=max_entries,
                 max_chars=max_chars,
                 lease_seconds=effective_lease_seconds,
@@ -272,8 +279,9 @@ def process_pending(
             thread_id: str | None = None
             turn_id: str | None = None
             metrics: Mapping[str, Any] | None = None
+            identity = None
             attempt_count = claimed.get("attempt_count")
-            usage_started = False
+            usage_started = True
             outcome = "failed"
             error_code: str | None = None
             receipt: dict[str, Any] | None = None
@@ -314,7 +322,7 @@ def process_pending(
                                    "jev_filter": filter_audit}
                         return receipt
                     _, _, sources = _claim_parts(generation_claim)
-                begin_attempt(store, workspace, job_id, attempt_count)
+                begin_attempt(store, workspace, job_id, attempt_count, profile=profile)
                 usage_started = True
                 request = _runner_request(generation_claim, checked_timeout)
                 if filter_audit is not None:
@@ -372,7 +380,8 @@ def process_pending(
                 def review_candidate(candidate, remaining):
                     nonlocal reviewed_output, review_count
                     review_count += 1
-                    canonical = _resolve_source_handles(candidate, sources)
+                    canonical = _resolve_source_handles(
+                        _unwrap_model_output(candidate) if profile.runtime == "pi" else candidate, sources)
                     candidate_notes, _, candidate_summary = _validate_model_output(
                         canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
                     if filter_audit is not None:
@@ -390,15 +399,33 @@ def process_pending(
                     def checkpoint(snapshot: Mapping[str, Any]) -> None:
                         snapshot_attempt(store, workspace, job_id, attempt_count, **snapshot)
 
-                    active_runner = NativeProcessorRunner(
-                        codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
-                        candidate_review=review_candidate if quality_enabled else None,
-                    )
-                run_value = _invoke_runner(active_runner, request)
-                if isinstance(run_value.get("metrics"), Mapping):
-                    metrics = run_value["metrics"]
-                output, evidence, thread_id, turn_id = _validate_runner_receipt(run_value)
-                if "result" in output:
+                    if profile.runtime == "pi":
+                        from .pi_runtime import PiProcessorRunner
+                        active_runner = PiProcessorRunner(
+                            usage_checkpoint=checkpoint,
+                            candidate_review=review_candidate if quality_enabled else None,
+                        )
+                    else:
+                        active_runner = NativeProcessorRunner(
+                            codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
+                            candidate_review=review_candidate if quality_enabled else None,
+                        )
+                execution_request = ExecutionRequest(
+                    prompt=request["prompt"], output_schema=request["output_schema"],
+                    context={key: value for key, value in request.items()
+                             if key not in {"prompt", "output_schema", "model", "reasoning_effort", "timeout"}},
+                    profile=profile, deadline=time.monotonic() + checked_timeout, job_type="summary" if generation_claim.get("summary_required") else "observation",
+                    attempt_id=f"{job_id}:{attempt_count}",
+                )
+                execution = execute(execution_request, active_runner)
+                metrics = execution.metrics
+                if execution.identity is not None:
+                    identity = {key: getattr(execution.identity, key)
+                                for key in ("runtime", "provider", "model", "reasoning_effort")}
+                execution.require_success()
+                output = execution.output
+                thread_id, turn_id = execution.identity.execution_id, execution.identity.turn_id
+                if profile.runtime == "pi" or "result" in output:
                     output = _unwrap_model_output(output)
                 output = _resolve_source_handles(output, sources)
                 notes, disposition, summary = _validate_model_output(
@@ -408,7 +435,7 @@ def process_pending(
                     if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
                         raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
                 if quality_enabled and (notes or summary is not None):
-                    if reviewed_output != json.dumps(run_value["output"], sort_keys=True, ensure_ascii=False):
+                    if reviewed_output != json.dumps(execution.output, sort_keys=True, ensure_ascii=False):
                         review_quality(notes, summary, MAX_GATE_SECONDS)
                 finished = store.finish_observation_batch(
                     workspace,
@@ -420,7 +447,7 @@ def process_pending(
                     worker_thread_id=thread_id,
                     worker_turn_id=turn_id,
                 )
-                receipt = _finished_receipt(finished, disposition, len(notes), evidence)
+                receipt = _finished_receipt(finished, disposition, len(notes), thread_id, turn_id)
                 receipt["session_summary_count"] = int(summary is not None)
                 outcome = disposition
             except ProcessorFailure as exc:
@@ -453,6 +480,9 @@ def process_pending(
                     store, workspace, job_id, lease_token, "runner_failure", thread_id, turn_id
                 )
             finally:
+                if receipt is not None:
+                    receipt.update(execution_profile=profile.to_dict(), model=profile.model,
+                                   reasoning_effort=profile.reasoning_effort)
                 if receipt is not None and filter_audit is not None:
                     receipt["jev_filter"] = filter_audit
                 if receipt is not None and quality_audit is not None:
@@ -466,7 +496,7 @@ def process_pending(
                         terminal = dict(
                             outcome=outcome,
                             error_code=_safe_failure_code(error_code) if error_code is not None else None,
-                            worker_thread_id=thread_id, worker_turn_id=turn_id,
+                            worker_thread_id=thread_id, worker_turn_id=turn_id, identity=identity,
                         )
                         try:
                             finish_attempt(store, workspace, job_id, attempt_count, metrics=metrics, **terminal)
@@ -570,9 +600,7 @@ def _quality_source_status(
                 or any(not isinstance(source_id, str) or not _valid_source_id(source_id)
                        for source_id in [*original_ids, *evidence_ids])):
             return "unavailable"
-        fingerprint = _observation_fingerprint(
-            workspace, PROCESSOR_ID, MODEL, REASONING_EFFORT, original_ids,
-        )
+        fingerprint = claimed["input_fingerprint"]
         source_slots = ",".join("?" for _ in original_ids)
         evidence_slots = ",".join("?" for _ in evidence_ids)
         connection = sqlite3.connect(Path(store.db_path).resolve().as_uri() + "?mode=ro", uri=True, timeout=.02)
@@ -586,9 +614,9 @@ def _quality_source_status(
             f"OR l.source_id NOT IN ({source_slots}))) AS sources_active "
             "FROM observation_jobs j WHERE j.id=? AND j.project=? AND j.status='running' "
             "AND j.lease_token=? AND j.attempt_count=? AND j.input_fingerprint=? "
-            "AND j.processor_id=? AND j.model=? AND j.reasoning_effort=?",
+            "AND j.processor_id=?",
             (*sorted(evidence_ids), *original_ids, claimed["job_id"], workspace, claimed["lease_token"],
-             claimed["attempt_count"], fingerprint, PROCESSOR_ID, MODEL, REASONING_EFFORT),
+             claimed["attempt_count"], fingerprint, PROCESSOR_ID),
         ).fetchone()
         if (row is None or row["source_count"] != len(original_ids)
                 or row["evidence_count"] != len(evidence_ids) or not row["sources_active"]):
@@ -632,7 +660,7 @@ def _filtered_lifecycle_claim(
         envelopes = []
         for source in original["sources"]:
             name = str(source.get("source", ""))
-            if source["id"] not in accepted_ids and (name == "hook:Stop" or name.startswith("hook:Stop:")):
+            if source["id"] not in accepted_ids and (source_role(name) == "assistant_report"):
                 envelope = {key: source[key] for key in ("id", "source", "created_at") if key in source}
                 envelope.update(title="Session boundary", body="Lifecycle marker only. Jev rejected the event text; no factual claim is supplied.", tags=[], _jev_lifecycle_only=True)
                 sources.append(envelope)
@@ -692,19 +720,53 @@ class NativeProcessorRunner:
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
 
+    def check_profile(self, profile, *, timeout=10):
+        if profile.provider != "openai" or profile.reasoning_effort is None:
+            raise ProcessorFailure("model_unavailable", reason_code=(
+                "unsupported_provider" if profile.provider != "openai" else "unsupported_reasoning"))
+        executable = shutil.which(self.codex)
+        if executable is None:
+            raise ProcessorFailure("runner_unavailable", reason_code="codex_not_found")
+        with tempfile.TemporaryDirectory(prefix="codex-mem-preflight-") as directory:
+            environment = dict(os.environ, CODEX_MEM_DISABLED="1")
+            client = _AppServer(executable, Path(directory).resolve(), environment, timeout)
+            try:
+                _initialize_execution(client, profile)
+            finally:
+                client.close()
+
+    def execute(self, request: ExecutionRequest) -> ExecutionResult:
+        from .execution import execute_codex
+        return execute_codex(request, self.run)
+
     def __call__(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
         return self.run(request)
 
     def run(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
+        from .execution import ExecutionProfile, legacy_profile, normalize_profile
+        raw_profile = request.get("execution_profile")
+        profile = (ExecutionProfile(**normalize_profile(raw_profile)) if raw_profile is not None
+                   else legacy_profile(request.get("timeout", self.timeout)))
+        if profile.runtime != "codex":
+            raise ProcessorFailure("runner_unavailable", reason_code="unsupported_runtime")
+        if profile.provider != "openai" or profile.reasoning_effort is None:
+            raise ProcessorFailure("model_unavailable", reason_code=(
+                "unsupported_provider" if profile.provider != "openai" else "unsupported_reasoning"))
         prompt = request.get("prompt")
         schema = request.get("output_schema")
         if not isinstance(prompt, str) or not isinstance(schema, Mapping):
             raise ProcessorFailure("invalid_request")
         if len(prompt) > MAX_PROMPT_CHARS:
             raise ProcessorFailure("invalid_request")
+        deadline = request.get("deadline", time.monotonic() + self.timeout)
+        if isinstance(deadline, bool) or not isinstance(deadline, (int, float)) or not math.isfinite(deadline):
+            raise ProcessorFailure("invalid_request")
+        budget = min(profile.timeout, deadline - time.monotonic())
+        if budget <= 0:
+            raise ProcessorFailure("timeout")
         executable = shutil.which(self.codex)
         if executable is None:
-            raise ProcessorFailure("runner_unavailable")
+            raise ProcessorFailure("runner_unavailable", reason_code="codex_not_found")
 
         thread_id: str | None = None
         turn_id: str | None = None
@@ -728,6 +790,8 @@ class NativeProcessorRunner:
                     "worker_thread_id": thread_id,
                     "worker_turn_id": monitor.turn_id if monitor is not None else turn_id,
                     "metrics": metrics(),
+                    "identity": dict(runtime=profile.runtime, provider=profile.provider,
+                                     model=profile.model, reasoning_effort=profile.reasoning_effort),
                 }, force=force)
 
         try:
@@ -741,28 +805,20 @@ class NativeProcessorRunner:
                 # Preserve normal Codex authentication and rules.  This flag
                 # only prevents this child from recursively capturing itself.
                 environment["CODEX_MEM_DISABLED"] = "1"
-                client = _AppServer(executable, worker_cwd, environment, self.timeout)
+                client = _AppServer(executable, worker_cwd, environment, min(budget, deadline - time.monotonic()))
                 try:
-                    client.request(
-                        "initialize",
-                        {
-                            "clientInfo": {"name": "codex-mem-processor", "version": "1"},
-                            "capabilities": {"experimentalApi": True},
-                        },
-                    )
-                    client.send({"jsonrpc": "2.0", "method": "initialized"})
-
-                    _verify_luna_available(client)
+                    _initialize_execution(client, profile)
                     config_read = client.request(
                         "config/read", {"cwd": str(worker_cwd), "includeLayers": False}
                     )
                     overrides = _isolated_config_overrides(config_read)
+                    overrides["model_reasoning_effort"] = profile.reasoning_effort
                     started = client.request(
                         "thread/start",
                         {
                             "cwd": str(worker_cwd),
-                            "model": MODEL,
-                            "modelProvider": "openai",
+                            "model": profile.model,
+                            "modelProvider": profile.provider,
                             "allowProviderModelFallback": False,
                             "ephemeral": True,
                             "environments": [],
@@ -771,7 +827,7 @@ class NativeProcessorRunner:
                             "config": overrides,
                         },
                     )
-                    thread_id = _verify_thread_start(started)
+                    thread_id = _verify_thread_start(started, profile=profile)
                     checkpoint(force=True)
                     _verify_empty_mcp_inventory(client, thread_id)
 
@@ -781,8 +837,8 @@ class NativeProcessorRunner:
                             "turn/start",
                             {
                                 "threadId": thread_id,
-                                "model": MODEL,
-                                "effort": REASONING_EFFORT,
+                                "model": profile.model,
+                                "effort": profile.reasoning_effort,
                                 "environments": [],
                                 "input": [{"type": "text", "text": prompt}],
                                 "outputSchema": dict(schema),
@@ -798,11 +854,11 @@ class NativeProcessorRunner:
                             output = _unwrap_model_output(output)
                         if self.candidate_review is None:
                             break
-                        remaining = self.timeout - (time.monotonic() - started_at)
+                        remaining = min(budget - (time.monotonic() - started_at), deadline - time.monotonic())
                         if remaining <= 0:
                             raise ProcessorFailure("timeout")
                         correction = self.candidate_review(output, remaining)
-                        if time.monotonic() - started_at >= self.timeout:
+                        if time.monotonic() >= deadline or time.monotonic() - started_at >= budget:
                             raise ProcessorFailure("timeout")
                         if correction is None:
                             break
@@ -872,7 +928,7 @@ class _AppServer:
     def __init__(self, codex: str, cwd: Path, environment: Mapping[str, str], timeout: float) -> None:
         self._deadline = time.monotonic() + timeout
         self._process = subprocess.Popen(
-            [codex, "app-server"],
+            [codex, "app-server", "-c", 'model_provider="openai"'],
             cwd=cwd,
             env=dict(environment),
             stdin=subprocess.PIPE,
@@ -944,6 +1000,10 @@ class _AppServer:
             if message.get("id") != request_id:
                 raise ProcessorFailure("protocol_error")
             if "error" in message:
+                error = message["error"]
+                if (method in ("initialize", "account/read", "model/list")
+                        and isinstance(error, Mapping) and error.get("code") == -32601):
+                    raise ProcessorFailure("runner_unavailable", reason_code="unsupported_codex_protocol")
                 raise ProcessorFailure("protocol_error")
             result = message.get("result")
             if not isinstance(result, Mapping):
@@ -1328,7 +1388,32 @@ def _normalized_usage_totals(value: object) -> dict[str, int] | None:
     return result
 
 
-def _verify_luna_available(client: _AppServer) -> None:
+def _initialize_execution(client, profile):
+    client.request(
+        "initialize",
+        {
+            "clientInfo": {"name": "codex-mem-processor", "version": "1"},
+            "capabilities": {"experimentalApi": True},
+        },
+    )
+    client.send({"jsonrpc": "2.0", "method": "initialized"})
+
+    _verify_auth_available(client)
+    _verify_model_available(client, profile.model, profile.reasoning_effort)
+
+
+def _verify_auth_available(client: _AppServer) -> None:
+    """Read bounded native account metadata without persisting account details."""
+    response = client.request("account/read", {"refreshToken": False})
+    if type(response.get("requiresOpenaiAuth")) is not bool or "account" not in response:
+        raise ProcessorFailure("runner_unavailable", reason_code="unsupported_codex_protocol")
+    account = response["account"]
+    if response["requiresOpenaiAuth"] and (not isinstance(account, Mapping)
+            or account.get("type") not in ("apiKey", "chatgpt")):
+        raise ProcessorFailure("runner_failure", reason_code="authentication_unavailable")
+
+
+def _verify_model_available(client: _AppServer, model: str, effort: str) -> None:
     cursor: str | None = None
     for _ in range(MAX_MODEL_PAGES):
         params: dict[str, Any] = {"limit": 100}
@@ -1341,24 +1426,29 @@ def _verify_luna_available(client: _AppServer) -> None:
         for candidate in data:
             if not isinstance(candidate, Mapping):
                 raise ProcessorFailure("protocol_error")
-            if candidate.get("id") != MODEL and candidate.get("model") != MODEL:
+            if candidate.get("model") != model:
                 continue
             efforts = candidate.get("supportedReasoningEfforts")
             if not isinstance(efforts, list):
-                raise ProcessorFailure("model_unavailable")
+                raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
             if any(
-                isinstance(option, Mapping) and option.get("reasoningEffort") == REASONING_EFFORT
+                isinstance(option, Mapping) and option.get("reasoningEffort") == effort
                 for option in efforts
             ):
                 return
-            raise ProcessorFailure("model_unavailable")
+            raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
         next_cursor = response.get("nextCursor")
         if next_cursor is None:
             break
         if not isinstance(next_cursor, str) or not next_cursor:
             raise ProcessorFailure("protocol_error")
         cursor = next_cursor
-    raise ProcessorFailure("model_unavailable")
+    raise ProcessorFailure("model_unavailable", reason_code="exact_model_unavailable")
+
+
+def _verify_luna_available(client: _AppServer) -> None:
+    """Keep explicit legacy-model probes compatible with the shared catalog check."""
+    _verify_model_available(client, MODEL, REASONING_EFFORT)
 
 
 def _isolated_config_overrides(config_read: Mapping[str, Any]) -> dict[str, Any]:
@@ -1409,15 +1499,17 @@ def _isolated_config_overrides(config_read: Mapping[str, Any]) -> dict[str, Any]
     return overrides
 
 
-def _verify_thread_start(value: Mapping[str, Any]) -> str:
+def _verify_thread_start(value: Mapping[str, Any], *, profile=None) -> str:
+    from .execution import legacy_profile
+    profile = profile or legacy_profile()
     thread = value.get("thread")
     if not isinstance(thread, Mapping):
         raise ProcessorFailure("protocol_error")
     thread_id = _safe_worker_id(thread.get("id"))
     if (
-        value.get("model") != MODEL
-        or value.get("reasoningEffort") != REASONING_EFFORT
-        or value.get("modelProvider") != "openai"
+        value.get("model") != profile.model
+        or value.get("reasoningEffort") != profile.reasoning_effort
+        or value.get("modelProvider") != profile.provider
     ):
         raise ProcessorFailure("model_mismatch", worker_thread_id=thread_id)
     return thread_id
@@ -1514,26 +1606,17 @@ def _evidence_role(source: Mapping[str, Any]) -> str:
     if source.get("_jev_lifecycle_only") is True:
         return "lifecycle_marker"
     """Label the capture channel, never the truth of the source's claims."""
-    name = str(source.get("source", ""))
-    if name == "hook:Stop" or name.startswith("hook:Stop:"):
-        return "assistant_report"
-    if name == "hook:UserPromptSubmit" or name.startswith("hook:UserPromptSubmit:"):
-        return "user_intent"
-    if name == "hook:PostToolUse" or name.startswith("hook:PostToolUse:"):
-        return "tool_record"
-    if name == "hook:PreCompact" or name.startswith("hook:PreCompact:"):
-        return "lifecycle_marker"
-    if name.startswith("processor:") or source.get("kind") == "session_summary":
+    role = source_role(source.get("source"))
+    if source.get("kind") == "session_summary":
         return "derived_note"
-    return "unspecified"
+    return "unspecified" if role == "unclassified" else role
 
 
 def _runner_request(claimed: Mapping[str, Any], timeout: float) -> dict[str, Any]:
     job_id, _, sources = _claim_parts(claimed)
     wire_sources = [dict(source, id=f"s{index}") for index, source in enumerate(sources, 1)]
     summary_required = bool(claimed.get("summary_required"))
-    has_stop = any(source.get("source") == "hook:Stop" or
-                   str(source.get("source", "")).startswith("hook:Stop:") for source in sources)
+    has_stop = any(source_role(source.get("source")) == "assistant_report" for source in sources)
     prompt = _build_prompt(wire_sources, claimed.get("context", []),
                            project_context=claimed.get("project_context", ""))
     if summary_required:
@@ -1701,8 +1784,8 @@ def _build_prompt(
         "Read the full retained response, including the middle; any omitted bytes are unknown. "
         "created_at gives the event time and project identifies its working directory. "
         "Use these as historical context, never infer a current state from a timestamp.\n\n"
-        "Return session_summary as null unless a new source has source hook:Stop (possibly "
-        "with a colon suffix). At Stop, write a dedicated summary when this session has "
+        "Return session_summary as null unless a new source has evidence_role assistant_report. "
+        "At assistant completion, write a dedicated summary when this session has "
         "substantive project work: request, investigated, learned, completed, next_steps, notes. "
         "Use new evidence plus same-session history, including previous summaries, to preserve "
         "continuity. A summary may share source_ids with notes; cite the new Stop source and "
@@ -1839,8 +1922,10 @@ def _invoke_runner(runner: Any, request: Mapping[str, Any]) -> Mapping[str, Any]
 
 
 def _validate_runner_receipt(
-    value: Mapping[str, Any],
+    value: Mapping[str, Any], *, profile=None,
 ) -> tuple[Mapping[str, Any], Mapping[str, Any], str, str]:
+    from .execution import legacy_profile
+    profile = profile or legacy_profile()
     if set(value) not in ({"output", "evidence"}, {"output", "evidence", "metrics"}):
         raise ProcessorFailure("invalid_response", reason_code="invalid_runner_receipt")
     output = value.get("output")
@@ -1862,9 +1947,9 @@ def _validate_runner_receipt(
     if turn_started.get("thread_id") != thread_id:
         raise ProcessorFailure("invalid_response", reason_code="worker_id_mismatch", worker_thread_id=thread_id, worker_turn_id=turn_id)
     if (
-        thread_start.get("model") != MODEL
-        or thread_start.get("reasoning_effort") != REASONING_EFFORT
-        or thread_start.get("model_provider") != "openai"
+        thread_start.get("model") != profile.model
+        or thread_start.get("reasoning_effort") != profile.reasoning_effort
+        or thread_start.get("model_provider") != profile.provider
     ):
         raise ProcessorFailure("model_mismatch", worker_thread_id=thread_id, worker_turn_id=turn_id)
     if evidence.get("rerouted") is True:
@@ -1914,7 +1999,7 @@ def _validate_model_output(
     if len(notes_value) > MAX_NOTES:
         raise ProcessorFailure("invalid_response", reason_code="too_many_notes")
     summary = _validated_summary(output.get("session_summary"), sources)
-    has_stop = any(s.get("source") == "hook:Stop" or str(s.get("source", "")).startswith("hook:Stop:") for s in sources)
+    has_stop = any(source_role(s.get("source")) == "assistant_report" for s in sources)
     # Legacy injected test runners remain compatible. Native schema always
     # declares session_summary and must not consume substantive Stop evidence
     # without either a summary or an explicit failed receipt.
@@ -1982,8 +2067,7 @@ def _validate_model_output(
 def _validated_summary(value: object, sources: Sequence[Mapping[str, Any]]) -> dict[str, Any] | None:
     if value is None:
         return None
-    stops = {s["id"] for s in sources if s.get("source") == "hook:Stop" or
-             str(s.get("source", "")).startswith("hook:Stop:")}
+    stops = {s["id"] for s in sources if source_role(s.get("source")) == "assistant_report"}
     fields = {"title", "request", "investigated", "learned", "completed", "next_steps", "notes", "source_ids"}
     if not stops or not isinstance(value, Mapping) or set(value) != fields:
         raise ProcessorFailure("invalid_response", reason_code="invalid_summary_shape")
@@ -2033,13 +2117,11 @@ def _claim_parts(claimed: Mapping[str, Any]) -> tuple[str, str, list[Mapping[str
 
 
 def _finished_receipt(
-    finished: Mapping[str, Any], disposition: str, note_count: int, evidence: Mapping[str, Any]
+    finished: Mapping[str, Any], disposition: str, note_count: int, thread_id: str, turn_id: str | None
 ) -> dict[str, Any]:
     job_id = finished.get("job_id")
     if not isinstance(job_id, str):
         raise ProcessorFailure("storage_failure")
-    thread_started = evidence["turn_started"]
-    assert isinstance(thread_started, Mapping)
     return {
         "status": disposition,
         "job_id": job_id,
@@ -2048,8 +2130,8 @@ def _finished_receipt(
         "processor_id": PROCESSOR_ID,
         "model": MODEL,
         "reasoning_effort": REASONING_EFFORT,
-        "worker_thread_id": thread_started["thread_id"],
-        "worker_turn_id": thread_started["turn_id"],
+        "worker_thread_id": thread_id,
+        "worker_turn_id": turn_id,
     }
 
 

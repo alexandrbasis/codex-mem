@@ -1,6 +1,8 @@
 """Small retrieval previews for CLI/MCP; full records stay available by ID."""
 from __future__ import annotations
 
+from .host import is_capture_source
+
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -434,7 +436,7 @@ def linked_handoff_matches(origin: Mapping[str, Any], later: Mapping[str, Any],
     if (origin.get("later_summary_id") != later.get("id")
             or later.get("project") != str(project) or later.get("superseded_by")
             or later.get("session_id") != origin.get("session_id")
-            or str(later.get("source") or "").startswith("hook:")):
+            or is_capture_source(later.get("source"))):
         return False
     plan = resume_subject_plan(query, project)
     if plan and any(plan.values()):
@@ -458,7 +460,7 @@ def issue_discovery_association(origin: Mapping[str, Any], candidate: Mapping[st
     project = origin.get("project")
     if (not isinstance(project, str) or candidate.get("project") != project
             or not origin.get("session_id") or candidate.get("session_id") != origin.get("session_id")
-            or candidate.get("superseded_by") or str(candidate.get("source") or "").startswith("hook:")
+            or candidate.get("superseded_by") or is_capture_source(candidate.get("source"))
             or historical_query(query)):
         return False
     plan = resume_subject_plan(query, project)
