@@ -285,3 +285,7 @@ See the [architecture proposal](project-memory-architecture-2026-10-20.md) for t
 The opt-in experimental `clause-support-v2` reader contract belongs to the quality experiment helper. It does not change the production reader API, model profiles or service configuration.
 
 The [earlier coverage decision](adr/0005-bounded-source-coverage-in-reader-context.md) records the R13 boundary. [ADR 0006](adr/0006-expanded-neutral-original-context.md) records its revision for finite neutral original context without a soft topical match.
+
+## Pi background processing
+
+A project-memory profile can select the pinned Pi 1.4.0 RPC runtime. Ordinary processing, reconsideration, consolidation, and one correction retain the same packet and atomic commit checks. Each attempt uses a separate ephemeral Pi session. The attempt ledger preserves the Pi receipt and `pi_assistant_usage` separately from historical Codex provenance. See [Pi runtime](PI_RUNTIME.md) for exact capability checks, authorization, limits, and installed-CLI evidence.

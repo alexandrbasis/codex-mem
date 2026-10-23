@@ -68,7 +68,7 @@ def install_schema(connection: sqlite3.Connection) -> None:
         "requested_runtime": "TEXT", "requested_provider": "TEXT", "requested_model": "TEXT",
         "requested_reasoning_effort": "TEXT", "requested_timeout": "REAL",
         "runtime": "TEXT", "provider": "TEXT", "actual_model": "TEXT",
-        "actual_reasoning_effort": "TEXT", "profile_basis": "TEXT",
+        "actual_reasoning_effort": "TEXT", "profile_basis": "TEXT", "execution_receipt": "TEXT",
     }.items():
         if name not in columns:
             connection.execute(f"ALTER TABLE pm_usage_attempts ADD COLUMN {name} {declaration}")
@@ -563,6 +563,10 @@ class ProjectMemory:
                 if old[field] is not None and old[field] != identity[key]:
                     raise ValueError("execution identity changed")
                 updated[field] = identity[key]
+        from .execution import pi_execution_receipt
+        evidence = pi_execution_receipt(receipt.get("execution_receipt"))
+        if evidence is not None:
+            updated["execution_receipt"] = json.dumps(evidence, sort_keys=True)
         token_changed = False
         for field in _ATTEMPT_COUNTERS:
             incoming = observed.get(field)
@@ -1276,7 +1280,7 @@ def _attempt_metrics(receipt: dict[str, Any]) -> dict[str, Any]:
     status = receipt.get("usage_status", usage.get("status", metrics.get("usage_status")))
     normalized["usage_status"] = ("reported" if status == "reported" and normalized.get("input_tokens") is not None and normalized.get("output_tokens") is not None else "partial" if known else "unknown")
     source = receipt.get("usage_source", usage.get("source", metrics.get("usage_source")))
-    normalized["usage_source"] = source if isinstance(source, str) and source in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner"} else "runner_receipt" if known else "unknown"
+    normalized["usage_source"] = source if isinstance(source, str) and source in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner", "pi_assistant_usage"} else "runner_receipt" if known else "unknown"
     updates = receipt.get("usage_updates", usage.get("updates", 0))
     normalized["usage_updates"] = updates if type(updates) is int and 0 <= updates <= 2**31-1 else 0
     duration = metrics.get("duration_ms", receipt.get("runner_duration_ms", receipt.get("duration_ms")))

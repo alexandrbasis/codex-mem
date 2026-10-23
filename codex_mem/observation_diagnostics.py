@@ -138,7 +138,16 @@ def read_failure_receipts(connection: sqlite3.Connection, job_id: str) -> list[d
              "created_at": row[3]} for row in reversed(rows)]
 
 
+PI_FAILURE_REASONS = frozenset({"pi_output_limit", "pi_disconnected", "pi_unexpected_event",
+    "pi_command_failed", "pi_identity_mismatch", "pi_session_changed", "pi_not_ephemeral_idle",
+    "pi_automatic_restart", "pi_multiple_answers", "pi_cancelled", "pi_incomplete_run",
+    "pi_provider_failure", "pi_forbidden_event", "pi_not_found", "unsupported_pi_version",
+    "pi_prompt_not_started", "pi_launch_failed", "pi_malformed_record"})
+
+
 def safe_failure_reason(code: object, reason: object) -> str | None:
+    if isinstance(reason, str) and isinstance(code, str) and code in _FAILURE_CODES and reason in PI_FAILURE_REASONS:
+        return reason
     allowed = (INVALID_RESPONSE_REASONS if code == "invalid_response" else
                RUNNER_FAILURE_REASONS if code == "runner_failure" else
                frozenset({"unsupported_provider", "unsupported_reasoning", "exact_model_unavailable"})

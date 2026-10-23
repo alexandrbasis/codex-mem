@@ -627,9 +627,13 @@ def _metrics(value: object) -> dict[str, Any]:
     duration = value.get("duration_ms")
     if isinstance(duration, (int, float)) and not isinstance(duration, bool) and math.isfinite(duration) and duration >= 0:
         result["runner_duration_ms"] = round(duration)
+    from .execution import pi_execution_receipt
+    evidence = pi_execution_receipt(value.get("execution_receipt"))
+    if evidence is not None:
+        result["execution_receipt"] = evidence
     usage = value.get("usage")
     if isinstance(usage, Mapping):
-        if usage.get("source") in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner"}:
+        if usage.get("source") in {"app_server_thread_total", "native_worker", "runner_receipt", "native_checkpoint", "injected_runner", "pi_assistant_usage"}:
             result["usage_source"] = usage["source"]
         if type(usage.get("updates")) is int and usage["updates"] >= 0:
             result["usage_updates"] = usage["updates"]
@@ -894,7 +898,13 @@ def process_project_memory(
                 except (StoreError, OSError, ValueError):
                     raise ProcessorFailure("storage_failure") from None
                 receipt["usage_attempt_id"] = attempt_id
-                active_runner = runner if runner is not None else NativeProcessorRunner(timeout=timeout, usage_checkpoint=checkpoint)
+                if runner is not None:
+                    active_runner = runner
+                elif profile.runtime == "pi":
+                    from .pi_runtime import PiProcessorRunner
+                    active_runner = PiProcessorRunner(usage_checkpoint=checkpoint)
+                else:
+                    active_runner = NativeProcessorRunner(timeout=timeout, usage_checkpoint=checkpoint)
                 execution_request = ExecutionRequest(
                     prompt=request["prompt"], output_schema=request["output_schema"], profile=profile,
                     context={key: value for key, value in request.items()

@@ -209,3 +209,23 @@ def execute(request: ExecutionRequest, runner: Any) -> ExecutionResult:
     if callable(method):
         return runner.execute(request)
     return execute_codex(request, runner)
+
+
+def pi_execution_receipt(value: Any) -> dict[str, Any] | None:
+    """Keep only bounded Pi execution facts, never native messages or prose."""
+    fields = {"runtime", "version", "protocol", "session_id", "generation", "settled", "identity_verified",
+              "tools_policy", "tool_calls_observed", "extensions_policy", "state_checked", "agent_end_observed", "system_message_verified", "assistant_stop_reason"}
+    if not isinstance(value, dict) or set(value) != fields:
+        return None
+    import re
+    if (value["runtime"] != "pi" or value["version"] not in (None, "1.4.0")
+            or value["protocol"] != "rpc-jsonl-1.4.0"
+            or value["tools_policy"] not in ("cli_disabled", "not_launched")
+            or value["extensions_policy"] not in ("cli_disabled", "not_launched")
+            or value["assistant_stop_reason"] not in (None, "stop", "length", "toolUse", "error", "aborted")
+            or any(type(value[key]) is not bool for key in ("settled", "identity_verified", "state_checked", "agent_end_observed", "system_message_verified"))
+            or any(type(value[key]) is not int or not 0 <= value[key] <= 2 for key in ("generation", "tool_calls_observed"))
+            or (value["session_id"] is not None and (not isinstance(value["session_id"], str)
+                or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", value["session_id"])))):
+        return None
+    return dict(value)

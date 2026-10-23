@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "cfceefad74ba390eb17b1e848134253c7943e992",
+      "revision": "0c0b136f079703ff2d2b24a5ac860991c6da3fd8",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -147,14 +147,14 @@
       "sources": [
         {
           "path": "codex_mem/episode_processor.py",
-          "line": 805,
-          "end_line": 989,
+          "line": 809,
+          "end_line": 999,
           "label": "Generation, validation and commit"
         },
         {
           "path": "codex_mem/project_memory.py",
           "line": 494,
-          "end_line": 596,
+          "end_line": 601,
           "label": "Requested and verified attempt ledger"
         }
       ]
@@ -162,8 +162,8 @@
     {
       "id": "provider",
       "type": "cloud",
-      "label": "OpenAI model",
-      "sublabel": "Through Codex app-server",
+      "label": "Selected model provider",
+      "sublabel": "Codex app-server or Pi RPC",
       "pos": [
         700,
         940
@@ -184,6 +184,12 @@
           "line": 1373,
           "end_line": 1403,
           "label": "Exact catalog capability check"
+        },
+        {
+          "path": "codex_mem/pi_runtime.py",
+          "line": 164,
+          "end_line": 178,
+          "label": "Native Pi auth and models only"
         }
       ]
     },
@@ -389,7 +395,7 @@
       "id": "execution",
       "type": "backend",
       "label": "Background execution",
-      "sublabel": "Shared contract, Codex runtime",
+      "sublabel": "Codex; Pi for project memory",
       "pos": [
         700,
         700
@@ -410,6 +416,12 @@
           "line": 702,
           "end_line": 898,
           "label": "Native execution and deadline"
+        },
+        {
+          "path": "codex_mem/pi_runtime.py",
+          "line": 344,
+          "end_line": 450,
+          "label": "Pinned ephemeral Pi RPC and settlement"
         }
       ]
     },
@@ -540,7 +552,7 @@
       "id": "execution-provider",
       "from": "execution",
       "to": "provider",
-      "label": "app-server",
+      "label": "runtime protocol",
       "variant": "default"
     },
     {
@@ -563,7 +575,7 @@
       "dot": "cyan",
       "title": "Document scope",
       "items": [
-        "This document describes the local issue #6 transition on October 23, 2026. It does not establish installed-service state, live provider behavior, or answer quality.",
+        "This document describes the local issue #7 transition on October 23, 2026. Installed Pi 1.4.0 passed a deterministic local-provider protocol test. It does not establish installed-service state, live provider behavior, matrix completion, or answer quality.",
         "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
         "The diagram, supporting text, Archify controls, and HTML language attribute use English."
       ]
@@ -573,10 +585,12 @@
       "title": "Host and background execution",
       "items": [
         "The Codex session is the interactive host. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:405-419, episode_processor.py:898-910.",
-        "NativeProcessorRunner remains the only connected runtime. It verifies Codex completion and actual identity, rejects tools and rerouting, and retains failed-call usage. One correction shares the attempt deadline and cumulative counters. Sources: execution.py:166-203, processor.py:702-914.",
-        "The resolver chooses the processor override, default profile, then legacy Codex. Both processors activate this choice. Project memory snapshots each attempt before dispatch, including reconsideration and consolidation. Pi execution is not connected. Codex pins OpenAI before catalog discovery, matches the exact model field and advertised effort, and rejects custom providers or null effort without substitution. Pagination is bounded by 16 pages and the same deadline. Sources: execution.py:15-70, processor.py:218-220,1373-1403, docs/EXECUTION.md.",
+        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner now connects project memory to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:702-914, pi_runtime.py:344-450.",
+        "The resolver chooses the processor override, default profile, then legacy Codex. Project memory, reconsideration, and consolidation can use Pi; observation processing remains Codex. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:897-925, pi_runtime.py:391-428, docs/EXECUTION.md.",
         "Observation jobs keep their source identity across profile changes. The claim transaction stores each requested profile with its lease. Corrections retain it; later attempts reload current configuration. Legacy receipts preserve requested-only provenance and measured usage. Successful sources do not replay, including overlapping historical jobs. Explicit maintenance recovery retains its separate fingerprint and opt-in. Explicit retry_failed with a different processor can create distinct work; successful sources and one-shot recovery remain protected. Sources: store.py:2357-2840, observer_usage_store.py:79-140,259-303, tests/test_observation_profiles.py. Project memory retains its existing profile-independent source fingerprint and stores requested and verified execution separately. Additive migration preserves historical values; failed usage survives source deletion. Sources: project_memory.py:494-595, tests/test_project_memory_profiles.py.",
-        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:420-442, episode_processor.py:938-965."
+        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:420-442, episode_processor.py:938-965.",
+        "Pi creates a fresh temporary working directory, agent profile, and in-memory session. Only native auth/models are linked. Tools, MCP, extension discovery, skills, instructions, automatic retries and compaction are disabled. No capture extension or database-write API is loaded. These are runtime restrictions, not an OS sandbox. Provider extensions remain unsupported. Sources: pi_runtime.py:19-21,163-177,361-377, docs/PI_RUNTIME.md.",
+        "The additive Pi receipt separates configured CLI restrictions from observed identity, settlement, stop reason, and tool events. It does not invent Codex checks or an enumerated tool inventory. Streaming counters replace current-generation totals; corrections add each generation once. Missing usage stays unknown or partial, including Pi zero placeholders. Failed packets retain measured usage. Sources: pi_runtime.py:181-341, project_memory.py:550-589, execution.py:214-231."
       ]
     },
     {
@@ -671,8 +685,8 @@
       "dot": "amber",
       "title": "Boundaries and optional features",
       "items": [
-        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:774-830,1400-1427.",
-        "The note processor and project memory use the same execution contract and Codex runtime. Their queues and commits remain independent. Sources: processor.py:396-442, episode_processor.py:913-965, execution.py:206-211.",
+        "Sources, queues, and derived records stay local. The selected runtime sends prepared evidence to its configured model provider. Codex retains its existing isolation. Pi restricts model tools without claiming OS isolation. Native auth/model configuration and the installed executable remain trusted. Sources: processor.py:774-830,1400-1427, pi_runtime.py:164-178,330-436.",
+        "The note processor and project memory use the same execution contract. Only project memory activates Pi in issue #7. Their queues and atomic commits remain independent, and profile changes do not replay successful sources. Sources: processor.py:396-442, episode_processor.py:897-980, execution.py:206-211.",
         "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:37-47,534-610, store.py:5710-5718, episode_processor.py:952-959.",
         "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:678-749,777-802,914-927, jev_quality.py:1-7.",
         "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:808-825,914-960, jev_quality.py:16-23."

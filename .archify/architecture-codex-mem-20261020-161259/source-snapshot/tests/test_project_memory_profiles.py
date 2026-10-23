@@ -78,10 +78,14 @@ class ProjectMemoryProfileTests(unittest.TestCase):
 
     def test_invalid_capabilities_keep_pending_sources_and_unknown_identity(self):
         self.capture()
+        # Pi is connected for project memory; this executable declares an unsupported version.
+        pi = self.root / 'pi'
+        pi.write_text('#!' + fixture.sys.executable + '\nprint("0.0.0")\n')
+        pi.chmod(0o700)
         for selected, reason in ((profile('missing'), 'exact_model_unavailable'),
                                  (profile('gpt-6-luna', 'high'), 'unsupported_reasoning'),
                                  ({**profile(), 'provider': 'custom'}, 'unsupported_provider'),
-                                 ({**profile(), 'runtime': 'pi'}, 'unsupported_runtime')):
+                                 ({**profile(), 'runtime': 'pi'}, 'unsupported_pi_version')):
             with self.subTest(reason=reason):
                 configure(self.data, project_memory_profile=selected)
                 result = self.process()
