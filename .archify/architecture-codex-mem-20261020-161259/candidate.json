@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "35b958100113a2464efd0fa982a67215a2a346b3",
+      "revision": "86f535323657974991ca5ab2987dac0532669f26",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -57,8 +57,8 @@
         },
         {
           "path": "codex_mem/config.py",
-          "line": 220,
-          "end_line": 243,
+          "line": 223,
+          "end_line": 246,
           "label": "Selected project access"
         }
       ]
@@ -137,7 +137,7 @@
       "label": "Episode processing",
       "sublabel": "New events or retained sources",
       "pos": [
-        730,
+        540,
         460
       ],
       "size": [
@@ -147,21 +147,9 @@
       "sources": [
         {
           "path": "codex_mem/episode_processor.py",
-          "line": 804,
-          "end_line": 969,
-          "label": "Proposal, preparation, assessment and commit"
-        },
-        {
-          "path": "codex_mem/processor.py",
-          "line": 733,
-          "end_line": 788,
-          "label": "Isolated worker"
-        },
-        {
-          "path": "codex_mem/processor.py",
-          "line": 1381,
-          "end_line": 1408,
-          "label": "Disabled tools"
+          "line": 805,
+          "end_line": 974,
+          "label": "Generation, validation and commit"
         }
       ]
     },
@@ -171,8 +159,8 @@
       "label": "OpenAI model",
       "sublabel": "Through Codex app-server",
       "pos": [
-        350,
-        460
+        700,
+        940
       ],
       "size": [
         180,
@@ -181,8 +169,8 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 733,
-          "end_line": 788,
+          "line": 750,
+          "end_line": 805,
           "label": "Provider call"
         }
       ]
@@ -191,7 +179,7 @@
       "id": "legacy",
       "type": "backend",
       "label": "Note processor",
-      "sublabel": "Independent legacy path",
+      "sublabel": "Observations and summaries",
       "pos": [
         1000,
         460
@@ -209,15 +197,15 @@
         },
         {
           "path": "codex_mem/processor.py",
-          "line": 227,
-          "end_line": 248,
+          "line": 229,
+          "end_line": 250,
           "label": "Lease observations"
         },
         {
           "path": "codex_mem/processor.py",
-          "line": 403,
-          "end_line": 422,
-          "label": "Save notes"
+          "line": 390,
+          "end_line": 430,
+          "label": "Shared execution and atomic save"
         }
       ]
     },
@@ -227,7 +215,7 @@
       "label": "Validate and commit",
       "sublabel": "Prepare, assess, fence writes",
       "pos": [
-        730,
+        350,
         700
       ],
       "size": [
@@ -262,7 +250,7 @@
       "sublabel": "Episodes, claims, source custody",
       "pos": [
         350,
-        700
+        940
       ],
       "size": [
         200,
@@ -305,8 +293,8 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 403,
-          "end_line": 422,
+          "line": 410,
+          "end_line": 429,
           "label": "Save the result"
         },
         {
@@ -324,7 +312,7 @@
       "sublabel": "Scoped quotes, references, budgets",
       "pos": [
         350,
-        940
+        1180
       ],
       "size": [
         200,
@@ -358,7 +346,7 @@
       "sublabel": "SessionStart · MCP · CLI",
       "pos": [
         20,
-        940
+        1180
       ],
       "size": [
         220,
@@ -379,9 +367,37 @@
         },
         {
           "path": "codex_mem/cli.py",
-          "line": 764,
-          "end_line": 788,
+          "line": 769,
+          "end_line": 793,
           "label": "State commands"
+        }
+      ]
+    },
+    {
+      "id": "execution",
+      "type": "backend",
+      "label": "Background execution",
+      "sublabel": "Shared contract, Codex runtime",
+      "pos": [
+        700,
+        700
+      ],
+      "size": [
+        220,
+        76
+      ],
+      "sources": [
+        {
+          "path": "codex_mem/execution.py",
+          "line": 73,
+          "end_line": 210,
+          "label": "Request, identity, result and adapter"
+        },
+        {
+          "path": "codex_mem/processor.py",
+          "line": 689,
+          "end_line": 873,
+          "label": "Native execution and deadline"
         }
       ]
     }
@@ -416,10 +432,10 @@
       "variant": "emphasis"
     },
     {
-      "id": "generator-provider",
+      "id": "generator-execution",
       "from": "generator",
-      "to": "provider",
-      "label": "model call",
+      "to": "execution",
+      "label": "prepared input",
       "variant": "default"
     },
     {
@@ -479,6 +495,20 @@
       "variant": "dashed",
       "fromSide": "left",
       "toSide": "left"
+    },
+    {
+      "id": "execution-provider",
+      "from": "execution",
+      "to": "provider",
+      "label": "app-server",
+      "variant": "default"
+    },
+    {
+      "id": "legacy-execution",
+      "from": "legacy",
+      "to": "execution",
+      "label": "prepared input",
+      "variant": "default"
     }
   ],
   "cards": [
@@ -486,9 +516,19 @@
       "dot": "cyan",
       "title": "Document scope",
       "items": [
-        "This document describes the local 1.12.0 working-tree code on October 22, 2026. It does not establish installed-service state, production behavior or answer quality.",
+        "This document describes the local issue #2 transition on October 23, 2026. It does not establish installed-service state, live provider behavior, or answer quality.",
         "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
         "The diagram, supporting text, Archify controls, and HTML language attribute use English."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Host and background execution",
+      "items": [
+        "The Codex session is the interactive host. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:399-407, episode_processor.py:891-900.",
+        "NativeProcessorRunner remains the only connected runtime. It verifies Codex completion and actual identity, rejects tools and rerouting, and retains failed-call usage. One correction shares the attempt deadline and cumulative counters. Sources: execution.py:166-202, processor.py:689-889.",
+        "The additive profile resolver chooses a processor override, the default profile, then legacy Codex. Current processors still create legacy profiles. Issues #5 and #6 activate configured profiles and migrate their separate queues and usage. Pi execution is not implemented here. Sources: execution.py:15-70, docs/EXECUTION.md.",
+        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:408-430, episode_processor.py:903-927."
       ]
     },
     {
@@ -498,7 +538,7 @@
         "The hook saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1910-1979, service.py:905-955.",
         "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:288-324,1124-1129.",
         "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:229-254,1098-1122,1272-1299.",
-        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:804-908.",
+        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:805-913.",
         "After eligible event batches, discovery can schedule a bounded reconsideration job for split heads with the same positive task identity in original user evidence. It reuses pm_jobs and retained observations. It does not replay a transcript. A completed fingerprint prevents repeated no-op calls for unchanged candidates. Sources: project_memory.py:370-472,1330-1348.",
         "Ordinary event jobs can disclose historical original sources for matching task IDs within their existing input budget. Historical sources do not advance the event queue again. Disclosure reports omitted heads, ancestor chains, and sources. Sources: project_memory.py:325-368,954-960.",
         "Commit records neutral custody identities and offsets for newly consumed user source fragments in the same transaction as queue progress. Reconsideration and historical disclosure do not backfill custody. Source text stays in the existing source store. Sources: project_memory.py:954-962, project_memory_custody.py:12-37."
@@ -510,19 +550,19 @@
       "items": [
         "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, revision, deletion generation, and current episode head. Objects, links, custody records, the current head, and queue progress commit in one transaction. Sources: project_memory.py:599-799,887-971.",
         "A job reserves a logical episode only after its continuation evidence passes. Unsupported requests stay standalone with an explicit continuity omission and do not block a supported continuation. Two supported successors of one logical episode, or overlapping continuation and consolidation targets, reject the whole batch. Sources: project_memory.py:694-756.",
-        "ProjectMemory.prepare uses the same final assembly as commit, including historical prior_ fields. Optional assessment runs outside the write transaction. Commit rebuilds the records and compares the assessed digest. Preparation grants no lease and bypasses no source or revision guard. Sources: project_memory.py:801-922, episode_processor.py:909-922.",
+        "ProjectMemory.prepare uses the same final assembly as commit, including historical prior_ fields. Optional assessment runs outside the write transaction. Commit rebuilds the records and compares the assessed digest. Preparation grants no lease and bypasses no source or revision guard. Sources: project_memory.py:801-922, episode_processor.py:914-927.",
         "Unsupported completion or acceptance becomes a proposal. Unsupported links that close or replace records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the field purpose or full conclusion follows from the text. Sources: project_memory.py:654-687,779-799.",
         "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Custody source references cascade on source deletion. Sources: project_memory.py:88-145, project_memory_custody.py:12-18, store.py:5797-5833.",
         "A reconsideration proposal can continue one current head and consolidate other eligible heads. Exact source spans must support explicit continuity and the same task identity. Commit creates a new immutable version and dependency links. Original records stay addressable. Consolidation does not close open claims. Sources: project_memory.py:731-756,924-953,1390-1479.",
         "Discovery inspects at most 100 heads and 64 identity sources totaling 24,000 characters. A job uses at most four heads, eight ancestors per head, 32 retained sources, and 24,000 source characters. Lower caller limits apply. A larger group uses the oldest three heads and newest head. Metadata reports omissions and incomplete history. Source: project_memory.py:370-472.",
         "New heads rebuild earlier goals, reasons, outcomes, and open work in prior_ fields from each field's own disclosed original references. Earlier model prose is not copied. Missing or oversized historical context increments the omission count. Current validity stays unresolved. This does not create or reopen active claims. Source: project_memory.py:801-857.",
-        "Native output v12 excludes project membership and object identity from generated values. Code binds omitted worktree scope to the claimed project and object identity to array position. Each claim owns its required outgoing_relations. Trusted code supplies the origin and flattens them into unchanged canonical relations. Empty claims cannot express a native relation. Existing targets and evidence remain required. Explicit canonical foreign values still fail storage validation. Sources: episode_processor.py:44-138,412-462, project_memory.py:658-666.",
+        "Native output v12 excludes project membership and object identity from generated values. Code binds omitted worktree scope to the claimed project and object identity to array position. Each claim owns its required outgoing_relations. Trusted code supplies the origin and flattens them into unchanged canonical relations. Empty claims cannot express a native relation. Existing targets and evidence remain required. Explicit canonical foreign values still fail storage validation. Sources: episode_processor.py:45-139,413-463, project_memory.py:658-666.",
         "Storage code assembles episode summary, goal, rationale, outcome, and open_work, plus claim rationale, from each field's own original source sentences. Text carries source-role labels, original offsets, and field_provenance. Field association remains model-selected. Assistant and tool statements retain their original roles. Sources: project_memory.py:757-762,1029-1071.",
         "A current attributed field must fit 6,000 characters and 32 references. Assembled objects and relations must fit 180,000 serialized characters. Oversized current output is rejected atomically. Source sentences cut by a disclosed-body boundary carry partial-context labels. Earlier stored versions are not retroactively verified. Sources: project_memory.py:836-857,1029-1071.",
         "A supported affirmative user command to reopen one confirmed task ID can support continuity. English accepts one short for/to/because explanation. Russian accepts для/чтобы/потому что. The recognizer rejects questions, known negations, conditions, approval-dependent wording, quoted examples, tool reports, and distinct-task wording. Unrecognized wording stays unresolved. Claim transitions use separate checks. Sources: project_memory.py:1307-1479.",
         "A custody row is source bookkeeping, not a separate requirement claim. This does not negate an explicit request inside the original user source. Only eligible whole-source exact-text claims can establish complete representation. Paraphrases, overlap, and partial compound clauses leave custody unresolved. Closure links can project completion. Replacement returns custody to unresolved. Cancellation is not inferred. Session exclusion applies to the source, represented claim, and transition evidence. Source: project_memory_custody.py:40-140.",
         "Event processing uses project-memory-v4. Reconsideration fingerprints use task-consolidation-v4. These policy identifiers do not migrate earlier records or prove deployment. Source: project_memory.py:20-21,313-317,407-452.",
-        "Native v11 indexed relations and mixed layouts reject the whole batch. Code neither invents an origin nor silently drops a malformed relation. Native arrays have per-owner bounds; code additionally enforces eight relations across all owners. Canonical injected outputs and storage remain unchanged, without migration or backfill. Structural ownership does not prove target relevance or semantic support. Sources: episode_processor.py:120-138,412-462,900-905."
+        "Native v11 indexed relations and mixed layouts reject the whole batch. Code neither invents an origin nor silently drops a malformed relation. Native arrays have per-owner bounds; code additionally enforces eight relations across all owners. Canonical injected outputs and storage remain unchanged, without migration or backfill. Structural ownership does not prove target relevance or semantic support. Sources: episode_processor.py:121-139,413-463,905-910."
       ]
     },
     {
@@ -530,7 +570,7 @@
       "title": "What the agent receives",
       "items": [
         "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. Supported current-assessment frames can include prior versions; explicit historical-slice requests can return coverage-only refusal. Sources: project_memory_retrieval.py:29-153,377-503,621-1611,1614-2102 integration.py:70-132.",
-        "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:220-243.",
+        "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:223-246.",
         "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5758-5795, hooks.py:872-909.",
         "The brief renders prior_goal, prior_rationale, prior_outcome, and prior_open_work as historical fields. It includes their original source pointers and unresolved-current-validity status. Source: project_memory_retrieval.py:29-153,377-503,621-1611,1614-2102.",
         "The brief renders complete exact quotation groups with source IDs, roles, and original offsets. A group that cannot fit is omitted whole. The renderer reserves bounded room for later obligations, open work, reasons, and source custody before an early record consumes space with secondary outcomes. Oversized reservations do not block a fitting primary group. Omission counts remain visible when space permits. Sources: project_memory_retrieval.py:29-153,377-503,621-1611,1614-2102.",
@@ -573,11 +613,11 @@
       "dot": "amber",
       "title": "Boundaries and optional features",
       "items": [
-        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:733-788,1381-1408.",
-        "The legacy note processor runs alongside project memory. It also uses NativeProcessorRunner. It operates independently of episode generation. Sources: service.py:695-706,791-820, processor.py:227-248,403-422.",
-        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35-45,532-608, store.py:5717-5725, episode_processor.py:909-916.",
-        "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:666-728,776-801,909-922, jev_quality.py:1-7.",
-        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:784-801,909-955, jev_quality.py:16-23."
+        "Sources, the queue, and derived records stay local. Generation calls an OpenAI model through an isolated Codex worker. MCP, plugins, and tools are disabled for that worker. The model runs outside local memory storage. Source: processor.py:750-805,1398-1425.",
+        "The note processor and project memory use the same execution contract and Codex runtime. Their queues and commits remain independent. Sources: processor.py:390-430, episode_processor.py:878-927, execution.py:205-210.",
+        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:35-45,532-608, store.py:5717-5725, episode_processor.py:914-921.",
+        "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:667-729,777-802,914-927, jev_quality.py:1-7.",
+        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:785-802,914-960, jev_quality.py:16-23."
       ]
     },
     {

@@ -18,9 +18,10 @@ import time
 from typing import Any
 
 from .config import load_config, project_memory_enabled
+from .execution import ExecutionRequest, execute
 from .processor import (
     DEFAULT_TIMEOUT, MODEL, REASONING_EFFORT, NativeProcessorRunner,
-    ProcessorFailure, _validate_runner_receipt,
+    ProcessorFailure,
 )
 from .store import Store, StoreError, project_key
 
@@ -887,12 +888,16 @@ def process_project_memory(
                     raise ProcessorFailure("storage_failure") from None
                 receipt["usage_attempt_id"] = attempt_id
                 active_runner = runner if runner is not None else NativeProcessorRunner(timeout=timeout, usage_checkpoint=checkpoint)
-                returned = active_runner.run(request) if hasattr(active_runner, "run") else active_runner(request)
-                if isinstance(returned, Mapping):
-                    receipt.update(_metrics(returned.get("metrics")))
-                output, _, thread_id, turn_id = _validate_runner_receipt(returned)
-                receipt.update(worker_thread_id=thread_id, worker_turn_id=turn_id,
-                               **_metrics(returned.get("metrics")))
+                execution_request = ExecutionRequest.from_legacy(
+                    request, job_type="reconsideration" if snapshot.get("job_kind") == "reconsideration" else "project_memory",
+                    attempt_id=attempt_id, deadline=started + timeout,
+                )
+                execution = execute(execution_request, active_runner)
+                receipt.update(_metrics(execution.metrics))
+                execution.require_success()
+                output = execution.output
+                thread_id, turn_id = execution.identity.execution_id, execution.identity.turn_id
+                receipt.update(worker_thread_id=thread_id, worker_turn_id=turn_id)
                 if time.monotonic() - started > timeout:
                     raise ProcessorFailure("timeout")
                 if len(json.dumps(output)) > MAX_OUTPUT_CHARS:

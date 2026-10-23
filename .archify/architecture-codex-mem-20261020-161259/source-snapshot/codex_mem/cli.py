@@ -193,6 +193,11 @@ def _config_updates(namespace: argparse.Namespace) -> dict[str, Any]:
             updates[key] = _parse_string_array(value, field=key)
         elif key in {"skip_tools", "tool_skip_list"}:
             updates[key] = _parse_string_array(value, field=key)
+        elif key in {"processing_profile", "observation_profile", "project_memory_profile"}:
+            try:
+                updates[key] = json.loads(value)
+            except (TypeError, ValueError):
+                raise CLIError("execution profile must be a JSON object or null") from None
         elif key == "capture_scope":
             capture_scope = value.strip()
             if capture_scope not in {"selected", "all", "manual"}:

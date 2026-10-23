@@ -1,0 +1,13 @@
+# Separate the interactive host from background execution
+
+The interactive host supplies events and receives context. A background runtime generates candidate memory from bounded input. The host does not select the runtime, provider, or model implicitly. This separation permits shared project memory across hosts without separate databases or automatic history reprocessing.
+
+Both processors now use `ExecutionRequest` and `ExecutionResult`. Requests contain a job type, output schema, immutable execution profile, monotonic deadline, and attempt identifier. Results contain generated output, verified execution identity, usage, or a normalized failure. Observation extraction and summaries share this contract. Project memory and reconsideration, including episode consolidation, use it through their existing generation path.
+
+`NativeProcessorRunner` remains the only connected runtime. Its adapter verifies the existing Codex completion receipt, exact identity, disabled tools, and absence of rerouting. The strict decoder and source checks remain authoritative. The runtime has no memory-write interface. Processors retain their leases and atomic commits. One correction shares the original deadline and cumulative usage. Failed calls retain measured usage, and unavailable usage stays unknown.
+
+Profile configuration is additive. The resolver chooses a processor override, then the default profile, then legacy Codex behavior. The current processors deliberately create legacy profiles until their separate queue and accounting migrations in issues #5 and #6. These migrations activate configured profiles. Issue #2 does not connect Pi or change queue identity. The configuration syntax therefore does not establish runtime availability or provider capability.
+
+Keeping Codex-specific receipts inside the adapter avoids teaching each processor another external protocol. Retaining the old injected-runner interface preserves existing deterministic tests during this transition. New behavioral tests replace the external executable and use the real store, queue, decoder, and retrieval path.
+
+See [execution configuration](../EXECUTION.md), [domain terms](../../GLOSSARY.md), and [the shared contract](../../codex_mem/execution.py).

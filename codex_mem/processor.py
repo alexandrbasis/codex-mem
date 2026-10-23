@@ -27,6 +27,8 @@ import time
 from typing import Any
 from xml.etree import ElementTree
 
+from .execution import ExecutionRequest, ExecutionResult, execute
+
 from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason, storage_failure_detail
 
 from .store import (
@@ -394,10 +396,15 @@ def process_pending(
                         codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
                         candidate_review=review_candidate if quality_enabled else None,
                     )
-                run_value = _invoke_runner(active_runner, request)
-                if isinstance(run_value.get("metrics"), Mapping):
-                    metrics = run_value["metrics"]
-                output, evidence, thread_id, turn_id = _validate_runner_receipt(run_value)
+                execution_request = ExecutionRequest.from_legacy(
+                    request, job_type="summary" if generation_claim.get("summary_required") else "observation",
+                    attempt_id=f"{job_id}:{attempt_count}",
+                )
+                execution = execute(execution_request, active_runner)
+                metrics = execution.metrics
+                execution.require_success()
+                output = execution.output
+                thread_id, turn_id = execution.identity.execution_id, execution.identity.turn_id
                 if "result" in output:
                     output = _unwrap_model_output(output)
                 output = _resolve_source_handles(output, sources)
@@ -408,7 +415,7 @@ def process_pending(
                     if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
                         raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
                 if quality_enabled and (notes or summary is not None):
-                    if reviewed_output != json.dumps(run_value["output"], sort_keys=True, ensure_ascii=False):
+                    if reviewed_output != json.dumps(execution.output, sort_keys=True, ensure_ascii=False):
                         review_quality(notes, summary, MAX_GATE_SECONDS)
                 finished = store.finish_observation_batch(
                     workspace,
@@ -420,7 +427,7 @@ def process_pending(
                     worker_thread_id=thread_id,
                     worker_turn_id=turn_id,
                 )
-                receipt = _finished_receipt(finished, disposition, len(notes), evidence)
+                receipt = _finished_receipt(finished, disposition, len(notes), thread_id, turn_id)
                 receipt["session_summary_count"] = int(summary is not None)
                 outcome = disposition
             except ProcessorFailure as exc:
@@ -692,6 +699,10 @@ class NativeProcessorRunner:
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
 
+    def execute(self, request: ExecutionRequest) -> ExecutionResult:
+        from .execution import execute_codex
+        return execute_codex(request, self.run)
+
     def __call__(self, request: Mapping[str, Any]) -> Mapping[str, Any]:
         return self.run(request)
 
@@ -702,6 +713,12 @@ class NativeProcessorRunner:
             raise ProcessorFailure("invalid_request")
         if len(prompt) > MAX_PROMPT_CHARS:
             raise ProcessorFailure("invalid_request")
+        deadline = request.get("deadline", time.monotonic() + self.timeout)
+        if isinstance(deadline, bool) or not isinstance(deadline, (int, float)) or not math.isfinite(deadline):
+            raise ProcessorFailure("invalid_request")
+        budget = min(self.timeout, float(request.get("timeout", self.timeout)), deadline - time.monotonic())
+        if budget <= 0:
+            raise ProcessorFailure("timeout")
         executable = shutil.which(self.codex)
         if executable is None:
             raise ProcessorFailure("runner_unavailable")
@@ -741,7 +758,7 @@ class NativeProcessorRunner:
                 # Preserve normal Codex authentication and rules.  This flag
                 # only prevents this child from recursively capturing itself.
                 environment["CODEX_MEM_DISABLED"] = "1"
-                client = _AppServer(executable, worker_cwd, environment, self.timeout)
+                client = _AppServer(executable, worker_cwd, environment, min(budget, deadline - time.monotonic()))
                 try:
                     client.request(
                         "initialize",
@@ -798,11 +815,11 @@ class NativeProcessorRunner:
                             output = _unwrap_model_output(output)
                         if self.candidate_review is None:
                             break
-                        remaining = self.timeout - (time.monotonic() - started_at)
+                        remaining = min(budget - (time.monotonic() - started_at), deadline - time.monotonic())
                         if remaining <= 0:
                             raise ProcessorFailure("timeout")
                         correction = self.candidate_review(output, remaining)
-                        if time.monotonic() - started_at >= self.timeout:
+                        if time.monotonic() >= deadline or time.monotonic() - started_at >= budget:
                             raise ProcessorFailure("timeout")
                         if correction is None:
                             break
@@ -2033,13 +2050,11 @@ def _claim_parts(claimed: Mapping[str, Any]) -> tuple[str, str, list[Mapping[str
 
 
 def _finished_receipt(
-    finished: Mapping[str, Any], disposition: str, note_count: int, evidence: Mapping[str, Any]
+    finished: Mapping[str, Any], disposition: str, note_count: int, thread_id: str, turn_id: str | None
 ) -> dict[str, Any]:
     job_id = finished.get("job_id")
     if not isinstance(job_id, str):
         raise ProcessorFailure("storage_failure")
-    thread_started = evidence["turn_started"]
-    assert isinstance(thread_started, Mapping)
     return {
         "status": disposition,
         "job_id": job_id,
@@ -2048,8 +2063,8 @@ def _finished_receipt(
         "processor_id": PROCESSOR_ID,
         "model": MODEL,
         "reasoning_effort": REASONING_EFFORT,
-        "worker_thread_id": thread_started["thread_id"],
-        "worker_turn_id": thread_started["turn_id"],
+        "worker_thread_id": thread_id,
+        "worker_turn_id": turn_id,
     }
 
 

@@ -3,7 +3,6 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import tempfile
-from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -290,7 +289,7 @@ class FieldEvidenceTests(unittest.TestCase):
             return result
         with mock.patch.object(jev_quality, "MAX_GATE_SECONDS", .02), \
                 mock.patch.object(jev_quality, "monotonic", lambda: clock[0]), \
-                mock.patch.object(ep, "time", SimpleNamespace(monotonic=lambda: clock[0])):
+                mock.patch.object(ep.time, "monotonic", lambda: clock[0]):
             result = ep.process_project_memory(self.project, self.data, runner=run,
                                                jev_quality_evaluator=slow_evaluate)
         self.assertEqual(result["status"], "failed", result)
