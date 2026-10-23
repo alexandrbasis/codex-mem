@@ -304,10 +304,18 @@ def _handle_hook(
                 and is_private_prompt(payload.get("prompt"))):
             # Persist before SQLite or the shared hook-state lock can stall.
             # A cancelled worker must leave later tool hooks protected.
-            from .private_gate import mark_private
+            from .private_gate import mark_private_delivery
+            from .host import HostEvent
             session_key = _session_key(payload, project)
+            identity = HostEvent(host="codex", project=project,
+                session_id=_optional_id(payload.get("session_id")), branch=_optional_branch(payload.get("branch")),
+                event="user_message", role="user_intent", body="",
+                event_id=_optional_id(payload.get("event_id")), message_id=_optional_id(payload.get("message_id")),
+                turn_id=_optional_id(payload.get("turn_id")))
             try:
-                mark_private(session_key, active_data_dir)
+                applied = mark_private_delivery(session_key, identity.dedupe_key, active_data_dir)
+                if not applied:
+                    trace_event("hook_skipped", reason="private_redelivery")
             except OSError as exc:
                 trace_error("private_marker_failed", exc)
                 # A marker-directory permission failure need not prevent the
@@ -635,31 +643,10 @@ def _user_prompt(
     private_query = is_private_prompt(payload.get("prompt"))
     prompt = _safe_prompt(payload.get("prompt"))
     session_key = _session_key(payload, project)
-    # The marker is detected before _safe_prompt/redact_text replaces private
-    # content.  A public prompt starts a fresh turn and clears the prior gate;
-    # the key includes the canonical project and session, so another session
-    # cannot inherit the privacy decision.
-    if private_prompt_gate_enabled(config):
-        try:
-            if private_query:
-                mark_private_prompt_gate(
-                    session_key,
-                    turn_id=_optional_id(payload.get("turn_id")),
-                    data_dir=data_dir,
-                )
-            else:
-                clear_private_prompt_gate(session_key, data_dir=data_dir)
-                from .private_gate import clear_private
-                clear_private(session_key, data_dir)
-        except Exception as exc:
-            trace_error("privacy_state_write_failed", exc)
-            _stderr("codex-mem hook: privacy state unavailable")
-    else:
-        try:
-            clear_private_prompt_gate(session_key, data_dir=data_dir)
-        except Exception as exc:
-            trace_error("privacy_state_clear_failed", exc)
-    if config.get("capture_enabled") and prompt:
+    # Private prompts were protected before Store opened. Do not replay that
+    # transition here or reinterpret a redacted private body as a public user.
+    # The shared delivery receipt owns every public gate transition.
+    if config.get("capture_enabled") and prompt and not private_query:
         _remember_safely(
             store,
             project,

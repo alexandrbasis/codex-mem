@@ -48,3 +48,7 @@ _Avoid_: Requested profile, configured model
 **Host event**:
 Completed interactive activity with its host, project, session, role, and available source identifiers.
 _Avoid_: Memory claim, model result
+
+**Branch activation**:
+One selected continuation path within an interactive session.
+_Avoid_: Episode, task identity

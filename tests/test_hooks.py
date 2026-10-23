@@ -20,6 +20,14 @@ from codex_mem.store import Store, project_key
 
 
 class FakeStore:
+    # Legacy adapter-only fixture. Durable replay is tested with real Store in
+    # test_host_contract; this fixture retains its existing non-deduping model.
+    def claim_host_delivery(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def finish_host_delivery(self, *_args: object, **_kwargs: object) -> None:
+        pass
+
     def __init__(self, data_dir: Path) -> None:
         self.data_dir = data_dir
         self.records: list[dict[str, object]] = []
@@ -714,7 +722,8 @@ class HookTests(unittest.TestCase):
             ),
             self.store,
         )
-        self.assertEqual(2, len(self.store.records))
+        # A private prompt now contributes no redacted placeholder source.
+        self.assertEqual(1, len(self.store.records))
         self.assertIn("other session result", str(self.store.records[-1]["body"]))
         self.assertNotIn("private result", " ".join(str(item["body"]) for item in self.store.records))
 

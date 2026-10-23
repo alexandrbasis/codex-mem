@@ -48,11 +48,136 @@ class HostContractTests(unittest.TestCase):
         self.assertEqual('omitted', blocked['status'])
         self.assertEqual('captured', capture_event(self.event(host='codex'), self.store)['status'])
         capture_event(self.event(event_id='public', body='Use public import.'), self.store)
-        self.assertEqual('captured', capture_event(tool, self.store)['status'])
+        self.assertEqual('captured', capture_event(self.event(event='tool_result', role='tool_record', event_id='new-tool-event', tool_id='tool-2', body='public result'), self.store)['status'])
         self.assertEqual([], self.store.search(self.project, 'hidden task'))
         explicit = capture_event(self.event(private=True, event_id='explicit-private', body='Hidden without a marker.'), self.store)
         self.assertEqual('omitted', explicit['status'])
         self.assertNotIn('Hidden without a marker.', str(self.store.timeline(self.project)))
+
+    def test_delivery_receipts_survive_migration_deletion_and_interruption(self):
+        import json
+        import sqlite3
+        from contextlib import closing
+        legacy = self.store.remember(self.project, 'Assistant final answer',
+            '[Assistant final answer]\nUse local import.', kind='session', source='hook:Stop',
+            session_id='legacy-session', turn_id='legacy-turn',
+            dedupe_key='hook:final:cf17c610d860bf85af24d61f98ffb10c3d9fb0c324559c2b1daa615de7065616')
+        database = self.store.db_path
+        self.store.close()
+        with closing(sqlite3.connect(database)) as connection:
+            connection.execute('DROP TABLE host_deliveries')
+            connection.commit()
+        self.store = Store(self.data)
+        self.addCleanup(self.store.close)
+        event = self.event(host='codex', event='assistant_message', role='assistant_report',
+            event_id=None, message_id=None, session_id='legacy-session', turn_id='legacy-turn',
+            body='[Assistant final answer]\nUse local import.')
+        self.assertEqual(legacy['id'], capture_event(event, self.store)['id'])
+        self.store.forget(self.project, [legacy['id']])
+        self.assertEqual('source_deleted', capture_event(event, self.store)['reason'])
+        self.assertEqual([], self.store.timeline(self.project))
+        unfinished = self.event(event_id='interrupted', body='<private>UNSTORED_PRIVATE_BODY</private>')
+        self.assertIsNone(self.store.claim_host_delivery(str(self.project), unfinished.dedupe_key))
+        self.store.close()
+        self.store = Store(self.data)
+        self.addCleanup(self.store.close)
+        result = capture_event(unfinished, self.store)
+        self.assertEqual('omitted', result['status'])
+        self.assertEqual('delivery_outcome_unknown', result['reason'])
+        self.assertNotIn('id', result)
+        # Inspect only the migration's metadata schema, not source behavior.
+        with closing(sqlite3.connect(database)) as connection:
+            receipts = json.dumps(connection.execute('SELECT * FROM host_deliveries').fetchall())
+        self.assertNotIn('UNSTORED_PRIVATE_BODY', receipts)
+        self.assertNotIn('interrupted', receipts)
+        committed = self.event(event_id='committed-before-receipt')
+        self.assertIsNone(self.store.claim_host_delivery(str(self.project), committed.dedupe_key))
+        source = self.store.remember(self.project, 'Committed source', committed.body,
+            source=committed.source, session_id=committed.stored_session, dedupe_key=committed.dedupe_key)
+        self.store.close()
+        self.store = Store(self.data)
+        self.addCleanup(self.store.close)
+        unknown = capture_event(committed, self.store)
+        self.assertEqual('delivery_outcome_unknown', unknown['reason'])
+        self.assertNotIn('id', unknown)
+        batch = self.store.claim_observation_batch(self.project, 'fixture-worker', 'gpt-6-luna', 'medium')
+        self.assertEqual([source['id']], [item['id'] for item in batch['sources']])
+
+    def test_concurrent_native_redelivery_captures_at_most_one_source(self):
+        from concurrent.futures import ThreadPoolExecutor
+        import threading
+        ready = threading.Barrier(2)
+        def deliver(_):
+            with Store(self.data) as store:
+                ready.wait(timeout=5)
+                return capture_event(self.event(), store)
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            results = list(workers.map(deliver, range(2)))
+        rows = self.store.timeline(self.project)
+        self.assertEqual(1, len(rows), results)
+        self.assertEqual(rows[0]['id'], capture_event(self.event(), self.store)['id'])
+        self.assertTrue(all(result['status'] == 'captured' or
+            result.get('reason') == 'delivery_outcome_unknown' for result in results), results)
+
+    def test_actual_codex_hooks_do_not_replay_public_or_private_gate_transitions(self):
+        from codex_mem.hooks import handle_hook
+        common = dict(cwd=str(self.project), session_id='native-hook')
+        public = dict(common, hook_event_name='UserPromptSubmit', message_id='public', prompt='Public fixture.')
+        private = dict(common, hook_event_name='UserPromptSubmit', message_id='private', prompt='<private>PRIVATE_HOOK_BODY</private>')
+        handle_hook(public, self.store)
+        handle_hook(private, self.store)
+        self.store.close()
+        self.store = Store(self.data)
+        self.addCleanup(self.store.close)
+        handle_hook(public, self.store)
+        handle_hook(dict(common, hook_event_name='Stop', message_id='hidden-assistant',
+            last_assistant_message='HIDDEN_HOOK_REPORT'), self.store)
+        self.assertEqual(1, len(self.store.timeline(self.project)))
+        handle_hook(dict(public, message_id='new-public'), self.store)
+        self.store.close()
+        self.store = Store(self.data)
+        self.addCleanup(self.store.close)
+        handle_hook(private, self.store)
+        handle_hook(dict(common, hook_event_name='Stop', message_id='public-assistant',
+            last_assistant_message='Public report.'), self.store)
+        rows = self.store.timeline(self.project)
+        self.assertEqual(3, len(rows), rows)
+        retained = str(self.store.get(self.project, [row['id'] for row in rows]))
+        self.assertNotIn('HIDDEN_HOOK_REPORT', retained)
+        self.assertNotIn('PRIVATE_HOOK_BODY', retained)
+        self.store.forget(self.project, [row['id'] for row in rows])
+        handle_hook(public, self.store)
+        handle_hook(private, self.store)
+        self.assertEqual([], self.store.timeline(self.project))
+        self.assertTrue(all(path.read_bytes() == b'' for path in (self.data / 'private-prompt-deliveries').iterdir()))
+        handle_hook(dict(public, message_id='after-delete'), self.store)
+        self.assertEqual(1, len(self.store.timeline(self.project)))
+
+    def test_incomplete_native_private_receipt_cannot_authorize_capture(self):
+        from codex_mem.hooks import handle_hook
+        common = dict(cwd=str(self.project), session_id='native-incomplete')
+        private = dict(common, hook_event_name='UserPromptSubmit', message_id='private', prompt='<private>HIDDEN</private>')
+        handle_hook(private, self.store)
+        handle_hook(dict(common, hook_event_name='UserPromptSubmit', message_id='public', prompt='Public recovery.'), self.store)
+        receipt = next((self.data / 'private-prompt-deliveries').iterdir())
+        receipt.write_bytes(b'partial')
+        handle_hook(private, self.store)
+        handle_hook(dict(common, hook_event_name='Stop', message_id='hidden-assistant', last_assistant_message='HIDDEN_REPORT'), self.store)
+        self.assertEqual(1, len(self.store.timeline(self.project)))
+
+    def test_native_codex_redelivery_cannot_rewind_private_gate(self):
+        public = self.event(host='codex')
+        private = self.event(host='codex', event_id='private', body='<private>PRIVATE_BODY</private>')
+        capture_event(public, self.store)
+        capture_event(private, self.store)
+        capture_event(public, self.store)
+        assistant = self.event(host='codex', event_id='assistant-private', event='assistant_message',
+            role='assistant_report', body='HIDDEN_REPORT')
+        self.assertEqual('private_turn', capture_event(assistant, self.store)['reason'])
+        capture_event(self.event(host='codex', event_id='new-public'), self.store)
+        capture_event(private, self.store)
+        self.assertEqual('captured', capture_event(self.event(host='codex', event_id='assistant-public',
+            event='assistant_message', role='assistant_report', body='Public report.'), self.store)['status'])
 
     def test_context_contract_applies_scope_budget_and_reports_omission(self):
         from codex_mem.host import ContextRequest, retrieve_context
@@ -162,7 +287,7 @@ class HostContractTests(unittest.TestCase):
         injected = capture_event(self.event(body='<codex_mem_untrusted_context>old evidence</codex_mem_untrusted_context>'), self.store)
         self.assertEqual('empty_or_injected', injected['reason'])
         self.assertEqual([], self.store.timeline(self.project))
-        overflow = capture_event(self.event(body='x' * 6100), self.store)
+        overflow = capture_event(self.event(event_id='overflow', body='x' * 6100), self.store)
         self.assertEqual(100, overflow['omitted_chars'])
         self.assertEqual(6000, len(self.store.get(self.project, [overflow['id']])[0]['body']))
         from codex_mem.host import ContextRequest, retrieve_context

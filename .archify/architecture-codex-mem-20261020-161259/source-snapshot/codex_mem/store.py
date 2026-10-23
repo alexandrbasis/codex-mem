@@ -1085,6 +1085,13 @@ class Store:
         def migrate_and_install_indexes() -> None:
             migrate()
             self._create_dashboard_indexes(connection)
+            # Body-free delivery tombstones survive source deletion. Replaying
+            # an old native event must not reset a newer private-turn gate.
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS host_deliveries ("
+                "project TEXT NOT NULL, delivery_hash TEXT NOT NULL, receipt_json TEXT, "
+                "PRIMARY KEY(project, delivery_hash))"
+            )
             from .project_memory import install_schema
             install_schema(connection)
             connection.execute(
@@ -1790,6 +1797,63 @@ class Store:
                     "verification": "not_assessed",
                 }
         return records
+
+    def claim_host_delivery(self, project: str, dedupe_key: str,
+                            dedupe_alias: str | None = None) -> dict[str, Any] | None:
+        """Claim a native delivery once, or return its body-free prior outcome.
+
+        A claim without a receipt has an unknown outcome after interruption.
+        It is never replayed: that could rewind the session's privacy state.
+        """
+        workspace = project_key(project)
+        delivery_hash = _dedupe_hash(workspace, dedupe_key)
+        alias_hash = _dedupe_hash(workspace, dedupe_alias)
+        with self._lock:
+            self._require_open()
+            connection = self._connection
+
+            def claim() -> dict[str, Any] | None:
+                previous = connection.execute(
+                    "SELECT receipt_json FROM host_deliveries WHERE project = ? AND delivery_hash = ?",
+                    (workspace, delivery_hash),
+                ).fetchone()
+                if previous is not None:
+                    if not previous['receipt_json']:
+                        return {'status': 'omitted', 'reason': 'delivery_outcome_unknown', 'deduplicated': True}
+                    receipt = dict(json.loads(previous['receipt_json']), deduplicated=True)
+                    if receipt.get('id') and connection.execute(
+                            "SELECT id FROM entries WHERE project = ? AND id = ?",
+                            (workspace, receipt['id'])).fetchone() is None:
+                        return {'status': 'omitted', 'reason': 'source_deleted', 'deduplicated': True}
+                    return receipt
+                # Existing sources, including pre-upgrade legacy aliases, retain
+                # their identity and completed processing without gate changes.
+                existing = connection.execute(
+                    "SELECT id FROM entries WHERE project = ? AND dedupe_hash IN (?, ?)",
+                    (workspace, delivery_hash, alias_hash),
+                ).fetchone()
+                receipt = ({'status': 'captured', 'id': existing['id'], 'deduplicated': True}
+                           if existing is not None else None)
+                connection.execute(
+                    "INSERT INTO host_deliveries(project, delivery_hash, receipt_json) VALUES (?, ?, ?)",
+                    (workspace, delivery_hash, json.dumps(receipt) if receipt else None),
+                )
+                return receipt
+
+            return self._write(claim)
+
+    def finish_host_delivery(self, project: str, dedupe_key: str, receipt: Mapping[str, Any]) -> None:
+        """Persist only a delivery outcome, never private text or native IDs."""
+        workspace = project_key(project)
+        delivery_hash = _dedupe_hash(workspace, dedupe_key)
+        safe = {key: receipt[key] for key in
+                ('status', 'reason', 'id', 'omitted_chars', 'injected_sections_removed') if key in receipt}
+        with self._lock:
+            self._require_open()
+            self._write(lambda: self._connection.execute(
+                "UPDATE host_deliveries SET receipt_json = ? WHERE project = ? AND delivery_hash = ?",
+                (json.dumps(safe, ensure_ascii=False), workspace, delivery_hash),
+            ))
 
     def remember(
         self,

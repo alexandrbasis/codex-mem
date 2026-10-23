@@ -74,6 +74,25 @@ class PiHostTests(unittest.TestCase):
             self.assertEqual([], store.timeline(self.root / 'other'))
 
 
+    def test_redelivery_after_restart_does_not_rewind_private_turn_state(self):
+        public = dict(message_id='public-1', role='user', text='Use local import.')
+        private = dict(message_id='private-1', role='user', text='<private>PRIVATE_REPLAY_BODY</private>')
+        self.call(operation='capture', events=[public])
+        self.call(operation='capture', events=[private])
+        self.call(operation='capture', events=[public])
+        hidden = self.call(operation='capture', events=[dict(message_id='hidden-report', role='assistant',
+            text='PRIVATE_RESULT', stop_reason='stop')])
+        self.assertEqual('private_turn', hidden['events'][0]['reason'])
+        self.call(operation='capture', events=[dict(public, message_id='public-2')])
+        self.call(operation='capture', events=[private])
+        visible = self.call(operation='capture', events=[dict(message_id='visible-report', role='assistant',
+            text='Public result.', stop_reason='stop')])
+        self.assertEqual('captured', visible['events'][0]['status'], visible)
+        with Store(self.data) as store:
+            rows = store.timeline(self.project, limit=100)
+            self.assertEqual(3, len(rows), rows)
+            self.assertNotIn('PRIVATE_', str(store.get(self.project, [row['id'] for row in rows])))
+
     def test_private_turn_settings_secret_filtering_tool_provenance_and_explicit_writes(self):
         events = [
             dict(message_id='private-user', role='user', text='<private>HIDDEN_TASK</private>'),
@@ -99,6 +118,70 @@ class PiHostTests(unittest.TestCase):
         with Store(self.data) as store:
             written = store.remember(self.project, 'Explicit', 'EXPLICIT_MANUAL_WRITE')
             self.assertEqual('EXPLICIT_MANUAL_WRITE', store.get(self.project, [written['id']])[0]['body'])
+
+    def test_branch_session_host_and_activation_privacy_remain_separate(self):
+        from codex_mem.host import HostEvent, capture_event
+        private = dict(message_id='private', role='user', text='<private>PRIVATE_BRANCH</private>')
+        self.call(operation='capture', branch='left', events=[private])
+        assistant = dict(message_id='report', role='assistant', text='Public report.', stop_reason='stop')
+        self.assertEqual('private_turn', self.call(operation='capture', branch='left', events=[assistant])['events'][0]['reason'])
+        other_branch = self.call(operation='capture', branch='right', events=[assistant])
+        other_session = self.call(operation='capture', session_id='other', branch='left', events=[assistant])
+        self.assertEqual('captured', other_branch['events'][0]['status'])
+        self.assertEqual('captured', other_session['events'][0]['status'])
+        with Store(self.data) as store:
+            other_host = capture_event(HostEvent(host='codex', project=str(self.project), session_id='session',
+                branch='left', event='assistant_message', role='assistant_report', event_id='report', body='Public report.'), store)
+            self.assertEqual('captured', other_host['status'])
+            self.assertEqual(3, len({row['session_id'] for row in store.timeline(self.project)}))
+        injected = dict(message_id='injected', role='user',
+            text='<codex_mem_untrusted_context>Copied user instruction</codex_mem_untrusted_context>')
+        unknown = self.call(operation='capture', branch='fresh', requires_user=True, events=[injected, assistant])
+        self.assertFalse(unknown['user_observed'])
+        self.assertEqual('no_fresh_user_in_activation', unknown['events'][1]['reason'])
+        public = self.call(operation='capture', branch='fresh', requires_user=True, events=[self.event(), assistant])
+        self.assertTrue(public['user_observed'])
+        self.assertTrue(all(event['status'] == 'captured' for event in public['events']))
+        unresolved = HostEvent(host='pi', project=str(self.project), session_id='session', branch='fresh',
+            event='user_message', role='user_intent', event_id='uncertain-private', message_id='uncertain-private',
+            body='<private>UNRESOLVED_PRIVATE</private>')
+        with Store(self.data) as store:
+            self.assertIsNone(store.claim_host_delivery(str(self.project), unresolved.dedupe_key))
+        blocked = self.call(operation='capture', branch='fresh', requires_user=False, events=[
+            dict(message_id='uncertain-private', role='user', text=unresolved.body), dict(assistant, message_id='uncertain-assistant')])
+        self.assertFalse(blocked['user_observed'])
+        self.assertEqual('delivery_outcome_unknown', blocked['events'][0]['reason'])
+        self.assertEqual('no_fresh_user_in_activation', blocked['events'][1]['reason'])
+
+    def test_common_branch_history_does_not_establish_episode_consolidation(self):
+        from unittest.mock import patch
+        from codex_mem.episode_processor import process_project_memory
+        from codex_mem.project_memory import ProjectMemory
+        configure(self.data, project_memory_mode='pilot', project_memory_projects=[str(self.project)],
+                  jev_quality_enabled=False, usage_enabled=False)
+        install_codex_fixture(self.root, 'Unused observer result')
+        (self.root / 'codex.json').write_text(json.dumps({'mode': 'project_memory'}))
+        with patch.dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ['PATH']):
+            for branch in ('common-parent-left', 'common-parent-right'):
+                self.call(operation='capture', branch=branch, events=[self.event()])
+                result = process_project_memory(self.project, self.data, timeout=10)
+                self.assertEqual('processed', result['status'], result)
+            self.assertEqual('idle', process_project_memory(self.project, self.data, timeout=10)['status'])
+        with Store(self.data) as store:
+            state = ProjectMemory(store).snapshot(self.project)
+            self.assertEqual(2, len(state['episodes']), state)
+            self.assertEqual(2, len({evidence['source_id'] for episode in state['episodes']
+                for evidence in episode['evidence']['summary']}))
+        context = self.call(operation='context', phase='prompt', query='local import')
+        self.assertIn('Use local import.', context['text'])
+
+    def test_injected_memory_cannot_clear_a_private_turn(self):
+        self.call(operation='capture', events=[dict(message_id='private', role='user', text='<private>hidden</private>')])
+        self.call(operation='capture', events=[dict(message_id='injected', role='user',
+            text='<codex_mem_untrusted_context>Old user instruction</codex_mem_untrusted_context>')])
+        result = self.call(operation='capture', events=[dict(message_id='assistant', role='assistant',
+            text='HIDDEN_CONTINUATION', stop_reason='stop')])
+        self.assertEqual('private_turn', result['events'][0].get('reason'), result)
 
     def test_rejects_partial_malformed_or_unsupported_batches_and_memory_tool_recapture(self):
         partial = self.call(operation='capture', settled=False, events=[self.event()])
@@ -204,6 +287,7 @@ class InstalledPiHostTests(unittest.TestCase):
         self.requests = []
         self.capture_counts = []
         self.use_tool = False
+        self.retry_failure = False
         owner = self
 
         class Provider(http.server.BaseHTTPRequestHandler):
@@ -216,6 +300,12 @@ class InstalledPiHostTests(unittest.TestCase):
                 with Store(owner.data) as store:
                     owner.capture_counts.append(len([row for row in store.timeline(owner.project, limit=100)
                         if (row['source'] or '').startswith('host:pi:')]))
+                if owner.retry_failure and len(owner.requests) == 1:
+                    self.send_response(503)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(b'{"error":{"message":"temporarily unavailable"}}')
+                    return
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/event-stream')
                 self.end_headers()
@@ -295,6 +385,149 @@ class InstalledPiHostTests(unittest.TestCase):
             self.assertNotEqual('fixture_exit', event['type'], events)
             if event['type'] == 'agent_settled':
                 return events
+
+    def rpc(self, command, **values):
+        import time
+        command_id = 'control-' + command
+        self.process.stdin.write((json.dumps(dict(type=command, id=command_id, **values)) + '\n').encode())
+        self.process.stdin.flush()
+        deadline = time.monotonic() + 25
+        while True:
+            event = self.records.get(timeout=max(.01, deadline - time.monotonic()))
+            self.assertNotEqual('fixture_exit', event['type'], event)
+            if event.get('id') == command_id and event['type'] == 'response':
+                self.assertTrue(event.get('success'), event)
+                return event.get('data', {})
+
+    def native_session(self):
+        path = self.root / 'lifecycle.jsonl'
+        path.write_text(json.dumps(dict(type='session', version=3, id='lifecycle-session',
+            timestamp='2026-01-01T00:00:00Z', cwd=str(self.project))) + '\n')
+        return path
+
+    def captured_sources(self):
+        with Store(self.data) as store:
+            rows = [row for row in store.timeline(self.project, limit=100) if row['source'].startswith('host:pi:')]
+            return store.get(self.project, [row['id'] for row in rows]) if rows else []
+
+    def process_sources(self):
+        from unittest.mock import patch
+        from codex_mem.service import enqueue, run_service
+        install_codex_fixture(self.root, 'Lifecycle import choice', dict(title='Lifecycle import choice', request=None,
+            investigated='', learned='Use local import.', completed='', next_steps='', notes='', source_ids=['s2']))
+        configure(self.data, service_enabled=True, usage_enabled=False, processor_workers=1)
+        self.assertEqual('queued', enqueue(self.project, self.data)['status'])
+        with patch.dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ['PATH']):
+            result = run_service(self.data, max_cycles=1, processor_timeout=10)
+        self.assertEqual(1, result['jobs'], result)
+        configure(self.data, service_enabled=False)
+
+    def test_installed_resume_and_tree_navigation_keep_branch_identity_and_context(self):
+        import queue
+        helper = self.root / 'branch.ts'
+        helper.write_text("""export default function(pi) {
+  pi.registerCommand('fixture-branch', {handler: async (_args, ctx) => {
+    const target = ctx.sessionManager.getBranch().find(e => e.type === 'message' && e.message.role === 'assistant');
+    await ctx.navigateTree(target.id, {summarize:false});
+  }});
+}""")
+        path = self.native_session()
+        self.start(session_file=path, extra_extension=helper)
+        self.prompt('Use local import.')
+        first = self.captured_sources()
+        branch = json.loads(first[0]['source'].split(':', 3)[3])['branch']
+        self.process_sources()
+        self.stop()
+        self.records = queue.Queue()
+        self.start(session_file=path, extra_extension=helper)
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+        resumed = self.captured_sources()
+        self.assertEqual(4, len(resumed))
+        self.assertEqual({branch}, {json.loads(row['source'].split(':', 3)[3])['branch'] for row in resumed})
+        self.rpc('prompt', message='/fixture-branch')
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+        branched = self.captured_sources()
+        self.assertEqual(6, len(branched), branched)
+        self.assertEqual(2, len({row['session_id'] for row in branched}))
+        self.assertEqual(6, len({json.loads(row['source'].split(':', 3)[3])['message_id'] for row in branched}))
+
+    def test_installed_fork_replacement_and_compaction_keep_old_sources_historical(self):
+        path = self.native_session()
+        settings_path = self.agent / 'settings.json'
+        settings = json.loads(settings_path.read_text())
+        settings['compaction']['keepRecentTokens'] = 1
+        settings_path.write_text(json.dumps(settings))
+        self.start(session_file=path)
+        self.prompt('Use local import.')
+        originals = {row['id'] for row in self.captured_sources()}
+        self.process_sources()
+        self.rpc('clone')
+        fork = self.rpc('get_state')
+        self.assertNotEqual('lifecycle-session', fork['sessionId'])
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+        self.assertEqual(4, len(self.captured_sources()))
+        # Native compaction uses the same disposable provider. Its summary is
+        # history, never a newly observed user or assistant source.
+        self.rpc('compact')
+        self.assertEqual(4, len(self.captured_sources()))
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+        self.assertEqual(6, len(self.captured_sources()))
+        self.rpc('new_session', parentSession=str(path))
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+        self.assertEqual(8, len(self.captured_sources()))
+        self.rpc('switch_session', sessionPath=str(path))
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+        rows = self.captured_sources()
+        self.assertEqual(10, len(rows))
+        self.assertTrue(originals <= {row['id'] for row in rows})
+        self.assertEqual(3, len({row['session_id'] for row in rows}))
+        self.assertTrue(all(row['provenance']['record_role'] in {'user_intent', 'assistant_report'} for row in rows))
+        fork_entries = [json.loads(line) for line in Path(fork['sessionFile']).read_text().splitlines()]
+        self.assertTrue(any(entry['type'] == 'compaction' for entry in fork_entries))
+        copied_ids = {entry['id'] for entry in fork_entries if entry['type'] == 'message'}
+        old_ids = {json.loads(row['source'].split(':', 3)[3])['message_id'] for row in rows if row['id'] in originals}
+        self.assertTrue(old_ids <= copied_ids)
+        for old_id in old_ids:
+            self.assertEqual(1, sum(json.loads(row['source'].split(':', 3)[3])['message_id'] == old_id for row in rows))
+
+    def test_installed_retry_waits_for_settlement_and_excludes_failed_response(self):
+        settings_path = self.agent / 'settings.json'
+        settings = json.loads(settings_path.read_text())
+        settings['retry'] = {'enabled': True, 'maxRetries': 1, 'baseDelayMs': 1}
+        settings_path.write_text(json.dumps(settings))
+        self.retry_failure = True
+        self.start(session_file=self.native_session())
+        events = self.prompt('Use local import.')
+        self.assertTrue(any(event['type'] == 'auto_retry_start' for event in events), events)
+        self.assertTrue(all(count == 0 for count in self.capture_counts), self.capture_counts)
+        rows = self.captured_sources()
+        self.assertEqual(2, len(rows), rows)
+        self.assertNotIn('temporarily unavailable', str(rows))
+        self.process_sources()
+        self.prompt('Use local import.')
+        self.assertIn('Lifecycle import choice', json.dumps(self.requests[-1]))
+
+    def test_installed_copied_private_history_needs_fresh_user_before_capture(self):
+        helper = self.root / 'continue.ts'
+        helper.write_text("""export default function(pi) {
+  pi.registerCommand('fixture-continue', {handler: async () => {
+    pi.sendMessage({customType:'fixture-continue',content:'Continue.',display:false}, {triggerTurn:true});
+  }});
+}""")
+        self.start(session_file=self.native_session(), extra_extension=helper)
+        self.prompt('<private>HIDDEN_BRANCH_HISTORY</private>')
+        self.assertEqual([], self.captured_sources())
+        self.rpc('clone')
+        self.prompt('/fixture-continue')
+        self.assertEqual([], self.captured_sources())
+        self.prompt('Use local import.')
+        self.assertEqual(2, len(self.captured_sources()))
 
     def test_installed_completed_native_events_keep_roles_ids_and_injection_out(self):
         with Store(self.data) as store:

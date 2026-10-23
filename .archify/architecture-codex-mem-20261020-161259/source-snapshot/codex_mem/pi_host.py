@@ -12,9 +12,9 @@ import sys
 from typing import Any
 
 from .config import load_config
-from .host import ContextRequest, HostEvent, capture_event, retrieve_context
+from .host import ContextRequest, HostEvent, capture_event, retrieve_context, validate_identifier
 from .store import Store
-from .tool_io import ToolCapture, normalize_capture, read_tool_payload
+from .tool_io import ToolCapture, normalize_capture, read_tool_payload, strip_injected_memory
 
 MAX_REQUEST_BYTES = 256 * 1024
 MAX_EVENTS = 256
@@ -32,20 +32,37 @@ def handle_request(request: Any, store: Store) -> dict[str, Any]:
         session = request.get('session_id')
         if not isinstance(session, str) or not session:
             raise ValueError('session required')
-        base = dict(host='pi', project=project, session_id=session)
+        validate_identifier(session)
+        validate_identifier(request.get('branch'))
+        base = dict(host='pi', project=project, session_id=session, branch=request.get('branch'))
         operation = request.get('operation')
         if operation == 'context':
             return _context(request, base, store)
         if operation != 'capture' or request.get('settled') is not True:
             raise ValueError('completed batch required')
+        requires_user = request.get('requires_user', False)
+        if type(requires_user) is not bool:
+            raise ValueError('invalid activation policy')
         records = request.get('events')
         if not isinstance(records, list) or len(records) > MAX_EVENTS:
             raise ValueError('invalid events')
         # Validate the complete batch first. A malformed private user event must
         # never be dropped while later assistant/tool events are accepted.
         events = [_event(record, base, store) for record in records]
-        receipts = [capture_event(event, store) if event else
-                    {'status': 'omitted', 'reason': 'unsupported_or_memory_tool'} for event in events]
+        receipts = []
+        user_observed = not requires_user
+        for event in events:
+            if event is None:
+                receipt = {'status': 'omitted', 'reason': 'unsupported_or_memory_tool'}
+            elif event.event != 'user_message' and not user_observed:
+                # A new activation cannot infer privacy from copied history.
+                receipt = {'status': 'omitted', 'reason': 'no_fresh_user_in_activation'}
+            else:
+                receipt = capture_event(event, store)
+            if event and event.event == 'user_message' and strip_injected_memory(event.body)[0].strip():
+                user_observed = (receipt.get('status') != 'unavailable' and
+                                 receipt.get('reason') != 'delivery_outcome_unknown')
+            receipts.append(receipt)
         fields = {'status', 'reason', 'id', 'deduplicated', 'omitted_chars', 'injected_sections_removed'}
         receipts = [{key: value for key, value in receipt.items() if key in fields} for receipt in receipts]
         for event, receipt in zip(events, receipts):
@@ -53,7 +70,7 @@ def handle_request(request: Any, store: Store) -> dict[str, Any]:
                 omitted = event.tool_capture.response_metadata.get('read_omitted_reason')
                 if omitted:
                     receipt['reason'] = omitted
-        result: dict[str, Any] = {'status': 'ok', 'events': receipts}
+        result: dict[str, Any] = {'status': 'ok', 'events': receipts, 'user_observed': user_observed}
         if any(receipt.get('status') == 'captured' for receipt in receipts):
             from .integration import after_write
             queue = after_write(project, store.data_dir, wait_for_start=False)

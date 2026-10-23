@@ -1,16 +1,18 @@
 /** Pi 1.4.0 lifecycle adapter. Shared policy and memory algorithms live in Python. */
+import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { StringDecoder } from "node:string_decoder";
 import { fileURLToPath } from "node:url";
 import { VERSION, type ExtensionAPI, type ExtensionContext, type SessionMessageEntry } from "@earendil-works/pi-coding-agent";
 
 const CUSTOM_TYPE = "codex-mem-context";
+const BRANCH_TYPE = "codex-mem-branch";
 const MAX_BYTES = 256 * 1024;
 const MAX_EVENTS = 256;
 const TIMEOUT_MS = 2000;
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-type Receipt = { status?: string; reason?: string; text?: string; events?: Receipt[]; omitted_chars?: number };
+type Receipt = { status?: string; reason?: string; text?: string; events?: Receipt[]; omitted_chars?: number; user_observed?: boolean };
 
 /** No text or credentials are placed in argv or diagnostics. Each call is finite. */
 function request(payload: object): Promise<Receipt> {
@@ -68,13 +70,15 @@ export default function (pi: ExtensionAPI) {
   }
   let session = "";
   let cwd = "";
+  let branch: string | undefined;
+  let requiresUser = true;
   let anchor: string | null = null;
   let observed = new Set<object>();
   let overflow = false;
   let activeContext: string | undefined;
 
-  const identity = (ctx: ExtensionContext) => ({ project: ctx.cwd, session_id: ctx.sessionManager.getSessionId() });
-  const matches = (ctx: ExtensionContext) => ctx.cwd === cwd && ctx.sessionManager.getSessionId() === session;
+  const identity = (ctx: ExtensionContext) => ({ project: ctx.cwd, session_id: ctx.sessionManager.getSessionId(), branch });
+  const matches = (ctx: ExtensionContext) => branch !== undefined && ctx.cwd === cwd && ctx.sessionManager.getSessionId() === session;
   const status = (ctx: ExtensionContext, reason: string) => ctx.ui.setStatus("codex-mem", `Memory: ${reason}`);
   const context = async (ctx: ExtensionContext, phase: "start" | "prompt", query = "") => {
     activeContext = undefined;
@@ -85,15 +89,44 @@ export default function (pi: ExtensionAPI) {
     return { customType: CUSTOM_TYPE, content: response.text, display: false };
   };
 
-  pi.on("session_start", async (_event, ctx) => {
+  const checkpoint = () => pi.appendEntry(BRANCH_TYPE, { version: 1, sessionId: session, branch });
+  const restoreBranch = (ctx: ExtensionContext): string | undefined => {
+    let cursor = ctx.sessionManager.getLeafId();
+    let traversed = 0;
+    while (cursor && traversed++ < 1024) {
+      const entry = ctx.sessionManager.getEntry(cursor);
+      if (!entry) return undefined;
+      if (entry.type === "custom" && entry.customType === BRANCH_TYPE) {
+        const value = entry.data as { version?: unknown; sessionId?: unknown; branch?: unknown } | undefined;
+        // A copied marker belongs to its original session. A fork starts a new
+        // scope; copied messages themselves never become newly observed events.
+        if (value?.version === 1 && value.sessionId !== session) return "root";
+        if (value?.version === 1 && value.sessionId === session &&
+            typeof value.branch === "string" && /^(root|[0-9a-f-]{36})$/.test(value.branch)) return value.branch;
+        return undefined;
+      }
+      cursor = entry.parentId;
+    }
+    return cursor === null ? "root" : undefined;
+  };
+  const activate = async (ctx: ExtensionContext, newBranch: boolean) => {
     session = ctx.sessionManager.getSessionId();
     cwd = ctx.cwd;
-    anchor = ctx.sessionManager.getLeafId();
-    observed = new Set();
+    branch = newBranch ? randomUUID() : restoreBranch(ctx);
+    requiresUser = true;
+    observed.clear();
     overflow = false;
+    activeContext = undefined;
+    if (!branch) { status(ctx, "branch identity unavailable"); return; }
+    checkpoint();
+    anchor = ctx.sessionManager.getLeafId();
     const message = await context(ctx, "start");
     if (message) pi.sendMessage(message, { triggerTurn: false });
-  });
+  };
+  pi.on("session_start", async (_event, ctx) => activate(ctx, false));
+  // Only a completed navigation creates a new activation. Cancelled navigation
+  // and compaction keep the old identity and pending observed-message set.
+  pi.on("session_tree", async (_event, ctx) => activate(ctx, true));
   pi.on("message_end", async (event, ctx) => {
     if (!matches(ctx) || overflow) return;
     const role = event.message.role;
@@ -115,11 +148,13 @@ export default function (pi: ExtensionAPI) {
     const complete = !overflow && cursor === anchor && entries.length === observed.size;
     const events = entries.reverse().map(record).filter((entry) => entry !== null);
     observed.clear();
+    checkpoint();
     anchor = ctx.sessionManager.getLeafId();
     overflow = false;
     if (!complete) { status(ctx, "capture omitted: event limit or native identity unavailable"); return; }
     if (!events.length) return;
-    const response = await request({ ...identity(ctx), operation: "capture", settled: true, events });
+    const response = await request({ ...identity(ctx), operation: "capture", settled: true, requires_user: requiresUser, events });
+    requiresUser = response.user_observed !== true;
     if (response.status !== "ok") status(ctx, response.reason || "service_unavailable");
     else if (response.events?.some((event) => event.status !== "captured" || event.omitted_chars || event.reason))
       status(ctx, "some source content omitted by policy or size limit");
@@ -138,5 +173,5 @@ export default function (pi: ExtensionAPI) {
       message.role !== "custom" || message.customType !== CUSTOM_TYPE ||
       (index === last && activeContext !== undefined && message.content === activeContext)) };
   });
-  pi.on("session_shutdown", async () => { observed.clear(); session = ""; cwd = ""; });
+  pi.on("session_shutdown", async () => { observed.clear(); activeContext = undefined; branch = undefined; session = ""; cwd = ""; });
 }

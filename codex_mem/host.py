@@ -138,7 +138,24 @@ class HostEvent:
 
 
 def capture_event(event: HostEvent, store: Any) -> dict[str, Any]:
-    """Capture completed evidence, or return a content-free omission receipt."""
+    """Capture a native delivery once without replaying privacy transitions."""
+    try:
+        if event.dedupe_key:
+            previous = store.claim_host_delivery(event.project, event.dedupe_key, event.legacy_dedupe_alias)
+            if previous is not None:
+                return previous
+        receipt = _capture_event(event, store)
+        if event.dedupe_key:
+            store.finish_host_delivery(event.project, event.dedupe_key, receipt)
+        return receipt
+    except Exception as exc:
+        from .hook_diagnostics import trace_error
+        trace_error('capture_delivery_failed', exc)
+        return {'status': 'unavailable', 'reason': 'capture_unavailable'}
+
+
+def _capture_event(event: HostEvent, store: Any) -> dict[str, Any]:
+    """Apply shared policy only to a delivery that has not already occurred."""
     from .config import (automatic_capture_enabled, hooks_disabled, load_config,
                          private_prompt_gate_enabled, private_prompt_gate_active,
                          mark_private_prompt_gate, clear_private_prompt_gate)
@@ -150,8 +167,13 @@ def capture_event(event: HostEvent, store: Any) -> dict[str, Any]:
             return {'status': 'omitted', 'reason': 'capture_disabled'}
         if event.event == 'tool_result' and not config.get('capture_tools'):
             return {'status': 'omitted', 'reason': 'tool_capture_disabled'}
+        body, removed = strip_injected_memory(event.body)
+        if event.injected:
+            return {'status': 'omitted', 'reason': 'private_or_injected'}
+        if not body.strip() and not event.private:
+            return {'status': 'omitted', 'reason': 'empty_or_injected'}
         key = session_state_key(event.project, event.stored_session)
-        private = event.private or (event.event == 'user_message' and is_private_prompt(event.body))
+        private = event.private or (event.event == 'user_message' and is_private_prompt(body))
         if private_prompt_gate_enabled(config):
             from .private_gate import mark_private, clear_private, private_active
             if event.event == 'user_message':
@@ -166,7 +188,6 @@ def capture_event(event: HostEvent, store: Any) -> dict[str, Any]:
                 return {'status': 'omitted', 'reason': 'private_turn'}
         if event.injected or event.private or private and redact_text(event.body) != event.body:
             return {'status': 'omitted', 'reason': 'private_or_injected'}
-        body, removed = strip_injected_memory(event.body)
         body = redact_text(body).strip()
         if not body:
             return {'status': 'omitted', 'reason': 'empty_or_injected'}

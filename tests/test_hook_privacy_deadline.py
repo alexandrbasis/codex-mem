@@ -85,6 +85,13 @@ class PrivacyDeadlineTests(unittest.TestCase):
             self.assertEqual(0, recovery.returncode, recovery.stderr)
             self.assertNotIn("systemMessage", json.loads(recovery.stdout))
             self.assertFalse(_private_tool_gate_active(payload, project, config, data))
+            # The cancelled private hook completed only its immediate privacy
+            # action. Its native replay cannot close the fresh public turn.
+            replay = subprocess.run([sys.executable, str(launcher), "hook"],
+                input=json.dumps(payload), capture_output=True, text=True,
+                env=dict(os.environ, CODEX_MEM_HOME=str(data)), timeout=3)
+            self.assertEqual(0, replay.returncode, replay.stderr)
+            self.assertFalse(_private_tool_gate_active(payload, project, config, data))
 
     @unittest.skipIf(os.name == "nt", "flock is POSIX-only")
     def test_private_prompt_remains_gated_while_shared_state_is_locked(self):

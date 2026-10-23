@@ -15,6 +15,14 @@ from codex_mem.hooks import handle_hook, handle_process_hook, main
 
 
 class _Store:
+    # Legacy adapter-only fixture. Durable replay is tested with real Store in
+    # test_host_contract; this fixture retains its existing non-deduping model.
+    def claim_host_delivery(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+    def finish_host_delivery(self, *_args: object, **_kwargs: object) -> None:
+        pass
+
     def __init__(self, data_dir: Path, *, context_error: bool = False,
                  remember_error: bool = False) -> None:
         self.data_dir = data_dir
