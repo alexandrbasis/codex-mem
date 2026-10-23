@@ -349,7 +349,9 @@ The local database remains on disk after plugin removal. Delete it separately on
 
 ## Known limitations
 
-Codex Mem does not provide full Claude Mem parity. There is no Web UI, HTTP API, cloud synchronization, or non-Codex host integration. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record. A live Claude-versus-Luna quality and cost comparison remains unmeasured. Observer accounting does not backfill missing historical receipts or establish net memory-system savings.
+Codex Mem does not provide full Claude Mem parity. It supports Codex and Pi 1.4.0 through separate host adapters. The local dashboard and its HTTP endpoints are read-only. There is no remote memory service or cloud synchronization. See [host and runtime verification](docs/HOST_RUNTIME_MATRIX.md) for public-adapter checks and native Pi checks with a local provider. The live four-pair check covers observation extraction only.
+
+The [profile comparison](docs/MEMORY_PROFILE_COMPARISON.md) does not establish equivalent or sufficient memory quality. The E5 comparison covered a small fixed set of multilingual and paraphrase cases; it is not a universal retrieval-quality claim. One older contradictory recall fixture remains partial or undetermined in the verification record. A live Claude-versus-Luna quality and cost comparison remains unmeasured. Observer accounting does not backfill missing historical receipts or establish net memory-system savings.
 
 Read [Upstream and implementation choices](UPSTREAM.md) for provenance and design differences. The project is licensed under the MIT license.
 

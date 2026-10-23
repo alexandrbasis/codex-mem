@@ -1,6 +1,6 @@
 # Interactive host contract
 
-`codex_mem.host` accepts completed host events and returns bounded memory data. The Codex hook adapter uses this contract. Pi can already use the [existing MCP tools](PI_MCP.md). Its lifecycle adapter is a later task. This module does not start a model, choose an execution profile, or define a new database.
+`codex_mem.host` accepts completed host events and returns bounded memory data. The Codex hook adapter and the [Pi 1.4.0 lifecycle adapter](PI_HOST.md) use this contract. Pi exposes the [existing MCP tools](PI_MCP.md) separately. Use the [project installer](PI_INSTALL.md) to install the complete Pi integration. This module does not start a model, choose an execution profile, or define a new database.
 
 `HostEvent` carries the host, canonical project, session, optional branch, event, source role, and available event, message, tool, and turn identifiers. The four events are `user_message`, `assistant_message`, `tool_result`, and `compaction`. Their roles are `user_intent`, `assistant_report`, `tool_record`, and `lifecycle_marker`. A mismatched role is invalid.
 
