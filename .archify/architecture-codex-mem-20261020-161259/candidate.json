@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "3cf2971207e550706d370384e2b137be9f251e03",
+      "revision": "a16eea945a1e45d3e8e735756511149ef07aa05f",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -63,9 +63,9 @@
       "sources": [
         {
           "path": "codex_mem/host.py",
-          "line": 68,
-          "end_line": 212,
-          "label": "Shared capture and provenance"
+          "line": 48,
+          "end_line": 214,
+          "label": "Opaque Pi tool IDs and shared capture"
         },
         {
           "path": "codex_mem/hooks.py",
@@ -391,8 +391,8 @@
       "sources": [
         {
           "path": "codex_mem/host.py",
-          "line": 228,
-          "end_line": 295,
+          "line": 230,
+          "end_line": 297,
           "label": "Shared bounded untrusted context"
         },
         {
@@ -699,12 +699,12 @@
       "dot": "cyan",
       "title": "Shared host events and context",
       "items": [
-        "Codex adapts native hooks to HostEvent. Pi 1.4.0 observes message_end, resolves native entry IDs after persistence, and submits only current-runtime sources at agent_settled. It never imports existing history or captures streaming updates. Python applies shared privacy, project policy, source identity and queue wake. Sources: host.py:68-212, hooks.py:882-929, pi/extension.ts:107-177, pi_host.py:24-125.",
+        "Codex adapts native hooks to HostEvent. Pi 1.4.0 observes message_end, resolves native entry IDs after persistence, and submits only current-runtime sources at agent_settled. It never imports existing history or captures streaming updates. Python applies shared privacy, project policy, source identity and queue wake. Pi tool-call IDs retain opaque pipe separators in source metadata and tool provenance. Other identifier restrictions and bounded batch validation remain unchanged. Sources: host.py:48-214, hooks.py:882-929, pi/extension.ts:107-177, pi_host.py:24-125.",
         "Legacy Codex source names and session IDs remain valid. Other host and branch sessions have separate namespaces. One classifier serves SQL queue and retrieval filters, processor summary validation, and project memory. Old dedupe aliases preserve existing entry IDs without a migration or replay. They remove injected memory before hashing, as the old Codex adapter did. Sources: host.py:21-65, store.py:1799-1956.",
-        "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns hook framing. Pi receives custom memory at startup and before prompts; only its current custom context reaches the model, and it is excluded from capture. Empty or failed refreshes remove prior automatic memory while preserving unrelated custom messages. Tiny budgets omit the frame and report a bounded native status. The local Python protocol has byte, event, response and deadline limits. Failure does not block conversation. Sources: host.py:228-295, hooks.py:823-879, pi/extension.ts:16-67,98-140,178-191, pi_host.py:128-164.",
+        "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns hook framing. Pi receives custom memory at startup and before prompts; only its current custom context reaches the model, and it is excluded from capture. Empty or failed refreshes remove prior automatic memory while preserving unrelated custom messages. Tiny budgets omit the frame and report a bounded native status. The local Python protocol has byte, event, response and deadline limits. Failure does not block conversation. Sources: host.py:230-297, hooks.py:823-879, pi/extension.ts:16-67,98-140,178-191, pi_host.py:128-164.",
         "Pi has no native private flag on UserMessage. Explicit private markers activate the shared gate for user, assistant and tool sources. Complete tool JSON is decoded before shared redaction. The shared safe payload reader checks both stored raw reads and new Pi source bodies. Incoming or generated truncation wrappers and derived excerpts are omitted with an explicit reason. UTF-8 subprocess decoding preserves split characters within the byte limit. Native MCP tools remain separate. Branch markers survive resume and reload. Fork copies remain historical. Tree navigation creates a new activation; compaction preserves pending sources until settlement. Sources: docs/PI_HOST.md, tests/test_pi_host.py.",
         "Pi requires a fresh user after activation before assistant/tool capture. Historical automatic continuation is omitted because its privacy state is unknown. Shutdown clears pending observations and automatic context. Common ancestry cannot establish episode identity. Sources: pi/extension.ts:92-177, pi_host.py:43-78, docs/PI_HOST.md.",
-        "The shared capture boundary claims hashed native identity before privacy transitions. Replays return body-free receipts without rewinding gates. Deleted sources cannot resurrect. Interrupted claims have an unknown outcome and are not replayed. Existing source and queue transactions remain authoritative. Sources: host.py:140-154, store.py:1801-1859.",
+        "The shared capture boundary claims hashed native identity before privacy transitions. Replays return body-free receipts without rewinding gates. Deleted sources cannot resurrect. Interrupted claims have an unknown outcome and are not replayed. Existing source and queue transactions remain authoritative. Sources: host.py:142-156, store.py:1801-1859.",
         "Native Codex private prompts create their immediate marker before SQLite, then an empty native-identity receipt. Completed replays skip the marker. An interrupted or invalid receipt stays conservative; it cannot establish source capture. Public transitions use shared delivery deduplication. Private prompts create no redacted placeholder source. Sources: hooks.py:302-326,633-662, private_gate.py:50-77, tests/test_hook_privacy_deadline.py."
       ]
     },

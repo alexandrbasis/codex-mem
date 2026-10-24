@@ -74,6 +74,55 @@ class PiHostTests(unittest.TestCase):
             self.assertEqual([], store.timeline(self.root / 'other'))
 
 
+    def test_compound_tool_ids_capture_queue_and_read_back_without_identity_loss(self):
+        from unittest.mock import patch
+        from codex_mem.pi_host import handle_request
+        from codex_mem.service import service_status
+        tool_ids = ['call_fixture|fc_fixture_a', 'call_fixture|fc_fixture_b',
+                    'call_fixturefc_fixture_a']
+        events = [self.event()] + [dict(message_id=f'tool-{index}', role='toolResult',
+            tool_id=tool_id, tool_name='bash', text='Same tool output.')
+            for index, tool_id in enumerate(tool_ids)]
+        request = dict(version=1, pi_version='1.4.0', operation='capture', settled=True,
+            project=str(self.project), session_id='session', branch='root', events=events)
+        configure(self.data, service_enabled=True)
+        with Store(self.data) as store:
+            # Only detached process creation is unavailable; capture and durable queue are real.
+            with patch('subprocess.Popen', side_effect=OSError('disposable worker unavailable')):
+                captured = handle_request(request, store)
+                repeated = handle_request(request, store)
+            self.assertEqual('ok', captured['status'], captured)
+            self.assertEqual(['captured'] * 4, [event['status'] for event in captured['events']])
+            self.assertEqual('queued', captured['queue']['status'])
+            self.assertEqual(1, service_status(self.data)['queued_projects'])
+            ids = [event['id'] for event in captured['events']]
+            self.assertEqual(4, len(set(ids)))
+            self.assertEqual(ids, [event['id'] for event in repeated['events']])
+            for entry_id, tool_id in zip(ids[1:], tool_ids):
+                record = store.get(self.project, [entry_id])[0]
+                self.assertEqual(tool_id, json.loads(record['source'].split(':', 3)[3])['tool_id'])
+                self.assertEqual(tool_id, store.get_source_capture(self.project, entry_id)['tool_use_id'])
+            self.assertEqual(4, len(store.timeline(self.project)))
+            self.assertEqual([], store.get(self.root / 'other', ids))
+
+    def test_compound_tool_ids_keep_identifier_limits_and_batch_rejection(self):
+        tool = dict(message_id='tool', role='toolResult', tool_id='call_fixture|fc_fixture',
+                    tool_name='bash', text='Tool output.')
+        for invalid in ('', 'x' * 257, 'call|bad\ncontrol', 'call|bad\x00control', 42):
+            with self.subTest(tool_id=invalid):
+                result = self.call(operation='capture', events=[self.event(), dict(tool, tool_id=invalid)])
+                self.assertEqual('invalid_request', result['reason'])
+        for field in ('session_id', 'branch'):
+            with self.subTest(field=field):
+                result = self.call(operation='capture', **{field: 'reserved|namespace'}, events=[self.event(), tool])
+                self.assertEqual('invalid_request', result['reason'])
+        result = self.call(operation='capture', events=[self.event(), dict(tool, message_id='entry|reserved')])
+        self.assertEqual('invalid_request', result['reason'])
+        with Store(self.data) as store:
+            self.assertEqual([], store.timeline(self.project))
+        longest = self.call(operation='capture', events=[self.event(), dict(tool, tool_id='a|' + 'b' * 254)])
+        self.assertEqual(['captured', 'captured'], [event['status'] for event in longest['events']])
+
     def test_redelivery_after_restart_does_not_rewind_private_turn_state(self):
         public = dict(message_id='public-1', role='user', text='Use local import.')
         private = dict(message_id='private-1', role='user', text='<private>PRIVATE_REPLAY_BODY</private>')
@@ -96,7 +145,7 @@ class PiHostTests(unittest.TestCase):
     def test_private_turn_settings_secret_filtering_tool_provenance_and_explicit_writes(self):
         events = [
             dict(message_id='private-user', role='user', text='<private>HIDDEN_TASK</private>'),
-            dict(message_id='private-tool', role='toolResult', text='HIDDEN_RESULT', tool_id='call-private', tool_name='bash'),
+            dict(message_id='private-tool', role='toolResult', text='HIDDEN_RESULT', tool_id='call_private|fc_private', tool_name='bash'),
             dict(message_id='private-assistant', role='assistant', text='HIDDEN_REPORT', stop_reason='stop'),
         ]
         private = self.call(operation='capture', events=events)
@@ -312,7 +361,7 @@ class InstalledPiHostTests(unittest.TestCase):
                 changes = [({'role': 'assistant', 'content': 'Use local '}, None),
                            ({'content': 'import.'}, None), ({}, 'stop')]
                 if owner.use_tool and not any(message['role'] == 'tool' for message in request['messages']):
-                    changes = [({'role': 'assistant', 'tool_calls': [{'index': 0, 'id': 'native-tool-call',
+                    changes = [({'role': 'assistant', 'tool_calls': [{'index': 0, 'id': 'call_fixture|fc_fixture_native',
                         'type': 'function', 'function': {'name': 'fixture_echo', 'arguments': '{}'}}]}, None), ({}, 'tool_calls')]
                 for delta, finish in changes:
                     chunk = dict(id='fixture', object='chat.completion.chunk', model='fixture',
@@ -590,7 +639,10 @@ export default function (pi) {
             records = store.get(self.project, [row['id'] for row in entries])
             tools = [row for row in records if row['provenance']['record_role'] == 'tool_record']
             self.assertEqual(1, len(tools), records)
-            self.assertIn('native-tool-call', tools[0]['source'])
+            self.assertEqual('call_fixture|fc_fixture_native',
+                json.loads(tools[0]['source'].split(':', 3)[3])['tool_id'])
+            self.assertEqual('call_fixture|fc_fixture_native',
+                store.get_source_capture(self.project, tools[0]['id'])['tool_use_id'])
             self.assertIn('TOOL_RESULT', str(store.get_source_capture(self.project, tools[0]['id'])))
             self.assertEqual(2, sum(row['provenance']['record_role'] == 'assistant_report' for row in records))
 

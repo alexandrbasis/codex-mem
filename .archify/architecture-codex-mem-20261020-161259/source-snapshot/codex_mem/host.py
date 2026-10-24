@@ -45,9 +45,9 @@ def is_capture_source(source: object) -> bool:
     return str(source or '').startswith('hook:') or source_event(source) is not None
 
 
-def validate_identifier(value: str | None) -> None:
+def validate_identifier(value: str | None, *, allow_pipe: bool = False) -> None:
     if value is not None and (not isinstance(value, str) or not value or len(value) > 256
-                              or any(ord(c) < 32 for c in value) or '|' in value):
+                              or any(ord(c) < 32 for c in value) or not allow_pipe and '|' in value):
         raise ValueError('invalid host identifier')
 
 
@@ -92,7 +92,9 @@ class HostEvent:
         object.__setattr__(self, 'project', project_key(self.project))
         for name in ('session_id', 'branch', 'event_id', 'message_id', 'tool_id', 'turn_id'):
             value = getattr(self, name)
-            validate_identifier(value)
+            # Pi provider tool IDs are opaque and can contain a pipe separator.
+            # Session/branch IDs still reserve it for the stored namespace.
+            validate_identifier(value, allow_pipe=self.host == 'pi' and name == 'tool_id')
         if not isinstance(self.body, str) or not isinstance(self.title, str):
             raise ValueError('host event text must be a string')
 
