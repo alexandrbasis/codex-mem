@@ -24,9 +24,9 @@ class PiObservationTests(unittest.TestCase):
         self.pi = self.root / 'pi'
         self.pi.write_text('#!' + sys.executable + '\n' + (Path(__file__).parent / 'fixtures/execution_pi.py').read_text())
         self.pi.chmod(0o700)
-        # Successful summary correction launches generation and two support processes.
-        # Use one six-second test budget; explicit timeout tests select three below.
-        self.profile = dict(runtime='pi', provider='fixture', model='fixture', reasoning_effort='low', timeout=6)
+        # Successful summary correction may launch generation plus five review processes.
+        # Use one ten-second test budget; explicit timeout tests select three below.
+        self.profile = dict(runtime='pi', provider='fixture', model='fixture', reasoning_effort='low', timeout=10)
         configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
                   processing_profile=self.profile)
         self.environment = mock.patch.dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ['PATH'],
@@ -165,13 +165,13 @@ class PiObservationTests(unittest.TestCase):
         self.assertGreaterEqual(len(calls), 3)
         attempt = self.attempts(result)[0]
         self.assertEqual('fixture', attempt['requested_model'])
-        self.assertEqual(48, attempt['total_tokens'])
+        self.assertEqual(84, attempt['total_tokens'])
         self.assertEqual('generation-2', attempt['worker_turn_id'])
         evidence = json.loads(attempt['execution_receipt'])
         self.assertEqual(2, evidence['generation'])
         trace = [json.loads(line) for line in self.pi.with_suffix('.trace').read_text().splitlines()]
-        self.assertEqual(5, sum(row['type'] == 'prompt' for row in trace))
-        self.assertEqual(4, len(self.pi.with_suffix('.launch').read_text().splitlines()))
+        self.assertEqual(8, sum(row['type'] == 'prompt' for row in trace))
+        self.assertEqual(7, len(self.pi.with_suffix('.launch').read_text().splitlines()))
         self.assertEqual('idle', self.process()['status'])
 
     def test_one_correction_unknown_partial_and_failed_cumulative_usage(self):
@@ -370,7 +370,7 @@ class PiObservationTests(unittest.TestCase):
         measured = {'input': 10, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 12}
         cases = [('absent', {}, None, 12),
                  ('zero', {'usage': {**measured, 'reasoning': 0}}, 0, 12),
-                 ('correction', {'usages': [dict(measured, reasoning=2), measured]}, None, 48)]
+                 ('correction', {'usages': [dict(measured, reasoning=2), measured]}, None, 84)]
         for name, scenario, expected_reasoning, expected_total in cases:
             with self.subTest(case=name):
                 self.data = self.root / ('late-' + name)
@@ -416,7 +416,7 @@ class PiObservationTests(unittest.TestCase):
                 attempts = self.attempts(result)
                 self.assertEqual(['lease_expired', 'processed'], [a['outcome'] for a in attempts])
                 self.assertEqual(['fixture', 'fixture-next'], [a['requested_model'] for a in attempts])
-                self.assertEqual([expected_total, 24 if correction else 12], [a['total_tokens'] for a in attempts])
+                self.assertEqual([expected_total, 48 if correction else 12], [a['total_tokens'] for a in attempts])
                 self.assertEqual(expected_reasoning, attempts[0]['reasoning_output_tokens'])
                 self.assertIsNone(attempts[1]['reasoning_output_tokens'])
                 self.assertEqual('reported', attempts[0]['usage_status'])
@@ -444,9 +444,9 @@ class PiObservationTests(unittest.TestCase):
         result = self.process(jev_quality_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
         attempt = self.attempts(result)[0]
-        self.assertEqual(63, attempt['total_tokens'])
-        self.assertEqual(46, attempt['input_tokens'])
-        self.assertEqual(17, attempt['output_tokens'])
+        self.assertEqual(114, attempt['total_tokens'])
+        self.assertEqual(82, attempt['input_tokens'])
+        self.assertEqual(32, attempt['output_tokens'])
         self.assertIsNone(attempt['reasoning_output_tokens'])
         self.assertEqual('reported', attempt['usage_status'])
 

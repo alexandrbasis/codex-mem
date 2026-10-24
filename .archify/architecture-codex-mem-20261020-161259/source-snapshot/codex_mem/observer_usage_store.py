@@ -447,7 +447,8 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
     The generator and each support review have separate identities and counters.
     Quotes, prompts, candidates and arbitrary error text cannot enter this record.
     """
-    if call_id not in ("generation", "summary_support_1", "summary_support_2"):
+    if call_id not in ("generation", "summary_support_1", "summary_support_2", "summary_source_1",
+                       "summary_outcome_1", "summary_outcome_2"):
         raise ValueError("invalid execution call")
     if outcome not in ("running", "success", "failed"):
         raise ValueError("invalid call outcome")

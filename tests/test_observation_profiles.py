@@ -293,13 +293,16 @@ class ObservationProfileTests(unittest.TestCase):
         result = self.process(jev_quality_evaluator=evaluator)
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(1, result['session_summary_count'])
-        self.assertEqual(['fixture-exact'] * 4, [r['model'] for r in self.trace('turn/start')])
-        self.assertEqual(['low'] * 4, [r['effort'] for r in self.trace('turn/start')])
+        self.assertEqual(['fixture-exact'] * 7, [r['model'] for r in self.trace('turn/start')])
+        self.assertEqual(['low'] * 7, [r['effort'] for r in self.trace('turn/start')])
         with Store(self.data) as store:
             attempt = store.observation_attempts(self.project, result['job_id'])[0]
             self.assertEqual('fixture-exact', attempt['requested_model'])
             self.assertEqual('turn-2', attempt['worker_turn_id'])
-            self.assertEqual(48, attempt['total_tokens'])
+            self.assertEqual(84, attempt['total_tokens'])
+            self.assertEqual({'generation', 'summary_support_1', 'summary_support_2',
+                'summary_source_1', 'summary_outcome_1', 'summary_outcome_2'},
+                set(json.loads(attempt['execution_calls'])))
             self.assertIn('Keep local import.', store.context(self.project))
 
     def test_claim_persists_profile_before_worker_can_crash(self):

@@ -52,6 +52,61 @@ class JevQualityProcessorTests(unittest.TestCase):
             ).fetchall() if table else []
         return job, [json.loads(row[0]) for row in audits]
 
+    def test_initially_stale_quality_input_never_starts_generation(self):
+        raw = self.remember()
+        original = Store.claim_observation_batch
+        def claim(store, *args, **kwargs):
+            result = original(store, *args, **kwargs)
+            if result is not None:
+                with Store(self.home) as other:
+                    other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                        ('Changed before any model call.', raw['id']))
+            return result
+        runner = mock.Mock(side_effect=self.runner)
+        evaluator = mock.Mock(side_effect=response)
+        with mock.patch.object(Store, 'claim_observation_batch', claim):
+            result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        self.assertEqual('summary_support_stale', result.get('reason_code'), result)
+        runner.assert_not_called()
+        evaluator.assert_not_called()
+        job, _ = self.stored(result)
+        self.assertEqual([], job['output_ids'])
+
+    def test_quality_rechecks_retained_content_after_its_http_slot_wait(self):
+        from contextlib import contextmanager
+        from codex_mem import jev_filter
+        raw = self.remember()
+        @contextmanager
+        def acquired(_deadline):
+            with Store(self.home) as other:
+                other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                    ('Changed while the quality request waited.', raw['id']))
+            yield
+        def measured_generation(request):
+            from codex_mem.observer_usage_store import COUNTERS
+            result = self.runner(request)
+            tokens = dict.fromkeys(COUNTERS, 0)
+            tokens.update(input_tokens=10, output_tokens=2, total_tokens=12)
+            result['metrics'] = dict(duration_ms=1, usage=dict(status='reported',
+                source='app_server_thread_total', updates=1, tokens=tokens))
+            return result
+        runner = mock.Mock(side_effect=measured_generation)
+        with mock.patch.object(jev_filter, '_credentials', return_value='synthetic-key'), \
+                mock.patch.object(jev_filter, 'acquire_jev_slot', acquired), \
+                mock.patch.object(jev_filter.urllib.request, 'build_opener') as opener:
+            result = process_pending(self.project, self.home, runner=runner)
+        self.assertEqual('jev_quality_unavailable', result.get('reason_code'), result)
+        opener.assert_not_called()
+        runner.assert_called_once()
+        self.assertEqual(0, result['jev_quality']['counts']['requests'])
+        self.assertEqual('jev_source_unavailable', result['jev_quality']['evaluations'][-1]['error_code'])
+        job, audits = self.stored(result)
+        self.assertEqual([], job['output_ids'])
+        self.assertEqual(0, sum(row['counts']['requests'] for row in audits))
+        with Store(self.home) as store:
+            attempt = store.observation_attempts(self.project, result['job_id'])[0]
+            self.assertEqual(12, attempt['total_tokens'])
+
     def assert_preserved(self, raw, result, reason):
         self.assertEqual("failed", result["status"], result)
         self.assertEqual("invalid_response", result["code"])

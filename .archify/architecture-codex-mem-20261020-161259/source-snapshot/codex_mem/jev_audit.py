@@ -17,7 +17,8 @@ CATEGORIES = frozenset({"decision", "verified_finding", "open_work", "preference
 V3_CATEGORIES = frozenset({"decision", "verification_result", "problem", "open_work",
                            "preference", "supporting_context", "routine", "other"})
 ERROR_CODES = frozenset({"jev_filter_failure", "jev_filter_credentials", "jev_filter_timeout",
-                         "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_invalid_input"})
+                         "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_invalid_input",
+                         "summary_support_stale", "lease_expired"})
 MAX_INTEGER = 2**63 - 1
 
 

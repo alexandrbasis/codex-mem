@@ -10,6 +10,26 @@ turn_number = 0
 
 def support_output(payload, scenario, root):
     """Canned unit references exercise orchestration, never semantic assessment."""
+    if payload['version'] in ('summary-source-v2', 'summary-outcome-v2'):
+        stage = 'source' if payload['version'] == 'summary-source-v2' else 'outcome'
+        counter = root.with_suffix('.' + stage + '-count')
+        number = int(counter.read_text()) + 1 if counter.exists() else 1
+        counter.write_text(str(number))
+        mode = scenario.get(stage + '_mode', 'supported')
+        if stage == 'source':
+            output = dict(version=payload['version'], coverage='partial',
+                          propositions=scenario.get('source_propositions', [dict(statement='Synthetic reported result.', subject='Current report', temporal_scope='Current Stop', modality='reported', source_id='report1')]),
+                          text_observations=scenario.get('text_observations', {key:dict(status='unknown',
+                              value=None, scope='Current report only', reason='Canned provider does not interpret text.')
+                              for key in ('language', 'organization')}))
+        else:
+            verdicts = scenario.get('outcome_verdicts', ['not_assessed'])
+            verdict = verdicts[min(number - 1, len(verdicts) - 1)]
+            output = dict(version=payload['version'], rows=[dict(relation_id=pair['id'],
+                candidate_claim='Synthetic candidate assertion.' if verdict in ('conflict', 'no_conflict') else None,
+                scope_comparison='Synthetic same-scoped comparison.', relation=verdict,
+                value_comparison='Synthetic value comparison.') for pair in payload['relations']])
+        return {} if mode == 'malformed_review' else output, mode
     counter = root.with_suffix('.support-count')
     number = int(counter.read_text()) + 1 if counter.exists() else 1
     counter.write_text(str(number))
@@ -18,14 +38,12 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = {'version': 'summary-support-v2', 'units': {
-        field: dict(coverage='complete', comparisons=[dict(candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
-            evidence_assertion='The evidence describes this reported result.',
-            value_comparison='Same value.', attribution_comparison='Same reporting role.',
-            scope_comparison='Same scope.', verdict=verdict,
-            evidence_span_ids=[evidence['spans'][0]['id']])]) for field in payload['units']}}
-    if mode == 'malformed_review':
-        output['units'] = {}
+    output = {'version': 'summary-support-v3', 'rows': [
+        dict(unit_id=field, coverage='complete', candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
+            evidence_assertion='The evidence describes this reported result.', value_comparison='Same value.',
+            attribution_comparison='Same reporting role.', scope_comparison='Same scope.', verdict=verdict,
+            evidence_span_ids=[evidence['spans'][0]['id']]) for field in payload['units']]}
+    if mode == 'malformed_review': output['rows'] = []
     return output, mode
 
 def send(value):
@@ -138,7 +156,7 @@ for line in sys.stdin:
             output = review_output
         text = '{invalid'  if mode == 'invalid_json' else json.dumps(output)
         if mode == 'duplicate_units':
-            text = '{"version":"summary-support-v2","units":{"title":{},"title":{}}}'
+            text = '{"version":"summary-support-v3","units":{"title":{},"title":{}}}'
         event('item/completed', item={'id': 'answer-' + str(turn_number), 'type': 'agentMessage', 'text': text, 'phase': 'final_answer'})
         event('turn/completed', turn={'id': turn_id, 'status': 'completed'})
         continue

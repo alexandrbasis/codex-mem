@@ -67,6 +67,7 @@ class JevFilterError(RuntimeError):
         self.code = code if code in {
             "jev_filter_failure", "jev_filter_credentials", "jev_filter_timeout",
             "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_invalid_input",
+            "summary_support_stale", "lease_expired",
         } else "jev_filter_failure"
         super().__init__(self.code)
 
@@ -98,10 +99,18 @@ def _encode(value: Any) -> bytes:
     return json.dumps(value, ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode("utf-8")
 
 
-def _post(payload: Mapping[str, Any], deadline: float, key_file: str = "") -> Mapping[str, Any]:
+def _post(payload: Mapping[str, Any], deadline: float, key_file: str = "", *,
+          before_dispatch: Callable[[], None] | None = None) -> Mapping[str, Any]:
     key = _credentials(key_file)
+    callback_failed = False
     try:
         with acquire_jev_slot(deadline):
+            if before_dispatch is not None:
+                try:
+                    before_dispatch()
+                except Exception:
+                    callback_failed = True
+                    raise
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise JevFilterError("jev_filter_timeout")
@@ -129,8 +138,14 @@ def _post(payload: Mapping[str, Any], deadline: float, key_file: str = "") -> Ma
     except JevFilterError:
         raise
     except TimeoutError:
+        if callback_failed:
+            raise
         raise JevFilterError("jev_filter_timeout") from None
     except Exception:
+        # The caller owns local freshness/deadline errors. They are not HTTP
+        # failures and its typed error adapter must retain their fixed reason.
+        if callback_failed:
+            raise
         raise JevFilterError("jev_filter_transport") from None
 
 
@@ -219,6 +234,7 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
                  evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
                  cache_get: Callable[[Mapping[str, Any]], Mapping[str, Any] | None] | None = None,
                  cache_put: Callable[[Mapping[str, Any], Mapping[str, Any]], None] | None = None,
+                 before_dispatch: Callable[[], None] | None = None,
                  ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Gate current sources first, then needed history, with exact-payload caching.
 
@@ -280,10 +296,20 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
     def evaluate(index, payload):
         if time.monotonic() >= deadline:
             raise JevFilterError("jev_filter_timeout")
-        with lock:
-            audit["counts"]["requests"] += 1
+        def dispatch():
+            if before_dispatch is not None:
+                before_dispatch()
+            with lock:
+                audit["counts"]["requests"] += 1
         try:
-            response = evaluator(payload) if evaluator is not None else _post(payload, deadline, key_file)
+            if evaluator is not None:
+                dispatch()
+                response = evaluator(payload)
+            elif before_dispatch is not None:
+                response = _post(payload, deadline, key_file, before_dispatch=dispatch)
+            else:
+                dispatch()
+                response = _post(payload, deadline, key_file)
         except JevFilterError:
             raise
         except Exception:
@@ -320,6 +346,8 @@ def filter_claim(claimed: Mapping[str, Any], *, timeout: float = 60, key_file: s
                 if time.monotonic() >= deadline:
                     raise JevFilterError("jev_filter_timeout")
                 cached = None
+                if before_dispatch is not None:
+                    before_dispatch()
                 if cache_get is not None:
                     try:
                         cached = cache_get(jobs[index])

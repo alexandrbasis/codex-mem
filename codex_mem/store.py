@@ -80,6 +80,20 @@ def _profile_observation_fingerprint(
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
 
 
+def _observation_evidence_record_fingerprint(record: Mapping[str, Any]) -> str:
+    """Bind every retained field, including metadata and hydrated current tool I/O."""
+    return hashlib.sha256(json.dumps(dict(record), sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def _observation_evidence_digest(fingerprints: Mapping[str, str]) -> str:
+    return hashlib.sha256(json.dumps(dict(fingerprints), sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def _observation_evidence_fingerprint(records: Sequence[Mapping[str, Any]]) -> str:
+    return _observation_evidence_digest({record["id"]: _observation_evidence_record_fingerprint(record)
+                                         for record in records})
+
+
 def _observation_fingerprint(
     workspace: str, processor_id: str, model: str, reasoning_effort: str,
     source_ids: Sequence[str],
@@ -193,6 +207,10 @@ class StoreError(RuntimeError):
         self.sqlite_errorcode = metadata["sqlite_errorcode"]
         self.os_errno = metadata["os_errno"]
         self.retry_safe = bool(retry_safe and self.reason_code in {"sqlite_busy", "sqlite_locked"})
+
+
+class ObservationEvidenceChanged(StoreError):
+    """Reviewed retained evidence changed before the atomic observation commit."""
 
 
 class ObservationLeaseExpired(StoreError):
@@ -2334,7 +2352,8 @@ class Store:
         return result
 
     def _bounded_observation_sources(
-        self, rows: Sequence[sqlite3.Row], max_chars: int, workspace: str | None = None
+        self, rows: Sequence[sqlite3.Row], max_chars: int, workspace: str | None = None,
+        *, evidence_fingerprints: dict[str, str] | None = None,
     ) -> list[dict[str, Any]]:
         records = self._records_from_rows(rows)
         if workspace is not None:
@@ -2347,6 +2366,8 @@ class Store:
                 raise StoreError("Observation sources exceed their stored batch boundary")
             remaining -= source_chars
             bounded.append(dict(record))
+            if evidence_fingerprints is not None:
+                evidence_fingerprints[record["id"]] = _observation_evidence_record_fingerprint(record)
         return bounded
 
     def next_observation_lease_expiry(
@@ -2904,9 +2925,15 @@ class Store:
                 raise StoreError("Storage operation failed")
             sources = self._observation_source_rows(job_id, workspace)
             result = self._observation_job_result(job, include_lease_token=True)
-            result["sources"] = self._bounded_observation_sources(sources, input_limit, workspace)
-            context = self._observation_context(workspace, sources)
+            evidence_fingerprints: dict[str, str] = {}
+            result["sources"] = self._bounded_observation_sources(sources, input_limit, workspace,
+                evidence_fingerprints=evidence_fingerprints)
+            context = self._observation_context(workspace, sources,
+                evidence_fingerprints=evidence_fingerprints)
             result["context"] = context
+            # Capture these identities from the exact records used above,
+            # before historical excerpting. Never accept a later initial view.
+            result["retained_evidence_fingerprints"] = evidence_fingerprints
             # Separate cross-session reference from the temporally bounded
             # source context. This history may postdate the claimed events.
             result["project_context"] = (
@@ -3116,7 +3143,8 @@ class Store:
         return ordered
 
     def _observation_context(
-        self, workspace: str, sources: Sequence[sqlite3.Row]
+        self, workspace: str, sources: Sequence[sqlite3.Row],
+        *, evidence_fingerprints: dict[str, str] | None = None,
     ) -> list[dict[str, Any]]:
         """Bounded earlier evidence helps a fresh observer resolve references."""
 
@@ -3207,9 +3235,36 @@ class Store:
                 item["body"] = body[: room // 2] + marker + body[-(room - room // 2) :]
                 payload_chars = self._observation_source_chars(item)
             context.append(item)
+            if evidence_fingerprints is not None:
+                evidence_fingerprints[record["id"]] = _observation_evidence_record_fingerprint(record)
             remaining -= payload_chars
         context.sort(key=lambda item: (str(item["created_at"]), str(item["id"])))
         return context
+
+    def _observation_evidence_records(
+        self, workspace: str, ids: Sequence[str], current_ids: Sequence[str],
+    ) -> list[dict[str, Any]]:
+        placeholders = ", ".join("?" for _ in ids)
+        rows = self._connection.execute(
+            f"SELECT * FROM entries WHERE project = ? AND id IN ({placeholders})",
+            (workspace, *ids),
+        ).fetchall()
+        return [self._hydrate_observation_source(workspace, record) if record["id"] in current_ids else record
+                for record in self._records_from_rows(rows)]
+
+    def observation_evidence_snapshot(
+        self, project: str | Path, ids: Sequence[str], *, current_ids: Sequence[str],
+    ) -> dict[str, str]:
+        """Read bounded retained identities without returning source text."""
+        workspace = project_key(project)
+        checked_ids = _validate_ids(ids, "ids")
+        current = _validate_ids(current_ids, "current_ids")
+        if not set(current) <= set(checked_ids):
+            raise ValueError("current evidence must belong to reviewed evidence")
+        with self._lock:
+            self._require_open()
+            records = self._read(lambda: self._observation_evidence_records(workspace, checked_ids, current))
+            return {record["id"]: _observation_evidence_record_fingerprint(record) for record in records}
 
     def finish_observation_batch(
         self,
@@ -3222,6 +3277,7 @@ class Store:
         disposition: str = "processed",
         worker_thread_id: str | None = None,
         worker_turn_id: str | None = None,
+        reviewed_evidence: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Commit one processor result and its source provenance atomically."""
 
@@ -3238,6 +3294,21 @@ class Store:
             raise ValueError("skipped observations must not include notes or session summary")
         thread_id = _validate_optional_processor_value(worker_thread_id, "worker_thread_id")
         turn_id = _validate_optional_processor_value(worker_turn_id, "worker_turn_id")
+        evidence_ids = None
+        evidence_current_ids = None
+        evidence_fingerprint = None
+        if reviewed_evidence is not None:
+            if (checked_summary is None or not isinstance(reviewed_evidence, Mapping)
+                    or set(reviewed_evidence) != {"ids", "current_ids", "fingerprint"}):
+                raise ValueError("reviewed evidence requires a summary and exact guard fields")
+            evidence_ids = _validate_ids(reviewed_evidence["ids"], "reviewed_evidence.ids")
+            evidence_current_ids = _validate_ids(reviewed_evidence["current_ids"], "reviewed_evidence.current_ids")
+            if not set(evidence_current_ids) <= set(evidence_ids):
+                raise ValueError("current evidence must belong to reviewed evidence")
+            evidence_fingerprint = reviewed_evidence["fingerprint"]
+            if (not isinstance(evidence_fingerprint, str)
+                    or re.fullmatch(r"[0-9a-f]{64}", evidence_fingerprint) is None):
+                raise ValueError("reviewed evidence fingerprint must be a SHA256 value")
 
         with self._lock:
             self._require_open()
@@ -3296,6 +3367,15 @@ class Store:
                     or (job["input_fingerprint"] != fingerprint and not legacy_fingerprint_valid)
                 ):
                     raise StoreError("Observation sources are unavailable")
+
+                if evidence_ids is not None:
+                    # This read shares BEGIN IMMEDIATE with every output write.
+                    # No model or processor callback runs inside the transaction.
+                    evidence_records = self._observation_evidence_records(
+                        workspace, evidence_ids, evidence_current_ids)
+                    if (len(evidence_records) != len(evidence_ids)
+                            or _observation_evidence_fingerprint(evidence_records) != evidence_fingerprint):
+                        raise ObservationEvidenceChanged("Reviewed observation evidence changed")
 
                 note_sources: list[list[str]] = []
                 if checked_notes:

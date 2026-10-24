@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -21,13 +22,32 @@ LAUNCHER = Path(__file__).resolve().parents[1] / "scripts" / "codex-mem.py"
 
 
 class LargeHookPayloadTests(unittest.TestCase):
+    def test_cold_source_capture_keeps_the_real_worker_deadline(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            package = root / "codex_mem"
+            package.mkdir()
+            for source in (LAUNCHER.parents[1] / "codex_mem").glob("*.py"):
+                shutil.copy2(source, package / source.name)
+            launcher = root / "scripts" / LAUNCHER.name
+            launcher.parent.mkdir()
+            shutil.copy2(LAUNCHER, launcher)
+            self.assertEqual([], list(root.rglob("__pycache__")))
+            self._check_large_results(launcher, cold=True, unique_only=True)
+            self.assertEqual([], list(root.rglob("__pycache__")))
+
     def test_large_results_are_captured_with_real_worker_deadline(self):
+        self._check_large_results(LAUNCHER)
+
+    def _check_large_results(self, launcher, *, cold=False, unique_only=False):
         cases = {
             "unique": [f"Verification row {index:05d}: passed" for index in range(20_000)],
             "repeated": [*[f"Warmup row {index}" for index in range(256)],
                          *(["x"] * 190_000)],
             "repeated_private": ["<private>hidden-fixture-value</private>"] * 10_000,
         }
+        if unique_only:
+            cases = {"unique": cases["unique"]}
         for name, items in cases.items():
             with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
                 data = Path(temp) / "memory"
@@ -49,10 +69,13 @@ class LargeHookPayloadTests(unittest.TestCase):
                 )
                 encoded = json.dumps(payload).encode()
                 self.assertLess(len(encoded), MAX_STDIN_BYTES)
+                environment = dict(os.environ, CODEX_MEM_HOME=str(data), CODEX_MEM_DISABLED="0")
+                if cold:
+                    environment["PYTHONDONTWRITEBYTECODE"] = "1"
                 result = subprocess.run(
-                    [sys.executable, str(LAUNCHER), "hook"], input=encoded,
+                    [sys.executable, str(launcher), "hook"], input=encoded,
                     capture_output=True, timeout=6,
-                    env=dict(os.environ, CODEX_MEM_HOME=str(data), CODEX_MEM_DISABLED="0"),
+                    env=environment,
                 )
                 self.assertEqual(0, result.returncode, result.stderr.decode())
                 self.assertEqual({"continue": True}, json.loads(result.stdout))

@@ -15,6 +15,7 @@ from collections.abc import Mapping
 from contextlib import contextmanager
 
 from .execution import ExecutionFailure, ExecutionIdentity, ExecutionResult
+from .store import ObservationLeaseExpired
 from .processor import (MAX_SERVER_LINE_BYTES, MAX_SERVER_OUTPUT_BYTES, MAX_MODEL_OUTPUT_CHARS,
                         MAX_PROMPT_CHARS, ProcessorFailure, _UsageCheckpointer)
 
@@ -416,10 +417,11 @@ def _prepared(pi, profile, deadline, run):
 
 class PiProcessorRunner:
     """One ephemeral Pi subprocess per attempt, at most one correction."""
-    def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None):
+    def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None, before_dispatch=None):
         self.pi = pi
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
+        self.before_dispatch = before_dispatch
 
     def check_profile(self, profile, *, timeout=10):
         run = _Run(profile, lambda: None)
@@ -446,6 +448,8 @@ class PiProcessorRunner:
                 checkpoint()
                 prompt = "Output schema: " + json.dumps(dict(request.output_schema)) + "\n\n" + request.prompt
                 for generation in range(2):
+                    if self.before_dispatch is not None:
+                        self.before_dispatch()
                     run.begin()
                     response = client.request("prompt", run.observe, message=prompt)
                     if response.get("disposition") != "started":
@@ -467,12 +471,15 @@ class PiProcessorRunner:
                     prompt = correction
         except Exception as error:
             run.finished = True
+            if isinstance(error, ObservationLeaseExpired):
+                # Lease ownership is a caller policy failure, not malformed RPC.
+                error = ProcessorFailure("lease_expired")
             if not isinstance(error, ProcessorFailure):
                 error = (ProcessorFailure("runner_unavailable", reason_code="pi_launch_failed")
                          if isinstance(error, OSError) else ProcessorFailure("protocol_error", reason_code="pi_malformed_record"))
             reason = {"timeout": "timeout", "runner_unavailable": "runtime_unavailable", "model_unavailable": "configuration",
                 "invalid_response": "invalid_output", "model_mismatch": "identity_mismatch", "protocol_error": "protocol",
-                "tool_called": "forbidden_tools"}.get(error.code, "runtime_failure")
+                "tool_called": "forbidden_tools", "lease_expired": "cancelled"}.get(error.code, "runtime_failure")
             if error.reason_code == "pi_cancelled":
                 reason = "cancelled"
             return ExecutionResult(metrics=metrics(), failure=ExecutionFailure(reason, error.code, error.reason_code,

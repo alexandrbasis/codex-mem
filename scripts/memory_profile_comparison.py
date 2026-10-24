@@ -32,6 +32,8 @@ from scripts.live_host_runtime_smoke import environment
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / 'tests/fixtures/memory_profile_comparison.json'
+# Two support calls, one source interpretation and two outcome comparisons.
+MAX_REVIEW_CALLS = 5
 
 
 def write(path, value):
@@ -44,21 +46,31 @@ def digest(path):
 
 
 class Recorder:
-    """Record one execution without interpreting or changing its output."""
-    def __init__(self, runner, destination):
+    """Record bounded public executions without interpreting their outputs."""
+    def __init__(self, runner, destination, *, max_calls=1):
+        if type(max_calls) is not int or not 1 <= max_calls <= MAX_REVIEW_CALLS:
+            raise ValueError('comparison execution bound is invalid')
         self.runner, self.destination, self.result = runner, destination, None
-        self.calls = 0
+        self.max_calls, self.calls = max_calls, 0
+        self.executions = []
 
     def execute(self, request):
+        if self.calls >= self.max_calls:
+            raise RuntimeError('comparison execution bound exceeded')
         self.calls += 1
-        if self.calls != 1:
-            raise RuntimeError('comparison permits one execution per public invocation')
-        write(self.destination / 'request.json', asdict(request))
+        destination = self.destination if self.max_calls == 1 else self.destination / ('call-' + str(self.calls))
+        record = dict(call=self.calls, attempt_id=request.attempt_id,
+            version=(request.context or {}).get('version'), execution=None)
+        self.executions.append(record)
+        self.result = None
+        write(destination / 'request.json', asdict(request))
         started = time.monotonic()
         result = self.runner.execute(request)
         self.result = asdict(result)
-        write(self.destination / 'execution.json', self.result)
-        write(self.destination / 'timing.json', {'seconds': time.monotonic() - started})
+        record['execution'] = self.result
+        record['seconds'] = time.monotonic() - started
+        write(destination / 'execution.json', self.result)
+        write(destination / 'timing.json', {'seconds': record['seconds']})
         return result
 
 
@@ -69,8 +81,9 @@ def measure(project, data, kind, destination, runner, *, timeout=60):
         before = {row['id'] for row in store.timeline(project, limit=100)}
     started = time.monotonic()
     function = process_project_memory if kind == 'project_memory' else process_pending
-    options = {} if kind == 'project_memory' else {
-        'summary_reviewer': Recorder(runner, destination / 'summary-support')}
+    review_recorder = (None if kind == 'project_memory' else
+        Recorder(runner, destination / 'summary-support', max_calls=MAX_REVIEW_CALLS))
+    options = {} if review_recorder is None else {'summary_reviewer': review_recorder}
     receipt = function(project, data, runner=recorder, timeout=timeout, **options)
     with Store(data) as store:
         rows = store.timeline(project, limit=100)
@@ -88,7 +101,10 @@ def measure(project, data, kind, destination, runner, *, timeout=60):
         context = handle_request(dict(version=1, pi_version='1.4.0', operation='context',
             project=str(project), session_id='reader', phase='start', query='requirements status evidence'), store)
     report = dict(kind=kind, receipt=receipt, seconds=time.monotonic() - started,
-        execution=recorder.result, execution_calls=recorder.calls, attempts=attempts, job=job,
+        execution=recorder.result, execution_calls=recorder.calls,
+        review_execution_calls=review_recorder.calls if review_recorder is not None else 0,
+        review_executions=review_recorder.executions if review_recorder is not None else [],
+        attempts=attempts, job=job,
         sources=sources, generated=generated, context=context,
         raw_boundary='Parsed original output in execution.json; invalid raw text is not exposed by native adapters. No native logs read.')
     write(destination / 'result.json', report)

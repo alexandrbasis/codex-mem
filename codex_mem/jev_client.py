@@ -260,24 +260,38 @@ def evaluate(*, state: Any, questions: Mapping[str, Any], policy_version: str,
         cached = _cache_get(store, workspace, key, questions)
         if time.monotonic() >= deadline:
             raise JevError("jev_timeout")
-        if before_dispatch is not None:
-            try:
-                permitted = before_dispatch() is True
-            except Exception:
-                permitted = False
-            if not permitted:
-                raise JevError("jev_source_unavailable")
+        def permit_dispatch():
+            if before_dispatch is not None:
+                try:
+                    permitted = before_dispatch() is True
+                except Exception:
+                    permitted = False
+                if not permitted:
+                    raise JevError("jev_source_unavailable")
             if time.monotonic() >= deadline:
                 raise JevError("jev_timeout")
+
+        permit_dispatch()
         if cached is not None:
             audit.update(status="success", evaluation_source="cache", answers=cached["answers"])
             audit["counts"]["cache_hits"] = 1
             return cached["answers"], finish()
-        audit["counts"]["requests"] = 1
-        audit["evaluation_source"] = "live"
-        audit["usage_status"] = "unavailable"
+
+        def start_live_dispatch():
+            permit_dispatch()
+            audit["counts"]["requests"] = 1
+            audit["evaluation_source"] = "live"
+            audit["usage_status"] = "unavailable"
+
         try:
-            response = evaluator(payload) if evaluator else _post(payload, deadline, key_file)
+            if evaluator:
+                start_live_dispatch()
+                response = evaluator(payload)
+            elif before_dispatch is not None:
+                response = _post(payload, deadline, key_file, before_dispatch=start_live_dispatch)
+            else:
+                start_live_dispatch()
+                response = _post(payload, deadline, key_file)
         except JevFilterError as exc:
             raise JevError(exc.code.replace("jev_filter_", "jev_")) from None
         except JevError:

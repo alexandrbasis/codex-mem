@@ -223,7 +223,8 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                         self.assertEqual(1, state["coverage"]["pending_events"])
                         attempt = memory.attempts(self.project)[0]
                         self.assertEqual("failed", attempt["outcome"])
-                        self.assertEqual(12, attempt["total_tokens"])
+                        self.assertEqual(12, attempt["total_tokens"],
+                            {"failed_receipt": failed, "attempt": attempt})
                         job_id = attempt["job_id"]
                         memory.retry_failed(self.project, include_quarantined=True)
                     # The source remains readable and both adapters stay available.

@@ -1,0 +1,141 @@
+"""Large tool results must be captured before the real hook worker deadline."""
+from __future__ import annotations
+
+import json
+import os
+import shutil
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from codex_mem.config import configure
+from codex_mem.hooks import MAX_STDIN_BYTES, _extract_tool_output, _handle_hook, _session_key
+from codex_mem.private_gate import mark_private
+from codex_mem.store import Store
+from codex_mem.tool_io import MAX_TOOL_PAYLOAD_BYTES, _extract_text, get_tool_capture
+
+
+LAUNCHER = Path(__file__).resolve().parents[1] / "scripts" / "codex-mem.py"
+
+
+class LargeHookPayloadTests(unittest.TestCase):
+    def test_cold_source_capture_keeps_the_real_worker_deadline(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            package = root / "codex_mem"
+            package.mkdir()
+            for source in (LAUNCHER.parents[1] / "codex_mem").glob("*.py"):
+                shutil.copy2(source, package / source.name)
+            launcher = root / "scripts" / LAUNCHER.name
+            launcher.parent.mkdir()
+            shutil.copy2(LAUNCHER, launcher)
+            self.assertEqual([], list(root.rglob("__pycache__")))
+            self._check_large_results(launcher, cold=True, unique_only=True)
+            self.assertEqual([], list(root.rglob("__pycache__")))
+
+    def test_large_results_are_captured_with_real_worker_deadline(self):
+        self._check_large_results(LAUNCHER)
+
+    def _check_large_results(self, launcher, *, cold=False, unique_only=False):
+        cases = {
+            "unique": [f"Verification row {index:05d}: passed" for index in range(20_000)],
+            "repeated": [*[f"Warmup row {index}" for index in range(256)],
+                         *(["x"] * 190_000)],
+            "repeated_private": ["<private>hidden-fixture-value</private>"] * 10_000,
+        }
+        if unique_only:
+            cases = {"unique": cases["unique"]}
+        for name, items in cases.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                data = Path(temp) / "memory"
+                project = (Path(temp) / "project").resolve()
+                project.mkdir()
+                configure(data, capture_scope="all", service_enabled=False,
+                          processor_enabled=False, semantic_enabled=False,
+                          jev_retrieval_enabled=False)
+                secret = "hidden-fixture-value"
+                payload = dict(
+                    hook_event_name="PostToolUse", cwd=str(project),
+                    session_id="long-session-fixture", turn_id="turn-1",
+                    tool_use_id=name, tool_name="functions.exec",
+                    tool_input={"code": "verify_fixture()"},
+                    tool_response={"output": [
+                        "FIRST verification row", *items,
+                        f"<private>{secret}</private>", "FINAL verification passed",
+                    ]},
+                )
+                encoded = json.dumps(payload).encode()
+                self.assertLess(len(encoded), MAX_STDIN_BYTES)
+                environment = dict(os.environ, CODEX_MEM_HOME=str(data), CODEX_MEM_DISABLED="0")
+                if cold:
+                    environment["PYTHONDONTWRITEBYTECODE"] = "1"
+                result = subprocess.run(
+                    [sys.executable, str(launcher), "hook"], input=encoded,
+                    capture_output=True, timeout=6,
+                    env=environment,
+                )
+                self.assertEqual(0, result.returncode, result.stderr.decode())
+                self.assertEqual({"continue": True}, json.loads(result.stdout))
+                self.assertEqual(b"", result.stderr)
+                with Store(data) as store:
+                    entries = store.timeline(project)
+                    self.assertEqual(1, len(entries))
+                    capture = get_tool_capture(store._connection, str(project), name,
+                                               session_id="long-session-fixture")
+                    # The read view withholds fragments. Verify the existing
+                    # capture/storage guarantee independently of that view.
+                    persisted = store._connection.execute(
+                        "SELECT tool_response FROM tool_uses WHERE tool_use_id=?", (name,),
+                    ).fetchone()[0]
+                self.assertIsNotNone(capture)
+                self.assertIsNone(capture["tool_response"])
+                self.assertIsNone(capture["response_excerpt"])
+                self.assertTrue(capture["response_metadata"]["truncated"])
+                self.assertTrue(capture["response_metadata"]["read_omitted"])
+                self.assertEqual("incomplete_json_fragments", capture["response_metadata"]["read_omitted_reason"])
+                self.assertLessEqual(len(persisted.encode()), MAX_TOOL_PAYLOAD_BYTES)
+                self.assertIn("FIRST verification row", persisted)
+                self.assertIn("FINAL verification passed", persisted)
+                self.assertNotIn(secret, persisted)
+                self.assertNotIn(secret, json.dumps(capture))
+                self.assertNotIn(secret, json.dumps(entries))
+
+    def test_output_extractors_preserve_order_and_nested_deduplication(self):
+        value = {"output": ["second", "first", "second", {"text": "third"}, "first"]}
+        self.assertEqual("second\nfirst\nthird", _extract_tool_output(value))
+        self.assertEqual("second\nfirst\nthird", _extract_text(value))
+
+    def test_privacy_enabled_during_store_open_discards_prepared_capture(self):
+        with tempfile.TemporaryDirectory() as temp:
+            data = Path(temp) / "memory"
+            project = (Path(temp) / "project").resolve()
+            configure(data, capture_scope="all", service_enabled=False)
+            payload = dict(
+                hook_event_name="PostToolUse", cwd=str(project),
+                session_id="privacy-race", turn_id="turn-1",
+                tool_use_id="private-result", tool_name="Bash",
+                tool_input={"command": "python3 verify_fixture.py"},
+                tool_response={"output": "Do not retain this private result"},
+            )
+
+            def open_store(*, data_dir):
+                store = Store(data_dir)
+                # Another prompt can set this while the tool hook waits for SQLite.
+                mark_private(_session_key(payload, str(project)), data_dir)
+                return store
+
+            with patch("codex_mem.hooks.Store", side_effect=open_store) as opened:
+                self.assertEqual({"continue": True},
+                                 _handle_hook(payload, store=None, data_dir=data))
+                opened.assert_called_once()
+            with Store(data) as store:
+                self.assertEqual([], store.timeline(project))
+                self.assertEqual(0, store._connection.execute(
+                    "SELECT COUNT(*) FROM tool_uses").fetchone()[0])
+
+
+if __name__ == "__main__":
+    unittest.main()

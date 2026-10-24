@@ -12,22 +12,46 @@ def receipt(output):
     return {'output': output, 'evidence': {'thread_start': {'thread_id': 'fake-thread', 'model': MODEL, 'reasoning_effort': REASONING_EFFORT, 'model_provider': 'openai'}, 'turn_started': {'thread_id': 'fake-thread', 'turn_id': 'fake-turn'}, 'turn_completed': True, 'no_tools': True, 'rerouted': False}}
 
 
+def source_output(*, version='summary-source-v2', coverage='partial', propositions=None, text_observations=None):
+    """Explicit unknown slots for wiring tests that do not evaluate meaning."""
+    return dict(version=version, coverage=coverage, propositions=propositions or [],
+        text_observations=text_observations if text_observations is not None else {
+            name: dict(status='unknown', value=None, scope='Current report text only',
+                       reason='Canned fixture does not interpret text attributes.')
+            for name in ('language', 'organization')})
+
+
+def comparison(output, name='completed'):
+    return next(row for row in output['rows'] if row['unit_id'] == name)
+
+
+def outcome_output(request, relation='not_assessed'):
+    return dict(version=request['version'], rows=[dict(relation_id=pair['id'],
+        candidate_claim='Synthetic candidate assertion.' if relation in ('conflict', 'no_conflict') else None,
+        scope_comparison='Synthetic same-scoped relation.', relation=relation,
+        value_comparison='Synthetic value comparison.') for pair in request['relations']])
+
+
 def supported_review(request):
     # Deterministic wiring fixture, not a semantic quality evaluator.
+    if request['version'] == 'summary-source-v2':
+        return receipt(source_output(propositions=[dict(statement='A synthetic reported result.',
+            subject='Current report', temporal_scope='Current Stop', modality='reported', source_id='report1')]))
+    if request['version'] == 'summary-outcome-v2':
+        return receipt(outcome_output(request))
     evidence = request['evidence'][-1]
-    return receipt({'version': 'summary-support-v2', 'units': {
-        name: dict(coverage='complete', comparisons=[dict(candidate_assertion=f'The complete synthetic {name} assertion in the input-owned unit.',
+    return receipt({'version': 'summary-support-v3', 'rows': [
+        dict(unit_id=name, coverage='complete', candidate_assertion=f'The complete synthetic {name} assertion in the input-owned unit.',
             evidence_assertion='The cited evidence supports this attributed assertion.',
             value_comparison='Same asserted value.', attribution_comparison='Same reporting role.',
             scope_comparison='Same scope and certainty.', verdict='supported',
-            evidence_span_ids=[evidence['spans'][0]['id']])])
-        for name in request['units']}})
+            evidence_span_ids=[evidence['spans'][0]['id']]) for name in request['units']]})
 
 
 def rejected_review(request):
     result = supported_review(request)
-    if 'completed' in result['output']['units']:
-        result['output']['units']['completed']['comparisons'][0]['verdict'] = 'contradicted'
+    for row in result['output']['rows']:
+        if row['unit_id'] == 'completed': row['verdict'] = 'contradicted'
     return result
 
 
@@ -51,6 +75,51 @@ class SummarySupportTests(unittest.TestCase):
             'learned': '', 'completed': 'The assistant provided three Russian facts.',
             'next_steps': '', 'notes': '', 'source_ids': [s['id'] for s in request['sources']]}})
 
+    def test_failed_reviewer_keeps_its_metrics_and_ids_separate_from_completed_generation(self):
+        from codex_mem.execution import ExecutionResult, ExecutionFailure
+        from codex_mem.observer_usage_store import COUNTERS
+        from codex_mem.processor import ProcessorFailure
+        def measured(total):
+            tokens = dict.fromkeys(COUNTERS, 0)
+            tokens.update(input_tokens=total - 2, output_tokens=2, total_tokens=total)
+            return dict(duration_ms=1, usage=dict(status='reported', source='app_server_thread_total',
+                updates=1, tokens=tokens))
+        for delivery in ('result', 'exception'):
+            for known in (True, False):
+                with self.subTest(delivery=delivery, known=known):
+                    self.data = self.data.parent / (delivery + '-' + str(known))
+                    configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
+                        jev_filter_enabled=False, jev_quality_enabled=False)
+                    self.seed()
+                    def generate(request):
+                        result = self.generate(request)
+                        result['metrics'] = measured(12)
+                        return result
+                    review_metrics = (measured(23) if known else dict(duration_ms=1,
+                        usage=dict(status='unavailable', source='app_server_thread_total', updates=0, tokens=None)))
+                    class FailedReview:
+                        def execute(inner, request):
+                            if delivery == 'exception':
+                                raise ProcessorFailure('invalid_response', reason_code='summary_support_stale',
+                                    metrics=review_metrics, worker_thread_id='review-thread', worker_turn_id='review-turn')
+                            return ExecutionResult(metrics=review_metrics, failure=ExecutionFailure(
+                                'invalid_output', 'invalid_response', 'summary_support_stale', 'review-thread', 'review-turn'))
+                    result = process_pending(self.project, self.data, runner=generate, summary_reviewer=FailedReview())
+                    self.assertEqual('summary_support_stale', result.get('reason_code'), result)
+                    with Store(self.data) as store:
+                        attempt = store.observation_attempts(self.project, result['job_id'])[0]
+                        calls = json.loads(attempt['execution_calls'])
+                        self.assertEqual([], store.observation_job_status(self.project, result['job_id'])['output_ids'])
+                    self.assertEqual(12, calls['generation']['metrics']['total_tokens'])
+                    self.assertEqual('fake-thread', calls['generation']['execution_id'])
+                    self.assertEqual('fake-turn', calls['generation']['turn_id'])
+                    self.assertEqual('fake-thread', result['worker_thread_id'])
+                    self.assertEqual('fake-turn', result['worker_turn_id'])
+                    self.assertEqual('review-thread', calls['summary_support_1']['execution_id'])
+                    self.assertEqual('review-turn', calls['summary_support_1']['turn_id'])
+                    self.assertEqual(23 if known else None, calls['summary_support_1']['metrics']['total_tokens'])
+                    self.assertEqual(35 if known else None, attempt['total_tokens'])
+
     def test_public_regression_requested_language_is_not_a_completed_attribute(self):
         self.seed()
         result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=rejected_review)
@@ -70,12 +139,16 @@ class SummarySupportTests(unittest.TestCase):
                 completed='The assistant reported 5 checks passed.')
             return result
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             if 'units' not in request:
                 # Reproduce the coarse contract's false acceptance with real quote ownership.
                 return supported_review(request)
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            comparison = result['output']['units']['completed']['comparisons'][0]
-            comparison.update(candidate_assertion='The assistant reported five passed checks.',
+            target = comparison(result['output'], 'completed')
+            target.update(candidate_assertion='The assistant reported five passed checks.',
                 evidence_assertion='The assistant reported two passed checks and five unrun checks.',
                 value_comparison='Passed counts differ; unrun checks cannot count as passed.',
                 verdict='contradicted')
@@ -104,9 +177,13 @@ class SummarySupportTests(unittest.TestCase):
                             request='Report the result.', completed=candidate)
                         return result
                     def review(request):
+                        if request['version'] != 'summary-support-v3':
+                            return supported_review(request)
                         # Controlled synthetic comparison; no claim of native semantic evaluation.
+                        if request['version'] != 'summary-support-v3':
+                            return supported_review(request)
                         result = supported_review(request)
-                        result['output']['units']['completed']['comparisons'][0].update(
+                        comparison(result['output'], 'completed').update(
                             candidate_assertion=candidate, evidence_assertion=positive,
                             value_comparison='Same reported proposition.' if supported else 'The claimed value exceeds or differs from the reported value.',
                             verdict='supported' if supported else 'contradicted')
@@ -127,14 +204,15 @@ class SummarySupportTests(unittest.TestCase):
                 configure(self.data, jev_filter_enabled=False, jev_quality_enabled=False)
                 self.seed(answer='PRIVATE_SYNTHETIC_SOURCE_🙂')
                 def review(request):
+                    if request['version'] != 'summary-support-v3':
+                        return supported_review(request)
                     result = supported_review(request)
-                    units = result['output']['units']
-                    comparison = units['completed']['comparisons'][0]
-                    if subtype == 'structure': comparison['unexpected'] = 'PRIVATE_SYNTHETIC_VERDICT'
-                    elif subtype == 'unit_coverage': units.pop('title')
-                    elif subtype == 'unknown_span': comparison['evidence_span_ids'] = ['PRIVATE_SYNTHETIC_SPAN']
-                    elif subtype == 'verdict': comparison['verdict'] = 'PRIVATE_SYNTHETIC_VERDICT'
-                    else: comparison['value_comparison'] = 'x' * 1201
+                    target = comparison(result['output'])
+                    if subtype == 'structure': target['unexpected'] = 'PRIVATE_SYNTHETIC_VERDICT'
+                    elif subtype == 'unit_coverage': result['output']['rows'][0]['unit_id'] = 'completed'
+                    elif subtype == 'unknown_span': target['evidence_span_ids'] = ['PRIVATE_SYNTHETIC_SPAN']
+                    elif subtype == 'verdict': target['verdict'] = 'PRIVATE_SYNTHETIC_VERDICT'
+                    else: target['value_comparison'] = 'x' * 1201
                     return result
                 result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
                 self.assertEqual('summary_support_invalid', result['reason_code'])
@@ -172,7 +250,7 @@ class SummarySupportTests(unittest.TestCase):
         self.assertEqual('The assistant provided three Russian facts.', records[0]['session_summary']['completed'])
         self.assertEqual('not_assessed', records[0]['provenance']['verification'])
         calls = json.loads(attempts[0]['execution_calls'])
-        self.assertEqual({'generation', 'summary_support_1'}, set(calls))
+        self.assertEqual({'generation', 'summary_support_1', 'summary_source_1', 'summary_outcome_1'}, set(calls))
         self.assertEqual(calls['generation']['requested_profile'], calls['summary_support_1']['requested_profile'])
 
     def test_false_status_quantity_path_and_language_are_quarantined(self):
@@ -204,20 +282,28 @@ class SummarySupportTests(unittest.TestCase):
 
     def test_malformed_review_cannot_authorize_a_write(self):
         def missing(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            result['output']['units'].pop('title')
+            result['output']['rows'].pop(0)
             return result
         def invented_quote(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            result['output']['units']['title']['comparisons'][0]['evidence_span_ids'] = ['fabricated']
+            comparison(result['output'], 'title')['evidence_span_ids'] = ['fabricated']
             return result
         def foreign(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            result['output']['units']['title']['comparisons'][0]['evidence_span_ids'] = ['outside-project:1']
+            comparison(result['output'], 'title')['evidence_span_ids'] = ['outside-project:1']
             return result
         def bool_offset(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            result['output']['units']['title']['comparisons'][0]['start'] = False
+            comparison(result['output'], 'title')['start'] = False
             return result
         for index, evaluator in enumerate((missing, invented_quote, foreign, bool_offset, lambda _: receipt({}))):
             with self.subTest(case=index):
@@ -242,6 +328,8 @@ class SummarySupportTests(unittest.TestCase):
         def generate(request):
             return measured(self.generate(request)['output'], 'generator', 10, 2)
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             return measured(rejected_review(request)['output'], 'reviewer', 20, 3)
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
         records, attempts, _ = self.stored(result)
@@ -264,6 +352,8 @@ class SummarySupportTests(unittest.TestCase):
     def test_source_change_during_review_fails_closed(self):
         self.seed()
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             with Store(self.data) as store:
                 store._connection.execute('UPDATE entries SET body=? WHERE id=?', ('Changed source', self.raw['id']))
                 store._connection.commit()
@@ -275,8 +365,10 @@ class SummarySupportTests(unittest.TestCase):
     def test_insufficient_context_is_visible_without_claiming_a_false_outcome(self):
         self.seed()
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            result['output']['units']['completed']['comparisons'][0].update(verdict='insufficient_context', evidence_span_ids=[])
+            comparison(result['output'], 'completed').update(verdict='insufficient_context', evidence_span_ids=[])
             return result
         result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
         self.assertEqual('summary_support_uncertain', result['reason_code'])
@@ -286,6 +378,8 @@ class SummarySupportTests(unittest.TestCase):
         self.seed()
         from codex_mem.observer_usage_store import COUNTERS
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
             result['evidence']['no_tools'] = False
             tokens = dict.fromkeys(COUNTERS, 0)
@@ -310,13 +404,15 @@ class SummarySupportTests(unittest.TestCase):
                 configure(self.data, jev_filter_enabled=False, jev_quality_enabled=False)
                 self.seed()
                 def review(request):
+                    if request['version'] != 'summary-support-v3':
+                        return supported_review(request)
                     with Store(self.data) as store:
                         store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
                     result = rejected_review(request)
                     if verdict == 'malformed':
-                        result['output']['units'] = {}
+                        result['output']['rows'] = []
                     else:
-                        result['output']['units']['completed']['comparisons'][0]['verdict'] = verdict
+                        comparison(result['output'], 'completed')['verdict'] = verdict
                     return result
                 runner = mock.Mock(side_effect=self.generate)
                 result = process_pending(self.project, self.data, runner=runner, summary_reviewer=review)
@@ -332,6 +428,8 @@ class SummarySupportTests(unittest.TestCase):
     def test_late_supported_review_cannot_commit_through_expired_lease(self):
         self.seed()
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             with Store(self.data) as store:
                 store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
             return supported_review(request)
@@ -344,6 +442,8 @@ class SummarySupportTests(unittest.TestCase):
     def test_late_rejection_does_not_mutate_replacement_lease(self):
         self.seed()
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             with Store(self.data) as store:
                 store._connection.execute("UPDATE observation_jobs SET lease_token='replacement', attempt_count=attempt_count+1 WHERE status='running'")
             return rejected_review(request)
@@ -383,8 +483,10 @@ class SummarySupportTests(unittest.TestCase):
                         notes=[dict(title='Later work', body=request['sources'][0]['body'],
                                     tags=[], source_ids=ids)])))
                 def review(request):
+                    if request['version'] != 'summary-support-v3':
+                        return supported_review(request)
                     result = rejected_review(request)
-                    result['output']['units']['completed']['comparisons'][0]['verdict'] = verdict
+                    comparison(result['output'], 'completed')['verdict'] = verdict
                     return measured(result)
                 def processor(project, **kwargs):
                     self.assertFalse(kwargs.get('retry_failed'))
@@ -424,6 +526,8 @@ class SummarySupportTests(unittest.TestCase):
     def test_repeated_unicode_and_punctuation_do_not_require_model_text_copying(self):
         self.seed(answer='Начало. Résultat 🙂 passed. Fin. Résultat 🙂 passed.')
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             evidence = request['evidence'][-1]
             self.assertEqual(evidence['body'], ''.join(span['text'] for span in evidence['spans']))
             return supported_review(request)
@@ -448,13 +552,17 @@ class SummarySupportTests(unittest.TestCase):
                                                        completed='Earlier local tests passed, 4 tests.')
             return result
         def review(request):
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             self.assertTrue(any(s['evidence_group'] == 'history' and s['evidence_role'] == 'derived_note'
                                 for s in request['evidence']))
             evidence = next(s for s in request['evidence'] if s['evidence_group'] == 'history'
                             and 'Local tests passed, 4 tests.' in s['body'])
+            if request['version'] != 'summary-support-v3':
+                return supported_review(request)
             result = supported_review(request)
-            for unit in result['output']['units'].values():
-                unit['comparisons'][0]['evidence_span_ids'] = [evidence['spans'][0]['id']]
+            for row in result['output']['rows']:
+                row['evidence_span_ids'] = [evidence['spans'][0]['id']]
             return result
         result = process_pending(self.project, self.data, runner=generate_summary, summary_reviewer=review)
         self.assertEqual('processed', result['status'], result)
@@ -488,7 +596,8 @@ class NativeSummarySupportTests(unittest.TestCase):
         self.data = self.root / ('memory-' + str(len(list(self.root.glob('memory-*')))))
         profile = dict(runtime=runtime, provider='fixture' if runtime == 'pi' else 'openai',
                        model='fixture' if runtime == 'pi' else MODEL,
-                       reasoning_effort='low' if runtime == 'pi' else REASONING_EFFORT, timeout=4)
+                       reasoning_effort='low' if runtime == 'pi' else REASONING_EFFORT,
+                       timeout=4 if scenario.get('support_mode') == 'timeout' else 8)
         configure(self.data, processing_profile=profile, jev_filter_enabled=False, jev_quality_enabled=False,
                   service_enabled=False, semantic_enabled=False)
         with Store(self.data) as store:
@@ -498,14 +607,67 @@ class NativeSummarySupportTests(unittest.TestCase):
                        completed='The assistant reported local import is requested.', next_steps='', notes='', source_ids=['s1'])
         base = dict(observation=True) if runtime == 'pi' else dict(
             output=dict(result=dict(notes=[], disposition='processed', session_summary=summary)))
+        if scenario.pop('fixed_summary', False):
+            base['output'] = dict(result=dict(notes=[], disposition='processed', session_summary=summary))
+        if scenario.pop('correction_changes_summary', False):
+            corrected = dict(summary, completed='Corrected attribution: local import remains requested.')
+            scenario['outputs'] = [dict(result=dict(notes=[], disposition='processed', session_summary=value))
+                                   for value in (summary, corrected)]
         (self.root / runtime).with_suffix('.json').write_text(json.dumps(dict(base, **scenario)))
-        (self.root / runtime).with_suffix('.support-count').unlink(missing_ok=True)
+        for suffix in ('.support-count', '.source-count', '.outcome-count'):
+            (self.root / runtime).with_suffix(suffix).unlink(missing_ok=True)
         (self.root / runtime).with_suffix('.trace').unlink(missing_ok=True)
         return profile
 
     def attempt(self, result):
         with Store(self.data) as store:
             return store.observation_attempts(self.project, result['job_id'])[0]
+
+    def test_successful_review_lease_expiry_keeps_service_nonblocking_and_generation_usage(self):
+        from codex_mem.execution import ExecutionIdentity, ExecutionResult
+        from codex_mem.service import enqueue, run_service, service_status
+        from tests.test_service import Clock
+        for runtime in ('codex', 'pi'):
+            with self.subTest(runtime=runtime):
+                self.setup_case(runtime, fixed_summary=True)
+                owner = self
+                class ExpiringReview:
+                    def execute(inner, request):
+                        with Store(owner.data) as store:
+                            store._connection.execute(
+                                "UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
+                        profile = request.profile
+                        return ExecutionResult(output=supported_review(request.context)['output'],
+                            identity=ExecutionIdentity(profile.runtime, profile.provider, profile.model,
+                                profile.reasoning_effort, 'review-thread', 'review-turn'))
+                configure(self.data, service_enabled=True, capture_scope='all')
+                clock, receipts = Clock(), []
+                def processor(project, **kwargs):
+                    result = process_pending(project, codex=str(self.root / 'codex'),
+                        summary_reviewer=ExpiringReview(), **kwargs)
+                    receipts.append(result)
+                    return result
+                enqueue(self.project, self.data, clock=clock)
+                service = run_service(self.data, processor=processor, clock=clock,
+                    sleeper=clock.sleep, max_cycles=2)
+                result = receipts[0]
+                self.assertEqual('lease_expired', result.get('code'), result)
+                self.assertEqual('cycle_limit', service['status'], service)
+                self.assertEqual(0, service_status(self.data, clock=clock)['blocked_projects'])
+                with Store(self.data) as store:
+                    job = store.observation_job_status(self.project, result['job_id'])
+                    attempt = store.observation_attempts(self.project, result['job_id'])[0]
+                self.assertEqual([], job['output_ids'])
+                self.assertEqual('running', job['status'])
+                self.assertEqual('lease_expired', attempt['outcome'], attempt)
+                self.assertEqual('lease_expired', attempt['error_code'])
+                calls = json.loads(attempt['execution_calls'])
+                self.assertEqual(12, calls['generation']['metrics']['total_tokens'])
+                self.assertEqual(result['worker_thread_id'], calls['generation']['execution_id'])
+                self.assertEqual(result['worker_turn_id'], calls['generation']['turn_id'])
+                self.assertIsNotNone(calls['generation']['execution_id'])
+                self.assertEqual('review-thread', calls['summary_support_1']['execution_id'])
+                self.assertIsNone(attempt['total_tokens'])
 
     def test_both_runtime_fixtures_retain_complete_long_summary_fields(self):
         for runtime in ('codex', 'pi'):
@@ -526,19 +688,19 @@ class NativeSummarySupportTests(unittest.TestCase):
                     self.assertEqual('session_summary', records[0]['kind'])
                     self.assertEqual('Notes: ' + text, records[0]['body'])
                     calls = json.loads(self.attempt(result)['execution_calls'])
-                    self.assertEqual({'generation', 'summary_support_1'}, set(calls))
+                    self.assertEqual({'generation', 'summary_support_1', 'summary_source_1', 'summary_outcome_1'}, set(calls))
                     self.assertEqual('supported', calls['summary_support_1']['review_diagnostic']['status'])
 
     def test_both_runtime_adapters_review_and_correct_with_same_profile(self):
         for runtime in ('codex', 'pi'):
             with self.subTest(runtime=runtime):
-                profile = self.setup_case(runtime, support_modes=['contradicted', 'supported'])
+                profile = self.setup_case(runtime, support_modes=['contradicted', 'supported'], correction_changes_summary=True)
                 result = process_pending(self.project, self.data, codex=str(self.root / 'codex'))
                 self.assertEqual('processed', result['status'], result)
                 attempt = self.attempt(result)
                 calls = json.loads(attempt['execution_calls'])
-                self.assertEqual({'generation', 'summary_support_1', 'summary_support_2'}, set(calls))
-                self.assertEqual(48, attempt['total_tokens'])
+                self.assertEqual({'generation', 'summary_support_1', 'summary_support_2', 'summary_source_1', 'summary_outcome_2'}, set(calls))
+                self.assertEqual(72, attempt['total_tokens'])
                 for call in calls.values():
                     self.assertEqual(profile, call['requested_profile'])
                     self.assertEqual(runtime, call['actual_identity']['runtime'])
@@ -599,5 +761,69 @@ class NativeSummarySupportTests(unittest.TestCase):
                     jev_quality_evaluator=lambda payload: response(payload, .5, .1))
                 self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
                 calls = json.loads(self.attempt(result)['execution_calls'])
-                self.assertEqual(3, len(calls))
+                self.assertEqual(5, len(calls))
                 self.assertEqual(24, calls['generation']['metrics']['total_tokens'])
+
+    def test_both_runtimes_reuse_interpretation_and_bound_outcome_correction(self):
+        for runtime in ('codex', 'pi'):
+            for final_verdict in ('not_assessed', 'conflict'):
+                with self.subTest(runtime=runtime, final_verdict=final_verdict):
+                    profile = self.setup_case(runtime, source_propositions=[dict(statement='A reported local result.',
+                        subject='Current report', temporal_scope='Current Stop', modality='reported', source_id='report1')],
+                        outcome_verdicts=['conflict', final_verdict], correction_changes_summary=True)
+                    result = process_pending(self.project, self.data, codex=str(self.root / 'codex'))
+                    self.assertEqual('processed' if final_verdict == 'not_assessed' else 'failed', result['status'], result)
+                    if final_verdict == 'conflict': self.assertEqual('summary_support_rejected', result['reason_code'])
+                    attempt = self.attempt(result)
+                    calls = json.loads(attempt['execution_calls'])
+                    self.assertEqual({'generation', 'summary_support_1', 'summary_support_2',
+                        'summary_source_1', 'summary_outcome_1', 'summary_outcome_2'}, set(calls))
+                    self.assertEqual(84, attempt['total_tokens'])
+                    self.assertEqual('1', (self.root / runtime).with_suffix('.source-count').read_text())
+                    self.assertEqual('2', (self.root / runtime).with_suffix('.outcome-count').read_text())
+                    self.assertEqual(24, calls['generation']['metrics']['total_tokens'])
+                    for call in calls.values(): self.assertEqual(profile, call['requested_profile'])
+
+    def test_new_stage_native_malformed_results_keep_usage_and_fail_closed(self):
+        for runtime in ('codex', 'pi'):
+            for stage in ('source', 'outcome'):
+                with self.subTest(runtime=runtime, stage=stage):
+                    self.setup_case(runtime, **{stage + '_mode': 'invalid_json'})
+                    result = process_pending(self.project, self.data, codex=str(self.root / 'codex'))
+                    self.assertEqual('summary_support_invalid', result.get('reason_code'), result)
+                    calls = json.loads(self.attempt(result)['execution_calls'])
+                    self.assertEqual(12, calls['summary_' + stage + '_1']['metrics']['total_tokens'])
+                    self.assertEqual('invalid', calls['summary_' + stage + '_1']['review_diagnostic']['status'])
+
+    def test_both_runtimes_carry_observed_text_slots_into_isolated_veto(self):
+        for runtime in ('codex', 'pi'):
+            for verdict in ('conflict', 'not_assessed'):
+                with self.subTest(runtime=runtime, verdict=verdict):
+                    self.setup_case(runtime, text_observations={
+                        'language': dict(status='observed', value='Synthetic mixed-language report.',
+                            scope='Current prose; quoted code is outside this observation.', reason=None),
+                        'organization': dict(status='not_applicable', value=None,
+                            scope='Current report only', reason='No applicable organization in this fixture.')},
+                        outcome_verdicts=[verdict], outcome_reference_ids=['observation_language'], fixed_summary=True)
+                    result = process_pending(self.project, self.data, codex=str(self.root / 'codex'))
+                    self.assertEqual('failed' if verdict == 'conflict' else 'processed', result['status'], result)
+                    if verdict == 'conflict': self.assertEqual('summary_support_rejected', result['reason_code'])
+                    attempt = self.attempt(result)
+                    self.assertEqual(60 if verdict == 'conflict' else 48, attempt['total_tokens'])
+                    self.assertEqual({'generation', 'summary_support_1', 'summary_source_1', 'summary_outcome_1'}, set(json.loads(attempt['execution_calls'])))
+                    self.assertEqual('1', (self.root / runtime).with_suffix('.outcome-count').read_text())
+                    self.assertEqual('1', (self.root / runtime).with_suffix('.source-count').read_text())
+                    trace = (self.root / runtime).with_suffix('.trace').read_text()
+                    self.assertIn('observation_language', trace)
+                    self.assertNotIn('observation_organization', trace)
+
+    def test_unchanged_native_correction_keeps_first_support_rejection_without_more_calls(self):
+        for runtime in ('codex', 'pi'):
+            with self.subTest(runtime=runtime):
+                self.setup_case(runtime, support_modes=['contradicted', 'supported'], fixed_summary=True)
+                result = process_pending(self.project, self.data, codex=str(self.root / 'codex'))
+                self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
+                attempt = self.attempt(result)
+                self.assertEqual(36, attempt['total_tokens'])
+                self.assertEqual({'generation', 'summary_support_1'}, set(json.loads(attempt['execution_calls'])))
+                self.assertEqual('1', (self.root / runtime).with_suffix('.support-count').read_text())
