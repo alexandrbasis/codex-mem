@@ -294,6 +294,7 @@ def process_pending(
             execution = None
             calls_started = False
             support_count = 0
+            support_diagnostics = []
             try:
                 from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt, record_execution_call
                 _, _, sources = _claim_parts(claimed)
@@ -366,16 +367,30 @@ def process_pending(
                     nonlocal support_count
                     if summary is None:
                         return None
-                    from .summary_support import prepare, validate, correction_prompt, SupportError
+                    from .summary_support import prepare, validate, correction_prompt, diagnostic, SupportError
                     source_guard()
                     support_count += 1
                     if support_count > 2:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid")
                     if time.monotonic() >= deadline:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
-                    prompt, schema, payload = prepare(summary, generation_claim)
                     call_id = f"summary_support_{support_count}"
-                    record_execution_call(store, workspace, job_id, attempt_count, call_id, profile=profile)
+                    detail = diagnostic(summary, generation_claim)
+                    support_diagnostics.append(detail)
+
+                    def mark_review(status, invalid_subtype=None):
+                        detail.update(status=status, invalid_subtype=invalid_subtype)
+                        record_execution_call(store, workspace, job_id, attempt_count, call_id,
+                                              profile=profile, review_diagnostic=detail)
+
+                    mark_review("pending")
+                    try:
+                        prompt, schema, payload = prepare(summary, generation_claim)
+                    except SupportError as exc:
+                        record_execution_call(store, workspace, job_id, attempt_count, call_id,
+                                              profile=profile, outcome="failed")
+                        mark_review("invalid", exc.subtype)
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
 
                     def checkpoint_review(snapshot):
                         from .execution import ExecutionIdentity
@@ -392,6 +407,7 @@ def process_pending(
                     if reviewer is None and runner is not None:
                         record_execution_call(store, workspace, job_id, attempt_count, call_id,
                                               profile=profile, outcome="failed")
+                        mark_review("unavailable")
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
                     if reviewer is None:
                         if profile.runtime == "pi":
@@ -408,6 +424,7 @@ def process_pending(
                     except Exception:
                         record_execution_call(store, workspace, job_id, attempt_count, call_id,
                                               profile=profile, outcome="failed")
+                        mark_review("unavailable")
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable") from None
                     record_execution_call(store, workspace, job_id, attempt_count, call_id, profile=profile,
                         outcome="failed" if reviewed.failure else "success", metrics=reviewed.metrics,
@@ -415,16 +432,23 @@ def process_pending(
                     if (reviewed.failure or reviewed.identity is None or time.monotonic() >= deadline
                             or any(getattr(reviewed.identity, key) != getattr(profile, key)
                                    for key in ("runtime", "provider", "model", "reasoning_effort"))):
+                        if reviewed.failure and reviewed.failure.reason_code in {"invalid_json", "invalid_output_shape"}:
+                            mark_review("invalid", "structure")
+                            source_guard("summary_support_invalid")
+                            raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid")
+                        mark_review("unavailable")
                         source_guard()
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
                     try:
                         rejected = validate(reviewed.output, payload)
-                    except (SupportError, TypeError, ValueError, KeyError):
+                    except (SupportError, TypeError, ValueError, KeyError) as exc:
+                        mark_review("invalid", exc.subtype if isinstance(exc, SupportError) else "structure")
                         source_guard("summary_support_invalid")
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
                     reason = ("summary_support_uncertain" if rejected and all(
                         item["verdict"] == "insufficient_context" for item in rejected)
                         else "summary_support_rejected" if rejected else None)
+                    mark_review("uncertain" if reason == "summary_support_uncertain" else "rejected" if rejected else "supported")
                     # Keep a known semantic blocker even if the lease expired while
                     # reviewing. The store still requires this exact owner/attempt.
                     source_guard(reason)
@@ -601,6 +625,8 @@ def process_pending(
                 if receipt is not None:
                     receipt.update(execution_profile=profile.to_dict(), model=profile.model,
                                    reasoning_effort=profile.reasoning_effort)
+                if receipt is not None and support_diagnostics:
+                    receipt["summary_support"] = support_diagnostics
                 if receipt is not None and filter_audit is not None:
                     receipt["jev_filter"] = filter_audit
                 if receipt is not None and quality_audit is not None:
@@ -1683,9 +1709,16 @@ def _read_valid_final_output(monitor: _TurnMonitor) -> dict[str, Any]:
     """Decode the one final agent message streamed by an ephemeral worker."""
 
     text = monitor.final_agent_text()
+    def unique_pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate output key")
+            result[key] = value
+        return result
     try:
-        output = json.loads(text)
-    except json.JSONDecodeError:
+        output = json.loads(text, object_pairs_hook=unique_pairs)
+    except (ValueError, RecursionError):
         raise ProcessorFailure("invalid_response", reason_code="invalid_json", worker_thread_id=monitor.thread_id, worker_turn_id=monitor.turn_id) from None
     if not isinstance(output, dict):
         raise ProcessorFailure("invalid_response", reason_code="invalid_output_shape", worker_thread_id=monitor.thread_id, worker_turn_id=monitor.turn_id)

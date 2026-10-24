@@ -441,7 +441,7 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
 
 def record_execution_call(store, project, job_id, attempt_count, call_id, *, profile,
                           outcome="running", metrics=None, identity=None, failure=None,
-                          worker_thread_id=None, worker_turn_id=None):
+                          worker_thread_id=None, worker_turn_id=None, review_diagnostic=None):
     """Persist bounded independent call receipts, replacing cumulative snapshots.
 
     The generator and each support review have separate identities and counters.
@@ -452,6 +452,8 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
     if outcome not in ("running", "success", "failed"):
         raise ValueError("invalid call outcome")
     from .execution import normalize_profile
+    from .summary_support import safe_diagnostic
+    checked_diagnostic = safe_diagnostic(review_diagnostic) if review_diagnostic is not None else None
     requested = normalize_profile(profile.to_dict())
     try:
         normalized = _normalize_metrics(metrics)
@@ -488,6 +490,10 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
                 if old["requested_profile"] != requested:
                     raise ValueError("call profile changed")
                 if old["outcome"] != "running":
+                    if checked_diagnostic is not None:
+                        old["review_diagnostic"] = checked_diagnostic
+                        connection.execute("UPDATE observer_usage_attempts SET execution_calls=? WHERE job_id=? AND attempt_count=?",
+                                           (json.dumps(calls, sort_keys=True), job_id, attempt_count))
                     return
                 if old["actual_identity"] is not None:
                     if actual is not None and old["actual_identity"] != actual:
@@ -499,6 +505,8 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
                     incoming["metrics"] = old["metrics"]
                     if incoming["metrics"]["usage_status"] == "reported" and outcome == "failed":
                         incoming["metrics"]["usage_status"] = "partial"
+            if checked_diagnostic is not None or (old and old.get("review_diagnostic")):
+                incoming["review_diagnostic"] = checked_diagnostic or old["review_diagnostic"]
             calls[call_id] = incoming
             connection.execute("UPDATE observer_usage_attempts SET execution_calls=? WHERE job_id=? AND attempt_count=?",
                                (json.dumps(calls, sort_keys=True), job_id, attempt_count))

@@ -152,13 +152,16 @@ def receipt(output: dict, model: str, effort: str) -> dict:
 
 
 def current_copy_review(request: dict) -> dict:
-    """Canned wiring-only support receipt for the non-live copy baseline."""
+    """Wiring-only receipt: unit references stay bounded; they do not judge meaning."""
     from codex_mem.processor import MODEL, REASONING_EFFORT
     source = request['evidence'][-1]
-    return {'output': {'version': 'summary-support-v1', 'fields': [
-        {'field': field, 'verdict': 'supported', 'reason': 'supported',
-         'references': [{'source_id': source['id'], 'quote': source['body']}]}
-        for field in request['fields']]}, 'evidence': {
+    return {'output': {'version': 'summary-support-v2', 'units': {
+        field: {'coverage': 'complete', 'comparisons': [{
+            'candidate_assertion': f'The complete synthetic {field} assertion in the input-owned unit.', 'evidence_assertion': 'The source-copy fixture retains this content.',
+            'value_comparison': 'Same copied value.', 'attribution_comparison': 'Same reporting role.',
+            'scope_comparison': 'Same scope.', 'verdict': 'supported',
+            'evidence_span_ids': [source['spans'][0]['id']]}]}
+        for field in request['units']}}, 'evidence': {
             'thread_start': {'thread_id': 'copy-review', 'model': MODEL,
                              'reasoning_effort': REASONING_EFFORT, 'model_provider': 'openai'},
             'turn_started': {'thread_id': 'copy-review', 'turn_id': 'copy-review-turn'},

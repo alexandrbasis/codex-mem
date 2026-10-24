@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "1d2ddf4b47004e17944b83d36d19efa45f875982",
+      "revision": "123ae6e86dddba8db5400dbb619cb1ee47ab19e4",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -193,8 +193,8 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 1516,
-          "end_line": 1571,
+          "line": 1542,
+          "end_line": 1597,
           "label": "Native account and exact catalog preflight"
         },
         {
@@ -228,20 +228,20 @@
         {
           "path": "codex_mem/processor.py",
           "line": 168,
-          "end_line": 660,
+          "end_line": 686,
           "label": "Claim, support review and atomic save"
         },
         {
           "path": "codex_mem/observer_usage_store.py",
           "line": 443,
-          "end_line": 535,
+          "end_line": 543,
           "label": "Independent call metrics"
         },
         {
           "path": "codex_mem/summary_support.py",
           "line": 1,
-          "end_line": 131,
-          "label": "Typed field support and quote ownership"
+          "end_line": 189,
+          "label": "Contrastive assertions and code-owned spans"
         }
       ]
     },
@@ -329,8 +329,8 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 543,
-          "end_line": 565,
+          "line": 567,
+          "end_line": 589,
           "label": "Save the result"
         },
         {
@@ -431,8 +431,8 @@
         },
         {
           "path": "codex_mem/processor.py",
-          "line": 835,
-          "end_line": 1037,
+          "line": 861,
+          "end_line": 1063,
           "label": "Native execution and deadline"
         },
         {
@@ -657,7 +657,7 @@
       "title": "Session summary support",
       "items": [
         "A mandatory summary-only review runs after shape validation and before atomic storage. It uses the same selected Codex or Pi profile, bounded deadline and role-labelled current/history evidence. Concise prose remains the stored product. Sources: codex_mem/summary_support.py, codex_mem/processor.py, docs/adr/0012-review-session-summary-support.md.",
-        "Every nonempty field has a supported, unsupported, contradicted or insufficient_context verdict. Code checks complete coverage and unique exact quote ownership. Quotes do not prove semantic support, and a model verdict does not prove truth. Historical verification labels remain unchanged. Sources: codex_mem/summary_support.py, tests/test_summary_support.py.",
+        "The v2 contract uses required complete field keys and bounded assertion comparisons of candidate meaning, evidence meaning, values, roles and scope. Code creates exact source-span IDs and retains full parent context. Models select IDs without copying punctuation or calculating offsets. Mechanical unit coverage does not prove complete assertion extraction or entailment. Fixed invalid subtypes and fingerprints contain no raw prose. Historical verification labels and legitimate routine skips remain unchanged. Sources: codex_mem/summary_support.py, tests/test_summary_support.py.",
         "Generation and both quality checks share one correction. Corrected candidates are reviewed again. Lease and source checks prevent stale writes. Known semantic rejection or uncertainty quarantines only the failed batch; fresh work continues across service restart. Operational failures retain the existing blocking policy. The attempt keeps bounded separate call identities and metrics, sums independent tokens once, preserves missing counters, and counts nested elapsed time once. Native fixtures establish wiring and accounting, not live semantic quality. Sources: codex_mem/processor.py, codex_mem/observer_usage_store.py, tests/test_summary_support.py."
       ]
     },
@@ -675,7 +675,7 @@
       "title": "Execution diagnostics and usage",
       "items": [
         "CLI doctor and the dashboard read saved profiles and bounded attempt metadata without dispatching a model. Default and processor overrides remain visible beside requested and actual identity. Latest failures have fixed content-free actions. Explicit doctor --check-execution shares native preparation with the processors. Sources: codex_mem/execution_diagnostics.py, codex_mem/dashboard_data.py, docs/EXECUTION.md.",
-        "Pi checks the exact 1.4.0 version and uses auth check --json --no-refresh before RPC selection. Codex reads account/read without requesting refresh, then validates the exact catalog model and reasoning. Missing executables, native authorization, model or reasoning support have separate reasons. Codex required-protocol support does not establish universal version compatibility. Local credential readiness does not prove remote acceptance. Sources: codex_mem/processor.py:1512-1575, codex_mem/pi_runtime.py:181-198,362-414, docs/PI_RUNTIME_EVIDENCE.json.",
+        "Pi checks the exact 1.4.0 version and uses auth check --json --no-refresh before RPC selection. Codex reads account/read without requesting refresh, then validates the exact catalog model and reasoning. Missing executables, native authorization, model or reasoning support have separate reasons. Codex required-protocol support does not establish universal version compatibility. Local credential readiness does not prove remote acceptance. Sources: codex_mem/processor.py:1538-1601, codex_mem/pi_runtime.py:181-198,362-414, docs/PI_RUNTIME_EVIDENCE.json.",
         "Reports combine historical Codex and new observation/project-memory attempts. Runtime-qualified worker identifiers preserve collisions across runtimes. Per-counter known subtotals remain separate from unknown totals. Failed measured usage, cumulative counter replacement, and original provenance remain visible. API estimates do not establish actual charges, and Pi receives no Codex-credit estimate. Sources: codex_mem/cost_report.py, codex_mem/pricing.py, codex_mem/observer_usage_store.py, tests/test_execution_usage_reports.py."
       ]
     },
@@ -694,14 +694,14 @@
       "dot": "cyan",
       "title": "Host and background execution",
       "items": [
-        "Codex and Pi are interactive hosts. Their model selection does not select the background runtime. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:504-544, episode_processor.py:898-910.",
-        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:835-1053, pi_runtime.py:417-481.",
+        "Codex and Pi are interactive hosts. Their model selection does not select the background runtime. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:528-568, episode_processor.py:898-910.",
+        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:861-1079, pi_runtime.py:417-481.",
         "The resolver chooses the processor override, default profile, then legacy Codex. Observations, summaries, project memory, reconsideration, and consolidation can use Pi with independent profiles. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:897-925, pi_runtime.py:390-410,445-464, docs/EXECUTION.md.",
         "Pi 1.4.0 can emit thinking_level_changed before the set_thinking_level response. Preparation accepts only the exact requested level and only during that command. A mismatched notification or another event fails the attempt. Initial and completed state checks still require the exact profile. Sources: codex_mem/pi_runtime.py:398-410, tests/fixtures/execution_pi.py, tests/test_pi_observations.py, tests/test_pi_project_memory.py.",
         "Observation jobs keep their source identity across profile changes. The claim transaction stores each requested profile with its lease. Corrections retain it; later attempts reload current configuration. Legacy receipts preserve requested-only provenance and measured usage. Successful sources do not replay, including overlapping historical jobs. Explicit maintenance recovery retains its separate fingerprint and opt-in. Explicit retry_failed with a different processor can create distinct work; successful sources and one-shot recovery remain protected. Sources: store.py:2421-2904, observer_usage_store.py:80-148,265-307, tests/test_observation_profiles.py. Project memory retains its existing profile-independent source fingerprint and stores requested and verified execution separately. Additive migration preserves historical values; failed usage survives source deletion. Sources: project_memory.py:494-599, tests/test_project_memory_profiles.py.",
-        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:545-567, episode_processor.py:938-965.",
+        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:569-591, episode_processor.py:938-965.",
         "Pi creates a fresh temporary working directory, agent profile, and in-memory session. Only native auth/models are linked. Tools, MCP, extension discovery, skills, instructions, automatic retries and compaction are disabled. No capture extension or database-write API is loaded. These are runtime restrictions, not an OS sandbox. Provider extensions remain unsupported. Sources: pi_runtime.py:20-22,163-177,361-377, docs/PI_RUNTIME.md.",
-        "The additive Pi receipt separates configured CLI restrictions from observed identity, settlement, stop reason, and tool events. It does not invent Codex checks or an enumerated tool inventory. Streaming counters replace current-generation totals; corrections add each generation once. Missing usage stays unknown or partial, including Pi zero placeholders. Failed packets retain measured usage. Sources: pi_runtime.py:198-358, project_memory.py:550-593, observer_usage_store.py:311-656, execution.py:214-231. Observation Pi checkpoints retain measured totals while omitted optional counters remain null. Public capture, summary, context, recovery and mixed-profile tests: tests/test_pi_observations.py."
+        "The additive Pi receipt separates configured CLI restrictions from observed identity, settlement, stop reason, and tool events. It does not invent Codex checks or an enumerated tool inventory. Streaming counters replace current-generation totals; corrections add each generation once. Missing usage stays unknown or partial, including Pi zero placeholders. Failed packets retain measured usage. Sources: pi_runtime.py:198-358, project_memory.py:550-593, observer_usage_store.py:311-664, execution.py:214-231. Observation Pi checkpoints retain measured totals while omitted optional counters remain null. Public capture, summary, context, recovery and mixed-profile tests: tests/test_pi_observations.py."
       ]
     },
     {
@@ -800,8 +800,8 @@
       "dot": "amber",
       "title": "Boundaries and optional features",
       "items": [
-        "Sources, queues, and derived records stay local. The selected runtime sends prepared evidence to its configured model provider. Codex retains its existing isolation. Pi restricts model tools without claiming OS isolation. Native auth/model configuration and the installed executable remain trusted. Sources: processor.py:922-969,1533-1560, pi_runtime.py:165-179,330-436.",
-        "The note processor and project memory use the same execution contract. Issue #8 activates Pi for observations and summaries as well as project memory. Their queues and atomic commits remain independent, and profile changes do not replay successful sources. Sources: processor.py:504-567, episode_processor.py:897-980, execution.py:206-211.",
+        "Sources, queues, and derived records stay local. The selected runtime sends prepared evidence to its configured model provider. Codex retains its existing isolation. Pi restricts model tools without claiming OS isolation. Native auth/model configuration and the installed executable remain trusted. Sources: processor.py:948-995,1559-1586, pi_runtime.py:165-179,330-436.",
+        "The note processor and project memory use the same execution contract. Issue #8 activates Pi for observations and summaries as well as project memory. Their queues and atomic commits remain independent, and profile changes do not replay successful sources. Sources: processor.py:528-591, episode_processor.py:897-980, execution.py:206-211.",
         "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:37-47,534-610, store.py:5775-5783, episode_processor.py:952-959.",
         "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:678-749,777-802,914-927, jev_quality.py:1-7.",
         "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:808-825,914-960, jev_quality.py:16-23."

@@ -24,7 +24,9 @@ class PiObservationTests(unittest.TestCase):
         self.pi = self.root / 'pi'
         self.pi.write_text('#!' + sys.executable + '\n' + (Path(__file__).parent / 'fixtures/execution_pi.py').read_text())
         self.pi.chmod(0o700)
-        self.profile = dict(runtime='pi', provider='fixture', model='fixture', reasoning_effort='low', timeout=3)
+        # Successful summary correction launches generation and two support processes.
+        # Use one six-second test budget; explicit timeout tests select three below.
+        self.profile = dict(runtime='pi', provider='fixture', model='fixture', reasoning_effort='low', timeout=6)
         configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
                   processing_profile=self.profile)
         self.environment = mock.patch.dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ['PATH'],
@@ -92,6 +94,7 @@ class PiObservationTests(unittest.TestCase):
         self.assertEqual('idle', self.process()['status'])
 
     def test_failures_are_atomic_retain_sources_usage_and_cleanup(self):
+        configure(self.data, processing_profile={**self.profile, "timeout": 3})
         for mode in ('invalid_json', 'schema', 'unknown_ref', 'provider_error', 'cancelled',
                      'tool', 'rerouted', 'disconnect', 'timeout', 'no_settlement',
                      'overflow', 'stderr_overflow', 'malformed'):
@@ -258,6 +261,7 @@ class PiObservationTests(unittest.TestCase):
         self.assertEqual(12, attempts[1]['total_tokens'])
 
     def test_deadline_includes_version_probe_and_correction(self):
+        configure(self.data, processing_profile={**self.profile, "timeout": 3})
         import time
         from codex_mem.pi_runtime import PiProcessorRunner
         for scenario in ({'version_timeout': True}, {'modes': ['valid', 'timeout']}):
@@ -305,6 +309,7 @@ class PiObservationTests(unittest.TestCase):
                 self.assertEqual('idle', process_project_memory(self.project, self.data)['status'])
 
     def test_retained_service_reloads_profile_for_same_job_retry(self):
+        configure(self.data, processing_profile={**self.profile, "timeout": 3})
         import time
         from codex_mem.service import enqueue, run_service
         configure(self.data, service_enabled=True)
@@ -323,7 +328,7 @@ class PiObservationTests(unittest.TestCase):
             jobs = store.status(self.project)['observation_jobs']['recent']
             self.assertEqual(1, len(jobs), result)
             attempts = store.observation_attempts(self.project, jobs[0]['job_id'])
-            self.assertEqual(['failed', 'processed'], [a['outcome'] for a in attempts])
+            self.assertEqual(['failed', 'processed'], [a['outcome'] for a in attempts], attempts)
             self.assertEqual(['fixture', 'fixture-next'], [a['requested_model'] for a in attempts])
             self.assertEqual([12, 12], [a['total_tokens'] for a in attempts])
 
@@ -399,7 +404,7 @@ class PiObservationTests(unittest.TestCase):
                     before_late_receipt.extend(self.attempts(replacement[0]))
                     return response(payload)
                 result = self.process(jev_quality_evaluator=evaluate)
-                self.assertEqual(1, len(replacement))
+                self.assertEqual(1, len(replacement), result)
                 self.assertEqual('processed', replacement[0]['status'], replacement)
                 self.assertEqual(result['job_id'], replacement[0]['job_id'])
                 self.assertEqual('lease_expired', before_late_receipt[0]['outcome'])

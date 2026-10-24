@@ -9,7 +9,7 @@ turn_number = 0
 
 
 def support_output(payload, scenario, root):
-    """Explicit canned reviewer decisions exercise orchestration, not semantics."""
+    """Canned unit references exercise orchestration, never semantic assessment."""
     counter = root.with_suffix('.support-count')
     number = int(counter.read_text()) + 1 if counter.exists() else 1
     counter.write_text(str(number))
@@ -18,12 +18,14 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = {'version': 'summary-support-v1', 'fields': [
-        dict(field=field, verdict=verdict, reason='supported' if verdict == 'supported' else 'attribute_mismatch',
-             references=[dict(source_id=evidence['id'], quote=evidence['body'])])
-        for field in payload['fields']]}
+    output = {'version': 'summary-support-v2', 'units': {
+        field: dict(coverage='complete', comparisons=[dict(candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
+            evidence_assertion='The evidence describes this reported result.',
+            value_comparison='Same value.', attribution_comparison='Same reporting role.',
+            scope_comparison='Same scope.', verdict=verdict,
+            evidence_span_ids=[evidence['spans'][0]['id']])]) for field in payload['units']}}
     if mode == 'malformed_review':
-        output['fields'] = []
+        output['units'] = {}
     return output, mode
 
 def send(value):
@@ -135,6 +137,8 @@ for line in sys.stdin:
         if support:
             output = review_output
         text = '{invalid'  if mode == 'invalid_json' else json.dumps(output)
+        if mode == 'duplicate_units':
+            text = '{"version":"summary-support-v2","units":{"title":{},"title":{}}}'
         event('item/completed', item={'id': 'answer-' + str(turn_number), 'type': 'agentMessage', 'text': text, 'phase': 'final_answer'})
         event('turn/completed', turn={'id': turn_id, 'status': 'completed'})
         continue

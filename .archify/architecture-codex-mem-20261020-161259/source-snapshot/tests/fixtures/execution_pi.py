@@ -7,7 +7,7 @@ import time
 
 
 def support_output(payload, scenario, root):
-    """Explicit canned reviewer decisions exercise orchestration, not semantics."""
+    """Canned unit references exercise orchestration, never semantic assessment."""
     counter = root.with_suffix('.support-count')
     number = int(counter.read_text()) + 1 if counter.exists() else 1
     counter.write_text(str(number))
@@ -16,12 +16,14 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = {'version': 'summary-support-v1', 'fields': [
-        dict(field=field, verdict=verdict, reason='supported' if verdict == 'supported' else 'attribute_mismatch',
-             references=[dict(source_id=evidence['id'], quote=evidence['body'])])
-        for field in payload['fields']]}
+    output = {'version': 'summary-support-v2', 'units': {
+        field: dict(coverage='complete', comparisons=[dict(candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
+            evidence_assertion='The evidence describes this reported result.',
+            value_comparison='Same value.', attribution_comparison='Same reporting role.',
+            scope_comparison='Same scope.', verdict=verdict,
+            evidence_span_ids=[evidence['spans'][0]['id']])]) for field in payload['units']}}
     if mode == 'malformed_review':
-        output['fields'] = []
+        output['units'] = {}
     return output, mode
 
 root = Path(__file__).resolve()
@@ -78,7 +80,7 @@ for raw in sys.stdin:
             mode = scenario['modes'][min(count - 1, len(scenario['modes']) - 1)]
         if count == 1:
             candidate_payload = command['message'].split('\n')[-1]
-            if candidate_payload.startswith('{"version": "summary-support-v1"'):
+            if candidate_payload.startswith('{"version": "summary-support-v2"'):
                 support = True
                 payload = json.loads(candidate_payload)
                 review_output, mode = support_output(payload, scenario, root)
@@ -167,6 +169,8 @@ for raw in sys.stdin:
         if scenario.get('outputs') and not support:
             output = scenario['outputs'][min(count - 1, len(scenario['outputs']) - 1)]
         text = '{bad' if mode == 'invalid_json' else json.dumps(output)
+        if mode == 'duplicate_units':
+            text = '{"version":"summary-support-v2","units":{"title":{},"title":{}}}'
         message = {'role': 'assistant', 'provider': model['provider'], 'model': model['id'],
             'content': [{'type': 'text', 'text': text}], 'usage': {} if scenario.get('omit_usage') or (count == 1 and scenario.get('first_usage_unknown')) or (count == 2 and scenario.get('last_usage_unknown')) else usage,
             'stopReason': 'aborted' if mode == 'cancelled' else 'error' if mode == 'provider_error' else 'stop'}

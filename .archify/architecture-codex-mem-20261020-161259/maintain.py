@@ -44,6 +44,7 @@ FIXED_SOURCES = (
     "docs/EXECUTION.md",
     "docs/adr/0012-review-session-summary-support.md",
     "tests/test_summary_support.py",
+    "tests/test_summary_support_contract.py",
     "tests/test_service.py",
     "scripts/project_memory_acceptance.py",
     "docs/PI_RUNTIME.md",
