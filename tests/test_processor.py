@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tests.test_summary_support import supported_review
+
 import json
 from pathlib import Path
 import tempfile
@@ -538,7 +540,7 @@ class ProcessorTests(unittest.TestCase):
             summary["request"] = None
             return self.receipt({"notes": [], "disposition": "processed", "session_summary": summary})
 
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
         self.assertEqual("processed", result["status"], result)
         with Store(self.data_dir) as store:
             output_ids = json.loads(store._connection.execute(
@@ -714,7 +716,7 @@ class ProcessorTests(unittest.TestCase):
                     damage(note)
                     return self.receipt({"disposition": "processed", "notes": [note], "session_summary": None})
 
-                result = process_pending(self.project, data_dir, runner=runner)
+                result = process_pending(self.project, data_dir, summary_reviewer=supported_review, runner=runner)
                 self.assertEqual("invalid_response", result["code"])
                 self.assertEqual(reason, result.get("reason_code"))
                 self.assertNotIn("private-", json.dumps(result))
@@ -779,7 +781,7 @@ class ProcessorTests(unittest.TestCase):
             source_id = request["sources"][0]["id"]
             return self.receipt({"disposition": "processed", "notes": [self.structured_note(source_id)],
                                  "session_summary": self.structured_summary(source_id)})
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
         self.assertEqual("processed", result["status"], result)
         self.assertEqual(1, result["session_summary_count"])
         with Store(self.data_dir) as store:
@@ -794,7 +796,7 @@ class ProcessorTests(unittest.TestCase):
 
     def test_summary_alone_is_processed(self):
         self.remember("Completed", "The duplicate retry regression passed.")
-        result = process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=lambda r: self.receipt({
             "disposition": "processed", "notes": [],
             "session_summary": self.structured_summary(r["sources"][0]["id"])}))
         self.assertEqual("processed", result["status"], result)
@@ -803,7 +805,7 @@ class ProcessorTests(unittest.TestCase):
 
     def test_non_stop_summary_fails_without_partial_note(self):
         self.remember("Tool result", "The retry test passed.", source="hook:PostToolUse:test")
-        result = process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=lambda r: self.receipt({
             "disposition": "processed", "notes": [self.structured_note(r["sources"][0]["id"])],
             "session_summary": self.structured_summary(r["sources"][0]["id"])}))
         self.assertEqual("invalid_response", result["code"])
@@ -816,7 +818,7 @@ class ProcessorTests(unittest.TestCase):
             note = self.structured_note(request["sources"][0]["id"])
             note["observation"]["type"] = "invented-type"
             return self.receipt({"disposition": "processed", "notes": [note], "session_summary": None})
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
         self.assertEqual("invalid_response", result["code"])
         with Store(self.data_dir) as store:
             self.assertEqual([], store.search(self.project, "checkout"))
@@ -834,7 +836,7 @@ class ProcessorTests(unittest.TestCase):
 
     def test_substantive_stop_cannot_be_consumed_without_summary(self):
         self.remember("Completed fix", "The checkout retry test passed.")
-        result = process_pending(self.project, self.data_dir, runner=lambda r: self.receipt({
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=lambda r: self.receipt({
             "disposition": "processed", "notes": [self.structured_note(r["sources"][0]["id"])],
             "session_summary": None}))
         self.assertEqual("invalid_response", result["code"])

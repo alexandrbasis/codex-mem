@@ -115,6 +115,7 @@ def recover_failed_batch(
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
     jev_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     jev_quality_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+    summary_reviewer: Any | None = None,
 ) -> dict[str, Any]:
     """Retry one diagnosed failed snapshot once, returning metadata receipts.
 
@@ -152,6 +153,7 @@ def recover_failed_batch(
         workspace, data_dir, retry_job_id=job_id, retry_error_code=expected_error_code,
         retry_attempt_count=expected_attempt_count, timeout=timeout, codex=codex, runner=runner,
         jev_evaluator=jev_evaluator, jev_quality_evaluator=jev_quality_evaluator,
+        summary_reviewer=summary_reviewer,
     )
     with Store(data_dir) as store:
         after = store.observation_job_status(workspace, job_id)
@@ -181,6 +183,7 @@ def process_pending(
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
     jev_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
     jev_quality_evaluator: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
+    summary_reviewer: Any | None = None,
     max_entries: int = MAX_OBSERVATION_ENTRIES,
     max_chars: int = DEFAULT_OBSERVATION_CHARS,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
@@ -287,8 +290,12 @@ def process_pending(
             receipt: dict[str, Any] | None = None
             filter_audit: dict[str, Any] | None = None
             quality_audit: dict[str, Any] | None = None
+            attempt_started = time.monotonic()
+            execution = None
+            calls_started = False
+            support_count = 0
             try:
-                from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt
+                from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt, record_execution_call
                 _, _, sources = _claim_parts(claimed)
                 generation_claim = claimed
                 if jev_enabled:
@@ -331,6 +338,101 @@ def process_pending(
                 initial_quality_audit = None
                 reviewed_output = None
                 review_count = 0
+                support_count = 0
+                summary_seen = False
+                deadline = time.monotonic() + checked_timeout
+                record_execution_call(store, workspace, job_id, attempt_count, "generation", profile=profile)
+                calls_started = True
+                from .summary_support import evidence_snapshot, SupportError
+                has_summary_scope = bool(generation_claim.get("summary_required")) or any(
+                    source_role(source.get("source")) == "assistant_report" for source in sources)
+                evidence_fingerprint = (evidence_snapshot(store, workspace, generation_claim)
+                                        if has_summary_scope else None)
+
+                def source_guard(semantic_failure=None):
+                    status = _quality_source_status(store, workspace, claimed, generation_claim)
+                    if status == "lease_expired":
+                        if semantic_failure is not None:
+                            raise ProcessorFailure("invalid_response", reason_code=semantic_failure)
+                        raise ObservationLeaseExpired()
+                    try:
+                        current_fingerprint = evidence_snapshot(store, workspace, generation_claim)
+                    except (SupportError, StoreError, ValueError):
+                        current_fingerprint = None
+                    if status != "current" or current_fingerprint != evidence_fingerprint:
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_stale")
+
+                def review_summary(summary, *, allow_correction):
+                    nonlocal support_count
+                    if summary is None:
+                        return None
+                    from .summary_support import prepare, validate, correction_prompt, SupportError
+                    source_guard()
+                    support_count += 1
+                    if support_count > 2:
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid")
+                    if time.monotonic() >= deadline:
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
+                    prompt, schema, payload = prepare(summary, generation_claim)
+                    call_id = f"summary_support_{support_count}"
+                    record_execution_call(store, workspace, job_id, attempt_count, call_id, profile=profile)
+
+                    def checkpoint_review(snapshot):
+                        from .execution import ExecutionIdentity
+                        observed = snapshot.get("identity")
+                        observed = (ExecutionIdentity(**observed,
+                                    execution_id=snapshot.get("worker_thread_id"),
+                                    turn_id=snapshot.get("worker_turn_id")) if observed else None)
+                        record_execution_call(store, workspace, job_id, attempt_count, call_id,
+                                              profile=profile, metrics=snapshot.get("metrics"), identity=observed)
+
+                    reviewer = summary_reviewer
+                    # An injected generator must never silently launch a live reviewer.
+                    # Tests that exercise summaries explicitly supply this separate seam.
+                    if reviewer is None and runner is not None:
+                        record_execution_call(store, workspace, job_id, attempt_count, call_id,
+                                              profile=profile, outcome="failed")
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
+                    if reviewer is None:
+                        if profile.runtime == "pi":
+                            from .pi_runtime import PiProcessorRunner
+                            reviewer = PiProcessorRunner(usage_checkpoint=checkpoint_review)
+                        else:
+                            reviewer = NativeProcessorRunner(codex=codex, timeout=checked_timeout,
+                                                             usage_checkpoint=checkpoint_review)
+                    review_request = ExecutionRequest(prompt=prompt, output_schema=schema,
+                        profile=profile, deadline=deadline, job_type="summary_support",
+                        attempt_id=f"{job_id}:{attempt_count}:{call_id}", context=payload)
+                    try:
+                        reviewed = execute(review_request, reviewer)
+                    except Exception:
+                        record_execution_call(store, workspace, job_id, attempt_count, call_id,
+                                              profile=profile, outcome="failed")
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable") from None
+                    record_execution_call(store, workspace, job_id, attempt_count, call_id, profile=profile,
+                        outcome="failed" if reviewed.failure else "success", metrics=reviewed.metrics,
+                        identity=reviewed.identity, failure=reviewed.failure)
+                    if (reviewed.failure or reviewed.identity is None or time.monotonic() >= deadline
+                            or any(getattr(reviewed.identity, key) != getattr(profile, key)
+                                   for key in ("runtime", "provider", "model", "reasoning_effort"))):
+                        source_guard()
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
+                    try:
+                        rejected = validate(reviewed.output, payload)
+                    except (SupportError, TypeError, ValueError, KeyError):
+                        source_guard("summary_support_invalid")
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
+                    reason = ("summary_support_uncertain" if rejected and all(
+                        item["verdict"] == "insufficient_context" for item in rejected)
+                        else "summary_support_rejected" if rejected else None)
+                    # Keep a known semantic blocker even if the lease expired while
+                    # reviewing. The store still requires this exact owner/attempt.
+                    source_guard(reason)
+                    if rejected:
+                        if allow_correction:
+                            return correction_prompt(rejected)
+                        raise ProcessorFailure("invalid_response", reason_code=reason)
+                    return None
 
                 def review_quality(notes, summary, remaining, *, allow_correction=False):
                     nonlocal quality_audit, initial_quality_audit
@@ -378,43 +480,54 @@ def process_pending(
                     return None
 
                 def review_candidate(candidate, remaining):
-                    nonlocal reviewed_output, review_count
+                    nonlocal reviewed_output, review_count, summary_seen
                     review_count += 1
                     canonical = _resolve_source_handles(
                         _unwrap_model_output(candidate) if profile.runtime == "pi" else candidate, sources)
                     candidate_notes, _, candidate_summary = _validate_model_output(
                         canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
+                    if summary_seen and candidate_summary is None:
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_rejected")
+                    summary_seen = summary_seen or candidate_summary is not None
                     if filter_audit is not None:
                         lifecycle_only = set(filter_audit.get("lifecycle_only_ids", []))
                         if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in candidate_notes):
                             raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
-                    feedback = review_quality(candidate_notes, candidate_summary, remaining,
-                                              allow_correction=review_count == 1)
+                    feedback = review_summary(candidate_summary, allow_correction=review_count == 1)
+                    if feedback is None and quality_enabled:
+                        feedback = review_quality(candidate_notes, candidate_summary,
+                            min(remaining, deadline - time.monotonic()), allow_correction=review_count == 1)
                     if feedback is None:
-                        reviewed_output = json.dumps(candidate, sort_keys=True, ensure_ascii=False)
+                        reviewed_output = json.dumps(canonical, sort_keys=True, ensure_ascii=False)
                     return feedback
 
                 active_runner = runner
                 if active_runner is None:
                     def checkpoint(snapshot: Mapping[str, Any]) -> None:
                         snapshot_attempt(store, workspace, job_id, attempt_count, **snapshot)
+                        from .execution import ExecutionIdentity
+                        observed = snapshot.get("identity")
+                        observed = (ExecutionIdentity(**observed, execution_id=snapshot.get("worker_thread_id"),
+                                                      turn_id=snapshot.get("worker_turn_id")) if observed else None)
+                        record_execution_call(store, workspace, job_id, attempt_count, "generation", profile=profile,
+                            metrics=snapshot.get("metrics"), identity=observed)
 
                     if profile.runtime == "pi":
                         from .pi_runtime import PiProcessorRunner
                         active_runner = PiProcessorRunner(
                             usage_checkpoint=checkpoint,
-                            candidate_review=review_candidate if quality_enabled else None,
+                            candidate_review=review_candidate,
                         )
                     else:
                         active_runner = NativeProcessorRunner(
                             codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
-                            candidate_review=review_candidate if quality_enabled else None,
+                            candidate_review=review_candidate,
                         )
                 execution_request = ExecutionRequest(
                     prompt=request["prompt"], output_schema=request["output_schema"],
                     context={key: value for key, value in request.items()
                              if key not in {"prompt", "output_schema", "model", "reasoning_effort", "timeout"}},
-                    profile=profile, deadline=time.monotonic() + checked_timeout, job_type="summary" if generation_claim.get("summary_required") else "observation",
+                    profile=profile, deadline=deadline, job_type="summary" if generation_claim.get("summary_required") else "observation",
                     attempt_id=f"{job_id}:{attempt_count}",
                 )
                 execution = execute(execution_request, active_runner)
@@ -434,9 +547,12 @@ def process_pending(
                     lifecycle_only = set(filter_audit.get("lifecycle_only_ids", []))
                     if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
                         raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
-                if quality_enabled and (notes or summary is not None):
-                    if reviewed_output != json.dumps(execution.output, sort_keys=True, ensure_ascii=False):
-                        review_quality(notes, summary, MAX_GATE_SECONDS)
+                if reviewed_output != json.dumps(output, sort_keys=True, ensure_ascii=False):
+                    review_summary(summary, allow_correction=False)
+                    if quality_enabled and (notes or summary is not None):
+                        review_quality(notes, summary, min(MAX_GATE_SECONDS, deadline - time.monotonic()))
+                if summary is not None:
+                    source_guard()
                 finished = store.finish_observation_batch(
                     workspace,
                     job_id,
@@ -459,7 +575,9 @@ def process_pending(
                                              reason_code=exc.reason_code,
                                              expired_quality_quarantine_attempt=(attempt_count if
                                                  exc.code == "invalid_response" and exc.reason_code in {
-                                                     "jev_quality_rejected", "jev_quality_uncertain"} else None))
+                                                     "jev_quality_rejected", "jev_quality_uncertain",
+                                                     "summary_support_rejected", "summary_support_uncertain",
+                                                     "summary_support_invalid"} else None))
             except ObservationLeaseExpired:
                 outcome = "lease_expired"
                 error_code = "lease_expired"
@@ -493,10 +611,17 @@ def process_pending(
                         if error_code == "lease_expired":
                             outcome = "lease_expired"
                     try:
+                        if calls_started:
+                            record_execution_call(store, workspace, job_id, attempt_count, "generation", profile=profile,
+                                outcome="failed" if execution is None or execution.failure else "success", metrics=metrics,
+                                identity=execution.identity if execution else None,
+                                failure=execution.failure if execution else None,
+                                worker_thread_id=thread_id, worker_turn_id=turn_id)
                         terminal = dict(
                             outcome=outcome,
                             error_code=_safe_failure_code(error_code) if error_code is not None else None,
                             worker_thread_id=thread_id, worker_turn_id=turn_id, identity=identity,
+                            total_duration_ms=max(0, round((time.monotonic() - attempt_started) * 1000)) if support_count else None,
                         )
                         try:
                             finish_attempt(store, workspace, job_id, attempt_count, metrics=metrics, **terminal)
@@ -2179,6 +2304,7 @@ def _failed_after_claim(
     except (StoreError, ValueError, OSError) as exc:
         if safe_code == "invalid_response" and reason_code in {
             "jev_quality_unavailable", "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
+            "summary_support_rejected", "summary_support_uncertain", "summary_support_invalid",
         }:
             # A replaced/revoked lease must not turn cancellation into an
             # automatic retry or mutate a newer worker's ownership.

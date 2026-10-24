@@ -5,6 +5,25 @@ from pathlib import Path
 import sys
 import time
 
+
+def support_output(payload, scenario, root):
+    """Explicit canned reviewer decisions exercise orchestration, not semantics."""
+    counter = root.with_suffix('.support-count')
+    number = int(counter.read_text()) + 1 if counter.exists() else 1
+    counter.write_text(str(number))
+    mode = scenario.get('support_mode', 'supported')
+    if scenario.get('support_modes'):
+        mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
+    evidence = payload['evidence'][-1]
+    verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
+    output = {'version': 'summary-support-v1', 'fields': [
+        dict(field=field, verdict=verdict, reason='supported' if verdict == 'supported' else 'attribute_mismatch',
+             references=[dict(source_id=evidence['id'], quote=evidence['body'])])
+        for field in payload['fields']]}
+    if mode == 'malformed_review':
+        output['fields'] = []
+    return output, mode
+
 root = Path(__file__).resolve()
 scenario = json.loads(root.with_suffix('.json').read_text())
 if '--version' in sys.argv:
@@ -20,6 +39,8 @@ if sys.argv[1:3] == ['auth', 'check']:
 model = {'id': 'fixture', 'provider': 'fixture', 'reasoning': True}
 level = 'low'
 count = 0
+support = False
+mode = scenario.get('mode', 'valid')
 with root.with_suffix('.launch').open('a') as trace:
     trace.write(json.dumps({'args': sys.argv[1:], 'cwd': os.getcwd(),
         'agent_dir': os.environ.get('PI_CODING_AGENT_DIR'), 'pid': os.getpid()}) + '\n')
@@ -46,7 +67,7 @@ for raw in sys.stdin:
         data = {'sessionId': 'fixture-session', 'model': model, 'thinkingLevel': level,
             'isStreaming': False, 'isCompacting': False, 'pendingMessageCount': 0,
             'messageCount': count * 2 + int(count > 0), 'autoCompactionEnabled': False}
-        if count and scenario.get('mode') == 'rerouted':
+        if count and mode == 'rerouted':
             data['model'] = dict(model, id='other')
     elif kind == 'prompt':
         count += 1
@@ -56,7 +77,13 @@ for raw in sys.stdin:
         if scenario.get('modes'):
             mode = scenario['modes'][min(count - 1, len(scenario['modes']) - 1)]
         if count == 1:
-            if scenario.get('observation'):
+            candidate_payload = command['message'].split('\n')[-1]
+            if candidate_payload.startswith('{"version": "summary-support-v1"'):
+                support = True
+                payload = json.loads(candidate_payload)
+                review_output, mode = support_output(payload, scenario, root)
+                supplied = {'events': [{'spans': [{'ref': 'unused', 'text': 'review'}]}]}
+            elif scenario.get('observation'):
                 import re
                 sources = json.loads(re.search(r'<untrusted_observations>\n(.*?)\n</untrusted_observations>', command['message'], re.S).group(1))
                 supplied = {'events': [{'spans': [{'ref': source['id'], 'text': source['body']} for source in sources]}]}
@@ -117,7 +144,7 @@ for raw in sys.stdin:
                 'evidence': {'summary': refs, 'goal': refs[:1], 'rationale': [], 'outcome': [],
                     'open_work': [], 'continuation_of': refs if merging else [],
                     'consolidation_of': refs if merging else []}}], 'claims': []}
-        if scenario.get('observation'):
+        if scenario.get('observation') and not support:
             note = {'title': 'Local import decision', 'body': 'The user requests local import.', 'tags': ['import'],
                 'source_ids': [ref], 'observation': {'type': 'decision', 'subtitle': '',
                 'narrative': 'The user requests local import.', 'facts': [], 'concepts': [], 'files_read': [], 'files_modified': []}}
@@ -136,7 +163,9 @@ for raw in sys.stdin:
             gate.with_suffix('.ready').touch()
             while not gate.exists():
                 time.sleep(.01)
-        output = scenario.get('output', output)
+        output = review_output if support else scenario.get('output', output)
+        if scenario.get('outputs') and not support:
+            output = scenario['outputs'][min(count - 1, len(scenario['outputs']) - 1)]
         text = '{bad' if mode == 'invalid_json' else json.dumps(output)
         message = {'role': 'assistant', 'provider': model['provider'], 'model': model['id'],
             'content': [{'type': 'text', 'text': text}], 'usage': {} if scenario.get('omit_usage') or (count == 1 and scenario.get('first_usage_unknown')) or (count == 2 and scenario.get('last_usage_unknown')) else usage,

@@ -1,6 +1,8 @@
 """End-to-end eligibility boundary before the observation generator."""
 from __future__ import annotations
 
+from tests.test_summary_support import supported_review
+
 import json
 from pathlib import Path
 import tempfile
@@ -143,7 +145,7 @@ class JevProcessorTests(unittest.TestCase):
 
     def test_rejected_stop_is_only_a_marker_for_required_summary(self):
         self.remember('Use local storage for offline access.')
-        earlier = process_pending(self.project, self.home, runner=self.note, jev_evaluator=lambda _: answer())
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.note, jev_evaluator=lambda _: answer())
         self.assertEqual('processed', earlier['status'], earlier)
         previous_note_ids = set(self.status(earlier)['output_ids'])
         stop = self.remember('REJECT_STOP_SENTINEL', 'hook:Stop')
@@ -158,7 +160,7 @@ class JevProcessorTests(unittest.TestCase):
             self.assertEqual('Session boundary', request['sources'][0]['title'])
             summary = processor_fixtures.ProcessorTests.structured_summary(request['sources'][0]['id'])
             return processor_fixtures.ProcessorTests.receipt({'disposition': 'processed', 'notes': [], 'session_summary': summary})
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(1, result['session_summary_count'])
         self.assertEqual([stop['id']], result['jev_filter']['lifecycle_only_ids'])
@@ -203,12 +205,12 @@ class JevProcessorTests(unittest.TestCase):
 
     def test_required_summary_cannot_replace_rejected_derived_note_with_raw_history(self):
         raw = self.remember('Original decision evidence.')
-        earlier = process_pending(self.project, self.home, runner=self.note, jev_evaluator=lambda _: answer())
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.note, jev_evaluator=lambda _: answer())
         self.assertEqual('processed', earlier['status'], earlier)
         derived_ids = set(self.status(earlier)['output_ids'])
         unrelated = self.remember('UNRELATED_RAW_HISTORY')
         configure(self.home, jev_filter_enabled=False)
-        process_pending(self.project, self.home, runner=self.skipped)
+        process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.skipped)
         configure(self.home, jev_filter_enabled=True)
         self.remember('REJECTED_STOP_TEXT', 'hook:Stop')
         evaluated = []
@@ -217,7 +219,7 @@ class JevProcessorTests(unittest.TestCase):
             evaluated.append(item['id'])
             return answer(0.01, 'routine') if item['id'] in derived_ids else answer()
         runner = mock.Mock(side_effect=AssertionError('Summary must not run without prior notes'))
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('failed', result['status'], result)
         runner.assert_not_called()
         self.assertTrue(derived_ids.issubset(set(evaluated)))
@@ -244,7 +246,7 @@ class JevProcessorTests(unittest.TestCase):
                            'tags': [], 'source_ids': [marker]}],
                 'session_summary': processor_fixtures.ProcessorTests.structured_summary(marker),
             })
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('failed', result['status'], result)
         self.assertEqual('invalid_response', result['code'])
         job = self.status(result)

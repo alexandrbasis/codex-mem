@@ -138,6 +138,8 @@ def _install_schema(connection: sqlite3.Connection) -> None:
     columns = {row[1] for row in connection.execute("PRAGMA table_info(observer_usage_attempts)")}
     if "execution_receipt" not in columns:
         connection.execute("ALTER TABLE observer_usage_attempts ADD COLUMN execution_receipt TEXT")
+    if "execution_calls" not in columns:
+        connection.execute("ALTER TABLE observer_usage_attempts ADD COLUMN execution_calls TEXT")
     connection.execute(
         "CREATE INDEX IF NOT EXISTS observer_usage_running "
         "ON observer_usage_attempts(started_at, job_id) WHERE outcome = 'running'"
@@ -437,6 +439,87 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
     return merged
 
 
+def record_execution_call(store, project, job_id, attempt_count, call_id, *, profile,
+                          outcome="running", metrics=None, identity=None, failure=None,
+                          worker_thread_id=None, worker_turn_id=None):
+    """Persist bounded independent call receipts, replacing cumulative snapshots.
+
+    The generator and each support review have separate identities and counters.
+    Quotes, prompts, candidates and arbitrary error text cannot enter this record.
+    """
+    if call_id not in ("generation", "summary_support_1", "summary_support_2"):
+        raise ValueError("invalid execution call")
+    if outcome not in ("running", "success", "failed"):
+        raise ValueError("invalid call outcome")
+    from .execution import normalize_profile
+    requested = normalize_profile(profile.to_dict())
+    try:
+        normalized = _normalize_metrics(metrics)
+    except ValueError:
+        normalized = _normalize_metrics(None)
+        normalized['usage_status'] = 'invalid'
+    actual = None
+    if identity is not None:
+        actual = {key: _identifier(getattr(identity, key), key, required=key != "reasoning_effort")
+                  for key in ("runtime", "provider", "model", "reasoning_effort")}
+        worker_thread_id, worker_turn_id = identity.execution_id, identity.turn_id
+    code = _safe_code(failure.code) if failure is not None else None
+    if failure is not None:
+        worker_thread_id = failure.execution_id or worker_thread_id
+        worker_turn_id = failure.turn_id or worker_turn_id
+    incoming = dict(call_id=call_id, requested_profile=requested, actual_identity=actual,
+                    outcome=outcome, error_code=code, metrics=normalized,
+                    execution_id=_identifier(worker_thread_id, "execution_id"),
+                    turn_id=_identifier(worker_turn_id, "turn_id"))
+    workspace = project_key(project)
+    with store._lock:
+        store._require_open()
+        def operation():
+            connection = store._connection
+            if _job(connection, workspace, job_id) is None:
+                raise ValueError("observation job unavailable")
+            row = connection.execute("SELECT execution_calls FROM observer_usage_attempts WHERE job_id=? AND attempt_count=?",
+                                     (job_id, attempt_count)).fetchone()
+            if row is None:
+                raise ValueError("attempt unavailable")
+            calls = json.loads(row[0]) if row[0] else {}
+            old = calls.get(call_id)
+            if old:
+                if old["requested_profile"] != requested:
+                    raise ValueError("call profile changed")
+                if old["outcome"] != "running":
+                    return
+                if old["actual_identity"] is not None:
+                    if actual is not None and old["actual_identity"] != actual:
+                        raise ValueError("call identity changed")
+                    incoming["actual_identity"] = old["actual_identity"]
+                for key in ("execution_id", "turn_id"):
+                    incoming[key] = incoming[key] or old[key]
+                if metrics is None or normalized["usage_status"] == "unavailable":
+                    incoming["metrics"] = old["metrics"]
+                    if incoming["metrics"]["usage_status"] == "reported" and outcome == "failed":
+                        incoming["metrics"]["usage_status"] = "partial"
+            calls[call_id] = incoming
+            connection.execute("UPDATE observer_usage_attempts SET execution_calls=? WHERE job_id=? AND attempt_count=?",
+                               (json.dumps(calls, sort_keys=True), job_id, attempt_count))
+        store._write(operation)
+
+
+def _aggregate_calls(calls, duration_ms, generation):
+    """Sum independent measured calls once; preserve unknown counters."""
+    rows = [call["metrics"] for call in calls.values()]
+    result = dict(generation)
+    result["duration_ms"] = duration_ms
+    statuses = [row["usage_status"] for row in rows]
+    result["usage_status"] = ("reported" if all(status == "reported" for status in statuses)
+                              else "partial" if any(status in ("reported", "partial") for status in statuses)
+                              else "unavailable")
+    result["usage_updates"] = sum(row["usage_updates"] or 0 for row in rows)
+    for key in COUNTERS:
+        result[key] = sum(row[key] for row in rows) if all(row[key] is not None for row in rows) else None
+    return result
+
+
 def finish_attempt(
     store: Store,
     project: str | Path,
@@ -449,6 +532,7 @@ def finish_attempt(
     worker_turn_id: str | None = None,
     metrics: Mapping[str, Any] | None = None,
     identity: Mapping[str, Any] | None = None,
+    total_duration_ms: int | None = None,
 ) -> None:
     """Finish or enrich one attempt without replacing a known final snapshot."""
 
@@ -504,6 +588,13 @@ def finish_attempt(
                     "actual_model=?, actual_reasoning_effort=? WHERE job_id=? AND attempt_count=?",
                     (*new, checked_job_id, checked_attempt))
             merged = _merge(existing, normalized, outcome)
+            if total_duration_ms is not None and existing["outcome"] in ("running", "lease_expired") and existing["execution_calls"]:
+                # Whole-attempt elapsed time includes nested reviewer execution.
+                # Never add nested wall time to the generator's wall time.
+                aggregate = _aggregate_calls(json.loads(existing["execution_calls"]),
+                                             _integer(total_duration_ms, "duration_ms"), normalized)
+                for key in (*COUNTERS, "usage_status", "usage_updates", "duration_ms"):
+                    merged[key] = aggregate[key]
             terminal_at = existing["finished_at"]
             if merged["outcome"] != "running" and terminal_at is None:
                 terminal_at = _utc_now()

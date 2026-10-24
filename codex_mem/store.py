@@ -3551,7 +3551,8 @@ class Store:
             or not isinstance(expired_quality_quarantine_attempt, int)
             or expired_quality_quarantine_attempt < 1
             or error_code != "invalid_response"
-            or reason_code not in {"jev_quality_rejected", "jev_quality_uncertain"}
+            or reason_code not in {"jev_quality_rejected", "jev_quality_uncertain",
+                                   "summary_support_rejected", "summary_support_uncertain", "summary_support_invalid"}
         ):
             raise ValueError("Expired quality quarantine requires a semantic failure and exact attempt")
 

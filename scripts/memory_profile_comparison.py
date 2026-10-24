@@ -69,7 +69,9 @@ def measure(project, data, kind, destination, runner, *, timeout=60):
         before = {row['id'] for row in store.timeline(project, limit=100)}
     started = time.monotonic()
     function = process_project_memory if kind == 'project_memory' else process_pending
-    receipt = function(project, data, runner=recorder, timeout=timeout)
+    options = {} if kind == 'project_memory' else {
+        'summary_reviewer': Recorder(runner, destination / 'summary-support')}
+    receipt = function(project, data, runner=recorder, timeout=timeout, **options)
     with Store(data) as store:
         rows = store.timeline(project, limit=100)
         sources = [dict(row, evidence_role=source_role(row.get('source'))) for row in rows

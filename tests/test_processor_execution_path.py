@@ -1,5 +1,7 @@
 """Host capture, real queues, external execution and retrieval in one process path."""
 import json
+from tests.test_summary_support import supported_review
+
 import unittest
 from unittest import mock
 
@@ -53,12 +55,12 @@ class ProcessorExecutionPathTests(unittest.TestCase):
                     observation=dict(type='discovery', subtitle='', narrative='Use local import.', facts=[],
                                      concepts=[], files_read=[], files_modified=[]))
         self.scenario(output={'result': dict(notes=[note], disposition='processed', session_summary=summary)})
-        result = process_pending(self.project, self.data, codex=str(self.executable), timeout=10)
+        result = process_pending(self.project, self.data, summary_reviewer=supported_review, codex=str(self.executable), timeout=10)
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(1, result['session_summary_count'])
         self.assertIn('Use local import.', json.dumps(self.context()))
         with Store(self.data) as store:
-            self.assertEqual('idle', process_pending(self.project, self.data, codex=str(self.executable))['status'])
+            self.assertEqual('idle', process_pending(self.project, self.data, summary_reviewer=supported_review, codex=str(self.executable))['status'])
             self.assertEqual([], store.search(self.root / 'other', 'Import'))
 
     def test_project_memory_keeps_original_role_and_citations_in_next_context(self):

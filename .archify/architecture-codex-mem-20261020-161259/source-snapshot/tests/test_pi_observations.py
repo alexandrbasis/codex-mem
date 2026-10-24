@@ -46,6 +46,12 @@ class PiObservationTests(unittest.TestCase):
     def process(self, **kwargs):
         return process_pending(self.project, self.data, **kwargs)
 
+    def generation_prompts(self):
+        rows = [json.loads(line) for line in self.pi.with_suffix('.trace').read_text().splitlines()]
+        return sum(row['type'] == 'prompt' and (not row['message'].startswith('Output schema: ') or
+            'version' not in json.loads(row['message'].split('\n\n', 1)[0].removeprefix(
+                'Output schema: ')).get('properties', {})) for row in rows)
+
     def attempts(self, result):
         with Store(self.data) as store:
             return store.observation_attempts(self.project, result['job_id'])
@@ -149,20 +155,20 @@ class PiObservationTests(unittest.TestCase):
         calls = []
         def evaluate(payload):
             calls.append(1)
-            prompts = sum(json.loads(line)['type'] == 'prompt' for line in self.pi.with_suffix('.trace').read_text().splitlines())
+            prompts = self.generation_prompts()
             return response(payload, .5, .1) if prompts == 2 else response(payload)
         result = self.process(jev_quality_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
         self.assertGreaterEqual(len(calls), 3)
         attempt = self.attempts(result)[0]
         self.assertEqual('fixture', attempt['requested_model'])
-        self.assertEqual(24, attempt['total_tokens'])
+        self.assertEqual(48, attempt['total_tokens'])
         self.assertEqual('generation-2', attempt['worker_turn_id'])
         evidence = json.loads(attempt['execution_receipt'])
         self.assertEqual(2, evidence['generation'])
         trace = [json.loads(line) for line in self.pi.with_suffix('.trace').read_text().splitlines()]
-        self.assertEqual(3, sum(row['type'] == 'prompt' for row in trace))
-        self.assertEqual(2, len(self.pi.with_suffix('.launch').read_text().splitlines()))
+        self.assertEqual(5, sum(row['type'] == 'prompt' for row in trace))
+        self.assertEqual(4, len(self.pi.with_suffix('.launch').read_text().splitlines()))
         self.assertEqual('idle', self.process()['status'])
 
     def test_one_correction_unknown_partial_and_failed_cumulative_usage(self):
@@ -359,7 +365,7 @@ class PiObservationTests(unittest.TestCase):
         measured = {'input': 10, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 12}
         cases = [('absent', {}, None, 12),
                  ('zero', {'usage': {**measured, 'reasoning': 0}}, 0, 12),
-                 ('correction', {'usages': [dict(measured, reasoning=2), measured]}, None, 24)]
+                 ('correction', {'usages': [dict(measured, reasoning=2), measured]}, None, 48)]
         for name, scenario, expected_reasoning, expected_total in cases:
             with self.subTest(case=name):
                 self.data = self.root / ('late-' + name)
@@ -374,12 +380,12 @@ class PiObservationTests(unittest.TestCase):
                 configure(self.data, jev_quality_enabled=True)
                 self.scenario(**scenario)
                 trace_path = self.pi.with_suffix('.trace')
-                baseline = sum(json.loads(line)['type'] == 'prompt' for line in trace_path.read_text().splitlines()) if trace_path.exists() else 0
+                baseline = self.generation_prompts() if trace_path.exists() else 0
                 replacement = []
                 before_late_receipt = []
                 first_generation = []
                 def evaluate(payload):
-                    prompts = sum(json.loads(line)['type'] == 'prompt' for line in trace_path.read_text().splitlines())
+                    prompts = self.generation_prompts()
                     if correction and prompts == baseline + 1:
                         with Store(self.data) as store:
                             job = store.status(self.project)['observation_jobs']['recent'][0]
@@ -405,7 +411,7 @@ class PiObservationTests(unittest.TestCase):
                 attempts = self.attempts(result)
                 self.assertEqual(['lease_expired', 'processed'], [a['outcome'] for a in attempts])
                 self.assertEqual(['fixture', 'fixture-next'], [a['requested_model'] for a in attempts])
-                self.assertEqual([expected_total, 12], [a['total_tokens'] for a in attempts])
+                self.assertEqual([expected_total, 24 if correction else 12], [a['total_tokens'] for a in attempts])
                 self.assertEqual(expected_reasoning, attempts[0]['reasoning_output_tokens'])
                 self.assertIsNone(attempts[1]['reasoning_output_tokens'])
                 self.assertEqual('reported', attempts[0]['usage_status'])
@@ -423,7 +429,7 @@ class PiObservationTests(unittest.TestCase):
                                'reasoning': 2, 'totalTokens': 17},
                               {'input': 10, 'output': 2, 'cacheRead': 0, 'cacheWrite': 0, 'totalTokens': 12}])
         def evaluate(payload):
-            prompts = sum(json.loads(line)['type'] == 'prompt' for line in self.pi.with_suffix('.trace').read_text().splitlines())
+            prompts = self.generation_prompts()
             if prompts == 3:
                 with Store(self.data) as store:
                     job = store.status(self.project)['observation_jobs']['recent'][0]
@@ -433,9 +439,9 @@ class PiObservationTests(unittest.TestCase):
         result = self.process(jev_quality_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
         attempt = self.attempts(result)[0]
-        self.assertEqual(29, attempt['total_tokens'])
-        self.assertEqual(22, attempt['input_tokens'])
-        self.assertEqual(7, attempt['output_tokens'])
+        self.assertEqual(63, attempt['total_tokens'])
+        self.assertEqual(46, attempt['input_tokens'])
+        self.assertEqual(17, attempt['output_tokens'])
         self.assertIsNone(attempt['reasoning_output_tokens'])
         self.assertEqual('reported', attempt['usage_status'])
 

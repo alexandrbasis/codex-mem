@@ -1,6 +1,8 @@
 """Quality quarantine is atomic with the existing observation lifecycle."""
 from __future__ import annotations
 
+from tests.test_summary_support import supported_review
+
 import json
 from pathlib import Path
 import tempfile
@@ -106,7 +108,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             summary = processor_fixtures.ProcessorTests.structured_summary(source_id)
             return processor_fixtures.ProcessorTests.receipt({"disposition": "processed", "notes": [note(source_id)],
                                            "session_summary": summary})
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=response)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=response)
         self.assertEqual("processed", result["status"], result)
         self.assertEqual(1, result["note_count"])
         self.assertEqual(1, result["session_summary_count"])
@@ -120,7 +122,7 @@ class JevQualityProcessorTests(unittest.TestCase):
 
     def test_required_summary_gets_the_same_vetted_history_as_generator(self):
         self.remember("Use checkout_id to avoid duplicate charges.")
-        earlier = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=response)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=response)
         self.assertEqual("processed", earlier["status"], earlier)
         raw = self.remember("Done.", "hook:Stop")
         calls = []
@@ -137,7 +139,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             self.assertTrue(any(row["evidence_role"] == "derived_note" for row in history))
             self.assertEqual([raw["id"]], [source["id"] for source in item["cited_sources"]])
             return response(payload)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assertEqual("processed", result["status"], result)
         self.assertEqual(1, result["session_summary_count"])
         self.assertEqual(1, len(calls))
@@ -190,17 +192,17 @@ class JevQualityProcessorTests(unittest.TestCase):
                 if key.startswith("item_1_") and key.endswith("_grounded"):
                     answer["noul"] = .5
             return result
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assert_preserved(raw, result, "jev_quality_uncertain")
         self.assertEqual(1, result["jev_quality"]["counts"]["accepted"])
 
     def test_missing_required_summary_is_rejected_before_quality(self):
         self.remember("Prior useful result.")
-        earlier = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=response)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=response)
         self.assertEqual("processed", earlier["status"], earlier)
         self.remember("Done.", "hook:Stop")
         evaluator = mock.Mock()
-        result = process_pending(self.project, self.home, runner=self.skipped, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.skipped, jev_quality_evaluator=evaluator)
         self.assertEqual("missing_required_summary", result["reason_code"])
         evaluator.assert_not_called()
 
@@ -216,7 +218,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             return processor_fixtures.ProcessorTests.receipt({"disposition": "processed", "notes": [note(source_id)],
                 "session_summary": processor_fixtures.ProcessorTests.structured_summary(source_id)})
         evaluator = mock.Mock()
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=filter_evaluator,
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=filter_evaluator,
                                  jev_quality_evaluator=evaluator)
         self.assertEqual("source_attribution_conflict", result["reason_code"])
         evaluator.assert_not_called()

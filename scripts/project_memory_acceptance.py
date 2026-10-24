@@ -151,6 +151,20 @@ def receipt(output: dict, model: str, effort: str) -> dict:
         'turn_completed': True, 'no_tools': True, 'rerouted': False}}
 
 
+def current_copy_review(request: dict) -> dict:
+    """Canned wiring-only support receipt for the non-live copy baseline."""
+    from codex_mem.processor import MODEL, REASONING_EFFORT
+    source = request['evidence'][-1]
+    return {'output': {'version': 'summary-support-v1', 'fields': [
+        {'field': field, 'verdict': 'supported', 'reason': 'supported',
+         'references': [{'source_id': source['id'], 'quote': source['body']}]}
+        for field in request['fields']]}, 'evidence': {
+            'thread_start': {'thread_id': 'copy-review', 'model': MODEL,
+                             'reasoning_effort': REASONING_EFFORT, 'model_provider': 'openai'},
+            'turn_started': {'thread_id': 'copy-review', 'turn_id': 'copy-review-turn'},
+            'turn_completed': True, 'no_tools': True, 'rerouted': False}}
+
+
 def copy_generator(request: dict) -> dict:
     """A source-copy test double, deliberately incapable of semantic extraction."""
     from codex_mem.episode_processor import MODEL, REASONING_EFFORT
@@ -382,7 +396,8 @@ def run_suite(*, fixture: dict | None = None, cutoff: int | None = None,
                                    session_id=event['session_id'], turn_id=event['id'])
             baseline_jobs = []
             for _ in range(len(events) + 1):
-                result = process_pending(project, current_data, runner=runner)
+                result = process_pending(project, current_data, runner=runner,
+                                         summary_reviewer=native_capture if live else current_copy_review)
                 baseline_jobs.append(result)
                 if result.get('status') not in ('processed', 'skipped'):
                     break

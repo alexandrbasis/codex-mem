@@ -7,6 +7,25 @@ import time
 scenario = json.loads(Path(__file__).resolve().with_suffix('.json').read_text())
 turn_number = 0
 
+
+def support_output(payload, scenario, root):
+    """Explicit canned reviewer decisions exercise orchestration, not semantics."""
+    counter = root.with_suffix('.support-count')
+    number = int(counter.read_text()) + 1 if counter.exists() else 1
+    counter.write_text(str(number))
+    mode = scenario.get('support_mode', 'supported')
+    if scenario.get('support_modes'):
+        mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
+    evidence = payload['evidence'][-1]
+    verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
+    output = {'version': 'summary-support-v1', 'fields': [
+        dict(field=field, verdict=verdict, reason='supported' if verdict == 'supported' else 'attribute_mismatch',
+             references=[dict(source_id=evidence['id'], quote=evidence['body'])])
+        for field in payload['fields']]}
+    if mode == 'malformed_review':
+        output['fields'] = []
+    return output, mode
+
 def send(value):
     print(json.dumps(value), flush=True)
 
@@ -65,7 +84,12 @@ for line in sys.stdin:
             event('thread/tokenUsage/updated', tokenUsage={'total': {'inputTokens': 10 * turn_number,
             'cachedInputTokens': 0, 'cacheWriteInputTokens': 0, 'outputTokens': 2 * turn_number,
             'reasoningOutputTokens': 0, 'totalTokens': 12 * turn_number}})
+        support = 'version' in params['outputSchema'].get('properties', {})
+        review_output = None
         mode = scenario.get('mode', 'valid')
+        if support:
+            payload = json.loads(params['input'][0]['text'].split('\n')[-1])
+            review_output, mode = support_output(payload, scenario, Path(__file__).resolve())
         if mode == 'timeout':
             time.sleep(30)
         if mode == 'disconnect':
@@ -108,6 +132,8 @@ for line in sys.stdin:
                 'evidence': {'summary': refs, 'goal': refs[:1], 'rationale': [], 'outcome': [],
                     'open_work': [], 'continuation_of': refs if merging or mode == 'pm_continue' else [],
                     'consolidation_of': refs if merging else []}}], 'claims': []}
+        if support:
+            output = review_output
         text = '{invalid'  if mode == 'invalid_json' else json.dumps(output)
         event('item/completed', item={'id': 'answer-' + str(turn_number), 'type': 'agentMessage', 'text': text, 'phase': 'final_answer'})
         event('turn/completed', turn={'id': turn_id, 'status': 'completed'})

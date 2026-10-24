@@ -79,3 +79,18 @@ Every token counter has `token_totals` metadata. `known_subtotal` sums measured 
 API-equivalent estimates remain separate from `actual_billing`, which is unavailable from local records. Pi usage never receives a Codex-credit estimate. A model name from another provider does not inherit an OpenAI price. Historical provenance remains intact during migration, and worker identifiers from different runtimes do not suppress each other's records.
 
 For a synthetic dashboard, run `python3 scripts/demo_execution_dashboard.py` from the repository. The script prints a temporary data directory, start command, and cleanup command. Stop that dashboard before cleanup. It does not start the background service or read user history.
+
+
+## Session summary support
+
+Every generated session summary now receives a separate support review through the selected Codex or Pi profile. This review runs even when the optional Jev quality gate is disabled. It checks every nonempty field against current observations and bounded session history. Source roles distinguish requests, assistant reports, tool records and earlier derived memory.
+
+The internal `summary-support-v1` response uses per-field verdicts and exact quotes. Code rejects missing fields, unknown source handles, missing quotes and ambiguous repeated quotes. A model verdict does not establish independent verification. Existing stored summaries remain readable, retain their current shape, and keep `verification=not_assessed`.
+
+Generation and review share the selected timeout. They can use one conservative generation correction, shared with the optional quality gate. The corrected summary is reviewed again. Failure reasons include `summary_support_invalid`, `summary_support_unavailable`, `summary_support_uncertain`, `summary_support_rejected` and `summary_support_stale`. A failure preserves raw work and commits no partial output.
+
+`Store.observation_attempts` exposes the additive `execution_calls` JSON column. It retains the generator and each reviewer identity, requested profile, outcome and cumulative metrics separately. Final attempt counters add independent calls once. Missing counters stay null, while detailed call records retain measured values. Attempt duration counts nested review time once. A crash can leave the latest call marked running; that label means no final call receipt was observed.
+
+For deterministic summary tests, pass separate `runner` and `summary_reviewer` implementations. Both receive the execution contract, including the selected profile and deadline. An injected generator without a reviewer cannot launch a live reviewer. The offline copy baseline supplies a canned reviewer and remains a transport test. See [the decision and limits](adr/0012-review-session-summary-support.md).
+
+Known summary rejection and uncertainty quarantine the failed batch without stopping fresh work in the retained service. Restart does not retry that batch. Malformed, unavailable, stale and unknown operational failures keep the existing project-blocking policy.

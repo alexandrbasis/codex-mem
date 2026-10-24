@@ -87,7 +87,7 @@ class ExecutionRequest:
             raise ValueError('execution input exceeds the bounded contract')
         if not isinstance(self.output_schema, Mapping):
             raise ValueError('execution output_schema must be an object')
-        if self.job_type not in ('observation', 'summary', 'project_memory', 'reconsideration', 'consolidation'):
+        if self.job_type not in ('observation', 'summary', 'summary_support', 'project_memory', 'reconsideration', 'consolidation'):
             raise ValueError('execution job_type is invalid')
         if not isinstance(self.profile, ExecutionProfile):
             raise ValueError('execution profile is invalid')
