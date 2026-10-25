@@ -143,6 +143,7 @@ PI_FAILURE_REASONS = frozenset({"pi_output_limit", "pi_disconnected", "pi_unexpe
     "pi_command_failed", "pi_identity_mismatch", "pi_session_changed", "pi_not_ephemeral_idle",
     "pi_automatic_restart", "pi_multiple_answers", "pi_cancelled", "pi_incomplete_run",
     "pi_provider_failure", "pi_forbidden_event", "pi_not_found", "unsupported_pi_version",
+    "pi_schema_helper_invalid", "pi_schema_proof_invalid",
     "pi_auth_check_unavailable", "pi_prompt_not_started", "pi_launch_failed", "pi_malformed_record"})
 
 

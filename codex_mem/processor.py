@@ -9,6 +9,7 @@ observation API.  Source text is evidence, never instructions.
 from __future__ import annotations
 
 from .host import source_role
+from .observation_contract import OBSERVATION_CLASSIFICATION_CONTRACT
 
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
@@ -301,8 +302,6 @@ def process_pending(
                 _, _, sources = _claim_parts(claimed)
                 generation_claim = claimed
                 from .summary_support import evidence_snapshot, SupportError
-                freshness_required = jev_enabled or quality_enabled or bool(claimed.get("summary_required")) or any(
-                    source_role(source.get("source")) == "assistant_report" for source in sources)
 
                 def check_retained(evidence, expected=None, semantic_failure=None):
                     status = _quality_source_status(store, workspace, claimed, evidence)
@@ -318,7 +317,7 @@ def process_pending(
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_stale")
                     return fingerprint
 
-                initial_fingerprint = check_retained(claimed) if freshness_required else None
+                initial_fingerprint = check_retained(claimed)
                 if jev_enabled:
                     from .jev_filter import filter_claim, JevFilterError, MODEL as JEV_MODEL, POLICY_VERSION
                     from .jev_audit import record_filter_attempt
@@ -371,14 +370,13 @@ def process_pending(
                 review_count = 0
                 support_count = 0
                 source_interpretation = None
-                rejected_summaries = {}
+                rejected_records = {}
                 summary_seen = False
                 deadline = time.monotonic() + checked_timeout
-                evidence_fingerprint = check_retained(generation_claim) if freshness_required else None
+                evidence_fingerprint = check_retained(generation_claim)
 
                 def source_guard(semantic_failure=None):
-                    if freshness_required:
-                        check_retained(generation_claim, evidence_fingerprint, semantic_failure)
+                    check_retained(generation_claim, evidence_fingerprint, semantic_failure)
 
                 def dispatch_source_guard():
                     try:
@@ -401,8 +399,8 @@ def process_pending(
                     source_guard()
                     if time.monotonic() >= deadline:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
-                    version = {"summary_source": "summary-source-v2", "summary_outcome": "summary-outcome-v2"}.get(
-                        call_id.rsplit("_", 1)[0], "summary-support-v3")
+                    version = {"summary_source": "summary-source-v4", "summary_outcome": "summary-outcome-v5"}.get(
+                        call_id.rsplit("_", 1)[0], "summary-support-v5")
                     detail = diagnostic(summary, generation_claim, version=version)
                     support_diagnostics.append(detail)
 
@@ -485,20 +483,23 @@ def process_pending(
                         mark_review("invalid", exc.subtype if isinstance(exc, SupportError) else "structure")
                         source_guard("summary_support_invalid")
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
-                    return validated, mark_review
+                    return validated, payload, mark_review
 
-                def review_summary(summary, *, allow_correction):
+                def review_packet(summary, notes=(), *, allow_correction):
                     nonlocal support_count, source_interpretation
-                    if summary is None:
+                    if summary is None and not notes:
                         return None
-                    from .summary_support import prepare, validate, correction_prompt, rejection_key
+                    from .summary_support import prepare, validate, correction_prompt, rejection_key, record_candidates, material_units
                     from .summary_outcome import prepare_source, validate_source, prepare_outcome, validate_outcome, outcome_applicable, current_report, OUTCOME_VERSION
                     # Shape, preservation and membership were checked by the caller.
                     # A changed lease/source cannot reuse a previous semantic decision.
                     source_guard()
-                    key = rejection_key(summary, evidence_fingerprint, source_interpretation, profile.to_dict())
-                    if key in rejected_summaries:
-                        raise ProcessorFailure("invalid_response", reason_code=rejected_summaries[key])
+                    records = record_candidates(summary, notes)
+                    _, _, unit_records = material_units(summary, notes)
+                    for record in records.values():
+                        key = rejection_key(record, evidence_fingerprint, source_interpretation, profile.to_dict())
+                        if key in rejected_records:
+                            raise ProcessorFailure("invalid_response", reason_code=rejected_records[key])
                     support_count += 1
                     if support_count > 2:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid")
@@ -510,34 +511,48 @@ def process_pending(
                         mark_review("uncertain" if reason == "summary_support_uncertain" else "rejected" if rejected else accepted_status)
                         source_guard(reason)
                         if rejected:
-                            rejected_summaries[rejection_key(summary, evidence_fingerprint,
-                                source_interpretation, profile.to_dict())] = reason
+                            for owner in {unit_records[item["unit"]] for item in rejected}:
+                                rejected_records[rejection_key(records[owner], evidence_fingerprint,
+                                    source_interpretation, profile.to_dict())] = reason
                             if allow_correction:
                                 return correction_prompt(rejected)
                             raise ProcessorFailure("invalid_response", reason_code=reason)
                         return None
 
-                    rejected, mark = review_stage(summary, f"summary_support_{support_count}",
-                        lambda: prepare(summary, generation_claim), validate)
-                    feedback = resolve(rejected, mark)
+                    support_review, support_payload, mark = review_stage(dict(summary=summary, notes=notes), f"summary_support_{support_count}",
+                        lambda: prepare(summary, generation_claim, notes), validate)
+                    feedback = resolve(support_review.issues, mark)
                     if feedback:
                         return feedback
+                    if summary is None:
+                        return None
                     # Reuse only within this attempt and after source_guard confirms the
                     # complete retained-evidence fingerprint captured before generation.
                     if source_interpretation is None and current_report(generation_claim) is not None:
-                        source_interpretation, mark = review_stage(summary, "summary_source_1",
+                        source_interpretation, _, mark = review_stage(summary, "summary_source_1",
                             lambda: prepare_source(generation_claim), validate_source)
                         source_guard()
                         mark("interpreted")
-                    if source_interpretation is None or not outcome_applicable(source_interpretation):
+                    if source_interpretation is None:
                         from .summary_support import diagnostic
                         source_guard()
                         support_diagnostics.append(diagnostic(summary, generation_claim,
                             status="not_assessed", version=OUTCOME_VERSION))
                         return None
-                    rejected, mark = review_stage(summary, f"summary_outcome_{support_count}",
-                        lambda: prepare_outcome(summary, source_interpretation), validate_outcome)
-                    return resolve(rejected, mark, "checked")
+                    from .summary_support import SupportError, diagnostic
+                    try:
+                        outcome_request = prepare_outcome(summary, support_review, source_interpretation, support_payload, notes)
+                    except SupportError as exc:
+                        support_diagnostics.append(diagnostic(summary, generation_claim, status="invalid",
+                            invalid_subtype=exc.subtype, version=OUTCOME_VERSION))
+                        raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
+                    if not outcome_applicable(outcome_request[2]):
+                        source_guard()
+                        support_diagnostics.append(diagnostic(summary, generation_claim, status="unused", version=OUTCOME_VERSION))
+                        return None
+                    outcome_review, _, mark = review_stage(summary, f"summary_outcome_{support_count}",
+                        lambda: outcome_request, validate_outcome)
+                    return resolve(outcome_review.issues, mark, outcome_review.status)
 
                 def review_quality(notes, summary, remaining, *, allow_correction=False):
                     nonlocal quality_audit, initial_quality_audit
@@ -605,7 +620,7 @@ def process_pending(
                         lifecycle_only = set(filter_audit.get("lifecycle_only_ids", []))
                         if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in candidate_notes):
                             raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
-                    feedback = review_summary(candidate_summary, allow_correction=review_count == 1)
+                    feedback = review_packet(candidate_summary, candidate_notes, allow_correction=review_count == 1)
                     if feedback is None and quality_enabled:
                         feedback = review_quality(candidate_notes, candidate_summary,
                             min(remaining, deadline - time.monotonic()), allow_correction=review_count == 1)
@@ -665,11 +680,10 @@ def process_pending(
                     if any(lifecycle_only.intersection(note.get("source_ids", [])) for note in notes):
                         raise ProcessorFailure("invalid_response", reason_code="source_attribution_conflict")
                 if reviewed_output != json.dumps(output, sort_keys=True, ensure_ascii=False):
-                    review_summary(summary, allow_correction=False)
+                    review_packet(summary, notes, allow_correction=False)
                     if quality_enabled and (notes or summary is not None):
                         review_quality(notes, summary, min(MAX_GATE_SECONDS, deadline - time.monotonic()))
-                if summary is not None:
-                    source_guard()
+                source_guard()
                 finished = store.finish_observation_batch(
                     workspace,
                     job_id,
@@ -680,7 +694,7 @@ def process_pending(
                     reviewed_evidence=({"ids": sorted({item["id"] for item in [
                         *generation_claim["sources"], *generation_claim.get("context", [])]}),
                         "current_ids": [source["id"] for source in generation_claim["sources"]],
-                        "fingerprint": evidence_fingerprint} if summary is not None else None),
+                        "fingerprint": evidence_fingerprint} if notes or summary is not None else None),
                     worker_thread_id=thread_id,
                     worker_turn_id=turn_id,
                 )
@@ -2037,10 +2051,7 @@ def _build_prompt(
         "subtitle, facts, narrative, concepts, files_read, "
         "files_modified. Facts are specific supported statements; narrative explains cause, "
         "rationale and consequences. "
-        "Use bugfix only when evidence establishes a correction, not for a still-failing test; "
-        "record an unresolved failure as discovery with its open work. Decision means an "
-        "accepted choice with rationale, not an unaccepted suggestion. Feature, refactor and "
-        "change require an observed change, never just an implementation request. "
+        f"{OBSERVATION_CLASSIFICATION_CONTRACT}"
         "Use concise concepts such as gotcha, how-it-works, "
         "why-it-exists, what-changed, problem-solution, pattern, trade-off. Include only paths "
         "actually present in evidence, never inferred files. Leave unsupported arrays empty. "
@@ -2443,7 +2454,7 @@ def _failed_after_claim(
     except (StoreError, ValueError, OSError) as exc:
         if safe_code == "invalid_response" and reason_code in {
             "jev_quality_unavailable", "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
-            "summary_support_rejected", "summary_support_uncertain", "summary_support_invalid",
+            "summary_support_rejected", "summary_support_uncertain", "summary_support_invalid", "summary_support_stale",
         }:
             # A replaced/revoked lease must not turn cancellation into an
             # automatic retry or mutate a newer worker's ownership.

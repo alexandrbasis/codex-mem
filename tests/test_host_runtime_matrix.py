@@ -22,6 +22,10 @@ from codex_mem.service import enqueue, service_status
 from codex_mem.store import Store
 
 ROOT = Path(__file__).resolve().parents[1]
+# Test infrastructure allowance for real synthetic executable startup and reviews.
+REAL_FIXTURE_ATTEMPT_BUDGET = 30
+READINESS_WATCHDOG = REAL_FIXTURE_ATTEMPT_BUDGET + 10
+OUTER_WATCHDOG = 3 * REAL_FIXTURE_ATTEMPT_BUDGET
 PAIRS = (("codex", "codex"), ("codex", "pi"), ("pi", "codex"), ("pi", "pi"))
 
 
@@ -36,12 +40,17 @@ class HostRuntimeMatrixTests(unittest.TestCase):
         self.host, self.runtime = host, runtime
         self.project_memory = project_memory
         self.executable = self.root / runtime
-        self.executable.write_text("#!" + sys.executable + "\n" +
-            (ROOT / "tests/fixtures" / ("execution_" + runtime + ".py")).read_text())
+        fixture = (ROOT / 'tests/fixtures' / ('execution_' + runtime + '.py')).read_text()
+        if runtime == 'codex':
+            gate_deadline = 'deadline = time.monotonic() + 10'
+            self.assertEqual(1, fixture.count(gate_deadline))
+            fixture = fixture.replace(gate_deadline,
+                'deadline = time.monotonic() + ' + str(REAL_FIXTURE_ATTEMPT_BUDGET), 1)
+        self.executable.write_text('#!' + sys.executable + '\n' + fixture)
         self.executable.chmod(0o700)
         self.profile = dict(runtime=runtime, provider="openai" if runtime == "codex" else "fixture",
             model="gpt-6-luna" if runtime == "codex" else "fixture",
-            reasoning_effort="medium" if runtime == "codex" else "low", timeout=3)
+            reasoning_effort="medium" if runtime == "codex" else "low", timeout=REAL_FIXTURE_ATTEMPT_BUDGET)
         # An empty native home and executable-only PATH prevent native history,
         # real providers, or a Codex installation from entering the Pi/Pi case.
         self.environment = dict(PATH=str(self.root), HOME=str(self.root / "home"),
@@ -72,7 +81,7 @@ class HostRuntimeMatrixTests(unittest.TestCase):
         payload.update(values)
         result = subprocess.run([sys.executable, "-m", "codex_mem.pi_host"],
             input=json.dumps(payload), text=True, capture_output=True, cwd=ROOT,
-            env={**os.environ, **self.environment}, timeout=10)
+            env={**os.environ, **self.environment}, timeout=OUTER_WATCHDOG)
         self.assertEqual(0, result.returncode, result.stderr)
         return json.loads(result.stdout)
 
@@ -111,16 +120,44 @@ class HostRuntimeMatrixTests(unittest.TestCase):
         try:
             self.assertEqual("queued", enqueue(self.project, self.data, retry_failed=retry)["status"])
             self.assertEqual(1, service_status(self.data)["queued_projects"])
-            code = "from codex_mem.service import run_service; import json; print(json.dumps(run_service(max_cycles=1, poll_interval=0, processor_timeout=3)))"
+            code = "from codex_mem.service import run_service; import json; print(json.dumps(run_service(max_cycles=1, poll_interval=0, processor_timeout=" + str(REAL_FIXTURE_ATTEMPT_BUDGET) + ")))"
             if self.project_memory:
                 code = ("from codex_mem.episode_processor import process_project_memory; import json,sys; "
                         "print(json.dumps(process_project_memory(sys.argv[1])))")
             result = subprocess.run([sys.executable, "-c", code, str(self.project)], cwd=ROOT, text=True,
-                capture_output=True, env={**os.environ, **self.environment}, timeout=15)
+                capture_output=True, env={**os.environ, **self.environment}, timeout=OUTER_WATCHDOG)
             self.assertEqual(0, result.returncode, result.stderr)
             return json.loads(result.stdout)
         finally:
             configure(self.data, service_enabled=False)
+
+    def diagnostics(self):
+        with Store(self.data) as store:
+            if self.project_memory:
+                memory = ProjectMemory(store)
+                return dict(attempts=memory.attempts(self.project), coverage=memory.snapshot(self.project)['coverage'])
+            jobs = store.status(self.project)['observation_jobs']['recent']
+            return dict(service=service_status(self.data), jobs=[dict(
+                job=store.observation_job_status(self.project, row['job_id']),
+                attempts=store.observation_attempts(self.project, row['job_id'])) for row in jobs])
+
+    def committed_note(self, source_id, receipt):
+        diagnostics = self.diagnostics()
+        self.assertEqual(1, len(diagnostics['jobs']), dict(receipt=receipt, diagnostics=diagnostics))
+        job = diagnostics['jobs'][0]['job']
+        self.assertEqual('processed', job['status'], dict(receipt=receipt, diagnostics=diagnostics))
+        self.assertEqual(1, len(job['output_ids']), diagnostics)
+        with Store(self.data) as store:
+            note = store.get(self.project, job['output_ids'])[0]
+            raw = store.get(self.project, [source_id])[0]
+            self.assertEqual([source_id], note['source_ids'], diagnostics)
+            self.assertEqual(str(self.project), note['project'])
+            self.assertEqual(job['session_id'], note['session_id'])
+            self.assertIsNone(note['superseded_by'])
+            self.assertEqual(note['id'], raw['superseded_by'])
+            local = store.context(self.project, query='local import', exclude_session='reader', allow_remote=False)
+        self.assertIn('local import', local.lower(), dict(receipt=receipt, diagnostics=diagnostics, local_context=local))
+        return diagnostics
 
     def test_observation_queue_delivers_next_request_for_every_pair(self):
         for host, runtime in PAIRS:
@@ -135,8 +172,11 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                     source_id = sources[0]["id"]
                     self.assertEqual("user_intent", store.get(self.project, [source_id])[0]["provenance"]["record_role"])
                 configure(self.data, processing_profile=self.profile)
-                self.assertEqual(1, self.drain()["jobs"])
-                self.assertIn("local import", self.context().lower())
+                drained = self.drain()
+                self.assertEqual(1, drained['jobs'], drained)
+                diagnostics = self.committed_note(source_id, drained)
+                context = self.context()
+                self.assertIn('local import', context.lower(), dict(context=context, diagnostics=diagnostics))
                 with Store(self.data) as store:
                     notes = store.search(self.project, "local import")
                     generated = [row for row in notes if row["id"] != source_id]
@@ -162,7 +202,8 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                     source_ids = {row["id"] for row in sources}
                     roles = {row["provenance"]["record_role"] for row in store.get(self.project, list(source_ids))}
                     self.assertEqual({"user_intent", "tool_record", "assistant_report"}, roles)
-                self.assertEqual("processed", self.drain()["status"])
+                processed = self.drain()
+                self.assertEqual('processed', processed['status'], dict(receipt=processed, diagnostics=self.diagnostics()))
                 with Store(self.data) as store:
                     memory = ProjectMemory(store)
                     state = memory.snapshot(self.project)
@@ -194,7 +235,8 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                 self.capture("<codex_mem_untrusted_context>INJECTED</codex_mem_untrusted_context>", "injection")
                 self.capture("HIDDEN_CONTINUATION", "hidden-report", role="assistant")
                 self.capture()
-                self.assertEqual("processed", self.drain()["status"])
+                processed = self.drain()
+                self.assertEqual('processed', processed['status'], dict(receipt=processed, diagnostics=self.diagnostics()))
                 with Store(self.data) as store:
                     sources = store.timeline(self.project)
                     self.assertEqual(1, len(sources), sources)
@@ -223,14 +265,20 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                         self.assertEqual(1, state["coverage"]["pending_events"])
                         attempt = memory.attempts(self.project)[0]
                         self.assertEqual("failed", attempt["outcome"])
-                        self.assertEqual(12, attempt["total_tokens"],
-                            {"failed_receipt": failed, "attempt": attempt})
+                        self.assertEqual(12, attempt['total_tokens'], dict(failed_receipt=failed, attempt=attempt))
+                        if runtime == 'pi':
+                            evidence = json.loads(attempt['execution_receipt'])
+                            self.assertEqual(1, evidence['generation'], dict(receipt=failed, attempt=attempt))
+                            self.assertGreater(attempt['usage_updates'], 0, dict(receipt=failed, attempt=attempt))
+                            if mode == 'cancelled':
+                                self.assertEqual('pi_cancelled', failed['reason_code'], dict(receipt=failed, attempt=attempt))
                         job_id = attempt["job_id"]
                         memory.retry_failed(self.project, include_quarantined=True)
                     # The source remains readable and both adapters stay available.
                     self.context()
                     self.scenario()
-                    self.assertEqual("processed", self.drain()["status"])
+                    recovery = self.drain()
+                    self.assertEqual('processed', recovery['status'], dict(receipt=recovery, diagnostics=self.diagnostics()))
                     with Store(self.data) as store:
                         memory = ProjectMemory(store)
                         attempts = memory.attempts(self.project)
@@ -243,25 +291,31 @@ class HostRuntimeMatrixTests(unittest.TestCase):
         for host, runtime in PAIRS:
             with self.subTest(host=host, runtime=runtime):
                 self.prepare(host, runtime, project_memory=True)
-                self.profile["timeout"] = 10
-                configure(self.data, processing_profile=self.profile)
                 self.capture()
                 with Store(self.data) as store:
                     source_id = store.timeline(self.project)[0]["id"]
                 gate = self.root / "release"
                 self.scenario(gate=str(gate))
+                ready = False
+                phase = None
                 with ThreadPoolExecutor(max_workers=1) as pool:
                     worker = pool.submit(self.drain)
                     try:
-                        deadline = time.monotonic() + 5
-                        while not gate.with_suffix(".ready").exists() and time.monotonic() < deadline:
+                        deadline = time.monotonic() + READINESS_WATCHDOG
+                        while time.monotonic() < deadline and not worker.done():
+                            if gate.with_suffix('.ready').exists():
+                                phase = self.diagnostics()
+                                with Store(self.data) as store:
+                                    ready = bool(store.get(self.project, [source_id]))
+                                    if ready:
+                                        store.forget(self.project, ids=[source_id])
+                                break
                             time.sleep(.01)
-                        self.assertTrue(gate.with_suffix(".ready").exists())
-                        with Store(self.data) as store:
-                            store.forget(self.project, ids=[source_id])
                     finally:
                         gate.touch()
-                    result = worker.result(timeout=15)
+                        result = worker.result(timeout=OUTER_WATCHDOG)
+                        final = self.diagnostics()
+                self.assertTrue(ready, dict(phase=phase, receipt=result, diagnostics=final))
                 self.assertEqual("deferred", result["status"], result)
                 self.assertEqual("source_changed", result["code"])
                 with Store(self.data) as store:
@@ -278,39 +332,68 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                 with ThreadPoolExecutor(max_workers=2) as pool:
                     captures = [pool.submit(self.capture, host=host) for host in ("codex", "pi")]
                     for capture in captures:
-                        capture.result(timeout=10)
+                        capture.result(timeout=OUTER_WATCHDOG)
                 with Store(self.data) as store:
                     sources = store.timeline(self.project)
                     self.assertEqual(2, len(sources))
                     self.assertEqual(2, len({row["session_id"] for row in sources}))
-                self.profile["timeout"] = 10
-                configure(self.data, processing_profile=self.profile)
                 gate = self.root / "release"
                 self.scenario(gate=str(gate))
                 configure(self.data, processor_workers=2)
                 trace = self.executable.with_suffix(".trace")
                 marker = '"turn/start"' if runtime == "codex" else '"type": "prompt"'
+                ready = False
+                phase = None
                 with ThreadPoolExecutor(max_workers=1) as pool:
                     worker = pool.submit(self.drain)
                     try:
-                        deadline = time.monotonic() + 5
-                        while time.monotonic() < deadline:
-                            if trace.exists() and trace.read_text().count(marker) == 2:
+                        deadline = time.monotonic() + READINESS_WATCHDOG
+                        while time.monotonic() < deadline and not worker.done():
+                            phase = self.diagnostics()
+                            jobs = phase['jobs']
+                            calls = [json.loads(row['attempts'][-1]['execution_calls'])
+                                     if row['attempts'][-1]['execution_calls'] is not None else {}
+                                     for row in jobs if row['attempts']]
+                            prompts = trace.read_text().count(marker) if trace.exists() else 0
+                            active = phase['service'].get('workers', {}).get('active')
+                            if (prompts == 2 and len(jobs) == len(calls) == 2 and active == 2
+                                    and all(row['job']['status'] == 'running' for row in jobs)
+                                    and len({row['job']['session_id'] for row in jobs}) == 2
+                                    and all(row.get('generation', {}).get('outcome') == 'running' for row in calls)):
+                                ready = True
+                                # Both distinct leased sessions reached generation before release.
+                                configure(self.data, processing_profile={**self.profile, 'model': 'unavailable-next'})
                                 break
                             time.sleep(.01)
-                        self.assertEqual(2, trace.read_text().count(marker))
-                        # This incompatible profile must affect only a later attempt.
-                        configure(self.data, processing_profile={**self.profile, "model": "unavailable-next"})
                     finally:
                         gate.touch()
-                    self.assertEqual(2, worker.result(timeout=15)["jobs"])
+                        result = worker.result(timeout=OUTER_WATCHDOG)
+                        final = self.diagnostics()
+                self.assertTrue(ready, dict(phase=phase, receipt=result, diagnostics=final))
+                self.assertEqual(2, result['jobs'], dict(receipt=result, diagnostics=final))
+                self.assertTrue(all(row['job']['status'] == 'processed' and len(row['job']['output_ids']) == 1
+                                    for row in final['jobs']), dict(receipt=result, diagnostics=final))
                 from codex_mem.usage_api import usage_report
                 report = usage_report(self.data, project=self.project, from_date="2020-01-01", to_date="2030-01-01",
                     group_by=["runtime", "model"])
                 rows = report["groups"]["observer"]["model"]["rows"]
                 self.assertEqual([self.profile["model"]], [row["value"] for row in rows])
                 self.assertEqual({"processed": 2}, rows[0]["outcome_counts"])
-                self.assertEqual(24, rows[0]["token_totals"]["total_tokens"]["total"])
+                with Store(self.data) as store:
+                    jobs = store.status(self.project)['observation_jobs']['recent']
+                    self.assertEqual(2, len(jobs))
+                    totals = []
+                    for job in jobs:
+                        attempt = store.observation_attempts(self.project, job['job_id'])[0]
+                        calls = json.loads(attempt['execution_calls'])
+                        self.assertEqual({'generation', 'summary_support_1'}, set(calls))
+                        # Each external fixture call reports twelve synthetic tokens.
+                        self.assertEqual([12, 12], [calls[key]['metrics']['total_tokens']
+                            for key in ('generation', 'summary_support_1')])
+                        total = sum(call['metrics']['total_tokens'] for call in calls.values())
+                        self.assertEqual(total, attempt['total_tokens'])
+                        totals.append(total)
+                self.assertEqual(sum(totals), rows[0]['token_totals']['total_tokens']['total'])
                 self.assertIn("local import", self.context(host="codex").lower())
                 self.assertIn("local import", self.context(host="pi").lower())
                 self.capture(identity="next-user")

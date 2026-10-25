@@ -108,29 +108,152 @@ class PiProjectMemoryTests(unittest.TestCase):
             self.assertGreater(memory.snapshot(self.project)['coverage']['pending_events'], 0)
 
 
-    def test_failed_packets_leave_no_memory_keep_measured_usage_and_can_retry(self):
-        for mode in ('invalid_json', 'schema', 'unknown_ref', 'provider_error', 'cancelled',
-                     'tool', 'rerouted', 'disconnect', 'timeout', 'no_settlement', 'overflow', 'stderr_overflow', 'malformed'):
-            with self.subTest(mode=mode):
-                self.scenario(mode=mode)
-                failed = self.process()
-                self.assertEqual('failed', failed['status'], failed)
-                with Store(self.data) as store:
-                    memory = ProjectMemory(store)
-                    self.assertEqual([], memory.snapshot(self.project)['episodes'])
-                    self.assertGreater(memory.snapshot(self.project)['coverage']['pending_events'], 0)
-                    attempt = memory.attempts(self.project)[0]
-                    self.assertEqual(12, attempt['total_tokens'])
-                    self.assertEqual('failed', attempt['outcome'])
-                    if mode == 'tool':
-                        self.assertEqual(1, json.loads(attempt['execution_receipt'])['tool_calls_observed'])
-                launch = json.loads(self.pi.with_suffix('.launch').read_text().splitlines()[-1])
-                self.assertFalse(Path(launch['cwd']).exists())
-                with self.assertRaises(ProcessLookupError):
-                    os.kill(launch['pid'], 0)
-                self.retry()
+    def assert_failed_packet_retained(self, failed, *, total_tokens, usage_status=None, usage_updates=None):
+        self.assertEqual('failed', failed['status'], failed)
+        with Store(self.data) as store:
+            memory = ProjectMemory(store)
+            self.assertEqual([], memory.snapshot(self.project)['episodes'])
+            self.assertEqual(1, memory.snapshot(self.project)['coverage']['pending_events'])
+            attempt = next(row for row in memory.attempts(self.project)
+                           if row['attempt_id'] == failed['usage_attempt_id'])
+            self.assertEqual(total_tokens, attempt['total_tokens'])
+            self.assertEqual('failed', attempt['outcome'])
+            if usage_status is not None:
+                self.assertEqual(usage_status, attempt['usage_status'])
+            if usage_updates is not None:
+                self.assertEqual(usage_updates, attempt['usage_updates'])
+        launch = json.loads(self.pi.with_suffix('.launch').read_text().splitlines()[-1])
+        self.assertFalse(Path(launch['cwd']).exists())
+        with self.assertRaises(ProcessLookupError):
+            os.kill(launch['pid'], 0)
+        return attempt
+
+    def assert_explicit_retry_processes(self, failed):
         self.scenario()
-        self.assertEqual('processed', self.process()['status'])
+        self.assertEqual('idle', self.process()['status'])
+        self.retry()
+        processed = self.process()
+        self.assertEqual('processed', processed['status'], processed)
+        self.assertNotEqual(failed['usage_attempt_id'], processed['usage_attempt_id'])
+        with Store(self.data) as store:
+            snapshot = ProjectMemory(store).snapshot(self.project)
+            self.assertEqual(1, len(snapshot['episodes']))
+            self.assertEqual(0, snapshot['coverage']['pending_events'])
+
+    def assert_failed_mode_can_retry(self, mode):
+        self.scenario(mode=mode)
+        failed = self.process()
+        attempt = self.assert_failed_packet_retained(failed, total_tokens=12)
+        if mode == 'tool':
+            self.assertEqual(1, json.loads(attempt['execution_receipt'])['tool_calls_observed'])
+        if mode == 'no_settlement':
+            evidence = json.loads(attempt['execution_receipt'])
+            self.assertTrue(evidence['agent_end_observed'])
+            self.assertFalse(evidence['settled'])
+        self.assert_explicit_retry_processes(failed)
+
+    def test_failed_invalid_json_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('invalid_json')
+
+    def test_failed_schema_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('schema')
+
+    def test_failed_unknown_ref_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('unknown_ref')
+
+    def test_failed_provider_error_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('provider_error')
+
+    def test_failed_cancelled_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('cancelled')
+
+    def test_failed_tool_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('tool')
+
+    def test_failed_rerouted_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('rerouted')
+
+    def test_failed_disconnect_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('disconnect')
+
+    def test_failed_no_settlement_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('no_settlement')
+
+    def test_failed_overflow_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('overflow')
+
+    def test_failed_stderr_overflow_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('stderr_overflow')
+
+    def test_failed_malformed_packet_can_retry_independently(self):
+        self.assert_failed_mode_can_retry('malformed')
+
+    def controlled_runtime_clock(self):
+        import time
+        from types import SimpleNamespace
+        started = time.monotonic()
+        clock = [started]
+        watchdog = [False]
+        def expire():
+            clock[0] = time.monotonic() + self.selected['timeout'] + 1
+        def monotonic():
+            # This is a test watchdog, separate from the unchanged three-second
+            # simulated production deadline. Never count watchdog expiry as proof.
+            if time.monotonic() - started >= 30:
+                watchdog[0] = True
+                expire()
+            return clock[0]
+        return expire, SimpleNamespace(monotonic=monotonic), watchdog
+
+    def test_timeout_after_accepted_usage_keeps_exact_measurement_and_can_retry(self):
+        from codex_mem import pi_runtime
+        self.scenario(mode='timeout')
+        expire, runtime_time, watchdog = self.controlled_runtime_clock()
+        accepted = []
+        def checkpoint(receipt):
+            usage = receipt['metrics']['usage']
+            if not accepted and (usage.get('tokens') or {}).get('total_tokens') == 12:
+                accepted.append(usage)
+                expire()
+        # Hold only the runtime clock through real subprocess startup. The callback
+        # expires it after real usage acceptance; the next real remaining() fails.
+        with mock.patch.object(pi_runtime, 'time', runtime_time):
+            failed = self.process(runner=pi_runtime.PiProcessorRunner(usage_checkpoint=checkpoint))
+        self.assertFalse(watchdog[0], 'Usage acceptance precondition was not reached within the test watchdog.')
+        self.assertEqual(1, len(accepted))
+        self.assertEqual(12, accepted[0]['tokens']['total_tokens'])
+        self.assertEqual('timeout', failed['code'], failed)
+        attempt = self.assert_failed_packet_retained(failed, total_tokens=12,
+                                                     usage_status='reported', usage_updates=1)
+        evidence = json.loads(attempt['execution_receipt'])
+        self.assertEqual(1, evidence['generation'])
+        self.assertFalse(evidence['settled'])
+        self.assertFalse(evidence['agent_end_observed'])
+        self.assert_explicit_retry_processes(failed)
+
+    def test_timeout_before_measurement_keeps_unknown_usage_and_can_retry(self):
+        from codex_mem import pi_runtime
+        self.scenario(mode='timeout')
+        expire, runtime_time, watchdog = self.controlled_runtime_clock()
+        prepared = []
+        def checkpoint(receipt):
+            if not prepared:
+                prepared.append(receipt)
+                expire()
+        # The first real prepared-session checkpoint has no measured usage.
+        # Expiry is observed by the real send/remaining path before any prompt.
+        with mock.patch.object(pi_runtime, 'time', runtime_time):
+            failed = self.process(runner=pi_runtime.PiProcessorRunner(usage_checkpoint=checkpoint))
+        self.assertFalse(watchdog[0], 'Prepared-session precondition was not reached within the test watchdog.')
+        self.assertEqual(1, len(prepared))
+        self.assertIsNone(prepared[0]['metrics']['usage']['tokens'])
+        self.assertEqual(0, prepared[0]['metrics']['usage']['updates'])
+        self.assertEqual('timeout', failed['code'], failed)
+        self.assert_failed_packet_retained(failed, total_tokens=None,
+                                           usage_status='unknown', usage_updates=0)
+        commands = [json.loads(line)['type'] for line in self.pi.with_suffix('.trace').read_text().splitlines()]
+        self.assertNotIn('prompt', commands)
+        self.assert_explicit_retry_processes(failed)
 
     def test_configuration_failures_never_send_prepared_input(self):
         for scenario, reason in (({'auth_status': 'not_ready'}, 'authentication_unavailable'),

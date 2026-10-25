@@ -175,6 +175,7 @@ def recover_attempt(
     ).fetchone()
     if present is None:
         return
+    _recover_call_usage(connection, checked_job_id, checked_attempt)
     connection.execute(
         """
         UPDATE observer_usage_attempts
@@ -235,6 +236,7 @@ def reconcile_attempts(
                     code = "lease_expired"
                 elif outcome == "failed":
                     code = row["error_code"] if row["error_code"] in ERROR_CODES else "runner_failure"
+                _recover_call_usage(connection, row["job_id"], row["attempt_count"])
                 connection.execute(
                     """
                     UPDATE observer_usage_attempts
@@ -529,6 +531,39 @@ def _aggregate_calls(calls, duration_ms, generation):
     return result
 
 
+def _saved_call_totals(existing, duration_ms):
+    """Saved independent calls own totals once their ledger is present."""
+    if not existing.get("execution_calls"):
+        return None
+    calls = json.loads(existing["execution_calls"])
+    if not calls:
+        return None
+    aggregate = _aggregate_calls(calls, duration_ms, existing)
+    if aggregate["usage_status"] == "reported" and any(call["outcome"] == "running" for call in calls.values()):
+        aggregate["usage_status"] = "partial"
+    return aggregate
+
+
+def _recover_call_usage(connection, job_id, attempt_count):
+    """Replace interrupted totals from saved calls inside the recovery transaction."""
+    cursor = connection.execute(
+        "SELECT * FROM observer_usage_attempts WHERE job_id=? AND attempt_count=? AND outcome='running'",
+        (job_id, attempt_count))
+    row = cursor.fetchone()
+    if row is None:
+        return
+    existing = dict(zip((column[0] for column in cursor.description), row))
+    aggregate = _saved_call_totals(existing, existing["duration_ms"])
+    if aggregate is None:
+        return
+    # Do not infer whole-attempt elapsed time or overwrite generation provenance.
+    fields = (*COUNTERS, "usage_status", "usage_updates")
+    connection.execute(
+        "UPDATE observer_usage_attempts SET " + ", ".join(f"{field}=?" for field in fields)
+        + " WHERE job_id=? AND attempt_count=? AND outcome='running'",
+        (*(aggregate[field] for field in fields), job_id, attempt_count))
+
+
 def finish_attempt(
     store: Store,
     project: str | Path,
@@ -597,13 +632,15 @@ def finish_attempt(
                     "actual_model=?, actual_reasoning_effort=? WHERE job_id=? AND attempt_count=?",
                     (*new, checked_job_id, checked_attempt))
             merged = _merge(existing, normalized, outcome)
-            if total_duration_ms is not None and existing["outcome"] in ("running", "lease_expired") and existing["execution_calls"]:
-                # Whole-attempt elapsed time includes nested reviewer execution.
-                # Never add nested wall time to the generator's wall time.
-                aggregate = _aggregate_calls(json.loads(existing["execution_calls"]),
-                                             _integer(total_duration_ms, "duration_ms"), normalized)
-                for key in (*COUNTERS, "usage_status", "usage_updates", "duration_ms"):
-                    merged[key] = aggregate[key]
+            if outcome != "running":
+                aggregate = _saved_call_totals(dict(existing), merged["duration_ms"])
+                if aggregate is not None:
+                    if total_duration_ms is not None and existing["outcome"] in ("running", "lease_expired"):
+                        # Only an explicitly measured whole-attempt duration may replace it.
+                        aggregate["duration_ms"] = _integer(total_duration_ms, "duration_ms")
+                    # A late generator receipt cannot erase independent reviewer gaps.
+                    for key in (*COUNTERS, "usage_status", "usage_updates", "duration_ms"):
+                        merged[key] = aggregate[key]
             terminal_at = existing["finished_at"]
             if merged["outcome"] != "running" and terminal_at is None:
                 terminal_at = _utc_now()

@@ -43,6 +43,7 @@ FIXED_SOURCES = (
     "docs/PI_MCP.md",
     "docs/EXECUTION.md",
     "docs/adr/0012-review-session-summary-support.md",
+    "codex_mem/pi_schema_helper.js",
     "tests/test_summary_support.py",
     "tests/test_summary_support_contract.py",
     "tests/test_summary_outcome.py",

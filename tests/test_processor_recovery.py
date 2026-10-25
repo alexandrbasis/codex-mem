@@ -12,6 +12,7 @@ from codex_mem.config import configure
 from codex_mem.processor import MODEL, PROCESSOR_ID, REASONING_EFFORT, ProcessorFailure
 from codex_mem import processor
 from codex_mem.store import Store
+from tests.test_summary_support import supported_review
 
 
 class ProcessorRecoveryTests(unittest.TestCase):
@@ -53,7 +54,7 @@ class ProcessorRecoveryTests(unittest.TestCase):
 
     def recover(self, **kwargs):
         arguments = dict(job_id=self.jobs["rejected"], expected_error_code="invalid_response",
-                         expected_attempt_count=1, runner=self.valid_receipt)
+                         expected_attempt_count=1, runner=self.valid_receipt, summary_reviewer=supported_review)
         arguments.update(kwargs)
         return processor.recover_failed_batch(self.project, self.base, **arguments)
 
@@ -173,7 +174,7 @@ class ProcessorRecoveryTests(unittest.TestCase):
         accepted = processor.process_pending(
             self.project, self.base, retry_job_id=self.jobs["rejected"],
             retry_error_code="invalid_response", retry_attempt_count=1,
-            retry_input_fingerprint=fingerprint, runner=self.valid_receipt,
+            retry_input_fingerprint=fingerprint, runner=self.valid_receipt, summary_reviewer=supported_review,
         )
         self.assertEqual("processed", accepted["status"], accepted)
 

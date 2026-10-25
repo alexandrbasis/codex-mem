@@ -52,7 +52,7 @@ class SupportContractTests(unittest.TestCase):
         output = supported_review(payload)['output']
         comparison(output, 'completed')['candidate_assertion'] = 'Reported prior result with a conditional next step.'
         self.assertTrue(schema_accepts(output, schema))
-        self.assertEqual([], support.validate(output, payload))
+        self.assertEqual((), support.validate(output, payload).issues)
         self.assertEqual(self.summary['completed'], payload['units']['completed'])
 
     def test_canned_reviewers_cover_complete_long_units_with_bounded_comparisons(self):
@@ -66,7 +66,7 @@ class SupportContractTests(unittest.TestCase):
                     self.assertEqual(summary, payload['units'])
                     self.assertEqual(set(summary), {row['unit_id'] for row in output['rows']})
                     self.assertTrue(schema_accepts(output, schema))
-                    self.assertEqual([], support.validate(output, payload))
+                    self.assertEqual((), support.validate(output, payload).issues)
                     self.assertEqual(length, len(payload['units']['notes']))
 
     def test_spans_cover_exact_unicode_repeated_body_and_retain_parent_qualifications(self):
@@ -99,7 +99,8 @@ class SupportContractTests(unittest.TestCase):
             value = copy.deepcopy(self.output); change(value); cases.append((name, value, expected, subtype))
         for verdict in support.VERDICTS:
             for refs in ([], ['current1:1']):
-                case((verdict, refs), lambda value, v=verdict, r=refs: comparison(value).update(verdict=v, evidence_span_ids=r),
+                case((verdict, refs), lambda value, v=verdict, r=refs: comparison(value).update(verdict=v, evidence_span_ids=r,
+                         report_binding=dict(target='other', report_span_ids=[], properties=[])),
                      bool(refs) or verdict not in ('supported', 'contradicted'), 'verdict')
         case('missing unit', lambda v: v['rows'][0].update(unit_id='completed'), False, 'unit_coverage')
         case('unknown unit', lambda v: v['rows'][0].update(unit_id='other'), False, 'unit_coverage')
@@ -116,10 +117,10 @@ class SupportContractTests(unittest.TestCase):
             with self.subTest(case=name):
                 if expected: self.assertTrue(schema_accepts(value, self.schema))
                 if expected:
-                    support.validate(value, self.payload)
+                    support.validate(value, self.payload).issues
                 else:
                     with self.assertRaises(support.SupportError) as caught:
-                        support.validate(value, self.payload)
+                        support.validate(value, self.payload).issues
                     self.assertEqual(subtype, caught.exception.subtype)
 
     def test_all_assertions_and_incomplete_coverage_block_acceptance(self):
@@ -127,14 +128,14 @@ class SupportContractTests(unittest.TestCase):
         other = dict(comparison(self.output), candidate_assertion='Five checks passed.',
             evidence_assertion='Five checks were not run.', value_comparison='Not run contradicts passed.', verdict='contradicted')
         comparisons.append(other)
-        rejected = support.validate(self.output, self.payload)
-        self.assertEqual([{key: value for key, value in other.items() if key not in ('unit_id', 'coverage')}], [item['comparison'] for item in rejected])
+        rejected = support.validate(self.output, self.payload).issues
+        self.assertEqual([{key: value for key, value in other.items() if key not in ('unit_id', 'coverage', 'candidate_span_ids', 'report_binding')}], [item['comparison'] for item in rejected])
         feedback = support.correction_prompt(rejected)
         self.assertIn('Five checks were not run.', feedback)
         self.assertIn('untrusted feedback', feedback)
         comparisons.pop()
         comparison(self.output)['coverage'] = 'incomplete'
-        self.assertEqual('insufficient_context', support.validate(self.output, self.payload)[0]['verdict'])
+        self.assertEqual('insufficient_context', support.validate(self.output, self.payload).issues[0]['verdict'])
 
     def test_bounded_inputs_and_safe_diagnostics(self):
         self.summary['completed'] = 'x' * 3001
@@ -150,7 +151,7 @@ class SupportContractTests(unittest.TestCase):
         with self.assertRaises(ValueError): support.safe_diagnostic(dict(detail, candidate='PRIVATE_TEXT'))
 
     def test_both_native_decoders_reject_duplicate_unit_keys(self):
-        raw = '{"version":"summary-support-v3","units":{"title":{},"title":{}}}'
+        raw = '{"version":"summary-support-v5","units":{"title":{},"title":{}}}'
         monitor = mock.Mock(thread_id='fixture', turn_id='turn')
         monitor.final_agent_text.return_value = raw
         for decode in (lambda: _read_valid_final_output(monitor), lambda: pi_json(raw)):
@@ -161,11 +162,11 @@ class SupportContractTests(unittest.TestCase):
         output = copy.deepcopy(self.output)
         target = comparison(output)
         output['rows'].extend(dict(target, candidate_assertion=f'Additional assertion {i}') for i in range(7))
-        self.assertEqual([], support.validate(output, self.payload))
+        self.assertEqual((), support.validate(output, self.payload).issues)
         output['rows'][-1]['coverage'] = 'incomplete'
-        with self.assertRaises(support.SupportError) as caught: support.validate(output, self.payload)
+        with self.assertRaises(support.SupportError) as caught: support.validate(output, self.payload).issues
         self.assertEqual('unit_coverage', caught.exception.subtype)
         output['rows'][-1]['coverage'] = 'complete'
         output['rows'].append(dict(target))
-        with self.assertRaises(support.SupportError) as caught: support.validate(output, self.payload)
+        with self.assertRaises(support.SupportError) as caught: support.validate(output, self.payload).issues
         self.assertEqual('bounds', caught.exception.subtype)

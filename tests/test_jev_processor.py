@@ -73,7 +73,7 @@ class JevProcessorTests(unittest.TestCase):
             self.assertEqual('KEEP_DECISION_SENTINEL', request['sources'][0]['body'])
             self.assertNotIn('REJECT_', json.dumps(request))
             return self.note(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate, summary_reviewer=supported_review)
         self.assertEqual('processed', result['status'], result)
         self.assertEqual({history['id'], rejected['id'], accepted['id']}, set(evaluated))
         job = self.status(result)
@@ -254,11 +254,11 @@ class JevProcessorTests(unittest.TestCase):
         reviewed = []
         def review(request):
             reviewed.append(request['version'])
-            self.assertEqual('summary-support-v3', request['version'])
+            self.assertEqual('summary-support-v5', request['version'])
             return supported_review(request)
         result = process_pending(self.project, self.home, summary_reviewer=review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v3'], reviewed)
+        self.assertEqual(['summary-support-v5'], reviewed)
         self.assertEqual('not_assessed', result['summary_support'][-1]['status'])
         self.assertEqual(1, result['session_summary_count'])
         self.assertEqual([stop['id']], result['jev_filter']['lifecycle_only_ids'])
@@ -286,7 +286,7 @@ class JevProcessorTests(unittest.TestCase):
         self.remember('Use local storage for offline access.')
         evaluator = mock.Mock(side_effect=AssertionError('No external judgment allowed'))
         result = process_pending(self.project, self.home, runner=self.note,
-                                 jev_evaluator=evaluator, jev_quality_evaluator=evaluator)
+                                 jev_evaluator=evaluator, jev_quality_evaluator=evaluator, summary_reviewer=supported_review)
         self.assertEqual('processed', result['status'], result)
         evaluator.assert_not_called()
         self.assertEqual([], self.status(result)['jev_filter_attempts'])
@@ -296,7 +296,7 @@ class JevProcessorTests(unittest.TestCase):
             receipt['output']['notes'][0]['source_ids'] = ['missing-source']
             return receipt
         invalid_result = process_pending(self.project, self.home, runner=invalid,
-                                         jev_evaluator=evaluator, jev_quality_evaluator=evaluator)
+                                         jev_evaluator=evaluator, jev_quality_evaluator=evaluator, summary_reviewer=supported_review)
         self.assertEqual('failed', invalid_result['status'], invalid_result)
         self.assertEqual('invalid_response', invalid_result['code'])
         evaluator.assert_not_called()
@@ -397,7 +397,7 @@ class JevProcessorTests(unittest.TestCase):
         # process_pending closes its Store; the retry must read a persisted row.
         second_evaluator = mock.Mock(side_effect=AssertionError('Exact input must be cached'))
         second = process_pending(self.project, self.home, retry_failed=True,
-                                 runner=self.note, jev_evaluator=second_evaluator)
+                                 runner=self.note, jev_evaluator=second_evaluator, summary_reviewer=supported_review)
         self.assertEqual('processed', second['status'], second)
         self.assertEqual(first['job_id'], second['job_id'])
         second_evaluator.assert_not_called()

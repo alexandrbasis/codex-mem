@@ -31,6 +31,7 @@ from codex_mem.service import (
     ServiceAlreadyRunning,
 )
 
+from tests.test_summary_support import supported_review
 
 class Clock:
     def __init__(self, value: float = 1_000.0) -> None:
@@ -497,7 +498,7 @@ class ServiceTests(unittest.TestCase):
 
         def processor(project: str, **kwargs: object) -> dict[str, object]:
             calls.append(bool(kwargs["retry_failed"]))
-            return process_pending(project, runner=runner, **kwargs)
+            return process_pending(project, summary_reviewer=supported_review, runner=runner, **kwargs)
 
         result = run_service(self.data_dir, processor=processor, clock=self.clock,
                              sleeper=self.clock.sleep, poll_interval=1, max_cycles=8)

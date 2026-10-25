@@ -40,6 +40,9 @@ class PiInstallTests(unittest.TestCase):
         metadata = json.loads((package / "package.json").read_text())
         self.assertEqual(["./pi/extension.ts"], metadata["pi"]["extensions"])
         self.assertTrue((package / "pi/extension.ts").is_file())
+        self.assertEqual((ROOT / "codex_mem/pi_schema_helper.js").read_bytes(),
+                         (package / "codex_mem/pi_schema_helper.js").read_bytes())
+        self.assertTrue((package / "codex_mem/pi_schema.py").is_file())
         self.assertEqual("1.4.0", metadata["codexMem"]["supportedPi"])
         self.assertTrue(self.cli("doctor")["ready"])
         server = json.loads((self.project / ".pi/mcp.json").read_text())["mcpServers"]["codex-mem"]

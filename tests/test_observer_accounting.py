@@ -183,13 +183,30 @@ class ObserverAccountingTests(unittest.TestCase):
         with mock.patch("codex_mem.observer_usage_store.finish_attempt", side_effect=StoreError("write failed")):
             first = process_pending(self.project, self.data, runner=lambda _: value)
         self.assertEqual("invalid_response", first["code"])
+        with Store(self.data) as store:
+            before = store.observation_attempts(self.project, first['job_id'])[0]
+        calls = json.loads(before['execution_calls'])
+        self.assertEqual({'generation'}, set(calls))
+        self.assertEqual('success', calls['generation']['outcome'])
+        self.assertEqual('reported', calls['generation']['metrics']['usage_status'])
+        self.assertEqual(240, calls['generation']['metrics']['total_tokens'])
+        self.assertTrue(all(before[key] is None for key in ('input_tokens', 'output_tokens', 'total_tokens')))
+        self.assertEqual(1, self.summary()['attempts']['unknown'])
         second = process_pending(self.project, self.data, retry_failed=True, runner=lambda _: receipt())
         self.assertEqual("skipped", second["status"])
         summary = self.summary()
         self.assertEqual(1, summary["attempts"]["outcomes"]["failed"])
         self.assertEqual(0, summary["attempts"]["outcomes"]["lease_expired"])
-        self.assertEqual(1, summary["attempts"]["unknown"])
-        self.assertEqual(240, summary["totals"]["reported"]["total_tokens"])
+        self.assertEqual(0, summary['attempts']['unknown'])
+        self.assertEqual(2, summary['attempts']['reported'])
+        self.assertEqual(480, summary['totals']['reported']['total_tokens'])
+        with Store(self.data) as store:
+            attempts = store.observation_attempts(self.project, first['job_id'])
+        self.assertEqual([1, 2], [row['attempt_count'] for row in attempts])
+        self.assertEqual(['failed', 'skipped'], [row['outcome'] for row in attempts])
+        self.assertEqual([240, 240], [row['total_tokens'] for row in attempts])
+        self.assertEqual(before['execution_calls'], attempts[0]['execution_calls'])
+        self.assertEqual(summary, self.summary())
 
     def test_cli_and_mcp_expose_separate_project_accounting(self):
         process_pending(self.project, self.data, runner=lambda _: receipt())

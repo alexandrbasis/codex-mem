@@ -1,0 +1,419 @@
+{
+  "date": "2026-10-25",
+  "snapshot": {
+    "as_of": "2026-10-25T18:55:04Z",
+    "phase": "after alternative-controls-2, before final CI4 and final private acceptance/install validation",
+    "status_scope": "Completion, pending and installation status fields describe this evidence snapshot. They do not track later work."
+  },
+  "scope": "Safe aggregate public development evidence only. No private cases, grading material, source bodies, reviewer prose or credentials.",
+  "contracts": {
+    "support": "summary-support-v5",
+    "source": "summary-source-v4",
+    "outcome": "summary-outcome-v5"
+  },
+  "limits": {
+    "material_units": 47,
+    "support_rows_per_unit": [
+      1,
+      8
+    ],
+    "support_rows_total": 64,
+    "source_items": 10,
+    "claim_item_relations": 50,
+    "original_report_characters": 100000,
+    "prompt_characters": 1250000,
+    "default_shared_deadline_seconds": 240,
+    "native_model_calls_max": 7
+  },
+  "code_sha256": {
+    "codex_mem/observation_contract.py": "187daba1abacc661aee276ba66b96a9186684a1864cfdfd2b3c30138bc85f227",
+    "codex_mem/summary_support.py": "9d02671e6f5555138bb3239fcf334fe99bea590010cdf4c5aadc0fad5bcc438b",
+    "codex_mem/summary_outcome.py": "b9cd452d93e616f2b3d287a26870b0a4485c573169bbf7b7c930c5c7a17c9f10",
+    "codex_mem/processor.py": "0dc8c8560584f7dd64cd1297c8a28d1781839037fe0cf9e7a56dc17a4249f01a",
+    "codex_mem/pi_schema.py": "e647370560f3b5917e97bde8c951a8e9dbe74bffffee3b4f04ae9537fba111d7",
+    "codex_mem/pi_schema_helper.js": "7523f97e2c93543666b8caaa4bcaa448efbbf5d4f3364d8b64a4b178f9979040",
+    "codex_mem/execution.py": "8c4a71408c75a5f880b86effe58044d36c2505a166907d6f6aa2407839ab1d2e",
+    "codex_mem/pi_runtime.py": "d3ff05df2f3b3ff3b03f4f793eca78b13736d74cb6e66cbacbfba91d74111c2a"
+  },
+  "development": {
+    "status": "passed_full14_declared_sol_controls",
+    "at": "2026-10-25T12:31:22.775448+00:00",
+    "source_manifest_sha256": "e7675d1cb80e161ca5c66f4cb0a110091be5d5a0dcf6d21604eb1161657cc4e4",
+    "plan_sha256": "35addeaf392746ce8decaf472269bdc290fc18547855472f3903a752f7070d6c",
+    "profiles": [
+      {
+        "runtime": "codex",
+        "provider": "openai",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium",
+        "timeout": 240
+      },
+      {
+        "runtime": "pi",
+        "provider": "openai-codex",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "medium",
+        "timeout": 240
+      }
+    ],
+    "native_calls": 18,
+    "native_generation": 0,
+    "synthetic_candidates": 24,
+    "positive_exact_persistence": 4,
+    "negative_targets_semantically_detected": 10,
+    "false_persistence": 0,
+    "invalid": 0,
+    "uncertain": 0,
+    "original_report_custody_proofs": 2,
+    "accounted_executions": 42,
+    "total_measured_tokens": {
+      "total": 177802,
+      "input": 150460,
+      "output": 27342
+    },
+    "pi_helper_proofs": 9,
+    "automatic_match_unproven": 1,
+    "manual_semantic_adjudications": 1,
+    "adjudication_limit": "One Codex concept-negative satisfied its frozen criterion on manual reading. The automatic matcher remained unproven. No historical result or matcher changed.",
+    "selection_status": "Historical Sol public controls retained. The Sol deployment/acceptance proposal is superseded."
+  },
+  "previous_results": {
+    "earlier_acceptance_and_smokes": "Failures preserved. Third four-case known-pair smoke passed after earlier failures.",
+    "luna_controls": "Twelve frozen controls passed but independent isolated false subtitle persisted in both runtimes.",
+    "first_sol_diagnostic": "Two supported language summaries uncertain because outcome lacked complete original body.",
+    "comparison_limit": "Whole-profile comparison only. Pi changed reasoning from Luna/low to Sol/medium."
+  },
+  "validation": {
+    "full_ci_3": {
+      "status": "failed",
+      "tests": 2189,
+      "failures": 1,
+      "errors": 0,
+      "acceptance": "passed deterministic checks, not private acceptance",
+      "package": "passed",
+      "failure": "Wall-time assertion observed 0.637459 seconds against 0.4 seconds; later diagnosis established SQLite BUSY with configured 20 ms timeout and no application retry."
+    },
+    "later_focused_jev": {
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "seconds": 3.131,
+      "scope": "Revised tests of actual contention/deadline contract. No production latency guarantee."
+    },
+    "full_ci_4": "pending"
+  },
+  "source_continuity": {
+    "current_pre_document_manifest_sha256": "cc4c2e6a5218cb5cf14606c5bab12c46f358e3d3c627772dbf71a72fc02b8c15",
+    "native_alternative_controls_manifest_sha256": "cc4c2e6a5218cb5cf14606c5bab12c46f358e3d3c627772dbf71a72fc02b8c15",
+    "files": 5526,
+    "pi_runtime_sha256": "d3ff05df2f3b3ff3b03f4f793eca78b13736d74cb6e66cbacbfba91d74111c2a",
+    "scope": "Both alternative comparisons used this source freeze after the generic Pi model-switch repair. Later changes in this documentation step are recorded separately. Historical Sol and first-document source identities remain in historical_snapshots."
+  },
+  "remaining": {
+    "private_acceptance": "New Luna/max600 protocol prospective, not frozen or run at this snapshot. CI/review/commit, native generation and independent blinded grading remain pending.",
+    "previous_sol_acceptance5_proposal": "superseded proposal, never executed, original artifacts unchanged",
+    "native_generation": "not established by public controls",
+    "installed_injection": "not established",
+    "installation_or_profile_change": false
+  },
+  "source_artifacts": {
+    "base": "/tmp/codex-mem-implement-spec-1/quality-repair/repair-4",
+    "files": {
+      "root-continuation-2026-10-25/sol-controls14-root-decision.json": "805801637f1257ba5ee4d5c9881c5571497d337ee50c7d43aad3b1fd511276a5",
+      "root-continuation-2026-10-25/native-controls6-root-decision.json": "18b758649641129dd2687a493fddf1107f73c9af7e1ad203a594981c7c275a93",
+      "root-continuation-2026-10-25/subtitle-diagnostic-root-decision.json": "b5cd9ecd749a0772d2063a7fd40d6d0b507f70bbb0eff5aa434e8832e65c0708",
+      "root-continuation-2026-10-25/profile-diagnostic-root-decision.json": "76e57816580a30b496729298de946a0d8fe53a6e94f71f00fa5f92733be74b7c",
+      "outcome-evidence-loss-diagnosis-1/diagnostic.json": "2bb4581696435769afbed705dc73b47fcef9fa340f0d6a2b21dcfcda84cade29",
+      "full-ci-3/result-summary.json": "652e024e48e58e621c1bba365368209e85406d7dfc4c380c92a0fd799335cb21",
+      "jev-contention-contract-1/focused-result.json": "593333d337d5329bbfb3501252bf6aefb5aaf4c9f80a376dcdba14683c46208c",
+      "root-continuation-2026-10-25/jev-contention-root-review.json": "390e151d4ee999c6d81caeff8dc9e0d2dd61cb95aef734e8213154ad7fc1ff47",
+      "root-continuation-2026-10-25/acceptance5-prospective-decision.json": "b437096f3506c3302e3b880e3dff78d1568eefb2ded102abc751c9ef4df26816",
+      "root-continuation-2026-10-25/deployment-profile-proposal.json": "b53c7e1b0bb594ad5f3a2a528648026be2c01579d109cbe5aa357fe0550a770c",
+      "root-continuation-2026-10-25/installed-background-profile-readonly.json": "b725df9bb195e0a4eae2f93757e729e0210d9e3946ded0620eaebc75c0bd9092",
+      "root-continuation-2026-10-25/alternative-controls-1-root-final-decision.json": "f3e6446d3c12a64619d1e3799340a30de274b545250540d86fa129a46eaf28d8",
+      "root-continuation-2026-10-25/alternative-controls-2-root-final-decision.json": "403274ccd48a3db5a8786e6fad95e6d6aa87018b4f9647426f13ab775575d4fa",
+      "native-alternative-controls-1-python313-run-1-report.json": "7e4114b996dd924962488c6ad20ffad2842f2d7f650951a7f6b35ba8be2659d7",
+      "native-alternative-controls-1-python313-run-1-review-packet.json": "a5f9fee803582ba33f776af88e08f5a82f0676e4add03e316714478c247fb96f",
+      "native-alternative-controls-1-python313-run-1-evidence-seal.json": "d445d67c4345b11dbee4bc7615b0883c8fbbeb5db7fe0e1b0d0f8b5059fd04b3",
+      "native-alternative-controls-2-python313-run-1-report.json": "c88b90175156fd24061e179c555461777e9f7a808d887fca1fcad7de54890376",
+      "native-alternative-controls-2-python313-run-1-review-packet.json": "47ec6322e28b0c9f0cbaf46116643d8c4dcb52ca34ff9223a80e317dbda418b8",
+      "native-alternative-controls-2-python313-run-1-evidence-seal.json": "6f627d41b44ffc3030f0397063bfa121eda0df399933d557421be5c39e053910",
+      "pi-model-switch-fix-1/implementation-report.json": "b85d845219179bcae4afcbdb393e6dc1535edfda27ee53bd24578ecbac0cd11b",
+      "root-continuation-2026-10-25/pi-model-switch-root-review.json": "646d19b14f1d7a178a636e4b58b25486d46e4757a5cb0438f20695084b3b0c09",
+      "pi-model-switch-fix-1/source-freeze/manifest.json": "cc4c2e6a5218cb5cf14606c5bab12c46f358e3d3c627772dbf71a72fc02b8c15",
+      "root-continuation-2026-10-25/installed-background-profile-readonly-2.json": "49187b08045ed1030cf27520a41edd79fa430933720a80a3282b93088face4a0",
+      "root-continuation-2026-10-25/alternative-controls-2-codex-profile-root-decision.json": "5a7a951a1b6ab8b60a3f9da7d804b3b982bf4c8a43cd7f78786300ebdd000a70",
+      "root-continuation-2026-10-25/alternative-controls-2-pi-luna-profile-root-decision.json": "9b1130fcda6e3c3657f80643e4bf9160d68d72d507361825919d507e36f132ab",
+      "root-continuation-2026-10-25/alternative-controls-2-glm-profile-root-decision.json": "95ee98481adb1861a5f40d9d7e93a5031888a2c93d4bae8da9ea5ca5bd172e8a"
+    }
+  },
+  "historical_snapshots": [
+    {
+      "path": "docs-refresh-1/revision2/proposed/docs/evidence/summary-support-2026-10-25.json",
+      "sha256": "747da5a0d2f1dc03df425a0ec079fecf7c2bfcc147cffae9b3649e50c860651a",
+      "scope": "Immutable first documentation snapshot before later Pi repair and alternative-profile comparisons.",
+      "source_continuity": {
+        "native_controls_manifest_sha256": "e7675d1cb80e161ca5c66f4cb0a110091be5d5a0dcf6d21604eb1161657cc4e4",
+        "pre_document_manifest_sha256": "3eee0b35a185d1a982cc89703b15a02cc455b489ce515941ea02459bbb2be800",
+        "files": 5524,
+        "later_changes": "Only product change preserves summary_support_stale after lease replacement. Contention tests also changed. Native controls did not rerun on this later source."
+      }
+    }
+  ],
+  "alternative_controls_1": {
+    "status": "failed_luna_high240_profiles_and_incomplete_glm_high240",
+    "recorded_stages": 16,
+    "not_run": 5,
+    "native_review_calls": 26,
+    "synthetic_invocations": 25,
+    "accounted_executions": 51,
+    "native_generation": 0,
+    "tokens": {
+      "total": null,
+      "known_sum": 230923,
+      "reported_calls": 25,
+      "unknown_calls": 1
+    },
+    "profiles": [
+      {
+        "profile": {
+          "runtime": "codex",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "high",
+          "timeout": 240
+        },
+        "stages_recorded": 7,
+        "stages_planned": 7,
+        "root_status": "failed_false_subtitle_persisted",
+        "positive_exact": 2,
+        "negative_target_rejections_zero_writes": 4,
+        "false_persisted_count": 1
+      },
+      {
+        "profile": {
+          "runtime": "pi",
+          "provider": "openai-codex",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "high",
+          "timeout": 240
+        },
+        "stages_recorded": 7,
+        "stages_planned": 7,
+        "root_status": "failed_false_subtitle_persisted",
+        "positive_exact": 2,
+        "negative_target_rejections_zero_writes": 4,
+        "false_persisted_count": 1
+      },
+      {
+        "profile": {
+          "runtime": "pi",
+          "provider": "zai",
+          "model": "glm-5.3",
+          "reasoning_effort": "high",
+          "timeout": 240
+        },
+        "stages_recorded": 2,
+        "stages_planned": 7,
+        "root_status": "incomplete_positive_timeout_and_checker_assertion",
+        "positive_exact": 0,
+        "negative_target_rejections_zero_writes": 1,
+        "false_persisted_count": 0
+      }
+    ],
+    "stop": "GLM high240 required language positive exhausted the product deadline. Checker AssertionError on unavailable usage stopped the run. Five GLM stages did not run. Prior results remain unchanged."
+  },
+  "alternative_controls_2": {
+    "status": "root_audit_complete_luna_max600_both_public_pass_glm_high600_operational_failure",
+    "root_decision_at": "2026-10-25T18:52:49.978368+00:00",
+    "recorded_stages": 21,
+    "completed_stage_checks": 21,
+    "not_run": 0,
+    "runs": 1,
+    "manual_retries": 0,
+    "profiles": [
+      {
+        "profile": {
+          "runtime": "codex",
+          "provider": "openai",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "max",
+          "timeout": 600
+        },
+        "stages_recorded": 7,
+        "stages_planned": 7,
+        "root_status": "passed_seven_declared_public_controls",
+        "positive_exact": 2,
+        "negative_target_rejections_zero_writes": 5,
+        "false_persisted_count": 0,
+        "processor_duration_sum_seconds": 558.0438443738967,
+        "supervisor_stage_duration_sum_seconds": 593.0642393748276
+      },
+      {
+        "profile": {
+          "runtime": "pi",
+          "provider": "openai-codex",
+          "model": "gpt-6-luna",
+          "reasoning_effort": "max",
+          "timeout": 600
+        },
+        "stages_recorded": 7,
+        "stages_planned": 7,
+        "root_status": "passed_seven_declared_public_controls",
+        "positive_exact": 2,
+        "negative_target_rejections_zero_writes": 5,
+        "false_persisted_count": 0,
+        "processor_duration_sum_seconds": 489.90490608417895,
+        "supervisor_stage_duration_sum_seconds": 523.5015723330434
+      },
+      {
+        "profile": {
+          "runtime": "pi",
+          "provider": "zai",
+          "model": "glm-5.3",
+          "reasoning_effort": "high",
+          "timeout": 600
+        },
+        "stages_recorded": 7,
+        "stages_planned": 7,
+        "root_status": "failed_required_positive_timeout",
+        "positive_exact": 1,
+        "negative_target_rejections_zero_writes": 5,
+        "false_persisted_count": 0,
+        "processor_duration_sum_seconds": 1747.4772204589099,
+        "supervisor_stage_duration_sum_seconds": 1781.0211343752453
+      }
+    ],
+    "native_review_calls": 29,
+    "synthetic_invocations": 36,
+    "accounted_executions": 65,
+    "native_generation": 0,
+    "tokens": {
+      "total": null,
+      "known_sum": 364186,
+      "reported_calls": 28,
+      "unknown_calls": 1
+    },
+    "raw_native_decoders_valid": 28,
+    "structural_invalid": 0,
+    "automatic_concept_unproven": 2,
+    "separate_manual_criterion_passes": 2,
+    "automatic_results_unchanged": true,
+    "unavailable_positive": {
+      "profile": "Pi/zai/glm-5.3/high/600",
+      "field_case": "language positive",
+      "processor_seconds": 600.0398391250055,
+      "outputs": 0,
+      "failure": "shared deadline exhausted; operational failure, not demonstrated semantic falsehood"
+    },
+    "other_glm_reasoning_levels": "untested",
+    "provider_proofs": [
+      {
+        "policy": "native_codex_schema",
+        "status": "valid",
+        "calls": 11
+      },
+      {
+        "policy": "prompt_schema_strict_decoder_no_extensions",
+        "status": "failed_call_retained",
+        "calls": 1
+      },
+      {
+        "policy": "prompt_schema_strict_decoder_no_extensions",
+        "status": "valid",
+        "calls": 8
+      },
+      {
+        "policy": "strict_json_schema_bundled_helper",
+        "status": "valid",
+        "calls": 9
+      }
+    ],
+    "scope": "Exposed public fixed-candidate review controls. Not native generation, private acceptance, installation, general accuracy or model-only causality."
+  },
+  "pi_model_switch": {
+    "source_manifest_sha256": "cc4c2e6a5218cb5cf14606c5bab12c46f358e3d3c627772dbf71a72fc02b8c15",
+    "change": "At set_model only, allow at most one exact thinking_level_changed/level notification from the documented native-level enum; after response, require that automatic level is advertised by the selected exact model. Automatic level need not equal the later requested profile. Explicit set_thinking_level notification and exact final get_state guards remain unchanged.",
+    "focused": {
+      "tests": 16,
+      "reported_seconds": 25.539,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0
+    },
+    "metadata_only": {
+      "profile": {
+        "runtime": "pi",
+        "provider": "zai",
+        "model": "glm-5.3",
+        "reasoning_effort": "high",
+        "timeout": 240
+      },
+      "status": "checked",
+      "seconds": 0.481,
+      "prompts": 0,
+      "inference_calls": 0,
+      "scope": "Local metadata preparation only; not remote credential validity or model quality."
+    },
+    "earlier_failure_reason": "pi_unexpected_event",
+    "limits": "Generic bounded event handling; semantic prompts, helper provider restriction, selected profile and final state guards unchanged."
+  },
+  "profile_proposal": {
+    "status": "prospective_only_not_applied",
+    "configuration_file": "~/.local/share/codex-mem/config.json",
+    "observed_at": "2026-10-25T18:55:04.162215+00:00",
+    "before_stored_profiles": {
+      "processing_profile": null,
+      "observation_profile": null,
+      "project_memory_profile": null
+    },
+    "set_only": {
+      "observation_profile": {
+        "runtime": "codex",
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "max",
+        "timeout": 600
+      }
+    },
+    "scope": "Future observations and session summaries across all projects using the existing shared data directory. Not a project-specific override.",
+    "preserve": [
+      "processing_profile",
+      "project_memory_profile",
+      "interactive Codex/Pi models and configuration",
+      "native authorization",
+      "all other configuration",
+      "historical records and jobs; no reprocessing"
+    ],
+    "conditions": "Final private acceptance and merge/install after final CI and code review."
+  },
+  "private_acceptance_proposal": {
+    "status": "prospective_not_frozen_not_run",
+    "profiles": [
+      {
+        "runtime": "codex",
+        "provider": "openai",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "max",
+        "timeout": 600
+      },
+      {
+        "runtime": "pi",
+        "provider": "openai-codex",
+        "model": "gpt-6-luna",
+        "reasoning_effort": "max",
+        "timeout": 600
+      }
+    ],
+    "private_cases_unchanged": true,
+    "private_case_sha256": "1303b017b850b95b9f4020276529d64278185cb105d4a71dd10bdfa8f835955e",
+    "grading": "fresh independent blinded grader after final CI/review/commit and exact freeze",
+    "prospective_stages": 28,
+    "prospective_max_native_calls": 138,
+    "prospective_max_synthetic_executions": 28,
+    "prospective_max_accounted_executions": 166,
+    "bound_scope": "Prospective upper bound only. Exact new protocol and execution program remain unfrozen. No external best-of retries.",
+    "ordinary_generation": "Proposed actual native generation through each configured runtime, not yet executed."
+  }
+}

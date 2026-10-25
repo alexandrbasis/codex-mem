@@ -104,7 +104,7 @@ class ProcessorTests(unittest.TestCase):
                 }
             )
 
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
 
         self.assertEqual("processed", result["status"])
         self.assertEqual(1, result["note_count"])
@@ -226,13 +226,13 @@ class ProcessorTests(unittest.TestCase):
             return self.receipt({"disposition": "processed", "notes": [{
                 "title": "Checkout idempotency", "body": "Unique checkout keys prevent duplicate charges.",
                 "tags": ["bugfix"], "source_ids": [request["sources"][0]["id"]]}]})
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
         self.assertEqual("processed", result["status"])
         with Store(self.data_dir) as store:
             note = store.search(self.project, "idempotency")[0]
             self.assertEqual(note["id"], store.get(self.project, [str(useful["id"])])[0]["superseded_by"])
             self.assertIsNone(store.get(self.project, [str(noise["id"])])[0]["superseded_by"])
-        self.assertEqual("idle", process_pending(self.project, self.data_dir, runner=runner)["status"])
+        self.assertEqual("idle", process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)["status"])
 
     def test_markup_heavy_evidence_fits_the_serialized_prompt_budget(self) -> None:
         # Two valid capture-sized events can expand sixfold when delimiters are
@@ -350,7 +350,7 @@ class ProcessorTests(unittest.TestCase):
                 }
             )
 
-        first = process_pending(self.project, self.data_dir, runner=invalid_runner)
+        first = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=invalid_runner)
         self.assertEqual({"status": "failed", "code": "invalid_response"}, {
             "status": first["status"],
             "code": first["code"],
@@ -377,10 +377,10 @@ class ProcessorTests(unittest.TestCase):
                 }
             )
 
-        self.assertEqual("idle", process_pending(self.project, self.data_dir, runner=good_runner)["status"])
+        self.assertEqual("idle", process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=good_runner)["status"])
         self.assertEqual(0, calls)
         recovered = process_pending(
-            self.project, self.data_dir, runner=good_runner, retry_failed=True
+            self.project, self.data_dir, summary_reviewer=supported_review, runner=good_runner, retry_failed=True
         )
         self.assertEqual("processed", recovered["status"])
         self.assertEqual(1, calls)
@@ -499,7 +499,7 @@ class ProcessorTests(unittest.TestCase):
                 }
             )
 
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
         self.assertEqual("processed", result["status"])
         self.assertEqual(2, result["note_count"])
         with Store(self.data_dir) as store:
@@ -516,7 +516,7 @@ class ProcessorTests(unittest.TestCase):
                                          ("Recovery boundary", "Retries preserve the exact source set."))]
             return self.receipt({"notes": notes, "disposition": "processed"})
 
-        result = process_pending(self.project, self.data_dir, runner=runner)
+        result = process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)
         self.assertEqual("processed", result["status"], result)
         with Store(self.data_dir) as store:
             output_ids = json.loads(store._connection.execute(
@@ -528,7 +528,7 @@ class ProcessorTests(unittest.TestCase):
             original = store.get(self.project, [raw["id"]])[0]
             self.assertEqual(raw["body"], original["body"])
             self.assertEqual(output_ids[0], original["superseded_by"])
-            self.assertEqual("idle", process_pending(self.project, self.data_dir, runner=runner)["status"])
+            self.assertEqual("idle", process_pending(self.project, self.data_dir, summary_reviewer=supported_review, runner=runner)["status"])
 
     def test_stop_summary_request_can_be_null_when_request_is_unknown(self) -> None:
         self.remember("Reported outcome", "The assistant reported a local result without a user request.")

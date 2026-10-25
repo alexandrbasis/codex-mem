@@ -14,6 +14,7 @@ from codex_mem.store import Store
 from tests import test_processor as processor_fixtures
 from tests.test_jev_quality import note, response
 from tests.test_service import Clock
+from tests.test_summary_support import supported_review
 
 
 class JevQualityServiceTests(unittest.TestCase):
@@ -66,7 +67,7 @@ class JevQualityServiceTests(unittest.TestCase):
 
         def process(project, **kwargs):
             self.processor_retries.append(bool(kwargs["retry_failed"]))
-            receipt = process_pending(project, runner=runner, jev_quality_evaluator=evaluator, **kwargs)
+            receipt = process_pending(project, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator, **kwargs)
             self.receipts.append(receipt)
             return receipt
         return process

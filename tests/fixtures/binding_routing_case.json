@@ -1,0 +1,149 @@
+{
+  "source_events": [
+    {
+      "role": "user_intent",
+      "text": "Local operational smoke test codex-mem-native-id-postfix-20261024-f2edfa83. This marker is a technical test, not a user preference. Use the read tool to read docs/PI_INSTALL.md and docs/HOSTS.md in the current project. Then return exactly three short, verifiable facts in Russian, each naming its source file, and include the test marker once. Focus on supported Pi version, shared memory and host versus background runtime. Do not modify files, do not run commands or other models, do not start other agents, do not contact anyone, and do not invoke any memory write, capture, consolidation or delete tool. No external research is needed. Finish after these three facts."
+    },
+    {
+      "role": "assistant_report",
+      "text": "- **docs/PI_INSTALL.md:** Obsługiwany jest Pi 1.4.0.\n- **docs/PI_INSTALL.md:** Pamięć współdzielona jest wskazywana osobnym katalogiem danych, poza pakietem `.pi/codex-mem`.\n- **docs/HOSTS.md:** Hosty korzystają ze wspólnego kontraktu przechwytywania i pobierania pamięci; konfiguracja profilu decyduje o runtime przetwarzania w tle. Marker testu: `codex-mem-native-id-postfix-20261024-f2edfa83`."
+    }
+  ],
+  "candidate": {
+    "notes": [],
+    "disposition": "processed",
+    "session_summary": {
+      "title": "Pi documentation report",
+      "request": "Local operational smoke test codex-mem-native-id-postfix-20261024-f2edfa83. This marker is a technical test, not a user preference. Use the read tool to read docs/PI_INSTALL.md and docs/HOSTS.md in the current project. Then return exactly three short, verifiable facts in Russian, each naming its source file, and include the test marker once. Focus on supported Pi version, shared memory and host versus background runtime. Do not modify files, do not run commands or other models, do not start other agents, do not contact anyone, and do not invoke any memory write, capture, consolidation or delete tool. No external research is needed. Finish after these three facts.",
+      "investigated": "",
+      "learned": "",
+      "completed": "The assistant report provided three Russian bullet points and included the test marker once. It reported Pi 1.4.0 support, a separate shared-memory data directory, and a common host capture/retrieval contract with a separately configured background runtime. The available evidence does not verify these claims against the named documentation files.",
+      "next_steps": "",
+      "notes": ""
+    }
+  },
+  "support": {
+    "version": "summary-support-v5",
+    "rows": [
+      {
+        "unit_id": "title",
+        "coverage": "complete",
+        "candidate_assertion": "Pi documentation report",
+        "evidence_assertion": "The user asked to read docs/PI_INSTALL.md and docs/HOSTS.md and return three Russian facts; the assistant report contains claims attributed to those files.",
+        "value_comparison": "The title names the topic of the supplied request and report without asserting that the documentation was read or verified.",
+        "attribution_comparison": "No factual source attribution is asserted by the title.",
+        "scope_comparison": "The title is limited to the topic of Pi documentation and a report.",
+        "verdict": "supported",
+        "evidence_span_ids": [
+          "current1:1",
+          "current2:1"
+        ],
+        "candidate_span_ids": [
+          "title:1"
+        ],
+        "report_binding": {
+          "target": "other",
+          "report_span_ids": [],
+          "properties": []
+        }
+      },
+      {
+        "unit_id": "request",
+        "coverage": "complete",
+        "candidate_assertion": "The historical user requested a read-only review of docs/PI_INSTALL.md and docs/HOSTS.md, followed by exactly three short, verifiable facts in Russian, each naming its source file and including the test marker once; the request also prohibited file changes, commands, other models, agents, contact, and memory write or deletion actions, and specified no external research and to finish after the facts.",
+        "evidence_assertion": "The original user message states these requested actions, constraints, and stopping condition.",
+        "value_comparison": "The request summary preserves the named files, three-fact count, language, marker, focus topics, and prohibitions.",
+        "attribution_comparison": "The request is correctly attributed to the user.",
+        "scope_comparison": "It describes requested work and constraints, not completed outcomes.",
+        "verdict": "supported",
+        "evidence_span_ids": [
+          "current1:1"
+        ],
+        "candidate_span_ids": [],
+        "report_binding": {
+          "target": "outside_outcome",
+          "report_span_ids": [],
+          "properties": []
+        }
+      },
+      {
+        "unit_id": "completed",
+        "coverage": "complete",
+        "candidate_assertion": "The assistant report gave three Russian bullets, included the marker once, reported Pi 1.4.0 support, separate shared-memory data directory, a common host capture/retrieval contract and profile-configured background runtime, and did not verify these claims against the named documentation files.",
+        "evidence_assertion": "The assistant report contains three Russian bullets and the marker once, makes the listed claims while labeling them with the named files, and the supplied record has no documentation-file contents or verification evidence.",
+        "value_comparison": "The summary accurately describes the report's bullet count, marker, claims, and the record's lack of verification against the named files.",
+        "attribution_comparison": "The assertions are explicitly attributed to the assistant report; the lack of verification is scoped to the available evidence.",
+        "scope_comparison": "This reports what the assistant said and what the supplied evidence establishes, without asserting that the underlying documentation claims are true.",
+        "verdict": "supported",
+        "evidence_span_ids": [
+          "current2:1"
+        ],
+        "candidate_span_ids": [
+          "completed:1"
+        ],
+        "report_binding": {
+          "target": "reported_content",
+          "report_span_ids": [
+            "current2:1"
+          ],
+          "properties": [
+            "content"
+          ]
+        }
+      }
+    ]
+  },
+  "source": {
+    "version": "summary-source-v4",
+    "coverage": "complete",
+    "propositions": [
+      {
+        "statement": "The report says Pi 1.4.0 is supported in docs/PI_INSTALL.md.",
+        "subject": "Pi 1.4.0 support",
+        "temporal_scope": "As stated in the referenced documentation",
+        "modality": "reported",
+        "source_id": "report1",
+        "target": "reported_content"
+      },
+      {
+        "statement": "The report says shared memory is designated by a separate data directory outside the .pi/codex-mem package.",
+        "subject": "Shared memory location",
+        "temporal_scope": "As stated in the referenced documentation",
+        "modality": "reported",
+        "source_id": "report1",
+        "target": "reported_content"
+      },
+      {
+        "statement": "The report says hosts use a shared contract for capturing and retrieving memory, while profile configuration determines the background-processing runtime.",
+        "subject": "Host memory contract and runtime configuration",
+        "temporal_scope": "As stated in the referenced documentation",
+        "modality": "reported",
+        "source_id": "report1",
+        "target": "reported_content"
+      },
+      {
+        "statement": "The report includes the test marker codex-mem-native-id-postfix-20261024-f2edfa83.",
+        "subject": "Test marker",
+        "temporal_scope": "In the report",
+        "modality": "observed_text",
+        "source_id": "report1",
+        "target": "report_text"
+      }
+    ],
+    "text_observations": {
+      "language": {
+        "status": "observed",
+        "value": "Polish prose with English technical identifiers and file paths",
+        "scope": "The three bullets in the report body",
+        "reason": null
+      },
+      "organization": {
+        "status": "observed",
+        "value": "A three-item bulleted list; each item names a documentation file or, in the third item, includes a test marker.",
+        "scope": "The entire report body",
+        "reason": null
+      }
+    }
+  },
+  "provenance": "Unchanged parsed support/source replies from controls5 false Codex. No outcome reply is supplied for new relations."
+}

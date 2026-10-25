@@ -3298,9 +3298,9 @@ class Store:
         evidence_current_ids = None
         evidence_fingerprint = None
         if reviewed_evidence is not None:
-            if (checked_summary is None or not isinstance(reviewed_evidence, Mapping)
+            if ((checked_summary is None and not checked_notes) or not isinstance(reviewed_evidence, Mapping)
                     or set(reviewed_evidence) != {"ids", "current_ids", "fingerprint"}):
-                raise ValueError("reviewed evidence requires a summary and exact guard fields")
+                raise ValueError("reviewed evidence requires a nonempty packet and exact guard fields")
             evidence_ids = _validate_ids(reviewed_evidence["ids"], "reviewed_evidence.ids")
             evidence_current_ids = _validate_ids(reviewed_evidence["current_ids"], "reviewed_evidence.current_ids")
             if not set(evidence_current_ids) <= set(evidence_ids):
