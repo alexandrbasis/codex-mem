@@ -622,7 +622,7 @@ class PiObservationTests(unittest.TestCase):
         diagnostics = self.diagnostics(result)
         self.assertEqual('failed', result.get('status'), diagnostics)
         self.assertNotEqual(initial['job_id'], result.get('job_id'), diagnostics)
-        self.assertEqual(['summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'],
+        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'],
                          [row.context['version'] for row in requests], diagnostics)
         self.assertEqual('summary_support_unavailable', result.get('reason_code'), diagnostics)
         self.assertEqual(1, len({row.deadline for row in requests}), diagnostics)
@@ -706,7 +706,7 @@ class InstalledPiObservationTests(unittest.TestCase):
                         'subtitle': '', 'narrative': '', 'facts': [], 'concepts': [], 'files_read': [], 'files_modified': []}}]}})
                 if version is not None:
                     # Authored support-v5 rows test provider/schema transport, not meaning.
-                    assert version == 'summary-support-v5', version
+                    assert version == 'summary-support-v6', version
                     payload = json.loads(text.split('\n')[-1])
                     output = json.dumps(supported_review(payload)['output'])
                 for delta, finish in (({'role': 'assistant', 'content': output}, None), ({}, 'stop')):
@@ -735,7 +735,7 @@ class InstalledPiObservationTests(unittest.TestCase):
         configure(self.data, processing_profile={**self.profile, 'reasoning_effort': 'none', 'timeout': 30})
         result = self.process()
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['generation', 'summary-support-v5'], contracts)
+        self.assertEqual(['generation', 'summary-support-v6'], contracts)
         self.assertEqual(2, len(calls))
         for call in calls:
             self.assertFalse(call.get('tools'))

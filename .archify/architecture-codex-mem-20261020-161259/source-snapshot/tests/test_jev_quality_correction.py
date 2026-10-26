@@ -43,7 +43,7 @@ class FakeServer:
         review = 'version' in params['outputSchema'].get('properties', {})
         if review:
             version = params['outputSchema']['properties']['version']['enum'][0]
-            assert version == 'summary-support-v5', version
+            assert version == 'summary-support-v6', version
             self.review_turns.append(params)
         else:
             self.turns.append(params)

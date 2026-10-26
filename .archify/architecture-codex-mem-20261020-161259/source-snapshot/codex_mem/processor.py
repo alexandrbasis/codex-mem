@@ -400,8 +400,9 @@ def process_pending(
                     source_guard()
                     if time.monotonic() >= deadline:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
+                    from .summary_support import VERSION as SUPPORT_VERSION
                     version = {"summary_source": "summary-source-v4", "summary_outcome": "summary-outcome-v5"}.get(
-                        call_id.rsplit("_", 1)[0], "summary-support-v5")
+                        call_id.rsplit("_", 1)[0], SUPPORT_VERSION)
                     detail = diagnostic(summary, generation_claim, version=version)
                     support_diagnostics.append(detail)
 

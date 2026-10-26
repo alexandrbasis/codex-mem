@@ -3,7 +3,7 @@ import copy
 import unittest
 
 from codex_mem import summary_support as support
-from tests.test_summary_support import supported_review
+from tests.test_summary_support import supported_review, support_rows
 from tests.test_summary_support_contract import schema_accepts
 
 
@@ -19,7 +19,7 @@ class SupportRowOwnershipTests(unittest.TestCase):
         self.output = supported_review(self.payload)['output']
 
     def row(self, unit):
-        return next(row for row in self.output['rows'] if row['unit_id'] == unit)
+        return next(row for row in support_rows(self.output) if row['unit_id'] == unit)
 
     def test_schema_rejects_valid_span_id_owned_by_another_outcome_field(self):
         row = self.row('completed')
@@ -41,7 +41,7 @@ class SupportRowOwnershipTests(unittest.TestCase):
         for unit, binding in cases:
             with self.subTest(unit=unit, binding=binding):
                 output = copy.deepcopy(self.output)
-                next(row for row in output['rows'] if row['unit_id'] == unit)['report_binding'] = binding
+                next(row for row in support_rows(output) if row['unit_id'] == unit)['report_binding'] = binding
                 with self.assertRaises(support.SupportError) as error:
                     support.validate(output, self.payload)
                 self.assertEqual('verdict', error.exception.subtype)
@@ -55,7 +55,7 @@ class SupportRowOwnershipTests(unittest.TestCase):
         ]:
             with self.subTest(target=target):
                 output = copy.deepcopy(self.output)
-                row = next(row for row in output['rows'] if row['unit_id'] == 'completed')
+                row = next(row for row in support_rows(output) if row['unit_id'] == 'completed')
                 row['report_binding'] = dict(target=target, report_span_ids=anchors, properties=properties)
                 self.assertTrue(schema_accepts(output, self.schema))
                 review = support.validate(output, self.payload)
@@ -87,7 +87,7 @@ class SupportRowOwnershipTests(unittest.TestCase):
         for field in ('candidate_span_ids', 'evidence_span_ids', 'report_span_ids', 'properties'):
             with self.subTest(field=field):
                 output = copy.deepcopy(self.output)
-                row = next(row for row in output['rows'] if row['unit_id'] == 'completed')
+                row = next(row for row in support_rows(output) if row['unit_id'] == 'completed')
                 target = row['report_binding'] if field in ('report_span_ids', 'properties') else row
                 target[field] = [target[field][0]] * 2
                 self.assertTrue(schema_accepts(output, self.schema))
@@ -111,7 +111,7 @@ class SupportRowOwnershipTests(unittest.TestCase):
                 self.assertEqual({}, payload['report_catalog'])
                 self.assertTrue(schema_accepts(output, schema))
                 self.assertEqual((), support.validate(output, payload).issues)
-                row = next(row for row in output['rows'] if row['unit_id'] == ('note:0:body' if summary is None else 'completed'))
+                row = next(row for row in support_rows(output) if row['unit_id'] == ('note:0:body' if summary is None else 'completed'))
                 row['report_binding'] = dict(target='report_text', report_span_ids=[], properties=['content'])
                 self.assertFalse(schema_accepts(output, schema))
 
@@ -135,7 +135,7 @@ class SupportRowPublicTests(unittest.TestCase):
         def review(payload):
             seen.append(copy.deepcopy(payload))
             result = supported_review(payload)
-            row = next(row for row in result['output']['rows'] if row['unit_id'] == 'note:0:body')
+            row = next(row for row in support_rows(result['output']) if row['unit_id'] == 'note:0:body')
             row['report_binding'] = dict(target='other', report_span_ids=[], properties=[])
             return result
         def generate(request):

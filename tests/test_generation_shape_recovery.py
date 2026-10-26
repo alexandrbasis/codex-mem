@@ -17,7 +17,7 @@ from codex_mem import processor
 from codex_mem.config import configure
 from codex_mem.execution import ExecutionIdentity, ExecutionResult
 from codex_mem.store import Store
-from tests.test_summary_support import supported_review
+from tests.test_summary_support import supported_review, support_rows
 
 
 class InventoryTransport:
@@ -149,11 +149,11 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
                 reviews.append(request)
                 output = supported_review(request.context)['output']
                 nonlocal support_number
-                if request.context['version'] == 'summary-support-v5':
+                if request.context['version'] == 'summary-support-v6':
                     chosen = verdict[support_number] if isinstance(verdict, list) else verdict
                     support_number += 1
                     if chosen != 'supported':
-                        next(row for row in output['rows'] if row['unit_id']=='completed')['verdict'] = chosen
+                        next(row for row in support_rows(output) if row['unit_id']=='completed')['verdict'] = chosen
                 profile = request.profile
                 return ExecutionResult(output=output, identity=ExecutionIdentity(profile.runtime, profile.provider,
                     profile.model, profile.reasoning_effort, f'inventory-review-{len(reviews)}', 'review-turn'),
@@ -204,7 +204,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
         result, transport, reviews, outputs, attempts, raw = self.run_candidates([missing, complete])
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(2, len(transport.sent))
-        self.assertEqual(['summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'],
+        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'],
                          [request.context['version'] for request in reviews])
         self.assertEqual(2, len(outputs))
         self.assertEqual(self.body, next(row for row in outputs if row['kind']=='note')['body'])
@@ -246,7 +246,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
             [self.candidate(True), self.candidate()], verdict='unsupported')
         self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
         self.assertEqual(2, len(transport.sent))
-        self.assertEqual(['summary-support-v5'], [request.context['version'] for request in reviews])
+        self.assertEqual(['summary-support-v6'], [request.context['version'] for request in reviews])
         self.assert_no_partial_write(outputs, raw)
         calls = json.loads(attempts[0]['execution_calls'])
         self.assertEqual({'generation', 'summary_support_1'}, set(calls))
@@ -327,7 +327,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
             [complete, corrected], verdict=['unsupported', 'supported'])
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(2, len(transport.sent))
-        self.assertEqual(['summary-support-v5', 'summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'],
+        self.assertEqual(['summary-support-v6', 'summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'],
                          [request.context['version'] for request in reviews])
         self.assertEqual(104, attempts[0]['total_tokens'])
         self.assertNotIn('generation_correction', result)

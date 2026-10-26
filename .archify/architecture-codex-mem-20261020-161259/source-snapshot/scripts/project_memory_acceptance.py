@@ -163,14 +163,14 @@ def current_copy_review(request: dict) -> dict:
             scope_comparison='Synthetic unused property.',
             value_comparison='Source-copy fixture cannot assess meaning.') for pair in request['relations']]), MODEL, REASONING_EFFORT)
     source = request['evidence'][-1]
-    return {'output': {'version': 'summary-support-v5', 'rows': [
-        dict(unit_id=field, coverage='complete', candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
+    return {'output': {'version': 'summary-support-v6', 'units': {
+        field: [dict(unit_id=field, coverage='complete', candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
             evidence_assertion='The source-copy fixture retains this content.', value_comparison='Same copied value.',
             attribution_comparison='Same reporting role.', scope_comparison='Same scope.', verdict='supported',
             evidence_span_ids=[source['spans'][0]['id']],
             candidate_span_ids=[request['candidate_spans'][field][0]['id']] if field in request['candidate_spans'] else [],
             report_binding=dict(target='other' if field in request['candidate_spans'] else 'outside_outcome',
-                report_span_ids=[], properties=[])) for field in request['units']]}, 'evidence': {
+                report_span_ids=[], properties=[]))] for field in request['units']}}, 'evidence': {
             'thread_start': {'thread_id': 'copy-review', 'model': MODEL,
                              'reasoning_effort': REASONING_EFFORT, 'model_provider': 'openai'},
             'turn_started': {'thread_id': 'copy-review', 'turn_id': 'copy-review-turn'},

@@ -22,7 +22,13 @@ def source_output(*, version='summary-source-v4', coverage='partial', propositio
 
 
 def comparison(output, name='completed'):
-    return next(row for row in output['rows'] if row['unit_id'] == name)
+    return output['units'][name][0]
+
+
+def support_rows(output):
+    """References to current support rows only; source/outcome keep their own wire."""
+    assert output['version'] == 'summary-support-v6'
+    return [row for rows in output['units'].values() for row in rows]
 
 
 def outcome_output(request, relation='unused'):
@@ -68,12 +74,12 @@ def supported_review(request):
     if request['version'] == 'summary-outcome-v5':
         return receipt(outcome_output(request))
     evidence = request['evidence'][-1]
-    return receipt({'version': 'summary-support-v5', 'rows': [support_row(request, name, evidence) for name in request['units']]})
+    return receipt({'version': 'summary-support-v6', 'units': {name: [support_row(request, name, evidence)] for name in request['units']}})
 
 
 def rejected_review(request):
     result = supported_review(request)
-    for row in result['output']['rows']:
+    for row in support_rows(result['output']):
         if row['unit_id'] == 'completed': row['verdict'] = 'contradicted'
     return result
 
@@ -162,12 +168,12 @@ class SummarySupportTests(unittest.TestCase):
                 completed='The assistant reported 5 checks passed.')
             return result
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             if 'units' not in request:
                 # Reproduce the coarse contract's false acceptance with real quote ownership.
                 return supported_review(request)
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
             target = comparison(result['output'], 'completed')
@@ -200,10 +206,10 @@ class SummarySupportTests(unittest.TestCase):
                             request='Report the result.', completed=candidate)
                         return result
                     def review(request):
-                        if request['version'] != 'summary-support-v5':
+                        if request['version'] != 'summary-support-v6':
                             return supported_review(request)
                         # Controlled synthetic comparison; no claim of native semantic evaluation.
-                        if request['version'] != 'summary-support-v5':
+                        if request['version'] != 'summary-support-v6':
                             return supported_review(request)
                         result = supported_review(request)
                         comparison(result['output'], 'completed').update(
@@ -227,12 +233,12 @@ class SummarySupportTests(unittest.TestCase):
                 configure(self.data, jev_filter_enabled=False, jev_quality_enabled=False)
                 self.seed(answer='PRIVATE_SYNTHETIC_SOURCE_🙂')
                 def review(request):
-                    if request['version'] != 'summary-support-v5':
+                    if request['version'] != 'summary-support-v6':
                         return supported_review(request)
                     result = supported_review(request)
                     target = comparison(result['output'])
                     if subtype == 'structure': target['unexpected'] = 'PRIVATE_SYNTHETIC_VERDICT'
-                    elif subtype == 'unit_coverage': result['output']['rows'][0]['unit_id'] = 'completed'
+                    elif subtype == 'unit_coverage': support_rows(result['output'])[0]['unit_id'] = 'completed'
                     elif subtype == 'unknown_span': target['evidence_span_ids'] = ['PRIVATE_SYNTHETIC_SPAN']
                     elif subtype == 'verdict': target['verdict'] = 'PRIVATE_SYNTHETIC_VERDICT'
                     else: target['value_comparison'] = 'x' * 1201
@@ -305,25 +311,25 @@ class SummarySupportTests(unittest.TestCase):
 
     def test_malformed_review_cannot_authorize_a_write(self):
         def missing(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
-            result['output']['rows'].pop(0)
+            result['output']['units'].pop(next(iter(result['output']['units'])))
             return result
         def invented_quote(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
             comparison(result['output'], 'title')['evidence_span_ids'] = ['fabricated']
             return result
         def foreign(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
             comparison(result['output'], 'title')['evidence_span_ids'] = ['outside-project:1']
             return result
         def bool_offset(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
             comparison(result['output'], 'title')['start'] = False
@@ -351,7 +357,7 @@ class SummarySupportTests(unittest.TestCase):
         def generate(request):
             return measured(self.generate(request)['output'], 'generator', 10, 2)
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             return measured(rejected_review(request)['output'], 'reviewer', 20, 3)
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
@@ -375,7 +381,7 @@ class SummarySupportTests(unittest.TestCase):
     def test_source_change_during_review_fails_closed(self):
         self.seed()
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             with Store(self.data) as store:
                 store._connection.execute('UPDATE entries SET body=? WHERE id=?', ('Changed source', self.raw['id']))
@@ -388,7 +394,7 @@ class SummarySupportTests(unittest.TestCase):
     def test_insufficient_context_is_visible_without_claiming_a_false_outcome(self):
         self.seed()
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
             comparison(result['output'], 'completed').update(verdict='insufficient_context', evidence_span_ids=[],
@@ -402,7 +408,7 @@ class SummarySupportTests(unittest.TestCase):
         self.seed()
         from codex_mem.observer_usage_store import COUNTERS
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
             result['evidence']['no_tools'] = False
@@ -428,13 +434,13 @@ class SummarySupportTests(unittest.TestCase):
                 configure(self.data, jev_filter_enabled=False, jev_quality_enabled=False)
                 self.seed()
                 def review(request):
-                    if request['version'] != 'summary-support-v5':
+                    if request['version'] != 'summary-support-v6':
                         return supported_review(request)
                     with Store(self.data) as store:
                         store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
                     result = rejected_review(request)
                     if verdict == 'malformed':
-                        result['output']['rows'] = []
+                        result['output']['units'] = {}
                     else:
                         comparison(result['output'], 'completed')['verdict'] = verdict
                     return result
@@ -452,7 +458,7 @@ class SummarySupportTests(unittest.TestCase):
     def test_late_supported_review_cannot_commit_through_expired_lease(self):
         self.seed()
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             with Store(self.data) as store:
                 store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
@@ -466,7 +472,7 @@ class SummarySupportTests(unittest.TestCase):
     def test_late_rejection_does_not_mutate_replacement_lease(self):
         self.seed()
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             with Store(self.data) as store:
                 store._connection.execute("UPDATE observation_jobs SET lease_token='replacement', attempt_count=attempt_count+1 WHERE status='running'")
@@ -507,7 +513,7 @@ class SummarySupportTests(unittest.TestCase):
                         notes=[dict(title='Later work', body=request['sources'][0]['body'],
                                     tags=[], source_ids=ids)])))
                 def review(request):
-                    if request['version'] != 'summary-support-v5':
+                    if request['version'] != 'summary-support-v6':
                         return supported_review(request)
                     if 'completed' not in request['units']:
                         return measured(supported_review(request))
@@ -552,7 +558,7 @@ class SummarySupportTests(unittest.TestCase):
     def test_repeated_unicode_and_punctuation_do_not_require_model_text_copying(self):
         self.seed(answer='Начало. Résultat 🙂 passed. Fin. Résultat 🙂 passed.')
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             evidence = request['evidence'][-1]
             self.assertEqual(evidence['body'], ''.join(span['text'] for span in evidence['spans']))
@@ -578,16 +584,16 @@ class SummarySupportTests(unittest.TestCase):
                                                        completed='Earlier local tests passed, 4 tests.')
             return result
         def review(request):
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             self.assertTrue(any(s['evidence_group'] == 'history' and s['evidence_role'] == 'derived_note'
                                 for s in request['evidence']))
             evidence = next(s for s in request['evidence'] if s['evidence_group'] == 'history'
                             and 'Local tests passed, 4 tests.' in s['body'])
-            if request['version'] != 'summary-support-v5':
+            if request['version'] != 'summary-support-v6':
                 return supported_review(request)
             result = supported_review(request)
-            for row in result['output']['rows']:
+            for row in support_rows(result['output']):
                 row['evidence_span_ids'] = [evidence['spans'][0]['id']]
                 if row['candidate_span_ids']:
                     row['report_binding'] = dict(target='other',report_span_ids=[],properties=[])

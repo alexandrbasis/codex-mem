@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/alexandrbasis/.codex/worktrees/pi-summary-quality/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/candidate.json",
+    "sha256": "4fca17905e2e1f090a19f9115d930b56822b2aee2c1909abf37c216cfbc6de72",
+    "bytes": 75995
+  },
+  "artifact": {
+    "path": "/Users/alexandrbasis/.codex/worktrees/pi-summary-quality/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/codex-mem.html",
+    "sha256": "c62b0d71c5b7fefed1d59311ebb1c5582c31f80a40ea0059600a1139bf36bac5",
+    "bytes": 911305
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/alexandrbasis/.codex/worktrees/pi-summary-quality/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-summary-support-20261026-6/codex-mem.finalize.json",
+    "summaryReceipt": "/Users/alexandrbasis/.codex/worktrees/pi-summary-quality/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-summary-support-20261026-6/codex-mem.finalize-summary.json",
+    "browserCheckReceipt": "/Users/alexandrbasis/.codex/worktrees/pi-summary-quality/codex-mem-public/.archify/architecture-codex-mem-20261020-161259/review-summary-support-20261026-6/codex-mem.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-25T19:07:44.656Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3568,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 1,
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "notes-recall",
+            "from": "notes",
+            "to": "recall",
+            "label": "note search",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "right": {
+            "id": "ledger-diagnostics",
+            "from": "ledger",
+            "to": "diagnostics",
+            "label": "attempt metadata",
+            "collectionIndex": 17,
+            "artifactIndex": 18
+          },
+          "point": [
+            976,
+            1218
+          ]
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "notes-recall",
+            "from": "notes",
+            "to": "recall",
+            "label": "note search",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "bends": 3,
+          "stretch": 1.045
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "notes → recall crosses ledger → diagnostics: move the node of whichever is a branch, return, or second entrance to the other side of the main path, so that relationship runs through an empty corridor.",
+      "notes → recall needs 3 bends: move node notes or recall so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

@@ -1,6 +1,7 @@
 """Public packet grounding controls. Injected verdicts test wiring, not semantics."""
 import copy
 import unittest
+from tests.test_summary_support import support_rows
 from codex_mem.processor import process_pending
 from codex_mem.store import Store
 from tests import test_summary_support as fixtures
@@ -30,7 +31,7 @@ class PacketSupportTests(unittest.TestCase):
         self.seed_tool()
         def review(request):
             result = supported_review(request)
-            for row in result['output']['rows']:
+            for row in support_rows(result['output']):
                 if row['unit_id'] == 'note:0:title': row['verdict'] = 'unsupported'
             return result
         result = process_pending(self.project, self.data, runner=self.generate_note, summary_reviewer=review)
@@ -85,7 +86,7 @@ class PacketSupportTests(unittest.TestCase):
             return result
         def review(request):
             result = supported_review(request)
-            for row in result['output']['rows']:
+            for row in support_rows(result['output']):
                 if row['unit_id'] == 'note:0:observation:subtitle': row['verdict'] = 'unsupported'
             return result
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
@@ -102,7 +103,7 @@ class PacketSupportTests(unittest.TestCase):
             calls.append(request['version'])
             result = supported_review(request)
             if len(calls) == 1:
-                next(r for r in result['output']['rows'] if r['unit_id'] == 'note:0:title')['verdict'] = 'unsupported'
+                next(r for r in support_rows(result['output']) if r['unit_id'] == 'note:0:title')['verdict'] = 'unsupported'
             return result
         def generate(instance, request):
             candidate = self.generate_note(request)['output']
@@ -117,7 +118,7 @@ class PacketSupportTests(unittest.TestCase):
         with mock.patch.object(NativeProcessorRunner, 'check_profile'), mock.patch.object(NativeProcessorRunner, 'run', generate):
             result = process_pending(self.project, self.data, summary_reviewer=review)
         self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
-        self.assertEqual(['summary-support-v5'], calls)
+        self.assertEqual(['summary-support-v6'], calls)
         self.assertEqual([], self.stored(result)[0])
 
     def test_changed_rejected_note_can_use_the_single_correction(self):
@@ -129,7 +130,7 @@ class PacketSupportTests(unittest.TestCase):
             calls.append(request['version'])
             result = supported_review(request)
             if len(calls) == 1:
-                next(r for r in result['output']['rows'] if r['unit_id'] == 'note:0:title')['verdict'] = 'unsupported'
+                next(r for r in support_rows(result['output']) if r['unit_id'] == 'note:0:title')['verdict'] = 'unsupported'
             return result
         def generate(instance, request):
             candidate = self.generate_note(request)['output']
@@ -141,7 +142,7 @@ class PacketSupportTests(unittest.TestCase):
         with mock.patch.object(NativeProcessorRunner, 'check_profile'), mock.patch.object(NativeProcessorRunner, 'run', generate):
             result = process_pending(self.project, self.data, summary_reviewer=review)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v5'] * 2, calls)
+        self.assertEqual(['summary-support-v6'] * 2, calls)
         self.assertEqual('Reported checkpoint with unknown final status', self.stored(result)[0][0]['title'])
 
 
@@ -161,7 +162,7 @@ class SourceInputBoundaryTests(unittest.TestCase):
         summary = dict(title='Same text', completed='Same text')
         _, _, payload = prepare(summary, dict(sources=[dict(id='raw',source='hook:Stop',body='Same text')]))
         output = supported_review(payload)['output']
-        next(row for row in output['rows'] if row['unit_id']=='title')['candidate_span_ids'] = ['completed:1']
+        next(row for row in support_rows(output) if row['unit_id']=='title')['candidate_span_ids'] = ['completed:1']
         with self.assertRaises(SupportError) as caught: validate(output,payload)
         self.assertEqual('unknown_span',caught.exception.subtype)
 
@@ -176,14 +177,21 @@ class PacketContractLimitsTests(unittest.TestCase):
         claim = dict(sources=[dict(id='raw', body='One result.', source='hook:PostToolUse')])
         _, schema, payload = prepare(summary, claim, [copy.deepcopy(note) for _ in range(4)])
         self.assertEqual(47, len(payload['units']))
-        self.assertEqual(64, schema['properties']['rows']['maxItems'])
+        self.assertEqual(set(payload['units']), set(schema['properties']['units']['required']))
+        self.assertTrue(all(group['maxItems']==8 for group in schema['properties']['units']['properties'].values()))
         output = supported_review(payload)['output']
-        output['rows'].extend(copy.deepcopy(output['rows'][i]) for i in range(17))
+        names = list(output['units'])
+        for unit in names[:17]:
+            output['units'][unit].append(copy.deepcopy(output['units'][unit][0]))
+        self.assertEqual(64, len(support_rows(output)))
         self.assertEqual((), validate(output, payload).issues)
-        output['rows'].append(copy.deepcopy(output['rows'][20]))
+        output['units'][names[17]].append(copy.deepcopy(output['units'][names[17]][0]))
+        self.assertEqual(65, len(support_rows(output)))
+        from tests.test_summary_support_contract import schema_accepts
+        self.assertTrue(schema_accepts(output, schema))
         with self.assertRaises(SupportError): validate(output, payload).issues
         output = supported_review(payload)['output']
-        output['rows'][-1]['unit_id'] = output['rows'][0]['unit_id']
+        support_rows(output)[-1]['unit_id'] = support_rows(output)[0]['unit_id']
         with self.assertRaises(SupportError): validate(output, payload).issues
         for version in ('summary-support-v1', 'summary-support-v2', 'summary-support-v3', 'summary-source-v1', 'summary-source-v2', 'summary-outcome-v1', 'summary-outcome-v2'):
             from codex_mem.summary_support import diagnostic, safe_diagnostic

@@ -60,7 +60,7 @@ class MemoryProfileComparisonTests(unittest.TestCase):
         destination = self.root / 'evidence'
         report = measure(project, data, 'observation', destination, ValidRunner(), timeout=5)
         self.assertEqual('processed', report['receipt']['status'], report['receipt'])
-        self.assertEqual(['generation', 'summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'], seen)
+        self.assertEqual(['generation', 'summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], seen)
         self.assertEqual(1, report['execution_calls'])
         self.assertEqual(3, report['review_execution_calls'])
         self.assertEqual(3, len(report['review_executions']))

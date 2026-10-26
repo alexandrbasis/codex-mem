@@ -1,5 +1,6 @@
 """Prompt delivery and packet policy tests, not semantic model evaluations."""
 import unittest
+from tests.test_summary_support import support_rows
 
 from codex_mem.execution import execute_codex
 from codex_mem.processor import process_pending
@@ -73,7 +74,7 @@ class ObservationContractTests(unittest.TestCase):
             self.assertEqual(value, request['units'][unit_id])
             seen.append(request['version'])
             result = supported_review(request)
-            row = next(row for row in result['output']['rows'] if row['unit_id'] == unit_id)
+            row = next(row for row in support_rows(result['output']) if row['unit_id'] == unit_id)
             row.update(candidate_assertion='The material field implies a final outcome or accepted change.',
                        evidence_assertion='The checkpoint establishes partial progress with final status unknown.',
                        value_comparison='The definitive outcome or accepted change is not established.',
@@ -84,7 +85,7 @@ class ObservationContractTests(unittest.TestCase):
         expected = 'summary_support_uncertain' if verdict == 'insufficient_context' else 'summary_support_rejected'
         self.assertEqual(expected, result.get('reason_code'), result)
         self.assertEqual([], self.stored(result)[0])
-        self.assertEqual(['summary-support-v5'], seen)
+        self.assertEqual(['summary-support-v6'], seen)
         self.assertEqual('uncertain' if verdict == 'insufficient_context' else 'rejected',
                          result['summary_support'][0]['status'])
 
@@ -133,7 +134,7 @@ class SummaryScopeContractTests(unittest.TestCase):
         result = process_pending(self.project, self.data, runner=lambda request: fixtures.receipt(candidate),
                                  summary_reviewer=Reviewer())
         self.assertEqual('processed', result['status'], result)
-        support = next(request for request in seen if request.context['version'] == 'summary-support-v5')
+        support = next(request for request in seen if request.context['version'] == 'summary-support-v6')
         # Exact material values, complete source text, and strict schema remain at the public boundary.
         expected = {}
         if kind != 'note-only':
@@ -147,11 +148,13 @@ class SummaryScopeContractTests(unittest.TestCase):
         self.assertEqual(body, support.context['evidence'][0]['body'])
         schema = support.output_schema
         self.assertFalse(schema['additionalProperties'])
-        self.assertEqual(['version','rows'], schema['required'])
-        self.assertEqual(len(expected), schema['properties']['rows']['minItems'])
-        self.assertEqual(min(64, len(expected) * 8), schema['properties']['rows']['maxItems'])
-        self.assertEqual(set(expected), {unit for branch in schema['properties']['rows']['items']['anyOf']
-                                        for unit in branch['properties']['unit_id']['enum']})
+        self.assertEqual(['version','units'], schema['required'])
+        groups = schema['properties']['units']
+        self.assertEqual(set(expected), set(groups['required']))
+        self.assertEqual(set(expected), set(groups['properties']))
+        for unit, group in groups['properties'].items():
+            self.assertEqual((1, 8), (group['minItems'], group['maxItems']))
+            self.assertEqual([unit], group['items']['properties']['unit_id']['enum'])
         return support
 
     def test_category_rules_are_scoped_to_packets_with_material_note_units(self):

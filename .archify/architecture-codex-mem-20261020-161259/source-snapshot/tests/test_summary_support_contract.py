@@ -7,7 +7,7 @@ from unittest import mock
 from codex_mem import summary_support as support
 from codex_mem.processor import _read_valid_final_output, ProcessorFailure
 from codex_mem.pi_runtime import _json as pi_json
-from tests.test_summary_support import supported_review, comparison
+from tests.test_summary_support import supported_review, comparison, support_rows
 
 
 def schema_accepts(value, schema):
@@ -48,7 +48,7 @@ class SupportContractTests(unittest.TestCase):
                 with self.subTest(length=length, reviewer=reviewer.__name__):
                     output = reviewer(payload)['output']
                     self.assertEqual(summary, payload['units'])
-                    self.assertEqual(set(summary), {row['unit_id'] for row in output['rows']})
+                    self.assertEqual(set(summary), {row['unit_id'] for row in support_rows(output)})
                     self.assertTrue(schema_accepts(output, schema))
                     self.assertEqual((), support.validate(output, payload).issues)
                     self.assertEqual(length, len(payload['units']['notes']))
@@ -86,17 +86,17 @@ class SupportContractTests(unittest.TestCase):
                 case((verdict, refs), lambda value, v=verdict, r=refs: comparison(value).update(verdict=v, evidence_span_ids=r,
                          report_binding=dict(target='other', report_span_ids=[], properties=[])),
                      bool(refs) or verdict not in ('supported', 'contradicted'), 'verdict')
-        case('missing unit', lambda v: v['rows'][0].update(unit_id='completed'), False, 'unit_coverage')
-        case('unknown unit', lambda v: v['rows'][0].update(unit_id='other'), False, 'unit_coverage')
+        case('missing unit', lambda v: v['units']['title'][0].update(unit_id='completed'), False, 'unit_coverage')
+        case('unknown unit', lambda v: v['units']['title'][0].update(unit_id='other'), False, 'unit_coverage')
         case('unknown span', lambda v: comparison(v).update(evidence_span_ids=['history999:1']), False, 'unknown_span')
         case('invalid verdict', lambda v: comparison(v).update(verdict='maybe'), False, 'verdict')
-        case('missing comparison', lambda v: v.update(rows=[]), False, 'bounds')
-        case('too many assertions', lambda v: v.update(rows=[v['rows'][0]] + [comparison(v)] * 9), False, 'bounds')
+        case('missing comparison', lambda v: v['units'].update(completed=[]), False, 'bounds')
+        case('too many assertions', lambda v: v['units'].update(completed=[comparison(v)] * 9), False, 'bounds')
         case('blank comparison', lambda v: comparison(v).update(value_comparison=' \n '), False, 'structure')
         case('long comparison', lambda v: comparison(v).update(value_comparison='x' * 1201), False, 'bounds')
-        case('copied text extra', lambda v: v['rows'][0].update(text='wrong punctuation..'), False, 'structure')
-        case('incomplete enumeration', lambda v: v['rows'][0].update(coverage='incomplete'), True)
-        case('list ownership', lambda v: v.update(rows={}), False, 'bounds')
+        case('copied text extra', lambda v: v['units']['title'][0].update(text='wrong punctuation..'), False, 'structure')
+        case('incomplete enumeration', lambda v: v['units']['title'][0].update(coverage='incomplete'), True)
+        case('list ownership', lambda v: v['units'].update(completed={}), False, 'bounds')
         for name, value, expected, subtype in cases:
             with self.subTest(case=name):
                 if expected: self.assertTrue(schema_accepts(value, self.schema))
@@ -108,7 +108,7 @@ class SupportContractTests(unittest.TestCase):
                     self.assertEqual(subtype, caught.exception.subtype)
 
     def test_all_assertions_and_incomplete_coverage_block_acceptance(self):
-        comparisons = self.output['rows']
+        comparisons = self.output['units']['completed']
         other = dict(comparison(self.output), candidate_assertion='Five checks passed.',
             evidence_assertion='Five checks were not run.', value_comparison='Not run contradicts passed.', verdict='contradicted')
         comparisons.append(other)
@@ -135,22 +135,22 @@ class SupportContractTests(unittest.TestCase):
         with self.assertRaises(ValueError): support.safe_diagnostic(dict(detail, candidate='PRIVATE_TEXT'))
 
     def test_both_native_decoders_reject_duplicate_unit_keys(self):
-        raw = '{"version":"summary-support-v5","units":{"title":{},"title":{}}}'
+        raw = '{"version":"summary-support-v6","units":{"title":{},"title":{}}}'
         monitor = mock.Mock(thread_id='fixture', turn_id='turn')
         monitor.final_agent_text.return_value = raw
         for decode in (lambda: _read_valid_final_output(monitor), lambda: pi_json(raw)):
             with self.assertRaises(ProcessorFailure) as caught: decode()
             self.assertEqual('invalid_json', caught.exception.reason_code)
 
-    def test_flat_rows_group_one_to_eight_comparisons_and_require_common_coverage(self):
+    def test_keyed_rows_keep_one_to_eight_comparisons_and_require_common_coverage(self):
         output = copy.deepcopy(self.output)
         target = comparison(output)
-        output['rows'].extend(dict(target, candidate_assertion=f'Additional assertion {i}') for i in range(7))
+        output['units']['completed'].extend(dict(target, candidate_assertion=f'Additional assertion {i}') for i in range(7))
         self.assertEqual((), support.validate(output, self.payload).issues)
-        output['rows'][-1]['coverage'] = 'incomplete'
+        output['units']['completed'][-1]['coverage'] = 'incomplete'
         with self.assertRaises(support.SupportError) as caught: support.validate(output, self.payload).issues
         self.assertEqual('unit_coverage', caught.exception.subtype)
-        output['rows'][-1]['coverage'] = 'complete'
-        output['rows'].append(dict(target))
+        output['units']['completed'][-1]['coverage'] = 'complete'
+        output['units']['completed'].append(dict(target))
         with self.assertRaises(support.SupportError) as caught: support.validate(output, self.payload).issues
         self.assertEqual('bounds', caught.exception.subtype)

@@ -126,7 +126,7 @@
     ],
     "development_evidence": "evidence/summary-support-2026-10-25.json",
     "contracts": {
-      "support": "summary-support-v5",
+      "support": "summary-support-v6",
       "source": "summary-source-v4",
       "outcome": "summary-outcome-v5"
     },
@@ -187,5 +187,30 @@
       "next-session native memory injection"
     ],
     "evidence": "evidence/summary-support-2026-10-25.json"
+  },
+  "support_wire_v6": {
+    "version": "summary-support-v6",
+    "root_keys": [
+      "version",
+      "units"
+    ],
+    "unit_keys": "every exact input-unit key required; no extras",
+    "comparisons_per_unit": [
+      1,
+      8
+    ],
+    "inner_unit_id": "must match outer key; never reassigned",
+    "global_rows": {
+      "maximum": 64,
+      "enforced_by": "decoder sum before flattening, not schema-level sum guarantee"
+    },
+    "historical_v5_diagnostics": "readable",
+    "old_v5_wire": "rejected",
+    "source_outcome_helper_profiles_budgets": "unchanged",
+    "focused_offline_tests": 157,
+    "skips": 0,
+    "native_v6_compatibility": "unproven including maximum size",
+    "semantic_overrejection_fix": "not demonstrated",
+    "release_and_native_consent": "not granted by this record"
   }
 }

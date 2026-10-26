@@ -254,11 +254,11 @@ class JevProcessorTests(unittest.TestCase):
         reviewed = []
         def review(request):
             reviewed.append(request['version'])
-            self.assertEqual('summary-support-v5', request['version'])
+            self.assertEqual('summary-support-v6', request['version'])
             return supported_review(request)
         result = process_pending(self.project, self.home, summary_reviewer=review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v5'], reviewed)
+        self.assertEqual(['summary-support-v6'], reviewed)
         self.assertEqual('not_assessed', result['summary_support'][-1]['status'])
         self.assertEqual(1, result['session_summary_count'])
         self.assertEqual([stop['id']], result['jev_filter']['lifecycle_only_ids'])

@@ -68,8 +68,8 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = dict(version='summary-support-v5', rows=[support_row(payload, field, evidence, verdict) for field in payload['units']])
-    if mode == 'malformed_review': output['rows'] = []
+    output = dict(version='summary-support-v6', units={field:[support_row(payload, field, evidence, verdict)] for field in payload['units']})
+    if mode == 'malformed_review': output['units'] = {}
     return output, mode
 
 root = Path(__file__).resolve()
@@ -133,7 +133,7 @@ for raw in sys.stdin:
         if count == 1:
             candidate_payload = command['message'].split('\n')[-1]
             schema_version = json.loads(command['message'].split('\n\n', 1)[0].removeprefix('Output schema: ')).get('properties', {}).get('version', {}).get('enum', [None])[0] if command['message'].startswith('Output schema: ') else None
-            if schema_version == 'summary-source-v4' or candidate_payload.startswith(('{"version": "summary-support-v5"', '{"version": "summary-outcome-v5"')):
+            if schema_version == 'summary-source-v4' or candidate_payload.startswith(('{"version": "summary-support-v6"', '{"version": "summary-outcome-v5"')):
                 support = True
                 payload = {'version': schema_version} if schema_version == 'summary-source-v4' else json.loads(candidate_payload)
                 review_output, mode = support_output(payload, scenario, root)
@@ -256,7 +256,7 @@ catch { /* Pi also catches extension hook errors; acceptance still needs proof. 
             output = scenario['outputs'][min(count - 1, len(scenario['outputs']) - 1)]
         text = '{bad' if mode == 'invalid_json' else json.dumps(output)
         if mode == 'duplicate_units':
-            text = '{"version":"summary-support-v5","units":{"title":{},"title":{}}}'
+            text = '{"version":"summary-support-v6","units":{"title":[],"title":[]}}'
         message = {'role': 'assistant', 'provider': model['provider'], 'model': model['id'],
             'content': [{'type': 'text', 'text': text}], 'usage': {} if scenario.get('omit_usage') or (count == 1 and scenario.get('first_usage_unknown')) or (count == 2 and scenario.get('last_usage_unknown')) else usage,
             'stopReason': 'aborted' if mode == 'cancelled' else 'error' if mode == 'provider_error' else 'stop'}

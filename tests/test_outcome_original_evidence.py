@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import unittest
+from tests.support_contract_fixtures import authored_support_reply
 
 from codex_mem import summary_outcome as outcome, summary_support as support
 from tests import test_summary_support as fixtures
@@ -114,7 +115,7 @@ class OriginalEvidenceContractTests(unittest.TestCase):
                 claim=dict(sources=[dict(id=f'raw-{i}',body=e['text'],source='hook:Stop' if e['role']=='assistant_report' else 'hook:UserPromptSubmit') for i,e in enumerate(case['source_events'],1)],context=[])
                 summary=case['candidate']['session_summary']
                 _,_,payload=support.prepare(summary,claim)
-                review=support.validate(case['support'],payload)
+                review=support.validate(authored_support_reply(case['id']),payload)
                 _,_,source_payload=outcome.prepare_source(claim)
                 source=outcome.validate_source(case['source'],source_payload)
                 _,schema,request=outcome.prepare_outcome(summary,review,source,payload)

@@ -196,7 +196,7 @@ class SummaryOutcomeTests(unittest.TestCase):
         reviewed = []
         def review(request):
             reviewed.append(request['version'])
-            if request['version'] == 'summary-support-v5':
+            if request['version'] == 'summary-support-v6':
                 self.assertTrue(any(item['body'] == old['body'] for item in request['evidence']))
             from codex_mem.observer_usage_store import COUNTERS
             result = supported_review(request)
@@ -222,7 +222,7 @@ class SummaryOutcomeTests(unittest.TestCase):
         with mock.patch.object(Store, 'finish_observation_batch', forget_before_finish):
             result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
         self.assertEqual('summary_support_stale', result.get('reason_code'), result)
-        self.assertEqual(['summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'], reviewed)
+        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], reviewed)
         with Store(self.data) as store:
             self.assertEqual([], store.get(self.project, [old['id']]))
             self.assertEqual([], store.observation_job_status(self.project, result['job_id'])['output_ids'])
@@ -253,7 +253,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                     unrelated = store.remember(unrelated_project, 'Other event', 'Unrelated evidence.',
                         source='hook:Stop', session_id='another-session')
                 def review(request):
-                    if request['version'] == 'summary-support-v5':
+                    if request['version'] == 'summary-support-v6':
                         self.assertNotIn('Unrelated evidence.', json.dumps(request))
                     return supported_review(request)
                 def generate(request):
@@ -323,7 +323,7 @@ class SummaryOutcomeTests(unittest.TestCase):
             return supported_review(request)
         result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=reviewer)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'], [r['version'] for r in seen])
+        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], [r['version'] for r in seen])
         self.assertEqual('unused', result['summary_support'][-1]['status'])
 
     def test_new_stage_failures_are_operational_and_keep_measured_usage(self):
@@ -440,7 +440,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                         return receipt(source_output(propositions=[dict(statement='Two checks passed.',
                             subject='Current run', temporal_scope='Current report', modality='reported', source_id='report1')]))
                     result = supported_review(request)
-                    if stage == 'support' and version == 'summary-support-v5' and calls.count(version) == 1:
+                    if stage == 'support' and version == 'summary-support-v6' and calls.count(version) == 1:
                         comparison(result['output'])['verdict'] = 'contradicted'
                     if stage == 'outcome' and version == 'summary-outcome-v5' and calls.count(version) == 1:
                         result['output'] = outcome_output(request, 'conflict')
@@ -475,7 +475,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                 def review(request):
                     calls.append(request['version'])
                     result = supported_review(request)
-                    if request['version'] == 'summary-support-v5' and calls.count(request['version']) == 1:
+                    if request['version'] == 'summary-support-v6' and calls.count(request['version']) == 1:
                         comparison(result['output'])['verdict'] = 'contradicted'
                     return result
                 def generate(instance, request):
@@ -519,7 +519,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                     return supported_review(request)
                 result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
                 self.assertEqual('processed', result['status'], result)
-                self.assertEqual(['summary-support-v5', 'summary-source-v4', 'summary-outcome-v5'], seen)
+                self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], seen)
                 self.assertEqual('unused', result['summary_support'][-1]['status'])
                 calls = json.loads(self.stored(result)[1][0]['execution_calls'])
                 self.assertEqual({'generation', 'summary_support_1', 'summary_source_1', 'summary_outcome_1'}, set(calls))
@@ -713,7 +713,8 @@ class OutcomeContractTests(unittest.TestCase):
     def test_original_support_emits_one_comparison_object_but_enforces_citations(self):
         from codex_mem.summary_support import prepare, validate, SupportError, TEXT_KEYS, VERDICTS
         _, schema, payload = prepare(self.summary, self.claim)
-        for comparison in schema['properties']['rows']['items']['anyOf']:
+        for group in schema['properties']['units']['properties'].values():
+            comparison = group['items']
             self.assertEqual({*TEXT_KEYS, 'verdict', 'evidence_span_ids', 'unit_id', 'coverage', 'candidate_span_ids','report_binding'}, set(comparison['properties']))
             self.assertEqual(list(VERDICTS), comparison['properties']['verdict']['enum'])
         for verdict in ('supported', 'contradicted'):
@@ -768,13 +769,14 @@ class OutcomeContractTests(unittest.TestCase):
                          {(row['unit_id'], row['source_item_id']) for row in payload['relations']})
         self.assertEqual({'version', 'rows'}, set(schema['properties']))
 
-    def test_original_support_wire_is_flat_and_versioned(self):
+    def test_original_support_wire_is_keyed_and_versioned(self):
         from codex_mem.summary_support import prepare
         prompt, schema, payload = prepare(self.summary, self.claim)
-        self.assertEqual('summary-support-v5', payload['version'])
-        self.assertEqual({'version', 'rows'}, set(schema['properties']))
-        for branch in schema['properties']['rows']['items']['anyOf']:
-            self.assertIn('unit_id', branch['properties'])
+        self.assertEqual('summary-support-v6', payload['version'])
+        self.assertEqual({'version', 'units'}, set(schema['properties']))
+        self.assertEqual(set(payload['units']), set(schema['properties']['units']['required']))
+        for unit, group in schema['properties']['units']['properties'].items():
+            self.assertEqual([unit], group['items']['properties']['unit_id']['enum'])
 
     def test_all_fifty_pairs_and_mixed_unavailable_propositions_are_preserved(self):
         import copy

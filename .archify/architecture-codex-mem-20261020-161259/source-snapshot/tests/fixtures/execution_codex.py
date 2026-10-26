@@ -70,8 +70,8 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = dict(version='summary-support-v5', rows=[support_row(payload, field, evidence, verdict) for field in payload['units']])
-    if mode == 'malformed_review': output['rows'] = []
+    output = dict(version='summary-support-v6', units={field:[support_row(payload, field, evidence, verdict)] for field in payload['units']})
+    if mode == 'malformed_review': output['units'] = {}
     return output, mode
 
 def send(value):
@@ -186,7 +186,7 @@ for line in sys.stdin:
             output = review_output
         text = '{invalid'  if mode == 'invalid_json' else json.dumps(output)
         if mode == 'duplicate_units':
-            text = '{"version":"summary-support-v5","units":{"title":{},"title":{}}}'
+            text = '{"version":"summary-support-v6","units":{"title":[],"title":[]}}'
         event('item/completed', item={'id': 'answer-' + str(turn_number), 'type': 'agentMessage', 'text': text, 'phase': 'final_answer'})
         event('turn/completed', turn={'id': turn_id, 'status': 'completed'})
         continue

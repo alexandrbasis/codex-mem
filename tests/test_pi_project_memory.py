@@ -14,6 +14,12 @@ from codex_mem.project_memory import ProjectMemory
 from codex_mem.store import Store
 
 
+# Real disposable executable preparation is separate from deadline policy tests.
+FIXTURE_ATTEMPT_SECONDS = 30
+DEADLINE_TEST_SECONDS = 3
+TEST_WATCHDOG_SECONDS = 30
+
+
 class PiProjectMemoryTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
@@ -25,7 +31,7 @@ class PiProjectMemoryTests(unittest.TestCase):
         self.pi = self.root / 'pi'
         self.pi.write_text('#!' + sys.executable + '\n' + (Path(__file__).parent / 'fixtures/execution_pi.py').read_text())
         self.pi.chmod(0o700)
-        self.selected = dict(runtime='pi', provider='fixture', model='fixture', reasoning_effort='low', timeout=3)
+        self.selected = dict(runtime='pi', provider='fixture', model='fixture', reasoning_effort='low', timeout=FIXTURE_ATTEMPT_SECONDS)
         configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
                   project_memory_mode='pilot', project_memory_projects=[str(self.project)],
                   project_memory_profile=self.selected)
@@ -116,7 +122,7 @@ class PiProjectMemoryTests(unittest.TestCase):
             self.assertEqual(1, memory.snapshot(self.project)['coverage']['pending_events'])
             attempt = next(row for row in memory.attempts(self.project)
                            if row['attempt_id'] == failed['usage_attempt_id'])
-            self.assertEqual(total_tokens, attempt['total_tokens'])
+            self.assertEqual(total_tokens, attempt['total_tokens'], dict(result=failed, attempt=attempt))
             self.assertEqual('failed', attempt['outcome'])
             if usage_status is not None:
                 self.assertEqual(usage_status, attempt['usage_status'])
@@ -129,6 +135,9 @@ class PiProjectMemoryTests(unittest.TestCase):
         return attempt
 
     def assert_explicit_retry_processes(self, failed):
+        # A retry tests recovery, not the deliberately short deadline above.
+        self.selected['timeout'] = FIXTURE_ATTEMPT_SECONDS
+        configure(self.data, project_memory_profile=self.selected)
         self.scenario()
         self.assertEqual('idle', self.process()['status'])
         self.retry()
@@ -144,6 +153,13 @@ class PiProjectMemoryTests(unittest.TestCase):
         self.scenario(mode=mode)
         failed = self.process()
         attempt = self.assert_failed_packet_retained(failed, total_tokens=12)
+        if mode == 'disconnect':
+            self.assertEqual('pi_disconnected', failed.get('reason_code'), failed)
+            evidence = json.loads(attempt['execution_receipt'])
+            self.assertEqual(1, evidence['generation'], failed)
+            self.assertFalse(evidence['agent_end_observed'], failed)
+            self.assertEqual('reported', attempt['usage_status'], attempt)
+            self.assertEqual(2, attempt['usage_updates'], attempt)
         if mode == 'tool':
             self.assertEqual(1, json.loads(attempt['execution_receipt'])['tool_calls_observed'])
         if mode == 'no_settlement':
@@ -189,6 +205,8 @@ class PiProjectMemoryTests(unittest.TestCase):
         self.assert_failed_mode_can_retry('malformed')
 
     def controlled_runtime_clock(self):
+        self.selected['timeout'] = DEADLINE_TEST_SECONDS
+        configure(self.data, project_memory_profile=self.selected)
         import time
         from types import SimpleNamespace
         started = time.monotonic()
@@ -199,7 +217,7 @@ class PiProjectMemoryTests(unittest.TestCase):
         def monotonic():
             # This is a test watchdog, separate from the unchanged three-second
             # simulated production deadline. Never count watchdog expiry as proof.
-            if time.monotonic() - started >= 30:
+            if time.monotonic() - started >= TEST_WATCHDOG_SECONDS:
                 watchdog[0] = True
                 expire()
             return clock[0]
@@ -275,10 +293,11 @@ class PiProjectMemoryTests(unittest.TestCase):
 
     def test_absent_and_zero_placeholder_usage_remain_unknown(self):
         self.scenario(omit_usage=True)
-        self.assertEqual('processed', self.process()['status'])
+        result = self.process()
+        self.assertEqual('processed', result['status'], result)
         with Store(self.data) as store:
             attempt = ProjectMemory(store).attempts(self.project)[0]
-            self.assertIsNone(attempt['total_tokens'])
+            self.assertIsNone(attempt['total_tokens'], attempt)
             self.assertEqual('unknown', attempt['usage_status'])
 
     def test_one_correction_keeps_profile_deadline_and_counts_each_generation_once(self):
@@ -390,10 +409,10 @@ class PiProjectMemoryTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(self.process)
             try:
-                deadline = time.monotonic() + 3
+                deadline = time.monotonic() + FIXTURE_ATTEMPT_SECONDS + 5
                 while not gate.with_suffix('.ready').exists() and time.monotonic() < deadline:
                     time.sleep(.01)
-                self.assertTrue(gate.with_suffix('.ready').exists())
+                self.assertTrue(gate.with_suffix('.ready').exists(), 'Synthetic generation gate not reached before readiness watchdog.')
                 with Store(self.data) as store:
                     source = store.timeline(self.project, limit=10)[0]
                     store.forget(self.project, ids=[source['id']])
@@ -411,6 +430,8 @@ class PiProjectMemoryTests(unittest.TestCase):
     def test_deadline_includes_version_probe_and_second_generation(self):
         import time
         from codex_mem.pi_runtime import PiProcessorRunner
+        self.selected['timeout'] = DEADLINE_TEST_SECONDS
+        configure(self.data, project_memory_profile=self.selected)
         for scenario in ({'version_timeout': True}, {'modes': ['valid', 'timeout']}):
             with self.subTest(scenario=scenario):
                 self.scenario(**scenario)
