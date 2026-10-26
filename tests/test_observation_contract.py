@@ -150,7 +150,8 @@ class SummaryScopeContractTests(unittest.TestCase):
         self.assertEqual(['version','rows'], schema['required'])
         self.assertEqual(len(expected), schema['properties']['rows']['minItems'])
         self.assertEqual(min(64, len(expected) * 8), schema['properties']['rows']['maxItems'])
-        self.assertEqual(set(expected), set(schema['properties']['rows']['items']['properties']['unit_id']['enum']))
+        self.assertEqual(set(expected), {unit for branch in schema['properties']['rows']['items']['anyOf']
+                                        for unit in branch['properties']['unit_id']['enum']})
         return support
 
     def test_category_rules_are_scoped_to_packets_with_material_note_units(self):

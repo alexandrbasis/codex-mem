@@ -634,7 +634,7 @@ class JevQualityProcessorTests(unittest.TestCase):
     def test_generator_applies_provenance_and_completion_scope_to_titles(self):
         self.remember("Use checkout_id for idempotency.", "hook:UserPromptSubmit")
         def runner(request):
-            self.assertIn("Titles and subtitles must preserve the same attribution, uncertainty and planned-versus-completed scope",
+            self.assertIn("Titles, subtitles and summaries must preserve attribution, uncertainty and planned-versus-completed scope",
                           request["prompt"])
             self.assertIn("A cautious body cannot repair a stronger title", request["prompt"])
             return self.runner(request)

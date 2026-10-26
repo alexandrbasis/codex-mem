@@ -1,7 +1,6 @@
 """Structural v2 contract controls; canned meanings are not native quality evidence."""
 import copy
 import json
-import re
 import unittest
 from unittest import mock
 
@@ -12,28 +11,13 @@ from tests.test_summary_support import supported_review, comparison
 
 
 def schema_accepts(value, schema):
-    """Independent checker for the JSON Schema subset emitted by this contract."""
-    if 'anyOf' in schema:
-        return any(schema_accepts(value, item) for item in schema['anyOf'])
-    kind = schema['type']
-    if isinstance(kind, list):
-        return any(schema_accepts(value, {**schema, 'type': item}) for item in kind)
-    if kind == 'null':
-        return value is None
-    if kind == 'object':
-        return (isinstance(value, dict) and set(schema.get('required', [])) <= set(value)
-                and (schema.get('additionalProperties', True) or set(value) <= set(schema['properties']))
-                and all(key in schema['properties'] and schema_accepts(item, schema['properties'][key])
-                        for key, item in value.items()))
-    if kind == 'array':
-        return (isinstance(value, list) and schema.get('minItems', 0) <= len(value) <= schema.get('maxItems', 10**9)
-                and (not schema.get('uniqueItems') or len({json.dumps(item, sort_keys=True) for item in value}) == len(value))
-                and all(schema_accepts(item, schema['items']) for item in value))
-    if kind == 'string':
-        return (isinstance(value, str) and schema.get('minLength', 0) <= len(value) <= schema.get('maxLength', 10**9)
-                and ('enum' not in schema or value in schema['enum'])
-                and ('pattern' not in schema or re.search(schema['pattern'], value) is not None))
-    raise AssertionError(kind)
+    """Use the optional standards evaluator, as in test_processor_schema."""
+    try:
+        import jsonschema
+    except ImportError:
+        raise unittest.SkipTest("jsonschema is optional; local validation tests still run")
+    jsonschema.Draft202012Validator.check_schema(schema)
+    return jsonschema.Draft202012Validator(schema).is_valid(value)
 
 
 class SupportContractTests(unittest.TestCase):

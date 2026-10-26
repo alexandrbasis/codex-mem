@@ -297,6 +297,7 @@ def process_pending(
             calls_started = False
             support_count = 0
             support_diagnostics = []
+            generation_correction = None
             try:
                 from .observer_usage_store import begin_attempt, finish_attempt, snapshot_attempt, record_execution_call
                 _, _, sources = _claim_parts(claimed)
@@ -607,12 +608,27 @@ def process_pending(
                     return None
 
                 def review_candidate(candidate, remaining):
-                    nonlocal reviewed_output, review_count, summary_seen
+                    nonlocal reviewed_output, review_count, summary_seen, generation_correction
                     review_count += 1
                     canonical = _resolve_source_handles(
                         _unwrap_model_output(candidate) if profile.runtime == "pi" else candidate, sources)
-                    candidate_notes, _, candidate_summary = _validate_model_output(
-                        canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
+                    try:
+                        candidate_notes, _, candidate_summary = _validate_model_output(
+                            canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
+                    except ProcessorFailure as exc:
+                        if (exc.reason_code != "missing_required_summary" or review_count != 1
+                                or canonical.get("disposition") != "processed"):
+                            raise
+                        from .summary_support import diagnostic
+                        detail = diagnostic(canonical, generation_claim, status="invalid", invalid_subtype="structure")
+                        generation_correction = dict(initial_reason_code="missing_required_summary",
+                                                     candidate_fingerprint=detail["candidate_fingerprint"])
+                        record_execution_call(store, workspace, job_id, attempt_count, "generation",
+                                              profile=profile, review_diagnostic=detail)
+                        source_guard()
+                        if remaining <= 0 or time.monotonic() >= deadline:
+                            raise ProcessorFailure("timeout")
+                        return _summary_shape_correction_prompt()
                     if summary_seen and candidate_summary is None:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_rejected")
                     summary_seen = summary_seen or candidate_summary is not None
@@ -740,6 +756,8 @@ def process_pending(
                 if receipt is not None:
                     receipt.update(execution_profile=profile.to_dict(), model=profile.model,
                                    reasoning_effort=profile.reasoning_effort)
+                if receipt is not None and generation_correction is not None:
+                    receipt["generation_correction"] = generation_correction
                 if receipt is not None and support_diagnostics:
                     receipt["summary_support"] = support_diagnostics
                 if receipt is not None and filter_audit is not None:
@@ -783,6 +801,17 @@ def process_pending(
     except (StoreError, OSError) as exc:
         return {**_failed_receipt(job_id, "storage_failure", None, None),
                 "failure_detail": storage_failure_detail(exc, storage_operation, preclaim=claimed is None)}
+
+
+def _summary_shape_correction_prompt() -> str:
+    """One fixed structural failure, using the existing generation correction."""
+    return (
+        "The JSON candidate failed structural validation: missing_required_summary. "
+        "Use the one permitted correction to return a complete result under the original output schema, "
+        "including the required session_summary. Use only the original supplied evidence and source handles. "
+        "Do not fabricate a summary from the note or invent facts to fill required fields. "
+        "All corrected material still requires full source support review before storage."
+    )
 
 
 def _quality_correction_prompt(audit: Mapping[str, Any]) -> str:
@@ -2016,18 +2045,20 @@ def _build_prompt(
         "supports it. A tool_record containing a README or an earlier assistant answer proves "
         "only that text was read, not that its claims were verified. A tool input is an attempt; "
         "its response may establish a result only within the command's actual scope. "
-        "A captured test command returning a passing result is evidence of that observed local "
-        "test outcome. Preserve it as an executed local regression reporting success; no second "
-        "independent verifier is required. Do not erase this evidence with a blanket statement "
-        "that the local result is unverified or only an assistant claim. It does not establish "
-        "production behavior or unseen implementation details. Do not invent an omitted exit "
-        "status or unseen assertions. Echo/printf of a success claim and reading a report do "
-        "not show that its claimed test actually ran. "
+        "A captured test command returning a passing result supports that observed outcome in the "
+        "supplied execution scope. No independent verifier is required. Do not reclassify it as only an "
+        "assistant claim. Do not infer an omitted local, synthetic or production scope, regression "
+        "purpose, exit status or unseen assertions. Echo/printf of a success claim or reading a report "
+        "does not show that the test ran. "
         "A derived_note inherits its sources' uncertainty and is not independent corroboration. "
         "State that provenance and any missing verification in the body and each relevant "
-        "structured fact, not only in tags. Titles and subtitles must preserve the same "
-        "attribution, uncertainty and planned-versus-completed scope as the body. A cautious "
-        "body cannot repair a stronger title. Never strengthen a claim in the summary. "
+        "structured fact, not only in tags. Use surrounding candidate fields only to resolve ambiguous "
+        "references within that same note or session_summary record. Never borrow candidate context "
+        "across records, weaken explicit wording or invent attribution. Titles, subtitles and summaries "
+        "must preserve attribution, uncertainty and planned-versus-completed scope. A cautious body "
+        "cannot repair a stronger title. Check evidence-limit wording for implied events or outcomes. "
+        "Omit incidental descriptions of candidate formatting. Claims about an external report's layout "
+        "need original evidence. "
         "When sources describe different versions or conflicting behavior, retain the version "
         "or event scope and the conflict. A newer timestamp alone does not resolve disagreement. "
         "Describe a replacement decision only when the evidence explicitly establishes it; "

@@ -135,6 +135,9 @@ class ExecutionContractTests(unittest.TestCase):
                 self.assertIsNone(result.identity)
 
     def test_catalog_failures_share_attempt_deadline_and_page_bound(self):
+        from types import SimpleNamespace
+        from unittest import mock
+        from codex_mem import processor
         for scenario, expected in (({'model_pages': {'first': {'data': 'malformed'}}}, 'protocol'),
                                    ({'catalog_mode': 'disconnect'}, 'protocol'),
                                    ({'catalog_mode': 'timeout'}, 'timeout'),
@@ -142,9 +145,76 @@ class ExecutionContractTests(unittest.TestCase):
                                                      'loop': {'data': [], 'nextCursor': 'loop'}}}, 'configuration')):
             with self.subTest(scenario=scenario):
                 self.scenario(**scenario)
+                trace = self.executable.with_suffix('.trace')
+                trace.unlink(missing_ok=True)
+                watchdog_seconds = 30
+                watchdog_expired = [False]
+                catalog_expiry = []
+
+                def records():
+                    if not trace.exists():
+                        return []
+                    text = trace.read_text()
+                    lines = text.splitlines()
+                    if text and not text.endswith('\n'):
+                        lines = lines[:-1]
+                    return [json.loads(line) for line in lines]
+
                 started = time.monotonic()
-                result = NativeProcessorRunner(codex=str(self.executable)).execute(
-                    self.request(deadline=started + 2))
-                self.assertEqual(expected, result.failure.reason)
+                request = self.request(deadline=started + 2)
+                original_deadline = request.deadline
+                clock = [started]
+
+                def monotonic():
+                    rows = records()
+                    methods = [row.get('method') for row in rows]
+                    catalogs = [row for row in rows if row.get('method') == 'model/list']
+                    # Charge logical preflight/page time to the original two-second
+                    # attempt, without making fixture startup speed its subject.
+                    elapsed = .25 * sum(method in methods for method in ('initialize', 'account/read'))
+                    clock[0] = max(clock[0], started + elapsed + .05 * len(catalogs))
+                    if scenario.get('catalog_mode') == 'timeout' and catalogs and not catalog_expiry:
+                        # Expire only after the real child received model/list.
+                        catalog_expiry.append(clock[0])
+                        clock[0] = original_deadline + .001
+                    # A separate real watchdog fails explicitly, never as a catalog
+                    # result. The runner's finally closes its owned process/pipes.
+                    if time.monotonic() - started >= watchdog_seconds and not watchdog_expired[0]:
+                        watchdog_expired[0] = True
+                        # Raise once regardless of any client deadline regression.
+                        # Later clock reads stay finite so finally can record and reap.
+                        raise AssertionError('Fixture exceeded the real catalog-test watchdog.')
+                    return clock[0]
+
+                with mock.patch.object(processor, 'time', SimpleNamespace(monotonic=monotonic)):
+                    result = NativeProcessorRunner(codex=str(self.executable)).execute(request)
+                rows = records()
+                methods = [row.get('method') for row in rows]
+                catalogs = [row for row in rows if row.get('method') == 'model/list']
+                self.assertFalse(watchdog_expired[0], {'scenario': scenario, 'methods': methods})
+                self.assertEqual(['initialize', 'initialized', 'account/read'], methods[:3])
+                self.assertEqual(expected, result.failure.reason, {'result': result, 'methods': methods})
+                self.assertIsNone(result.output)
+                self.assertIsNone(result.identity)
                 self.assertIsNone(result.usage['tokens'])
-                self.assertLess(time.monotonic() - started, 4)
+                self.assertEqual(original_deadline, request.deadline)
+                self.assertNotIn('thread/start', methods)
+                self.assertNotIn('turn/start', methods)
+                if expected == 'configuration':
+                    self.assertEqual('exact_model_unavailable', result.failure.reason_code)
+                    self.assertEqual(processor.MAX_MODEL_PAGES, len(catalogs))
+                    self.assertEqual([None] + ['loop'] * (processor.MAX_MODEL_PAGES - 1),
+                                     [row['params'].get('cursor') for row in catalogs])
+                else:
+                    self.assertEqual(1, len(catalogs), methods)
+                if expected == 'timeout':
+                    self.assertEqual(1, len(catalog_expiry))
+                    self.assertGreater(catalog_expiry[0], started)
+                    self.assertLess(catalog_expiry[0], original_deadline)
+                    self.assertGreater(clock[0], original_deadline)
+                else:
+                    self.assertEqual([], catalog_expiry)
+                    self.assertLess(clock[0], original_deadline)
+                # Thirty seconds is a test hang detector, not a latency promise.
+                # Allow the existing runner's five-second termination sequence.
+                self.assertLess(time.monotonic() - started, watchdog_seconds + 5)

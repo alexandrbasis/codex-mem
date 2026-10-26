@@ -1,9 +1,9 @@
 {
-  "date": "2026-10-25",
+  "date": "2026-10-26",
   "snapshot": {
-    "as_of": "2026-10-25T18:55:04Z",
-    "phase": "after alternative-controls-2, before final CI4 and final private acceptance/install validation",
-    "status_scope": "Completion, pending and installation status fields describe this evidence snapshot. They do not track later work."
+    "as_of": "2026-10-26",
+    "phase": "after failed historical acceptance6 and three uncommitted repairs; before final validation of the new candidate",
+    "status_scope": "Current statuses are this snapshot only. Historical public controls do not establish new candidate quality or a general profile recommendation."
   },
   "scope": "Safe aggregate public development evidence only. No private cases, grading material, source bodies, reviewer prose or credentials.",
   "contracts": {
@@ -27,9 +27,9 @@
   },
   "code_sha256": {
     "codex_mem/observation_contract.py": "187daba1abacc661aee276ba66b96a9186684a1864cfdfd2b3c30138bc85f227",
-    "codex_mem/summary_support.py": "9d02671e6f5555138bb3239fcf334fe99bea590010cdf4c5aadc0fad5bcc438b",
+    "codex_mem/summary_support.py": "2943d93b6aafebe54f4fd2653fd9bd7afe03550cd8c8c2b2caab928b0c169b10",
     "codex_mem/summary_outcome.py": "b9cd452d93e616f2b3d287a26870b0a4485c573169bbf7b7c930c5c7a17c9f10",
-    "codex_mem/processor.py": "0dc8c8560584f7dd64cd1297c8a28d1781839037fe0cf9e7a56dc17a4249f01a",
+    "codex_mem/processor.py": "dacb1aee75c8584505c956c01a217b03f55b47605047eb061467c7f55f0614a6",
     "codex_mem/pi_schema.py": "e647370560f3b5917e97bde8c951a8e9dbe74bffffee3b4f04ae9537fba111d7",
     "codex_mem/pi_schema_helper.js": "7523f97e2c93543666b8caaa4bcaa448efbbf5d4f3364d8b64a4b178f9979040",
     "codex_mem/execution.py": "8c4a71408c75a5f880b86effe58044d36c2505a166907d6f6aa2407839ab1d2e",
@@ -84,38 +84,39 @@
     "comparison_limit": "Whole-profile comparison only. Pi changed reasoning from Luna/low to Sol/medium."
   },
   "validation": {
-    "full_ci_3": {
-      "status": "failed",
-      "tests": 2189,
-      "failures": 1,
-      "errors": 0,
-      "acceptance": "passed deterministic checks, not private acceptance",
-      "package": "passed",
-      "failure": "Wall-time assertion observed 0.637459 seconds against 0.4 seconds; later diagnosis established SQLite BUSY with configured 20 ms timeout and no application retry."
+    "current_candidate_full_ci": "pending root final full CI and Standards then Spec; not run in documentation stage",
+    "focused_repairs": {
+      "owner_schema": 34,
+      "missing_summary_correction": 25,
+      "generic_wording": 22,
+      "public_packet_readbacks": 4
     },
-    "later_focused_jev": {
-      "tests": 16,
-      "failures": 0,
-      "errors": 0,
-      "skips": 0,
-      "seconds": 3.131,
-      "scope": "Revised tests of actual contention/deadline contract. No production latency guarantee."
-    },
-    "full_ci_4": "pending"
+    "native_repairs": "unverified; no fresh batch authorized"
   },
   "source_continuity": {
-    "current_pre_document_manifest_sha256": "cc4c2e6a5218cb5cf14606c5bab12c46f358e3d3c627772dbf71a72fc02b8c15",
-    "native_alternative_controls_manifest_sha256": "cc4c2e6a5218cb5cf14606c5bab12c46f358e3d3c627772dbf71a72fc02b8c15",
-    "files": 5526,
-    "pi_runtime_sha256": "d3ff05df2f3b3ff3b03f4f793eca78b13736d74cb6e66cbacbfba91d74111c2a",
-    "scope": "Both alternative comparisons used this source freeze after the generic Pi model-switch repair. Later changes in this documentation step are recorded separately. Historical Sol and first-document source identities remain in historical_snapshots."
+    "historical_native_run_commit": "49a49793ff8f3e028485d4112628741a3b862d8a",
+    "current_pre_document_manifest_sha256": "62b972b54dcb3337eab26a5a27a95427e42bac7307ecfbdc68cb3a1c53ed7bea",
+    "files": 5566,
+    "scope": "Current dirty product/schema/instruction repairs postdate historical acceptance6. That native run did not exercise current source bytes. Older source identities remain in historical snapshots and reports."
   },
   "remaining": {
-    "private_acceptance": "New Luna/max600 protocol prospective, not frozen or run at this snapshot. CI/review/commit, native generation and independent blinded grading remain pending.",
+    "historical_acceptance6": "completed and failed; five required useful outputs absent",
+    "fresh_native_batch_authorized": false,
+    "acceptance6_authorization_consumed": true,
+    "profile_proposal": "conditional and unapproved; pending Roughdraft human review and successful acceptance plus merge/install",
+    "native_capture_and_injection": "not established by finite synthetic capture inputs",
+    "open": [
+      "final candidate CI and Standards then Spec",
+      "commit and concrete fresh protocol with separate direct authorization",
+      "merge/install",
+      "startup-timeout verification",
+      "actual Pi-language validation",
+      "next-session native memory injection"
+    ],
+    "settings_changed": false,
+    "merged_or_installed": false,
     "previous_sol_acceptance5_proposal": "superseded proposal, never executed, original artifacts unchanged",
-    "native_generation": "not established by public controls",
-    "installed_injection": "not established",
-    "installation_or_profile_change": false
+    "unchanged_scope": "Repairs did not change installed configuration, historical user records or production jobs. Synthetic disposable test jobs are outside this statement. No fresh settings read in documentation stage."
   },
   "source_artifacts": {
     "base": "/tmp/codex-mem-implement-spec-1/quality-repair/repair-4",
@@ -145,7 +146,12 @@
       "root-continuation-2026-10-25/installed-background-profile-readonly-2.json": "49187b08045ed1030cf27520a41edd79fa430933720a80a3282b93088face4a0",
       "root-continuation-2026-10-25/alternative-controls-2-codex-profile-root-decision.json": "5a7a951a1b6ab8b60a3f9da7d804b3b982bf4c8a43cd7f78786300ebdd000a70",
       "root-continuation-2026-10-25/alternative-controls-2-pi-luna-profile-root-decision.json": "9b1130fcda6e3c3657f80643e4bf9160d68d72d507361825919d507e36f132ab",
-      "root-continuation-2026-10-25/alternative-controls-2-glm-profile-root-decision.json": "95ee98481adb1861a5f40d9d7e93a5031888a2c93d4bae8da9ea5ca5bd172e8a"
+      "root-continuation-2026-10-25/alternative-controls-2-glm-profile-root-decision.json": "95ee98481adb1861a5f40d9d7e93a5031888a2c93d4bae8da9ea5ca5bd172e8a",
+      "root-continuation-2026-10-25/post-acceptance6-documentation-facts.json": "e259f30ac0b05e398fbee2c87ae4ec1e6f0f106e87ae9aa5ccc14bb70465498b",
+      "support-row-owner-repair-1/implementation-report.json": "979c53aafe4fd81be6b961f3c8a4fee1e557da5755670cb3a38d6541bc96fe57",
+      "generation-shape-repair-1/implementation-report.json": "f197504276ae1e4e776c63cbf066eb9bb22a3873208399c5cda2ef711847d0c3",
+      "evidence-scope-prompt-repair-1/implementation-report.json": "4d1a3a70d3d40ba29bedd78463af15611a5a12a18e000fb2de02942d107b8441",
+      "evidence-scope-prompt-repair-1/source-freeze/manifest.json": "62b972b54dcb3337eab26a5a27a95427e42bac7307ecfbdc68cb3a1c53ed7bea"
     }
   },
   "historical_snapshots": [
@@ -158,6 +164,59 @@
         "pre_document_manifest_sha256": "3eee0b35a185d1a982cc89703b15a02cc455b489ce515941ea02459bbb2be800",
         "files": 5524,
         "later_changes": "Only product change preserves summary_support_stale after lease replacement. Contention tests also changed. Native controls did not rerun on this later source."
+      }
+    },
+    {
+      "path": "docs-refresh-2/proposed/docs/evidence/summary-support-2026-10-25.json",
+      "sha256": "294e9ef1db49d5a7040057ccaa7118f3c03e38dd3eedd7a19186f52d5d0abf6a",
+      "scope": "Immutable pre-acceptance6 documentation snapshot. Earlier validation, future protocol and profile statuses are historical.",
+      "validation": {
+        "full_ci_3": {
+          "status": "failed",
+          "tests": 2189,
+          "failures": 1,
+          "errors": 0,
+          "acceptance": "passed deterministic checks, not private acceptance",
+          "package": "passed",
+          "failure": "Wall-time assertion observed 0.637459 seconds against 0.4 seconds; later diagnosis established SQLite BUSY with configured 20 ms timeout and no application retry."
+        },
+        "later_focused_jev": {
+          "tests": 16,
+          "failures": 0,
+          "errors": 0,
+          "skips": 0,
+          "seconds": 3.131,
+          "scope": "Revised tests of actual contention/deadline contract. No production latency guarantee."
+        },
+        "full_ci_4": "pending"
+      },
+      "private_acceptance_proposal": {
+        "status": "prospective_not_frozen_not_run",
+        "profiles": [
+          {
+            "runtime": "codex",
+            "provider": "openai",
+            "model": "gpt-6-luna",
+            "reasoning_effort": "max",
+            "timeout": 600
+          },
+          {
+            "runtime": "pi",
+            "provider": "openai-codex",
+            "model": "gpt-6-luna",
+            "reasoning_effort": "max",
+            "timeout": 600
+          }
+        ],
+        "private_cases_unchanged": true,
+        "private_case_sha256": "1303b017b850b95b9f4020276529d64278185cb105d4a71dd10bdfa8f835955e",
+        "grading": "fresh independent blinded grader after final CI/review/commit and exact freeze",
+        "prospective_stages": 28,
+        "prospective_max_native_calls": 138,
+        "prospective_max_synthetic_executions": 28,
+        "prospective_max_accounted_executions": 166,
+        "bound_scope": "Prospective upper bound only. Exact new protocol and execution program remain unfrozen. No external best-of retries.",
+        "ordinary_generation": "Proposed actual native generation through each configured runtime, not yet executed."
       }
     }
   ],
@@ -360,7 +419,7 @@
     "limits": "Generic bounded event handling; semantic prompts, helper provider restriction, selected profile and final state guards unchanged."
   },
   "profile_proposal": {
-    "status": "prospective_only_not_applied",
+    "status": "conditional_unapproved_not_applied",
     "configuration_file": "~/.local/share/codex-mem/config.json",
     "observed_at": "2026-10-25T18:55:04.162215+00:00",
     "before_stored_profiles": {
@@ -386,34 +445,76 @@
       "all other configuration",
       "historical records and jobs; no reprocessing"
     ],
-    "conditions": "Final private acceptance and merge/install after final CI and code review."
+    "conditions": "Pending human Roughdraft review, successful separately authorized acceptance, then merge/install. Earlier public passes are finite historical evidence, not a general recommendation.",
+    "before_values_scope": "Historical read-only settings snapshot at observed_at. Not re-read or changed in the October 26 documentation step."
   },
   "private_acceptance_proposal": {
-    "status": "prospective_not_frozen_not_run",
+    "status": "prior prospective proposal archived; historical acceptance6 completed and failed; no fresh batch authorized",
+    "next": "Concrete fresh protocol and separate direct user authorization after final candidate CI/review/commit. No implied approval from prior consent."
+  },
+  "historical_native_run": {
+    "source_commit": "49a49793ff8f3e028485d4112628741a3b862d8a",
     "profiles": [
-      {
-        "runtime": "codex",
-        "provider": "openai",
-        "model": "gpt-6-luna",
-        "reasoning_effort": "max",
-        "timeout": 600
-      },
-      {
-        "runtime": "pi",
-        "provider": "openai-codex",
-        "model": "gpt-6-luna",
-        "reasoning_effort": "max",
-        "timeout": 600
-      }
+      "codex/openai/gpt-6-luna/max/600",
+      "pi/openai-codex/gpt-6-luna/max/600"
     ],
-    "private_cases_unchanged": true,
-    "private_case_sha256": "1303b017b850b95b9f4020276529d64278185cb105d4a71dd10bdfa8f835955e",
-    "grading": "fresh independent blinded grader after final CI/review/commit and exact freeze",
-    "prospective_stages": 28,
-    "prospective_max_native_calls": 138,
-    "prospective_max_synthetic_executions": 28,
-    "prospective_max_accounted_executions": 166,
-    "bound_scope": "Prospective upper bound only. Exact new protocol and execution program remain unfrozen. No external best-of retries.",
-    "ordinary_generation": "Proposed actual native generation through each configured runtime, not yet executed."
+    "stages": 28,
+    "final_cells": 26,
+    "native_submissions": 65,
+    "synthetic_submissions": 24,
+    "independent_executions": 61,
+    "input_tokens": 558193,
+    "output_tokens": 301900,
+    "total_tokens": 860093,
+    "required_useful_outputs": "5/10",
+    "optional_supported_outputs": "2/2",
+    "positive_controls": "4/4",
+    "negative_target_detection": "10/10",
+    "materially_false_persisted_claims_established": 0,
+    "acceptance": "failed because five required useful outputs absent",
+    "limits": "Finite source-bounded synthetic capture inputs. Not real native host capture/injection, not general accuracy or model equivalence. Cost and internal HTTP attempt counts unknown.",
+    "scope": "Safe aggregate only, supplied by root. No private cases, expected answers, identity mappings, packets, rubrics or diagnosis read in this stage."
+  },
+  "new_candidate": {
+    "source_commit": "49a49793ff8f3e028485d4112628741a3b862d8a",
+    "uncommitted_repairs": true,
+    "pre_document_source_manifest_sha256": "62b972b54dcb3337eab26a5a27a95427e42bac7307ecfbdc68cb3a1c53ed7bea",
+    "files": 5566,
+    "native_verified": false,
+    "support_row_owner": {
+      "wire_version": "summary-support-v5",
+      "model_schema": "Owner/category relationships use unit-specific candidate spans, binding unions and shared catalogs.",
+      "authoritative_validator": "Unchanged. Code checks duplicate references, citation subsets and coverage. Fallible model review assesses semantic support. Schema validity does not prove semantic support.",
+      "focused_tests": 34,
+      "provider_schema_acceptance": "unverified, including maxima"
+    },
+    "generation_shape": {
+      "initial_reason": "missing_required_summary",
+      "scope": "First processed candidate whose reported validation reason is missing_required_summary. Other errors can remain in that initial candidate. Existing single correction shared with semantic repair, two-generation ceiling and original deadline. The corrected candidate must pass full validation and all normal reviews.",
+      "returned_diagnostic": "generation_correction initial_reason_code and canonical candidate_fingerprint",
+      "durable_diagnostic_keys": [
+        "version",
+        "candidate_fingerprint",
+        "evidence_fingerprint",
+        "status",
+        "invalid_subtype"
+      ],
+      "durable_status": "invalid",
+      "durable_invalid_subtype": "structure",
+      "fingerprint_scope": "parsed source-resolved canonical candidate, not raw bytes",
+      "raw_telemetry_added": false,
+      "partial_writes": false,
+      "focused_tests": 25
+    },
+    "generic_wording": {
+      "completed": true,
+      "exact_instruction_replacements": 6,
+      "focused_tests": 22,
+      "prepared_packet_readbacks": 4,
+      "semantic_verdicts_from_readback": false,
+      "policy": "Preserve supplied execution scope. Candidate reference context stays within same owner. Original/history allowance unchanged. Implied events and success need evidence. Candidate is not evidence.",
+      "schema_or_validation_relaxation": false
+    },
+    "limits": "Authored public inputs/verdicts and offline checks only. No new live model evidence or causal semantic improvement established."
   }
 }

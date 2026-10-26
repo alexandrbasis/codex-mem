@@ -713,10 +713,9 @@ class OutcomeContractTests(unittest.TestCase):
     def test_original_support_emits_one_comparison_object_but_enforces_citations(self):
         from codex_mem.summary_support import prepare, validate, SupportError, TEXT_KEYS, VERDICTS
         _, schema, payload = prepare(self.summary, self.claim)
-        comparison = schema['properties']['rows']['items']
-        self.assertNotIn('anyOf', comparison)
-        self.assertEqual({*TEXT_KEYS, 'verdict', 'evidence_span_ids', 'unit_id', 'coverage', 'candidate_span_ids','report_binding'}, set(comparison['properties']))
-        self.assertEqual(list(VERDICTS), comparison['properties']['verdict']['enum'])
+        for comparison in schema['properties']['rows']['items']['anyOf']:
+            self.assertEqual({*TEXT_KEYS, 'verdict', 'evidence_span_ids', 'unit_id', 'coverage', 'candidate_span_ids','report_binding'}, set(comparison['properties']))
+            self.assertEqual(list(VERDICTS), comparison['properties']['verdict']['enum'])
         for verdict in ('supported', 'contradicted'):
             output = supported_review(payload)['output']
             fixtures.comparison(output).update(verdict=verdict, evidence_span_ids=[])
@@ -774,7 +773,8 @@ class OutcomeContractTests(unittest.TestCase):
         prompt, schema, payload = prepare(self.summary, self.claim)
         self.assertEqual('summary-support-v5', payload['version'])
         self.assertEqual({'version', 'rows'}, set(schema['properties']))
-        self.assertIn('unit_id', schema['properties']['rows']['items']['properties'])
+        for branch in schema['properties']['rows']['items']['anyOf']:
+            self.assertIn('unit_id', branch['properties'])
 
     def test_all_fifty_pairs_and_mixed_unavailable_propositions_are_preserved(self):
         import copy
