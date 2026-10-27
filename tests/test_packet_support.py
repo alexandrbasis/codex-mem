@@ -1,5 +1,6 @@
 """Public packet grounding controls. Injected verdicts test wiring, not semantics."""
 import copy
+import json
 import unittest
 from tests.test_summary_support import support_rows
 from codex_mem.processor import process_pending
@@ -177,6 +178,8 @@ class PacketContractLimitsTests(unittest.TestCase):
         claim = dict(sources=[dict(id='raw', body='One result.', source='hook:PostToolUse')])
         _, schema, payload = prepare(summary, claim, [copy.deepcopy(note) for _ in range(4)])
         self.assertEqual(47, len(payload['units']))
+        # Keep the full 47-owner contract compact without dropping constraints.
+        self.assertLess(len(json.dumps(schema, ensure_ascii=False, separators=(',', ':')).encode()), 55_000)
         self.assertEqual(set(payload['units']), set(schema['properties']['units']['required']))
         self.assertTrue(all(group['maxItems']==8 for group in schema['properties']['units']['properties'].values()))
         output = supported_review(payload)['output']

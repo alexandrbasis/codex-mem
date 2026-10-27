@@ -107,6 +107,29 @@ class SupportContractTests(unittest.TestCase):
                         support.validate(value, self.payload).issues
                     self.assertEqual(subtype, caught.exception.subtype)
 
+    def test_shared_comparisons_keep_resolved_bounds_and_owner_references(self):
+        rows = self.schema['properties']['units']['properties']
+        text_schemas = [rows[unit]['items']['properties'][key]
+                        for unit in rows for key in support.TEXT_KEYS]
+        self.assertTrue(all(set(text) == {'$ref'} for text in text_schemas))
+        self.assertEqual(1, len({text['$ref'] for text in text_schemas}))
+        valid = copy.deepcopy(self.output)
+        comparison(valid)['candidate_assertion'] = 'x' * 1200
+        self.assertTrue(schema_accepts(valid, self.schema))
+        changes = [
+            lambda value: value['units'].pop('title'),
+            lambda value: comparison(value).update(candidate_span_ids=['title:1']),
+            lambda value: comparison(value).update(evidence_span_ids=['current99:1']),
+            lambda value: comparison(value).update(candidate_assertion='x' * 1201),
+        ]
+        for change in changes:
+            with self.subTest(change=change):
+                output = copy.deepcopy(valid)
+                change(output)
+                self.assertFalse(schema_accepts(output, self.schema))
+                with self.assertRaises(support.SupportError):
+                    support.validate(output, self.payload)
+
     def test_all_assertions_and_incomplete_coverage_block_acceptance(self):
         comparisons = self.output['units']['completed']
         other = dict(comparison(self.output), candidate_assertion='Five checks passed.',

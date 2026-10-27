@@ -256,14 +256,18 @@ def prepare(summary, claim, notes=()):
     )
     if len(prompt) > MAX_PROMPT_CHARS:
         raise SupportError("bounds")
-    text = {"type": "string", "minLength": 1, "maxLength": MAX_COMPARISON_CHARS, "pattern": r"[\s\S]*\S[\s\S]*"}
     definitions = {"evidence_span_id": dict(type="string", enum=span_ids)}
     anchors = [span for report in reports.values() for span in report["span_ids"]]
     if anchors:
         definitions["report_span_id"] = dict(type="string", enum=anchors)
+    def shared(name, value):
+        definitions[name] = value
+        return {"$ref": f"#/$defs/{name}"}
+    text = shared("comparison_text", {"type": "string", "minLength": 1,
+        "maxLength": MAX_COMPARISON_CHARS, "pattern": r"[\s\S]*\S[\s\S]*"})
     def refs(items, maximum, minimum=0):
         return dict(type="array", minItems=minimum, maxItems=maximum, items=items)
-    empty = refs(text, 0)
+    empty = shared("empty_references", refs(text, 0))
     def binding(targets, report_refs=empty, properties=empty):
         fields = dict(target=dict(type="string", enum=targets), report_span_ids=report_refs,
                       properties=properties)
@@ -276,17 +280,20 @@ def prepare(summary, claim, notes=()):
                     refs(dict(type="string", enum=list(REPORT_PROPERTIES)), 3, 1)),
             binding(["reported_content"], report_refs,
                     refs(dict(type="string", enum=["content"]), 1, 1))])
-    common = dict(coverage={"type": "string", "enum": ["complete", "incomplete"]},
-        **{key: text for key in TEXT_KEYS}, verdict={"type": "string", "enum": list(VERDICTS)},
-        evidence_span_ids=refs({"$ref": "#/$defs/evidence_span_id"}, 12))
+    outside_binding = shared("outside_outcome_binding", binding(["outside_outcome"]))
+    outcome_binding = shared("outcome_binding", {"anyOf": outcome_bindings})
+    common = dict(coverage=shared("coverage", {"type": "string", "enum": ["complete", "incomplete"]}),
+        **{key: text for key in TEXT_KEYS},
+        verdict=shared("verdict", {"type": "string", "enum": list(VERDICTS)}),
+        evidence_span_ids=shared("evidence_references", refs({"$ref": "#/$defs/evidence_span_id"}, 12)))
     unit_schemas = {}
     for unit in units:
         if unit in OUTCOME_FIELDS:
             owned = [span["id"] for span in payload["candidate_spans"][unit]]
             candidates = refs(dict(type="string", enum=owned), 3, 1)
-            report_binding = {"anyOf": outcome_bindings}
+            report_binding = outcome_binding
         else:
-            candidates, report_binding = empty, binding(["outside_outcome"])
+            candidates, report_binding = empty, outside_binding
         properties = dict(unit_id=dict(type="string", enum=[unit]), **common,
                           candidate_span_ids=candidates, report_binding=report_binding)
         row = dict(type="object", additionalProperties=False,

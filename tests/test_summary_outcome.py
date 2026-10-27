@@ -716,7 +716,8 @@ class OutcomeContractTests(unittest.TestCase):
         for group in schema['properties']['units']['properties'].values():
             comparison = group['items']
             self.assertEqual({*TEXT_KEYS, 'verdict', 'evidence_span_ids', 'unit_id', 'coverage', 'candidate_span_ids','report_binding'}, set(comparison['properties']))
-            self.assertEqual(list(VERDICTS), comparison['properties']['verdict']['enum'])
+            verdict_ref = comparison['properties']['verdict']['$ref']
+            self.assertEqual(list(VERDICTS), schema['$defs'][verdict_ref.removeprefix('#/$defs/')]['enum'])
         for verdict in ('supported', 'contradicted'):
             output = supported_review(payload)['output']
             fixtures.comparison(output).update(verdict=verdict, evidence_span_ids=[])
