@@ -237,6 +237,7 @@ class ContextRequest:
     exclude_current_session: bool = True
     allow_remote: bool = True
     remote_deadline: float | None = None
+    automatic_baseline: bool = False
 
     def __post_init__(self) -> None:
         from .store import project_key
@@ -271,6 +272,9 @@ def retrieve_context(request: ContextRequest, store: Any) -> ContextResult:
         if request.query.strip() and not query.strip():
             return ContextResult(reason='routing_only_query')
         options: dict[str, Any] = {'hook_mode': True}
+        if request.automatic_baseline:
+            from .retrieval import prompt_baseline_allowed
+            options['automatic_baseline'] = prompt_baseline_allowed(query)
         if config.get('jev_retrieval_enabled'):
             from .config import private_prompt_gate_active, private_prompt_gate_enabled
             from .private_gate import private_active

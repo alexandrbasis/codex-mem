@@ -61,6 +61,7 @@ FIXED_SOURCES = (
     "pi/extension.ts",
     "scripts/check_pi_extension.py",
     "tests/test_pi_host.py",
+    "tests/fixtures/pi_context_host.mjs",
     "tests/test_host_contract.py",
     "tests/test_hook_privacy_deadline.py",
     "tests/test_hook_large_payload.py",
