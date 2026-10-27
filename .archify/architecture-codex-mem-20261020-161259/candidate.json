@@ -2,12 +2,12 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Codex Mem 1.12.0 project memory",
+    "title": "Codex Mem 1.12.1 project memory",
     "output": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "516fdf289af670ac984e1607881894d9cbf1cef2",
+      "revision": "3d328a90fc87cdaf44477fc2e4396c0a0817e625",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -398,14 +398,14 @@
         {
           "path": "codex_mem/host.py",
           "line": 230,
-          "end_line": 297,
-          "label": "Shared bounded untrusted context"
+          "end_line": 301,
+          "label": "Bounded host context and Pi baseline"
         },
         {
           "path": "codex_mem/pi_host.py",
           "line": 128,
-          "end_line": 146,
-          "label": "Pi untrusted bounded framing"
+          "end_line": 147,
+          "label": "Pi prompt refresh and untrusted bounded framing"
         },
         {
           "path": "codex_mem/hooks.py",
@@ -489,7 +489,7 @@
       "label": "CLI and dashboard",
       "sublabel": "Profiles, attempts, usage gaps",
       "pos": [
-        1000,
+        700,
         1180
       ],
       "size": [
@@ -673,6 +673,15 @@
         "Outcome decisions distinguish applicability, residual scope and value. Absent or disjoint comparisons are unused. Available same-scope compatible values are checked; incompatible values contradict. Unresolved applicable comparisons and unavailable evidence for an asserted same-scope property remain uncertain. Contradiction or uncertainty blocks storage. Compatibility does not independently establish original support. Sources: codex_mem/summary_outcome.py:315-365.",
         "Generation and review instructions preserve only the actual observed execution scope. They do not invent local, regression, synthetic or production labels. Ambiguous candidate references can use context only from the same unit_records owner; permitted original-source and historical context remain available under existing rules. Evidence-limit wording is also checked for implied events or success. Incidental candidate-format descriptions are omitted. The candidate remains non-evidence. Semantic meaning is judged fallibly by the model; code validates shape, ownership and references. Sources: codex_mem/processor.py:2117-2138; codex_mem/summary_support.py:206-266,422-431.",
         "The support reviewer instructions require comparison of asserted relationships as well as their component facts. Separate change reports and passing checks do not establish that those checks verified the change. A verification claim needs supplied evidence linking the result to the claimed property at the asserted scope. Explicit tested properties or assertions can establish that link. Proximity, matching values, a shared command or an aggregate result cannot supply missing coverage. Matching commands and results can support their stated operation without external verification. Printed or quoted claims establish only that the text was printed or read. Separately supported outcomes need no unasserted verification relationship. These are model instructions. The structural validator checks shape, ownership and references, not whether the model judged the meaning correctly. Sources: codex_mem/summary_support.py:219-242,258-266,332-419."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Fresh Pi prompt context",
+      "items": [
+        "Pi prompt refresh first selects matching current records. If no note or project brief matches an unconstrained natural prompt, an explicit automatic-baseline option reads current project context again. It uses the same canonical project, session exclusion, active-record selection, metadata filters and total budget. No startup text is cached or restored. Sources: codex_mem/pi_host.py:128-147; codex_mem/host.py:258-301; codex_mem/store.py:5914-5923.",
+        "The lexical guard examines the complete normalized prompt before the host query limit. Word-internal apostrophes, bare integer quantities and descriptive alphabetic compounds do not create literal scopes. Quoted literals, paths, mixed identifiers, dotted versions, explicitly labelled IDs, known environments and explicit historical selectors prohibit fallback. Compound scope positions reuse the project query grammar. Exact Store context and search keep their default behavior. This grammar does not infer semantic equivalence or identify every possible natural-language scope. Sources: codex_mem/retrieval.py:123-160; codex_mem/project_memory_query.py:23-27,164-208; codex_mem/host.py:271-291; codex_mem/store.py:5658-5680,5914-5923.",
+        "The extension still replaces automatic context on every request. Failed, disabled, deleted, out-of-scope and tiny-budget refreshes cannot restore startup text. Offline tests load the unchanged extension through its public event API, use real Python transport and storage, and replace only the external processor with an authored fixture. They cover capture, processing, public search/get and next-request provider context. They do not prove native model behavior. Sources: pi/extension.ts:98-105,178-192; tests/test_pi_host.py; tests/fixtures/pi_context_host.mjs."
       ]
     },
     {

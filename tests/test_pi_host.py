@@ -74,6 +74,215 @@ class PiHostTests(unittest.TestCase):
             self.assertEqual([], store.timeline(self.root / 'other'))
 
 
+    def test_long_prompt_keeps_fresh_project_context(self):
+        with Store(self.data) as store:
+            store.remember(self.project, 'Supplier contract decision',
+                'The supplier requires codename SilverOrchid and packaging color violet. '
+                'Keep the exact case because the supplier rejects changed labels.', kind='decision')
+        initial = self.call(operation='context', phase='start')
+        self.assertIn('SilverOrchid', initial['text'])
+        query = ('What supplier contract codename and packaging color did we choose for this '
+            'fictional project and why must case stay exact? Answer from delivered memory only. '
+            'Do not use tools or files. If the information is absent then clearly say that you do not know.')
+        refreshed = self.call(operation='context', phase='prompt', query=query)
+        self.assertIn('SilverOrchid', refreshed['text'])
+        self.assertIn('violet', refreshed['text'])
+        self.assertIn('Untrusted memory', refreshed['text'])
+        self.assertLessEqual(len(refreshed['text']), 6000)
+
+    def test_prompt_prose_punctuation_does_not_erase_project_context(self):
+        with Store(self.data) as store:
+            store.remember(self.project, 'Packaging agreement',
+                'The workshop selected codename AmberBirch and packaging color copper blue. '
+                'Keep letter case because the label scanner compares exact strings.', kind='decision')
+        base = ('What packaging codename and color did we select for the workshop project and '
+                'why must the original letter case remain unchanged? Explain the previous decision '
+                'using delivered memory only and clearly say when any requested detail is unavailable. ')
+        variants = ("Don't use tools or files.", 'Don’t use tools or files.',
+                    'Answer in 2 sentences.', 'Use plain-language wording.',
+                    "The workshop's agreement matters. Don't guess.",
+                    'Give 3 short paragraphs with easy-to-read wording.')
+        queries = [base + ending for ending in variants]
+        queries.append('Какое кодовое имя и цвет упаковки мы согласовали для этого проекта '
+            'и почему нельзя менять регистр букв? Используй только переданную память. '
+            'Не открывай файлы и не вызывай инструменты. Если сведений нет, прямо скажи, '
+            'что не знаешь. Ответь по-русски.')
+        queries.append('Какие кодовое имя и цвет упаковки мы утвердили в этом проекте '
+            'и почему нельзя менять регистр? Ответь по-русски по доставленной памяти. '
+            'Инструменты и файлы не используй. Если сведений нет, скажи, что не знаешь.')
+        for query in queries:
+            with self.subTest(query=query):
+                result = self.call(operation='context', phase='prompt', query=query)
+                self.assertIn('AmberBirch', result['text'])
+                self.assertIn('copper blue', result['text'])
+                self.assertLessEqual(len(result['text']), 6000)
+
+    def test_prompt_baseline_is_fresh_scoped_and_bounded(self):
+        with Store(self.data) as store:
+            old = store.remember(self.project, 'Contract', 'OLD_CONTRACT_VALUE', kind='decision')
+            store.remember(self.root / 'other', 'Other', 'OTHER_PROJECT_VALUE', kind='decision')
+        self.assertIn('OLD_CONTRACT_VALUE', self.call(operation='context', phase='start')['text'])
+        with Store(self.data) as store:
+            store.forget(self.project, [old['id']])
+            store.remember(self.project, 'New contract', 'FRESH_CONTRACT_VALUE', kind='decision')
+        query = 'Какой цвет упаковки мы выбрали и почему?'
+        refreshed = self.call(operation='context', phase='prompt', query=query)
+        self.assertIn('FRESH_CONTRACT_VALUE', refreshed['text'])
+        self.assertNotIn('OLD_CONTRACT_VALUE', refreshed['text'])
+        self.assertNotIn('OTHER_PROJECT_VALUE', refreshed['text'])
+        switched = self.call(operation='context', phase='prompt', query=query, project=str(self.root / 'other'))
+        self.assertIn('OTHER_PROJECT_VALUE', switched['text'])
+        self.assertNotIn('FRESH_CONTRACT_VALUE', switched['text'])
+        configure(self.data, context_chars=900)
+        bounded = self.call(operation='context', phase='prompt', query=query)
+        self.assertLessEqual(len(bounded['text']), 900)
+        configure(self.data, context_chars=128)
+        self.assertEqual('', self.call(operation='context', phase='prompt', query=query)['text'])
+        configure(self.data, context_chars=6000, capture_scope='manual')
+        disabled = self.call(operation='context', phase='prompt', query=query)
+        self.assertEqual('capture_disabled', disabled['reason'])
+        self.assertNotIn('FRESH_CONTRACT_VALUE', disabled['text'])
+
+    def test_prompt_baseline_preserves_matching_relevance_and_exact_constraints(self):
+        with Store(self.data) as store:
+            store.remember(self.project, 'Supplier agreement', 'SUPPLIER_MATCH_VALUE', kind='decision')
+            store.remember(self.project, 'Gardening', 'UNRELATED_BASELINE_VALUE', kind='decision')
+        matched = self.call(operation='context', phase='prompt', query='What supplier agreement did we choose?')
+        self.assertIn('SUPPLIER_MATCH_VALUE', matched['text'])
+        self.assertNotIn('UNRELATED_BASELINE_VALUE', matched['text'])
+        for query in ('unknownneedle', 'What happened in missing.py?', 'What changed in version 9.8.7?',
+                      'What happened to TASK-789?', 'What happened to "QuotedName"?',
+                      'What is in /LICENSE?', 'What changed in .gitignore?',
+                      'What happened to “QuotedName”?',
+                      'What changed in missingSymbol?',
+                      'What happened in cache-router?', 'What changed in staging?',
+                      'What happened as of yesterday?', 'What changed for task 2?',
+                      'What changed in version 2?', 'What happened to #123?',
+                      'What changed in environment canary?',
+                      'What changed in field status?', 'What happened to API-TOKEN?',
+                      'What did we choose? ' * 100 + 'What happened in missing.py?'):
+            with self.subTest(query=query[:100]):
+                context = self.call(operation='context', phase='prompt', query=query)
+                self.assertNotIn('SUPPLIER_MATCH_VALUE', context['text'])
+                self.assertNotIn('UNRELATED_BASELINE_VALUE', context['text'])
+        with Store(self.data) as store:
+            # Explicit Store reads retain exact semantics without the Pi opt-in.
+            self.assertNotIn('SUPPLIER_MATCH_VALUE', store.context(self.project, query='What color did we choose?'))
+            self.assertEqual([], store.search(self.project, 'What color did we choose?'))
+
+    def test_prompt_baseline_preserves_session_exclusion_and_private_capture(self):
+        from codex_mem.host import ContextRequest, retrieve_context, session_namespace
+        self.call(operation='capture', events=[dict(message_id='private', role='user',
+            text='<private>PRIVATE_CONTRACT_VALUE</private>')])
+        self.call(operation='capture', events=[dict(message_id='private-result', role='assistant',
+            text='PRIVATE_RESULT_VALUE', stop_reason='stop')])
+        with Store(self.data) as store:
+            store.remember(self.project, 'Session decision', 'CURRENT_SESSION_VALUE', kind='decision',
+                session_id=session_namespace('pi', 'session', 'root'))
+            store.remember(self.project, 'Other decision', 'OTHER_SESSION_VALUE', kind='decision',
+                session_id=session_namespace('pi', 'earlier', 'root'))
+            request = ContextRequest(host='pi', project=str(self.project), session_id='session', branch='root',
+                query='What color did we choose?', automatic_baseline=True, allow_remote=False)
+            result = retrieve_context(request, store)
+            self.assertIn('OTHER_SESSION_VALUE', result.text)
+            self.assertNotIn('CURRENT_SESSION_VALUE', result.text)
+            self.assertNotIn('PRIVATE_', result.text)
+        # Private-only and injected-memory-only input cannot trigger a baseline.
+        for query in ('<private>What color did we choose?</private>',
+                      '<codex_mem_untrusted_context>What color did we choose?</codex_mem_untrusted_context>'):
+            result = self.call(operation='context', phase='prompt', query=query)
+            self.assertNotIn('OTHER_SESSION_VALUE', result['text'])
+
+    def test_processed_host_event_reaches_provider_and_refresh_clears_stale_context(self):
+        import select
+        import shutil
+        from unittest.mock import patch
+        from codex_mem.service import enqueue, run_service
+        if not shutil.which('node'):
+            self.skipTest('Node is required for the offline extension API harness')
+        support = subprocess.run(['node', '-p',
+            'typeof require("node:module").stripTypeScriptTypes'], text=True, capture_output=True, timeout=5)
+        if support.returncode or support.stdout.strip() != 'function':
+            self.skipTest('Node with built-in TypeScript stripping is required for the offline host harness')
+        self.call(operation='capture', events=[self.event()])
+        install_codex_fixture(self.root, 'Approved import contract')
+        configure(self.data, service_enabled=True, usage_enabled=False, processor_workers=1)
+        enqueue(self.project, self.data)
+        with patch.dict(os.environ, PATH=str(self.root) + os.pathsep + os.environ['PATH']):
+            processed = run_service(self.data, max_cycles=1, processor_timeout=10)
+        self.assertEqual(1, processed['jobs'], processed)
+        configure(self.data, service_enabled=False)
+        with Store(self.data) as store:
+            found = store.search(self.project, 'Approved import contract')
+            self.assertTrue(found)
+            derived = store.get(self.project, [row['id'] for row in found])
+            self.assertIn('Use local import.', str(derived))
+        failure = self.root / 'backend-off'
+        wrapper = self.root / 'context-python'
+        wrapper.write_text('#!' + sys.executable + '\n' + f"""import pathlib, subprocess, sys
+if pathlib.Path({str(failure)!r}).exists():
+    sys.exit(1)
+sys.exit(subprocess.run([sys.executable, *sys.argv[1:]]).returncode)
+""")
+        wrapper.chmod(0o700)
+        process = subprocess.Popen(['node', '--experimental-vm-modules',
+            str(ROOT / 'tests/fixtures/pi_context_host.mjs'), str(ROOT / 'pi/extension.ts'), str(self.project)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            env={**os.environ, 'CODEX_MEM_HOME': str(self.data), 'CODEX_MEM_PYTHON': str(wrapper)})
+        def close():
+            process.stdin.close()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+            process.stdout.close()
+            process.stderr.close()
+        self.addCleanup(close)
+        def step(**action):
+            process.stdin.write(json.dumps(action) + '\n')
+            process.stdin.flush()
+            self.assertTrue(select.select([process.stdout], [], [], 8)[0], 'Extension callback did not finish')
+            line = process.stdout.readline()
+            self.assertTrue(line, 'Offline extension harness exited')
+            return json.loads(line)
+        initial = step(operation='start')
+        self.assertIn('Approved import contract', str(initial['messages']))
+        query = ('What earlier import choice did we make and why did we choose it for this project? '
+                 'Answer using delivered memory only and do not open files or call tools. '
+                 'Keep the original wording and clearly state when any details are missing.')
+        delivered = step(operation='prompt', query=query)
+        automatic = [item for item in delivered['messages'] if item.get('customType') == 'codex-mem-context']
+        self.assertEqual(1, len(automatic))
+        self.assertIn('Approved import contract', automatic[0]['content'])
+        self.assertIn(derived[0]['id'], automatic[0]['content'])
+        self.assertIn('OTHER_CONTEXT', str(delivered['messages']))
+        self.assertLessEqual(len(automatic[0]['content']), 6000)
+        with Store(self.data) as store:
+            store.forget(self.project, [row['id'] for row in found])
+        deleted = step(operation='prompt', query=query)
+        self.assertNotIn('Approved import contract', str(deleted['messages']))
+        with Store(self.data) as store:
+            store.remember(self.project, 'Replacement contract', 'FRESH_REPLACEMENT_VALUE', kind='decision')
+        fresh = step(operation='prompt', query=query)
+        self.assertIn('FRESH_REPLACEMENT_VALUE', str(fresh['messages']))
+        failure.touch()
+        failed = step(operation='prompt', query=query)
+        self.assertNotIn('FRESH_REPLACEMENT_VALUE', str(failed['messages']))
+        self.assertNotIn('codex-mem-context', str(failed['messages']))
+        self.assertIn('OTHER_CONTEXT', str(failed['messages']))
+        failure.unlink()
+        step(operation='prompt', query=query)
+        configure(self.data, context_chars=128)
+        tiny = step(operation='prompt', query=query)
+        self.assertNotIn('FRESH_REPLACEMENT_VALUE', str(tiny['messages']))
+        self.assertNotIn('codex-mem-context', str(tiny['messages']))
+        configure(self.data, context_chars=6000)
+        step(operation='prompt', query=query)
+        switched = step(operation='switch', project=str(self.root / 'other'), session='other-reader')
+        self.assertNotIn('FRESH_REPLACEMENT_VALUE', str(switched['messages']))
+        self.assertIn('OTHER_CONTEXT', str(switched['messages']))
+
     def test_compound_tool_ids_capture_queue_and_read_back_without_identity_loss(self):
         from unittest.mock import patch
         from codex_mem.pi_host import handle_request

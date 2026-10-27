@@ -120,6 +120,46 @@ def _prompt_tokens(query: str, *, natural_compounds: bool | None = None) -> list
     return result
 
 
+def prompt_baseline_allowed(query: str) -> bool:
+    """Keep explicit scopes while allowing punctuation and quantities in prose.
+
+    Inspect the complete prompt before query truncation or planner token caps.
+    Reuse the project planner's literal-scope and descriptive-compound grammar.
+    This is a lexical guard, not semantic query classification.
+    """
+    from .project_memory_query import (
+        _CONTENT_LABEL, _ENVS, _EXPLICIT_AS_OF,
+        _coordinated_scope_identifiers, _descriptive_compounds,
+    )
+    # An apostrophe between letters belongs to a word, not a quoted literal.
+    text = re.sub(r"(?<=[^\W_])['’](?=[^\W_])", "", query)
+    if any(mark in text for mark in ('`', '"', "'", '“', '”', '‘', '’', '«', '»')):
+        return False
+    if (re.search(r"(?<!\w)[./\\]\w|(?<!\w)#\d", text)
+            or _CONTENT_LABEL.search(text) or _ENVS.search(text) or _EXPLICIT_AS_OF.search(text)
+            or re.search(r"\b(?:id|issue|task|version|release|build)\s+#?\d+\b", text, re.I)):
+        return False
+    tokens = _prompt_tokens(text, natural_compounds=False)
+    if not any(token.casefold() in _PROMPT_WORDS for token in tokens):
+        return False
+    # Sentence punctuation does not turn the descriptive head into a path.
+    descriptive = _descriptive_compounds(re.sub(r"\.(?=\s|$)", " ", text))
+    coordinated = _coordinated_scope_identifiers(text)
+    for token in tokens:
+        # A bare quantity has no literal identity marker. Mixed identifiers,
+        # versions, dates and explicitly labelled numbers remain constraints.
+        if token.isdecimal():
+            continue
+        if re.search(r"[_./:]|\d", token) or re.search(r"[a-z][A-Z]", token):
+            return False
+        if '-' in token and (token.isupper() or token.casefold() in coordinated or
+                token.casefold() not in descriptive and re.search(
+                    r"\b(?:for|in|from|to|on|about|regarding|within|of|project|projects|"
+                    r"compare|versus|vs|between|with)\s+" + re.escape(token) + r"(?![\w.-])", text, re.I)):
+            return False
+    return True
+
+
 def prompt_query_plan(query: str, *, natural_compounds: bool | None = None) -> dict[str, Any] | None:
     """Bounded lexical fallback for questions, without loading an embedder.
 

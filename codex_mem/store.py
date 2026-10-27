@@ -5673,6 +5673,7 @@ class Store:
         hook_mode: bool = False,
         include_health: bool = True,
         selected_project_scopes: Sequence[str | Path] | None = None,
+        automatic_baseline: bool = False,
     ) -> str:
         """Build a bounded, escaped wrapper of active memory records.
 
@@ -5909,6 +5910,17 @@ class Store:
             if brief["enabled"] and brief["records"]:
                 chunks.append(brief["xml"])
                 remaining -= len(brief["xml"])
+
+        if automatic_baseline and query.strip() and not routing_only and not records and not chunks:
+            # A prompt is also an automatic project-context refresh. If its
+            # unconstrained lexical query has no candidates, read the current
+            # baseline through the same policy and formatter, never cached text.
+            from .retrieval import prompt_baseline_allowed
+            if prompt_baseline_allowed(normalized_query):
+                return self.context(workspace, budget=budget, exclude_session=checked_exclude,
+                    files=checked_files, concepts=checked_concepts, types=checked_types,
+                    kinds=checked_kinds, allow_remote=False, hook_mode=hook_mode,
+                    include_health=include_health, selected_project_scopes=selected_project_scopes)
 
         # A small set of readable excerpts is more useful than many records
         # whose labels and provenance consume most of the injection budget.
