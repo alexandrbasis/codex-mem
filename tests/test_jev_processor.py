@@ -1,6 +1,8 @@
 """End-to-end eligibility boundary before the observation generator."""
 from __future__ import annotations
 
+from tests.test_summary_support import supported_review
+
 import json
 from pathlib import Path
 import tempfile
@@ -71,7 +73,7 @@ class JevProcessorTests(unittest.TestCase):
             self.assertEqual('KEEP_DECISION_SENTINEL', request['sources'][0]['body'])
             self.assertNotIn('REJECT_', json.dumps(request))
             return self.note(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate, summary_reviewer=supported_review)
         self.assertEqual('processed', result['status'], result)
         self.assertEqual({history['id'], rejected['id'], accepted['id']}, set(evaluated))
         job = self.status(result)
@@ -96,6 +98,97 @@ class JevProcessorTests(unittest.TestCase):
             self.assertEqual(raw['body'], original['body'])
             self.assertIsNone(original['superseded_by'])
         self.assertEqual('idle', process_pending(self.project, self.home, runner=runner)['status'])
+
+    def test_stale_claim_is_fenced_before_jev_or_generation(self):
+        for change in ('current_mutated', 'history_deleted'):
+            with self.subTest(change=change):
+                self.home = self.root / change
+                configure(self.home, jev_filter_enabled=False)
+                old = None
+                if change == 'history_deleted':
+                    old = self.remember('Earlier synthetic report.', source='hook:Stop')
+                    process_pending(self.project, self.home, runner=self.skipped)
+                current = self.remember('Current synthetic report.', source='hook:Stop')
+                configure(self.home, jev_filter_enabled=True)
+                original = Store.claim_observation_batch
+                def intercept(store, *args, **kwargs):
+                    claim = original(store, *args, **kwargs)
+                    if claim is not None:
+                        with Store(self.home) as other:
+                            if old is not None:
+                                other.forget(self.project, ids=[old['id']])
+                            else:
+                                other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                                    ('Changed synthetic report.', current['id']))
+                    return claim
+                evaluator = mock.Mock(return_value=answer())
+                runner = mock.Mock(side_effect=AssertionError('Generator must not run'))
+                reviewer = mock.Mock(side_effect=AssertionError('Reviewer must not run'))
+                with mock.patch.object(Store, 'claim_observation_batch', intercept):
+                    result = process_pending(self.project, self.home, runner=runner,
+                        summary_reviewer=reviewer, jev_evaluator=evaluator)
+                self.assertEqual('summary_support_stale', result.get('reason_code'), result)
+                evaluator.assert_not_called()
+                runner.assert_not_called()
+                reviewer.assert_not_called()
+                job = self.status(result)
+                self.assertEqual([], job['output_ids'])
+                self.assertTrue(all(not row['generator_started'] for row in job['jev_filter_attempts']))
+                self.assert_no_generator_usage(result['job_id'])
+
+    def test_each_jev_dispatch_and_generation_recheck_retained_identity(self):
+        for change in ('between_chunks', 'after_retained_chunk'):
+            with self.subTest(change=change):
+                self.home = self.root / change
+                configure(self.home, jev_filter_enabled=True)
+                raw = self.remember('x' * 35_000 + ' MIDDLE ' + 'y' * 35_000, source='hook:Stop')
+                calls = []
+                def evaluate(payload):
+                    calls.append(payload)
+                    with Store(self.home) as other:
+                        other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                            ('Changed after the first judgment.', raw['id']))
+                    return (answer(useful=0.01, category='routine', confidence=0.99)
+                        if change == 'between_chunks' else answer())
+                runner = mock.Mock(side_effect=AssertionError('Generator must not run'))
+                reviewer = mock.Mock(side_effect=AssertionError('Reviewer must not run'))
+                result = process_pending(self.project, self.home, runner=runner,
+                    summary_reviewer=reviewer, jev_evaluator=evaluate)
+                self.assertEqual('summary_support_stale', result.get('reason_code'), result)
+                self.assertEqual(1, len(calls))
+                runner.assert_not_called()
+                reviewer.assert_not_called()
+                job = self.status(result)
+                self.assertEqual([], job['output_ids'])
+                self.assertFalse(job['jev_filter_attempts'][0]['generator_started'])
+                self.assertEqual(1, job['jev_filter_attempts'][0]['counts']['requests'])
+                self.assertEqual({'input_tokens': 12, 'output_tokens': 2},
+                    job['jev_filter_attempts'][0]['usage'])
+                self.assert_no_generator_usage(result['job_id'])
+
+    def test_jev_rechecks_after_waiting_for_the_native_http_slot(self):
+        from contextlib import contextmanager
+        from codex_mem import jev_filter
+        raw = self.remember('Original synthetic report.', source='hook:Stop')
+        @contextmanager
+        def acquired(_deadline):
+            with Store(self.home) as other:
+                other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                    ('Changed while waiting for an HTTP slot.', raw['id']))
+            yield
+        runner = mock.Mock(side_effect=AssertionError('Generator must not run'))
+        with mock.patch.object(jev_filter, '_credentials', return_value='synthetic-key'), \
+                mock.patch.object(jev_filter, 'acquire_jev_slot', acquired), \
+                mock.patch.object(jev_filter.urllib.request, 'build_opener') as opener:
+            result = process_pending(self.project, self.home, runner=runner)
+        self.assertEqual('summary_support_stale', result.get('reason_code'), result)
+        opener.assert_not_called()
+        runner.assert_not_called()
+        job = self.status(result)
+        self.assertEqual([], job['output_ids'])
+        self.assertEqual(0, job['jev_filter_attempts'][0]['counts']['requests'])
+        self.assertFalse(job['jev_filter_attempts'][0]['generator_started'])
+        self.assert_no_generator_usage(result['job_id'])
 
     def test_retained_prefix_reduces_jev_calls_but_generator_receives_all_bytes(self):
         body = 'x' * 35_000 + ' MIDDLE_EVIDENCE ' + 'y' * 35_000 + ' FULL_TAIL'
@@ -143,7 +236,7 @@ class JevProcessorTests(unittest.TestCase):
 
     def test_rejected_stop_is_only_a_marker_for_required_summary(self):
         self.remember('Use local storage for offline access.')
-        earlier = process_pending(self.project, self.home, runner=self.note, jev_evaluator=lambda _: answer())
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.note, jev_evaluator=lambda _: answer())
         self.assertEqual('processed', earlier['status'], earlier)
         previous_note_ids = set(self.status(earlier)['output_ids'])
         stop = self.remember('REJECT_STOP_SENTINEL', 'hook:Stop')
@@ -158,8 +251,15 @@ class JevProcessorTests(unittest.TestCase):
             self.assertEqual('Session boundary', request['sources'][0]['title'])
             summary = processor_fixtures.ProcessorTests.structured_summary(request['sources'][0]['id'])
             return processor_fixtures.ProcessorTests.receipt({'disposition': 'processed', 'notes': [], 'session_summary': summary})
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        reviewed = []
+        def review(request):
+            reviewed.append(request['version'])
+            self.assertEqual('summary-support-v6', request['version'])
+            return supported_review(request)
+        result = process_pending(self.project, self.home, summary_reviewer=review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('processed', result['status'], result)
+        self.assertEqual(['summary-support-v6'], reviewed)
+        self.assertEqual('not_assessed', result['summary_support'][-1]['status'])
         self.assertEqual(1, result['session_summary_count'])
         self.assertEqual([stop['id']], result['jev_filter']['lifecycle_only_ids'])
         self.assertEqual(stop['id'], evaluated[0])
@@ -186,7 +286,7 @@ class JevProcessorTests(unittest.TestCase):
         self.remember('Use local storage for offline access.')
         evaluator = mock.Mock(side_effect=AssertionError('No external judgment allowed'))
         result = process_pending(self.project, self.home, runner=self.note,
-                                 jev_evaluator=evaluator, jev_quality_evaluator=evaluator)
+                                 jev_evaluator=evaluator, jev_quality_evaluator=evaluator, summary_reviewer=supported_review)
         self.assertEqual('processed', result['status'], result)
         evaluator.assert_not_called()
         self.assertEqual([], self.status(result)['jev_filter_attempts'])
@@ -196,19 +296,19 @@ class JevProcessorTests(unittest.TestCase):
             receipt['output']['notes'][0]['source_ids'] = ['missing-source']
             return receipt
         invalid_result = process_pending(self.project, self.home, runner=invalid,
-                                         jev_evaluator=evaluator, jev_quality_evaluator=evaluator)
+                                         jev_evaluator=evaluator, jev_quality_evaluator=evaluator, summary_reviewer=supported_review)
         self.assertEqual('failed', invalid_result['status'], invalid_result)
         self.assertEqual('invalid_response', invalid_result['code'])
         evaluator.assert_not_called()
 
     def test_required_summary_cannot_replace_rejected_derived_note_with_raw_history(self):
         raw = self.remember('Original decision evidence.')
-        earlier = process_pending(self.project, self.home, runner=self.note, jev_evaluator=lambda _: answer())
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.note, jev_evaluator=lambda _: answer())
         self.assertEqual('processed', earlier['status'], earlier)
         derived_ids = set(self.status(earlier)['output_ids'])
         unrelated = self.remember('UNRELATED_RAW_HISTORY')
         configure(self.home, jev_filter_enabled=False)
-        process_pending(self.project, self.home, runner=self.skipped)
+        process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.skipped)
         configure(self.home, jev_filter_enabled=True)
         self.remember('REJECTED_STOP_TEXT', 'hook:Stop')
         evaluated = []
@@ -217,7 +317,7 @@ class JevProcessorTests(unittest.TestCase):
             evaluated.append(item['id'])
             return answer(0.01, 'routine') if item['id'] in derived_ids else answer()
         runner = mock.Mock(side_effect=AssertionError('Summary must not run without prior notes'))
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('failed', result['status'], result)
         runner.assert_not_called()
         self.assertTrue(derived_ids.issubset(set(evaluated)))
@@ -244,7 +344,7 @@ class JevProcessorTests(unittest.TestCase):
                            'tags': [], 'source_ids': [marker]}],
                 'session_summary': processor_fixtures.ProcessorTests.structured_summary(marker),
             })
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=evaluate)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=evaluate)
         self.assertEqual('failed', result['status'], result)
         self.assertEqual('invalid_response', result['code'])
         job = self.status(result)
@@ -297,7 +397,7 @@ class JevProcessorTests(unittest.TestCase):
         # process_pending closes its Store; the retry must read a persisted row.
         second_evaluator = mock.Mock(side_effect=AssertionError('Exact input must be cached'))
         second = process_pending(self.project, self.home, retry_failed=True,
-                                 runner=self.note, jev_evaluator=second_evaluator)
+                                 runner=self.note, jev_evaluator=second_evaluator, summary_reviewer=supported_review)
         self.assertEqual('processed', second['status'], second)
         self.assertEqual(first['job_id'], second['job_id'])
         second_evaluator.assert_not_called()

@@ -87,7 +87,7 @@ class ExecutionRequest:
             raise ValueError('execution input exceeds the bounded contract')
         if not isinstance(self.output_schema, Mapping):
             raise ValueError('execution output_schema must be an object')
-        if self.job_type not in ('observation', 'summary', 'project_memory', 'reconsideration', 'consolidation'):
+        if self.job_type not in ('observation', 'summary', 'summary_support', 'project_memory', 'reconsideration', 'consolidation'):
             raise ValueError('execution job_type is invalid')
         if not isinstance(self.profile, ExecutionProfile):
             raise ValueError('execution profile is invalid')
@@ -215,17 +215,38 @@ def pi_execution_receipt(value: Any) -> dict[str, Any] | None:
     """Keep only bounded Pi execution facts, never native messages or prose."""
     fields = {"runtime", "version", "protocol", "session_id", "generation", "settled", "identity_verified",
               "tools_policy", "tool_calls_observed", "extensions_policy", "state_checked", "agent_end_observed", "system_message_verified", "assistant_stop_reason"}
-    if not isinstance(value, dict) or set(value) != fields:
+    if not isinstance(value, dict) or set(value) not in (fields, fields | {"structured_output"}):
         return None
     import re
     if (value["runtime"] != "pi" or value["version"] not in (None, "1.4.0")
             or value["protocol"] != "rpc-jsonl-1.4.0"
             or value["tools_policy"] not in ("cli_disabled", "not_launched")
-            or value["extensions_policy"] not in ("cli_disabled", "not_launched")
+            or value["extensions_policy"] not in ("cli_disabled", "bundled_schema_only", "not_launched")
             or value["assistant_stop_reason"] not in (None, "stop", "length", "toolUse", "error", "aborted")
             or any(type(value[key]) is not bool for key in ("settled", "identity_verified", "state_checked", "agent_end_observed", "system_message_verified"))
             or any(type(value[key]) is not int or not 0 <= value[key] <= 2 for key in ("generation", "tool_calls_observed"))
             or (value["session_id"] is not None and (not isinstance(value["session_id"], str)
                 or not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", value["session_id"])))):
+        return None
+    if "structured_output" in value:
+        schema = value["structured_output"]
+        basic = {"mode", "status"}
+        strict = basic | {"version", "helper_sha256", "schema_sha256", "transport", "cache_warming", "provider_retries"}
+        if (not isinstance(schema, dict) or set(schema) not in (basic, strict)
+                or schema.get("mode") not in ("prompt_schema", "strict_json_schema")
+                or schema.get("status") not in ("not_applied", "invalid", "applied")):
+            return None
+        if set(schema) == strict:
+            if (schema["mode"] != "strict_json_schema" or schema["version"] != "pi-review-schema-v1"
+                    or schema["transport"] != "sse" or schema["cache_warming"] != "off"
+                    or type(schema["provider_retries"]) is not int or schema["provider_retries"] != 0
+                    or any(not isinstance(schema[key], str) or not re.fullmatch(r"[0-9a-f]{64}", schema[key])
+                           for key in ("helper_sha256", "schema_sha256"))):
+                return None
+        elif schema["status"] != "not_applied":
+            return None
+        if value["extensions_policy"] == "bundled_schema_only" and set(schema) != strict:
+            return None
+    elif value["extensions_policy"] == "bundled_schema_only":
         return None
     return dict(value)

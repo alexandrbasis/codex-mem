@@ -12,6 +12,7 @@ from codex_mem import processor
 from codex_mem.config import configure
 from codex_mem.store import Store
 from tests.test_jev_quality import note, response
+from tests.test_summary_support import supported_review
 
 
 class FakeServer:
@@ -22,6 +23,7 @@ class FakeServer:
 
     def __init__(self, *args):
         self.turns = []
+        self.review_turns = []
         self.interrupted = []
         self.closed = False
         type(self).instances.append(self)
@@ -37,10 +39,17 @@ class FakeServer:
                     "modelProvider": "openai"}
         if method != "turn/start":
             return {}
-        self.turns.append(params)
-        number = len(self.turns)
+        # Authored protocol responses exercise the real native adapter, not model quality.
+        review = 'version' in params['outputSchema'].get('properties', {})
+        if review:
+            version = params['outputSchema']['properties']['version']['enum'][0]
+            assert version == 'summary-support-v6', version
+            self.review_turns.append(params)
+        else:
+            self.turns.append(params)
+        number = len(self.review_turns) if review else len(self.turns)
         turn_id = f"turn-{number}"
-        if number == 2 and self.fail_second:
+        if not review and number == 2 and self.fail_second:
             raise processor.ProcessorFailure("runner_failure")
         notification_handler({"method": "turn/started", "params": {
             "threadId": "thread-test", "turn": {"id": turn_id}}})
@@ -52,11 +61,16 @@ class FakeServer:
                     "cachedInputTokens": 0, "cacheWriteInputTokens": 0, "reasoningOutputTokens": 0}}}})
         output = {"notes": [note("s1", observation={"type": "discovery", "subtitle": "", "facts": [], "narrative": "", "concepts": [], "files_read": [], "files_modified": []}, body="Reported local result." if number == 1 else "The assistant reported a test pass.")],
                   "disposition": "processed", "session_summary": None}
+        if review:
+            payload = json.loads(params['input'][0]['text'].split('\n')[-1])
+            text = json.dumps(supported_review(payload)['output'])
+        else:
+            text = json.dumps({'result': output})
         notification_handler({"method": "turn/completed", "params": {
             "threadId": "thread-test", "turn": {"id": turn_id, "status": "completed", "items": [{
                 "type": "agentMessage", "id": f"message-{number}", "phase": "final_answer",
-                "text": json.dumps({"result": output})}, *(
-                    [{"type": "mcpToolCall"}] if number == 2 and self.unsafe_second else [])]}}})
+                "text": text}, *(
+                    [{"type": "mcpToolCall"}] if not review and number == 2 and self.unsafe_second else [])]}}})
         return {"turn": {"id": turn_id}}
 
     def interrupt(self, thread, turn):
@@ -102,7 +116,28 @@ class QualityCorrectionTests(unittest.TestCase):
                 return response(payload, .01, .99)
             return response(payload, .5, .1) if len(calls) <= 2 or final == "uncertain" else response(payload)
         result = processor.process_pending(self.project, self.home, jev_quality_evaluator=evaluator)
-        return result, calls, FakeServer.instances[-1]
+        return result, calls, next(server for server in reversed(FakeServer.instances) if server.turns)
+
+    def assert_usage(self, result, generation_total, generation_status, generation_updates, reviews):
+        with Store(self.home) as store:
+            usage = store.observation_attempts(self.project, result['job_id'])[0]
+        ledger = json.loads(usage['execution_calls'])
+        self.assertEqual({'generation', *(f'summary_support_{n}' for n in range(1, reviews + 1))}, set(ledger))
+        generation = ledger['generation']['metrics']
+        self.assertEqual(generation_total, generation['total_tokens'])
+        self.assertEqual(generation_status, generation['usage_status'])
+        self.assertEqual(generation_updates, generation['usage_updates'])
+        for name, call in ledger.items():
+            if name != 'generation':
+                self.assertEqual(100, call['metrics']['total_tokens'])
+                self.assertEqual('reported', call['metrics']['usage_status'])
+                self.assertEqual(1, call['metrics']['usage_updates'])
+        self.assertEqual(sum(call['metrics']['total_tokens'] for call in ledger.values()), usage['total_tokens'])
+        self.assertEqual(generation_status, usage['usage_status'])
+        self.assertEqual(generation_updates + reviews, usage['usage_updates'])
+        self.assertEqual(reviews, sum(len(server.review_turns) for server in FakeServer.instances))
+        self.assertTrue(all(server.closed for server in FakeServer.instances))
+        return usage
 
     def test_uncertain_candidate_gets_one_same_thread_correction_and_strict_recheck(self):
         result, calls, server = self.run_gate()
@@ -117,12 +152,8 @@ class QualityCorrectionTests(unittest.TestCase):
         self.assertIn('"field_path":"body"', feedback)
         self.assertNotIn(self.raw["body"], feedback)
         self.assertNotIn("Reported local result", feedback)
-        with Store(self.home) as store:
-            usage = store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
-            self.assertEqual(160, usage["total_tokens"])
-            self.assertEqual("reported", usage["usage_status"])
-            self.assertEqual("turn-2", usage["worker_turn_id"])
-            self.assertEqual(2, usage["usage_updates"])
+        usage = self.assert_usage(result, 160, 'reported', 2, reviews=2)
+        self.assertEqual('turn-2', usage['worker_turn_id'])
         self.assertTrue(server.closed)
 
     def test_second_uncertain_candidate_is_quarantined_without_third_turn(self):
@@ -134,9 +165,8 @@ class QualityCorrectionTests(unittest.TestCase):
         self.assertEqual(4, result["jev_quality"]["counts"]["requests"])
         with Store(self.home) as store:
             self.assertIsNone(store.get(self.project, [self.raw["id"]])[0]["superseded_by"])
-            usage = store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
-            self.assertEqual(160, usage["total_tokens"])
-            self.assertEqual("turn-2", usage["worker_turn_id"])
+        usage = self.assert_usage(result, 160, 'reported', 2, reviews=2)
+        self.assertEqual('turn-2', usage['worker_turn_id'])
 
     def test_rejected_or_transport_failure_never_starts_correction(self):
         for outcome in ("rejected", "transport"):
@@ -156,10 +186,7 @@ class QualityCorrectionTests(unittest.TestCase):
         FakeServer.include_second_usage = False
         result, _, _ = self.run_gate()
         self.assertEqual("processed", result["status"])
-        with Store(self.home) as store:
-            usage = store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
-            self.assertEqual("partial", usage["usage_status"])
-            self.assertEqual(100, usage["total_tokens"])
+        self.assert_usage(result, 100, 'partial', 1, reviews=2)
 
     def test_second_turn_failure_preserves_first_usage_without_replay(self):
         FakeServer.fail_second = True
@@ -168,10 +195,7 @@ class QualityCorrectionTests(unittest.TestCase):
         self.assertEqual(2, len(server.turns))
         self.assertEqual(2, len(calls))
         self.assertTrue(result["jev_quality"]["correction"]["requested"])
-        with Store(self.home) as store:
-            usage = store._connection.execute("SELECT * FROM observer_usage_attempts").fetchone()
-            self.assertEqual("partial", usage["usage_status"])
-            self.assertEqual(100, usage["total_tokens"])
+        self.assert_usage(result, 100, 'partial', 1, reviews=1)
 
     def test_correction_turn_cannot_execute_tools(self):
         FakeServer.unsafe_second = True
@@ -183,7 +207,8 @@ class QualityCorrectionTests(unittest.TestCase):
     def test_first_accepted_candidate_never_gets_a_correction(self):
         result = processor.process_pending(self.project, self.home, jev_quality_evaluator=response)
         self.assertEqual("processed", result["status"])
-        self.assertEqual(1, len(FakeServer.instances[-1].turns))
+        self.assertEqual(1, sum(len(server.turns) for server in FakeServer.instances))
+        self.assert_usage(result, 100, 'reported', 1, reviews=1)
         self.assertEqual(1, result["jev_quality"]["counts"]["requests"])
         self.assertNotIn("correction", result["jev_quality"])
 

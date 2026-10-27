@@ -3,6 +3,8 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -30,6 +32,11 @@ def response(payload):
                       "legend": {str(i): value for i, value in enumerate(payload["questions"]["relevance"]["criteria"])},
                       "probabilities": {"0": 0, "1": .2, "2": .8}}},
         "usage": {"input_tokens": 123, "output_tokens": 9}}
+
+
+# Watchdogs bound this test's child, not SQLite's configured20ms lock wait.
+CONTENTION_SETUP_WATCHDOG = 30
+CONTENTION_OPERATION_WATCHDOG = 2
 
 
 class JevClientTests(unittest.TestCase):
@@ -181,23 +188,78 @@ class JevClientTests(unittest.TestCase):
         self.assertEqual("jev_timeout", failure.exception.code)
         self.assertEqual(123, failure.exception.audit["usage"]["input_tokens"])
 
+    def real_contention(self, mode):
+        helper = Path(__file__).parent / 'fixtures' / 'jev_contention.py'
+        ready = Path(self.tmp.name) / 'contention-ready'
+        child = subprocess.Popen([sys.executable, str(helper), self.tmp.name, self.project, mode, str(ready)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            deadline = time.monotonic() + CONTENTION_SETUP_WATCHDOG
+            while not ready.exists() and child.poll() is None and time.monotonic() < deadline:
+                time.sleep(.01)
+            if not ready.exists():
+                if child.poll() is None:
+                    child.kill()
+                output, errors = child.communicate(timeout=CONTENTION_SETUP_WATCHDOG)
+                self.fail('Real writer-lock setup did not complete within test watchdog: '
+                          + repr(dict(returncode=child.returncode, output=output, errors=errors)))
+            try:
+                output, errors = child.communicate('run\n', timeout=CONTENTION_OPERATION_WATCHDOG)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                output, errors = child.communicate(timeout=CONTENTION_SETUP_WATCHDOG)
+                self.fail('Contention child exceeded test hang watchdog; no wall-latency contract inferred. '
+                          + repr((output, errors)))
+            self.assertEqual(0, child.returncode, errors)
+            return json.loads(output)
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.communicate(timeout=CONTENTION_SETUP_WATCHDOG)
+            for stream in (child.stdin, child.stdout, child.stderr):
+                stream.close()
+
+    def assert_real_contention_contract(self, result):
+        self.assertTrue(result['writer_held'], result)
+        self.assertTrue(result['lock_released'], result)
+        self.assertEqual([], result['tables_under_lock'], result)
+        self.assertEqual([], result['tables_after_release'], result)
+        self.assertEqual(1, result['providers'], result)
+        self.assertFalse(result['audit_saved'], result)
+        self.assertEqual({'input_tokens': 123, 'output_tokens': 9}, result['audit']['usage'], result)
+        self.assertEqual({'requests': 1, 'cache_hits': 0}, result['audit']['counts'], result)
+        self.assertTrue(result['connections'], result)
+        self.assertTrue(all(row['busy_timeout_ms'] == 20 for row in result['connections']), result)
+        self.assertTrue(all(row['closed'] for row in result['connections']), result)
+        self.assertEqual(2, len(result['writes']), result)
+        self.assertTrue(all(row['readonly'] is False for row in result['writes']), result)
+        self.assertEqual([20, 20], [row['busy_timeout_ms'] for row in result['writes']], result)
+        for row in result['writes']:
+            if row['sqlite_errorcode'] is not None:
+                self.assertEqual(getattr(sqlite3, 'SQLITE_BUSY', 5), row['sqlite_errorcode'], result)
+            else:  # Python3.10 lacks sqlite_errorcode; retain the actual SQLite exception.
+                self.assertEqual(('OperationalError', 'database is locked'),
+                                 (row['error_type'], row['error_message']), result)
+        for row, table in zip(result['writes'], ('jev_judgment_cache', 'jev_judgment_audits')):
+            self.assertTrue(row['statement'].startswith('CREATE TABLE IF NOT EXISTS ' + table + ' '), result)
+
     def test_cache_and_audit_writer_contention_are_bounded(self):
-        # A busy DB must not convert the short hook path into a multi-second wait.
-        lock = sqlite3.connect(self.store.db_path)
-        self.addCleanup(lock.close)
-        lock.execute("BEGIN IMMEDIATE")
-        before = time.monotonic()
-        _, audit = self.evaluate()
-        self.assertFalse(client.record_audit(self.store, self.project, audit, route="search"))
-        self.assertLess(time.monotonic() - before, .4)
-        lock.rollback()
+        result = self.real_contention('normal')
+        self.assert_real_contention_contract(result)
+        self.assertIsNone(result['error_code'], result)
+        self.assertEqual('success', result['audit']['status'], result)
+        self.assertEqual('reported', result['audit']['usage_status'], result)
+        self.assertEqual(.9, result['answers']['support']['noul'], result)
+        self.assertEqual([], result['expiry_after_real_cache_busy'], result)
 
     def test_cache_write_cannot_extend_success_past_deadline(self):
-        with patch.object(client, "_cache_put", side_effect=lambda *args: time.sleep(.025)):
-            with self.assertRaises(client.JevError) as failure:
-                self.evaluate(timeout=.01)
-        self.assertEqual("jev_timeout", failure.exception.code)
-        self.assertEqual(123, failure.exception.audit["usage"]["input_tokens"])
+        result = self.real_contention('expire')
+        self.assert_real_contention_contract(result)
+        self.assertEqual('jev_timeout', result['error_code'], result)
+        self.assertEqual('failure', result['audit']['status'], result)
+        self.assertEqual('partial', result['audit']['usage_status'], result)
+        self.assertIsNone(result['answers'], result)
+        self.assertEqual([result['writes'][0]], result['expiry_after_real_cache_busy'], result)
 
     def test_revocation_after_cache_lookup_blocks_dispatch_and_cached_decision(self):
         for warm in (False, True):

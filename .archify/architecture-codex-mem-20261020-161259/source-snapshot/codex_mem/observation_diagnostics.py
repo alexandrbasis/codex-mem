@@ -10,6 +10,7 @@ from typing import Any
 
 # Fixed vocabulary only. Never save model text or exception messages here.
 INVALID_RESPONSE_REASONS = frozenset({
+    "summary_support_uncertain", "summary_support_stale", "summary_support_unavailable", "summary_support_invalid", "summary_support_rejected",
     "invalid_message_phase", "invalid_message_text", "missing_final_message",
     "multiple_final_messages", "invalid_json", "invalid_output_shape",
     "invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
@@ -142,6 +143,7 @@ PI_FAILURE_REASONS = frozenset({"pi_output_limit", "pi_disconnected", "pi_unexpe
     "pi_command_failed", "pi_identity_mismatch", "pi_session_changed", "pi_not_ephemeral_idle",
     "pi_automatic_restart", "pi_multiple_answers", "pi_cancelled", "pi_incomplete_run",
     "pi_provider_failure", "pi_forbidden_event", "pi_not_found", "unsupported_pi_version",
+    "pi_schema_helper_invalid", "pi_schema_proof_invalid",
     "pi_auth_check_unavailable", "pi_prompt_not_started", "pi_launch_failed", "pi_malformed_record"})
 
 

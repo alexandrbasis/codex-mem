@@ -27,9 +27,12 @@ class LocalExecutionScopeTests(unittest.TestCase):
     def test_generator_and_correction_preserve_scoped_test_results(self):
         source = dict(json.loads(FIXTURE.read_text())["cases"][0]["sources"][0], title="Local test")
         prompt = processor._build_prompt([source])
-        self.assertIn("no second independent verifier is required", prompt)
-        self.assertIn("Do not invent an omitted exit status or unseen assertions", prompt)
+        self.assertIn("supports that observed outcome in the supplied execution scope", prompt)
+        self.assertIn("No independent verifier is required", prompt)
+        self.assertIn("Do not infer an omitted local, synthetic or production scope, regression purpose, "
+                      "exit status or unseen assertions", prompt)
         self.assertIn("Echo/printf of a success claim", prompt)
+        self.assertIn("or reading a report does not show that the test ran", prompt)
         correction = processor._quality_correction_prompt({"decisions": []})
         self.assertIn("Preserve supported findings and observed local test outcomes", correction)
         self.assertIn("unverified production behavior or unseen implementation details", correction)

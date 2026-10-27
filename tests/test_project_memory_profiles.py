@@ -176,7 +176,8 @@ class ProjectMemoryProfileTests(unittest.TestCase):
     def test_retained_service_reloads_profile_after_failure(self):
         from codex_mem.service import run_service
         self.capture()
-        configure(self.data, service_enabled=True, project_memory_profile=profile(timeout=1))
+        # Allow native startup to finish before the fixture's intentional turn stall.
+        configure(self.data, service_enabled=True, project_memory_profile=profile(timeout=3))
         self.scenario(mode='timeout',
             models=[{'id': 'picker', 'model': 'fixture-exact', 'supportedReasoningEfforts': [{'reasoningEffort': 'low'}]}],
             config_change={'path': str(self.data / 'config.json'), 'values': {'project_memory_profile': None}},

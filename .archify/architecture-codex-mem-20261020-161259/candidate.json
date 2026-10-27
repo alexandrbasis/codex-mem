@@ -7,7 +7,7 @@
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "a16eea945a1e45d3e8e735756511149ef07aa05f",
+      "revision": "516fdf289af670ac984e1607881894d9cbf1cef2",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -97,8 +97,8 @@
       "sources": [
         {
           "path": "codex_mem/store.py",
-          "line": 1971,
-          "end_line": 2040,
+          "line": 1876,
+          "end_line": 2066,
           "label": "Atomic write"
         },
         {
@@ -109,8 +109,8 @@
         },
         {
           "path": "codex_mem/store.py",
-          "line": 1801,
-          "end_line": 1859,
+          "line": 1819,
+          "end_line": 1874,
           "label": "Body-free durable delivery receipts"
         }
       ]
@@ -131,14 +131,14 @@
       "sources": [
         {
           "path": "codex_mem/service.py",
-          "line": 697,
-          "end_line": 708,
+          "line": 698,
+          "end_line": 709,
           "label": "Two processing paths"
         },
         {
           "path": "codex_mem/service.py",
-          "line": 907,
-          "end_line": 957,
+          "line": 908,
+          "end_line": 958,
           "label": "Discover pending PM work"
         },
         {
@@ -193,20 +193,20 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 1391,
-          "end_line": 1446,
+          "line": 1767,
+          "end_line": 1822,
           "label": "Native account and exact catalog preflight"
         },
         {
           "path": "codex_mem/pi_runtime.py",
-          "line": 182,
-          "end_line": 199,
+          "line": 184,
+          "end_line": 197,
           "label": "Read-only native authorization check"
         },
         {
           "path": "codex_mem/pi_runtime.py",
-          "line": 165,
-          "end_line": 179,
+          "line": 167,
+          "end_line": 181,
           "label": "Native Pi auth and models only"
         }
       ]
@@ -214,8 +214,8 @@
     {
       "id": "legacy",
       "type": "backend",
-      "label": "Note processor",
-      "sublabel": "Observations and summaries",
+      "label": "Note and summary processor",
+      "sublabel": "Mandatory material support",
       "pos": [
         1000,
         460
@@ -227,21 +227,21 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 233,
-          "end_line": 255,
-          "label": "Lease observations"
+          "line": 398,
+          "end_line": 717,
+          "label": "Support, source and bound outcomes"
         },
         {
-          "path": "codex_mem/processor.py",
-          "line": 396,
-          "end_line": 451,
-          "label": "Shared execution and atomic save"
+          "path": "codex_mem/summary_support.py",
+          "line": 99,
+          "end_line": 419,
+          "label": "Material fields and exact report bindings"
         },
         {
-          "path": "codex_mem/observer_usage_store.py",
-          "line": 264,
-          "end_line": 306,
-          "label": "Atomic attempt profile"
+          "path": "codex_mem/summary_outcome.py",
+          "line": 49,
+          "end_line": 365,
+          "label": "Original report join and outcome states"
         }
       ]
     },
@@ -317,7 +317,7 @@
       "id": "notes",
       "type": "database",
       "label": "Stored notes",
-      "sublabel": "The same SQLite and Store",
+      "sublabel": "Atomic notes and summaries",
       "pos": [
         1000,
         700
@@ -329,15 +329,21 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 430,
-          "end_line": 449,
-          "label": "Save the result"
+          "line": 714,
+          "end_line": 732,
+          "label": "Accepted packet and reviewed-evidence handoff"
         },
         {
           "path": "codex_mem/store.py",
-          "line": 3214,
-          "end_line": 3256,
-          "label": "Finish the leased observation batch"
+          "line": 3269,
+          "end_line": 3414,
+          "label": "Lease, evidence and output membership"
+        },
+        {
+          "path": "codex_mem/observer_usage_store.py",
+          "line": 444,
+          "end_line": 567,
+          "label": "Generation receipts and independent totals"
         }
       ]
     },
@@ -424,22 +430,22 @@
       ],
       "sources": [
         {
-          "path": "codex_mem/execution.py",
-          "line": 73,
-          "end_line": 211,
-          "label": "Request, identity, result and adapter"
-        },
-        {
-          "path": "codex_mem/processor.py",
-          "line": 710,
-          "end_line": 912,
-          "label": "Native execution and deadline"
-        },
-        {
           "path": "codex_mem/pi_runtime.py",
-          "line": 362,
-          "end_line": 481,
-          "label": "Exact Pi profile, bounded RPC and settlement"
+          "line": 368,
+          "end_line": 550,
+          "label": "Selected execution and strict Pi review"
+        },
+        {
+          "path": "codex_mem/pi_schema.py",
+          "line": 27,
+          "end_line": 105,
+          "label": "Attempt schema and proof acceptance fence"
+        },
+        {
+          "path": "codex_mem/pi_schema_helper.js",
+          "line": 7,
+          "end_line": 42,
+          "label": "text.format hook and application proof"
         }
       ]
     },
@@ -573,7 +579,7 @@
       "id": "legacy-notes",
       "from": "legacy",
       "to": "notes",
-      "label": "notes",
+      "label": "if reviews pass",
       "variant": "default"
     },
     {
@@ -617,7 +623,7 @@
       "id": "legacy-execution",
       "from": "legacy",
       "to": "execution",
-      "label": "prepared input",
+      "label": "generation + reviews",
       "variant": "default"
     },
     {
@@ -649,7 +655,24 @@
       "items": [
         "This document includes issue #14 memory-profile comparison and issue #13 public host/runtime matrix evidence from October 24, 2026. The comparison froze two synthetic tasks and two exact profiles before twelve public processor calls. Eleven calls committed memory and one Pi project-memory call failed. Summary calls covered only the first assistant completion, leaving later tool/user events pending. Semantic assessment and limits are separate from structural success. Sources: docs/MEMORY_PROFILE_COMPARISON.md, docs/evidence/memory-profile-comparison-2026-10-24/freeze.json, docs/evidence/memory-profile-comparison-2026-10-24/runtime-analysis.json.",
         "A separate local Git snapshot pins the source files. Its revision is separate from the main repository history. source-manifest.json records the base HEAD, file list, and hashes. source-snapshot.bundle preserves the snapshot for later checks.",
-        "The diagram, supporting text, Archify controls, and HTML language attribute use English."
+        "The diagram, supporting text, Archify controls, and HTML language attribute use English.",
+        "This refresh also describes mandatory material support, isolated original-report interpretation, bound summary outcome checks and the trusted Pi native schema helper. Historical comparison and development outcomes remain historical; this architecture is a source-backed description, not private semantic acceptance or installation proof. Sources: docs/adr/0012-review-session-summary-support.md:98-116,122-138."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Material support and summary outcomes",
+      "items": [
+        "After output shape validation, summary-support-v6 reviews every complete nonempty material field in retained notes and summaries against role-labelled current/history evidence, including note-only packets. Note title, body, tags and structured observation fields retain typed arrays and record ownership. Observation classifications follow the same scoped evidence rules as prose. Code supplies exact field spans and original-report anchors. The response contains only version and units. Every exact input-unit key is required, with one to eight rows whose inner unit_id equals that outer key. Missing or extra keys, empty or malformed groups and mismatched owners reject the packet. The decoder enforces at most 64 rows across all groups before flattening; per-group schema bounds do not constrain that sum. It preserves input-unit order and row order within each group, never moving or inventing rows. Outcome-field comparisons bind report_text, reported_content, other or unresolved. Request, next_steps and note units require outside_outcome with empty candidate/report bindings; outcome units select only their owned candidate spans and permitted bindings. Existing text, reference, binding, citation-subset and coverage checks remain authoritative. Incomplete coverage retains uncertainty. Binding and schema validity prove neither semantic support nor external truth. Seven explicit shared $defs hold repeated comparison text, coverage, verdict, empty/evidence references and outcome/outside_outcome bindings. Per-owner candidate-span enums remain local; factoring changes the schema representation while preserving the strict constraints and their ordering. The keyed schema, payload and downstream validation retain their existing contracts. This adds no generic optimizer, schema-size policy, runtime boundary or model selection. Old v5 wire replies reject; historical v5 diagnostics remain readable. Sources: codex_mem/summary_support.py:87-95,99-147,165-271,272-320,332-419; codex_mem/observation_contract.py:3-15; codex_mem/processor.py:490-530.",
+        "After original support passes for a summary, summary-source-v4 sees only the latest current original assistant report between code-selected delimiters absent from that body. Provenance and current order stay in code-owned validation context. No candidate, competing request, history or historical fallback reaches this interpretation. Up to eight content propositions plus language and organization slots preserve target, subject, time, modality and scope. The outcome-v5 layer joins the exact selected original body by retained identity, provenance, SHA-256 and complete ordered span coverage before dispatch. It pairs each immutable bound summary claim with the selected source items, at most fifty relations; request, next_steps and note fields remain outside this layer. Full report text remains visible because extraction is incomplete. Missing or changed joins fail before dispatch. Sources: codex_mem/summary_outcome.py:49-107,122-173,189-312.",
+        "Every call uses the same selected profile and shared deadline. One correction allowance is shared by initial JSON replacement, structural correction, mandatory support and optional Jev review. Changed note or summary records repeat mandatory support with fresh retained evidence; applicable summary reviews also repeat. Exact unchanged rejected record/evidence/interpretation/profile/versions retain that record's first rejection with no new vote. This can preserve a mistaken rejection. Lease/source checks precede reuse. Store captures per-record identities with the exact current/history views before excerpting. The processor compares those identities before Jev filtering, cache reuse, live chunk submission after HTTP-slot acquisition, and selection. Native initial/correction turns, support/source/outcome calls and optional quality use the same checks before submission. The original absolute deadlines remain. A guard denies changes visible then; it cannot revoke a submitted request or close the interval after a guard. The atomic write fence still blocks stale output. No lock spans a model call. Full retained fields, metadata, source links and hydrated current tool I/O remain bound. Store rechecks the same IDs and content fingerprint inside the output write transaction, before inserting any note or summary. The cross-session project_context is reference-only for generation and optional quality; it retains existence checks and is excluded from mandatory support evidence and this content fingerprint. Deleted or changed evidence blocks the whole packet; unrelated records do not. No model call runs in this transaction. Known semantic failures quarantine only their batch while fresh work continues; operational failures retain project blocking. Sources: codex_mem/processor.py, codex_mem/service.py, tests/test_summary_support.py, codex_mem/store.py, tests/test_summary_outcome.py. A replaced lease preserves summary_support_stale without changing its replacement. Sources: codex_mem/processor.py:470-474,490-521; docs/adr/0012-review-session-summary-support.md:84-98.",
+        "The execution_calls ledger records generation, up to two original-support calls, one source interpretation and two outcome calls. Generation includes at most two turns, so the attempt has at most seven native model calls. All calls share the selected profile and original deadline. Note-only packets omit the source/outcome layer. Independent measured counters add once. Missing counters keep the combined counter null. Recovery and terminal receipts use persisted execution_calls instead of adding prior totals. Unfinished calls remain partial. Late generation receipts cannot erase reviewer gaps. Whole-attempt elapsed time counts nested reviews once. Reviewer failures keep their own metrics and identifiers. Sources: codex_mem/observer_usage_store.py:474-600,670-679; codex_mem/processor.py:376-405,448-557. The first decoded processed candidate can request the shared correction for missing_required_summary. The reported first reason does not prove that other errors are absent. Its generation_correction contains the initial reason and canonical candidate fingerprint. The existing generation.review_diagnostic retains five fixed keys and fingerprints. Sources: codex_mem/processor.py:624-659,770-776,833-841.",
+        "An optional typed failure_review callback receives ExecutionFailure separately from candidate_review. Only the first observation or summary generation with invalid_response/invalid_json can request one complete replacement. The processor consumes the existing correction allowance, rechecks source custody and the original deadline, then returns fixed feedback. Malformed bytes remain rejected. The replacement uses the original schema, profile and evidence. It must pass strict decoding, shape, source and mandatory support checks, plus applicable summary and optional quality reviews. There is no third generation or partial note write. Repeated malformed JSON, unknown handles, other failures and review jobs do not gain this path. The dispatch guard checks custody again before submission. Sources: codex_mem/processor.py:611-717,822-829,1176-1227; codex_mem/pi_runtime.py:461-532. Deterministic transport and Store tests exercise replacement routing, custody/deadline stops, mandatory reviews and atomic rejection. Authored verdicts do not prove model semantic quality or explain why the first bytes were malformed. Sources: tests/test_generation_shape_recovery.py; tests/test_execution_contract.py; tests/test_observer_usage_store.py.",
+        "Generation receipts retain at most two sanitized rows under the existing generation call. Each row keeps its number, actual execution/turn IDs, outcome, fixed failure codes and measured usage. The initial invalid_json failure remains immutable when feedback, custody or deadline checks fail. Checkpoint deduplication includes failure-detail transitions. Codex derives per-turn usage only from measured cumulative boundaries. Pi records direct per-generation usage. Missing counters and unmeasured per-generation durations stay null. Invalid optional counters become invalid/unknown without deleting the fixed failure. Generation rows never add to totals. Sources: codex_mem/processor.py:1006-1018,1105-1126,1196-1208,1691-1701; codex_mem/pi_runtime.py:462-482,509-518,533-550; codex_mem/observer_usage_store.py:444-470,542-566.",
+        "The keyed v6 envelope repairs deterministic owner coverage. The current focused checks use authored offline inputs and verdicts. Native acceptance of the exact v6 schema and its maximum size remains unproven, as does improvement in semantic overrejection. Earlier native v5 runs remain historical and do not establish v6 quality, independent truth or successful acceptance. Source-v4, outcome-v5, helper bytes/proof, profiles, shared deadlines, the single correction and seven-call ceiling remain unchanged. New native or semantic validation requires separate authorization. Sources: docs/adr/0012-review-session-summary-support.md:162-172; docs/EXECUTION.md:144-152; docs/PI_RUNTIME.md:93-97.",
+        "Outcome decisions distinguish applicability, residual scope and value. Absent or disjoint comparisons are unused. Available same-scope compatible values are checked; incompatible values contradict. Unresolved applicable comparisons and unavailable evidence for an asserted same-scope property remain uncertain. Contradiction or uncertainty blocks storage. Compatibility does not independently establish original support. Sources: codex_mem/summary_outcome.py:315-365.",
+        "Generation and review instructions preserve only the actual observed execution scope. They do not invent local, regression, synthetic or production labels. Ambiguous candidate references can use context only from the same unit_records owner; permitted original-source and historical context remain available under existing rules. Evidence-limit wording is also checked for implied events or success. Incidental candidate-format descriptions are omitted. The candidate remains non-evidence. Semantic meaning is judged fallibly by the model; code validates shape, ownership and references. Sources: codex_mem/processor.py:2117-2138; codex_mem/summary_support.py:206-266,422-431.",
+        "The support reviewer instructions require comparison of asserted relationships as well as their component facts. Separate change reports and passing checks do not establish that those checks verified the change. A verification claim needs supplied evidence linking the result to the claimed property at the asserted scope. Explicit tested properties or assertions can establish that link. Proximity, matching values, a shared command or an aggregate result cannot supply missing coverage. Matching commands and results can support their stated operation without external verification. Printed or quoted claims establish only that the text was printed or read. Separately supported outcomes need no unasserted verification relationship. These are model instructions. The structural validator checks shape, ownership and references, not whether the model judged the meaning correctly. Sources: codex_mem/summary_support.py:219-242,258-266,332-419."
       ]
     },
     {
@@ -666,8 +689,8 @@
       "title": "Execution diagnostics and usage",
       "items": [
         "CLI doctor and the dashboard read saved profiles and bounded attempt metadata without dispatching a model. Default and processor overrides remain visible beside requested and actual identity. Latest failures have fixed content-free actions. Explicit doctor --check-execution shares native preparation with the processors. Sources: codex_mem/execution_diagnostics.py, codex_mem/dashboard_data.py, docs/EXECUTION.md.",
-        "Pi checks the exact 1.4.0 version and uses auth check --json --no-refresh before RPC selection. Codex reads account/read without requesting refresh, then validates the exact catalog model and reasoning. Missing executables, native authorization, model or reasoning support have separate reasons. Codex required-protocol support does not establish universal version compatibility. Local credential readiness does not prove remote acceptance. Sources: codex_mem/processor.py:1387-1450, codex_mem/pi_runtime.py:181-198,362-414, docs/PI_RUNTIME_EVIDENCE.json.",
-        "Reports combine historical Codex and new observation/project-memory attempts. Runtime-qualified worker identifiers preserve collisions across runtimes. Per-counter known subtotals remain separate from unknown totals. Failed measured usage, cumulative counter replacement, and original provenance remain visible. API estimates do not establish actual charges, and Pi receives no Codex-credit estimate. Sources: codex_mem/cost_report.py, codex_mem/pricing.py, codex_mem/observer_usage_store.py, tests/test_execution_usage_reports.py."
+        "Pi checks the exact 1.4.0 version and uses auth check --json --no-refresh before RPC selection. Codex reads account/read without requesting refresh, then validates the exact catalog model and reasoning. Missing executables, native authorization, model or reasoning support have separate reasons. Codex required-protocol support does not establish universal version compatibility. Local credential readiness does not prove remote acceptance. Sources: codex_mem/processor.py:1052-1070,1767-1822, codex_mem/pi_runtime.py:184-197,368-433, docs/PI_RUNTIME_EVIDENCE.json.",
+        "Reports combine historical Codex and new observation/project-memory attempts. Runtime-qualified worker identifiers preserve collisions across runtimes. Per-counter known subtotals remain separate from unknown totals. Failed measured usage, cumulative counter replacement, and original provenance remain visible. API estimates do not establish actual charges, and Pi receives no Codex-credit estimate. Sources: codex_mem/cost_report.py, codex_mem/pricing.py, codex_mem/observer_usage_store.py, tests/test_execution_usage_reports.py. Interruption recovery replaces top-level counters, usage status and update counts from the saved independent-call ledger inside the existing transaction. It preserves the raw ledger, generation identity/provenance and known duration. Any missing counter remains null, and a running measured call prevents complete status. A terminal generation receipt cannot restore certainty missing from a reviewer. Legacy rows without a call ledger retain their prior behavior. Only the existing explicit whole-attempt measurement contract can replace duration; nested wall times are never summed. These are recovery/accounting rules, not proof of an observed live crash. Sources: codex_mem/observer_usage_store.py:149-187,215-256,555-600,670-679."
       ]
     },
     {
@@ -675,24 +698,26 @@
       "title": "Host/runtime evidence boundaries",
       "items": [
         "The common matrix submits Codex hooks or the public Pi local protocol into a real temporary Store. Observation cases drain the durable service queue in a fresh process. Project-memory cases drain the durable project-memory queue through its public explicit processor in a fresh process, without bypassing the service quiet period. Only external executables are deterministic. Pi/Pi excludes Codex from PATH. Sources: tests/test_host_runtime_matrix.py:25-122, docs/HOST_RUNTIME_MATRIX.md.",
-        "All four pairs exercise roles, source references, project scope, duplicates, privacy, injected-memory exclusion, atomic protocol failure, retained-source retry, and deletion during generation. Concurrent Codex/Pi events exercise two worker slots and retain the active profile while a later attempt reloads changed configuration. Existing suites own native lifecycle, tools, legacy migration and usage coverage. Sources: tests/test_host_runtime_matrix.py:124-319, docs/HOST_RUNTIME_MATRIX.md.",
+        "All four pairs exercise roles, source references, project scope, duplicates, privacy, injected-memory exclusion, atomic protocol failure, retained-source retry, and deletion during generation. Concurrent Codex/Pi events exercise two worker slots and retain the active profile while a later attempt reloads changed configuration. Existing suites own native lifecycle, tools, legacy migration and usage coverage. Sources: tests/test_host_runtime_matrix.py:124-323, docs/HOST_RUNTIME_MATRIX.md.",
         "Installed Pi lifecycle and MCP tests use real native Pi with a deterministic local HTTP provider. The separate live helper sends synthetic public-adapter events through real background executables and remote providers into disposable memory. All four observation pairs recorded processed derived notes with exact execution identity, source/project references, and next-request delivery. Pi/Pi excluded Codex. Pi was 1.4.0 and Codex CLI was 0.163.0. These runs do not establish native interactive event emission, hook trust, other processors or model quality. Sources: docs/evidence/host-runtime-matrix-2026-10-24/live-final.json, scripts/live_host_runtime_smoke.py, docs/HOST_RUNTIME_MATRIX.md.",
         "The final live report identifies its adapter boundary and uncovered processors. The executed helper was reconstructed from the recorded edit sequence after the run, not captured before it. Later helper edits strengthened future classification, audit fields and safe failure diagnostics without another remote run. Failures record the stage and allowlisted cause metadata without raw exception text, process output or paths. The provenance file records both hashes and the exact prior pass predicates. Current classifier and diagnostic coverage uses routine tests. Sources: docs/evidence/host-runtime-matrix-2026-10-24/snapshot-provenance.json, scripts/live_host_runtime_smoke.py:64-92, tests/test_live_host_runtime_smoke.py.",
-        "The quality comparison observes real native execution through a recorder at the public execution boundary, with temporary stores and synthetic sources. It retains original parsed packets, durable IDs, failures, latency and usage. Timeline output bodies are previews, structured metadata is complete, and project-memory snapshots retain typed fields. Invalid raw model text is unavailable from the adapter boundary. Independent semantic grading remains distinct from core acceptance. Sources: scripts/memory_profile_comparison.py, tests/test_memory_profile_comparison.py, docs/MEMORY_PROFILE_COMPARISON.md."
+        "The quality comparison observes real native execution through a recorder at the public execution boundary, with temporary stores and synthetic sources. It retains original parsed packets, durable IDs, failures, latency and usage. Generation remains single-use; up to five ordered review executions use distinct bounded paths. Timeline output bodies are previews, structured metadata is complete, and project-memory snapshots retain typed fields. Invalid raw model text is unavailable from the adapter boundary. Independent semantic grading remains distinct from core acceptance. Sources: scripts/memory_profile_comparison.py, tests/test_memory_profile_comparison.py, docs/MEMORY_PROFILE_COMPARISON.md.",
+        "The shared redactor skips replacement passes only for ASCII text without any necessary redaction marker. Every possible match and all non-ASCII text retain the existing full redactor. Redaction precedes truncation. The hook supervisor keeps its two-second worker deadline and existing failure notice. Cold-source public capture tests exclude bytecode caches. Sources: codex_mem/privacy.py, tests/test_privacy.py, tests/test_hook_large_payload.py, docs/EXECUTION.md."
       ]
     },
     {
       "dot": "cyan",
       "title": "Host and background execution",
       "items": [
-        "Codex and Pi are interactive hosts. Their model selection does not select the background runtime. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:397-431, episode_processor.py:898-910.",
-        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:710-928, pi_runtime.py:417-481.",
-        "The resolver chooses the processor override, default profile, then legacy Codex. Observations, summaries, project memory, reconsideration, and consolidation can use Pi with independent profiles. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:897-925, pi_runtime.py:390-410,445-464, docs/EXECUTION.md.",
-        "Pi 1.4.0 can emit thinking_level_changed before the set_thinking_level response. Preparation accepts only the exact requested level and only during that command. A mismatched notification or another event fails the attempt. Initial and completed state checks still require the exact profile. Sources: codex_mem/pi_runtime.py:398-410, tests/fixtures/execution_pi.py, tests/test_pi_observations.py, tests/test_pi_project_memory.py.",
-        "Observation jobs keep their source identity across profile changes. The claim transaction stores each requested profile with its lease. Corrections retain it; later attempts reload current configuration. Legacy receipts preserve requested-only provenance and measured usage. Successful sources do not replay, including overlapping historical jobs. Explicit maintenance recovery retains its separate fingerprint and opt-in. Explicit retry_failed with a different processor can create distinct work; successful sources and one-shot recovery remain protected. Sources: store.py:2421-2904, observer_usage_store.py:80-146,263-305, tests/test_observation_profiles.py. Project memory retains its existing profile-independent source fingerprint and stores requested and verified execution separately. Additive migration preserves historical values; failed usage survives source deletion. Sources: project_memory.py:494-599, tests/test_project_memory_profiles.py.",
-        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:432-451, episode_processor.py:938-965.",
-        "Pi creates a fresh temporary working directory, agent profile, and in-memory session. Only native auth/models are linked. Tools, MCP, extension discovery, skills, instructions, automatic retries and compaction are disabled. No capture extension or database-write API is loaded. These are runtime restrictions, not an OS sandbox. Provider extensions remain unsupported. Sources: pi_runtime.py:20-22,163-177,361-377, docs/PI_RUNTIME.md.",
-        "The additive Pi receipt separates configured CLI restrictions from observed identity, settlement, stop reason, and tool events. It does not invent Codex checks or an enumerated tool inventory. Streaming counters replace current-generation totals; corrections add each generation once. Missing usage stays unknown or partial, including Pi zero placeholders. Failed packets retain measured usage. Sources: pi_runtime.py:198-358, project_memory.py:550-593, observer_usage_store.py:309-565, execution.py:214-231. Observation Pi checkpoints retain measured totals while omitted optional counters remain null. Public capture, summary, context, recovery and mixed-profile tests: tests/test_pi_observations.py."
+        "Codex and Pi are interactive hosts. Their model selection does not select the background runtime. Both processors submit bounded generation requests through the shared contract. Each request carries a job type, schema, profile, monotonic deadline, and attempt identifier. Sources: execution.py:73-121, processor.py:661-697, episode_processor.py:908-917.",
+        "NativeProcessorRunner preserves Codex completion, exact identity, tool restrictions, and usage. PiProcessorRunner connects both processors to a pinned Pi 1.4.0 subprocess. It waits for agent_settled, a completed assistant response, and matching idle state. Prompt acceptance is not completion. Sources: execution.py:166-203, processor.py:1034-1281, pi_runtime.py:456-550.",
+        "The resolver chooses the processor override, default profile, then legacy Codex. Observations, summaries, project memory, reconsideration, and consolidation can use Pi with independent profiles. Pi catalog, exact provider/model selection, advertised thinking, and pre/post state checks share one deadline. Unsupported profiles fail without substitution. Sources: execution.py:15-70, episode_processor.py:839-840,908-917, pi_runtime.py:387-434,456-508, docs/EXECUTION.md.",
+        "Pi 1.4.0 may emit one thinking_level_changed notification while set_model applies its own level. Preparation accepts at most one exact type/level record with a known native level, then requires the selected model to advertise it. Duplicate, extra-field and unknown notifications fail. The adapter next assigns the requested level explicitly; its command accepts only that exact level. Initial and completed state checks still require the selected provider, model and requested thinking level. This bounded model-switch handling applies across providers. Sources: codex_mem/pi_runtime.py:407-433,254-272; docs/PI_RUNTIME.md:15-19.",
+        "Observation jobs keep their source identity across profile changes. The claim transaction stores each requested profile with its lease. Corrections retain it; later attempts reload current configuration. Legacy receipts preserve requested-only provenance and measured usage. Successful sources do not replay, including overlapping historical jobs. Explicit maintenance recovery retains its separate fingerprint and opt-in. Explicit retry_failed with a different processor can create distinct work; successful sources and one-shot recovery remain protected. Sources: store.py:2442-2949, observer_usage_store.py:81-147,292-311, tests/test_observation_profiles.py. Project memory retains its existing profile-independent source fingerprint and stores requested and verified execution separately. Additive migration preserves historical values; failed usage survives source deletion. Sources: project_memory.py:494-599, tests/test_project_memory_profiles.py.",
+        "The runtime proposes data and has no memory-write interface. Source roles, evidence validation, leases, and atomic writes remain with the processors and Store. Source custody and episode consolidation retain their existing rules. Sources: processor.py:702-732, episode_processor.py:925-949.",
+        "Pi creates a fresh temporary working directory, agent profile and in-memory session. Only native auth/models are linked. Tools, MCP, extension discovery, skills, instructions, automatic retries and compaction remain disabled. For openai-codex summary_support jobs only, execution explicitly loads one package-owned hash-pinned schema helper. It registers no tools, provider clients, routing, output handlers or continuations, and changes only text.format. Generation and other providers keep prompt-schema behavior. These are runtime restrictions, not an OS sandbox. Sources: codex_mem/pi_runtime.py:368-400,456-490; codex_mem/pi_schema_helper.js:7-42; codex_mem/pi_schema.py:27-60.",
+        "The additive Pi receipt separates configured CLI restrictions from observed identity, settlement, stop reason, and tool events. It does not invent Codex checks or an enumerated tool inventory. Streaming counters replace current-generation totals; corrections add each generation once. Missing usage stays unknown or partial, including Pi zero placeholders. Failed packets retain measured usage. Sources: pi_runtime.py:200-364, project_memory.py:550-593, observer_usage_store.py:313-734, execution.py:214-252. Observation Pi checkpoints retain measured totals while omitted optional counters remain null. Public capture, summary, context, recovery and mixed-profile tests: tests/test_pi_observations.py. Structured output receipts distinguish prompt_schema from strict_json_schema and carry only the allowed proof hashes, status and temporary transport/retry policy. Source: codex_mem/execution.py:231-252.",
+        "Strict Pi review uses temporary SSE transport, cache warming off and zero provider retries. Acceptance requires one exact applied proof matching helper/schema hashes, selected provider/model, strict format and unchanged remaining payload. Missing, foreign, duplicate, oversized or tampered proof rejects acceptance. Pi catches hook errors, so this fence cannot retract an already-sent request. Receipts disclose bundled_schema_only and structured-output mode, hashes and status. The bundled helper is Python package data. Sources: codex_mem/pi_schema.py:53-105; codex_mem/pi_schema_helper.js:14-40; codex_mem/pi_runtime.py:357-364,504-508; pyproject.toml:29-30."
       ]
     },
     {
@@ -700,11 +725,11 @@
       "title": "Shared host events and context",
       "items": [
         "Codex adapts native hooks to HostEvent. Pi 1.4.0 observes message_end, resolves native entry IDs after persistence, and submits only current-runtime sources at agent_settled. It never imports existing history or captures streaming updates. Python applies shared privacy, project policy, source identity and queue wake. Pi tool-call IDs retain opaque pipe separators in source metadata and tool provenance. Other identifier restrictions and bounded batch validation remain unchanged. Sources: host.py:48-214, hooks.py:882-929, pi/extension.ts:107-177, pi_host.py:24-125.",
-        "Legacy Codex source names and session IDs remain valid. Other host and branch sessions have separate namespaces. One classifier serves SQL queue and retrieval filters, processor summary validation, and project memory. Old dedupe aliases preserve existing entry IDs without a migration or replay. They remove injected memory before hashing, as the old Codex adapter did. Sources: host.py:21-65, store.py:1799-1956.",
+        "Legacy Codex source names and session IDs remain valid. Other host and branch sessions have separate namespaces. One classifier serves SQL queue and retrieval filters, processor summary validation, and project memory. Old dedupe aliases preserve existing entry IDs without a migration or replay. They remove injected memory before hashing, as the old Codex adapter did. Sources: host.py:21-65, store.py:1819-2066.",
         "ContextRequest returns bounded untrusted data with omission diagnostics. Codex owns hook framing. Pi receives custom memory at startup and before prompts; only its current custom context reaches the model, and it is excluded from capture. Empty or failed refreshes remove prior automatic memory while preserving unrelated custom messages. Tiny budgets omit the frame and report a bounded native status. The local Python protocol has byte, event, response and deadline limits. Failure does not block conversation. Sources: host.py:230-297, hooks.py:823-879, pi/extension.ts:16-67,98-140,178-191, pi_host.py:128-164.",
         "Pi has no native private flag on UserMessage. Explicit private markers activate the shared gate for user, assistant and tool sources. Complete tool JSON is decoded before shared redaction. The shared safe payload reader checks both stored raw reads and new Pi source bodies. Incoming or generated truncation wrappers and derived excerpts are omitted with an explicit reason. UTF-8 subprocess decoding preserves split characters within the byte limit. Native MCP tools remain separate. Branch markers survive resume and reload. Fork copies remain historical. Tree navigation creates a new activation; compaction preserves pending sources until settlement. Sources: docs/PI_HOST.md, tests/test_pi_host.py.",
         "Pi requires a fresh user after activation before assistant/tool capture. Historical automatic continuation is omitted because its privacy state is unknown. Shutdown clears pending observations and automatic context. Common ancestry cannot establish episode identity. Sources: pi/extension.ts:92-177, pi_host.py:43-78, docs/PI_HOST.md.",
-        "The shared capture boundary claims hashed native identity before privacy transitions. Replays return body-free receipts without rewinding gates. Deleted sources cannot resurrect. Interrupted claims have an unknown outcome and are not replayed. Existing source and queue transactions remain authoritative. Sources: host.py:142-156, store.py:1801-1859.",
+        "The shared capture boundary claims hashed native identity before privacy transitions. Replays return body-free receipts without rewinding gates. Deleted sources cannot resurrect. Interrupted claims have an unknown outcome and are not replayed. Existing source and queue transactions remain authoritative. Sources: host.py:142-156, store.py:1819-1874.",
         "Native Codex private prompts create their immediate marker before SQLite, then an empty native-identity receipt. Completed replays skip the marker. An interrupted or invalid receipt stays conservative; it cannot establish source capture. Public transitions use shared delivery deduplication. Private prompts create no redacted placeholder source. Sources: hooks.py:302-326,633-662, private_gate.py:50-77, tests/test_hook_privacy_deadline.py."
       ]
     },
@@ -712,14 +737,14 @@
       "dot": "emerald",
       "title": "How memory accumulates",
       "items": [
-        "Each host adapter saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1971-2040, service.py:907-957.",
+        "Each host adapter saves each permitted observation and project memory event in one transaction. A notification speeds up processing. The background service also discovers pending work itself. Sources: store.py:1876-2066, service.py:908-958.",
         "Batch readiness depends on inactivity, age, size, and checkpoints. A Stop event is optional. Each scheduled batch covers one session. A shared session alone does not merge tasks. Source: project_memory.py:299-335,1125-1130.",
         "Before background processing, the brief can show provisional signals from pending events. These include user corrections, requests to remember, decision intent, or saved execution results. Retrieval computes these signals. They remain provisional. Sources: project_memory.py:240-265,1099-1123,1273-1300.",
-        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:828-948.",
+        "The generator receives a bounded batch and the previous state. It proposes episodes, requirements, decisions, tasks, and links. Each attempt enters the usage ledger before dispatch. A retry gets a separate cost record. Source: episode_processor.py:874-994.",
         "After eligible event batches, discovery can schedule a bounded reconsideration job for split heads with the same positive task identity in original user evidence. It reuses pm_jobs and retained observations. It does not replay a transcript. A completed fingerprint prevents repeated no-op calls for unchanged candidates. Sources: project_memory.py:381-483,1331-1349.",
         "Ordinary event jobs can disclose historical original sources for matching task IDs within their existing input budget. Historical sources do not advance the event queue again. Disclosure reports omitted heads, ancestor chains, and sources. Sources: project_memory.py:336-379,955-961.",
         "Commit records neutral custody identities and offsets for newly consumed user source fragments in the same transaction as queue progress. Reconsideration and historical disclosure do not backfill custody. Source text stays in the existing source store. Sources: project_memory.py:989-997, project_memory_custody.py:12-37.",
-        "Storage retries and failure receipts share one contention classifier. Numeric SQLite metadata is authoritative. Without it, only the exact built-in OperationalError messages for a locked database or table map to contention codes. Exception text stays private. Only a failure before the transaction begins can authorize a safe retry; a commit failure never replays the operation. Sources: observation_diagnostics.py:38-83, store.py:978-1035."
+        "Storage retries and failure receipts share one contention classifier. Numeric SQLite metadata is authoritative. Without it, only the exact built-in OperationalError messages for a locked database or table map to contention codes. Exception text stays private. Only a failure before the transaction begins can authorize a safe retry; a commit failure never replays the operation. Sources: observation_diagnostics.py:39-84, store.py:994-1055."
       ]
     },
     {
@@ -728,19 +753,19 @@
       "items": [
         "The model proposes changes. ProjectMemory.commit controls database writes. It validates the active lease, source text, revision, deletion generation, and current episode head. Objects, links, custody records, the current head, and queue progress commit in one transaction. Sources: project_memory.py:634-834,888-972.",
         "A job reserves a logical episode only after its continuation evidence passes. Unsupported requests stay standalone with an explicit continuity omission and do not block a supported continuation. Two supported successors of one logical episode, or overlapping continuation and consolidation targets, reject the whole batch. Sources: project_memory.py:729-791.",
-        "ProjectMemory.prepare uses the same final assembly as commit, including historical prior_ fields. Optional assessment runs outside the write transaction. Commit rebuilds the records and compares the assessed digest. Preparation grants no lease and bypasses no source or revision guard. Sources: project_memory.py:836-957, episode_processor.py:952-965.",
+        "ProjectMemory.prepare uses the same final assembly as commit, including historical prior_ fields. Optional assessment runs outside the write transaction. Commit rebuilds the records and compares the assessed digest. Preparation grants no lease and bypasses no source or revision guard. Sources: project_memory.py:836-957, episode_processor.py:998-1011.",
         "Unsupported completion or acceptance becomes a proposal. Unsupported links that close or replace records are omitted. These cases require reconciliation. An exact quote proves that the text exists. It does not prove that the field purpose or full conclusion follows from the text. Sources: project_memory.py:689-722,780-800.",
-        "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Custody source references cascade on source deletion. Sources: project_memory.py:99-156, project_memory_custody.py:12-18, store.py:5854-5890.",
+        "Deletion revokes dependent records and episode descendants. It clears a deleted current head and invalidates old jobs. The previous version does not become current automatically. Custody source references cascade on source deletion. Sources: project_memory.py:99-156, project_memory_custody.py:12-18, store.py:5935-6002.",
         "A reconsideration proposal can continue one current head and consolidate other eligible heads. Exact source spans must support explicit continuity and the same task identity. Commit creates a new immutable version and dependency links. Original records stay addressable. Consolidation does not close open claims. Sources: project_memory.py:766-791,925-954,1391-1480.",
         "Discovery inspects at most 100 heads and 64 identity sources totaling 24,000 characters. A job uses at most four heads, eight ancestors per head, 32 retained sources, and 24,000 source characters. Lower caller limits apply. A larger group uses the oldest three heads and newest head. Metadata reports omissions and incomplete history. Source: project_memory.py:381-483.",
         "New heads rebuild earlier goals, reasons, outcomes, and open work in prior_ fields from each field's own disclosed original references. Earlier model prose is not copied. Missing or oversized historical context increments the omission count. Current validity stays unresolved. This does not create or reopen active claims. Source: project_memory.py:836-892.",
-        "Native output v12 excludes project membership and object identity from generated values. Code binds omitted worktree scope to the claimed project and object identity to array position. Each claim owns its required outgoing_relations. Trusted code supplies the origin and flattens them into unchanged canonical relations. Empty claims cannot express a native relation. Existing targets and evidence remain required. Explicit canonical foreign values still fail storage validation. Sources: episode_processor.py:45-139,413-463, project_memory.py:693-701.",
+        "Native output v12 excludes project membership and object identity from generated values. Code binds omitted worktree scope to the claimed project and object identity to array position. Each claim owns its required outgoing_relations. Trusted code supplies the origin and flattens them into unchanged canonical relations. Empty claims cannot express a native relation. Existing targets and evidence remain required. Explicit canonical foreign values still fail storage validation. Sources: episode_processor.py:45-140,413-463, project_memory.py:693-701.",
         "Storage code assembles episode summary, goal, rationale, outcome, and open_work, plus claim rationale, from each field's own original source sentences. Text carries source-role labels, original offsets, and field_provenance. Field association remains model-selected. Assistant and tool statements retain their original roles. Sources: project_memory.py:792-797,1030-1072.",
         "A current attributed field must fit 6,000 characters and 32 references. Assembled objects and relations must fit 180,000 serialized characters. Oversized current output is rejected atomically. Source sentences cut by a disclosed-body boundary carry partial-context labels. Earlier stored versions are not retroactively verified. Sources: project_memory.py:871-892,1030-1072.",
         "A supported affirmative user command to reopen one confirmed task ID can support continuity. English accepts one short for/to/because explanation. Russian accepts для/чтобы/потому что. The recognizer rejects questions, known negations, conditions, approval-dependent wording, quoted examples, tool reports, and distinct-task wording. Unrecognized wording stays unresolved. Claim transitions use separate checks. Sources: project_memory.py:1342-1514.",
         "A custody row is source bookkeeping, not a separate requirement claim. This does not negate an explicit request inside the original user source. Only eligible whole-source exact-text claims can establish complete representation. Paraphrases, overlap, and partial compound clauses leave custody unresolved. Closure links can project completion. Replacement returns custody to unresolved. Cancellation is not inferred. Session exclusion applies to the source, represented claim, and transition evidence. Source: project_memory_custody.py:40-140.",
         "Event processing uses project-memory-v4. Reconsideration fingerprints use task-consolidation-v4. These policy identifiers do not migrate earlier records or prove deployment. Source: project_memory.py:22-23,314-318,408-453.",
-        "Native v11 indexed relations and mixed layouts reject the whole batch. Code neither invents an origin nor silently drops a malformed relation. Native arrays have per-owner bounds; code additionally enforces eight relations across all owners. Canonical injected outputs and storage remain unchanged, without migration or backfill. Structural ownership does not prove target relevance or semantic support. Sources: episode_processor.py:121-139,413-463,905-910."
+        "Native v11 indexed relations and mixed layouts reject the whole batch. Code neither invents an origin nor silently drops a malformed relation. Native arrays have per-owner bounds; code additionally enforces eight relations across all owners. Canonical injected outputs and storage remain unchanged, without migration or backfill. Structural ownership does not prove target relevance or semantic support. Sources: episode_processor.py:122-140,413-463,905-910."
       ]
     },
     {
@@ -749,7 +774,7 @@
       "items": [
         "One builder serves explicit briefs, startup context, and part of resume search. The query limits the project, task, version, and retrieval purpose. Retrieval uses current versions by default. Supported current-assessment frames can include prior versions; explicit historical-slice requests can return coverage-only refusal. Sources: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101 integration.py:70-132.",
         "Project memory is off by default. Shadow mode processes selected roots and supports explicit reads. Pilot mode adds project state to automatic context. Each worktree requires separate access. Source: config.py:223-246.",
-        "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5815-5852, hooks.py:856-879.",
+        "At startup, project memory receives up to three fifths of the remaining context budget. Legacy notes fill the remaining space. Saved text carries an untrusted label and unverified freshness. Sources: store.py:5890-5933, hooks.py:856-879.",
         "The brief renders prior_goal, prior_rationale, prior_outcome, and prior_open_work as historical fields. It includes their original source pointers and unresolved-current-validity status. Source: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
         "The brief renders complete exact quotation groups with source IDs, roles, and original offsets. A group that cannot fit is omitted whole. The renderer reserves bounded room for later obligations, open work, reasons, and source custody before an early record consumes space with secondary outcomes. Oversized reservations do not block a fitting primary group. Omission counts remain visible when space permits. Sources: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
         "Natural-language projections prefer open work and reasons before incidental outcomes and summaries. Rationale and environment projections keep separate priorities. Complete emitted intervals can suppress repeated quotations from the same source field and role. Suppressed inferred episode field associations remain counted in field_associations_omitted. Source availability is not complete representation of every inferred field. Oversized groups leave smaller alternatives eligible. Sources: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
@@ -763,7 +788,7 @@
         "At least two eligible unresolved user-source intervals can share a neutral original-source bundle. Each chosen interval stays whole with source ID, role, offsets and capture sequence. Selection tries newest intervals first, then displays selected intervals in capture order. A bundle selects at most eight intervals of at most 600 characters each. Its XML uses at most 3,200 characters and must fit after reserved execution and current-head evidence. Missing intervals receive explicit omission counts. Partial consumed sources keep their interval status. Sources: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
         "Hard task, identifier, version, environment, project, privacy, session and deletion guards still apply to original user sources. Soft relevance can keep a source already cited by eligible material only after hard query matching passes. Bundle presence creates no requirement, completion, continuity or contradiction relation, and extends no retention. Matching worktree and capture-order qualifiers move to the XML root only when opening and closing tags fit; otherwise record qualifiers remain subject to fit-or-omit. Sources: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
         "Complete observed tool fields keep a bounded reservation when native execution shape is unavailable. A compact omitted latest-head identity is added after material rendering when it fits. It can trim lower-priority coverage counters but never a fitting quotation. Version and uncertainty metadata do not imply that omitted fields were shown. Default total budget remains 6,000 characters. Sources: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
-        "The shared planner separates caller-selected project scope names from content in the brief builder and Store.context. The owner remains implicit. At most sixteen additional absolute canonical paths require enabled project memory. Unique exact structured basenames can repeat selected scope metadata in natural requests; ordinary alphabetic names require explicit scope syntax. Quoted, code-like, ambiguous, unknown and unselected names retain their content constraints. Normalization discovers no project and expands no read owner. The MCP state read accepts selected_project_scopes. ProjectMemory.snapshot remains literal. Sources: project_memory_query.py:70-182,474-601, store.py:5613-5626, mcp.py:810-822.",
+        "The shared planner separates caller-selected project scope names from content in the brief builder and Store.context. The owner remains implicit. At most sixteen additional absolute canonical paths require enabled project memory. Unique exact structured basenames can repeat selected scope metadata in natural requests; ordinary alphabetic names require explicit scope syntax. Quoted, code-like, ambiguous, unknown and unselected names retain their content constraints. Normalization discovers no project and expands no read owner. The MCP state read accepts selected_project_scopes. ProjectMemory.snapshot remains literal. Sources: project_memory_query.py:70-182,474-601, store.py:5698-5707, mcp.py:810-822.",
         "A leading selected-scope clause with a comma can precede a recognized natural request even when it ends with a period. Code-only bodies and unknown, ambiguous or quoted scope names retain literal behavior. Protected task, version, environment, command and artifact positions remain exact. A bare conjunction does not promote an unprotected descriptive hyphen compound to an identifier. The original query remains; only soft matching splits that compound into words. Scope-list syntax preserves existing hard coordinated names. These bounded grammar rules infer no source meaning or current truth. Sources: project_memory_query.py:92-182,474-601.",
         "Complete requirement-state clauses describe answer fields without requiring words such as cancelled or retained in each source. Generic project-state selection requires no residual topic or exact subject; remaining topics remain content constraints. This selects evidence without inferring cancellation, replacement or current validity. Declared environment scope remains a hard boundary. User words do not establish an execution environment. Unscoped user quotes keep unknown scope and user attribution. Raw environment checks apply to tool and assistant evidence; inferred claims are checked against their own execution references. Environment projections reject complete groups containing incompatible execution and never restore all-filtered fields. Sources: project_memory_query.py:70-182,184-633 project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
         "Neutral custody can use declared environment metadata only from a current whole-source exact user claim. Binding requires the same source ID, body field, user role, full body span and exact text, with all references on that original user source. Partial, mixed, historical, episode, report and retired associations cannot bind it. Owner, worktree, privacy, session and deletion guards apply. The metadata is an environment guard only; it assigns no quote scope, content anchor or custody fate. Source: project_memory_retrieval.py:31-152,376-502,620-1610,1613-2101.",
@@ -791,11 +816,11 @@
       "dot": "amber",
       "title": "Boundaries and optional features",
       "items": [
-        "Sources, queues, and derived records stay local. The selected runtime sends prepared evidence to its configured model provider. Codex retains its existing isolation. Pi restricts model tools without claiming OS isolation. Native auth/model configuration and the installed executable remain trusted. Sources: processor.py:797-844,1408-1435, pi_runtime.py:165-179,330-436.",
-        "The note processor and project memory use the same execution contract. Issue #8 activates Pi for observations and summaries as well as project memory. Their queues and atomic commits remain independent, and profile changes do not replay successful sources. Sources: processor.py:397-451, episode_processor.py:897-980, execution.py:206-211.",
-        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:37-47,534-610, store.py:5774-5782, episode_processor.py:952-959.",
-        "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:678-749,777-802,914-927, jev_quality.py:1-7.",
-        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:808-825,914-960, jev_quality.py:16-23."
+        "Sources, queues, and derived records stay local. The selected runtime sends prepared evidence to its configured model provider. Codex retains its existing isolation. Pi restricts model tools and extension discovery without claiming OS isolation; openai-codex review loads only the explicit bundled schema helper. Native auth/model configuration and the installed executable remain trusted. Sources: processor.py:1034-1281,1830-1868, pi_runtime.py:167-181,368-400,456-508.",
+        "The note processor and project memory use the same execution contract. Issue #8 activates Pi for observations and summaries as well as project memory. Their queues and atomic commits remain independent, and profile changes do not replay successful sources. Sources: processor.py:661-732, episode_processor.py:943-1026, execution.py:206-211.",
+        "Local E5 supplements legacy search. Jev can separately assess generator output or rank legacy context. Configuration controls these external calls. The local brief works without them. Sources: semantic.py:37-47,534-610, store.py:5860-5868, episode_processor.py:998-1005.",
+        "When enabled, the existing Jev quality gate checks final assembled fields, including prior_ fields, against their own exact source spans. It also checks original proposed_value interpretations when assembly changed the model wording. Exact copying cannot hide an unsupported proposal. Full context can qualify but cannot replace cited support. The gate checks support and overclaim, not external truth. The measured field-purpose workflow remains experimental, without a production blocker. Sources: episode_processor.py:724-795,777-802,914-927, jev_quality.py:1-7.",
+        "The quality gate checks payload bounds for all fields before dispatch. Batches share a 20-second evaluation budget. More fields can require more calls or exceed payload limits. A rejected or uncertain result prevents the batch commit. This optional model check does not prove field relevance, current validity, or overall correctness. Sources: episode_processor.py:854-871,914-960, jev_quality.py:16-23."
       ]
     },
     {

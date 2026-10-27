@@ -97,6 +97,21 @@ _TOKEN_PATTERNS = (
 )
 
 
+# This is only a no-match filter for ordinary ASCII output rows. Private tags
+# require < or [, PEM keys contain "key", URL userinfo requires ://, and
+# query/assignment names contain one of the credential-name fragments below.
+# Bearer values and every standalone token family have the listed markers.
+# False positives run the unchanged redactor. Non-ASCII text always runs it too,
+# preserving Python IGNORECASE's Unicode behavior. New pattern families must
+# retain a necessary marker here or bypass this filter.
+_REDACTION_MARKERS = (
+    "<", "[", "://", "key", "token", "auth", "credential", "secret",
+    "password", "passwd", "bearer", "ghp_", "gho_", "ghu_", "ghs_", "ghr_",
+    "github_pat_", "glpat-", "xoxb-", "xoxp-", "xoxa-", "xoxr-", "xoxs-",
+    "akia", "asia", "aiza", "sk-", "sk_", "rk_", "hf_", "npm_", "eyj",
+)
+
+
 def _replace_quoted(match: re.Match[str]) -> str:
     """Preserve JSON/shell quoting while replacing the value."""
 
@@ -158,6 +173,11 @@ def redact_text(value: str) -> str:
 
     if not isinstance(value, str):
         raise TypeError("redact_text accepts text only")
+
+    if value.isascii():
+        lowered = value.lower()
+        if not any(marker in lowered for marker in _REDACTION_MARKERS):
+            return value
 
     text = value
     text = _redact_tagged_blocks(

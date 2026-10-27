@@ -11,14 +11,16 @@ import signal
 import subprocess
 import tempfile
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 
 from .execution import ExecutionFailure, ExecutionIdentity, ExecutionResult
+from .store import ObservationLeaseExpired
 from .processor import (MAX_SERVER_LINE_BYTES, MAX_SERVER_OUTPUT_BYTES, MAX_MODEL_OUTPUT_CHARS,
                         MAX_PROMPT_CHARS, ProcessorFailure, _UsageCheckpointer)
 
 PI_VERSION = "1.4.0"
+_NATIVE_THINKING_LEVELS = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
 SYSTEM_PROMPT = "Process only the supplied evidence. Return only the requested JSON."
 RESTRICTIONS = ("--no-session", "--no-tools", "--no-mcp", "--no-extensions",
                 "--no-skills", "--no-prompt-templates", "--no-context-files", "--no-themes")
@@ -198,6 +200,8 @@ def _check_auth(executable, directory, environment, deadline, provider):
 class _Run:
     def __init__(self, profile, checkpoint):
         self.profile = profile
+        self.schema_requested = False
+        self.schema_contract = None
         self.checkpoint = checkpoint
         self.session = None
         self.number = 0
@@ -354,12 +358,14 @@ class _Run:
         return dict(runtime="pi", version=PI_VERSION if self.version_verified else None, protocol="rpc-jsonl-1.4.0", session_id=self.session,
             generation=self.number, settled=self.settled, identity_verified=self.identity_verified,
             tools_policy="cli_disabled" if self.launched else "not_launched", tool_calls_observed=self.tool_calls,
-            extensions_policy="cli_disabled" if self.launched else "not_launched", state_checked=self.post_state_checked,
+            extensions_policy=("bundled_schema_only" if self.schema_contract else "cli_disabled") if self.launched else "not_launched",
+            structured_output=self.schema_contract.receipt() if self.schema_contract else dict(
+                mode="strict_json_schema" if self.schema_requested else "prompt_schema", status="not_applied"), state_checked=self.post_state_checked,
             agent_end_observed=self.ended, system_message_verified=self.system_count == 1, assistant_stop_reason=self.message.get("stopReason") if self.message else None)
 
 
 @contextmanager
-def _prepared(pi, profile, deadline, run):
+def _prepared(pi, profile, deadline, run, *, output_schema=None):
     if profile.runtime != "pi":
         raise ProcessorFailure("runner_unavailable", reason_code="unsupported_runtime")
     if profile.reasoning_effort is None:
@@ -371,7 +377,12 @@ def _prepared(pi, profile, deadline, run):
     with tempfile.TemporaryDirectory(prefix="codex-mem-pi-") as temporary:
         directory = Path(temporary).resolve()
         run.cwd = directory
+        if output_schema is not None:
+            from .pi_schema import SchemaContract
+            run.schema_contract = SchemaContract(directory, output_schema, profile)
         environment = _environment(directory)
+        if run.schema_contract:
+            run.schema_contract.configure(environment)
         try:
             client = _Process([executable, "--version"], directory, environment, deadline)
             if client.line().decode().strip() != PI_VERSION:
@@ -383,7 +394,8 @@ def _prepared(pi, profile, deadline, run):
                 client = None
         _check_auth(executable, directory, environment, deadline, profile.provider)
         try:
-            client = _Process([executable, "--mode", "rpc", *RESTRICTIONS,
+            schema_args = ["--extension", str(run.schema_contract.helper)] if run.schema_contract else []
+            client = _Process([executable, "--mode", "rpc", *RESTRICTIONS, *schema_args,
                 "--system-prompt", SYSTEM_PROMPT],
                 directory, environment, deadline)
             run.launched = True
@@ -392,13 +404,24 @@ def _prepared(pi, profile, deadline, run):
                 raise ProcessorFailure("protocol_error")
             if sum(m.get("id") == profile.model and m.get("provider") == profile.provider for m in available) != 1:
                 raise ProcessorFailure("model_unavailable", reason_code="exact_model_unavailable")
-            selected = client.request("set_model", provider=profile.provider, modelId=profile.model)
+            model_thinking = []
+            def model_thinking_changed(event):
+                # Model selection may apply its own level before our explicit choice.
+                if (model_thinking or set(event) != {"type", "level"}
+                        or event.get("type") != "thinking_level_changed"
+                        or event.get("level") not in _NATIVE_THINKING_LEVELS):
+                    raise ProcessorFailure("protocol_error", reason_code="pi_unexpected_event")
+                model_thinking.append(event["level"])
+            selected = client.request("set_model", model_thinking_changed,
+                                      provider=profile.provider, modelId=profile.model)
             if selected.get("id") != profile.model or selected.get("provider") != profile.provider:
                 raise ProcessorFailure("model_mismatch", reason_code="pi_identity_mismatch")
             level = "off" if profile.reasoning_effort == "none" else profile.reasoning_effort
             levels = client.request("get_available_thinking_levels").get("levels")
             if not isinstance(levels, list) or any(not isinstance(item, str) for item in levels):
                 raise ProcessorFailure("protocol_error")
+            if model_thinking and model_thinking[0] not in levels:
+                raise ProcessorFailure("protocol_error", reason_code="pi_unexpected_event")
             if level not in levels:
                 raise ProcessorFailure("model_unavailable", reason_code="unsupported_reasoning")
             def thinking_changed(event):
@@ -416,10 +439,14 @@ def _prepared(pi, profile, deadline, run):
 
 class PiProcessorRunner:
     """One ephemeral Pi subprocess per attempt, at most one correction."""
-    def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None):
+    def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None,
+                 failure_review: Callable[[ExecutionFailure, float], str | None] | None = None,
+                 before_dispatch=None):
         self.pi = pi
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
+        self.failure_review = failure_review
+        self.before_dispatch = before_dispatch
 
     def check_profile(self, profile, *, timeout=10):
         run = _Run(profile, lambda: None)
@@ -431,9 +458,23 @@ class PiProcessorRunner:
         deadline = min(request.deadline, started + request.profile.timeout)
         checkpointer = _UsageCheckpointer(self.usage_checkpoint)
         run = _Run(request.profile, lambda: checkpoint())
+        run.schema_requested = request.job_type == "summary_support" and request.profile.provider == "openai-codex"
+        generations = []
+        generation_start_updates = 0
+        track_generations = self.failure_review is not None and request.job_type in ("observation", "summary")
+        def capture_generation(error=None):
+            if not track_generations or not run.number or generations and generations[-1]["number"] == run.number:
+                return
+            tokens = dict(run.current_usage) if run.current_usage else None
+            complete = tokens is not None and {"input_tokens", "output_tokens", "total_tokens"} <= set(tokens)
+            usage = dict(status="reported" if complete and run.settled else "partial" if tokens else "unavailable",
+                source="pi_assistant_usage", updates=run.updates-generation_start_updates, tokens=tokens)
+            generations.append(dict(number=run.number, execution_id=run.session, turn_id=f"generation-{run.number}",
+                outcome="failed" if error else "success", error_code=error.code if error else None,
+                reason_code=error.reason_code if error else None, usage=usage))
         def metrics():
             return dict(duration_ms=round((time.monotonic() - started) * 1000), usage=run.usage(),
-                        execution_receipt=run.receipt())
+                        execution_receipt=run.receipt(), **({"generations": list(generations)} if generations else {}))
         def checkpoint():
             if run.session:
                 checkpointer.save(dict(worker_thread_id=run.session, worker_turn_id=f"generation-{run.number}",
@@ -442,10 +483,16 @@ class PiProcessorRunner:
         try:
             if started >= deadline:
                 raise ProcessorFailure("timeout")
-            with _prepared(self.pi, request.profile, deadline, run) as client:
+            with _prepared(self.pi, request.profile, deadline, run,
+                           **({"output_schema": request.output_schema} if run.schema_requested else {})) as client:
                 checkpoint()
                 prompt = "Output schema: " + json.dumps(dict(request.output_schema)) + "\n\n" + request.prompt
-                for generation in range(2):
+                for generation in range(1 if run.schema_requested else 2):
+                    if self.before_dispatch is not None:
+                        self.before_dispatch()
+                    if run.schema_contract:
+                        run.schema_contract.verify_files()
+                    generation_start_updates = run.updates
                     run.begin()
                     response = client.request("prompt", run.observe, message=prompt)
                     if response.get("disposition") != "started":
@@ -454,25 +501,47 @@ class PiProcessorRunner:
                         run.observe(client.message())
                     run.state(client.request("get_state"))
                     checkpoint()
-                    output = run.output()
-                    remaining = client.remaining()
-                    correction = self.candidate_review(output, remaining) if self.candidate_review else None
+                    if run.schema_contract:
+                        try:
+                            run.schema_contract.verify()
+                        finally:
+                            checkpoint()
+                    try:
+                        output = run.output()
+                    except ProcessorFailure as exc:
+                        capture_generation(exc)
+                        checkpoint()
+                        if (generation or not track_generations or run.schema_requested
+                                or exc.code != "invalid_response" or exc.reason_code != "invalid_json"):
+                            raise
+                        correction = self.failure_review(ExecutionFailure("invalid_output", exc.code,
+                            exc.reason_code, run.session, f"generation-{run.number}"), client.remaining())
+                        if correction is None:
+                            raise
+                    else:
+                        remaining = client.remaining()
+                        correction = self.candidate_review(output, remaining) if self.candidate_review else None
+                        capture_generation()
                     client.remaining()
                     if correction is None:
                         run.finished = True
                         return ExecutionResult(output=output, identity=ExecutionIdentity("pi", request.profile.provider,
                             request.profile.model, request.profile.reasoning_effort, run.session, f"generation-{run.number}"), metrics=metrics())
-                    if generation or not isinstance(correction, str) or not correction or len(correction) > MAX_PROMPT_CHARS:
+                    if generation or run.schema_requested or not isinstance(correction, str) or not correction or len(correction) > MAX_PROMPT_CHARS:
                         raise ProcessorFailure("invalid_response", reason_code="jev_quality_uncertain")
                     prompt = correction
         except Exception as error:
             run.finished = True
+            if isinstance(error, ObservationLeaseExpired):
+                # Lease ownership is a caller policy failure, not malformed RPC.
+                error = ProcessorFailure("lease_expired")
             if not isinstance(error, ProcessorFailure):
                 error = (ProcessorFailure("runner_unavailable", reason_code="pi_launch_failed")
                          if isinstance(error, OSError) else ProcessorFailure("protocol_error", reason_code="pi_malformed_record"))
+            capture_generation(error)
             reason = {"timeout": "timeout", "runner_unavailable": "runtime_unavailable", "model_unavailable": "configuration",
                 "invalid_response": "invalid_output", "model_mismatch": "identity_mismatch", "protocol_error": "protocol",
-                "tool_called": "forbidden_tools"}.get(error.code, "runtime_failure")
+                "tool_called": "forbidden_tools", "lease_expired": "cancelled"}.get(error.code, "runtime_failure")
             if error.reason_code == "pi_cancelled":
                 reason = "cancelled"
             return ExecutionResult(metrics=metrics(), failure=ExecutionFailure(reason, error.code, error.reason_code,

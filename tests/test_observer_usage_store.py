@@ -1,5 +1,6 @@
 """Boundaries and aggregation for observation processor metrics."""
 import sqlite3
+import json
 import tempfile
 import unittest
 
@@ -10,6 +11,7 @@ from codex_mem.observer_usage_store import (
     observer_usage_summary,
     recover_attempt,
     reconcile_attempts,
+    record_execution_call,
     snapshot_attempt,
 )
 from codex_mem.store import SCHEMA_VERSION, Store, project_key
@@ -284,6 +286,144 @@ class ObserverUsageStoreTests(unittest.TestCase):
         self.assertEqual(("lease_expired", "reported", 260),
                          tuple(row[k] for k in ("outcome", "usage_status", "total_tokens")))
 
+    def test_restart_recovery_reports_generation_and_partial_reviewer_once(self) -> None:
+        from codex_mem.execution import ExecutionIdentity, legacy_profile
+        profile = legacy_profile()
+        self.store.remember(self.project, 'Source', 'A synthetic reported result.',
+                            source='hook:PostToolUse', session_id='interrupted-review')
+        claim = self.store.claim_observation_batch(self.project, 'observer-v1', profile.model,
+            profile.reasoning_effort, execution_profile=profile.to_dict())
+        job_id = claim['job_id']
+        generation = self.metrics()
+        reviewer = self.metrics(status='partial')
+        reviewer['usage']['tokens'] = {key: value * 2 for key, value in reviewer['usage']['tokens'].items()}
+        identity = ExecutionIdentity('codex', 'openai', profile.model, profile.reasoning_effort,
+                                     'generation-thread', 'generation-turn')
+        snapshot_attempt(self.store, self.project, job_id, 1, metrics=generation,
+                         worker_thread_id=identity.execution_id, worker_turn_id=identity.turn_id,
+                         identity=dict(runtime=identity.runtime, provider=identity.provider,
+                             model=identity.model, reasoning_effort=identity.reasoning_effort))
+        record_execution_call(self.store, self.project, job_id, 1, 'generation', profile=profile,
+                              metrics=generation, identity=identity)
+        record_execution_call(self.store, self.project, job_id, 1, 'summary_support_1', profile=profile,
+            metrics=reviewer, identity=ExecutionIdentity('codex', 'openai', profile.model,
+                profile.reasoning_effort, 'reviewer-thread', 'reviewer-turn'))
+        before = self.store.observation_attempts(self.project, job_id)[0]
+        self.store._write(lambda: self.store._connection.execute(
+            "UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE id=?", (job_id,)))
+        self.store.close()
+        self.store = Store(self.tmp.name)
+        self.assertEqual(1, reconcile_attempts(self.store, self.project))
+        summary = observer_usage_summary(self.store._connection, self.project)
+        self.assertEqual(1, summary['attempts']['partial'], summary)
+        self.assertEqual(390, summary['totals']['partial']['total_tokens'], summary)
+        self.assertEqual(0, summary['attempts']['reported'])
+        row = self.store.observation_attempts(self.project, job_id)[0]
+        self.assertEqual(('lease_expired', 'partial', 390, 2, 12),
+            tuple(row[key] for key in ('outcome', 'usage_status', 'total_tokens', 'usage_updates', 'duration_ms')))
+        self.assertEqual(before['execution_calls'], row['execution_calls'])
+        for key in ('worker_thread_id', 'worker_turn_id', 'actual_runtime', 'actual_provider', 'actual_model',
+                    'actual_reasoning_effort', 'usage_source'):
+            self.assertEqual(before[key], row[key], key)
+        self.assertEqual(0, reconcile_attempts(self.store, self.project))
+        self.assertEqual(summary, observer_usage_summary(self.store._connection, self.project))
+        # Credible late terminal call receipts can complete accounting, not change the expired lease.
+        reviewer['usage']['status'] = 'reported'
+        record_execution_call(self.store, self.project, job_id, 1, 'generation', profile=profile,
+                              outcome='success', metrics=generation, identity=identity)
+        record_execution_call(self.store, self.project, job_id, 1, 'summary_support_1', profile=profile,
+            outcome='success', metrics=reviewer, identity=ExecutionIdentity('codex', 'openai', profile.model,
+                profile.reasoning_effort, 'reviewer-thread', 'reviewer-turn'))
+        for _ in range(2):
+            finish_attempt(self.store, self.project, job_id, 1, outcome='processed', metrics=generation,
+                           worker_thread_id=identity.execution_id, total_duration_ms=50)
+        row = self.store.observation_attempts(self.project, job_id)[0]
+        self.assertEqual(('lease_expired', 'reported', 390, 50),
+            tuple(row[key] for key in ('outcome', 'usage_status', 'total_tokens', 'duration_ms')))
+        self.assertEqual(390, observer_usage_summary(self.store._connection, self.project)
+                         ['totals']['reported']['total_tokens'])
+
+    def test_late_generation_receipt_does_not_erase_recovered_unknown_reviewer(self) -> None:
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-null')
+        begin_attempt(self.store, self.project, 'job-null', 1)
+        generation = self.metrics()
+        snapshot_attempt(self.store, self.project, 'job-null', 1, metrics=generation,
+                         worker_thread_id='generation-worker')
+        record_execution_call(self.store, self.project, 'job-null', 1, 'generation', profile=profile,
+                              metrics=generation, worker_thread_id='generation-worker')
+        record_execution_call(self.store, self.project, 'job-null', 1, 'summary_support_1', profile=profile,
+                              metrics=self.metrics(status='unavailable', updates=0), worker_thread_id='reviewer-worker')
+        self.store._write(lambda: recover_attempt(self.store._connection, 'job-null', 1,
+                                                  outcome='failed', error_code='runner_failure'))
+        before = self.store.observation_attempts(self.project, 'job-null')[0]
+        self.assertEqual('partial', before['usage_status'])
+        self.assertTrue(all(before[key] is None for key in COUNTERS))
+        finish_attempt(self.store, self.project, 'job-null', 1, outcome='processed',
+                       metrics=generation, worker_thread_id='generation-worker')
+        row = self.store.observation_attempts(self.project, 'job-null')[0]
+        self.assertEqual('partial', row['usage_status'], dict(row))
+        self.assertEqual('failed', row['outcome'])
+        self.assertTrue(all(row[key] is None for key in COUNTERS), dict(row))
+        self.assertEqual(before['execution_calls'], row['execution_calls'])
+        self.assertEqual('generation-worker', row['worker_thread_id'])
+        summary = observer_usage_summary(self.store._connection, self.project)
+        self.assertEqual(0, summary['attempts']['reported'], summary)
+        self.assertIsNone(summary['totals']['partial']['total_tokens'])
+
+    def test_reconciled_partial_pi_calls_keep_each_unknown_optional_counter(self) -> None:
+        from codex_mem.execution import ExecutionIdentity, ExecutionProfile
+        profile = ExecutionProfile('pi', 'fixture', 'fixture', 'low', 240)
+        self.add_job('job-pi', model=profile.model, effort=profile.reasoning_effort)
+        begin_attempt(self.store, self.project, 'job-pi', 1, profile=profile)
+        generation = self.metrics()
+        generation['usage']['source'] = 'pi_assistant_usage'
+        reviewer = self.metrics(status='partial')
+        reviewer['usage']['source'] = 'pi_assistant_usage'
+        reviewer['usage']['tokens'] = {key: value * 2 for key, value in reviewer['usage']['tokens'].items()
+                                      if key != 'reasoning_output_tokens'}
+        snapshot_attempt(self.store, self.project, 'job-pi', 1, metrics=generation,
+                         worker_thread_id='pi-generation', identity=dict(runtime='pi', provider='fixture',
+                             model='fixture', reasoning_effort='low'))
+        record_execution_call(self.store, self.project, 'job-pi', 1, 'generation', profile=profile,
+            metrics=generation, identity=ExecutionIdentity('pi', 'fixture', 'fixture', 'low', 'pi-generation', 'turn'))
+        record_execution_call(self.store, self.project, 'job-pi', 1, 'summary_support_1', profile=profile,
+            metrics=reviewer, identity=ExecutionIdentity('pi', 'fixture', 'fixture', 'low', 'pi-reviewer', 'turn'))
+        self.store._write(lambda: self.store._connection.execute(
+            "UPDATE observation_jobs SET status='skipped',completed_at='2026-09-12T00:01:00Z' WHERE id='job-pi'"))
+        self.store.close()
+        self.store = Store(self.tmp.name)
+        self.assertEqual(1, reconcile_attempts(self.store, self.project))
+        row = self.store.observation_attempts(self.project, 'job-pi')[0]
+        self.assertEqual(('skipped', 'partial', 390, None, 12, 'pi-generation', 'fixture'),
+            tuple(row[key] for key in ('outcome', 'usage_status', 'total_tokens', 'reasoning_output_tokens',
+                                      'duration_ms', 'worker_thread_id', 'actual_model')))
+        summary = observer_usage_summary(self.store._connection, self.project)
+        self.assertEqual(390, summary['totals']['partial']['total_tokens'])
+        self.assertIsNone(summary['totals']['partial']['reasoning_output_tokens'])
+        self.assertEqual(0, summary['totals']['partial']['counter_attempts']['reasoning_output_tokens'])
+
+    def test_recovery_distinguishes_finalized_unfinished_and_unmeasured_calls(self) -> None:
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        for job_id, status, outcome in (('job-final', 'reported', 'success'),
+                                        ('job-open', 'reported', 'running'),
+                                        ('job-unmeasured', 'unavailable', 'running')):
+            self.add_job(job_id)
+            begin_attempt(self.store, self.project, job_id, 1)
+            snapshot_attempt(self.store, self.project, job_id, 1, metrics=self.metrics(status=status))
+            record_execution_call(self.store, self.project, job_id, 1, 'generation', profile=profile,
+                                  metrics=self.metrics(status=status), outcome=outcome)
+            self.store._write(lambda: recover_attempt(self.store._connection, job_id, 1, outcome='lease_expired'))
+        rows = {job_id: self.store.observation_attempts(self.project, job_id)[0]
+                for job_id in ('job-final', 'job-open', 'job-unmeasured')}
+        self.assertEqual('reported', rows['job-final']['usage_status'])
+        self.assertEqual('partial', rows['job-open']['usage_status'])
+        self.assertEqual('unavailable', rows['job-unmeasured']['usage_status'])
+        self.assertEqual(130, rows['job-open']['total_tokens'])
+        self.assertTrue(all(rows['job-unmeasured'][key] is None for key in COUNTERS))
+
     def test_checkpoint_regression_is_not_summed_or_reported_as_complete(self) -> None:
         self.add_job("job-a")
         begin_attempt(self.store, self.project, "job-a", 1)
@@ -499,6 +639,15 @@ class ObserverUsageStoreTests(unittest.TestCase):
             "medium",
         )
         begin_attempt(self.store, self.project, first["job_id"], first["attempt_count"])
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        snapshot_attempt(self.store, self.project, first['job_id'], 1, metrics=self.metrics())
+        record_execution_call(self.store, self.project, first['job_id'], 1, 'generation', profile=profile,
+                              metrics=self.metrics(), outcome='success')
+        review = self.metrics(status='partial')
+        review['usage']['tokens'] = {key: value * 2 for key, value in review['usage']['tokens'].items()}
+        record_execution_call(self.store, self.project, first['job_id'], 1, 'summary_support_1', profile=profile,
+                              metrics=review)
         self.store.fail_observation_batch(
             self.project,
             first["job_id"],
@@ -522,6 +671,12 @@ class ObserverUsageStoreTests(unittest.TestCase):
             [(1, "failed", "timeout"), (2, "running", None)],
             [tuple(row) for row in rows],
         )
+        summary = observer_usage_summary(self.store._connection, self.project)
+        self.assertEqual(390, summary['totals']['partial']['total_tokens'], summary)
+        self.assertEqual(1, summary['attempts']['partial'])
+        self.assertEqual(1, summary['attempts']['unknown'])
+        self.assertEqual(0, reconcile_attempts(self.store, self.project))
+
 
     def test_project_and_model_groups_do_not_cross_contaminate(self) -> None:
         self.add_job("job-a", model="model-a")
@@ -637,6 +792,75 @@ class ObserverUsageStoreTests(unittest.TestCase):
                 "SELECT body FROM entries WHERE id=?", (entry_id,)
             ).fetchone()[0],
         )
+
+    def test_generation_details_are_bounded_sanitized_and_not_added_to_totals(self):
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-generations')
+        begin_attempt(self.store, self.project, 'job-generations', 1, profile=profile)
+        first = dict(number=1, execution_id='synthetic-worker', turn_id='synthetic-turn-1',
+            outcome='failed', error_code='invalid_response', reason_code='invalid_json',
+            usage=self.metrics()['usage'])
+        second = dict(number=2, execution_id='synthetic-worker', turn_id='synthetic-turn-2',
+            outcome='failed', error_code='invalid_response', reason_code='untrusted diagnostic prose',
+            usage=self.metrics(status='unavailable')['usage'])
+        metrics = dict(self.metrics(status='partial'), generations=[first, second])
+        record_execution_call(self.store, self.project, 'job-generations', 1, 'generation',
+                              profile=profile, metrics=metrics, outcome='failed')
+        finish_attempt(self.store, self.project, 'job-generations', 1, outcome='failed', metrics=metrics)
+        row = self.store.observation_attempts(self.project, 'job-generations')[0]
+        details = json.loads(row['execution_calls'])['generation']['generations']
+        self.assertEqual(130, row['total_tokens'])
+        self.assertEqual([130, None], [detail['metrics']['total_tokens'] for detail in details])
+        self.assertTrue(all(detail['metrics']['duration_ms'] is None for detail in details))
+        self.assertEqual('invalid_json', details[0]['reason_code'])
+        self.assertIsNone(details[1]['reason_code'])
+        self.assertNotIn('untrusted diagnostic prose', row['execution_calls'])
+
+    def test_generation_details_reject_extra_content_and_rewriting_an_existing_failure(self):
+        import copy
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-generation-guard')
+        begin_attempt(self.store, self.project, 'job-generation-guard', 1, profile=profile)
+        first = dict(number=1, execution_id='synthetic-worker', turn_id='synthetic-turn-1',
+            outcome='failed', error_code='invalid_response', reason_code='invalid_json',
+            usage=self.metrics()['usage'])
+        metrics = dict(self.metrics(), generations=[first])
+        record_execution_call(self.store, self.project, 'job-generation-guard', 1, 'generation',
+                              profile=profile, metrics=metrics)
+        altered = copy.deepcopy(metrics)
+        altered['generations'][0]['reason_code'] = 'invalid_output_shape'
+        extra = copy.deepcopy(metrics)
+        extra['generations'][0]['raw_response'] = 'Must never enter operational diagnostics.'
+        for invalid in (altered, extra, dict(metrics, generations=[first]*3)):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                record_execution_call(self.store, self.project, 'job-generation-guard', 1, 'generation',
+                                      profile=profile, metrics=invalid)
+        row = self.store.observation_attempts(self.project, 'job-generation-guard')[0]
+        details = json.loads(row['execution_calls'])['generation']['generations']
+        self.assertEqual(1, len(details))
+        self.assertEqual('invalid_json', details[0]['reason_code'])
+        self.assertNotIn('Must never enter', row['execution_calls'])
+
+    def test_invalid_generation_usage_keeps_failure_and_aggregate_without_fake_counters(self):
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-generation-invalid-usage')
+        begin_attempt(self.store, self.project, 'job-generation-invalid-usage', 1, profile=profile)
+        usage = self.metrics()['usage']
+        usage['tokens']['cached_input_tokens'] = 101  # Exceeds the measured input total of 100.
+        detail = dict(number=1, execution_id='synthetic-worker', turn_id='synthetic-turn-1',
+            outcome='failed', error_code='invalid_response', reason_code='invalid_json', usage=usage)
+        record_execution_call(self.store, self.project, 'job-generation-invalid-usage', 1, 'generation',
+                              profile=profile, metrics=dict(self.metrics(), generations=[detail]))
+        row = self.store.observation_attempts(self.project, 'job-generation-invalid-usage')[0]
+        call = json.loads(row['execution_calls'])['generation']
+        self.assertEqual(130, call['metrics']['total_tokens'])
+        saved = call['generations'][0]
+        self.assertEqual('invalid_json', saved['reason_code'])
+        self.assertEqual('invalid', saved['metrics']['usage_status'])
+        self.assertTrue(all(saved['metrics'][counter] is None for counter in COUNTERS))
 
 
 if __name__ == "__main__":

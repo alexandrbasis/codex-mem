@@ -151,6 +151,32 @@ def receipt(output: dict, model: str, effort: str) -> dict:
         'turn_completed': True, 'no_tools': True, 'rerouted': False}}
 
 
+def current_copy_review(request: dict) -> dict:
+    """Wiring-only receipt: unit references stay bounded; they do not judge meaning."""
+    from codex_mem.processor import MODEL, REASONING_EFFORT
+    if request['version'] == 'summary-source-v4':
+        return receipt(dict(version=request['version'], coverage='partial', propositions=[], text_observations={
+            key: dict(status='unknown', value=None, scope='Current report only',
+                      reason='Source-copy fixture does not interpret text.') for key in ('language', 'organization')}), MODEL, REASONING_EFFORT)
+    if request['version'] == 'summary-outcome-v5':
+        return receipt(dict(version=request['version'], rows=[dict(relation_id=pair['id'], applicability='absent', scope_relation='not_compared', value='not_compared',
+            scope_comparison='Synthetic unused property.',
+            value_comparison='Source-copy fixture cannot assess meaning.') for pair in request['relations']]), MODEL, REASONING_EFFORT)
+    source = request['evidence'][-1]
+    return {'output': {'version': 'summary-support-v6', 'units': {
+        field: [dict(unit_id=field, coverage='complete', candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
+            evidence_assertion='The source-copy fixture retains this content.', value_comparison='Same copied value.',
+            attribution_comparison='Same reporting role.', scope_comparison='Same scope.', verdict='supported',
+            evidence_span_ids=[source['spans'][0]['id']],
+            candidate_span_ids=[request['candidate_spans'][field][0]['id']] if field in request['candidate_spans'] else [],
+            report_binding=dict(target='other' if field in request['candidate_spans'] else 'outside_outcome',
+                report_span_ids=[], properties=[]))] for field in request['units']}}, 'evidence': {
+            'thread_start': {'thread_id': 'copy-review', 'model': MODEL,
+                             'reasoning_effort': REASONING_EFFORT, 'model_provider': 'openai'},
+            'turn_started': {'thread_id': 'copy-review', 'turn_id': 'copy-review-turn'},
+            'turn_completed': True, 'no_tools': True, 'rerouted': False}}
+
+
 def copy_generator(request: dict) -> dict:
     """A source-copy test double, deliberately incapable of semantic extraction."""
     from codex_mem.episode_processor import MODEL, REASONING_EFFORT
@@ -382,7 +408,8 @@ def run_suite(*, fixture: dict | None = None, cutoff: int | None = None,
                                    session_id=event['session_id'], turn_id=event['id'])
             baseline_jobs = []
             for _ in range(len(events) + 1):
-                result = process_pending(project, current_data, runner=runner)
+                result = process_pending(project, current_data, runner=runner,
+                                         summary_reviewer=native_capture if live else current_copy_review)
                 baseline_jobs.append(result)
                 if result.get('status') not in ('processed', 'skipped'):
                     break

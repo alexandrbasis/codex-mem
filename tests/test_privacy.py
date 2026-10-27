@@ -67,6 +67,37 @@ class PrivacyTests(unittest.TestCase):
         self.assertEqual("OPENAI_API_KEY='" + REDACTED + "'", result)
         self.assertEqual(["normal", "token=" + REDACTED], redact_tags(["normal", "token=abc", "normal"]))
 
+    def test_standalone_token_families_keep_their_redaction_boundaries(self) -> None:
+        body = "a" * 40
+        tokens = [
+            "apikey_" + "a" * 32 + "_" + "b" * 64,
+            *["gh" + kind + "_" + body for kind in "pousr"],
+            "github_pat_" + body, "glpat-" + body,
+            *["xox" + kind + "-" + body for kind in "bpars"],
+            "AKIA" + "A" * 16, "ASIA" + "A" * 16, "AIza" + "a" * 35,
+            "sk-" + body, "sk-proj-" + body, "sk-ant-" + body,
+            *[kind + "_" + mode + "_" + body
+              for kind in ("sk", "rk") for mode in ("live", "test")],
+            "hf_" + body, "npm_" + body,
+            "eyJ" + "a" * 12 + "." + "b" * 12 + "." + "c" * 12,
+        ]
+        for token in tokens:
+            with self.subTest(prefix=token[:12]):
+                self.assertEqual("before " + REDACTED + " after", redact_text("before " + token + " after"))
+
+    def test_unicode_credential_names_and_private_delimiters_still_redact(self) -> None:
+        for name in ("API_KEY", "clıent_ſecret", "credentİal", "PASSWORD"):
+            with self.subTest(name=name):
+                self.assertEqual(name + "=" + REDACTED, redact_text(name + "=hidden-value"))
+        for raw, expected in (
+            ("< PRIVATE >hidden-value</ PRIVATE >", "<private>" + REDACTED + "</private>"),
+            ("[ SENSITIVE ]hidden-value", "[private]" + REDACTED + "[/private]"),
+            ("пароль: visible prose", "пароль: visible prose"),
+            ("Verification row 00001: passed", "Verification row 00001: passed"),
+        ):
+            with self.subTest(raw=raw):
+                self.assertEqual(expected, redact_text(raw))
+
     def test_structured_payloads_are_rejected(self) -> None:
         with self.assertRaises(TypeError):
             redact_text({"token": "secret"})  # type: ignore[arg-type]

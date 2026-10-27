@@ -31,6 +31,7 @@ from codex_mem.service import (
     ServiceAlreadyRunning,
 )
 
+from tests.test_summary_support import supported_review
 
 class Clock:
     def __init__(self, value: float = 1_000.0) -> None:
@@ -497,7 +498,7 @@ class ServiceTests(unittest.TestCase):
 
         def processor(project: str, **kwargs: object) -> dict[str, object]:
             calls.append(bool(kwargs["retry_failed"]))
-            return process_pending(project, runner=runner, **kwargs)
+            return process_pending(project, summary_reviewer=supported_review, runner=runner, **kwargs)
 
         result = run_service(self.data_dir, processor=processor, clock=self.clock,
                              sleeper=self.clock.sleep, poll_interval=1, max_cycles=8)
@@ -661,7 +662,8 @@ class ServiceTests(unittest.TestCase):
     def test_unknown_and_runner_rejection_reasons_remain_blocked(self) -> None:
         failed = self._failed_job(self.first)
         for reason in (None, "invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
-                       "turn_not_completed", "invalid_source_batch", "secret-response-excerpt"):
+                       "turn_not_completed", "invalid_source_batch", "summary_support_invalid",
+                       "summary_support_unavailable", "summary_support_stale", "secret-response-excerpt"):
             with self.subTest(reason=reason):
                 enqueue(self.first, self.data_dir, retry_failed=True, clock=self.clock)
                 result = run_service(self.data_dir,
@@ -671,7 +673,8 @@ class ServiceTests(unittest.TestCase):
                 self.assertEqual("halted", result["status"])
                 self.assertEqual(1, result["jobs"])
                 if reason in {"invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",
-                              "turn_not_completed", "invalid_source_batch"}:
+                              "turn_not_completed", "invalid_source_batch", "summary_support_invalid",
+                              "summary_support_unavailable", "summary_support_stale"}:
                     state = json.loads((self.data_dir / SERVICE_STATE_FILENAME).read_text())
                     self.assertEqual(reason, state["projects"][str(self.first.resolve())]["last_rejected_reason"])
                     recovery = resume_pending(self.first, self.data_dir,

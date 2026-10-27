@@ -1,6 +1,8 @@
 """Quality quarantine is atomic with the existing observation lifecycle."""
 from __future__ import annotations
 
+from tests.test_summary_support import supported_review
+
 import json
 from pathlib import Path
 import tempfile
@@ -50,6 +52,66 @@ class JevQualityProcessorTests(unittest.TestCase):
             ).fetchall() if table else []
         return job, [json.loads(row[0]) for row in audits]
 
+    def test_initially_stale_quality_input_never_starts_generation(self):
+        raw = self.remember()
+        original = Store.claim_observation_batch
+        def claim(store, *args, **kwargs):
+            result = original(store, *args, **kwargs)
+            if result is not None:
+                with Store(self.home) as other:
+                    other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                        ('Changed before any model call.', raw['id']))
+            return result
+        runner = mock.Mock(side_effect=self.runner)
+        evaluator = mock.Mock(side_effect=response)
+        with mock.patch.object(Store, 'claim_observation_batch', claim):
+            result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
+        self.assertEqual('summary_support_stale', result.get('reason_code'), result)
+        runner.assert_not_called()
+        evaluator.assert_not_called()
+        job, _ = self.stored(result)
+        self.assertEqual([], job['output_ids'])
+
+    def test_quality_rechecks_retained_content_after_its_http_slot_wait(self):
+        from contextlib import contextmanager
+        from codex_mem import jev_filter
+        raw = self.remember()
+        @contextmanager
+        def acquired(_deadline):
+            with Store(self.home) as other:
+                other._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                    ('Changed while the quality request waited.', raw['id']))
+            yield
+        def measured_generation(request):
+            from codex_mem.observer_usage_store import COUNTERS
+            result = self.runner(request)
+            tokens = dict.fromkeys(COUNTERS, 0)
+            tokens.update(input_tokens=10, output_tokens=2, total_tokens=12)
+            result['metrics'] = dict(duration_ms=1, usage=dict(status='reported',
+                source='app_server_thread_total', updates=1, tokens=tokens))
+            return result
+        runner = mock.Mock(side_effect=measured_generation)
+        with mock.patch.object(jev_filter, '_credentials', return_value='synthetic-key'), \
+                mock.patch.object(jev_filter, 'acquire_jev_slot', acquired), \
+                mock.patch.object(jev_filter.urllib.request, 'build_opener') as opener:
+            result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner)
+        self.assertEqual('jev_quality_unavailable', result.get('reason_code'), result)
+        opener.assert_not_called()
+        runner.assert_called_once()
+        self.assertEqual(0, result['jev_quality']['counts']['requests'])
+        self.assertEqual('jev_source_unavailable', result['jev_quality']['evaluations'][-1]['error_code'])
+        job, audits = self.stored(result)
+        self.assertEqual([], job['output_ids'])
+        self.assertEqual(0, sum(row['counts']['requests'] for row in audits))
+        with Store(self.home) as store:
+            attempt = store.observation_attempts(self.project, result['job_id'])[0]
+            calls = json.loads(attempt['execution_calls'])
+            self.assertEqual({'generation', 'summary_support_1'}, set(calls))
+            self.assertEqual(12, calls['generation']['metrics']['total_tokens'])
+            self.assertIsNone(calls['summary_support_1']['metrics']['total_tokens'])
+            self.assertEqual('unavailable', calls['summary_support_1']['metrics']['usage_status'])
+            self.assertIsNone(attempt['total_tokens'])
+
     def assert_preserved(self, raw, result, reason):
         self.assertEqual("failed", result["status"], result)
         self.assertEqual("invalid_response", result["code"])
@@ -65,6 +127,20 @@ class JevQualityProcessorTests(unittest.TestCase):
         self.assertNotIn("PRIVATE_", json.dumps([result, job, audits]))
         return job, audits
 
+    def assert_source_fenced(self, result, reviewer, evaluator):
+        """A changed source is blocked before either review may dispatch."""
+        self.assertEqual('failed', result['status'], result)
+        self.assertEqual('invalid_response', result['code'])
+        self.assertEqual('summary_support_stale', result['reason_code'])
+        reviewer.assert_not_called()
+        evaluator.assert_not_called()
+        self.assertNotIn('jev_quality', result)
+        job, audits = self.stored(result)
+        self.assertEqual([], job['output_ids'])
+        self.assertEqual([], audits)
+        self.assertNotIn('PRIVATE_', json.dumps([result, job, audits]))
+        return job
+
     def test_valid_shape_with_unsupported_claim_is_quarantined_before_finish(self):
         raw = self.remember("PRIVATE_INTENT Please deploy the change.", "hook:UserPromptSubmit")
         def runner(request):
@@ -72,7 +148,7 @@ class JevQualityProcessorTests(unittest.TestCase):
                 note(request["sources"][0]["id"], title="Deployment completed", body="Production deployment succeeded.")
             ]})
         with mock.patch.object(Store, "finish_observation_batch", side_effect=AssertionError("Must not commit")) as finish:
-            result = process_pending(self.project, self.home, runner=runner,
+            result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner,
                                      jev_quality_evaluator=lambda payload: response(payload, 0.01, 0.99))
         _, audits = self.assert_preserved(raw, result, "jev_quality_rejected")
         finish.assert_not_called()
@@ -92,10 +168,10 @@ class JevQualityProcessorTests(unittest.TestCase):
                 configure(self.home, jev_quality_enabled=True)
                 raw = self.remember(text)
                 runner = mock.Mock(side_effect=self.runner)
-                result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+                result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
                 self.assert_preserved(raw, result, "jev_quality_" + reason)
                 self.assertEqual(calls, result["jev_quality"]["counts"]["requests"])
-                again = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+                again = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
                 self.assertEqual("idle", again["status"])
                 runner.assert_called_once()
 
@@ -106,7 +182,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             summary = processor_fixtures.ProcessorTests.structured_summary(source_id)
             return processor_fixtures.ProcessorTests.receipt({"disposition": "processed", "notes": [note(source_id)],
                                            "session_summary": summary})
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=response)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=response)
         self.assertEqual("processed", result["status"], result)
         self.assertEqual(1, result["note_count"])
         self.assertEqual(1, result["session_summary_count"])
@@ -120,7 +196,7 @@ class JevQualityProcessorTests(unittest.TestCase):
 
     def test_required_summary_gets_the_same_vetted_history_as_generator(self):
         self.remember("Use checkout_id to avoid duplicate charges.")
-        earlier = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=response)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=response)
         self.assertEqual("processed", earlier["status"], earlier)
         raw = self.remember("Done.", "hook:Stop")
         calls = []
@@ -137,7 +213,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             self.assertTrue(any(row["evidence_role"] == "derived_note" for row in history))
             self.assertEqual([raw["id"]], [source["id"] for source in item["cited_sources"]])
             return response(payload)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assertEqual("processed", result["status"], result)
         self.assertEqual(1, result["session_summary_count"])
         self.assertEqual(1, len(calls))
@@ -149,7 +225,7 @@ class JevQualityProcessorTests(unittest.TestCase):
                 note(request["sources"][0]["id"], title="Idempotency key decision",
                      body="The user chose checkout_id as the retry idempotency key.")
             ]})
-        earlier = process_pending(self.project, self.home, runner=decision_runner, jev_quality_evaluator=response)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=decision_runner, jev_quality_evaluator=response)
         self.assertEqual("processed", earlier["status"], earlier)
         run = self.remember("The local retry test passed with that key.")
         inspected = []
@@ -169,7 +245,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             self.assertTrue(any("checkout_id" in source["body"] for source in item["session_history"]))
             self.assertNotIn(decision["id"], [source["id"] for source in item["cited_sources"]])
             return response(payload)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assertEqual("processed", result["status"], result)
         self.assertEqual(1, len(inspected))
         job, _ = self.stored(result)
@@ -190,17 +266,17 @@ class JevQualityProcessorTests(unittest.TestCase):
                 if key.startswith("item_1_") and key.endswith("_grounded"):
                     answer["noul"] = .5
             return result
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assert_preserved(raw, result, "jev_quality_uncertain")
         self.assertEqual(1, result["jev_quality"]["counts"]["accepted"])
 
     def test_missing_required_summary_is_rejected_before_quality(self):
         self.remember("Prior useful result.")
-        earlier = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=response)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=response)
         self.assertEqual("processed", earlier["status"], earlier)
         self.remember("Done.", "hook:Stop")
         evaluator = mock.Mock()
-        result = process_pending(self.project, self.home, runner=self.skipped, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.skipped, jev_quality_evaluator=evaluator)
         self.assertEqual("missing_required_summary", result["reason_code"])
         evaluator.assert_not_called()
 
@@ -216,7 +292,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             return processor_fixtures.ProcessorTests.receipt({"disposition": "processed", "notes": [note(source_id)],
                 "session_summary": processor_fixtures.ProcessorTests.structured_summary(source_id)})
         evaluator = mock.Mock()
-        result = process_pending(self.project, self.home, runner=runner, jev_evaluator=filter_evaluator,
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_evaluator=filter_evaluator,
                                  jev_quality_evaluator=evaluator)
         self.assertEqual("source_attribution_conflict", result["reason_code"])
         evaluator.assert_not_called()
@@ -233,7 +309,7 @@ class JevQualityProcessorTests(unittest.TestCase):
                 configure(self.home, **value)
                 self.remember()
                 evaluator = mock.Mock()
-                result = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=evaluator)
+                result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=evaluator)
                 self.assertEqual("processed", result["status"], result)
                 self.assertNotIn("jev_quality", result)
                 self.assertEqual([], self.stored(result)[1])
@@ -242,7 +318,7 @@ class JevQualityProcessorTests(unittest.TestCase):
     def test_skipped_output_makes_no_quality_calls(self):
         self.remember("Routine listing.")
         evaluator = mock.Mock()
-        result = process_pending(self.project, self.home, runner=self.skipped, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.skipped, jev_quality_evaluator=evaluator)
         self.assertEqual("skipped", result["status"], result)
         self.assertNotIn("jev_quality", result)
         self.assertEqual([], self.stored(result)[1])
@@ -256,50 +332,51 @@ class JevQualityProcessorTests(unittest.TestCase):
                 self.remember()
                 with mock.patch("codex_mem.processor._effective_lease_seconds", wraps=_effective_lease_seconds) as lease:
                     result = process_pending(self.project, self.home, timeout=30, lease_seconds=1,
-                        runner=self.runner, jev_evaluator=lambda _: filter_answer(), jev_quality_evaluator=response)
+                        summary_reviewer=supported_review, runner=self.runner, jev_evaluator=lambda _: filter_answer(), jev_quality_evaluator=response)
                 self.assertEqual("processed", result["status"], result)
                 lease.assert_called_once_with(1, expected)
 
     def test_failed_audit_persistence_is_visible(self):
         self.remember()
         with mock.patch("codex_mem.jev_client.record_audit", return_value=False):
-            result = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=response)
+            result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=response)
         self.assertEqual("processed", result["status"], result)
         self.assertFalse(result["jev_quality"]["audit_recorded"])
 
     def test_forgotten_current_source_after_generation_is_never_sent(self):
         raw = self.remember("PRIVATE_FORGOTTEN_CURRENT")
         evaluator = mock.Mock()
+        reviewer = mock.Mock(side_effect=supported_review)
         def runner(request):
             with Store(self.home) as store:
                 store.forget(self.project, [raw["id"]])
             return self.runner(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
-        self.assertEqual("invalid_response", result["code"], result)
-        self.assertEqual("jev_quality_unavailable", result["reason_code"])
-        self.assertEqual(0, result["jev_quality"]["counts"]["requests"])
-        job, audits = self.stored(result)
+        result = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=runner, jev_quality_evaluator=evaluator)
+        job = self.assert_source_fenced(result, reviewer, evaluator)
         self.assertEqual("source_deleted", job["error_code"])
         self.assertEqual([], job["output_ids"])
-        self.assertEqual("jev_source_unavailable", audits[-1]["error_code"])
         with Store(self.home) as store:
             self.assertEqual([], store.get(self.project, [raw["id"]]))
         evaluator.assert_not_called()
 
     def test_forgotten_session_history_blocks_current_result_without_deleting_it(self):
         history = self.remember("PRIVATE_FORGOTTEN_HISTORY")
-        earlier = process_pending(self.project, self.home, runner=self.skipped)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.skipped)
         self.assertEqual("skipped", earlier["status"])
         raw = self.remember("Current result with an earlier reference.")
         evaluator = mock.Mock()
+        reviewer = mock.Mock(side_effect=supported_review)
         def runner(request):
             self.assertIn("PRIVATE_FORGOTTEN_HISTORY", request["prompt"])
             with Store(self.home) as store:
                 store.forget(self.project, [history["id"]])
             return self.runner(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
-        self.assert_preserved(raw, result, "jev_quality_unavailable")
-        self.assertEqual(0, result["jev_quality"]["counts"]["requests"])
+        result = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=runner, jev_quality_evaluator=evaluator)
+        self.assert_source_fenced(result, reviewer, evaluator)
+        with Store(self.home) as store:
+            original = store.get(self.project, [raw['id']])[0]
+            self.assertEqual(raw['body'], original['body'])
+            self.assertIsNone(original['superseded_by'])
         evaluator.assert_not_called()
 
     def test_forgotten_cross_session_reference_is_never_sent(self):
@@ -308,13 +385,18 @@ class JevQualityProcessorTests(unittest.TestCase):
                                         kind="decision", session_id="older-session")
         raw = self.remember("Current result.")
         evaluator = mock.Mock()
+        reviewer = mock.Mock(side_effect=supported_review)
         def runner(request):
             self.assertIn("PRIVATE_CROSS_SESSION_REFERENCE", request["prompt"])
             with Store(self.home) as store:
                 store.forget(self.project, [historical["id"]])
             return self.runner(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
-        self.assert_preserved(raw, result, "jev_quality_unavailable")
+        result = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=runner, jev_quality_evaluator=evaluator)
+        self.assert_source_fenced(result, reviewer, evaluator)
+        with Store(self.home) as store:
+            original = store.get(self.project, [raw['id']])[0]
+            self.assertEqual(raw['body'], original['body'])
+            self.assertIsNone(original['superseded_by'])
         evaluator.assert_not_called()
 
     def test_forget_during_cache_preparation_blocks_dispatch(self):
@@ -325,7 +407,7 @@ class JevQualityProcessorTests(unittest.TestCase):
                 store.forget(self.project, [raw["id"]])
             return None
         with mock.patch("codex_mem.jev_client._cache_get", side_effect=cached):
-            result = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=evaluator)
+            result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=evaluator)
         self.assertEqual("invalid_response", result["code"], result)
         self.assertEqual("jev_quality_unavailable", result["reason_code"])
         self.assertEqual(0, result["jev_quality"]["counts"]["requests"])
@@ -344,7 +426,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             with Store(self.home) as store:
                 store.forget(self.project, [second["id"]])
             return response(payload)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator,
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator,
                                  max_chars=120_000)
         self.assertEqual("invalid_response", result["code"], result)
         self.assertEqual("jev_quality_unavailable", result["reason_code"])
@@ -362,20 +444,27 @@ class JevQualityProcessorTests(unittest.TestCase):
     def test_replaced_lease_is_not_dispatched_or_mutated_by_old_worker(self):
         raw = self.remember()
         evaluator = mock.Mock()
+        reviewer = mock.Mock(side_effect=supported_review)
         def runner(request):
             with Store(self.home) as store:
                 store._connection.execute("UPDATE observation_jobs SET lease_token=?,attempt_count=attempt_count+1 WHERE id=?",
                                           ("replacement-token", request["job_id"]))
             return self.runner(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
-        self.assertEqual("invalid_response", result["code"], result)
-        self.assertEqual("jev_quality_unavailable", result["reason_code"])
+        result = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=runner, jev_quality_evaluator=evaluator)
         with Store(self.home) as store:
             job = store._connection.execute("SELECT status,lease_token,attempt_count FROM observation_jobs WHERE id=?",
                                             (result["job_id"],)).fetchone()
             self.assertEqual(("running", "replacement-token", 2), tuple(job))
-            self.assertIsNone(store.get(self.project, [raw["id"]])[0]["superseded_by"])
+            original = store.get(self.project, [raw['id']])[0]
+            self.assertEqual(raw['body'], original['body'])
+            self.assertIsNone(original['superseded_by'])
+            self.assertEqual([], store.observation_job_status(self.project, result['job_id'])['output_ids'])
+        reviewer.assert_not_called()
         evaluator.assert_not_called()
+        self.assertNotIn('jev_quality', result)
+        self.assertEqual('failed', result['status'], result)
+        self.assertEqual('invalid_response', result['code'], result)
+        self.assertEqual('summary_support_stale', result['reason_code'])
 
     def test_current_source_membership_is_checked(self):
         for mutation in ("fingerprint", "superseded"):
@@ -384,6 +473,7 @@ class JevQualityProcessorTests(unittest.TestCase):
                 configure(self.home, jev_quality_enabled=True)
                 raw = self.remember()
                 evaluator = mock.Mock()
+                reviewer = mock.Mock(side_effect=supported_review)
                 def runner(request):
                     with Store(self.home) as store:
                         if mutation == "fingerprint":
@@ -392,33 +482,40 @@ class JevQualityProcessorTests(unittest.TestCase):
                         else:
                             store._connection.execute("UPDATE entries SET superseded_by=? WHERE id=?", (raw["id"], raw["id"]))
                     return self.runner(request)
-                result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
-                self.assertEqual("invalid_response", result["code"], result)
-                self.assertEqual("jev_quality_unavailable", result["reason_code"])
-                self.assertEqual(0, result["jev_quality"]["counts"]["requests"])
-                evaluator.assert_not_called()
+                result = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=runner, jev_quality_evaluator=evaluator)
+                self.assert_source_fenced(result, reviewer, evaluator)
+                with Store(self.home) as store:
+                    original = store.get(self.project, [raw['id']])[0]
+                    self.assertEqual(raw['body'], original['body'])
+                    self.assertEqual(raw['id'] if mutation == 'superseded' else None,
+                                     original['superseded_by'])
 
     def test_expired_lease_blocks_dispatch_and_keeps_normal_recovery(self):
         raw = self.remember()
         evaluator = mock.Mock(side_effect=response)
+        reviewer = mock.Mock(side_effect=supported_review)
         def expired_runner(request):
             with Store(self.home) as store:
                 store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE id=?",
                                           (request["job_id"],))
             return self.runner(request)
-        expired = process_pending(self.project, self.home, runner=expired_runner, jev_quality_evaluator=evaluator)
+        expired = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=expired_runner, jev_quality_evaluator=evaluator)
         self.assertEqual("lease_expired", expired["code"], expired)
-        self.assertEqual(0, expired["jev_quality"]["counts"]["requests"])
+        reviewer.assert_not_called()
+        self.assertNotIn('jev_quality', expired)
+        _, audits = self.stored(expired)
+        self.assertEqual([], audits)
         evaluator.assert_not_called()
         with Store(self.home) as store:
             job = store.observation_job_status(self.project, expired["job_id"])
             self.assertEqual("running", job["status"])
             self.assertEqual([], job["output_ids"])
             self.assertIsNone(store.get(self.project, [raw["id"]])[0]["superseded_by"])
-        recovered = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=evaluator)
+        recovered = process_pending(self.project, self.home, summary_reviewer=reviewer, runner=self.runner, jev_quality_evaluator=evaluator)
         self.assertEqual("processed", recovered["status"], recovered)
         self.assertEqual(expired["job_id"], recovered["job_id"])
         evaluator.assert_called_once()
+        reviewer.assert_called_once()
         with Store(self.home) as store:
             job = store.observation_job_status(self.project, expired["job_id"])
             self.assertEqual(2, job["attempt_count"])
@@ -434,12 +531,12 @@ class JevQualityProcessorTests(unittest.TestCase):
                     with Store(self.home) as store:
                         store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
                     return response(payload, grounded, overclaim)
-                result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+                result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
                 self.assert_preserved(raw, result, "jev_quality_" + reason)
                 self.assertEqual("lease_expired", result["jev_quality"]["blocked_by"])
                 self.assertEqual(reason, result["jev_quality"]["decisions"][0]["route"])
                 self.assertEqual(1, result["jev_quality"]["counts"]["requests"])
-                next_poll = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+                next_poll = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
                 self.assertEqual("idle", next_poll["status"])
                 runner.assert_called_once()
 
@@ -451,7 +548,7 @@ class JevQualityProcessorTests(unittest.TestCase):
                     store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
                 return response(payload)
             return response(payload, .5, .5)
-        expired = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=evaluator)
+        expired = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=evaluator)
         self.assertEqual("lease_expired", expired["code"], expired)
         decision = expired["jev_quality"]["decisions"][0]
         self.assertEqual("uncertain", decision["initial"]["route"])
@@ -461,7 +558,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             job = store.observation_job_status(self.project, expired["job_id"])
             self.assertEqual("running", job["status"])
             self.assertIsNone(store.get(self.project, [raw["id"]])[0]["superseded_by"])
-        recovered = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=mock.Mock())
+        recovered = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=mock.Mock())
         self.assertEqual("processed", recovered["status"], recovered)
         self.assertEqual(2, recovered["jev_quality"]["counts"]["cache_hits"])
         self.assertEqual(0, recovered["jev_quality"]["counts"]["requests"])
@@ -475,13 +572,13 @@ class JevQualityProcessorTests(unittest.TestCase):
                     store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
                 raise RuntimeError("PRIVATE_REFINEMENT_TRANSPORT_FAILURE")
             return response(payload, .5, .5)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assert_preserved(raw, result, "jev_quality_uncertain")
         self.assertEqual(2, result["jev_quality"]["counts"]["requests"])
         self.assertEqual("partial", result["jev_quality"]["usage_status"])
         self.assertEqual(200, result["jev_quality"]["usage"]["input_tokens"])
         self.assertEqual("lease_expired", result["jev_quality"]["blocked_by"])
-        next_poll = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=evaluator)
+        next_poll = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=evaluator)
         self.assertEqual("idle", next_poll["status"])
         runner.assert_called_once()
 
@@ -524,7 +621,7 @@ class JevQualityProcessorTests(unittest.TestCase):
             return result
         evaluator = mock.Mock(side_effect=lambda payload: response(payload, .5, .5))
         with mock.patch.object(jev_client, "_cache_get", side_effect=cache_get):
-            result = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=evaluator)
+            result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=evaluator)
         self.assertEqual("jev_quality_unavailable", result["reason_code"], result)
         self.assertEqual(2, len(reads))
         evaluator.assert_called_once()
@@ -537,16 +634,16 @@ class JevQualityProcessorTests(unittest.TestCase):
     def test_generator_applies_provenance_and_completion_scope_to_titles(self):
         self.remember("Use checkout_id for idempotency.", "hook:UserPromptSubmit")
         def runner(request):
-            self.assertIn("Titles and subtitles must preserve the same attribution, uncertainty and planned-versus-completed scope",
+            self.assertIn("Titles, subtitles and summaries must preserve attribution, uncertainty and planned-versus-completed scope",
                           request["prompt"])
             self.assertIn("A cautious body cannot repair a stronger title", request["prompt"])
             return self.runner(request)
-        result = process_pending(self.project, self.home, runner=runner, jev_quality_evaluator=response)
+        result = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=runner, jev_quality_evaluator=response)
         self.assertEqual("processed", result["status"], result)
 
     def test_superseded_history_is_allowed_when_retained(self):
         history = self.remember("Earlier evidence retained through its derived note.")
-        earlier = process_pending(self.project, self.home, runner=self.runner, jev_quality_evaluator=response)
+        earlier = process_pending(self.project, self.home, summary_reviewer=supported_review, runner=self.runner, jev_quality_evaluator=response)
         self.assertEqual("processed", earlier["status"], earlier)
         self.remember("New evidence.")
         with Store(self.home) as store:
