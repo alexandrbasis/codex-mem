@@ -30,7 +30,7 @@ import time
 from typing import Any
 from xml.etree import ElementTree
 
-from .execution import ExecutionRequest, ExecutionResult, execute
+from .execution import ExecutionFailure, ExecutionRequest, ExecutionResult, execute
 
 from .observation_diagnostics import INVALID_RESPONSE_REASONS, safe_failure_reason, storage_failure_detail
 
@@ -608,6 +608,19 @@ def process_pending(
                     quality_audit = _correction_audit(initial_quality_audit, current_audit)
                     return None
 
+                def review_generation_failure(failure: ExecutionFailure, remaining: float):
+                    nonlocal review_count, generation_correction
+                    if (failure.code != "invalid_response" or failure.reason_code != "invalid_json"
+                            or review_count != 0):
+                        return None
+                    # The malformed generation owns the same allowance as shape/semantic feedback.
+                    review_count += 1
+                    generation_correction = dict(initial_reason_code="invalid_json")
+                    source_guard()
+                    if remaining <= 0 or time.monotonic() >= deadline:
+                        raise ProcessorFailure("timeout")
+                    return _json_generation_correction_prompt()
+
                 def review_candidate(candidate, remaining):
                     nonlocal reviewed_output, review_count, summary_seen, generation_correction
                     review_count += 1
@@ -661,12 +674,14 @@ def process_pending(
                         from .pi_runtime import PiProcessorRunner
                         active_runner = PiProcessorRunner(
                             usage_checkpoint=checkpoint,
+                            failure_review=review_generation_failure,
                             candidate_review=review_candidate,
                             before_dispatch=before_generation_dispatch,
                         )
                     else:
                         active_runner = NativeProcessorRunner(
                             codex=codex, timeout=checked_timeout, usage_checkpoint=checkpoint,
+                            failure_review=review_generation_failure,
                             candidate_review=review_candidate,
                             before_dispatch=before_generation_dispatch,
                         )
@@ -802,6 +817,17 @@ def process_pending(
     except (StoreError, OSError) as exc:
         return {**_failed_receipt(job_id, "storage_failure", None, None),
                 "failure_detail": storage_failure_detail(exc, storage_operation, preclaim=claimed is None)}
+
+
+def _json_generation_correction_prompt() -> str:
+    """Reject the malformed bytes and request one full replacement, never a patch."""
+    return (
+        "The previous generation failed strict JSON decoding: invalid_json. "
+        "Use the one permitted correction to return one complete JSON result under the original "
+        "full output schema and original supplied evidence. Include every required field and any "
+        "required session summary. Do not repair, continue or quote the malformed response. "
+        "Return only the complete replacement JSON. All original evidence and support rules still apply."
+    )
 
 
 def _summary_shape_correction_prompt() -> str:
@@ -985,6 +1011,8 @@ class _UsageCheckpointer:
         signature = (
             snapshot["worker_thread_id"], snapshot["worker_turn_id"], usage["status"],
             tuple(sorted(tokens.items())) if tokens is not None else None,
+            tuple((row["number"], row["outcome"], row["error_code"], row["reason_code"])
+                  for row in snapshot["metrics"].get("generations", [])),
         )
         if signature == self._last_saved_signature:
             return
@@ -1010,12 +1038,14 @@ class NativeProcessorRunner:
         self, *, codex: str = "codex", timeout: int | float = DEFAULT_TIMEOUT,
         usage_checkpoint: Callable[[Mapping[str, Any]], None] | None = None,
         candidate_review: Callable[[Mapping[str, Any], float], str | None] | None = None,
+        failure_review: Callable[[ExecutionFailure, float], str | None] | None = None,
         before_dispatch: Callable[[], None] | None = None,
     ) -> None:
         self.codex = codex
         self.timeout = _validate_timeout(timeout)
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
+        self.failure_review = failure_review
         self.before_dispatch = before_dispatch
 
     def check_profile(self, profile, *, timeout=10):
@@ -1072,10 +1102,24 @@ class NativeProcessorRunner:
         monitor: _TurnMonitor | None = None
         started_at = time.monotonic()
         checkpointer = _UsageCheckpointer(self.usage_checkpoint)
+        generations = []
+        track_generations = self.failure_review is not None and request.get("job_type") in ("observation", "summary")
+
+        def capture_generation(error=None):
+            if not track_generations or monitor is None or monitor.turn_id is None:
+                return
+            number = monitor._generation_number
+            if generations and generations[-1]["number"] == number:
+                # A custody/deadline failure while requesting feedback cannot erase the decode failure.
+                return
+            generations.append(dict(number=number, execution_id=thread_id, turn_id=monitor.turn_id,
+                outcome="failed" if error else "success", error_code=error.code if error else None,
+                reason_code=error.reason_code if error else None, usage=monitor.generation_usage_receipt()))
 
         def metrics() -> dict[str, Any]:
             return {
                 "duration_ms": max(0, round((time.monotonic() - started_at) * 1000)),
+                **({"generations": list(generations)} if generations else {}),
                 "usage": monitor.usage_receipt() if monitor is not None else {
                     "status": "unavailable", "source": "app_server_thread_total",
                     "updates": 0, "tokens": None,
@@ -1149,15 +1193,29 @@ class NativeProcessorRunner:
                         monitor.set_turn(turn_id)
                         checkpoint(force=True)
                         _wait_for_turn_completion(client, monitor)
-                        output = _read_valid_final_output(monitor)
-                        if "result" in schema.get("properties", {}):
-                            output = _unwrap_model_output(output)
-                        if self.candidate_review is None:
-                            break
-                        remaining = min(budget - (time.monotonic() - started_at), deadline - time.monotonic())
-                        if remaining <= 0:
-                            raise ProcessorFailure("timeout")
-                        correction = self.candidate_review(output, remaining)
+                        try:
+                            output = _read_valid_final_output(monitor)
+                        except ProcessorFailure as exc:
+                            capture_generation(exc)
+                            checkpoint(force=True)
+                            if (generation or not track_generations or exc.code != "invalid_response"
+                                    or exc.reason_code != "invalid_json"):
+                                raise
+                            remaining = min(budget - (time.monotonic() - started_at), deadline - time.monotonic())
+                            if remaining <= 0:
+                                raise ProcessorFailure("timeout")
+                            correction = self.failure_review(ExecutionFailure("invalid_output", exc.code,
+                                exc.reason_code, thread_id, monitor.turn_id), remaining)
+                            if correction is None:
+                                raise
+                        else:
+                            if "result" in schema.get("properties", {}):
+                                output = _unwrap_model_output(output)
+                            remaining = min(budget - (time.monotonic() - started_at), deadline - time.monotonic())
+                            if remaining <= 0:
+                                raise ProcessorFailure("timeout")
+                            correction = self.candidate_review(output, remaining) if self.candidate_review else None
+                            capture_generation()
                         if time.monotonic() >= deadline or time.monotonic() - started_at >= budget:
                             raise ProcessorFailure("timeout")
                         if correction is None:
@@ -1184,11 +1242,13 @@ class NativeProcessorRunner:
                         },
                     }
                 except ObservationLeaseExpired:
+                    capture_generation(ProcessorFailure("lease_expired"))
                     raise ProcessorFailure(
                         "lease_expired", worker_thread_id=thread_id,
                         worker_turn_id=turn_id, metrics=metrics(),
                     ) from None
                 except ProcessorFailure as exc:
+                    capture_generation(exc)
                     failed_thread = exc.worker_thread_id or thread_id
                     failed_turn = exc.worker_turn_id or turn_id
                     if failed_thread is not None and failed_turn is not None:
@@ -1511,6 +1571,8 @@ class _TurnMonitor:
         self._usage_updates = 0
         self._usage_invalid = False
         self._turn_start_usage_updates = 0
+        self._turn_start_usage_tokens = None
+        self._generation_number = 1
         self._on_usage = on_usage
 
     def begin_next_turn(self) -> None:
@@ -1524,6 +1586,8 @@ class _TurnMonitor:
         self._agent_messages = []
         self._agent_message_ids = set()
         self._turn_start_usage_updates = self._usage_updates
+        self._turn_start_usage_tokens = dict(self._usage_tokens) if self._usage_tokens is not None and not self._usage_invalid else None
+        self._generation_number += 1
 
     def set_turn(self, turn_id: str) -> None:
         self.turn_id = turn_id
@@ -1623,6 +1687,18 @@ class _TurnMonitor:
             "updates": self._usage_updates,
             "tokens": dict(self._usage_tokens) if self._usage_tokens is not None and not self._usage_invalid else None,
         }
+
+    def generation_usage_receipt(self) -> dict[str, Any]:
+        """Subtract measured cumulative boundaries only; missing boundaries stay unknown."""
+        value = self.usage_receipt()
+        value["updates"] -= self._turn_start_usage_updates
+        if self._generation_number > 1:
+            if value["tokens"] is None or self._turn_start_usage_tokens is None or not value["updates"]:
+                value.update(status="invalid" if value["status"] == "invalid" else "unavailable", tokens=None)
+            else:
+                value["tokens"] = {key: count - self._turn_start_usage_tokens[key]
+                                   for key, count in value["tokens"].items()}
+        return value
 
     def _completion_items(self, turn: Mapping[str, Any]) -> list[Mapping[str, Any]]:
         items = turn.get("items")

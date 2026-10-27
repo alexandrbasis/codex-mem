@@ -135,6 +135,8 @@ for line in sys.stdin:
         support = 'version' in params['outputSchema'].get('properties', {})
         review_output = None
         mode = scenario.get('mode', 'valid')
+        if scenario.get('modes'):
+            mode = scenario['modes'][min(turn_number - 1, len(scenario['modes']) - 1)]
         if support:
             version = params['outputSchema']['properties']['version']['enum'][0]
             payload = ({'version': version} if version == 'summary-source-v4' else

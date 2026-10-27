@@ -21,7 +21,8 @@ from tests.test_summary_support import supported_review, support_rows
 
 
 class InventoryTransport:
-    def __init__(self, candidates):
+    def __init__(self, candidates, unknown_usage=()):
+        self.unknown_usage = unknown_usage
         self.raw = [output if isinstance(output, str) else
                     json.dumps({'result': output}, ensure_ascii=False, indent=2) for output in candidates]
         self.delivered_raw = []
@@ -57,6 +58,8 @@ class InventoryTransport:
                 reasoningOutputTokens=0, totalTokens=12*number)}),
             event('item/completed', item=dict(id=f'answer-{number}', type='agentMessage', phase='final_answer', text=self.raw[number-1])),
             event('turn/completed', turn=dict(id=turn, status='completed'))]
+        if number in self.unknown_usage:
+            self.events = [event for event in self.events if event['method'] != 'thread/tokenUsage/updated']
         return {'turn': {'id': turn}}
 
     def next_notification(self, handler):
@@ -73,8 +76,8 @@ class InventoryTransport:
 
 
 class PiInventoryTransport(InventoryTransport):
-    def __init__(self, candidates, profile, deadline, run):
-        super().__init__(candidates)
+    def __init__(self, candidates, profile, deadline, run, unknown_usage=()):
+        super().__init__(candidates, unknown_usage)
         self.profile, self.deadline, self.run = profile, deadline, run
 
     def state(self, initial=False):
@@ -98,6 +101,8 @@ class PiInventoryTransport(InventoryTransport):
             model=self.profile.model, content=[dict(type='text', text=self.raw[number-1])], stopReason='stop',
             usage=dict(input=10, output=2, cacheRead=0, cacheWrite=0, reasoning=0, totalTokens=12))),
             dict(type='agent_end'), dict(type='agent_settled', aborted=False)])
+        if number in self.unknown_usage:
+            next(event['message'] for event in self.events if event.get('message', {}).get('role') == 'assistant').pop('usage')
         return dict(disposition='started')
 
     def message(self):
@@ -135,13 +140,16 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
                              facts=[], concepts=[], files_read=[], files_modified=[]))
         return dict(notes=[note], disposition='processed', session_summary=None if missing else summary)
 
-    def run_candidates(self, candidates, *, verdict='supported', runtime='codex', expire_on_diagnostic=False):
-        transport = InventoryTransport(candidates)
+    def run_candidates(self, candidates, *, verdict='supported', runtime='codex', expire_on_diagnostic=False,
+                       on_generation_failure=None, unknown_usage=(), reject_unit='completed', quality_evaluator=None):
+        transport = InventoryTransport(candidates, unknown_usage)
         reviews = []
         support_number = 0
         if runtime == 'pi':
             configure(self.data, processing_profile=dict(runtime='pi', provider='fixture', model='inventory-fixture',
                                                        reasoning_effort='low', timeout=240))
+        if quality_evaluator is not None:
+            configure(self.data, jev_quality_enabled=True)
         clock = [time.monotonic()]
         controlled_time = SimpleNamespace(monotonic=lambda:clock[0], time=time.time)
         class Reviewer:
@@ -153,7 +161,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
                     chosen = verdict[support_number] if isinstance(verdict, list) else verdict
                     support_number += 1
                     if chosen != 'supported':
-                        next(row for row in support_rows(output) if row['unit_id']=='completed')['verdict'] = chosen
+                        next(row for row in support_rows(output) if row['unit_id']==reject_unit)['verdict'] = chosen
                 profile = request.profile
                 return ExecutionResult(output=output, identity=ExecutionIdentity(profile.runtime, profile.provider,
                     profile.model, profile.reasoning_effort, f'inventory-review-{len(reviews)}', 'review-turn'),
@@ -163,7 +171,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
         @contextlib.contextmanager
         def prepared(pi, profile, deadline, run, **kwargs):
             nonlocal transport
-            transport = PiInventoryTransport(candidates, profile, deadline, run)
+            transport = PiInventoryTransport(candidates, profile, deadline, run, unknown_usage)
             run.version_verified = run.launched = True
             run.cwd = '/in-memory/library'
             run.state(transport.state(initial=True), initial=True)
@@ -173,13 +181,19 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
                 transport.close()
         from codex_mem.observer_usage_store import record_execution_call
         checkpoints = []
+        failures_seen = []
         def record(*args, **kwargs):
             value = record_execution_call(*args, **kwargs)
             metrics = kwargs.get('metrics') or {}
             tokens = metrics.get('usage', {}).get('tokens')
             if args[4] == 'generation' and tokens:
                 checkpoints.append(tokens['total_tokens'])
-            if expire_on_diagnostic and kwargs.get('review_diagnostic'):
+            failure = next((row for row in metrics.get('generations', []) if row.get('reason_code') == 'invalid_json'), None)
+            if failure and not failures_seen:
+                failures_seen.append(copy.deepcopy(failure))
+                if on_generation_failure:
+                    on_generation_failure()
+            if expire_on_diagnostic and (kwargs.get('review_diagnostic') or failure):
                 clock[0] += 241.0
             return value
         with contextlib.ExitStack() as stack:
@@ -190,12 +204,15 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
             if expire_on_diagnostic:
                 stack.enter_context(mock.patch('codex_mem.processor.time', controlled_time))
                 stack.enter_context(mock.patch('codex_mem.pi_runtime.time', controlled_time))
-            result = processor.process_pending(self.project, self.data, summary_reviewer=Reviewer())
+            result = processor.process_pending(self.project, self.data, summary_reviewer=Reviewer(),
+                                               jev_quality_evaluator=quality_evaluator)
         with Store(self.data) as store:
             job = store.observation_job_status(self.project, result['job_id'])
             outputs = store.get(self.project, job['output_ids']) if job['output_ids'] else []
             attempts = store.observation_attempts(self.project, result['job_id'])
-            raw = store.get(self.project, [self.raw['id']])[0]
+            raw_rows = store.get(self.project, [self.raw['id']])
+            raw = raw_rows[0] if raw_rows else None
+        transport.failures_seen = failures_seen
         transport.checkpoints = checkpoints
         return result, transport, reviews, outputs, attempts, raw
 
@@ -363,12 +380,203 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
                     returned_generation_correction=result['generation_correction'], durable_calls=calls,
                     total_tokens=attempts[0]['total_tokens']), sort_keys=True))
 
-    def test_malformed_json_still_fails_without_structural_feedback(self):
+    def test_malformed_json_remains_rejected_after_one_full_replacement(self):
         raw = '{"result": '
-        result, transport, reviews, outputs, attempts, source = self.run_candidates([raw])
+        result, transport, reviews, outputs, attempts, source = self.run_candidates([raw, raw])
         self.assertEqual('invalid_json', result.get('reason_code'), result)
-        self.assertEqual([raw], transport.delivered_raw)
-        self.assertEqual(1, len(transport.sent))
+        self.assertEqual([raw, raw], transport.delivered_raw)
+        self.assertEqual(2, len(transport.sent))
         self.assertEqual([], reviews)
-        self.assertNotIn('generation_correction', result)
+        self.assertEqual('invalid_json', result['generation_correction']['initial_reason_code'])
         self.assert_no_partial_write(outputs, source)
+
+
+class GenerationJsonRecoveryTests(unittest.TestCase):
+    """Public payload facts test control flow, not model judgment quality."""
+    run_candidates = GenerationShapeRecoveryTests.run_candidates
+    assert_no_partial_write = GenerationShapeRecoveryTests.assert_no_partial_write
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.project, self.data = self.root/'payload', self.root/'memory'
+        self.project.mkdir()
+        configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
+                  jev_filter_enabled=False, jev_quality_enabled=False)
+        self.intent = 'Set the maximum payload to 4096 bytes, run validation checks and create a local bundle.'
+        self.body = 'The payload limit is 4096 bytes, six validation checks passed, and the local bundle was created.'
+        with Store(self.data) as store:
+            store.remember(self.project, 'Payload request', self.intent,
+                           source='hook:UserPromptSubmit', session_id='payload-session')
+            store.remember(self.project, 'Payload operation',
+                'Command: python tools/set_payload_limit_and_bundle.py\nApplied MAX_PAYLOAD_BYTES = 4096. '
+                'Validation checks: 6 passed, 0 failed. Created dist/payload-demo.tar.gz locally. Exit code: 0.',
+                source='hook:PostToolUse', session_id='payload-session')
+            self.raw = store.remember(self.project, 'Payload report', self.body,
+                                      source='hook:Stop', session_id='payload-session')
+
+    def candidate(self, missing=False):
+        summary = dict(title='Payload configuration', request=self.intent, investigated='', learned='',
+            completed=self.body, next_steps='', notes='', source_ids=['s1','s2','s3'])
+        note = dict(title='Payload configuration', body=self.body, tags=['payload'], source_ids=['s2','s3'],
+            observation=dict(type='change', subtitle='4096-byte limit applied; six validation checks passed',
+                narrative=self.body, facts=['A local bundle was created.'], concepts=['payload'],
+                files_read=[], files_modified=[]))
+        return dict(notes=[note], disposition='processed', session_summary=None if missing else summary)
+
+    def malformed(self):
+        # Independently remove the envelope delimiter; do not repair it in production.
+        return json.dumps({'result': self.candidate()}, ensure_ascii=False)[:-1]
+
+    def test_malformed_first_gets_one_full_replacement_with_original_failure_and_usage(self):
+        for runtime in ('codex', 'pi'):
+            with self.subTest(runtime=runtime):
+                self.setUp()
+                malformed, replacement = self.malformed(), self.candidate()
+                result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                    [malformed, replacement], runtime=runtime)
+                self.assertEqual('processed', result['status'], result)
+                self.assertEqual(2, len(transport.sent))
+                self.assertEqual(malformed, transport.delivered_raw[0])
+                self.assertEqual(replacement, json.loads(transport.delivered_raw[1])['result'])
+                self.assertEqual(['summary-support-v6','summary-source-v4','summary-outcome-v5'],
+                                 [request.context['version'] for request in reviews])
+                note = next(row for row in outputs if row['kind']=='note')
+                self.assertEqual(replacement['notes'][0]['observation'], note['observation'])
+                self.assertEqual(self.body, note['body'])
+                stored_summary = next(row for row in outputs if row['kind']=='session_summary')['session_summary']
+                expected_summary = dict(title='Payload configuration', request=self.intent,
+                    investigated=None, learned=None, completed=self.body, next_steps=None, notes=None)
+                self.assertEqual(expected_summary, {field: stored_summary[field] for field in expected_summary})
+                if runtime=='codex':
+                    for field in ('model','effort','outputSchema'):
+                        self.assertEqual(transport.sent[0][field], transport.sent[1][field])
+                self.assertEqual(1, len({request.deadline for request in reviews}))
+                self.assertIsNotNone(raw['superseded_by'])
+                calls = json.loads(attempts[0]['execution_calls'])
+                generation = calls['generation']
+                self.assertEqual(24, generation['metrics']['total_tokens'])
+                self.assertEqual(84, attempts[0]['total_tokens'])
+                details = generation['generations']
+                self.assertEqual([1,2], [row['number'] for row in details])
+                self.assertEqual(['failed','success'], [row['outcome'] for row in details])
+                self.assertEqual('invalid_json', details[0]['reason_code'])
+                self.assertEqual('invalid_response', details[0]['error_code'])
+                self.assertEqual('inventory-generation', details[0]['execution_id'])
+                self.assertEqual('generation-1' if runtime=='pi' else 'inventory-turn-1', details[0]['turn_id'])
+                self.assertEqual([12,12], [row['metrics']['total_tokens'] for row in details])
+                self.assertEqual('invalid_json', result['generation_correction']['initial_reason_code'])
+                self.assertNotIn(self.body, json.dumps(calls))
+                self.assertTrue(transport.closed)
+
+    def test_repeated_malformed_json_is_terminal_after_two_dispatches(self):
+        for runtime in ('codex', 'pi'):
+            with self.subTest(runtime=runtime):
+                self.setUp()
+                result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                    [self.malformed()]*2, runtime=runtime)
+                self.assertEqual('invalid_json', result.get('reason_code'), result)
+                self.assertEqual(2, len(transport.sent))
+                self.assertEqual([], reviews)
+                self.assert_no_partial_write(outputs, raw)
+                generation = json.loads(attempts[0]['execution_calls'])['generation']
+                self.assertEqual(['invalid_json']*2, [row['reason_code'] for row in generation['generations']])
+                self.assertEqual([12,12], [row['metrics']['total_tokens'] for row in generation['generations']])
+                self.assertEqual(24, attempts[0]['total_tokens'])
+
+    def test_replacement_cannot_get_another_shape_or_material_support_correction(self):
+        for runtime in ('codex', 'pi'):
+            for rejected in ('missing_summary', 'subtitle'):
+                with self.subTest(runtime=runtime, rejected=rejected):
+                    self.setUp()
+                    replacement = self.candidate(missing=rejected=='missing_summary')
+                    if rejected == 'subtitle':
+                        replacement['notes'][0]['observation']['subtitle'] = '4096-byte limit verified by six validation checks'
+                    # Authored support verdict checks routing only, never semantic quality.
+                    result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                        [self.malformed(), replacement], runtime=runtime,
+                        verdict='unsupported' if rejected=='subtitle' else 'supported',
+                        reject_unit='note:0:observation:subtitle')
+                    self.assertEqual('missing_required_summary' if rejected=='missing_summary' else 'summary_support_rejected',
+                                     result.get('reason_code'), result)
+                    self.assertEqual(2, len(transport.sent))
+                    self.assertEqual(0 if rejected=='missing_summary' else 1, len(reviews))
+                    self.assert_no_partial_write(outputs, raw)
+                    self.assertEqual('invalid_json', result['generation_correction']['initial_reason_code'])
+                    self.assertEqual(24 if rejected=='missing_summary' else 44, attempts[0]['total_tokens'])
+
+    def test_failure_checkpoint_precedes_custody_and_deadline_recheck(self):
+        for runtime in ('codex', 'pi'):
+            for changed in ('deadline', 'edited', 'deleted'):
+                with self.subTest(runtime=runtime, changed=changed):
+                    self.setUp()
+                    def change_source():
+                        with Store(self.data) as store:
+                            if changed == 'deleted':
+                                store.forget(self.project, [self.raw['id']])
+                            elif changed == 'edited':
+                                store._connection.execute('UPDATE entries SET body=? WHERE id=?',
+                                                          ('Changed public source', self.raw['id']))
+                                store._connection.commit()
+                    result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                        [self.malformed(), self.candidate()], runtime=runtime,
+                        expire_on_diagnostic=changed=='deadline', on_generation_failure=change_source)
+                    self.assertEqual(1, len(transport.sent), result)
+                    self.assertEqual(1, len(transport.failures_seen))
+                    self.assertEqual([], reviews)
+                    self.assertEqual([], outputs)
+                    self.assertEqual('timeout' if changed=='deadline' else 'invalid_response', result.get('code'), result)
+                    if changed in ('edited', 'deleted'):
+                        self.assertEqual('summary_support_stale', result.get('reason_code'))
+                    self.assertEqual(12, attempts[0]['total_tokens'])
+                    details = json.loads(attempts[0]['execution_calls'])['generation']['generations']
+                    self.assertEqual(1, len(details))
+                    self.assertEqual('invalid_json', details[0]['reason_code'])
+
+    def test_per_generation_usage_keeps_unknown_boundaries_without_double_counting(self):
+        for runtime in ('codex', 'pi'):
+            for unknown in ((1,), (2,), (1,2)):
+                with self.subTest(runtime=runtime, unknown=unknown):
+                    self.setUp()
+                    result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                        [self.malformed(), self.candidate()], runtime=runtime, unknown_usage=unknown)
+                    self.assertEqual('processed', result['status'], result)
+                    generation = json.loads(attempts[0]['execution_calls'])['generation']
+                    expected_details = ([None, None] if runtime=='codex' and 1 in unknown else
+                                        [None if n in unknown else 12 for n in (1,2)])
+                    self.assertEqual(expected_details, [row['metrics']['total_tokens'] for row in generation['generations']])
+                    expected_total = (None if len(unknown)==2 else 24 if runtime=='codex' and unknown==(1,) else 12)
+                    self.assertEqual(expected_total, generation['metrics']['total_tokens'])
+                    self.assertEqual(None if expected_total is None else expected_total+60, attempts[0]['total_tokens'])
+                    for row, total in zip(generation['generations'], expected_details):
+                        if total is None:
+                            self.assertEqual('unavailable', row['metrics']['usage_status'])
+
+    def test_quality_failure_after_json_replacement_cannot_buy_another_generation(self):
+        from tests.test_jev_quality import response
+        for runtime in ('codex', 'pi'):
+            for uncertain in (False, True):
+                with self.subTest(runtime=runtime, uncertain=uncertain):
+                    self.setUp()
+                    def evaluate(payload):
+                        return response(payload, .5 if uncertain else .01, .5 if uncertain else .99)
+                    result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                        [self.malformed(), self.candidate()], runtime=runtime, quality_evaluator=evaluate)
+                    self.assertEqual('jev_quality_uncertain' if uncertain else 'jev_quality_rejected',
+                                     result.get('reason_code'), result)
+                    self.assertEqual(2, len(transport.sent))
+                    self.assert_no_partial_write(outputs, raw)
+                    self.assertEqual('invalid_json', result['generation_correction']['initial_reason_code'])
+
+    def test_valid_shape_correction_then_malformed_cannot_reset_the_allowance(self):
+        for runtime in ('codex', 'pi'):
+            with self.subTest(runtime=runtime):
+                self.setUp()
+                result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                    [self.candidate(True), self.malformed()], runtime=runtime)
+                self.assertEqual('invalid_json', result.get('reason_code'), result)
+                self.assertEqual(2, len(transport.sent))
+                self.assertEqual('missing_required_summary', result['generation_correction']['initial_reason_code'])
+                self.assert_no_partial_write(outputs, raw)
+                self.assertEqual(24, attempts[0]['total_tokens'])

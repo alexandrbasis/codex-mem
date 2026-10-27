@@ -793,6 +793,75 @@ class ObserverUsageStoreTests(unittest.TestCase):
             ).fetchone()[0],
         )
 
+    def test_generation_details_are_bounded_sanitized_and_not_added_to_totals(self):
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-generations')
+        begin_attempt(self.store, self.project, 'job-generations', 1, profile=profile)
+        first = dict(number=1, execution_id='synthetic-worker', turn_id='synthetic-turn-1',
+            outcome='failed', error_code='invalid_response', reason_code='invalid_json',
+            usage=self.metrics()['usage'])
+        second = dict(number=2, execution_id='synthetic-worker', turn_id='synthetic-turn-2',
+            outcome='failed', error_code='invalid_response', reason_code='untrusted diagnostic prose',
+            usage=self.metrics(status='unavailable')['usage'])
+        metrics = dict(self.metrics(status='partial'), generations=[first, second])
+        record_execution_call(self.store, self.project, 'job-generations', 1, 'generation',
+                              profile=profile, metrics=metrics, outcome='failed')
+        finish_attempt(self.store, self.project, 'job-generations', 1, outcome='failed', metrics=metrics)
+        row = self.store.observation_attempts(self.project, 'job-generations')[0]
+        details = json.loads(row['execution_calls'])['generation']['generations']
+        self.assertEqual(130, row['total_tokens'])
+        self.assertEqual([130, None], [detail['metrics']['total_tokens'] for detail in details])
+        self.assertTrue(all(detail['metrics']['duration_ms'] is None for detail in details))
+        self.assertEqual('invalid_json', details[0]['reason_code'])
+        self.assertIsNone(details[1]['reason_code'])
+        self.assertNotIn('untrusted diagnostic prose', row['execution_calls'])
+
+    def test_generation_details_reject_extra_content_and_rewriting_an_existing_failure(self):
+        import copy
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-generation-guard')
+        begin_attempt(self.store, self.project, 'job-generation-guard', 1, profile=profile)
+        first = dict(number=1, execution_id='synthetic-worker', turn_id='synthetic-turn-1',
+            outcome='failed', error_code='invalid_response', reason_code='invalid_json',
+            usage=self.metrics()['usage'])
+        metrics = dict(self.metrics(), generations=[first])
+        record_execution_call(self.store, self.project, 'job-generation-guard', 1, 'generation',
+                              profile=profile, metrics=metrics)
+        altered = copy.deepcopy(metrics)
+        altered['generations'][0]['reason_code'] = 'invalid_output_shape'
+        extra = copy.deepcopy(metrics)
+        extra['generations'][0]['raw_response'] = 'Must never enter operational diagnostics.'
+        for invalid in (altered, extra, dict(metrics, generations=[first]*3)):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                record_execution_call(self.store, self.project, 'job-generation-guard', 1, 'generation',
+                                      profile=profile, metrics=invalid)
+        row = self.store.observation_attempts(self.project, 'job-generation-guard')[0]
+        details = json.loads(row['execution_calls'])['generation']['generations']
+        self.assertEqual(1, len(details))
+        self.assertEqual('invalid_json', details[0]['reason_code'])
+        self.assertNotIn('Must never enter', row['execution_calls'])
+
+    def test_invalid_generation_usage_keeps_failure_and_aggregate_without_fake_counters(self):
+        from codex_mem.execution import legacy_profile
+        profile = legacy_profile()
+        self.add_job('job-generation-invalid-usage')
+        begin_attempt(self.store, self.project, 'job-generation-invalid-usage', 1, profile=profile)
+        usage = self.metrics()['usage']
+        usage['tokens']['cached_input_tokens'] = 101  # Exceeds the measured input total of 100.
+        detail = dict(number=1, execution_id='synthetic-worker', turn_id='synthetic-turn-1',
+            outcome='failed', error_code='invalid_response', reason_code='invalid_json', usage=usage)
+        record_execution_call(self.store, self.project, 'job-generation-invalid-usage', 1, 'generation',
+                              profile=profile, metrics=dict(self.metrics(), generations=[detail]))
+        row = self.store.observation_attempts(self.project, 'job-generation-invalid-usage')[0]
+        call = json.loads(row['execution_calls'])['generation']
+        self.assertEqual(130, call['metrics']['total_tokens'])
+        saved = call['generations'][0]
+        self.assertEqual('invalid_json', saved['reason_code'])
+        self.assertEqual('invalid', saved['metrics']['usage_status'])
+        self.assertTrue(all(saved['metrics'][counter] is None for counter in COUNTERS))
+
 
 if __name__ == "__main__":
     unittest.main()

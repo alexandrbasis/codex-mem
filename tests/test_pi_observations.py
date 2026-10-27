@@ -164,9 +164,9 @@ class PiObservationTests(unittest.TestCase):
         self.assertEqual('failed', failed['status'], diagnostics)
         attempt = next(row for row in self.attempts(failed) if row['attempt_count'] == 1)
         evidence = json.loads(attempt['execution_receipt'])
-        self.assertEqual(1, evidence['generation'], diagnostics)
+        self.assertEqual(2 if mode == 'invalid_json' else 1, evidence['generation'], diagnostics)
         self.assertGreater(attempt['usage_updates'], 0, diagnostics)
-        self.assertEqual(12, attempt['total_tokens'], diagnostics)
+        self.assertEqual(24 if mode == 'invalid_json' else 12, attempt['total_tokens'], diagnostics)
         self.assertEqual('failed', attempt['outcome'], diagnostics)
         if mode in ('overflow', 'stderr_overflow'):
             self.assertEqual('pi_output_limit', failed['reason_code'], diagnostics)

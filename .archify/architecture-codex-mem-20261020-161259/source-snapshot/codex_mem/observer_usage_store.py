@@ -321,7 +321,7 @@ def _normalize_metrics(metrics: Mapping[str, Any] | None) -> dict[str, Any]:
     }
     if metrics is None:
         return result
-    if not isinstance(metrics, Mapping) or set(metrics) not in (
+    if not isinstance(metrics, Mapping) or set(metrics) - {"generations"} not in (
             {"duration_ms", "usage"}, {"duration_ms", "usage", "execution_receipt"}):
         raise ValueError("metrics must contain duration_ms and usage")
     from .execution import pi_execution_receipt
@@ -441,6 +441,36 @@ def _merge(existing: sqlite3.Row, incoming: dict[str, Any], outcome: str) -> dic
     return merged
 
 
+def _generation_details(metrics):
+    """Sanitize at most two diagnostic rows; these never contribute to totals."""
+    rows = metrics.get("generations") if isinstance(metrics, Mapping) else None
+    if rows is None:
+        return None
+    if not isinstance(rows, list) or not 1 <= len(rows) <= 2:
+        raise ValueError("invalid generation details")
+    from .observation_diagnostics import safe_failure_reason
+    result = []
+    fields = {"number", "execution_id", "turn_id", "outcome", "error_code", "reason_code", "usage"}
+    for number, row in enumerate(rows, 1):
+        if (not isinstance(row, Mapping) or set(row) != fields or type(row["number"]) is not int
+                or row["number"] != number or row["outcome"] not in ("success", "failed")):
+            raise ValueError("invalid generation details")
+        code = _safe_code(row["error_code"])
+        if (row["outcome"] == "success") != (code is None):
+            raise ValueError("invalid generation outcome")
+        try:
+            measurement = _normalize_metrics(dict(duration_ms=0, usage=row["usage"]))
+        except ValueError:
+            measurement = _normalize_metrics(None)
+            measurement["usage_status"] = "invalid"
+        measurement["duration_ms"] = None  # Per-generation duration was not measured.
+        result.append(dict(number=number, execution_id=_identifier(row["execution_id"], "execution_id"),
+            turn_id=_identifier(row["turn_id"], "turn_id"), outcome=row["outcome"], error_code=code,
+            reason_code=safe_failure_reason(code, row["reason_code"]),
+            metrics=measurement))
+    return result
+
+
 def record_execution_call(store, project, job_id, attempt_count, call_id, *, profile,
                           outcome="running", metrics=None, identity=None, failure=None,
                           worker_thread_id=None, worker_turn_id=None, review_diagnostic=None):
@@ -457,6 +487,7 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
     from .execution import normalize_profile
     from .summary_support import safe_diagnostic
     checked_diagnostic = safe_diagnostic(review_diagnostic) if review_diagnostic is not None else None
+    generations = _generation_details(metrics) if call_id == "generation" else None
     requested = normalize_profile(profile.to_dict())
     try:
         normalized = _normalize_metrics(metrics)
@@ -508,6 +539,11 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
                     incoming["metrics"] = old["metrics"]
                     if incoming["metrics"]["usage_status"] == "reported" and outcome == "failed":
                         incoming["metrics"]["usage_status"] = "partial"
+            if generations is not None or (old and old.get("generations")):
+                previous = old.get("generations", []) if old else []
+                if generations is not None and generations[:len(previous)] != previous:
+                    raise ValueError("generation details changed")
+                incoming["generations"] = generations if generations is not None else previous
             if checked_diagnostic is not None or (old and old.get("review_diagnostic")):
                 incoming["review_diagnostic"] = checked_diagnostic or old["review_diagnostic"]
             calls[call_id] = incoming

@@ -11,7 +11,7 @@ import signal
 import subprocess
 import tempfile
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import contextmanager
 
 from .execution import ExecutionFailure, ExecutionIdentity, ExecutionResult
@@ -439,10 +439,13 @@ def _prepared(pi, profile, deadline, run, *, output_schema=None):
 
 class PiProcessorRunner:
     """One ephemeral Pi subprocess per attempt, at most one correction."""
-    def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None, before_dispatch=None):
+    def __init__(self, *, pi="pi", usage_checkpoint=None, candidate_review=None,
+                 failure_review: Callable[[ExecutionFailure, float], str | None] | None = None,
+                 before_dispatch=None):
         self.pi = pi
         self.usage_checkpoint = usage_checkpoint
         self.candidate_review = candidate_review
+        self.failure_review = failure_review
         self.before_dispatch = before_dispatch
 
     def check_profile(self, profile, *, timeout=10):
@@ -456,9 +459,22 @@ class PiProcessorRunner:
         checkpointer = _UsageCheckpointer(self.usage_checkpoint)
         run = _Run(request.profile, lambda: checkpoint())
         run.schema_requested = request.job_type == "summary_support" and request.profile.provider == "openai-codex"
+        generations = []
+        generation_start_updates = 0
+        track_generations = self.failure_review is not None and request.job_type in ("observation", "summary")
+        def capture_generation(error=None):
+            if not track_generations or not run.number or generations and generations[-1]["number"] == run.number:
+                return
+            tokens = dict(run.current_usage) if run.current_usage else None
+            complete = tokens is not None and {"input_tokens", "output_tokens", "total_tokens"} <= set(tokens)
+            usage = dict(status="reported" if complete and run.settled else "partial" if tokens else "unavailable",
+                source="pi_assistant_usage", updates=run.updates-generation_start_updates, tokens=tokens)
+            generations.append(dict(number=run.number, execution_id=run.session, turn_id=f"generation-{run.number}",
+                outcome="failed" if error else "success", error_code=error.code if error else None,
+                reason_code=error.reason_code if error else None, usage=usage))
         def metrics():
             return dict(duration_ms=round((time.monotonic() - started) * 1000), usage=run.usage(),
-                        execution_receipt=run.receipt())
+                        execution_receipt=run.receipt(), **({"generations": list(generations)} if generations else {}))
         def checkpoint():
             if run.session:
                 checkpointer.save(dict(worker_thread_id=run.session, worker_turn_id=f"generation-{run.number}",
@@ -476,6 +492,7 @@ class PiProcessorRunner:
                         self.before_dispatch()
                     if run.schema_contract:
                         run.schema_contract.verify_files()
+                    generation_start_updates = run.updates
                     run.begin()
                     response = client.request("prompt", run.observe, message=prompt)
                     if response.get("disposition") != "started":
@@ -489,9 +506,22 @@ class PiProcessorRunner:
                             run.schema_contract.verify()
                         finally:
                             checkpoint()
-                    output = run.output()
-                    remaining = client.remaining()
-                    correction = self.candidate_review(output, remaining) if self.candidate_review else None
+                    try:
+                        output = run.output()
+                    except ProcessorFailure as exc:
+                        capture_generation(exc)
+                        checkpoint()
+                        if (generation or not track_generations or run.schema_requested
+                                or exc.code != "invalid_response" or exc.reason_code != "invalid_json"):
+                            raise
+                        correction = self.failure_review(ExecutionFailure("invalid_output", exc.code,
+                            exc.reason_code, run.session, f"generation-{run.number}"), client.remaining())
+                        if correction is None:
+                            raise
+                    else:
+                        remaining = client.remaining()
+                        correction = self.candidate_review(output, remaining) if self.candidate_review else None
+                        capture_generation()
                     client.remaining()
                     if correction is None:
                         run.finished = True
@@ -508,6 +538,7 @@ class PiProcessorRunner:
             if not isinstance(error, ProcessorFailure):
                 error = (ProcessorFailure("runner_unavailable", reason_code="pi_launch_failed")
                          if isinstance(error, OSError) else ProcessorFailure("protocol_error", reason_code="pi_malformed_record"))
+            capture_generation(error)
             reason = {"timeout": "timeout", "runner_unavailable": "runtime_unavailable", "model_unavailable": "configuration",
                 "invalid_response": "invalid_output", "model_mismatch": "identity_mismatch", "protocol_error": "protocol",
                 "tool_called": "forbidden_tools", "lease_expired": "cancelled"}.get(error.code, "runtime_failure")

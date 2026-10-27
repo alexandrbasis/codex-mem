@@ -49,6 +49,8 @@ FIXED_SOURCES = (
     "tests/test_summary_outcome.py",
     "tests/test_jev_processor.py",
     "tests/test_execution_contract.py",
+    "tests/test_generation_shape_recovery.py",
+    "tests/test_observer_usage_store.py",
     "tests/test_service.py",
     "scripts/project_memory_acceptance.py",
     "docs/PI_RUNTIME.md",
