@@ -406,8 +406,10 @@ def process_pending(
                     detail = diagnostic(summary, generation_claim, version=version)
                     support_diagnostics.append(detail)
 
-                    def mark_review(status, invalid_subtype=None):
+                    def mark_review(status, invalid_subtype=None, *, error=None):
                         detail.update(status=status, invalid_subtype=invalid_subtype)
+                        if isinstance(error, SupportError) and error.rule_code is not None:
+                            detail.update(rule_code=error.rule_code, unit_id=error.unit_id)
                         record_execution_call(store, workspace, job_id, attempt_count, call_id,
                                               profile=profile, review_diagnostic=detail)
 
@@ -417,7 +419,7 @@ def process_pending(
                     except SupportError as exc:
                         record_execution_call(store, workspace, job_id, attempt_count, call_id,
                                               profile=profile, outcome="failed")
-                        mark_review("invalid", exc.subtype)
+                        mark_review("invalid", exc.subtype, error=exc)
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
 
                     def checkpoint_review(snapshot):
@@ -482,7 +484,7 @@ def process_pending(
                     try:
                         validated = validate_call(reviewed.output, payload)
                     except (SupportError, TypeError, ValueError, KeyError) as exc:
-                        mark_review("invalid", exc.subtype if isinstance(exc, SupportError) else "structure")
+                        mark_review("invalid", exc.subtype if isinstance(exc, SupportError) else "structure", error=exc)
                         source_guard("summary_support_invalid")
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
                     return validated, payload, mark_review

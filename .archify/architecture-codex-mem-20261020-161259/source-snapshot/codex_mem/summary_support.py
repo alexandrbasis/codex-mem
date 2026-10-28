@@ -31,6 +31,21 @@ OUTCOME_FIELDS = ("title", "investigated", "learned", "completed", "notes")
 REPORT_TARGETS = ("report_text", "reported_content", "other", "unresolved", "outside_outcome")
 REPORT_PROPERTIES = ("language", "organization", "content")
 
+# Only validator-owned rule and field names may enter operational receipts.
+VERDICT_RULES = ("unknown_verdict", "verdict_requires_evidence", "unknown_report_target",
+    "outside_outcome_binding", "outcome_requires_candidate_span", "outcome_requires_report_target",
+    "nonreport_binding_has_anchors", "nonreport_binding_has_properties", "report_requires_anchor",
+    "report_requires_property", "report_anchor_not_in_evidence", "reported_content_requires_content")
+DIAGNOSTIC_UNITS = (*FIELDS, *(f"note:{index}:{field}" for index in range(4)
+    for field in ("title", "body", "tags", "observation:type", "observation:subtitle",
+                  "observation:narrative", "observation:facts", "observation:concepts",
+                  "observation:files_read", "observation:files_modified")))
+
+
+def _valid_rule_unit(rule_code, unit_id):
+    return (isinstance(rule_code, str) and rule_code in VERDICT_RULES
+            and isinstance(unit_id, str) and unit_id in DIAGNOSTIC_UNITS)
+
 
 @dataclass(frozen=True)
 class BoundClaim:
@@ -61,7 +76,12 @@ def candidate_spans(units):
 
 class SupportError(ValueError):
     """A fixed diagnostic subtype, never model or source text."""
-    def __init__(self, subtype="structure"):
+    def __init__(self, subtype="structure", *, rule_code=None, unit_id=None):
+        if ((rule_code is not None or unit_id is not None)
+                and (subtype != "verdict" or not _valid_rule_unit(rule_code, unit_id))):
+            raise ValueError("invalid support diagnostic")
+        self.rule_code = rule_code
+        self.unit_id = unit_id
         self.subtype = subtype if subtype in INVALID_SUBTYPES else "structure"
         super().__init__(self.subtype)
 
@@ -78,16 +98,26 @@ def rejection_key(summary, evidence_fingerprint, interpretation, profile):
         contracts=[VERSION, SOURCE_VERSION, OUTCOME_VERSION]))
 
 
-def diagnostic(summary, claim, status="pending", invalid_subtype=None, *, version=VERSION):
-    return dict(version=version, candidate_fingerprint=_fingerprint(summary),
+def diagnostic(summary, claim, status="pending", invalid_subtype=None, *, version=VERSION,
+               rule_code=None, unit_id=None):
+    value = dict(version=version, candidate_fingerprint=_fingerprint(summary),
                 evidence_fingerprint=_fingerprint([claim["sources"], claim.get("context", [])]),
                 status=status, invalid_subtype=invalid_subtype)
+    if rule_code is not None or unit_id is not None:
+        value.update(rule_code=rule_code, unit_id=unit_id)
+        return safe_diagnostic(value)
+    return value
 
 
 def safe_diagnostic(value):
-    """Only fixed categories and hex digests may enter operational receipts."""
+    """Only fixed categories, code-owned fields and hex digests enter receipts."""
     keys = {"version", "candidate_fingerprint", "evidence_fingerprint", "status", "invalid_subtype"}
-    if (not isinstance(value, Mapping) or set(value) != keys or value["version"] not in (VERSION, "summary-support-v5", "summary-support-v4", "summary-source-v4", "summary-outcome-v4", "summary-outcome-v5", "summary-support-v1", "summary-support-v3", "summary-support-v2", "summary-source-v1", "summary-source-v2", "summary-source-v3", "summary-outcome-v1", "summary-outcome-v2", "summary-outcome-v3")
+    extended = keys | {"rule_code", "unit_id"}
+    if (not isinstance(value, Mapping) or set(value) not in (keys, extended)
+            or (set(value) == extended and (value["version"] != VERSION
+                or value["status"] != "invalid" or value["invalid_subtype"] != "verdict"
+                or not _valid_rule_unit(value["rule_code"], value["unit_id"])))
+            or value["version"] not in (VERSION, "summary-support-v5", "summary-support-v4", "summary-source-v4", "summary-outcome-v4", "summary-outcome-v5", "summary-support-v1", "summary-support-v3", "summary-support-v2", "summary-source-v1", "summary-source-v2", "summary-source-v3", "summary-outcome-v1", "summary-outcome-v2", "summary-outcome-v3")
             or value["status"] not in ("pending", "supported", "rejected", "uncertain", "invalid", "unavailable", "interpreted", "checked", "unused", "not_assessed")
             or value["invalid_subtype"] not in (*INVALID_SUBTYPES, None)
             or any(not isinstance(value[key], str) or not re.fullmatch(r"[0-9a-f]{64}", value[key])
@@ -371,7 +401,7 @@ def validate(output, payload):
         if row["coverage"] != group[0]["coverage"]:
             raise SupportError("unit_coverage")
         if row["verdict"] not in VERDICTS:
-            raise SupportError("verdict")
+            raise SupportError("verdict", rule_code="unknown_verdict", unit_id=unit)
         for key in TEXT_KEYS:
             if not isinstance(row[key], str) or not row[key].strip():
                 raise SupportError()
@@ -379,7 +409,7 @@ def validate(output, payload):
                 raise SupportError("bounds")
         _references(row["evidence_span_ids"], spans, 12)
         if row["verdict"] in ("supported", "contradicted") and not row["evidence_span_ids"]:
-            raise SupportError("verdict")
+            raise SupportError("verdict", rule_code="verdict_requires_evidence", unit_id=unit)
         comparison = {key: row[key] for key in (*TEXT_KEYS, "verdict", "evidence_span_ids")}
         if row["verdict"] != "supported":
             issues.append(dict(unit=unit, verdict=row["verdict"], comparison=comparison))
@@ -388,26 +418,36 @@ def validate(output, payload):
             raise SupportError()
         target, anchors, properties = binding["target"], binding["report_span_ids"], binding["properties"]
         if target not in REPORT_TARGETS:
-            raise SupportError("verdict")
+            raise SupportError("verdict", rule_code="unknown_report_target", unit_id=unit)
         _references(anchors, report_spans, 12)
         _references(properties, REPORT_PROPERTIES, 3)
         owned = {span["id"] for span in payload["candidate_spans"].get(unit, [])}
         _references(row["candidate_span_ids"], owned, 3)
         if unit not in OUTCOME_FIELDS:
             if target != "outside_outcome" or anchors or properties or row["candidate_span_ids"]:
-                raise SupportError("verdict")
+                raise SupportError("verdict", rule_code="outside_outcome_binding", unit_id=unit)
             continue
-        if not row["candidate_span_ids"] or target == "outside_outcome":
-            raise SupportError("verdict")
+        if not row["candidate_span_ids"]:
+            raise SupportError("verdict", rule_code="outcome_requires_candidate_span", unit_id=unit)
+        if target == "outside_outcome":
+            raise SupportError("verdict", rule_code="outcome_requires_report_target", unit_id=unit)
         if target in ("other", "unresolved"):
-            if anchors or properties:
-                raise SupportError("verdict")
+            if anchors:
+                raise SupportError("verdict", rule_code="nonreport_binding_has_anchors", unit_id=unit)
+            if properties:
+                raise SupportError("verdict", rule_code="nonreport_binding_has_properties", unit_id=unit)
             if target == "unresolved":
                 issues.append(dict(unit=unit, verdict="insufficient_context",
                                    comparison=dict(reason="report_binding_unresolved")))
-        elif (not anchors or not properties or not set(anchors) <= set(row["evidence_span_ids"])
-              or target == "reported_content" and properties != ["content"]):
-            raise SupportError("verdict")
+        else:
+            if not anchors:
+                raise SupportError("verdict", rule_code="report_requires_anchor", unit_id=unit)
+            if not properties:
+                raise SupportError("verdict", rule_code="report_requires_property", unit_id=unit)
+            if not set(anchors) <= set(row["evidence_span_ids"]):
+                raise SupportError("verdict", rule_code="report_anchor_not_in_evidence", unit_id=unit)
+            if target == "reported_content" and properties != ["content"]:
+                raise SupportError("verdict", rule_code="reported_content_requires_content", unit_id=unit)
         claims.append(BoundClaim(f"{unit}#{len(group)}", unit, tuple(row["candidate_span_ids"]),
             target, tuple(properties), tuple(sorted({report_spans[ref] for ref in anchors})),
             tuple(anchors), row["candidate_assertion"]))

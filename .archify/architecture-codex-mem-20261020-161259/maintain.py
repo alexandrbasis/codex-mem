@@ -46,6 +46,7 @@ FIXED_SOURCES = (
     "codex_mem/pi_schema_helper.js",
     "tests/test_summary_support.py",
     "tests/test_summary_support_contract.py",
+    "tests/test_support_diagnostics.py",
     "tests/test_summary_outcome.py",
     "tests/test_jev_processor.py",
     "tests/test_execution_contract.py",
