@@ -14,7 +14,7 @@ A timely response from the expected reviewer that fails typed response validatio
 
 Preparation errors, changed sources, missing execution identity, unavailable runtimes and unexpected internal exceptions remain blocking failures. The broad historical `summary_support_invalid` reason is not sufficient evidence to unblock a project.
 
-Explicit recovery of a historical outcome-review block requires the exact current failed job and attempt, a matching execution profile, and a durable successful reviewer call with an invalid outcome verdict. Recovery queues independent pending work. It preserves the failed job, its attempt count, source snapshot and diagnostics. It does not migrate all historical blocks or bypass another active blocker.
+Explicit recovery of a historical review block requires the exact current failed job and attempt, matching requested and actual execution identities, and a durable successful reviewer call with an invalid verdict from `summary-support-v6` or `summary-outcome-v5`. The receipt must belong to the final applicable review. An inconsistent later source receipt cannot authorize recovery. Recovery queues independent pending work. It preserves the failed job, its attempt count, source snapshot and diagnostics. It does not migrate all historical blocks or bypass another active blocker.
 
 The dashboard shows a retry date only for a waiting retry. A blocked project says that no retry is scheduled. An earlier error on an unblocked project is labelled as a past error.
 
