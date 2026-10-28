@@ -178,7 +178,7 @@ class OriginalEvidencePublicTests(unittest.TestCase):
                     self.assertEqual(1,len(records))
                 else:
                     self.assertEqual([],records)
-                    expected={'uncertain':'summary_support_uncertain','bad-reply':'summary_support_invalid',
+                    expected={'uncertain':'summary_support_uncertain','bad-reply':'summary_review_malformed',
                               'changed-custody':'summary_support_stale','prompt-overflow':'summary_support_invalid'}[scenario]
                     self.assertEqual(expected,result.get('reason_code'),result)
                 self.assertEqual(0 if scenario in ('changed-custody','prompt-overflow') else 1,len(captured))

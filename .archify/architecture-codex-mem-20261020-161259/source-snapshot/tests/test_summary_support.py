@@ -244,7 +244,7 @@ class SummarySupportTests(unittest.TestCase):
                     else: target['value_comparison'] = 'x' * 1201
                     return result
                 result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
-                self.assertEqual('summary_support_invalid', result['reason_code'])
+                self.assertEqual('summary_review_malformed', result['reason_code'])
                 detail = result['summary_support'][0]
                 self.assertEqual(subtype, detail['invalid_subtype'])
                 self.assertEqual('invalid', detail['status'])
@@ -340,7 +340,7 @@ class SummarySupportTests(unittest.TestCase):
                 configure(self.data, jev_filter_enabled=False, jev_quality_enabled=False)
                 self.seed()
                 result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=evaluator)
-                self.assertEqual('summary_support_invalid', result['reason_code'])
+                self.assertEqual('summary_review_malformed', result['reason_code'])
                 self.assertEqual([], self.stored(result)[0])
 
     def test_review_usage_sums_once_and_independent_identity_is_retained(self):
@@ -428,7 +428,7 @@ class SummarySupportTests(unittest.TestCase):
     def test_late_negative_review_quarantines_exact_attempt_without_ordinary_retry(self):
         for verdict, reason in [('contradicted', 'summary_support_rejected'),
                                 ('insufficient_context', 'summary_support_uncertain'),
-                                ('malformed', 'summary_support_invalid')]:
+                                ('malformed', 'summary_review_malformed')]:
             with self.subTest(verdict=verdict):
                 self.data = self.data.parent / verdict
                 configure(self.data, jev_filter_enabled=False, jev_quality_enabled=False)
@@ -745,7 +745,7 @@ class NativeSummarySupportTests(unittest.TestCase):
 
     def test_both_runtime_adapters_quarantine_bad_review_and_preserve_usage(self):
         for runtime in ('codex', 'pi'):
-            for mode, reason in [('malformed_review', 'summary_support_invalid'),
+            for mode, reason in [('malformed_review', 'summary_review_malformed'),
                                  ('invalid_json', 'summary_support_invalid'),
                                  ('duplicate_units', 'summary_support_invalid'),
                                  ('insufficient_context', 'summary_support_uncertain'),

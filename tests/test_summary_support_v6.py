@@ -119,7 +119,7 @@ class KeyedSupportPublicTests(unittest.TestCase):
             return receipt(output)
         generator=mock.Mock(side_effect=generate);reviewer=mock.Mock(side_effect=review)
         result=process_pending(self.project,self.data,runner=generator,summary_reviewer=reviewer)
-        self.assertEqual('summary_support_invalid',result.get('reason_code'),result)
+        self.assertEqual('summary_review_malformed',result.get('reason_code'),result)
         generator.assert_called_once();reviewer.assert_called_once()
         self.assertEqual('unit_coverage',result['summary_support'][0]['invalid_subtype'])
         self.assertEqual('summary-support-v6',result['summary_support'][0]['version'])
