@@ -2214,8 +2214,8 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
     """Require current failed-attempt proof of a completed malformed review.
 
     Historical general reasons alone carry no retry permission. Only an exact
-    successful support-v6 or outcome-v5 invalid-verdict call can recover that
-    older block.
+    successful supported-version invalid-verdict call can recover that older
+    block. Correction calls must retain their contract version.
     This operation reads no source bodies and never rewrites old receipts.
     """
     if not _valid_job_id(job_id):
@@ -2253,6 +2253,20 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
                     "summary_support_2", "summary_outcome_2")
         if not isinstance(calls, dict) or set(calls) - {"generation", *sequence}:
             return False
+        for stage, versions in (("summary_support", {"summary-support-v6", "summary-support-v7"}),
+                                ("summary_outcome", {"summary-outcome-v5", "summary-outcome-v6"})):
+            if stage + "_2" in calls:
+                # An initial support rejection can consume correction before
+                # any outcome call. Its first outcome then carries suffix 2.
+                if stage == "summary_outcome" and stage + "_1" not in calls:
+                    continue
+                first_call, second_call = calls.get(stage + "_1"), calls[stage + "_2"]
+                if not isinstance(first_call, Mapping) or not isinstance(second_call, Mapping):
+                    return False
+                first = safe_diagnostic(first_call.get("review_diagnostic"))
+                second = safe_diagnostic(second_call.get("review_diagnostic"))
+                if first["version"] not in versions or first["version"] != second["version"]:
+                    return False
         # The first source interpretation can follow either support pass.
         # Support rejection asks for correction before source interpretation;
         # outcome rejection instead reuses the already interpreted source.
@@ -2266,7 +2280,8 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
                     return False
                 first = safe_diagnostic(calls["summary_support_1"].get("review_diagnostic"))
                 second = safe_diagnostic(calls["summary_support_2"].get("review_diagnostic"))
-                if (first["version"] == second["version"] == "summary-support-v6"
+                if (first["version"] == second["version"]
+                        and first["version"] in {"summary-support-v6", "summary-support-v7"}
                         and first["status"] in {"rejected", "uncertain"} and second["status"] == "supported"):
                     call_id = "summary_source_1"
                 else:
@@ -2291,9 +2306,10 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
                 or not isinstance(call.get("turn_id"), str) or not call["turn_id"]):
             return False
         detail = safe_diagnostic(call.get("review_diagnostic"))
-        expected_version = ("summary-outcome-v5" if call_id.startswith("summary_outcome") else
-                            "summary-source-v4" if call_id.startswith("summary_source") else "summary-support-v6")
-        return (detail["version"] == expected_version and detail["status"] == "invalid"
+        expected_versions = ({"summary-outcome-v5", "summary-outcome-v6"}
+                             if call_id.startswith("summary_outcome") else {"summary-source-v4"}
+                             if call_id.startswith("summary_source") else {"summary-support-v6", "summary-support-v7"})
+        return (detail["version"] in expected_versions and detail["status"] == "invalid"
                 and detail["invalid_subtype"] is not None
                 and (not historical or detail["invalid_subtype"] == "verdict"))
     except (OSError, sqlite3.Error, ServiceError, ValueError, TypeError, KeyError):

@@ -18,8 +18,8 @@ class KeyedSupportContractTests(unittest.TestCase):
         return dict(version=support.VERSION, units={unit:[dict(unit_id=unit, coverage='complete',
             candidate_assertion='An attributed public finding.', evidence_assertion='The supplied report states the finding.',
             value_comparison='Authored same value.', attribution_comparison='Authored same speaker.',
-            scope_comparison='Authored same scope.', verdict='supported', evidence_span_ids=['current1:1'],
-            candidate_span_ids=[], report_binding=dict(target='outside_outcome', report_span_ids=[], properties=[]))]
+            scope_comparison='Authored same scope.', verdict='supported', citations=[dict(span_id='current1:1', role='evidence')],
+            candidate_span_ids=[], report_binding=dict(target='outside_outcome', properties=[]))]
             for unit in self.payload['units']})
 
     def test_missing_owner_cannot_be_hidden_by_sufficient_duplicated_comparisons(self):
@@ -76,10 +76,10 @@ class KeyedSupportContractTests(unittest.TestCase):
         self.assertEqual('summary-support-v5',historical['version'])
         with self.assertRaises(support.SupportError) as error:support.validate(historical,self.payload)
         self.assertEqual('structure',error.exception.subtype)
-        for version in ('summary-support-v5','summary-support-v6'):
+        for version in ('summary-support-v5','summary-support-v7'):
             detail=support.diagnostic(self.payload['units'],self.claim,'invalid','unit_coverage',version=version)
             self.assertEqual(detail,support.safe_diagnostic(detail))
-        self.assertEqual('summary-support-v6',support.diagnostic(self.payload['units'],self.claim)['version'])
+        self.assertEqual('summary-support-v7',support.diagnostic(self.payload['units'],self.claim)['version'])
 
     def test_duplicate_unit_keys_and_trailing_data_fail_in_both_existing_decoders(self):
         from unittest import mock
@@ -122,10 +122,10 @@ class KeyedSupportPublicTests(unittest.TestCase):
         self.assertEqual('summary_review_malformed',result.get('reason_code'),result)
         generator.assert_called_once();reviewer.assert_called_once()
         self.assertEqual('unit_coverage',result['summary_support'][0]['invalid_subtype'])
-        self.assertEqual('summary-support-v6',result['summary_support'][0]['version'])
+        self.assertEqual('summary-support-v7',result['summary_support'][0]['version'])
         outputs,attempts,raw=self.stored(result)
         self.assertEqual([],outputs);self.assertIsNone(raw['superseded_by']);self.assertEqual(body,raw['body'])
         calls=json.loads(attempts[0]['execution_calls'])
         self.assertEqual({'generation','summary_support_1'},set(calls))
-        self.assertEqual('summary-support-v6',calls['summary_support_1']['review_diagnostic']['version'])
+        self.assertEqual('summary-support-v7',calls['summary_support_1']['review_diagnostic']['version'])
         self.assertIsNone(attempts[0]['total_tokens'])

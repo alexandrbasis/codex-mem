@@ -119,7 +119,7 @@ class PacketSupportTests(unittest.TestCase):
         with mock.patch.object(NativeProcessorRunner, 'check_profile'), mock.patch.object(NativeProcessorRunner, 'run', generate):
             result = process_pending(self.project, self.data, summary_reviewer=review)
         self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
-        self.assertEqual(['summary-support-v6'], calls)
+        self.assertEqual(['summary-support-v7'], calls)
         self.assertEqual([], self.stored(result)[0])
 
     def test_changed_rejected_note_can_use_the_single_correction(self):
@@ -143,7 +143,7 @@ class PacketSupportTests(unittest.TestCase):
         with mock.patch.object(NativeProcessorRunner, 'check_profile'), mock.patch.object(NativeProcessorRunner, 'run', generate):
             result = process_pending(self.project, self.data, summary_reviewer=review)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v6'] * 2, calls)
+        self.assertEqual(['summary-support-v7'] * 2, calls)
         self.assertEqual('Reported checkpoint with unknown final status', self.stored(result)[0][0]['title'])
 
 

@@ -1,6 +1,7 @@
 """Isolated outcome checks: controlled replies prove wiring, not semantics."""
 import json
 import unittest
+from codex_mem.summary_support import VERSION as SUPPORT_VERSION
 from codex_mem.hooks import handle_hook
 from codex_mem.processor import process_pending
 from codex_mem.store import Store
@@ -196,7 +197,7 @@ class SummaryOutcomeTests(unittest.TestCase):
         reviewed = []
         def review(request):
             reviewed.append(request['version'])
-            if request['version'] == 'summary-support-v6':
+            if request['version'] == SUPPORT_VERSION:
                 self.assertTrue(any(item['body'] == old['body'] for item in request['evidence']))
             from codex_mem.observer_usage_store import COUNTERS
             result = supported_review(request)
@@ -222,7 +223,7 @@ class SummaryOutcomeTests(unittest.TestCase):
         with mock.patch.object(Store, 'finish_observation_batch', forget_before_finish):
             result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
         self.assertEqual('summary_support_stale', result.get('reason_code'), result)
-        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], reviewed)
+        self.assertEqual([SUPPORT_VERSION, 'summary-source-v4', 'summary-outcome-v6'], reviewed)
         with Store(self.data) as store:
             self.assertEqual([], store.get(self.project, [old['id']]))
             self.assertEqual([], store.observation_job_status(self.project, result['job_id'])['output_ids'])
@@ -253,7 +254,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                     unrelated = store.remember(unrelated_project, 'Other event', 'Unrelated evidence.',
                         source='hook:Stop', session_id='another-session')
                 def review(request):
-                    if request['version'] == 'summary-support-v6':
+                    if request['version'] == SUPPORT_VERSION:
                         self.assertNotIn('Unrelated evidence.', json.dumps(request))
                     return supported_review(request)
                 def generate(request):
@@ -294,7 +295,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                 return receipt(source_output(version=request['version'], coverage='complete', propositions=[dict(
                     statement='Two checks passed and three remain unrun.', subject='Checks in this report',
                     temporal_scope='This reported run', modality='reported', source_id='report1')]))
-            if request['version'] == 'summary-outcome-v5':
+            if request['version'] == 'summary-outcome-v6':
                 return receipt(outcome_output(request, 'conflict'))
             return supported_review(request)
         def generate(request):
@@ -309,7 +310,7 @@ class SummaryOutcomeTests(unittest.TestCase):
         self.assertFalse(records, 'A false outcome passed despite isolated contradiction')
         self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
         self.assertIn('summary-source-v4', stages)
-        self.assertIn('summary-outcome-v5', stages)
+        self.assertIn('summary-outcome-v6', stages)
 
     def test_unknown_partial_interpretation_does_not_veto_supported_history(self):
         self.capture()
@@ -323,13 +324,13 @@ class SummaryOutcomeTests(unittest.TestCase):
             return supported_review(request)
         result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=reviewer)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], [r['version'] for r in seen])
+        self.assertEqual([SUPPORT_VERSION, 'summary-source-v4', 'summary-outcome-v6'], [r['version'] for r in seen])
         self.assertEqual('unused', result['summary_support'][-1]['status'])
 
     def test_new_stage_failures_are_operational_and_keep_measured_usage(self):
         from codex_mem.config import configure
         from codex_mem.observer_usage_store import COUNTERS
-        for stage in ('summary-source-v4', 'summary-outcome-v5'):
+        for stage in ('summary-source-v4', 'summary-outcome-v6'):
             with self.subTest(stage=stage):
                 self.data = self.data.parent / stage
                 configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
@@ -355,7 +356,7 @@ class SummaryOutcomeTests(unittest.TestCase):
 
     def test_new_stages_fence_changed_sources_and_expired_lease(self):
         from codex_mem.config import configure
-        for stage in ('summary-source-v4', 'summary-outcome-v5'):
+        for stage in ('summary-source-v4', 'summary-outcome-v6'):
             for change in ('source', 'lease'):
                 with self.subTest(stage=stage, change=change):
                     self.data = self.data.parent / (stage + change)
@@ -381,7 +382,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                 return receipt(source_output(version=request['version'], coverage='partial', propositions=[dict(
                     statement='The report describes a partial result.', subject='Current report',
                     temporal_scope='Current Stop', modality='reported', source_id='report1')]))
-            if request['version'] == 'summary-outcome-v5':
+            if request['version'] == 'summary-outcome-v6':
                 with Store(self.data) as store:
                     store._connection.execute("UPDATE observation_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE status='running'")
                 return receipt(outcome_output(request, 'conflict'))
@@ -440,9 +441,9 @@ class SummaryOutcomeTests(unittest.TestCase):
                         return receipt(source_output(propositions=[dict(statement='Two checks passed.',
                             subject='Current run', temporal_scope='Current report', modality='reported', source_id='report1')]))
                     result = supported_review(request)
-                    if stage == 'support' and version == 'summary-support-v6' and calls.count(version) == 1:
+                    if stage == 'support' and version == SUPPORT_VERSION and calls.count(version) == 1:
                         comparison(result['output'])['verdict'] = 'contradicted'
-                    if stage == 'outcome' and version == 'summary-outcome-v5' and calls.count(version) == 1:
+                    if stage == 'outcome' and version == 'summary-outcome-v6' and calls.count(version) == 1:
                         result['output'] = outcome_output(request, 'conflict')
                     return result
                 def generate(instance, request):
@@ -475,7 +476,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                 def review(request):
                     calls.append(request['version'])
                     result = supported_review(request)
-                    if request['version'] == 'summary-support-v6' and calls.count(request['version']) == 1:
+                    if request['version'] == SUPPORT_VERSION and calls.count(request['version']) == 1:
                         comparison(result['output'])['verdict'] = 'contradicted'
                     return result
                 def generate(instance, request):
@@ -502,7 +503,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                     if change == 'source': self.assertEqual('summary_support_stale', result['reason_code'])
                     self.assertEqual([], self.stored(result)[0])
 
-    def test_empty_and_wholly_unknown_or_planned_interpretations_skip_outcome_call(self):
+    def test_unasserted_empty_unknown_and_planned_items_keep_unused_relations(self):
         from codex_mem.config import configure
         for modality in (None, 'unknown', 'planned'):
             with self.subTest(modality=modality):
@@ -519,7 +520,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                     return supported_review(request)
                 result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
                 self.assertEqual('processed', result['status'], result)
-                self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'], seen)
+                self.assertEqual([SUPPORT_VERSION, 'summary-source-v4', 'summary-outcome-v6'], seen)
                 self.assertEqual('unused', result['summary_support'][-1]['status'])
                 calls = json.loads(self.stored(result)[1][0]['execution_calls'])
                 self.assertEqual({'generation', 'summary_support_1', 'summary_source_1', 'summary_outcome_1'}, set(calls))
@@ -548,6 +549,43 @@ class OutcomeContractTests(unittest.TestCase):
         _, _, support_payload = prepare(summary,self.claim)
         review = validate(supported_review(support_payload)['output'],support_payload)
         return self.outcome.prepare_outcome(summary,review,interpretation,support_payload)
+
+    def test_attributed_plan_relations_can_be_compared_without_claiming_execution(self):
+        """Typed judgments exercise availability, not a semantic oracle."""
+        import copy
+        from codex_mem.summary_support import SupportError
+        from tests.test_summary_support_contract import schema_accepts
+
+        self.claim['sources'][-1]['body'] = 'I proposed scanning the map. Execution is not established.'
+        _, _, source = self.outcome.prepare_source(self.claim)
+        interpretation = self.outcome.validate_source(source_output(propositions=[dict(
+            statement='The assistant proposed scanning the map.', subject='The proposed scan',
+            temporal_scope='This report', modality='planned', source_id='report1',
+            target='reported_content')]), source)
+        self.summary = dict(completed='The assistant report proposed scanning the map; execution is not established.')
+        _, schema, payload = self.prepare_bound(interpretation=interpretation)
+        output = outcome_output(payload)
+        pair = next(pair for pair in payload['relations'] if pair['source_item_id'] == 'p1')
+        row = next(row for row in output['rows'] if row['relation_id'] == pair['id'])
+        row.update(applicability='present', scope_relation='aligned', value='compatible')
+        self.assertEqual('checked', self.outcome.validate_outcome(output, payload).status)
+        self.assertTrue(schema_accepts(output, schema))
+        for value, status in (('incompatible', 'contradicted'), ('unresolved', 'uncertain')):
+            with self.subTest(value=value):
+                row['value'] = value
+                self.assertEqual(status, self.outcome.validate_outcome(output, payload).status)
+                self.assertTrue(schema_accepts(output, schema))
+        row['value'] = 'not_established'
+        with self.assertRaises(SupportError):
+            self.outcome.validate_outcome(output, payload)
+
+        unknown = copy.deepcopy(interpretation)
+        unknown['items'][0].update(modality='unknown', availability='unknown')
+        _, _, unavailable_payload = self.prepare_bound(interpretation=unknown)
+        self.assertEqual('uncertain', self.outcome.validate_outcome(output, unavailable_payload).status)
+        row['value'] = 'compatible'
+        with self.assertRaises(SupportError):
+            self.outcome.validate_outcome(output, unavailable_payload)
 
     def test_source_is_candidate_blind_complete_and_preserves_identity(self):
         self.assertNotIn('PRIVATE_REQUEST', self.prompt)
@@ -608,7 +646,7 @@ class OutcomeContractTests(unittest.TestCase):
     def test_all_relations_are_required_and_unknown_modalities_cannot_veto(self):
         import copy
         from codex_mem.summary_support import SupportError
-        for modality in ('unknown','planned'):
+        for modality in ('unknown',):
             interpretation=copy.deepcopy(self.interpretation)
             interpretation['items'][0].update(modality=modality,availability=modality)
             _, _, payload=self.prepare_bound(interpretation=interpretation)
@@ -714,13 +752,13 @@ class OutcomeContractTests(unittest.TestCase):
         from codex_mem.summary_support import prepare, validate, SupportError, TEXT_KEYS, VERDICTS
         _, schema, payload = prepare(self.summary, self.claim)
         for group in schema['properties']['units']['properties'].values():
-            comparison = group['items']
-            self.assertEqual({*TEXT_KEYS, 'verdict', 'evidence_span_ids', 'unit_id', 'coverage', 'candidate_span_ids','report_binding'}, set(comparison['properties']))
-            verdict_ref = comparison['properties']['verdict']['$ref']
-            self.assertEqual(list(VERDICTS), schema['$defs'][verdict_ref.removeprefix('#/$defs/')]['enum'])
+            for comparison in group['items'].get('anyOf', [group['items']]):
+                self.assertEqual({*TEXT_KEYS, 'verdict', 'citations', 'unit_id', 'coverage', 'candidate_span_ids','report_binding'}, set(comparison['properties']))
+                verdict_ref = comparison['properties']['verdict']['$ref']
+                self.assertEqual(list(VERDICTS), schema['$defs'][verdict_ref.removeprefix('#/$defs/')]['enum'])
         for verdict in ('supported', 'contradicted'):
             output = supported_review(payload)['output']
-            fixtures.comparison(output).update(verdict=verdict, evidence_span_ids=[])
+            fixtures.comparison(output).update(verdict=verdict, citations=[])
             with self.assertRaises(SupportError): validate(output, payload)
 
     def test_actual_native_entry_paths_emit_compatible_schemas_without_subprocesses(self):
@@ -764,7 +802,7 @@ class OutcomeContractTests(unittest.TestCase):
 
     def test_relation_wire_owns_every_complete_field_and_source_pair(self):
         _, schema, payload = self.prepare_bound()
-        self.assertEqual('summary-outcome-v5', payload['version'])
+        self.assertEqual('summary-outcome-v6', payload['version'])
         self.assertEqual({(field, item['id']) for field in payload['units']
                           for item in self.interpretation['items']},
                          {(row['unit_id'], row['source_item_id']) for row in payload['relations']})
@@ -773,11 +811,12 @@ class OutcomeContractTests(unittest.TestCase):
     def test_original_support_wire_is_keyed_and_versioned(self):
         from codex_mem.summary_support import prepare
         prompt, schema, payload = prepare(self.summary, self.claim)
-        self.assertEqual('summary-support-v6', payload['version'])
+        self.assertEqual(SUPPORT_VERSION, payload['version'])
         self.assertEqual({'version', 'units'}, set(schema['properties']))
         self.assertEqual(set(payload['units']), set(schema['properties']['units']['required']))
         for unit, group in schema['properties']['units']['properties'].items():
-            self.assertEqual([unit], group['items']['properties']['unit_id']['enum'])
+            for branch in group['items'].get('anyOf', [group['items']]):
+                self.assertEqual([unit], branch['properties']['unit_id']['enum'])
 
     def test_all_fifty_pairs_and_mixed_unavailable_propositions_are_preserved(self):
         import copy
@@ -785,7 +824,7 @@ class OutcomeContractTests(unittest.TestCase):
         summary={field:'A complete field with a qualifying clause.' for field in self.outcome.OUTCOME_FIELDS}
         interpretation=copy.deepcopy(self.interpretation)
         interpretation['items']=[dict(interpretation['items'][0],id=f'p{i}',
-            modality='planned' if i==9 else 'reported',availability='planned' if i==9 else 'reported') for i in range(10)]
+            modality='unknown' if i==9 else 'reported',availability='unknown' if i==9 else 'reported') for i in range(10)]
         _, schema, payload=self.prepare_bound(summary=summary,interpretation=interpretation)
         self.assertEqual(50,len(payload['relations']))
         self.assertEqual(50,schema['properties']['rows']['maxItems'])

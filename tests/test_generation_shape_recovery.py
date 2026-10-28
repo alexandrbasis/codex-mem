@@ -157,7 +157,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
                 reviews.append(request)
                 output = supported_review(request.context)['output']
                 nonlocal support_number
-                if request.context['version'] == 'summary-support-v6':
+                if request.context['version'] == 'summary-support-v7':
                     chosen = verdict[support_number] if isinstance(verdict, list) else verdict
                     support_number += 1
                     if chosen != 'supported':
@@ -221,7 +221,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
         result, transport, reviews, outputs, attempts, raw = self.run_candidates([missing, complete])
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(2, len(transport.sent))
-        self.assertEqual(['summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'],
+        self.assertEqual(['summary-support-v7', 'summary-source-v4', 'summary-outcome-v6'],
                          [request.context['version'] for request in reviews])
         self.assertEqual(2, len(outputs))
         self.assertEqual(self.body, next(row for row in outputs if row['kind']=='note')['body'])
@@ -263,7 +263,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
             [self.candidate(True), self.candidate()], verdict='unsupported')
         self.assertEqual('summary_support_rejected', result.get('reason_code'), result)
         self.assertEqual(2, len(transport.sent))
-        self.assertEqual(['summary-support-v6'], [request.context['version'] for request in reviews])
+        self.assertEqual(['summary-support-v7'], [request.context['version'] for request in reviews])
         self.assert_no_partial_write(outputs, raw)
         calls = json.loads(attempts[0]['execution_calls'])
         self.assertEqual({'generation', 'summary_support_1'}, set(calls))
@@ -344,7 +344,7 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
             [complete, corrected], verdict=['unsupported', 'supported'])
         self.assertEqual('processed', result['status'], result)
         self.assertEqual(2, len(transport.sent))
-        self.assertEqual(['summary-support-v6', 'summary-support-v6', 'summary-source-v4', 'summary-outcome-v5'],
+        self.assertEqual(['summary-support-v7', 'summary-support-v7', 'summary-source-v4', 'summary-outcome-v6'],
                          [request.context['version'] for request in reviews])
         self.assertEqual(104, attempts[0]['total_tokens'])
         self.assertNotIn('generation_correction', result)
@@ -440,7 +440,7 @@ class GenerationJsonRecoveryTests(unittest.TestCase):
                 self.assertEqual(2, len(transport.sent))
                 self.assertEqual(malformed, transport.delivered_raw[0])
                 self.assertEqual(replacement, json.loads(transport.delivered_raw[1])['result'])
-                self.assertEqual(['summary-support-v6','summary-source-v4','summary-outcome-v5'],
+                self.assertEqual(['summary-support-v7','summary-source-v4','summary-outcome-v6'],
                                  [request.context['version'] for request in reviews])
                 note = next(row for row in outputs if row['kind']=='note')
                 self.assertEqual(replacement['notes'][0]['observation'], note['observation'])

@@ -4,6 +4,7 @@ import unittest
 
 from codex_mem import summary_support as support
 from tests.test_summary_support import supported_review
+from tests.support_contract_fixtures import bind_report
 
 
 class SupportDiagnosticTests(unittest.TestCase):
@@ -15,17 +16,16 @@ class SupportDiagnosticTests(unittest.TestCase):
         _, _, self.payload = support.prepare(self.summary, self.claim)
         self.output = supported_review(self.payload)['output']
 
-    def test_missing_evidence_and_uncited_report_anchor_have_distinct_safe_diagnostics(self):
-        for spans, expected_rule in (([], 'verdict_requires_evidence'),
-                                     (['current2:1'], 'report_anchor_not_in_evidence')):
-            with self.subTest(rule=expected_rule):
-                output = copy.deepcopy(self.output)
-                output['units']['completed'][0]['evidence_span_ids'] = spans
-                with self.assertRaises(support.SupportError) as error:
-                    support.validate(output, self.payload)
-                self.assertEqual('verdict', error.exception.subtype)
-                self.assertEqual(expected_rule, error.exception.rule_code)
-                self.assertEqual('completed', error.exception.unit_id)
+    def test_missing_evidence_is_rejected_and_old_subset_diagnostic_stays_readable(self):
+        output = copy.deepcopy(self.output)
+        output['units']['completed'][0]['citations'] = []
+        with self.assertRaises(support.SupportError) as error:
+            support.validate(output, self.payload)
+        self.assertEqual(('verdict_requires_evidence','completed'),
+                         (error.exception.rule_code,error.exception.unit_id))
+        historical = support.diagnostic(self.summary,self.claim,'invalid','verdict',
+            version='summary-support-v6',rule_code='report_anchor_not_in_evidence',unit_id='completed')
+        self.assertEqual(historical,support.safe_diagnostic(historical))
 
 
     def test_verdict_checks_identify_the_fixed_rule_without_echoing_invalid_values(self):
@@ -43,7 +43,12 @@ class SupportDiagnosticTests(unittest.TestCase):
         for expected_rule, change in cases:
             with self.subTest(rule=expected_rule):
                 output = copy.deepcopy(self.output)
-                output['units']['completed'][0].update(change)
+                row=output['units']['completed'][0]
+                change=copy.deepcopy(change)
+                binding=change.pop('report_binding',None)
+                row.update(change)
+                if binding is not None:
+                    bind_report(row,binding['target'],binding['report_span_ids'],binding['properties'])
                 with self.assertRaises(support.SupportError) as error:
                     support.validate(output, self.payload)
                 self.assertEqual('verdict', str(error.exception))
@@ -117,7 +122,7 @@ class SupportDiagnosticPersistenceTests(unittest.TestCase):
         def review(request):
             result = supported_review(request)
             row = result['output']['units']['completed'][0]
-            row.update(evidence_span_ids=[], candidate_assertion='PRIVATE REVIEWER TEXT')
+            row.update(citations=[], candidate_assertion='PRIVATE REVIEWER TEXT')
             return result
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
         self.assertEqual('summary_review_malformed', result.get('reason_code'), result)

@@ -17,10 +17,10 @@ def support_row(request, name, evidence, verdict='supported'):
         evidence_assertion='The cited evidence supports this attributed assertion.',
         value_comparison='Same asserted value.', attribution_comparison='Same reporting role.',
         scope_comparison='Same scope and certainty.', verdict=verdict,
-        evidence_span_ids=[anchor or evidence['spans'][0]['id']],
+        citations=[dict(span_id=anchor if outcome and report else evidence['spans'][0]['id'],
+            role='report_anchor' if outcome and report else 'evidence')],
         candidate_span_ids=[request['candidate_spans'][name][0]['id']] if outcome else [],
         report_binding=dict(target='report_text' if outcome and report else 'other' if outcome else 'outside_outcome',
-            report_span_ids=[anchor] if outcome and report else [],
             properties=['language','organization','content'] if outcome and report else []))
 
 
@@ -30,7 +30,7 @@ def outcome_output(request, relation='unused'):
     rows = []
     for pair in request['relations']:
         item = items[pair['source_item_id']]
-        available = item['availability'] in ('reported', 'observed_text', 'observed') and item['target'] != 'unresolved'
+        available = item['availability'] in ('reported', 'observed_text', 'observed', 'planned') and item['target'] != 'unresolved'
         app, scope, value = 'absent', 'not_compared', 'not_compared'
         if relation in ('conflict', 'incompatible', 'no_conflict', 'compatible') and available:
             app, scope, value = 'present', 'aligned', 'incompatible' if relation in ('conflict','incompatible') else 'compatible'
@@ -43,7 +43,7 @@ def outcome_output(request, relation='unused'):
 
 def support_output(payload, scenario, root):
     """Canned unit references exercise orchestration, never semantic assessment."""
-    if payload['version'] in ('summary-source-v4', 'summary-outcome-v5'):
+    if payload['version'] in ('summary-source-v4', 'summary-outcome-v6'):
         stage = 'source' if payload['version'] == 'summary-source-v4' else 'outcome'
         counter = root.with_suffix('.' + stage + '-count')
         number = int(counter.read_text()) + 1 if counter.exists() else 1
@@ -68,7 +68,7 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = dict(version='summary-support-v6', units={field:[support_row(payload, field, evidence, verdict)] for field in payload['units']})
+    output = dict(version='summary-support-v7', units={field:[support_row(payload, field, evidence, verdict)] for field in payload['units']})
     if mode == 'malformed_review': output['units'] = {}
     return output, mode
 
@@ -133,7 +133,7 @@ for raw in sys.stdin:
         if count == 1:
             candidate_payload = command['message'].split('\n')[-1]
             schema_version = json.loads(command['message'].split('\n\n', 1)[0].removeprefix('Output schema: ')).get('properties', {}).get('version', {}).get('enum', [None])[0] if command['message'].startswith('Output schema: ') else None
-            if schema_version == 'summary-source-v4' or candidate_payload.startswith(('{"version": "summary-support-v6"', '{"version": "summary-outcome-v5"')):
+            if schema_version == 'summary-source-v4' or candidate_payload.startswith(('{"version": "summary-support-v7"', '{"version": "summary-outcome-v6"')):
                 support = True
                 payload = {'version': schema_version} if schema_version == 'summary-source-v4' else json.loads(candidate_payload)
                 review_output, mode = support_output(payload, scenario, root)
@@ -256,7 +256,7 @@ catch { /* Pi also catches extension hook errors; acceptance still needs proof. 
             output = scenario['outputs'][min(count - 1, len(scenario['outputs']) - 1)]
         text = '{bad' if mode == 'invalid_json' else json.dumps(output)
         if mode == 'duplicate_units':
-            text = '{"version":"summary-support-v6","units":{"title":[],"title":[]}}'
+            text = '{"version":"summary-support-v7","units":{"title":[],"title":[]}}'
         message = {'role': 'assistant', 'provider': model['provider'], 'model': model['id'],
             'content': [{'type': 'text', 'text': text}], 'usage': {} if scenario.get('omit_usage') or (count == 1 and scenario.get('first_usage_unknown')) or (count == 2 and scenario.get('last_usage_unknown')) else usage,
             'stopReason': 'aborted' if mode == 'cancelled' else 'error' if mode == 'provider_error' else 'stop'}

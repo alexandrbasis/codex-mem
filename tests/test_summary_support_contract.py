@@ -83,12 +83,12 @@ class SupportContractTests(unittest.TestCase):
             value = copy.deepcopy(self.output); change(value); cases.append((name, value, expected, subtype))
         for verdict in support.VERDICTS:
             for refs in ([], ['current1:1']):
-                case((verdict, refs), lambda value, v=verdict, r=refs: comparison(value).update(verdict=v, evidence_span_ids=r,
-                         report_binding=dict(target='other', report_span_ids=[], properties=[])),
+                case((verdict, refs), lambda value, v=verdict, r=refs: comparison(value).update(verdict=v, citations=[dict(span_id=ref,role='evidence') for ref in r],
+                         report_binding=dict(target='other', properties=[])),
                      bool(refs) or verdict not in ('supported', 'contradicted'), 'verdict')
         case('missing unit', lambda v: v['units']['title'][0].update(unit_id='completed'), False, 'unit_coverage')
         case('unknown unit', lambda v: v['units']['title'][0].update(unit_id='other'), False, 'unit_coverage')
-        case('unknown span', lambda v: comparison(v).update(evidence_span_ids=['history999:1']), False, 'unknown_span')
+        case('unknown span', lambda v: comparison(v).update(citations=[dict(span_id='history999:1',role='evidence')]), False, 'unknown_span')
         case('invalid verdict', lambda v: comparison(v).update(verdict='maybe'), False, 'verdict')
         case('missing comparison', lambda v: v['units'].update(completed=[]), False, 'bounds')
         case('too many assertions', lambda v: v['units'].update(completed=[comparison(v)] * 9), False, 'bounds')
@@ -109,8 +109,10 @@ class SupportContractTests(unittest.TestCase):
 
     def test_shared_comparisons_keep_resolved_bounds_and_owner_references(self):
         rows = self.schema['properties']['units']['properties']
-        text_schemas = [rows[unit]['items']['properties'][key]
-                        for unit in rows for key in support.TEXT_KEYS]
+        text_schemas = [branch['properties'][key]
+                        for unit in rows
+                        for branch in rows[unit]['items'].get('anyOf', [rows[unit]['items']])
+                        for key in support.TEXT_KEYS]
         self.assertTrue(all(set(text) == {'$ref'} for text in text_schemas))
         self.assertEqual(1, len({text['$ref'] for text in text_schemas}))
         valid = copy.deepcopy(self.output)
@@ -119,7 +121,7 @@ class SupportContractTests(unittest.TestCase):
         changes = [
             lambda value: value['units'].pop('title'),
             lambda value: comparison(value).update(candidate_span_ids=['title:1']),
-            lambda value: comparison(value).update(evidence_span_ids=['current99:1']),
+            lambda value: comparison(value).update(citations=[dict(span_id='current99:1',role='evidence')]),
             lambda value: comparison(value).update(candidate_assertion='x' * 1201),
         ]
         for change in changes:
@@ -136,7 +138,9 @@ class SupportContractTests(unittest.TestCase):
             evidence_assertion='Five checks were not run.', value_comparison='Not run contradicts passed.', verdict='contradicted')
         comparisons.append(other)
         rejected = support.validate(self.output, self.payload).issues
-        self.assertEqual([{key: value for key, value in other.items() if key not in ('unit_id', 'coverage', 'candidate_span_ids', 'report_binding')}], [item['comparison'] for item in rejected])
+        expected={key:value for key,value in other.items() if key not in ('unit_id','coverage','candidate_span_ids','report_binding','citations')}
+        expected['evidence_span_ids']=[ref['span_id'] for ref in other['citations']]
+        self.assertEqual([expected],[item['comparison'] for item in rejected])
         feedback = support.correction_prompt(rejected)
         self.assertIn('Five checks were not run.', feedback)
         self.assertIn('untrusted feedback', feedback)

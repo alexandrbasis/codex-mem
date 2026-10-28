@@ -154,23 +154,25 @@ def receipt(output: dict, model: str, effort: str) -> dict:
 def current_copy_review(request: dict) -> dict:
     """Wiring-only receipt: unit references stay bounded; they do not judge meaning."""
     from codex_mem.processor import MODEL, REASONING_EFFORT
+    from codex_mem.summary_support import VERSION as SUPPORT_VERSION
+    from codex_mem.summary_outcome import OUTCOME_VERSION
     if request['version'] == 'summary-source-v4':
         return receipt(dict(version=request['version'], coverage='partial', propositions=[], text_observations={
             key: dict(status='unknown', value=None, scope='Current report only',
                       reason='Source-copy fixture does not interpret text.') for key in ('language', 'organization')}), MODEL, REASONING_EFFORT)
-    if request['version'] == 'summary-outcome-v5':
+    if request['version'] == OUTCOME_VERSION:
         return receipt(dict(version=request['version'], rows=[dict(relation_id=pair['id'], applicability='absent', scope_relation='not_compared', value='not_compared',
             scope_comparison='Synthetic unused property.',
             value_comparison='Source-copy fixture cannot assess meaning.') for pair in request['relations']]), MODEL, REASONING_EFFORT)
     source = request['evidence'][-1]
-    return {'output': {'version': 'summary-support-v6', 'units': {
+    return {'output': {'version': SUPPORT_VERSION, 'units': {
         field: [dict(unit_id=field, coverage='complete', candidate_assertion=f'The complete synthetic {field} assertion in the input-owned unit.',
             evidence_assertion='The source-copy fixture retains this content.', value_comparison='Same copied value.',
             attribution_comparison='Same reporting role.', scope_comparison='Same scope.', verdict='supported',
-            evidence_span_ids=[source['spans'][0]['id']],
+            citations=[dict(span_id=source['spans'][0]['id'], role='evidence')],
             candidate_span_ids=[request['candidate_spans'][field][0]['id']] if field in request['candidate_spans'] else [],
             report_binding=dict(target='other' if field in request['candidate_spans'] else 'outside_outcome',
-                report_span_ids=[], properties=[]))] for field in request['units']}}, 'evidence': {
+                properties=[]))] for field in request['units']}}, 'evidence': {
             'thread_start': {'thread_id': 'copy-review', 'model': MODEL,
                              'reasoning_effort': REASONING_EFFORT, 'model_provider': 'openai'},
             'turn_started': {'thread_id': 'copy-review', 'turn_id': 'copy-review-turn'},

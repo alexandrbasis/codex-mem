@@ -19,10 +19,10 @@ def support_row(request, name, evidence, verdict='supported'):
         evidence_assertion='The cited evidence supports this attributed assertion.',
         value_comparison='Same asserted value.', attribution_comparison='Same reporting role.',
         scope_comparison='Same scope and certainty.', verdict=verdict,
-        evidence_span_ids=[anchor or evidence['spans'][0]['id']],
+        citations=[dict(span_id=anchor if outcome and report else evidence['spans'][0]['id'],
+            role='report_anchor' if outcome and report else 'evidence')],
         candidate_span_ids=[request['candidate_spans'][name][0]['id']] if outcome else [],
         report_binding=dict(target='report_text' if outcome and report else 'other' if outcome else 'outside_outcome',
-            report_span_ids=[anchor] if outcome and report else [],
             properties=['language','organization','content'] if outcome and report else []))
 
 
@@ -32,7 +32,7 @@ def outcome_output(request, relation='unused'):
     rows = []
     for pair in request['relations']:
         item = items[pair['source_item_id']]
-        available = item['availability'] in ('reported', 'observed_text', 'observed') and item['target'] != 'unresolved'
+        available = item['availability'] in ('reported', 'observed_text', 'observed', 'planned') and item['target'] != 'unresolved'
         app, scope, value = 'absent', 'not_compared', 'not_compared'
         if relation in ('conflict', 'incompatible', 'no_conflict', 'compatible') and available:
             app, scope, value = 'present', 'aligned', 'incompatible' if relation in ('conflict','incompatible') else 'compatible'
@@ -45,7 +45,7 @@ def outcome_output(request, relation='unused'):
 
 def support_output(payload, scenario, root):
     """Canned unit references exercise orchestration, never semantic assessment."""
-    if payload['version'] in ('summary-source-v4', 'summary-outcome-v5'):
+    if payload['version'] in ('summary-source-v4', 'summary-outcome-v6'):
         stage = 'source' if payload['version'] == 'summary-source-v4' else 'outcome'
         counter = root.with_suffix('.' + stage + '-count')
         number = int(counter.read_text()) + 1 if counter.exists() else 1
@@ -70,7 +70,7 @@ def support_output(payload, scenario, root):
         mode = scenario['support_modes'][min(number - 1, len(scenario['support_modes']) - 1)]
     evidence = payload['evidence'][-1]
     verdict = mode if mode in ('unsupported', 'contradicted', 'insufficient_context') else 'supported'
-    output = dict(version='summary-support-v6', units={field:[support_row(payload, field, evidence, verdict)] for field in payload['units']})
+    output = dict(version='summary-support-v7', units={field:[support_row(payload, field, evidence, verdict)] for field in payload['units']})
     if mode == 'malformed_review': output['units'] = {}
     return output, mode
 
@@ -188,7 +188,7 @@ for line in sys.stdin:
             output = review_output
         text = '{invalid'  if mode == 'invalid_json' else json.dumps(output)
         if mode == 'duplicate_units':
-            text = '{"version":"summary-support-v6","units":{"title":[],"title":[]}}'
+            text = '{"version":"summary-support-v7","units":{"title":[],"title":[]}}'
         event('item/completed', item={'id': 'answer-' + str(turn_number), 'type': 'agentMessage', 'text': text, 'phase': 'final_answer'})
         event('turn/completed', turn={'id': turn_id, 'status': 'completed'})
         continue

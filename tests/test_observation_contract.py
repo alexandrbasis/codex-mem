@@ -85,7 +85,7 @@ class ObservationContractTests(unittest.TestCase):
         expected = 'summary_support_uncertain' if verdict == 'insufficient_context' else 'summary_support_rejected'
         self.assertEqual(expected, result.get('reason_code'), result)
         self.assertEqual([], self.stored(result)[0])
-        self.assertEqual(['summary-support-v6'], seen)
+        self.assertEqual(['summary-support-v7'], seen)
         self.assertEqual('uncertain' if verdict == 'insufficient_context' else 'rejected',
                          result['summary_support'][0]['status'])
 
@@ -134,7 +134,7 @@ class SummaryScopeContractTests(unittest.TestCase):
         result = process_pending(self.project, self.data, runner=lambda request: fixtures.receipt(candidate),
                                  summary_reviewer=Reviewer())
         self.assertEqual('processed', result['status'], result)
-        support = next(request for request in seen if request.context['version'] == 'summary-support-v6')
+        support = next(request for request in seen if request.context['version'] == 'summary-support-v7')
         # Exact material values, complete source text, and strict schema remain at the public boundary.
         expected = {}
         if kind != 'note-only':

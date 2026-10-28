@@ -49,6 +49,8 @@ FIXED_SOURCES = (
     "tests/test_support_diagnostics.py",
     "tests/test_outcome_recovery.py",
     "docs/adr/0013-isolate-malformed-review-responses.md",
+    "docs/adr/0014-preserve-plans-and-single-review-citations.md",
+    "tests/test_summary_support_v7.py",
     "tests/test_summary_outcome.py",
     "tests/test_jev_processor.py",
     "tests/test_execution_contract.py",

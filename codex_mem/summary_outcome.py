@@ -12,7 +12,7 @@ from .summary_support import (SupportError, SupportReview, MAX_PROMPT_CHARS, MAX
                               _fingerprint, material_units, candidate_spans, original_reports, SPAN_CHARS)
 
 SOURCE_VERSION = 'summary-source-v4'
-OUTCOME_VERSION = 'summary-outcome-v5'
+OUTCOME_VERSION = 'summary-outcome-v6'
 MAX_CONTENT_PROPOSITIONS = 8
 MAX_PROPOSITIONS = MAX_CONTENT_PROPOSITIONS + 2
 PURPOSES = {
@@ -317,8 +317,13 @@ def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
         'Use applicability absent, scope_relation not_compared, value not_compared for a property the candidate does not assert. '
         'Unresolved applicability requires scope_relation unresolved and value unresolved. For present applicability, '
         'disjoint scope requires not_compared; unresolved scope requires unresolved. For present/aligned, available '
-        'source items permit compatible, incompatible or unresolved values. Available means reported, observed_text or '
-        'observed availability with a resolved target. Planned, unknown, not_applicable or unresolved-target items '
+        'source items permit compatible, incompatible or unresolved values. Available means reported, observed_text, '
+        'observed or planned availability with a resolved target. A known plan or proposal is comparable as what '
+        'the original report proposes. Compatible requires preserving its proposed or unfinished modality and '
+        'report attribution. A plan alone establishes neither external execution nor nonexecution. '
+        'Incompatible requires an actual conflict within the same report scope, including conflicting descriptions '
+        'of the proposal. Unresolved completion, attribution or modality requires unresolved, not compatible. '
+        'Unknown, not_applicable or unresolved-target items '
         'cannot establish conflict: present/aligned requires not_established. All other state combinations are invalid. '
         'Compatible means the asserted scoped property agrees, without requiring the candidate to repeat every source detail. '
         'Incompatible requires conflicting values within the same residual scope. An unresolved applicable comparison '
@@ -328,7 +333,7 @@ def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
 
 
 def _available(item):
-    return item['availability'] in ('reported', 'observed_text', 'observed') and item['target'] != 'unresolved'
+    return item['availability'] in ('reported', 'observed_text', 'observed', 'planned') and item['target'] != 'unresolved'
 
 
 def _decision(applicability, scope, value, available):

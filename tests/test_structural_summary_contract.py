@@ -2,6 +2,7 @@
 import copy
 import dataclasses
 import unittest
+from codex_mem.summary_support import VERSION as SUPPORT_VERSION
 from tests.test_summary_support import support_rows
 from tests.support_contract_fixtures import authored_support_reply
 
@@ -15,16 +16,16 @@ class StructuralSupportTests(unittest.TestCase):
         self.prompt, self.schema, self.payload = support.prepare(self.summary, self.claim)
 
     def output(self):
-        return dict(version='summary-support-v6', units={u:[dict(unit_id=u, coverage='complete',
+        return dict(version=SUPPORT_VERSION, units={u:[dict(unit_id=u, coverage='complete',
             candidate_assertion='Synthetic scoped report assertion.', evidence_assertion='Supplied report.',
             value_comparison='Same value.', attribution_comparison='Same speaker.', scope_comparison='Same scope.',
-            verdict='supported', evidence_span_ids=['current1:1'],
+            verdict='supported', citations=[dict(span_id='current1:1', role='report_anchor')],
             candidate_span_ids=[self.payload['candidate_spans'][u][0]['id']],
-            report_binding=dict(target='report_text', report_span_ids=['current1:1'], properties=['content']))]
+            report_binding=dict(target='report_text', properties=['content']))]
             for u in self.payload['units']})
 
     def test_original_report_bindings_produce_immutable_owned_claims(self):
-        self.assertEqual('summary-support-v6', self.payload['version'])
+        self.assertEqual(SUPPORT_VERSION, self.payload['version'])
         review = support.validate(self.output(), self.payload)
         self.assertEqual((), review.issues)
         self.assertEqual(('current1',), review.claims[0].report_ids)
@@ -64,7 +65,8 @@ class StructuralOutcomeTests(unittest.TestCase):
         self.claim = dict(sources=[dict(id='raw', source='hook:Stop', body='A supplied report.')], context=[])
         _, _, self.payload = support.prepare(self.summary, self.claim)
         output = StructuralSupportTests.output(self)
-        support_rows(output)[0]['report_binding'] = dict(target='other', report_span_ids=[], properties=[])
+        support_rows(output)[0]['report_binding'] = dict(target='other', properties=[])
+        support_rows(output)[0]['citations']=[dict(ref,role='evidence') for ref in support_rows(output)[0]['citations']]
         support_rows(output)[1]['report_binding']['properties'] = ['language']
         self.review = support.validate(output, self.payload)
         _, _, source = outcome.prepare_source(self.claim)
@@ -78,7 +80,7 @@ class StructuralOutcomeTests(unittest.TestCase):
     def typed_output(self, payload, app='present', scope='aligned', value='compatible'):
         # This authored scenario compares the first item; all other sent properties are explicitly unused.
         item_id=payload['interpretation']['items'][0]['id']
-        return dict(version='summary-outcome-v5', rows=[dict(relation_id=pair['id'],
+        return dict(version='summary-outcome-v6', rows=[dict(relation_id=pair['id'],
             applicability=app if pair['source_item_id']==item_id else 'absent',
             scope_relation=scope if pair['source_item_id']==item_id else 'not_compared',
             value=value if pair['source_item_id']==item_id else 'not_compared',
@@ -117,13 +119,13 @@ class StructuralPublicTests(unittest.TestCase):
         def review(request):
             seen.append(request['version'])
             result = supported_review(request)
-            if request['version'] == 'summary-outcome-v5':
+            if request['version'] == 'summary-outcome-v6':
                 result['output']['rows'][0].update(applicability='present', scope_relation='aligned', value='unresolved')
             return result
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
         self.assertEqual('summary_support_uncertain', result.get('reason_code'), result)
         self.assertEqual([], self.stored(result)[0])
-        self.assertEqual(['summary-support-v6','summary-source-v4','summary-outcome-v5'], seen)
+        self.assertEqual([SUPPORT_VERSION,'summary-source-v4','summary-outcome-v6'], seen)
 
     def test_unclaimed_unknown_property_uses_existing_outcome_call_and_unused_ledger(self):
         import json
@@ -138,7 +140,7 @@ class StructuralPublicTests(unittest.TestCase):
             return supported_review(request)
         result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
         self.assertEqual('processed', result['status'], result)
-        self.assertEqual(['summary-support-v6','summary-source-v4','summary-outcome-v5'], seen)
+        self.assertEqual([SUPPORT_VERSION,'summary-source-v4','summary-outcome-v6'], seen)
         self.assertEqual('unused', result['summary_support'][-1]['status'])
         calls = json.loads(self.stored(result)[1][0]['execution_calls'])
         self.assertEqual({'generation','summary_support_1','summary_source_1','summary_outcome_1'}, set(calls))
@@ -184,7 +186,8 @@ class StructuralMatrixTests(unittest.TestCase):
 
     def test_mixed_claim_decisions_preserve_contradiction_priority(self):
         output = StructuralSupportTests.output(self)
-        support_rows(output)[0]['report_binding'] = dict(target='other',report_span_ids=[],properties=[])
+        support_rows(output)[0]['report_binding'] = dict(target='other',properties=[])
+        support_rows(output)[0]['citations']=[dict(ref,role='evidence') for ref in support_rows(output)[0]['citations']]
         base = output['units']['completed'][0]
         base['report_binding']['properties'] = ['language']
         output['units']['completed'].extend([copy.deepcopy(base),copy.deepcopy(base)])
@@ -257,7 +260,9 @@ class StructuralMatrixTests(unittest.TestCase):
             ('report_text','observed_text','The report supplies no final status.','No final status appears in this report.','compatible','checked'),
             ('reported_content','unknown','The operation completed.','Actual outcome unknown.','not_established','uncertain'),
             ('report_text','observed_text','The report records a plan.','This report includes a proposed operation.','compatible','checked'),
-            ('reported_content','planned','The operation completed.','The operation is planned.','not_established','uncertain'),
+            ('reported_content','planned','The report proposed the operation.','The operation is planned.','compatible','checked'),
+            ('reported_content','planned','The report proposed a different operation.','The operation is planned.','incompatible','contradicted'),
+            ('reported_content','planned','The operation completed.','The operation is planned.','unresolved','uncertain'),
         ):
             self.summary={'completed':assertion};_, _, self.payload=support.prepare(self.summary,self.claim)
             output=supported_review(self.payload)['output'];binding=support_rows(output)[0]['report_binding']
@@ -285,7 +290,7 @@ class StructuralBindingTests(unittest.TestCase):
         self.assertEqual({'current1','history1'},set(self.payload['report_catalog']))
         output=self.output()
         for row in support_rows(output):
-            row['evidence_span_ids']=['history1:1'];row['report_binding']['report_span_ids']=['history1:1']
+            row['citations']=[dict(span_id='history1:1', role='report_anchor')]
         review=support.validate(output,self.payload)
         _, _, source=outcome.prepare_source(self.claim)
         normalized=outcome.validate_source(source_output(),source)
@@ -294,8 +299,7 @@ class StructuralBindingTests(unittest.TestCase):
         self.assertEqual([],payload['relations'])
         # Structurally valid bindings are not proof that the model understood the referent.
         for row in support_rows(output):
-            row['evidence_span_ids']=['current1:1','history1:1']
-            row['report_binding']['report_span_ids']=['current1:1','history1:1']
+            row['citations']=[dict(span_id=ref, role='report_anchor') for ref in ['current1:1','history1:1']]
         review=support.validate(output,self.payload)
         normalized['items'].append(dict(id='p1',property='content',target='report_text',availability='observed_text',
             statement='Current acknowledgement text.',subject='Report',temporal_scope='Now',modality='observed_text',source_id='report1'))
@@ -307,11 +311,11 @@ class StructuralBindingTests(unittest.TestCase):
             lambda o:o['units']['completed'][0].update(candidate_span_ids=['title:1']),
             lambda o:o['units']['completed'][0].update(candidate_span_ids=[]),
             lambda o:o['units']['completed'][0].update(candidate_span_ids=['completed:1','completed:1']),
-            lambda o:o['units']['completed'][0]['report_binding'].update(report_span_ids=['history999:1']),
-            lambda o:o['units']['completed'][0].update(evidence_span_ids=[]),
+            lambda o:o['units']['completed'][0].update(citations=[dict(span_id='history999:1',role='report_anchor')]),
+            lambda o:o['units']['completed'][0].update(citations=[]),
             lambda o:o['units']['completed'][0]['report_binding'].update(properties=['language','language']),
             lambda o:o['units']['completed'][0]['report_binding'].update(target='reported_content',properties=['language']),
-            lambda o:o['units']['completed'][0]['report_binding'].update(target='outside_outcome',report_span_ids=[],properties=[]),
+            lambda o:o['units']['completed'][0]['report_binding'].update(target='outside_outcome',properties=[]),
             lambda o:o['units']['completed'][0]['report_binding'].update(target='other'),
             lambda o:o['units']['completed'][0]['report_binding'].update(target='unresolved'),
             lambda o:o['units']['completed'][0]['report_binding'].update(record_id='forged'),
@@ -323,12 +327,14 @@ class StructuralBindingTests(unittest.TestCase):
         _, _, self.payload=support.prepare(self.summary,self.claim)
         output=supported_review(self.payload)['output']
         row=next(r for r in support_rows(output) if r['unit_id']=='request')
-        row['report_binding'].update(target='report_text',report_span_ids=['current1:1'],properties=['content'])
+        row['report_binding'].update(target='report_text',properties=['content'])
+        row['citations']=[dict(span_id='current1:1',role='report_anchor')]
         with self.assertRaises(support.SupportError):support.validate(output,self.payload)
 
     def test_unresolved_binding_is_uncertain_while_adverse_support_verdict_is_preserved(self):
         output=self.output()
-        support_rows(output)[1]['report_binding']=dict(target='unresolved',report_span_ids=[],properties=[])
+        support_rows(output)[1]['report_binding']=dict(target='unresolved',properties=[])
+        support_rows(output)[1]['citations']=[dict(ref,role='evidence') for ref in support_rows(output)[1]['citations']]
         review=support.validate(output,self.payload)
         self.assertEqual(['insufficient_context'],[i['verdict'] for i in review.issues])
         output['units']['completed'][0]['verdict']='contradicted'
@@ -367,7 +373,7 @@ class StructuralPublicBudgetTests(unittest.TestCase):
         result=process_pending(self.project,self.data,runner=generate,summary_reviewer=review)
         self.assertEqual('summary_support_invalid',result.get('reason_code'),result)
         self.assertEqual('bounds',result['summary_support'][-1]['invalid_subtype'])
-        self.assertEqual(['summary-support-v6','summary-source-v4'],seen)
+        self.assertEqual([SUPPORT_VERSION,'summary-source-v4'],seen)
         self.assertEqual([],self.stored(result)[0])
 
     def test_correction_uses_one_profile_and_deadline_with_at_most_seven_executions(self):
@@ -382,8 +388,8 @@ class StructuralPublicBudgetTests(unittest.TestCase):
                 seen.append(request)
                 def review(context):
                     result=supported_review(context)
-                    if context['version']=='summary-outcome-v5':
-                        result['output']=outcome_output(context,'conflict' if sum(r.context['version']=='summary-outcome-v5' for r in seen)==1 else 'compatible')
+                    if context['version']=='summary-outcome-v6':
+                        result['output']=outcome_output(context,'conflict' if sum(r.context['version']=='summary-outcome-v6' for r in seen)==1 else 'compatible')
                     return result
                 return execute_codex(request,review)
         def generate(instance,request):
@@ -436,11 +442,12 @@ class ArchivedInputStructuralPolicyTests(unittest.TestCase):
                             text_observations={'language':dict(status='observed',value='Polish prose with English technical terms.',scope='This report prose',reason=None),
                                 'organization':dict(status='observed',value='Three bullet points with additional formatting details.',scope='This report list',reason=None)}))
                     result=supported_review(request)
-                    if request['version']=='summary-support-v6':
+                    if request['version']==SUPPORT_VERSION:
                         for row in support_rows(result['output']):
                             if row['unit_id'] in request['candidate_spans'] and row['unit_id']!='completed':
-                                row['report_binding']=dict(target='other',report_span_ids=[],properties=[])
-                    elif request['version']=='summary-outcome-v5':
+                                row['report_binding']=dict(target='other',properties=[])
+                                row['citations']=[dict(ref,role='evidence') for ref in row['citations']]
+                    elif request['version']=='summary-outcome-v6':
                         result['output']=outcome_output(request,'compatible')
                         if case['expected']=='contradicted':
                             pair=next(p for p in request['relations'] if p['source_item_id']=='observation_language')
@@ -452,7 +459,7 @@ class ArchivedInputStructuralPolicyTests(unittest.TestCase):
                     return receipt(fixed)
                 result=process_pending(self.project,self.data,runner=generate,summary_reviewer=review)
                 outputs=self.stored(result)[0]
-                self.assertEqual(['summary-support-v6','summary-source-v4','summary-outcome-v5'],seen)
+                self.assertEqual([SUPPORT_VERSION,'summary-source-v4','summary-outcome-v6'],seen)
                 if case['expected']=='contradicted':
                     self.assertEqual('summary_support_rejected',result.get('reason_code'),result)
                     self.assertEqual([],outputs)
@@ -520,7 +527,7 @@ class BindingRoutingTests(unittest.TestCase):
             return receipt(candidate)
         def review(request):
             seen.append(request['version'])
-            if request['version']=='summary-support-v6':return receipt(authored_support_reply('binding-routing'))
+            if request['version']==SUPPORT_VERSION:return receipt(authored_support_reply('binding-routing'))
             if request['version']=='summary-source-v4':return receipt(copy.deepcopy(case['source']))
             observed.append(request)
             # Authored operational failure only. No invented verdicts for the newly included pairs.
@@ -528,7 +535,7 @@ class BindingRoutingTests(unittest.TestCase):
         result=process_pending(self.project,self.data,runner=generate,summary_reviewer=review)
         self.assertEqual('summary_support_unavailable',result.get('reason_code'),result)
         self.assertEqual([],self.stored(result)[0])
-        self.assertEqual(['summary-support-v6','summary-source-v4','summary-outcome-v5'],seen)
+        self.assertEqual([SUPPORT_VERSION,'summary-source-v4','summary-outcome-v6'],seen)
         self.assertEqual(6,len(observed[0]['relations']))
         self.assertEqual(case['candidate']['session_summary']['completed'],observed[0]['units']['completed'])
         self.assertEqual({'p1','p2','p3','p4','observation_language','observation_organization'},
@@ -547,7 +554,7 @@ class BindingRoutingTests(unittest.TestCase):
         self.assertEqual(48,schema['properties']['rows']['maxItems'])
         title=output['units']['title'][0]
         title.update(report_binding=copy.deepcopy(completed['report_binding']),
-            evidence_span_ids=copy.deepcopy(completed['evidence_span_ids']),candidate_assertion='Authored bound claim for capacity only.')
+            citations=copy.deepcopy(completed['citations']),candidate_assertion='Authored bound claim for capacity only.')
         review=support.validate(output,payload)
         with self.assertRaises(support.SupportError) as caught:outcome.prepare_outcome(summary,review,source,payload)
         self.assertEqual('bounds',caught.exception.subtype)

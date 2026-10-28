@@ -31,7 +31,7 @@ class OriginalEvidenceContractTests(unittest.TestCase):
         self.assertNotIn('PRIVATE_COMPETING_REQUEST',prompt)
         self.assertNotIn('body_sha256',json.dumps(schema))
         _,out_schema,request=outcome.prepare_outcome(summary,review,source,payload)
-        self.assertEqual('summary-outcome-v5',request['version'])
+        self.assertEqual('summary-outcome-v6',request['version'])
         self.assertEqual(body,request['original_report']['body'])
         self.assertEqual(expected,request['original_report']['body_sha256'])
         self.assertEqual('current2',request['original_report']['catalog_id'])
@@ -162,7 +162,7 @@ class OriginalEvidencePublicTests(unittest.TestCase):
                         if scenario=='changed-custody':
                             with Store(self.data) as store:store._connection.execute('UPDATE entries SET body=? WHERE id=?',('Changed after extraction',self.raw['id']))
                         if scenario=='prompt-overflow':patch.start()
-                    if request['version']=='summary-outcome-v5':
+                    if request['version']=='summary-outcome-v6':
                         captured.append(request)
                         self.assertEqual(body,request['original_report']['body'])
                         self.assertNotEqual(body,request['units']['completed'])
