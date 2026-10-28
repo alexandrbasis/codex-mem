@@ -228,8 +228,19 @@ def prepare(summary, claim, notes=()):
         'assertion to original report anchors explicitly: report_text for properties of report text, '
         'reported_content for what its speaker reports, other for assertions outside reports, or unresolved '
         'if the referent is unknown. Do not infer a referent from general source_ids or the latest report. '
+        'Here an original report is only an assistant_report listed in report_catalog. A quoted message, '
+        'document or reported statement inside a tool_record is ordinary evidence, not an original-report '
+        'anchor. Use other with empty properties for a known claim about that tool evidence, even when '
+        'its wording says reported or recap. Do not borrow an assistant-report anchor for a tool-sourced claim. '
         'Use one citations list. Each citation has span_id and role evidence or report_anchor. A report_anchor '
         'explicitly selects that original report span both as evidence and as this claim report anchor. '
+        'Both report_text and reported_content require at least one report_anchor citation from report_catalog. '
+        'Select the evidence citations before the binding. If all selected citations have role evidence, '
+        'the binding is other for a known nonreport claim or unresolved for an unknown referent. '
+        'Keep independent assertions with different source owners or report bindings in separate comparison rows. '
+        'For a report-bound row, candidate_assertion identifies only the assertion about that anchored report. '
+        'Other assertions in the same parent field retain their own comparisons and evidence. This separates '
+        'comparison ownership without changing or truncating the complete candidate field or its spans. '
         'List each span_id only once per comparison. When a span serves both roles, select report_anchor only; '
         'do not add a second evidence citation for the same span. '
         'Ordinary evidence citations do not select a report anchor. Properties are language, organization or content; '
@@ -320,7 +331,10 @@ def prepare(summary, claim, notes=()):
         return dict(type="array", minItems=minimum, maxItems=maximum, items=items)
     empty = shared("empty_references", refs(text, 0))
     def binding(targets, properties=empty):
-        fields = dict(target=dict(type="string", enum=targets), properties=properties)
+        fields = dict(target=dict(type="string", enum=targets,
+            description=("This unit is outside outcome review. Select only ordinary evidence citations."
+                if targets == ["outside_outcome"] else
+                "Original assistant report in report_catalog only: report_text or reported_content requires a selected report_anchor citation. Claims about messages or documents inside tool evidence use other, not reported_content. Unknown referents use unresolved.")), properties=properties)
         return dict(type="object", additionalProperties=False, required=list(fields), properties=fields)
     outcome_bindings = [binding(["other", "unresolved"])]
     if anchors:
@@ -346,8 +360,8 @@ def prepare(summary, claim, notes=()):
     for unit in units:
         def row(report_binding, selected_citations):
             properties = dict(unit_id=dict(type="string", enum=[unit]), **common,
-                              candidate_span_ids=candidates, report_binding=report_binding,
-                              citations=selected_citations)
+                              candidate_span_ids=candidates, citations=selected_citations,
+                              report_binding=report_binding)
             return dict(type="object", additionalProperties=False,
                         required=list(properties), properties=properties)
         if unit in OUTCOME_FIELDS:

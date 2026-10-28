@@ -402,17 +402,61 @@ class PiObservationTests(unittest.TestCase):
         self.assertIsNone(attempts[0]['total_tokens'])
         self.assertEqual(24, attempts[1]['total_tokens'])
 
-    def test_deadline_includes_version_probe_and_correction(self):
+    def test_deadline_includes_version_probe(self):
         configure(self.data, processing_profile={**self.profile, "timeout": 3})
         import time
         from codex_mem.pi_runtime import PiProcessorRunner
-        for scenario in ({'version_timeout': True}, {'modes': ['valid', 'timeout']}):
-            self.scenario(**scenario)
-            started = time.monotonic()
-            result = self.process(retry_failed=True, runner=PiProcessorRunner(candidate_review=lambda *_: 'Correct input.'))
-            self.assertEqual('timeout', result['code'], result)
-            self.assertLess(time.monotonic() - started, 5)
-        self.assertEqual(24, self.attempts(result)[-1]['total_tokens'])
+        self.scenario(version_timeout=True)
+        started = time.monotonic()
+        result = self.process(runner=PiProcessorRunner())
+        self.assertEqual('timeout', result['code'], result)
+        self.assertLess(time.monotonic() - started, 5)
+        attempt = self.attempts(result)[0]
+        self.assertIsNone(attempt['total_tokens'])
+        self.assertEqual(0, attempt['usage_updates'])
+
+    def test_deadline_includes_correction_and_preserves_accepted_usage(self):
+        import time
+        from types import SimpleNamespace
+        from codex_mem import pi_runtime
+        self.scenario(modes=['valid', 'timeout'])
+        started = time.monotonic()
+        clock = [started]
+        watchdog = [False]
+        accepted = []
+        original_runner = pi_runtime.PiProcessorRunner
+
+        def runtime_monotonic():
+            if time.monotonic() - started >= READINESS_WATCHDOG:
+                watchdog[0] = True
+                return time.monotonic() + REAL_FIXTURE_ATTEMPT_BUDGET + 1
+            return clock[0]
+
+        def acknowledged_runner(*args, **kwargs):
+            original_checkpoint = kwargs.get('usage_checkpoint')
+
+            def checkpoint(receipt):
+                if original_checkpoint is not None:
+                    original_checkpoint(receipt)
+                tokens = (receipt['metrics']['usage'].get('tokens') or {}).get('total_tokens')
+                if tokens in (12, 24) and tokens not in accepted:
+                    accepted.append(tokens)
+                    # The correction must retain the original 30-second deadline.
+                    # Resetting it at generation two would leave time after +31.
+                    clock[0] = started + (20 if tokens == 12 else 31)
+
+            kwargs['usage_checkpoint'] = checkpoint
+            return original_runner(*args, **kwargs)
+
+        with mock.patch.object(pi_runtime, 'time', SimpleNamespace(monotonic=runtime_monotonic)):
+            result = self.process(runner=acknowledged_runner(candidate_review=lambda *_: 'Correct input.'))
+        diagnostics = self.diagnostics(result)
+        self.assertFalse(watchdog[0], diagnostics)
+        self.assertEqual([12, 24], accepted, diagnostics)
+        self.assertEqual('timeout', result['code'], diagnostics)
+        attempt = self.attempts(result)[0]
+        self.assertEqual(24, attempt['total_tokens'], diagnostics)
+        self.assertEqual(2, json.loads(attempt['execution_receipt'])['generation'], diagnostics)
 
     def test_mixed_processor_profiles_remain_independent_of_host_model(self):
         from codex_mem.episode_processor import process_project_memory

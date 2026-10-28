@@ -154,7 +154,14 @@ class SummaryScopeContractTests(unittest.TestCase):
         self.assertEqual(set(expected), set(groups['properties']))
         for unit, group in groups['properties'].items():
             self.assertEqual((1, 8), (group['minItems'], group['maxItems']))
-            self.assertEqual([unit], group['items']['properties']['unit_id']['enum'])
+            item = group['items']
+            variants = item['anyOf'] if 'anyOf' in item else [item]
+            self.assertTrue(variants)
+            for variant in variants:
+                self.assertEqual('object', variant['type'])
+                self.assertIs(False, variant['additionalProperties'])
+                self.assertEqual(set(variant['properties']), set(variant['required']))
+                self.assertEqual([unit], variant['properties']['unit_id']['enum'])
         return support
 
     def test_category_rules_are_scoped_to_packets_with_material_note_units(self):

@@ -28,6 +28,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 FORMAT_VERSION = 1
 FIXED_SOURCES = (
+    "tests/test_observation_contract.py",
     "package.json",
     "scripts/install.py",
     "scripts/install_pi.py",
@@ -50,6 +51,7 @@ FIXED_SOURCES = (
     "tests/test_outcome_recovery.py",
     "docs/adr/0013-isolate-malformed-review-responses.md",
     "docs/adr/0014-preserve-plans-and-single-review-citations.md",
+    "docs/adr/0015-compare-overlapping-outcome-claims.md",
     "tests/test_summary_support_v7.py",
     "tests/test_summary_outcome.py",
     "tests/test_jev_processor.py",
