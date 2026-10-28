@@ -2,12 +2,12 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Codex Mem 1.12.3 project memory",
+    "title": "Codex Mem 1.12.4 project memory",
     "output": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "8efd99860d8f4d622df336649ef84850820dc7c6",
+      "revision": "6481a8b90709a2900e53c4a57d4d77fa77dc1d00",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -682,7 +682,7 @@
       "items": [
         "The summary-outcome-v5 response schema groups exact relation IDs by source availability. Its anyOf rows permit only the applicability, scope and value combinations already accepted by the local validator. Wire fields, strict decisions, coverage checks and call budgets remain unchanged. Schema consistency does not prove semantic accuracy or native provider acceptance. Sources: codex_mem/summary_outcome.py; tests/test_outcome_recovery.py.",
         "A timely identity-matching reviewer response that fails typed response validation receives summary_review_malformed. The job fails with no output writes. The service confirms durable completed-review proof, quarantines that batch and continues independent fresh work without retrying rejected sources. Preparation, stale-source, unavailable and internal failures keep their existing blocking behavior. Sources: codex_mem/processor.py; codex_mem/service.py; codex_mem/store.py; tests/test_outcome_recovery.py.",
-        "Explicit historical recovery requires the exact current failed job and attempt, matching requested/actual identities and a completed invalid outcome-v5 verdict. The broad summary_support_invalid reason alone cannot authorize resume. Failed jobs, source snapshots and diagnostic history are preserved. No automatic global migration runs. Sources: codex_mem/service.py; tests/test_outcome_recovery.py; docs/adr/0013-isolate-malformed-review-responses.md.",
+        "Explicit historical recovery requires the exact current failed job and attempt, matching requested/actual identities and a completed invalid support-v6 or outcome-v5 verdict from the final applicable review. Inconsistent later source receipts fail closed. The broad summary_support_invalid reason alone cannot authorize resume. Failed jobs, source snapshots and diagnostic history are preserved. No automatic global migration runs. Sources: codex_mem/service.py; tests/test_outcome_recovery.py; docs/adr/0013-isolate-malformed-review-responses.md.",
         "The project dashboard distinguishes past errors from current blockers. It shows a retry time only for waiting retries, excluding blocked, parked, running and ordinary fresh-work records. A blocked row states that no retry is scheduled. Sources: codex_mem/dashboard_data.py; codex_mem/ui_static/app.js; tests/test_dashboard_data.py."
       ]
     },

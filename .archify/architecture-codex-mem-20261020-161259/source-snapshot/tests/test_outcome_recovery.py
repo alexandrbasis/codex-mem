@@ -329,3 +329,142 @@ class MalformedReviewServiceTests(ReviewFixtures, unittest.TestCase):
         with Store(self.data) as store:
             job = store.observation_job_status(self.project, self.failed_job)
             self.assertEqual(('failed', 1, []), (job['status'], job['attempt_count'], job['output_ids']))
+
+    def block_as_historical_support(self, *, corrected):
+        from unittest import mock
+        from codex_mem.processor import NativeProcessorRunner, process_pending
+        from codex_mem.service import enqueue, run_service
+        from codex_mem.store import Store
+        from tests.test_summary_support import supported_review, comparison
+        self.capture()
+        support_count = 0
+        def review(request):
+            nonlocal support_count
+            result = supported_review(request)
+            self.assertEqual('summary-support-v6', request['version'])
+            support_count += 1
+            if corrected and support_count == 1:
+                comparison(result['output'])['verdict'] = 'contradicted'
+            else:
+                comparison(result['output'])['evidence_span_ids'] = []
+            return result
+        def generate(instance, request):
+            instance.before_dispatch()
+            instance.usage_checkpoint(dict(worker_thread_id='fixture-thread', worker_turn_id='fixture-turn',
+                identity={key: request['execution_profile'][key]
+                    for key in ('runtime', 'provider', 'model', 'reasoning_effort')}))
+            candidate = self.generate(request)['output']
+            feedback = instance.candidate_review(candidate, 240)
+            self.assertTrue(corrected)
+            self.assertIsInstance(feedback, str)
+            candidate['session_summary']['completed'] = 'Corrected attributed fixture result.'
+            instance.candidate_review(candidate, 240)
+            self.fail('Malformed verdict must reject before generation returns')
+        with mock.patch.object(NativeProcessorRunner, 'check_profile'), \
+             mock.patch.object(NativeProcessorRunner, 'run', generate):
+            result = process_pending(self.project, self.data, summary_reviewer=review)
+        self.assertEqual('summary_review_malformed', result.get('reason_code'), result)
+        self.assertEqual(2 if corrected else 1, support_count)
+        with Store(self.data) as store:
+            attempt = store.observation_attempts(self.project, result['job_id'])[0]
+            calls = json.loads(attempt['execution_calls'])
+            detail = calls['summary_support_2' if corrected else 'summary_support_1']['review_diagnostic']
+            self.assertEqual('verdict', detail['invalid_subtype'])
+            detail.pop('rule_code'); detail.pop('unit_id')
+            store._connection.execute('UPDATE observer_usage_attempts SET execution_calls=? WHERE job_id=?',
+                (json.dumps(calls), result['job_id']))
+            store._connection.execute('UPDATE observation_failure_receipts SET reason_code=? WHERE job_id=?',
+                ('summary_support_invalid', result['job_id']))
+        self.configure_service()
+        enqueue(self.project, self.data, clock=lambda: 1000)
+        blocked = run_service(self.data, processor=lambda *_a, **_k: dict(result, reason_code='summary_support_invalid'),
+            processor_workers=1, clock=lambda: 1000, sleeper=lambda _: None, max_cycles=1)
+        self.assertEqual('halted', blocked['status'])
+        return result
+
+    def test_explicit_resume_accepts_exact_historical_support_verdict_without_retry(self):
+        from codex_mem.config import configure
+        from codex_mem.processor import process_pending
+        from codex_mem.service import resume_pending, run_service
+        from codex_mem.store import Store
+        for corrected in (False, True):
+            with self.subTest(corrected=corrected):
+                self.data = self.data.parent / ('historical-support-' + str(corrected))
+                configure(self.data, capture_scope='all', service_enabled=False, semantic_enabled=False,
+                    jev_filter_enabled=False, jev_quality_enabled=False)
+                result = self.block_as_historical_support(corrected=corrected)
+                with Store(self.data) as store:
+                    before_job = store.observation_job_status(self.project, result['job_id'])
+                    before_attempts = store.observation_attempts(self.project, result['job_id'])
+                    before_sources = store.timeline(self.project)
+                recovery = resume_pending(self.project, self.data, rejected_job_id=result['job_id'], clock=lambda: 1000)
+                self.assertEqual('queued', recovery['status'], recovery)
+                self.assertFalse(recovery['retry_failed'])
+                retry_flags = []
+                def process(project, **kwargs):
+                    retry_flags.append(kwargs['retry_failed'])
+                    return process_pending(project, self.data,
+                        runner=lambda _: self.fail('Historical failed sources must not be retried'))
+                run_service(self.data, processor=process, processor_workers=1,
+                    clock=lambda: 1000, sleeper=lambda _: None, max_cycles=2)
+                self.assertEqual([False], retry_flags)
+                with Store(self.data) as store:
+                    self.assertEqual(before_job, store.observation_job_status(self.project, result['job_id']))
+                    self.assertEqual(before_attempts, store.observation_attempts(self.project, result['job_id']))
+                    self.assertEqual(before_sources, store.timeline(self.project))
+
+    def test_historical_support_resume_rejects_other_failures_and_superseded_proof(self):
+        from codex_mem.service import resume_pending, SERVICE_STATE_FILENAME
+        from codex_mem.store import Store
+        result = self.block_as_historical_support(corrected=True)
+        state_before = (self.data / SERVICE_STATE_FILENAME).read_text()
+        with Store(self.data) as store:
+            before_attempts = store.observation_attempts(self.project, result['job_id'])
+        original_calls = json.loads(before_attempts[0]['execution_calls'])
+        other_subtypes = ('structure', 'unit_coverage', 'unknown_span', 'bounds',
+                          'unknown_proposition', 'duplicate_reference')
+        cases = (*other_subtypes, 'old_support_version', 'source_verdict', 'missing_identity',
+                 'failed_review', 'unknown_reason', 'stale_reason', 'newer_block',
+                 'later_supported_outcome', 'source_after_invalid_support')
+        for change in cases:
+            with self.subTest(change=change):
+                state = json.loads(state_before)
+                calls = copy.deepcopy(original_calls)
+                call = calls['summary_support_2']
+                reason = 'summary_support_invalid'
+                if change in other_subtypes: call['review_diagnostic']['invalid_subtype'] = change
+                if change == 'old_support_version': call['review_diagnostic']['version'] = 'summary-support-v5'
+                if change == 'missing_identity': call['actual_identity'] = None
+                if change == 'failed_review': call['outcome'] = 'failed'
+                if change == 'unknown_reason': reason = None
+                if change == 'stale_reason':
+                    reason = 'summary_support_stale'
+                    state['projects'][str(self.project.resolve())]['last_rejected_reason'] = reason
+                if change == 'newer_block':
+                    state['projects'][str(self.project.resolve())]['last_failure_job'] = '0' * 32
+                if change == 'later_supported_outcome':
+                    later = copy.deepcopy(call)
+                    later['call_id'] = 'summary_outcome_2'
+                    later['review_diagnostic'].update(version='summary-outcome-v5', status='checked', invalid_subtype=None)
+                    calls[later['call_id']] = later
+                if change in ('source_verdict', 'source_after_invalid_support'):
+                    source = copy.deepcopy(call)
+                    source['call_id'] = 'summary_source_1'
+                    source['review_diagnostic']['version'] = 'summary-source-v4'
+                    if change == 'source_after_invalid_support':
+                        source['review_diagnostic'].update(status='interpreted', invalid_subtype=None)
+                    else:
+                        calls.pop('summary_support_2')
+                    calls[source['call_id']] = source
+                with Store(self.data) as store:
+                    store._connection.execute('UPDATE observer_usage_attempts SET execution_calls=? WHERE job_id=?',
+                        (json.dumps(calls), result['job_id']))
+                    store._connection.execute('UPDATE observation_failure_receipts SET reason_code=? WHERE job_id=?',
+                        (reason, result['job_id']))
+                (self.data / SERVICE_STATE_FILENAME).write_text(json.dumps(state))
+                recovery = resume_pending(self.project, self.data, rejected_job_id=result['job_id'], clock=lambda: 1000)
+                self.assertEqual('blocked', recovery['status'], (change, recovery))
+                with Store(self.data) as store:
+                    after = store.observation_job_status(self.project, result['job_id'])
+                    self.assertEqual(('failed', 1, []), (after['status'], after['attempt_count'], after['output_ids']))
+                    self.assertEqual(json.dumps(calls), store.observation_attempts(self.project, result['job_id'])[0]['execution_calls'])

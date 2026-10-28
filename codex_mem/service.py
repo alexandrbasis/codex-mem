@@ -2214,7 +2214,8 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
     """Require current failed-attempt proof of a completed malformed review.
 
     Historical general reasons alone carry no retry permission. Only an exact
-    successful outcome-v5 invalid-verdict call can recover that older block.
+    successful support-v6 or outcome-v5 invalid-verdict call can recover that
+    older block.
     This operation reads no source bodies and never rewrites old receipts.
     """
     if not _valid_job_id(job_id):
@@ -2259,21 +2260,27 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
             call_id = "summary_outcome_2"
         elif "summary_support_2" in calls:
             call_id = "summary_support_2"
-            if ("summary_source_1" in calls and "summary_outcome_1" not in calls
-                    and isinstance(calls.get("summary_support_1"), Mapping)
-                    and isinstance(calls["summary_support_2"], Mapping)):
+            if "summary_source_1" in calls and "summary_outcome_1" not in calls:
+                if (not isinstance(calls.get("summary_support_1"), Mapping)
+                        or not isinstance(calls["summary_support_2"], Mapping)):
+                    return False
                 first = safe_diagnostic(calls["summary_support_1"].get("review_diagnostic"))
                 second = safe_diagnostic(calls["summary_support_2"].get("review_diagnostic"))
                 if (first["version"] == second["version"] == "summary-support-v6"
                         and first["status"] in {"rejected", "uncertain"} and second["status"] == "supported"):
                     call_id = "summary_source_1"
+                else:
+                    # Source interpretation cannot follow an invalid support
+                    # reply. Do not reuse that earlier malformed verdict.
+                    return False
         elif "summary_outcome_1" in calls:
             call_id = "summary_outcome_1"
         elif "summary_source_1" in calls:
             call_id = "summary_source_1"
         else:
             call_id = "summary_support_1" if "summary_support_1" in calls else None
-        if call_id is None or (historical and call_id not in {"summary_outcome_1", "summary_outcome_2"}):
+        if call_id is None or (historical and call_id not in {
+                "summary_support_1", "summary_support_2", "summary_outcome_1", "summary_outcome_2"}):
             return False
         call = calls[call_id]
         if (not isinstance(call, dict) or call.get("call_id") != call_id
