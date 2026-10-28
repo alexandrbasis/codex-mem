@@ -145,7 +145,7 @@ class SupportRowPublicTests(unittest.TestCase):
             return receipt(output)
         self.raw = raw
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
-        self.assertEqual('summary_support_invalid', result.get('reason_code'), result)
+        self.assertEqual('summary_review_malformed', result.get('reason_code'), result)
         self.assertEqual('verdict', result['summary_support'][0]['invalid_subtype'])
         outputs, attempts, saved = self.stored(result)
         self.assertEqual([], outputs)

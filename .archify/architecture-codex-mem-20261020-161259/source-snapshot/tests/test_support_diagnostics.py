@@ -120,7 +120,7 @@ class SupportDiagnosticPersistenceTests(unittest.TestCase):
             row.update(evidence_span_ids=[], candidate_assertion='PRIVATE REVIEWER TEXT')
             return result
         result = process_pending(self.project, self.data, runner=generate, summary_reviewer=review)
-        self.assertEqual('summary_support_invalid', result.get('reason_code'), result)
+        self.assertEqual('summary_review_malformed', result.get('reason_code'), result)
         detail = result['summary_support'][0]
         self.assertEqual('verdict_requires_evidence', detail['rule_code'])
         self.assertEqual('completed', detail['unit_id'])

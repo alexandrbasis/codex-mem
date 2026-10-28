@@ -483,8 +483,15 @@ def process_pending(
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_unavailable")
                     try:
                         validated = validate_call(reviewed.output, payload)
-                    except (SupportError, TypeError, ValueError, KeyError) as exc:
-                        mark_review("invalid", exc.subtype if isinstance(exc, SupportError) else "structure", error=exc)
+                    except SupportError as exc:
+                        mark_review("invalid", exc.subtype, error=exc)
+                        # Only a completed, matching reviewer call reaches this
+                        # typed decoder. Preparation and internal failures retain
+                        # their broader, fail-closed classification.
+                        source_guard("summary_review_malformed")
+                        raise ProcessorFailure("invalid_response", reason_code="summary_review_malformed") from None
+                    except (TypeError, ValueError, KeyError):
+                        mark_review("invalid", "structure")
                         source_guard("summary_support_invalid")
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
                     return validated, payload, mark_review
@@ -746,7 +753,7 @@ def process_pending(
                                                  exc.code == "invalid_response" and exc.reason_code in {
                                                      "jev_quality_rejected", "jev_quality_uncertain",
                                                      "summary_support_rejected", "summary_support_uncertain",
-                                                     "summary_support_invalid"} else None))
+                                                     "summary_support_invalid", "summary_review_malformed"} else None))
             except ObservationEvidenceChanged:
                 error_code = "invalid_response"
                 receipt = _failed_after_claim(store, workspace, job_id, lease_token, error_code,
@@ -2564,7 +2571,7 @@ def _failed_after_claim(
     except (StoreError, ValueError, OSError) as exc:
         if safe_code == "invalid_response" and reason_code in {
             "jev_quality_unavailable", "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
-            "summary_support_rejected", "summary_support_uncertain", "summary_support_invalid", "summary_support_stale",
+            "summary_support_rejected", "summary_support_uncertain", "summary_support_invalid", "summary_support_stale", "summary_review_malformed",
         }:
             # A replaced/revoked lease must not turn cancellation into an
             # automatic retry or mutate a newer worker's ownership.

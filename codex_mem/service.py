@@ -92,7 +92,7 @@ _CONTENT_REJECTION_REASONS = frozenset({
     "source_attribution_conflict", "invalid_summary_shape", "invalid_summary_attribution",
     "future_summary_source", "invalid_summary_text", "invalid_summary_metadata", "empty_session_summary", "invalid_text", "invalid_tags",
     "jev_quality_rejected", "jev_quality_uncertain", "jev_quality_input_limit",
-    "summary_support_rejected", "summary_support_uncertain",
+    "summary_support_rejected", "summary_support_uncertain", "summary_review_malformed",
 })
 _TRANSIENT_RUNNER_REASONS = frozenset({
     "jev_filter_timeout", "jev_filter_transport", "jev_filter_invalid_response", "jev_filter_failure",
@@ -241,10 +241,25 @@ def resume_pending(
     with _state_lock(base):
         state = _load_state(base)
         record = state["projects"].get(workspace)
+        persisted_reason = _persisted_rejection_reason(base, workspace, rejected_job_id)
+        if persisted_reason in {"summary_support_invalid", "summary_review_malformed"}:
+            if (record is None or record["last_failure_job"] != rejected_job_id
+                    or record["last_code"] != "invalid_response"
+                    or record["last_rejected_reason"] != persisted_reason
+                    or not _persisted_malformed_review(base, workspace, rejected_job_id,
+                        historical=persisted_reason == "summary_support_invalid")):
+                return {"status": "blocked", "project": workspace, "code": "rejection_unavailable"}
         if record is not None and record["blocked"]:
             reason_code = record["last_rejected_reason"]
+            historical_review = (reason_code == "summary_support_invalid"
+                and record["last_failure_job"] == rejected_job_id
+                and _persisted_malformed_review(base, workspace, rejected_job_id, historical=True))
             if (record["last_code"] != "invalid_response"
-                    or (reason_code is not None and reason_code not in _CONTENT_REJECTION_REASONS)):
+                    or (reason_code is not None and reason_code not in _CONTENT_REJECTION_REASONS
+                        and not historical_review)
+                    or (reason_code == "summary_review_malformed" and
+                        (record["last_failure_job"] != rejected_job_id or not
+                         _persisted_malformed_review(base, workspace, rejected_job_id)))):
                 return {"status": "blocked", "project": workspace, "code": record["last_code"],
                         "reason_code": reason_code}
         if record is None:
@@ -2174,6 +2189,113 @@ def _persisted_rejection(base: Path, project: str, job_id: Any) -> bool:
     return _persisted_failed_batch(base, project, job_id, "invalid_response")
 
 
+def _persisted_rejection_reason(base: Path, project: str, job_id: str) -> str | None:
+    """Read the exact current failure reason; missing legacy receipts stay unknown."""
+    connection = None
+    try:
+        from .observation_diagnostics import safe_failure_reason
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        row = connection.execute(
+            "SELECT f.reason_code FROM observation_jobs j JOIN observation_failure_receipts f "
+            "ON f.job_id=j.id AND f.attempt_count=j.attempt_count WHERE j.id=? AND j.project=? "
+            "AND j.processor_id=? AND j.status='failed' AND j.error_code='invalid_response' "
+            "AND f.error_code='invalid_response'", (job_id, project, PROCESSOR_ID)).fetchone()
+        return safe_failure_reason("invalid_response", row[0]) if row else None
+    except (OSError, sqlite3.Error, ServiceError, ValueError):
+        return None
+    finally:
+        if connection is not None:
+            connection.close()
+
+
+def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, historical: bool = False) -> bool:
+    """Require current failed-attempt proof of a completed malformed review.
+
+    Historical general reasons alone carry no retry permission. Only an exact
+    successful outcome-v5 invalid-verdict call can recover that older block.
+    This operation reads no source bodies and never rewrites old receipts.
+    """
+    if not _valid_job_id(job_id):
+        return False
+    connection = None
+    try:
+        from .execution import normalize_profile
+        from .summary_support import safe_diagnostic
+        database = base / "memory.sqlite3"
+        _reject_link_or_nonfile(database)
+        connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=2.0)
+        connection.row_factory = sqlite3.Row
+        row = connection.execute(
+            "SELECT a.*,j.model AS job_model,j.reasoning_effort AS job_effort "
+            "FROM observation_jobs j JOIN observer_usage_attempts a ON a.job_id=j.id "
+            "AND a.attempt_count=j.attempt_count "
+            "JOIN observation_failure_receipts f ON f.job_id=j.id AND f.attempt_count=j.attempt_count "
+            "WHERE j.id=? AND j.project=? AND j.processor_id=? AND j.status='failed' "
+            "AND j.error_code='invalid_response' AND j.lease_token IS NULL AND j.lease_expires_at IS NULL "
+            "AND j.output_ids_json='[]' AND a.outcome='failed' AND a.error_code='invalid_response' "
+            "AND a.finished_at IS NOT NULL AND f.error_code='invalid_response' AND f.reason_code=?",
+            (job_id, project, PROCESSOR_ID, "summary_support_invalid" if historical else "summary_review_malformed"),
+        ).fetchone()
+        if row is None:
+            return False
+        profile = normalize_profile(dict(runtime=row["runtime"], provider=row["provider"],
+            model=row["requested_model"], reasoning_effort=row["reasoning_effort"], timeout=row["timeout"]))
+        identity = dict(runtime=row["actual_runtime"], provider=row["actual_provider"],
+            model=row["actual_model"], reasoning_effort=row["actual_reasoning_effort"])
+        if (profile["model"] != row["job_model"] or profile["reasoning_effort"] != row["job_effort"]
+                or identity != {key: profile[key] for key in identity}):
+            return False
+        calls = json.loads(row["execution_calls"])
+        sequence = ("summary_support_1", "summary_source_1", "summary_outcome_1",
+                    "summary_support_2", "summary_outcome_2")
+        if not isinstance(calls, dict) or set(calls) - {"generation", *sequence}:
+            return False
+        # The first source interpretation can follow either support pass.
+        # Support rejection asks for correction before source interpretation;
+        # outcome rejection instead reuses the already interpreted source.
+        if "summary_outcome_2" in calls:
+            call_id = "summary_outcome_2"
+        elif "summary_support_2" in calls:
+            call_id = "summary_support_2"
+            if ("summary_source_1" in calls and "summary_outcome_1" not in calls
+                    and isinstance(calls.get("summary_support_1"), Mapping)
+                    and isinstance(calls["summary_support_2"], Mapping)):
+                first = safe_diagnostic(calls["summary_support_1"].get("review_diagnostic"))
+                second = safe_diagnostic(calls["summary_support_2"].get("review_diagnostic"))
+                if (first["version"] == second["version"] == "summary-support-v6"
+                        and first["status"] in {"rejected", "uncertain"} and second["status"] == "supported"):
+                    call_id = "summary_source_1"
+        elif "summary_outcome_1" in calls:
+            call_id = "summary_outcome_1"
+        elif "summary_source_1" in calls:
+            call_id = "summary_source_1"
+        else:
+            call_id = "summary_support_1" if "summary_support_1" in calls else None
+        if call_id is None or (historical and call_id not in {"summary_outcome_1", "summary_outcome_2"}):
+            return False
+        call = calls[call_id]
+        if (not isinstance(call, dict) or call.get("call_id") != call_id
+                or call.get("outcome") != "success" or call.get("error_code") is not None
+                or normalize_profile(call.get("requested_profile")) != profile
+                or call.get("actual_identity") != identity
+                or not isinstance(call.get("execution_id"), str) or not call["execution_id"]
+                or not isinstance(call.get("turn_id"), str) or not call["turn_id"]):
+            return False
+        detail = safe_diagnostic(call.get("review_diagnostic"))
+        expected_version = ("summary-outcome-v5" if call_id.startswith("summary_outcome") else
+                            "summary-source-v4" if call_id.startswith("summary_source") else "summary-support-v6")
+        return (detail["version"] == expected_version and detail["status"] == "invalid"
+                and detail["invalid_subtype"] is not None
+                and (not historical or detail["invalid_subtype"] == "verdict"))
+    except (OSError, sqlite3.Error, ServiceError, ValueError, TypeError, KeyError):
+        return False
+    finally:
+        if connection is not None:
+            connection.close()
+
+
 def _persisted_failed_batch(base: Path, project: str, job_id: Any, code: str) -> bool:
     """Confirm a durable failed batch before permitting independent work.
 
@@ -2426,6 +2548,8 @@ def _quarantine_rejection(
     if not isinstance(reason_code, str) or reason_code not in _CONTENT_REJECTION_REASONS:
         return False
     if not _persisted_rejection(base, project, job_id):
+        return False
+    if reason_code == "summary_review_malformed" and not _persisted_malformed_review(base, project, job_id):
         return False
     with _state_lock(base):
         state = _load_state(base)

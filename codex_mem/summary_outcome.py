@@ -274,12 +274,27 @@ def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
         field_purposes={key: PURPOSES[key] for key in units}, interpretation=interpretation,
         claims={claim.id: asdict(claim) for claim in review.claims},
         report_catalog=reports, relations=relations, unused=unused, original_report=original_report)
-    row = _object(dict(relation_id=_enum([r['id'] for r in relations]) if relations else _text(),
-        applicability=_enum(('absent', 'present', 'unresolved')),
-        scope_relation=_enum(('aligned', 'disjoint', 'unresolved', 'not_compared')),
-        value=_enum(('compatible', 'incompatible', 'unresolved', 'not_established', 'not_compared')),
-        scope_comparison=dict(type='string', minLength=1, maxLength=600),
-        value_comparison=dict(type='string', minLength=1, maxLength=600)))
+    # Each alternative owns both the valid state and its source availability.
+    # Group relation IDs to keep the schema bounded at fifty relations.
+    item_by_id = {item['id']: item for item in items}
+    alternatives = []
+    for available in (True, False):
+        relation_ids = [relation['id'] for relation in relations
+            if _available(item_by_id[relation['source_item_id']]) == available]
+        if not relation_ids:
+            continue
+        states = [('absent', 'not_compared', ('not_compared',)),
+                  ('unresolved', 'unresolved', ('unresolved',)),
+                  ('present', 'disjoint', ('not_compared',)),
+                  ('present', 'unresolved', ('unresolved',)),
+                  ('present', 'aligned', ('compatible', 'incompatible', 'unresolved')
+                   if available else ('not_established',))]
+        for applicability, scope, values in states:
+            alternatives.append(_object(dict(relation_id=_enum(relation_ids),
+                applicability=_enum((applicability,)), scope_relation=_enum((scope,)),
+                value=_enum(values), scope_comparison=dict(type='string', minLength=1, maxLength=600),
+                value_comparison=dict(type='string', minLength=1, maxLength=600))))
+    row = dict(anyOf=alternatives) if alternatives else _object({})
     schema = _object(dict(version=_enum((OUTCOME_VERSION,)),
         rows=dict(type='array', minItems=len(relations), maxItems=len(relations), items=row)))
     prompt = _prompt(
@@ -310,6 +325,10 @@ def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
         'blocks storage; absent/disjoint branches are unused. Source extraction and semantic bindings remain fallible '
         'and incomplete. Return only schema JSON.', payload)
     return prompt, schema, payload
+
+
+def _available(item):
+    return item['availability'] in ('reported', 'observed_text', 'observed') and item['target'] != 'unresolved'
 
 
 def _decision(applicability, scope, value, available):
@@ -354,8 +373,19 @@ def validate_outcome(output, payload):
                 raise SupportError('bounds')
         pair = pairs[key]
         item = items[pair['source_item_id']]
-        available = item['availability'] in ('reported', 'observed_text', 'observed') and item['target'] != 'unresolved'
-        decision = _decision(row['applicability'], row['scope_relation'], row['value'], available)
+        available = _available(item)
+        try:
+            decision = _decision(row['applicability'], row['scope_relation'], row['value'], available)
+        except SupportError:
+            app, scope = row['applicability'], row['scope_relation']
+            rule = ('outcome_absent_state' if app == 'absent' else
+                    'outcome_unresolved_state' if app == 'unresolved' else
+                    'outcome_disjoint_state' if app == 'present' and scope == 'disjoint' else
+                    'outcome_scope_unresolved_state' if app == 'present' and scope == 'unresolved' else
+                    'outcome_available_value' if app == 'present' and scope == 'aligned' and available else
+                    'outcome_unavailable_value' if app == 'present' and scope == 'aligned' else
+                    'outcome_unknown_state')
+            raise SupportError('verdict', rule_code=rule, unit_id=pair['unit_id']) from None
         decisions.append(dict(relation_id=key, claim_id=pair['claim_id'], decision=decision))
         if decision in ('contradicted', 'uncertain'):
             issues.append(dict(unit=pair['unit_id'], verdict='contradicted' if decision == 'contradicted' else 'insufficient_context',

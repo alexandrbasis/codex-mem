@@ -10,7 +10,7 @@ from typing import Any
 
 # Fixed vocabulary only. Never save model text or exception messages here.
 INVALID_RESPONSE_REASONS = frozenset({
-    "summary_support_uncertain", "summary_support_stale", "summary_support_unavailable", "summary_support_invalid", "summary_support_rejected",
+    "summary_review_malformed", "summary_support_uncertain", "summary_support_stale", "summary_support_unavailable", "summary_support_invalid", "summary_support_rejected",
     "invalid_message_phase", "invalid_message_text", "missing_final_message",
     "multiple_final_messages", "invalid_json", "invalid_output_shape",
     "invalid_runner_receipt", "invalid_runner_evidence", "worker_id_mismatch",

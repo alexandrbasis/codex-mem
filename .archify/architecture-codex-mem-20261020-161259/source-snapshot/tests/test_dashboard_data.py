@@ -13,6 +13,29 @@ from codex_mem.dashboard_data import DashboardReader, _window
 
 
 class DashboardDataTests(unittest.TestCase):
+    def test_projects_show_retry_time_only_for_waiting_retries(self):
+        self.seed()
+        due = 1893456000.0
+        cases = (
+            ('blocked failure', {'blocked': True, 'attempts': 1}, None),
+            ('fresh work', {'blocked': False, 'attempts': 0}, None),
+            ('quarantine only', {'blocked': False, 'attempts': 0,
+                                 'last_code': 'invalid_response'}, None),
+            ('parked retry', {'blocked': False, 'attempts': 1,
+                              'parked': 'rejected_batches'}, None),
+            ('running retry', {'blocked': False, 'attempts': 1,
+                               'inflight_generation': 2}, None),
+            ('automatic retry', {'blocked': False, 'attempts': 1}, due),
+            ('explicit retry', {'blocked': False, 'attempts': 0,
+                                'retry_requested': True}, due),
+        )
+        for label, fields, expected in cases:
+            with self.subTest(label=label):
+                state = {'projects': {self.project: {'due_at': due, **fields}}}
+                (self.home / 'service-state.json').write_text(json.dumps(state))
+                row = DashboardReader(self.home).projects()['projects'][0]
+                self.assertEqual(expected, row['next_retry_at'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

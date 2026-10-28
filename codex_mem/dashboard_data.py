@@ -388,12 +388,22 @@ class DashboardReader:
                 if path.stat().st_size <= 1024 * 1024:
                     state = json.loads(path.read_text())
                     if isinstance(state.get('projects'), dict):
-                        fields = ('due_at', 'attempts', 'blocked', 'parked', 'inflight_until', 'last_code', 'last_failure_at', 'retry_requested', 'rejected_batches', 'last_rejected_reason')
+                        fields = ('due_at', 'attempts', 'blocked', 'parked', 'inflight_generation', 'inflight_until', 'last_code', 'last_failure_at', 'retry_requested', 'rejected_batches', 'last_rejected_reason')
                         records = {key: {field: row.get(field) for field in fields} for key, row in state['projects'].items() if isinstance(row, dict)}
             except (OSError, ValueError, TypeError, AttributeError):
                 pass
             snapshot['_service_records'] = records
         return snapshot['_service_records']
+
+    @staticmethod
+    def _next_retry_at(record):
+        if (record.get('blocked') or record.get('parked') is not None
+                or record.get('inflight_generation') is not None):
+            return None
+        attempts = record.get('attempts')
+        if record.get('retry_requested') or type(attempts) is int and attempts > 0:
+            return record.get('due_at')
+        return None
 
     @staticmethod
     def _queue_progress(snapshot, jobs):
@@ -580,7 +590,7 @@ class DashboardReader:
         for key in chosen:
             selected_snapshot = self._snapshot(period, key) if snapshot['coverage']['truncated_tables'] else snapshot
             report = self._report(selected_snapshot, project=key)
-            rows.append({'project': key, 'path': key, 'name': Path(key).name or key, 'last_activity_at': datetime.fromtimestamp(project_activity[key], timezone.utc).isoformat() if key in project_activity else None, **{name: report[name] for name in ('main', 'observer', 'combined')}, 'queue': self._queue(selected_snapshot, key), 'capture': self._capture(selected_snapshot, key), 'jev': self._jev(selected_snapshot, key), 'last_error_code': self._service_records(snapshot).get(key, {}).get('last_code'), 'breaker_status': 'blocked' if self._service_records(snapshot).get(key, {}).get('blocked') else 'open', 'next_retry_at': self._service_records(snapshot).get(key, {}).get('due_at'), 'last_progress_at': max((row.get('updated_at') for row in snapshot['tables']['observation_jobs'] if row.get('project') == key and row.get('updated_at')), default=None)})
+            rows.append({'project': key, 'path': key, 'name': Path(key).name or key, 'last_activity_at': datetime.fromtimestamp(project_activity[key], timezone.utc).isoformat() if key in project_activity else None, **{name: report[name] for name in ('main', 'observer', 'combined')}, 'queue': self._queue(selected_snapshot, key), 'capture': self._capture(selected_snapshot, key), 'jev': self._jev(selected_snapshot, key), 'last_error_code': self._service_records(snapshot).get(key, {}).get('last_code'), 'breaker_status': 'blocked' if self._service_records(snapshot).get(key, {}).get('blocked') else 'open', 'next_retry_at': self._next_retry_at(self._service_records(snapshot).get(key, {})), 'last_progress_at': max((row.get('updated_at') for row in snapshot['tables']['observation_jobs'] if row.get('project') == key and row.get('updated_at')), default=None)})
         return {**self._base(snapshot), 'projects': rows, 'pagination': pagination}
 
     def project(self, project, period='all', page=1, limit=50):

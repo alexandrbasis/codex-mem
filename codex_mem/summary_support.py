@@ -36,6 +36,8 @@ VERDICT_RULES = ("unknown_verdict", "verdict_requires_evidence", "unknown_report
     "outside_outcome_binding", "outcome_requires_candidate_span", "outcome_requires_report_target",
     "nonreport_binding_has_anchors", "nonreport_binding_has_properties", "report_requires_anchor",
     "report_requires_property", "report_anchor_not_in_evidence", "reported_content_requires_content")
+OUTCOME_VERDICT_RULES = ("outcome_absent_state", "outcome_unresolved_state", "outcome_disjoint_state",
+    "outcome_scope_unresolved_state", "outcome_available_value", "outcome_unavailable_value", "outcome_unknown_state")
 DIAGNOSTIC_UNITS = (*FIELDS, *(f"note:{index}:{field}" for index in range(4)
     for field in ("title", "body", "tags", "observation:type", "observation:subtitle",
                   "observation:narrative", "observation:facts", "observation:concepts",
@@ -43,7 +45,7 @@ DIAGNOSTIC_UNITS = (*FIELDS, *(f"note:{index}:{field}" for index in range(4)
 
 
 def _valid_rule_unit(rule_code, unit_id):
-    return (isinstance(rule_code, str) and rule_code in VERDICT_RULES
+    return (isinstance(rule_code, str) and rule_code in (*VERDICT_RULES, *OUTCOME_VERDICT_RULES)
             and isinstance(unit_id, str) and unit_id in DIAGNOSTIC_UNITS)
 
 
@@ -114,7 +116,10 @@ def safe_diagnostic(value):
     keys = {"version", "candidate_fingerprint", "evidence_fingerprint", "status", "invalid_subtype"}
     extended = keys | {"rule_code", "unit_id"}
     if (not isinstance(value, Mapping) or set(value) not in (keys, extended)
-            or (set(value) == extended and (value["version"] != VERSION
+            or (set(value) == extended and ((value["version"] == VERSION and value["rule_code"] not in VERDICT_RULES)
+                or (value["version"] == "summary-outcome-v5" and
+                    (value["rule_code"] not in OUTCOME_VERDICT_RULES or value["unit_id"] not in OUTCOME_FIELDS))
+                or value["version"] not in (VERSION, "summary-outcome-v5")
                 or value["status"] != "invalid" or value["invalid_subtype"] != "verdict"
                 or not _valid_rule_unit(value["rule_code"], value["unit_id"])))
             or value["version"] not in (VERSION, "summary-support-v5", "summary-support-v4", "summary-source-v4", "summary-outcome-v4", "summary-outcome-v5", "summary-support-v1", "summary-support-v3", "summary-support-v2", "summary-source-v1", "summary-source-v2", "summary-source-v3", "summary-outcome-v1", "summary-outcome-v2", "summary-outcome-v3")

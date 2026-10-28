@@ -343,7 +343,7 @@ class SummaryOutcomeTests(unittest.TestCase):
                         source='app_server_thread_total', updates=1, tokens=counters))
                     return response
                 result = process_pending(self.project, self.data, runner=self.generate, summary_reviewer=review)
-                self.assertEqual('summary_support_invalid', result.get('reason_code'), result)
+                self.assertEqual('summary_review_malformed', result.get('reason_code'), result)
                 self.assertEqual(stage, result['summary_support'][-1]['version'])
                 self.assertEqual('structure', result['summary_support'][-1]['invalid_subtype'])
                 with Store(self.data) as store:

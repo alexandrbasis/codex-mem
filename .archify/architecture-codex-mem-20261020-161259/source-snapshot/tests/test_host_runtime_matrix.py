@@ -6,6 +6,7 @@ project memory drains its durable queue through the public explicit processor.
 """
 import json
 import os
+import sqlite3
 from pathlib import Path
 import subprocess
 import sys
@@ -140,6 +141,34 @@ class HostRuntimeMatrixTests(unittest.TestCase):
             return dict(service=service_status(self.data), jobs=[dict(
                 job=store.observation_job_status(self.project, row['job_id']),
                 attempts=store.observation_attempts(self.project, row['job_id'])) for row in jobs])
+
+    def readiness_diagnostics(self):
+        """Observe active leases without Store initialization reserving a writer.
+
+        The polling loop must not compete with worker receipt writes. Store
+        initialization installs schemas inside BEGIN IMMEDIATE even on reopen.
+        Keep these temporary-fixture reads on a read-only SQLite snapshot.
+        """
+        connection = sqlite3.connect((self.data / "memory.sqlite3").as_uri() + "?mode=ro",
+            uri=True, timeout=2)
+        connection.row_factory = sqlite3.Row
+        try:
+            connection.execute("BEGIN")
+            jobs = connection.execute(
+                "SELECT id AS job_id, session_id, status FROM observation_jobs "
+                "WHERE project=? ORDER BY created_at DESC, id DESC LIMIT 20",
+                (str(self.project),)).fetchall()
+            has_attempts = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observer_usage_attempts'").fetchone()
+            rows = []
+            for job in jobs:
+                attempts = connection.execute(
+                    "SELECT execution_calls FROM observer_usage_attempts WHERE job_id=? ORDER BY attempt_count",
+                    (job['job_id'],)).fetchall() if has_attempts else []
+                rows.append(dict(job=dict(job), attempts=[dict(attempt) for attempt in attempts]))
+        finally:
+            connection.close()
+        return dict(service=service_status(self.data), jobs=rows)
 
     def committed_note(self, source_id, receipt):
         diagnostics = self.diagnostics()
@@ -325,6 +354,49 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                     self.assertEqual(12, memory.attempts(self.project)[0]["total_tokens"])
                 self.assertNotIn("Use local import.", self.context())
 
+    def test_readiness_diagnostics_never_reserve_the_sqlite_writer(self):
+        self.prepare("codex", "codex")
+        self.capture()
+        statements = []
+        connect = sqlite3.connect
+        def traced_connect(*args, **kwargs):
+            connection = connect(*args, **kwargs)
+            connection.set_trace_callback(statements.append)
+            return connection
+        with patch.object(sqlite3, "connect", traced_connect):
+            phase = self.readiness_diagnostics()
+        self.assertEqual([], phase['jobs'])
+        self.assertFalse(any(sql.upper().startswith("BEGIN IMMEDIATE") for sql in statements), statements)
+
+    def test_readiness_reads_both_generation_receipts_while_writer_reserved(self):
+        from codex_mem.execution import ExecutionProfile
+        from codex_mem.observer_usage_store import begin_attempt, record_execution_call
+        from codex_mem.processor import PROCESSOR_ID
+        self.prepare("codex", "codex")
+        self.capture(host="codex")
+        self.capture(host="pi")
+        profile = ExecutionProfile(**self.profile)
+        with Store(self.data) as store:
+            for _ in range(2):
+                job = store.claim_observation_batch(self.project, PROCESSOR_ID,
+                    profile.model, profile.reasoning_effort, parallel_sessions=True)
+                self.assertIsNotNone(job)
+                begin_attempt(store, self.project, job['job_id'], job['attempt_count'], profile=profile)
+                record_execution_call(store, self.project, job['job_id'], job['attempt_count'],
+                    "generation", profile=profile)
+        writer = sqlite3.connect(self.data / "memory.sqlite3", timeout=0)
+        try:
+            writer.execute("BEGIN IMMEDIATE")
+            phase = self.readiness_diagnostics()
+            self.assertEqual(2, len(phase['jobs']))
+            self.assertEqual(2, len({row['job']['session_id'] for row in phase['jobs']}))
+            self.assertTrue(all(row['job']['status'] == 'running' and
+                json.loads(row['attempts'][-1]['execution_calls'])['generation']['outcome'] == 'running'
+                for row in phase['jobs']), phase)
+        finally:
+            writer.rollback()
+            writer.close()
+
     def test_mixed_hosts_share_worker_limit_and_active_profile_after_restart(self):
         for runtime in ("codex", "pi"):
             with self.subTest(runtime=runtime):
@@ -349,7 +421,7 @@ class HostRuntimeMatrixTests(unittest.TestCase):
                     try:
                         deadline = time.monotonic() + READINESS_WATCHDOG
                         while time.monotonic() < deadline and not worker.done():
-                            phase = self.diagnostics()
+                            phase = self.readiness_diagnostics()
                             jobs = phase['jobs']
                             calls = [json.loads(row['attempts'][-1]['execution_calls'])
                                      if row['attempts'][-1]['execution_calls'] is not None else {}
