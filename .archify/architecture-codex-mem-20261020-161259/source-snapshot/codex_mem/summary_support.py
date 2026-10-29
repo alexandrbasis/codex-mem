@@ -11,7 +11,9 @@ import hashlib
 import json
 import re
 
-from .observation_contract import OBSERVATION_CLASSIFICATION_CONTRACT, SUMMARY_FIELD_EVIDENCE_CONTRACT
+from .observation_contract import (OBSERVATION_CLASSIFICATION_CONTRACT,
+                                   OBSERVATION_FILE_EVIDENCE_CONTRACT,
+                                   SUMMARY_FIELD_EVIDENCE_CONTRACT)
 
 VERSION = "summary-support-v7"
 FIELDS = ("title", "request", "investigated", "learned", "completed", "next_steps", "notes")
@@ -185,7 +187,7 @@ def material_units(summary, notes=()):
 def original_reports(catalog):
     """Only code-labelled original report custody can supply binding anchors."""
     return {record["id"]: dict(record_id=record["retained_id"], evidence_group=record["evidence_group"],
-        span_ids=[span["id"] for span in record["spans"]])
+        span_ids=[span["id"] for span in record["spans"] if span.get("field", "body") == "body"])
         for record in catalog if record["evidence_role"] == "assistant_report"}
 
 
@@ -211,6 +213,20 @@ def prepare(summary, claim, notes=()):
             spans = [dict(id=f"{source_id}:{start // SPAN_CHARS + 1}", start=start,
                           end=min(start + SPAN_CHARS, len(body)), text=body[start:start + SPAN_CHARS])
                      for start in range(0, len(body), SPAN_CHARS)]
+            # Generation receives the retained full tool I/O as well as the
+            # display excerpt. Give that same evidence code-owned citation
+            # spans; otherwise facts outside the excerpt cannot be reviewed.
+            tool_io = record.get("tool_io")
+            if isinstance(tool_io, Mapping):
+                for field in ("tool_input", "tool_response"):
+                    if field not in tool_io:
+                        continue
+                    value = tool_io[field]
+                    value = value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, sort_keys=True)
+                    spans.extend(dict(id=f"{source_id}:{field}:{start // SPAN_CHARS + 1}",
+                        field=field, start=start, end=min(start + SPAN_CHARS, len(value)),
+                        text=value[start:start + SPAN_CHARS])
+                        for start in range(0, len(value), SPAN_CHARS))
             span_ids.extend(span["id"] for span in spans)
             catalog.append(dict(record, id=source_id, retained_id=record.get("id"), evidence_role=_evidence_role(record),
                                 evidence_group=group, spans=spans))
@@ -219,7 +235,7 @@ def prepare(summary, claim, notes=()):
     reports = original_reports(catalog)
     payload = dict(version=VERSION, units=units, field_purposes=purposes, unit_records=owners,
                    evidence=catalog, report_catalog=reports, candidate_spans=candidate_spans(units))
-    category_rules = (OBSERVATION_CLASSIFICATION_CONTRACT
+    category_rules = (OBSERVATION_CLASSIFICATION_CONTRACT + OBSERVATION_FILE_EVIDENCE_CONTRACT
                       if any(owner.startswith("note:") for owner in owners.values()) else "")
     binding_rules = (
         'Summary notes is a summary field, distinct from a note record and its note:<index>: unit IDs. '
@@ -294,8 +310,27 @@ def prepare(summary, claim, notes=()):
         "commitments still need evidence. Evidence-limited uncertainty describes the supplied record, not"
         " universal absence. Any implied event, success or specific referent also needs evidence. "
         "Use candidate context to resolve ambiguous references only within the same unit_records owner. "
+        "Resolve a pronoun from its explicit preceding subject before comparing scope. An assertion "
+        "that this result, excerpt or test does not establish X concerns that identified evidence, "
+        "not every event in the session. Evidence of X in a different earlier record does not "
+        "contradict that scoped evidence limit. Compare the actual subject, evidence window and "
+        "claimed property; do not expand a local absence into a universal denial. Conversely, an "
+        "explicit claim that X never occurred or that no supplied evidence establishes X must be "
+        "checked against all relevant supplied evidence. Do not invent a local qualifier to rescue "
+        "such a broad claim. A genuinely unclear referent remains insufficient_context. "
+        "Contrastive example: an earlier record establishes an edit and a later test output "
+        "establishes a failure. 'The test output shows a failure. It does not establish an edit' "
+        "limits what that output proves and is compatible with the earlier edit. Its subject is "
+        "the test output, not the supplied record as a whole. 'No edit occurred in this session' "
+        "is a different, universal claim contradicted by the earlier edit. Never replace the "
+        "first assertion with the second in candidate_assertion or value_comparison. "
         "Never borrow candidate context across records, weaken explicit claims or invent attribution. "
-        "Read full source bodies with qualifications and later corrections. Source order and "
+        "Read full source bodies with qualifications and later corrections. "
+        "The tool_input/tool_response spans preserve retained full tool I/O when the body is a "
+        "display excerpt. Read those spans before declaring details absent or truncated. Their "
+        "field identifies input versus result; a quoted report inside tool output remains tool "
+        "evidence, not an original assistant-report anchor. Truncation metadata still bounds "
+        "what was retained; do not invent any omitted text. Source order and "
         "current/history groups are preserved. Historical derived "
         "records cannot override contradictory original evidence; they can support continuity when "
         "the current Stop is an acknowledgement. Partial context is unknown, not proof of failure. "
@@ -354,8 +389,13 @@ def prepare(summary, claim, notes=()):
     citation_choices = [evidence_citation]
     if anchors:
         citation_choices.append(shared("report_anchor_citation", citation("report_anchor", {"$ref": "#/$defs/report_span_id"})))
-    citations = shared("citations", refs({"anyOf": citation_choices}, 12))
-    evidence_citations = shared("evidence_citations", refs(evidence_citation, 12))
+    # A span has one role per comparison. In particular, one available span
+    # cannot be emitted twice as both evidence and report_anchor. Match the
+    # wire bound to the catalog; the validator still rejects all duplicates.
+    citation_limit = min(12, len(span_ids))
+    citations = shared("citations", dict(refs({"anyOf": citation_choices}, citation_limit),
+        description="Select each span_id once. report_anchor already supplies evidence; never add the same span with role evidence."))
+    evidence_citations = shared("evidence_citations", refs(evidence_citation, citation_limit))
     unit_schemas = {}
     for unit in units:
         def row(report_binding, selected_citations):
@@ -366,7 +406,7 @@ def prepare(summary, claim, notes=()):
                         required=list(properties), properties=properties)
         if unit in OUTCOME_FIELDS:
             owned = [span["id"] for span in payload["candidate_spans"][unit]]
-            candidates = refs(dict(type="string", enum=owned), 3, 1)
+            candidates = refs(dict(type="string", enum=owned), min(3, len(owned)), 1)
             item = {"anyOf": [row(outcome_bindings[0], evidence_citations),
                               *[row(report_binding, citations)
                                 for report_binding in outcome_bindings[1:]]]}
@@ -545,6 +585,7 @@ def correction_prompt(rejected):
             "events and scope. Use surrounding candidate fields to resolve ambiguous references only within "
             "the original candidate note or session_summary record, never across records. Do not weaken "
             "explicit claims or invent attribution. "
+            f"{OBSERVATION_FILE_EVIDENCE_CONTRACT}"
             f"{SUMMARY_FIELD_EVIDENCE_CONTRACT}"
             "Untrusted comparisons: " +
         json.dumps(rejected, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e"))

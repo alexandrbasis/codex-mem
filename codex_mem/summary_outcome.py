@@ -9,12 +9,15 @@ import json
 import hashlib
 
 from .summary_support import (SupportError, SupportReview, MAX_PROMPT_CHARS, MAX_COMPARISON_CHARS,
-                              _fingerprint, material_units, candidate_spans, original_reports, SPAN_CHARS)
+                              _fingerprint, material_units, candidate_spans, original_reports, SPAN_CHARS, MAX_ROWS)
 
 SOURCE_VERSION = 'summary-source-v4'
 OUTCOME_VERSION = 'summary-outcome-v6'
 MAX_CONTENT_PROPOSITIONS = 8
 MAX_PROPOSITIONS = MAX_CONTENT_PROPOSITIONS + 2
+MAX_RELATIONS_PER_CALL = 50
+MAX_RELATIONS = MAX_ROWS * MAX_PROPOSITIONS
+MAX_OUTCOME_CHUNKS = (MAX_RELATIONS + MAX_RELATIONS_PER_CALL - 1) // MAX_RELATIONS_PER_CALL
 PURPOSES = {
     'title': 'Topic of the session; any factual outcome attributes still need support.',
     'request': 'Historical user request, regardless of whether it was completed.',
@@ -233,7 +236,7 @@ def _original_report(interpretation, support_payload):
                 provenance=provenance, body_sha256=digest, body=body)
 
 
-def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
+def _outcome_payload(summary, review, interpretation, support_payload, notes=()):
     """Join immutable bound claims to individual source items without semantic pruning."""
     units, _, _ = material_units(summary, notes)
     if (not isinstance(review, SupportReview) or review.issues
@@ -241,6 +244,8 @@ def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
             or review.candidate_fingerprint != _fingerprint(support_payload['units'])
             or review.evidence_fingerprint != _fingerprint(support_payload['evidence'])):
         raise SupportError('structure')
+    if len(review.claims) > MAX_ROWS:
+        raise SupportError('bounds')
     if (support_payload['candidate_spans'] != candidate_spans(units)
             or support_payload['report_catalog'] != original_reports(support_payload['evidence'])):
         raise SupportError('unknown_span')
@@ -268,12 +273,41 @@ def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
             for claim in claims:
                 relations.append(dict(id=f'r{len(relations) + 1}', unit_id=unit, claim_id=claim.id,
                     source_item_id=item['id'], report_link='exact' if claim.report_ids == (selected,) else 'includes_other_reports'))
-                if len(relations) > 50:
+                if len(relations) > MAX_RELATIONS:
                     raise SupportError('bounds')
     payload = dict(version=OUTCOME_VERSION, units=units, candidate_spans=support_payload['candidate_spans'],
         field_purposes={key: PURPOSES[key] for key in units}, interpretation=interpretation,
         claims={claim.id: asdict(claim) for claim in review.claims},
         report_catalog=reports, relations=relations, unused=unused, original_report=original_report)
+    return payload
+
+
+def prepare_outcome(summary, review, interpretation, support_payload, notes=()):
+    """Prepare one bounded call; callers with larger joins must use chunks."""
+    payload = _outcome_payload(summary, review, interpretation, support_payload, notes)
+    if len(payload['relations']) > MAX_RELATIONS_PER_CALL:
+        raise SupportError('bounds')
+    return _outcome_request(payload)
+
+
+def prepare_outcome_chunks(summary, review, interpretation, support_payload, notes=()):
+    """Partition the complete join without changing IDs or pruning any relation.
+
+    Each call retains the complete candidate and original report. Only its owned
+    relations are partitioned. Unused joins are accounted for once, in the first
+    group. The global bound follows the support-row and source-item contracts.
+    """
+    payload = _outcome_payload(summary, review, interpretation, support_payload, notes)
+    relations = payload['relations']
+    return tuple(_outcome_request(dict(payload,
+        relations=relations[start:start + MAX_RELATIONS_PER_CALL],
+        unused=payload['unused'] if start == 0 else []))
+        for start in range(0, max(1, len(relations)), MAX_RELATIONS_PER_CALL))
+
+
+def _outcome_request(payload):
+    relations = payload['relations']
+    items = payload['interpretation']['items']
     # Each alternative owns both the valid state and its source availability.
     # Group relation IDs to keep the schema bounded at fifty relations.
     item_by_id = {item['id']: item for item in items}

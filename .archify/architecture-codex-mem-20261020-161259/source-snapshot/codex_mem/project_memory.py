@@ -38,6 +38,49 @@ def _role(source: str | None) -> str:
     return source_role(source)
 
 
+_RECOVERY_PROVENANCE = ("source", "session_id", "turn_id", "title", "created_at")
+
+
+def _recovery_selector(expected, statuses, *, allow_error_none=False):
+    keys = {"job_id", "status", "error", "attempts", "fingerprint", "revision", "generation",
+            "current_revision", "current_deletion_generation", "events"}
+    if not isinstance(expected, dict) or set(expected) != keys:
+        raise ValueError("exact recovery selector required")
+    expected = json.loads(_json(expected))
+    if (expected["status"] not in statuses
+            or any(type(expected[key]) is not int or expected[key] < 0
+                   for key in ("attempts", "revision", "generation", "current_revision", "current_deletion_generation"))
+            or expected["attempts"] < 1
+            or any(not isinstance(expected[key], str) or not expected[key] for key in ("job_id", "fingerprint"))
+            or not (isinstance(expected["error"], str) and expected["error"]
+                    or allow_error_none and expected["error"] is None)):
+        raise ValueError("invalid recovery parent selector")
+    events = expected["events"]
+    if not isinstance(events, list) or not 1 <= len(events) <= 128:
+        raise ValueError("invalid recovery event set")
+    for event in events:
+        if (not isinstance(event, dict) or set(event) != {"seq", "source_id", "offset", "source_sha256", "superseded_by", "provenance"}
+                or type(event["seq"]) is not int or type(event["offset"]) is not int
+                or event["offset"] < 0 or not isinstance(event["source_id"], str)
+                or event["superseded_by"] is not None and not isinstance(event["superseded_by"], str)
+                or not isinstance(event["source_sha256"], str)
+                or re.fullmatch(r"[0-9a-f]{64}", event["source_sha256"]) is None
+                or not isinstance(event["provenance"], dict) or set(event["provenance"]) != set(_RECOVERY_PROVENANCE)
+                or any(value is not None and not isinstance(value, str) for value in event["provenance"].values())):
+            raise ValueError("invalid recovery event")
+    if len({event["seq"] for event in events}) != len(events):
+        raise ValueError("duplicate recovery event")
+    events.sort(key=lambda event: event["seq"])
+    return expected
+
+
+def _recovery_event(row):
+    return dict(seq=row["seq"], source_id=row["source_id"], offset=row["offset"],
+                source_sha256=hashlib.sha256(row["body"].encode()).hexdigest() if row["body"] is not None else None,
+                superseded_by=row["superseded_by"], provenance={
+                    key: row["entry_session_id" if key == "session_id" else key] for key in _RECOVERY_PROVENANCE})
+
+
 def install_schema(connection: sqlite3.Connection) -> None:
     """Install additive tables, without backfilling historical observations."""
     had_fts = connection.execute("SELECT 1 FROM sqlite_master WHERE name='pm_objects_fts'").fetchone() is not None
@@ -47,6 +90,7 @@ def install_schema(connection: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS pm_events_pending ON pm_events(project,done,session_id,seq)",
         "CREATE TABLE IF NOT EXISTS pm_jobs (id TEXT PRIMARY KEY, project TEXT NOT NULL, session_id TEXT NOT NULL, fingerprint TEXT NOT NULL, token TEXT NOT NULL, status TEXT NOT NULL, lease_until REAL NOT NULL, retry_after REAL NOT NULL DEFAULT 0, attempts INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL, generation INTEGER NOT NULL, input_json TEXT NOT NULL, receipt_json TEXT, error TEXT)",
         "CREATE INDEX IF NOT EXISTS pm_jobs_lane ON pm_jobs(project,session_id,status)",
+        "CREATE TABLE IF NOT EXISTS pm_job_recoveries (parent_job_id TEXT PRIMARY KEY, successor_job_id TEXT NOT NULL UNIQUE, project TEXT NOT NULL, event_set_hash TEXT NOT NULL, created_at REAL NOT NULL)",
         "CREATE TABLE IF NOT EXISTS pm_objects (id TEXT PRIMARY KEY, project TEXT NOT NULL, object_type TEXT NOT NULL, session_id TEXT NOT NULL, revision INTEGER NOT NULL, data_json TEXT NOT NULL)",
         "CREATE INDEX IF NOT EXISTS pm_objects_project ON pm_objects(project,object_type,revision)",
         "CREATE TABLE IF NOT EXISTS pm_episode_heads (project TEXT NOT NULL, logical_episode_id TEXT NOT NULL, head_id TEXT, episode_version INTEGER NOT NULL, PRIMARY KEY(project,logical_episode_id))",
@@ -328,10 +372,109 @@ class ProjectMemory:
                 snapshot = {"job_id": job_id, "token": token, "project": project, "session_id": lane[0], "revision": state["revision"], "deletion_generation": state["deletion_generation"], "input_fingerprint": fingerprint, "processor_version": PROCESSOR_VERSION, "sources": sources, "state": state, "historical_context": historical_context}
                 # Expired work in this lane is revoked even if changed state or
                 # new events produced a different deterministic job identifier.
+                c.execute("UPDATE pm_jobs SET status='quarantined',error='lease_expired',input_json='{}' WHERE project=? AND session_id=? AND status='running' AND lease_until<=? AND id IN (SELECT successor_job_id FROM pm_job_recoveries)", (project, lane[0], now))
                 c.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE project=? AND session_id=? AND status IN ('running','failed') AND id!=?", (project, lane[0], job_id))
                 c.execute("INSERT INTO pm_jobs(id,project,session_id,fingerprint,token,status,lease_until,attempts,revision,generation,input_json) VALUES (?,?,?,?,?,'running',?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,status='running',lease_until=excluded.lease_until,attempts=excluded.attempts,input_json=excluded.input_json,error=NULL", (job_id, project, lane[0], fingerprint, token, now+max(1,min(int(lease_seconds),3600)), (prior[0]+1) if prior else 1, state["revision"], state["deletion_generation"], _json(snapshot)))
                 return snapshot
             return self.store._write(claim_job)
+
+    def claim_recovery(self, project: Any, *, expected: dict[str, Any],
+                       max_events: int = 32, max_chars: int = 24000,
+                       lease_seconds: int = 120) -> dict[str, Any]:
+        """Claim one inspected quarantined event set as a new, exclusive successor.
+
+        expected owns the parent job's job_id/status/error/attempts/fingerprint/
+        revision/generation, current_revision/current_deletion_generation, and
+        complete events: seq/source_id/offset/source_sha256/superseded_by/provenance. Old snapshots are
+        never restored. Failed jobs without quarantine membership are rejected.
+        Retained sources must be unchanged and unprocessed. Supersession is
+        pinned metadata, not deletion; PM can consume retained original captures.
+        This method calls no runtime. A successor consumes this exact recovery
+        authorization even if it fails; another attempt needs its own selector.
+        """
+        project = self._project(project)
+        expected = _recovery_selector(expected, ("quarantined",))
+        events = expected["events"]
+        if (type(max_events) is not int or not 1 <= max_events <= 128
+                or type(max_chars) is not int or not 256 <= max_chars <= 120000
+                or type(lease_seconds) is not int or not 1 <= lease_seconds <= 3600):
+            raise ValueError("invalid bounded recovery limits")
+        with self.store._lock:
+            def claim():
+                c = self.store._connection
+                parent = c.execute("SELECT * FROM pm_jobs WHERE id=? AND project=?", (expected["job_id"], project)).fetchone()
+                state = c.execute("SELECT * FROM pm_projects WHERE project=?", (project,)).fetchone()
+                if (parent is None or state is None
+                        or any(parent[key] != expected[key] for key in ("status", "error", "attempts", "fingerprint", "revision", "generation"))
+                        or state["revision"] != expected["current_revision"]
+                        or state["deletion_generation"] != expected["current_deletion_generation"]
+                        or parent["generation"] != state["deletion_generation"]
+                        or c.execute("SELECT 1 FROM pm_job_recoveries WHERE parent_job_id=?", (parent["id"],)).fetchone()
+                        or c.execute("SELECT 1 FROM pm_jobs WHERE project=? AND session_id=? AND status='running' AND lease_until>?", (project, parent["session_id"], time.time())).fetchone()):
+                    raise ValueError("recovery state changed or already consumed")
+                selected = c.execute("SELECT v.*,e.title,e.body,e.kind,e.source,e.session_id AS entry_session_id,e.turn_id,e.created_at,e.superseded_by FROM pm_events v LEFT JOIN entries e ON e.id=v.source_id AND e.project=v.project WHERE v.project=? AND v.blocked_job_id=? ORDER BY v.seq", (project, parent["id"])).fetchall()
+                actual = [_recovery_event(row) for row in selected]
+                if (actual != events or any(row["done"]
+                        or row["session_id"] != parent["session_id"]
+                        or (row["entry_session_id"] or "") != parent["session_id"] or row["body"] is None
+                        or row["offset"] >= len(row["body"])
+                        or _role(row["source"]) not in {"user_intent", "assistant_report", "tool_record"}
+                        for row in selected)):
+                    raise ValueError("recovery event set or sources changed")
+                sources, remaining = [], max_chars
+                for row in selected[:max_events]:
+                    if remaining <= 0:
+                        break
+                    body = row["body"][row["offset"]:row["offset"]+remaining]
+                    sources.append({key: row[key] for key in ("title", "source", "turn_id", "created_at", "seq")} |
+                                   dict(id=row["source_id"], session_id=row["entry_session_id"], body=body,
+                                        body_offset=row["offset"], body_length=len(row["body"]),
+                                        source_role=_role(row["source"]), truncated=row["offset"]+len(body)<len(row["body"])))
+                    remaining -= len(body)
+                current = _bounded_generation_state(self._state(project, 100, 0, include_project_obligations=True), sources)
+                history = self._disclose_history(project, current, sources, max_chars, max_events)
+                fingerprint = _hash(dict(sources=sources, revision=current["revision"], generation=current["deletion_generation"], processor_version=PROCESSOR_VERSION))
+                job_id = "pmj_" + _hash(["recovery", parent["id"], fingerprint])[:40]
+                token, now = uuid.uuid4().hex, time.time()
+                snapshot = dict(job_id=job_id, token=token, project=project, session_id=parent["session_id"],
+                    revision=current["revision"], deletion_generation=current["deletion_generation"],
+                    input_fingerprint=fingerprint, processor_version=PROCESSOR_VERSION, sources=sources,
+                    state=current, historical_context=history, recovery_parent_job_id=parent["id"], recovery_events=events)
+                c.execute("INSERT INTO pm_jobs(id,project,session_id,fingerprint,token,status,lease_until,attempts,revision,generation,input_json) VALUES (?,?,?,?,?,'running',?,1,?,?,?)", (job_id, project, parent["session_id"], fingerprint, token, now+lease_seconds, current["revision"], current["deletion_generation"], _json(snapshot)))
+                c.execute("INSERT INTO pm_job_recoveries VALUES (?,?,?,?,?)", (parent["id"], job_id, project, _hash(events), now))
+                c.execute("UPDATE pm_events SET blocked_job_id=? WHERE project=? AND blocked_job_id=?", (job_id, project, parent["id"]))
+                return snapshot
+            return self.store._write(claim)
+
+    def quarantine_expired_recovery(self, project: Any, *, expected: dict[str, Any]) -> dict[str, Any]:
+        """Reconcile one inspected expired recovery lease without dispatching it.
+
+        The same exact selector includes current event provenance. No attempt,
+        lineage or blocked membership is reset. The caller must inspect a new
+        quarantine selector before separately authorizing another successor.
+        """
+        project = self._project(project)
+        expected = _recovery_selector(expected, ("running", "stale"), allow_error_none=True)
+        with self.store._lock:
+            def reconcile():
+                c = self.store._connection
+                job = c.execute("SELECT * FROM pm_jobs WHERE id=? AND project=?", (expected["job_id"], project)).fetchone()
+                state = c.execute("SELECT * FROM pm_projects WHERE project=?", (project,)).fetchone()
+                if (job is None or state is None
+                        or any(job[key] != expected[key] for key in ("status", "error", "attempts", "fingerprint", "revision", "generation"))
+                        or job["lease_until"] > time.time()
+                        or state["revision"] != expected["current_revision"]
+                        or state["deletion_generation"] != expected["current_deletion_generation"]
+                        or job["generation"] != state["deletion_generation"]
+                        or not c.execute("SELECT 1 FROM pm_job_recoveries WHERE successor_job_id=? AND project=?", (job["id"], project)).fetchone()):
+                    raise ValueError("expired recovery state changed")
+                selected = c.execute("SELECT v.*,e.body,e.superseded_by,e.source,e.session_id AS entry_session_id,e.turn_id,e.title,e.created_at FROM pm_events v LEFT JOIN entries e ON e.id=v.source_id AND e.project=v.project WHERE v.project=? AND v.blocked_job_id=? ORDER BY v.seq", (project, job["id"])).fetchall()
+                if ([_recovery_event(row) for row in selected] != expected["events"]
+                        or any(row["done"] or row["body"] is None for row in selected)):
+                    raise ValueError("expired recovery event set changed")
+                c.execute("UPDATE pm_jobs SET status='quarantined',error='lease_expired',input_json='{}' WHERE id=?", (job["id"],))
+                return dict(status="quarantined", job_id=job["id"], code="lease_expired", attempts=job["attempts"])
+            return self.store._write(reconcile)
 
     def _disclose_history(self, project: str, state: dict, sources: list[dict], max_chars: int, max_sources: int) -> dict:
         """Supply original evidence for retained fields, within the existing input budget."""
@@ -487,9 +630,36 @@ class ProjectMemory:
         project = c.execute("SELECT * FROM pm_projects WHERE project=?", (supplied.get("project"),)).fetchone()
         return job, project
 
-    @staticmethod
-    def _live(job: Any, project: Any, supplied: dict[str, Any]) -> bool:
-        return bool(job and project and job["status"] == "running" and job["token"] == supplied.get("token") and job["fingerprint"] == supplied.get("input_fingerprint") and job["lease_until"] > time.time() and job["revision"] == project["revision"] and job["generation"] == project["deletion_generation"])
+    def _live(self, job: Any, project: Any, supplied: dict[str, Any]) -> bool:
+        if not (job and project and job["status"] == "running" and job["token"] == supplied.get("token") and job["fingerprint"] == supplied.get("input_fingerprint") and job["lease_until"] > time.time() and job["revision"] == project["revision"] and job["generation"] == project["deletion_generation"]):
+            return False
+        durable = json.loads(job["input_json"])
+        for event in durable.get("recovery_events", []):
+            row = self.store._connection.execute("SELECT v.*,e.body,e.superseded_by,e.source,e.session_id AS entry_session_id,e.turn_id,e.title,e.created_at FROM pm_events v JOIN entries e ON e.id=v.source_id AND e.project=v.project WHERE v.seq=? AND v.project=?", (event["seq"], job["project"])).fetchone()
+            if (row is None or row["done"] or row["blocked_job_id"] != job["id"]
+                    or row["session_id"] != job["session_id"] or _recovery_event(row) != event):
+                return False
+        if durable.get("recovery_parent_job_id"):
+            # Disclosure may also supply retained historical sources. Their
+            # original provenance is input evidence, even though they are not
+            # members of the pending event set authorized for consumption.
+            for source in durable["sources"]:
+                row = self.store._connection.execute("SELECT body,source,session_id,turn_id,title,created_at FROM entries WHERE id=? AND project=?", (source["id"], job["project"])).fetchone()
+                if (row is None or any(row[key] != source[key] for key in _RECOVERY_PROVENANCE)
+                        or len(row["body"]) != source["body_length"]
+                        or row["body"][source["body_offset"]:source["body_offset"]+len(source["body"])] != source["body"]):
+                    return False
+        return True
+
+    def _invalidate_claim(self, job: Any) -> None:
+        # Recovery events remain exclusively blocked, even if freshness revokes
+        # their lease. Keep that successor addressable without automatic retry.
+        connection = self.store._connection
+        recovery = connection.execute("SELECT 1 FROM pm_job_recoveries WHERE successor_job_id=?", (job["id"],)).fetchone()
+        if recovery:
+            connection.execute("UPDATE pm_jobs SET status='quarantined',error='source_changed',input_json='{}' WHERE id=?", (job["id"],))
+        else:
+            connection.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
 
     def begin_attempt(self, snapshot: dict[str, Any], *, model: str, reasoning_effort: str,
                       processor_id: str = "", attempt_id: str | None = None, profile=None) -> dict[str, Any]:
@@ -612,9 +782,10 @@ class ProjectMemory:
                 job, project = self._job(snapshot)
                 if not self._live(job, project, snapshot):
                     if job and job["token"] == snapshot.get("token") and job["status"] == "running":
-                        self.store._connection.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
+                        self._invalidate_claim(job)
                     return {"status": "stale"}
-                status = "quarantined" if reason != "configuration_error" and (reason == "invalid_response" or job["attempts"] >= 5) else "failed"
+                recovery = self.store._connection.execute("SELECT 1 FROM pm_job_recoveries WHERE successor_job_id=?", (job["id"],)).fetchone()
+                status = "quarantined" if recovery or reason != "configuration_error" and (reason == "invalid_response" or job["attempts"] >= 5) else "failed"
                 # Do not persist arbitrary model/runner errors: they may contain
                 # sensitive inputs. Only a bounded error category is durable.
                 category = reason if reason in {"configuration_error", "invalid_response", "timeout", "runner_failure", "unavailable"} else "processing_failed"
@@ -932,14 +1103,14 @@ class ProjectMemory:
                     return dict(json.loads(job["receipt_json"]), status="duplicate")
                 if not self._live(job, project, snapshot):
                     if job and job["token"] == snapshot.get("token") and job["status"] == "running":
-                        c.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
+                        self._invalidate_claim(job)
                     return {"status": "stale"}
                 durable = json.loads(job["input_json"])
                 # Never validate against caller-mutated sources or state.
                 for source in durable["sources"]:
                     current = c.execute("SELECT body FROM entries WHERE id=? AND project=?", (source["id"], durable["project"])).fetchone()
                     if current is None or current[0][source["body_offset"]:source["body_offset"]+len(source["body"])] != source["body"]:
-                        c.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
+                        self._invalidate_claim(job)
                         return {"status": "stale"}
                 if isinstance(output, dict) and isinstance(output.get("episodes", []), list):
                     for proposed in output.get("episodes", []):
@@ -950,7 +1121,7 @@ class ProjectMemory:
                                 prior = json.loads(target[0])
                                 _episode_identity(c, durable["project"], prior)
                                 if not prior["is_current_head"]:
-                                    c.execute("UPDATE pm_jobs SET status='stale',input_json='{}' WHERE id=?", (job["id"],))
+                                    self._invalidate_claim(job)
                                     return {"status": "stale", "reason": "episode_head_changed"}
                 if type(conservative_transitions) is not bool:
                     raise ValueError("conservative_transitions must be a boolean trusted caller option")
@@ -997,6 +1168,9 @@ class ProjectMemory:
                     record_consumed(c, durable["project"], source)
                     offset = source["body_offset"]+len(source["body"])
                     c.execute("UPDATE pm_events SET offset=?,done=? WHERE project=? AND source_id=?", (offset, int(offset>=source["body_length"]), durable["project"], source["id"]))
+                for event in durable.get("recovery_events", []):
+                    c.execute("UPDATE pm_events SET blocked_job_id=NULL WHERE seq=? AND project=? AND source_id=? AND blocked_job_id=? AND done=0",
+                              (event["seq"], durable["project"], event["source_id"], job["id"]))
                 from .project_memory_custody import associate_claims
                 associate_claims(c, durable["project"], objects)
                 revision = durable["revision"]+1

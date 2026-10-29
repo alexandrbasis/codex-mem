@@ -11,7 +11,36 @@ OBSERVATION_CLASSIFICATION_CONTRACT = (
     "Generic topic and concept labels require topical fit. Any label or category implying "
     "completion, termination, failure, identity, quantity or another factual assertion requires "
     "the same scoped evidence, attribution and uncertainty as prose. "
+    "A title stating a test or measurement result must retain the tested scope when omitting "
+    "it would imply a general product property. Use a topical title if the necessary qualifier "
+    "does not fit clearly. "
+    "Concept labels are optional; examples are not default values. When a note states that "
+    "the cause or remedy remains unknown, prefer a label describing the failure or investigation. "
+    "Use problem-solution only when the evidence links a problem to a proposed or actual remedy, "
+    "preserving that remedy's unverified or proposed status in the note. "
     "No material field is exempt from factual support. "
+    "Preserve the source's scope and modality in every field: a preference is not a requirement, "
+    "discussion is not agreement, and a recalled possible limitation is not an established limitation. "
+    "Keep these qualifiers next to the claim rather than relying on a later general disclaimer. "
+    "Preserve entity relationships and quantifiers: a specific program of a selected account "
+    "does not establish every program or every account. Do not broaden one instance into a rule. "
+    "Keep distinct domain terms distinct unless the evidence establishes their equivalence. "
+    "When a synonym or translation could change the meaning, retain the source term with attribution. "
+    "Copy concrete test names and other identifiers exactly from the evidence for the stated "
+    "result. Do not replace them with similarly named targets from a command or earlier record. "
+    "If the command and result name different targets, preserve the discrepancy instead of "
+    "silently treating the names as equivalent. "
+)
+
+OBSERVATION_FILE_EVIDENCE_CONTRACT = (
+    "File paths carry operation claims in files_read and files_modified. "
+    "Use files_read only when evidence establishes that the file's contents were read or inspected, "
+    "and files_modified only when evidence establishes an actual edit. A path mentioned in a "
+    "request, command, traceback or test result does not by itself establish either operation. "
+    "Executing a file does not establish inspection of its contents. Preserve relevant referenced "
+    "paths in the body or facts when no read or edit is established; leave unsupported file arrays empty. "
+    "A content search that returns matching lines establishes limited inspection of that file, "
+    "not review of the whole file. A filename-only listing establishes no content inspection. "
 )
 
 SUMMARY_FIELD_EVIDENCE_CONTRACT = (

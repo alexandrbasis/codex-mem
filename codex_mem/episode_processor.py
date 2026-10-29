@@ -812,6 +812,7 @@ def process_project_memory(
     timeout: int | float = DEFAULT_TIMEOUT,
     background: bool = False,
     jev_quality_evaluator: Callable | None = None,
+    recovery: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Run one bounded background job and return content-free metadata.
 
@@ -825,6 +826,8 @@ def process_project_memory(
     workspace = project_key(project)
     if not isinstance(background, bool):
         raise ValueError("background must be true or false")
+    if recovery is not None and (not isinstance(recovery, dict) or background):
+        raise ValueError("exact recovery requires an explicit foreground selector")
     if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or not 1 <= timeout <= 600:
         raise ValueError("timeout must be between 1 and 600 seconds")
     started = time.monotonic()
@@ -853,8 +856,16 @@ def process_project_memory(
     try:
         with Store(data_dir) as store:
             memory = ProjectMemory(store)
-            snapshot = memory.claim(workspace, max_events=MAX_EVENTS, max_chars=MAX_SOURCE_CHARS,
-                                    lease_seconds=min(900, math.ceil(timeout) + 40), ready_only=background)
+            if recovery is not None:
+                try:
+                    snapshot = memory.claim_recovery(workspace, expected=recovery,
+                        max_events=MAX_EVENTS, max_chars=MAX_SOURCE_CHARS,
+                        lease_seconds=min(900, math.ceil(timeout) + 40))
+                except ValueError:
+                    return dict(receipt, status="blocked", code="recovery_unavailable")
+            else:
+                snapshot = memory.claim(workspace, max_events=MAX_EVENTS, max_chars=MAX_SOURCE_CHARS,
+                                        lease_seconds=min(900, math.ceil(timeout) + 40), ready_only=background)
             if snapshot is None:
                 return dict(receipt, status="idle")
             receipt["job_id"] = snapshot["job_id"]

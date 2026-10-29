@@ -850,3 +850,36 @@ class OutcomeContractTests(unittest.TestCase):
         changed = copy.deepcopy(self.interpretation); changed['coverage'] = 'complete'
         self.assertNotEqual(baseline, rejection_key(self.summary, 'evidence', changed, profile))
         self.assertNotEqual(baseline, rejection_key(self.summary, 'evidence', self.interpretation, dict(profile, model='other')))
+
+    def test_bounded_chunks_preserve_all_relations_through_global_limit(self):
+        """The join boundary accepts immutable support claims, never drops pairs."""
+        from dataclasses import replace
+        from codex_mem.summary_support import prepare, validate, SupportError
+        summary = {field:'A complete attributed report finding.' for field in self.outcome.OUTCOME_FIELDS}
+        _, _, support = prepare(summary,self.claim)
+        reviewed = validate(supported_review(support)['output'],support)
+        interpretation = dict(self.interpretation, items=[dict(self.interpretation['items'][0],id=f'p{i}') for i in range(10)])
+        # The wire permits eight claims per outcome field: 40 x 10 = 400.
+        claims = tuple(replace(claim,id=f'{claim.unit_id}#{i}') for claim in reviewed.claims for i in range(1,9))
+        for count, expected in ((40,[50]*8),(64,[50]*12+[40])):
+            # Exercise the global 64-support-row contract at the immutable claim
+            # boundary as well as the currently reachable 40 outcome claims.
+            bounded = claims if count == 40 else tuple(replace(claims[0],id=f'bound{i}') for i in range(64))
+            review = replace(reviewed,claims=bounded)
+            chunks = self.outcome.prepare_outcome_chunks(summary,review,interpretation,support)
+            self.assertEqual(expected,[len(p['relations']) for _,_,p in chunks])
+            self.assertEqual([f'r{i}' for i in range(1,count*10+1)],
+                [r['id'] for _,_,p in chunks for r in p['relations']])
+            for prompt,schema,payload in chunks:
+                self.assertEqual(self.claim['sources'][-1]['body'],payload['original_report']['body'])
+                self.assertEqual(summary,payload['units'])
+                self.assertLessEqual(len(prompt),1_250_000)
+                self.assertLessEqual(schema['properties']['rows']['maxItems'],50)
+                self.assertEqual((),self.outcome.validate_outcome(outcome_output(payload),payload).issues)
+            with self.assertRaises(SupportError):
+                self.outcome.prepare_outcome(summary,review,interpretation,support)
+        with self.assertRaises(SupportError):
+            self.outcome.prepare_outcome_chunks(summary,replace(reviewed,claims=tuple(
+                replace(claims[0],id=f'bound{i}') for i in range(65))),interpretation,support)
+        short = self.outcome.prepare_outcome(summary,reviewed,interpretation,support)
+        self.assertEqual((short,),self.outcome.prepare_outcome_chunks(summary,reviewed,interpretation,support))

@@ -633,7 +633,8 @@ class NativeSummarySupportTests(unittest.TestCase):
         profile = dict(runtime=runtime, provider='fixture' if runtime == 'pi' else 'openai',
                        model='fixture' if runtime == 'pi' else MODEL,
                        reasoning_effort='low' if runtime == 'pi' else REASONING_EFFORT,
-                       timeout=4 if scenario.get('support_mode') == 'timeout' else 8)
+                       timeout=scenario.pop('processing_timeout',
+                           4 if scenario.get('support_mode') == 'timeout' else 8))
         configure(self.data, processing_profile=profile, jev_filter_enabled=False, jev_quality_enabled=False,
                   service_enabled=False, semantic_enabled=False)
         with Store(self.data) as store:
@@ -806,7 +807,9 @@ class NativeSummarySupportTests(unittest.TestCase):
                 with self.subTest(runtime=runtime, final_verdict=final_verdict):
                     profile = self.setup_case(runtime, source_propositions=[dict(statement='A reported local result.',
                         subject='Current report', temporal_scope='Current Stop', modality='reported', source_id='report1')],
-                        outcome_verdicts=['conflict', final_verdict], correction_changes_summary=True)
+                        outcome_verdicts=['conflict', final_verdict], correction_changes_summary=True,
+                        # Seven fixture subprocess calls verify correction/usage, not an 8s timing limit.
+                        processing_timeout=30)
                     result = process_pending(self.project, self.data, codex=str(self.root / 'codex'))
                     self.assertEqual('processed' if final_verdict == 'compatible' else 'failed', result['status'], result)
                     if final_verdict == 'conflict': self.assertEqual('summary_support_rejected', result['reason_code'])

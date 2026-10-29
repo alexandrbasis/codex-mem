@@ -479,8 +479,12 @@ def record_execution_call(store, project, job_id, attempt_count, call_id, *, pro
     The generator and each support review have separate identities and counters.
     Quotes, prompts, candidates and arbitrary error text cannot enter this record.
     """
-    if call_id not in ("generation", "summary_support_1", "summary_support_2", "summary_source_1",
-                       "summary_outcome_1", "summary_outcome_2"):
+    from .summary_outcome import MAX_OUTCOME_CHUNKS
+    outcome_chunks = {f"summary_outcome_{attempt}_chunk_{chunk}"
+                      for attempt in (1, 2) for chunk in range(1, MAX_OUTCOME_CHUNKS + 1)}
+    if call_id not in outcome_chunks and call_id not in (
+            "generation", "summary_support_1", "summary_support_2", "summary_source_1",
+            "summary_outcome_1", "summary_outcome_2"):
         raise ValueError("invalid execution call")
     if outcome not in ("running", "success", "failed"):
         raise ValueError("invalid call outcome")

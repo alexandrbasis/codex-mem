@@ -2458,6 +2458,7 @@ class Store:
         retry_input_fingerprint: str | None = None,
         retry_previous_profile: bool = False,
         retry_one_shot: bool = False,
+        retry_dispatched_worker: tuple[str, str] | None = None,
         parallel_sessions: bool = False,
         execution_profile: Mapping[str, Any] | None = None,
     ) -> dict[str, Any] | None:
@@ -2478,6 +2479,10 @@ class Store:
         its expired lease as failed instead of allowing automatic lease retry.
         Transport failures require this guarded selector and no recorded
         worker thread or turn, because dispatch can precede a lost turn receipt.
+        An explicit ``retry_dispatched_worker`` pins both old worker IDs and
+        permits only a one-shot legacy-profile successor of an already failed,
+        lease-free job. It preserves the uncertain parent outcome. This never
+        revives the old lease or authorizes automatic transport retries.
         ``parallel_sessions`` permits separate known sessions to run together.
         Default and unknown-session leases remain exclusive to the project.
         """
@@ -2517,6 +2522,14 @@ class Store:
             raise ValueError("retry_one_shot must be true or false")
         if retry_one_shot and not guarded_retry:
             raise ValueError("one-shot recovery requires an exact selector")
+        dispatched_thread = dispatched_turn = None
+        if retry_dispatched_worker is not None:
+            if (not isinstance(retry_dispatched_worker, tuple) or len(retry_dispatched_worker) != 2
+                    or any(not isinstance(value, str) or not value.strip() for value in retry_dispatched_worker)
+                    or not retry_previous_profile or not retry_one_shot
+                    or retry_error_code != "protocol_error"):
+                raise ValueError("dispatched recovery requires an exact one-shot legacy successor")
+            dispatched_thread, dispatched_turn = retry_dispatched_worker
         if guarded_retry and (
             retry_job is None or retry_error_code not in {
                 "timeout", "runner_failure", "storage_failure", "invalid_response",
@@ -2609,14 +2622,16 @@ class Store:
                         "AND done.status IN ('processed','skipped')) "
                         "AND status='failed' AND error_code=? AND attempt_count=? "
                         "AND (error_code NOT IN ('runner_unavailable', 'protocol_error') "
-                        "OR (worker_thread_id IS NULL AND worker_turn_id IS NULL)) "
+                        "OR (worker_thread_id IS NULL AND worker_turn_id IS NULL) "
+                        "OR (worker_thread_id=? AND worker_turn_id=? AND model!=?)) "
                         "AND lease_token IS NULL AND lease_expires_at IS NULL AND output_ids_json='[]' "
                         "AND EXISTS (SELECT 1 FROM observation_job_sources WHERE job_id=j.id) "
                         "AND NOT EXISTS (SELECT 1 FROM observation_job_sources AS links "
                         "LEFT JOIN entries AS e ON e.id=links.source_id AND e.project=j.project "
                         "WHERE links.job_id=j.id AND (e.id IS NULL OR e.superseded_by IS NOT NULL)) "
                         "AND " + free_lane.format(session="j.session_id"),
-                        (retry_job, workspace, processor, retry_error_code, retry_attempt_count, *lane_args),
+                        (retry_job, workspace, processor, retry_error_code, retry_attempt_count,
+                         dispatched_thread, dispatched_turn, required_model, *lane_args),
                     ).fetchone()
                 else:
                     reusable = connection.execute(

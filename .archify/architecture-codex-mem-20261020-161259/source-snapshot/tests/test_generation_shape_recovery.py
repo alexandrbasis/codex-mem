@@ -245,6 +245,33 @@ class GenerationShapeRecoveryTests(unittest.TestCase):
         self.assertEqual(self.body, raw['body'])
         self.assertIsNone(raw['superseded_by'])
 
+    def test_empty_summary_can_use_only_the_existing_correction_in_both_runtimes(self):
+        for runtime in ('codex', 'pi'):
+            for replacement in ('supported', 'empty', 'unsupported'):
+                with self.subTest(runtime=runtime, replacement=replacement):
+                    self.setUp()
+                    empty = self.candidate()
+                    for field in ('investigated', 'learned', 'completed', 'next_steps', 'notes'):
+                        empty['session_summary'][field] = ''
+                    fixed = empty if replacement == 'empty' else self.candidate()
+                    result, transport, reviews, outputs, attempts, raw = self.run_candidates(
+                        [empty, fixed], runtime=runtime,
+                        verdict='unsupported' if replacement == 'unsupported' else 'supported')
+                    self.assertEqual(2, len(transport.sent))
+                    self.assertEqual('empty_session_summary',
+                                     result['generation_correction']['initial_reason_code'])
+                    self.assertEqual(24, json.loads(attempts[0]['execution_calls'])['generation']['metrics']['total_tokens'])
+                    if replacement == 'supported':
+                        self.assertEqual('processed', result['status'], result)
+                        self.assertEqual(2, len(outputs))
+                        self.assertEqual(self.body, next(row for row in outputs if row['kind'] == 'note')['body'])
+                        self.assertEqual(3, len(reviews))
+                    else:
+                        self.assert_no_partial_write(outputs, raw)
+                        self.assertEqual('empty_session_summary' if replacement == 'empty'
+                                         else 'summary_support_rejected', result.get('reason_code'), result)
+                        self.assertEqual(0 if replacement == 'empty' else 1, len(reviews))
+
     def test_repeated_missing_summary_exhausts_same_allowance_without_review_or_writes(self):
         result, transport, reviews, outputs, attempts, raw = self.run_candidates([self.candidate(True)]*2)
         self.assertEqual('missing_required_summary', result.get('reason_code'), result)

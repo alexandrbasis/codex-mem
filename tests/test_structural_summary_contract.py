@@ -348,11 +348,11 @@ class StructuralPublicBudgetTests(unittest.TestCase):
     generate = StructuralPublicTests.generate
     stored = StructuralPublicTests.stored
 
-    def test_overflow_fails_before_outcome_dispatch_without_silent_pruning(self):
+    def test_large_packet_checks_every_relation_in_bounded_groups(self):
         from codex_mem.processor import process_pending
-        from tests.test_summary_support import supported_review, source_output, receipt
+        from tests.test_summary_support import supported_review, source_output, outcome_output, receipt
         self.seed()
-        seen=[]
+        seen=[];relations=[];group_sizes=[]
         def generate(request):
             result=self.generate(request)
             for field in ('title','investigated','learned','completed','notes'):
@@ -360,6 +360,10 @@ class StructuralPublicBudgetTests(unittest.TestCase):
             return result
         def review(request):
             seen.append(request['version'])
+            if request['version']=='summary-outcome-v6':
+                group_sizes.append(len(request['relations']))
+                relations.extend(row['id'] for row in request['relations'])
+                return receipt(outcome_output(request))
             if request['version']=='summary-source-v4':
                 return receipt(source_output(propositions=[dict(statement=f'Observed report property {i}',subject='Report',
                     temporal_scope='This report',modality='observed_text',source_id='report1',target='report_text') for i in range(8)],
@@ -371,10 +375,12 @@ class StructuralPublicBudgetTests(unittest.TestCase):
                 for unit,rows in result['output']['units'].items()}
             return result
         result=process_pending(self.project,self.data,runner=generate,summary_reviewer=review)
-        self.assertEqual('summary_support_invalid',result.get('reason_code'),result)
-        self.assertEqual('bounds',result['summary_support'][-1]['invalid_subtype'])
-        self.assertEqual([SUPPORT_VERSION,'summary-source-v4'],seen)
-        self.assertEqual([],self.stored(result)[0])
+        self.assertEqual('processed',result['status'],result)
+        self.assertEqual([SUPPORT_VERSION,'summary-source-v4']+['summary-outcome-v6']*8,seen)
+        self.assertEqual([50]*8,group_sizes)
+        self.assertEqual(400,len(relations))
+        self.assertEqual(400,len(set(relations)))
+        self.assertTrue(self.stored(result)[0])
 
     def test_correction_uses_one_profile_and_deadline_with_at_most_seven_executions(self):
         import json

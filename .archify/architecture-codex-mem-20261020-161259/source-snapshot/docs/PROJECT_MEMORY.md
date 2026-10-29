@@ -135,6 +135,8 @@ python3 scripts/codex-mem.py project-memory retry \
 
 Add `--include-quarantined` to release quarantined jobs explicitly. Retry reports the eligible count and calls no model. Run `process` or let the daemon continue. `service retry` controls the separate ordinary observation queue.
 
+For one inspected quarantine, use the Python API `process_project_memory(project, data_dir, recovery=selector)`. Its exact selector binds the failed job and complete blocked event set to the current project revision, deletion generation, source hashes and provenance. It creates a successor without resetting the parent or its attempts. A successful bounded prefix releases only its authorized remainder for normal processing. A failed successor stays quarantined. `ProjectMemory.quarantine_expired_recovery(project, expected=selector)` reconciles an expired recovery lease without dispatching a model; inspect a fresh selector before another recovery. See [ADR 0016](adr/0016-recover-retained-packets-with-complete-evidence.md).
+
 Configuration, source-deletion, and revision checks reject outdated results. They do not grant permission for external actions.
 
 ## Read and delete state

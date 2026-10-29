@@ -9,7 +9,9 @@ observation API.  Source text is evidence, never instructions.
 from __future__ import annotations
 
 from .host import source_role
-from .observation_contract import OBSERVATION_CLASSIFICATION_CONTRACT, SUMMARY_FIELD_EVIDENCE_CONTRACT
+from .observation_contract import (OBSERVATION_CLASSIFICATION_CONTRACT,
+                                   OBSERVATION_FILE_EVIDENCE_CONTRACT,
+                                   SUMMARY_FIELD_EVIDENCE_CONTRACT)
 
 from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
@@ -180,6 +182,7 @@ def process_pending(
     retry_input_fingerprint: str | None = None,
     retry_previous_profile: bool = False,
     retry_one_shot: bool = False,
+    retry_dispatched_worker: tuple[str, str] | None = None,
     timeout: int | float = DEFAULT_TIMEOUT,
     codex: str = "codex",
     runner: Callable[[Mapping[str, Any]], Mapping[str, Any]] | Any | None = None,
@@ -257,6 +260,8 @@ def process_pending(
                    if retry_input_fingerprint is not None else {}),
                 **({"retry_previous_profile": True} if retry_previous_profile else {}),
                 **({"retry_one_shot": True} if retry_one_shot else {}),
+                **({"retry_dispatched_worker": retry_dispatched_worker}
+                   if retry_dispatched_worker is not None else {}),
                 **({"parallel_sessions": True} if parallel_sessions else {}),
             )
             if claimed is None:
@@ -403,7 +408,7 @@ def process_pending(
                     from .summary_support import VERSION as SUPPORT_VERSION
                     from .summary_outcome import SOURCE_VERSION, OUTCOME_VERSION
                     version = {"summary_source": SOURCE_VERSION, "summary_outcome": OUTCOME_VERSION}.get(
-                        call_id.rsplit("_", 1)[0], SUPPORT_VERSION)
+                        "_".join(call_id.split("_")[:2]), SUPPORT_VERSION)
                     detail = diagnostic(summary, generation_claim, version=version)
                     support_diagnostics.append(detail)
 
@@ -502,7 +507,7 @@ def process_pending(
                     if summary is None and not notes:
                         return None
                     from .summary_support import prepare, validate, correction_prompt, rejection_key, record_candidates, material_units
-                    from .summary_outcome import prepare_source, validate_source, prepare_outcome, validate_outcome, outcome_applicable, current_report, OUTCOME_VERSION
+                    from .summary_outcome import prepare_source, validate_source, prepare_outcome_chunks, validate_outcome, outcome_applicable, current_report, OUTCOME_VERSION
                     # Shape, preservation and membership were checked by the caller.
                     # A changed lease/source cannot reuse a previous semantic decision.
                     source_guard()
@@ -553,18 +558,27 @@ def process_pending(
                         return None
                     from .summary_support import SupportError, diagnostic
                     try:
-                        outcome_request = prepare_outcome(summary, support_review, source_interpretation, support_payload, notes)
+                        outcome_requests = prepare_outcome_chunks(summary, support_review, source_interpretation, support_payload, notes)
                     except SupportError as exc:
                         support_diagnostics.append(diagnostic(summary, generation_claim, status="invalid",
                             invalid_subtype=exc.subtype, version=OUTCOME_VERSION))
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
-                    if not outcome_applicable(outcome_request[2]):
+                    if not outcome_applicable(outcome_requests[0][2]):
                         source_guard()
                         support_diagnostics.append(diagnostic(summary, generation_claim, status="unused", version=OUTCOME_VERSION))
                         return None
-                    outcome_review, _, mark = review_stage(summary, f"summary_outcome_{support_count}",
-                        lambda: outcome_request, validate_outcome)
-                    return resolve(outcome_review.issues, mark, outcome_review.status)
+                    rejected = []
+                    for index, outcome_request in enumerate(outcome_requests, 1):
+                        call_id = f"summary_outcome_{support_count}"
+                        if len(outcome_requests) > 1:
+                            call_id += f"_chunk_{index}"
+                        outcome_review, _, mark = review_stage(summary, call_id,
+                            lambda: outcome_request, validate_outcome)
+                        mark("rejected" if outcome_review.status == "contradicted" else outcome_review.status)
+                        rejected.extend(outcome_review.issues)
+                    # Every group has its own receipt; resolve the complete candidate
+                    # once so chunking cannot multiply generation corrections.
+                    return resolve(rejected, lambda status: None)
 
                 def review_quality(notes, summary, remaining, *, allow_correction=False):
                     nonlocal quality_audit, initial_quality_audit
@@ -640,19 +654,19 @@ def process_pending(
                         candidate_notes, _, candidate_summary = _validate_model_output(
                             canonical, sources, summary_required=bool(generation_claim.get("summary_required")))
                     except ProcessorFailure as exc:
-                        if (exc.reason_code != "missing_required_summary" or review_count != 1
+                        if (exc.reason_code not in {"missing_required_summary", "empty_session_summary"} or review_count != 1
                                 or canonical.get("disposition") != "processed"):
                             raise
                         from .summary_support import diagnostic
                         detail = diagnostic(canonical, generation_claim, status="invalid", invalid_subtype="structure")
-                        generation_correction = dict(initial_reason_code="missing_required_summary",
+                        generation_correction = dict(initial_reason_code=exc.reason_code,
                                                      candidate_fingerprint=detail["candidate_fingerprint"])
                         record_execution_call(store, workspace, job_id, attempt_count, "generation",
                                               profile=profile, review_diagnostic=detail)
                         source_guard()
                         if remaining <= 0 or time.monotonic() >= deadline:
                             raise ProcessorFailure("timeout")
-                        return _summary_shape_correction_prompt()
+                        return _summary_shape_correction_prompt(exc.reason_code)
                     if summary_seen and candidate_summary is None:
                         raise ProcessorFailure("invalid_response", reason_code="summary_support_rejected")
                     summary_seen = summary_seen or candidate_summary is not None
@@ -840,12 +854,15 @@ def _json_generation_correction_prompt() -> str:
     )
 
 
-def _summary_shape_correction_prompt() -> str:
+def _summary_shape_correction_prompt(reason_code: str = "missing_required_summary") -> str:
     """One fixed structural failure, using the existing generation correction."""
+    if reason_code not in {"missing_required_summary", "empty_session_summary"}:
+        raise ValueError("unsupported summary shape correction")
     return (
-        "The JSON candidate failed structural validation: missing_required_summary. "
+        f"The JSON candidate failed structural validation: {reason_code}. "
         "Use the one permitted correction to return a complete result under the original output schema, "
-        "including the required session_summary. Use only the original supplied evidence and source handles. "
+        "including the required session_summary with substantive text in at least one field beyond its title. "
+        "Use only the original supplied evidence and source handles. "
         "Do not fabricate a summary from the note or invent facts to fill required fields. "
         "All corrected material still requires full source support review before storage."
     )
@@ -2159,8 +2176,7 @@ def _build_prompt(
         "claim. Keep distinct local, synthetic and production verification scopes. A code "
         "comment or test source is implementation evidence, not an executed result. "
         "Retain concrete task identifiers and task-document paths present in the evidence "
-        "so a discovery can later be associated with its task. Include those observed paths "
-        "in files_read or files_modified as appropriate, even when the task ID is assigned "
+        "so a discovery can later be associated with its task, even when the task ID is assigned "
         "later. Do not invent an ID or infer that two topics share a task from session "
         "membership alone. "
         "Prefer zero notes over a generic activity summary. Return "
@@ -2170,8 +2186,9 @@ def _build_prompt(
         "files_modified. Facts are specific supported statements; narrative explains cause, "
         "rationale and consequences. "
         f"{OBSERVATION_CLASSIFICATION_CONTRACT}"
-        "Use concise concepts such as gotcha, how-it-works, "
-        "why-it-exists, what-changed, problem-solution, pattern, trade-off. Include only paths "
+        f"{OBSERVATION_FILE_EVIDENCE_CONTRACT}"
+        "Derive concise concept labels from the note's supported content; leave concepts empty "
+        "when no label adds useful information. Include only paths "
         "actually present in evidence, never inferred files. Leave unsupported arrays empty. "
         "tool_io contains redacted original input and response, with truncation metadata. "
         "Read the full retained response, including the middle; any omitted bytes are unknown. "

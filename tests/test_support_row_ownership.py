@@ -87,15 +87,21 @@ class SupportRowOwnershipTests(unittest.TestCase):
         self.assertFalse(schema_accepts(self.output, self.schema))
 
     def test_local_validator_still_owns_duplicate_and_evidence_subset_checks(self):
+        # With multiple available spans, array length alone cannot enforce
+        # uniqueness. The single-span schema bound has separate coverage.
+        summary = dict(self.summary, completed=self.summary['completed'] * 30)
+        claim = copy.deepcopy(self.claim)
+        claim['sources'][0]['body'] *= 30
+        _, schema, payload = support.prepare(summary, claim, [self.note])
         for field in ('candidate_span_ids', 'citations', 'properties'):
             with self.subTest(field=field):
-                output = copy.deepcopy(self.output)
+                output = supported_review(payload)['output']
                 row = next(row for row in support_rows(output) if row['unit_id'] == 'completed')
                 target = row['report_binding'] if field=='properties' else row
                 target[field] = [target[field][0]] * 2
-                self.assertTrue(schema_accepts(output, self.schema))
+                self.assertTrue(schema_accepts(output, schema))
                 with self.assertRaises(support.SupportError) as error:
-                    support.validate(output, self.payload)
+                    support.validate(output, payload)
                 self.assertEqual('duplicate_reference', error.exception.subtype)
         self.row('completed')['citations'] = []
         self.row('completed')['verdict'] = 'unsupported'

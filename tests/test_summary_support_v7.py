@@ -6,6 +6,25 @@ from tests.test_summary_support_contract import schema_accepts
 
 
 class TypedCitationTests(unittest.TestCase):
+    def test_single_available_span_cannot_be_declared_twice_in_wire_schema(self):
+        summary = dict(completed='The assistant reported scanning a map.')
+        claim = dict(sources=[dict(id='report', source='hook:Stop', body='I reported scanning a map.')])
+        _, schema, payload = support.prepare(summary, claim)
+        output = dict(version=support.VERSION, units={'completed': [dict(
+            unit_id='completed', coverage='complete', candidate_assertion=summary['completed'],
+            evidence_assertion='The original report describes scanning a map.',
+            value_comparison='Same reported action.', attribution_comparison='Same assistant report.',
+            scope_comparison='An attributed report only.', verdict='supported',
+            citations=[dict(span_id='current1:1', role='report_anchor')],
+            candidate_span_ids=['completed:1'],
+            report_binding=dict(target='reported_content', properties=['content']))]})
+        self.assertTrue(schema_accepts(output, schema))
+        self.assertEqual((), support.validate(output, payload).issues)
+        output['units']['completed'][0]['citations'].append(dict(span_id='current1:1', role='evidence'))
+        self.assertFalse(schema_accepts(output, schema))
+        with self.assertRaises(support.SupportError):
+            support.validate(output, payload)
+
     def setUp(self):
         self.summary = dict(title='Map scan report', completed='The assistant reported scanning a map.')
         self.claim = dict(sources=[dict(id='tool', source='hook:PostToolUse', body='A scan operation returned a result.'),

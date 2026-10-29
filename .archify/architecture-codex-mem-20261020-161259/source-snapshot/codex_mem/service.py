@@ -2251,8 +2251,44 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
         calls = json.loads(row["execution_calls"])
         sequence = ("summary_support_1", "summary_source_1", "summary_outcome_1",
                     "summary_support_2", "summary_outcome_2")
-        if not isinstance(calls, dict) or set(calls) - {"generation", *sequence}:
+        from .summary_outcome import MAX_OUTCOME_CHUNKS, OUTCOME_VERSION
+        chunk_ids = {f"summary_outcome_{attempt}_chunk_{chunk}"
+                     for attempt in (1, 2) for chunk in range(1, MAX_OUTCOME_CHUNKS + 1)}
+        if not isinstance(calls, dict) or set(calls) - {"generation", *sequence, *chunk_ids}:
             return False
+        outcome_tail = {}
+        for attempt in (1, 2):
+            stage = f"summary_outcome_{attempt}"
+            present = [f"{stage}_chunk_{i}" for i in range(1, MAX_OUTCOME_CHUNKS + 1)
+                       if f"{stage}_chunk_{i}" in calls]
+            if not present:
+                continue
+            if stage in calls or present != [f"{stage}_chunk_{i}" for i in range(1, len(present) + 1)]:
+                return False
+            statuses = []
+            for chunk_id in present:
+                chunk = calls[chunk_id]
+                if (not isinstance(chunk, dict) or chunk.get("call_id") != chunk_id
+                        or chunk.get("outcome") != "success" or chunk.get("error_code") is not None
+                        or normalize_profile(chunk.get("requested_profile")) != profile
+                        or chunk.get("actual_identity") != identity
+                        or not isinstance(chunk.get("execution_id"), str) or not chunk["execution_id"]
+                        or not isinstance(chunk.get("turn_id"), str) or not chunk["turn_id"]):
+                    return False
+                detail = safe_diagnostic(chunk.get("review_diagnostic"))
+                # Chunking did not exist in earlier outcome wires. Never turn
+                # an older or mixed-version ledger into current recovery proof.
+                if detail["version"] != OUTCOME_VERSION:
+                    return False
+                statuses.append(detail["status"])
+            if any(status not in {"checked", "unused", "rejected", "uncertain"} for status in statuses[:-1]):
+                return False
+            if statuses[-1] == "invalid" and any(status in {"rejected", "uncertain"} for status in statuses[:-1]):
+                return False
+            # Select the actual last call for the existing attempt-order rules;
+            # this in-memory alias never alters the persisted receipt or ID.
+            outcome_tail[stage] = present[-1]
+            calls[stage] = calls[present[-1]]
         for stage, versions in (("summary_support", {"summary-support-v6", "summary-support-v7"}),
                                 ("summary_outcome", {"summary-outcome-v5", "summary-outcome-v6"})):
             if stage + "_2" in calls:
@@ -2298,7 +2334,7 @@ def _persisted_malformed_review(base: Path, project: str, job_id: Any, *, histor
                 "summary_support_1", "summary_support_2", "summary_outcome_1", "summary_outcome_2"}):
             return False
         call = calls[call_id]
-        if (not isinstance(call, dict) or call.get("call_id") != call_id
+        if (not isinstance(call, dict) or call.get("call_id") != outcome_tail.get(call_id, call_id)
                 or call.get("outcome") != "success" or call.get("error_code") is not None
                 or normalize_profile(call.get("requested_profile")) != profile
                 or call.get("actual_identity") != identity

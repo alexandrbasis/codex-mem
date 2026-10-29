@@ -211,7 +211,7 @@ def run_next(project, data_dir=None, *, processor: Callable[..., Any] | None = N
     Interrupted dispatch remains consumed and requires a new inspection.
     """
     workspace, base = project_key(project), data_dir_path(data_dir)
-    forbidden = {"retry_failed", "retry_job_id", "retry_error_code", "retry_attempt_count", "retry_input_fingerprint", "retry_previous_profile", "retry_one_shot"}
+    forbidden = {"retry_failed", "retry_job_id", "retry_error_code", "retry_attempt_count", "retry_input_fingerprint", "retry_previous_profile", "retry_one_shot", "retry_dispatched_worker"}
     if forbidden.intersection(processor_kwargs):
         raise ValueError("recovery selectors belong to the permission")
     if not (base / STATE_FILENAME).exists() and not (base / STATE_FILENAME).is_symlink():

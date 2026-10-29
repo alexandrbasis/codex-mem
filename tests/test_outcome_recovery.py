@@ -136,7 +136,7 @@ class MalformedReviewProcessorTests(ReviewFixtures, unittest.TestCase):
         from codex_mem.processor import process_pending
         from tests.test_summary_support import supported_review
         from codex_mem.config import configure
-        for stage, error in (('prepare_outcome', SupportError('unknown_span')),
+        for stage, error in (('prepare_outcome_chunks', SupportError('unknown_span')),
                              ('validate_outcome', KeyError('private internal detail'))):
             with self.subTest(stage=stage):
                 self.data = self.data.parent / stage
