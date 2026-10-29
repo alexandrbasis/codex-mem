@@ -1,4 +1,4 @@
 """Local, project-scoped memory for Codex."""
 
-__version__ = "1.12.10"
+__version__ = "1.12.11"
 VERSION = __version__

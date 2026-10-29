@@ -10,7 +10,9 @@ Outcome review treated a known reported plan like an unknown value. This could r
 
 ## Decision
 
-Generation and its one allowed correction share the same field rules. The request is null without evidence of what the user asked. Next steps are empty unless the sources establish unfinished requested work, a plan or a proposal. A pending external result does not create a commitment to wait or follow up. Required summaries and their supported content remain required.
+Generation, initial support review and the one allowed correction share the same field rules. The request is null without evidence of what the user asked. Next steps are empty unless the sources establish unfinished requested work, a plan or a proposal. A pending external result does not create a commitment to wait or follow up. Required summaries and their supported content remain required.
+
+Field purposes define what a field means; they do not establish that its source exists. In particular, the request field needs evidence of an actual user request. A tool result, an assistant answer or the candidate itself cannot supply a missing request. If a nonempty request has no supporting evidence, review must return an unsupported or insufficient-context verdict instead of inventing a citation. Such verdicts can have no citations. Supported and contradicted verdicts still require evidence. The existing correction can set an unsupported request to null while preserving supported summary content.
 
 In the `summary-support-v7` response, each comparison declares one list of citations. Each citation selects an existing span and its role: evidence or report anchor. A report anchor explicitly serves both roles. Code derives the canonical evidence and anchor lists from those choices, then applies the strict ownership and binding checks. It does not add references that the model did not select. Old malformed v6 responses remain rejected; they are not repaired or reinterpreted.
 

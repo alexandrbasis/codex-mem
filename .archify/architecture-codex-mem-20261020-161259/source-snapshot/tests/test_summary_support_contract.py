@@ -28,6 +28,55 @@ class SupportContractTests(unittest.TestCase):
         self.prompt, self.schema, self.payload = support.prepare(self.summary, self.claim)
         self.output = supported_review(self.payload)['output']
 
+    def test_initial_review_requires_user_evidence_for_a_claimed_request(self):
+        claim = dict(sources=[dict(id='tool', source='hook:PostToolUse',
+            body='The draft contains a short synthetic release note.')], context=[])
+        summary = dict(request='The user requested a synthetic release note.')
+        prompt, _, payload = support.prepare(summary, claim)
+        self.assertEqual(['tool_record'], [record['evidence_role'] for record in payload['evidence']])
+        self.assertIn(support.SUMMARY_FIELD_EVIDENCE_CONTRACT, prompt)
+        self.assertIn('Field purposes define field meaning; they do not establish that a request or source exists.', prompt)
+        self.assertEqual(summary, payload['units'])
+        output = supported_review(payload)['output']
+        row = comparison(output, 'request')
+        row.update(candidate_assertion=summary['request'],
+            evidence_assertion='The tool contains a draft, without the original user request.',
+            value_comparison='The draft does not establish a request to write it.',
+            attribution_comparison='No supplied user statement establishes the claimed request.',
+            scope_comparison='The evidence establishes only the draft contents.',
+            verdict='unsupported', citations=[])
+        review = support.validate(output, payload)
+        self.assertEqual([('request', 'unsupported')],
+                         [(issue['unit'], issue['verdict']) for issue in review.issues])
+        # A supported verdict still requires a citation.
+        row['verdict'] = 'supported'
+        with self.assertRaises(support.SupportError) as caught:
+            support.validate(output, payload)
+        self.assertEqual('verdict_requires_evidence', caught.exception.rule_code)
+        self.assertEqual('request', caught.exception.unit_id)
+
+    def test_canned_supported_request_cites_actual_user_evidence(self):
+        request = 'Write a short synthetic release note.'
+        prompt, _, payload = support.prepare(dict(request=request), dict(sources=[
+            dict(id='user', source='hook:UserPromptSubmit', body=request)]))
+        self.assertIn(support.SUMMARY_FIELD_EVIDENCE_CONTRACT, prompt)
+        self.assertEqual('user_intent', payload['evidence'][0]['evidence_role'])
+        output = supported_review(payload)['output']
+        row = comparison(output, 'request')
+        row.update(candidate_assertion=request, evidence_assertion=request,
+            value_comparison='The requested action matches the supplied user statement.',
+            attribution_comparison='The supplied user statement owns the request.',
+            scope_comparison='The same requested artifact and scope.',
+            citations=[dict(span_id=payload['evidence'][0]['spans'][0]['id'], role='evidence')])
+        self.assertEqual((), support.validate(output, payload).issues)
+
+    def test_null_request_remains_omitted_from_review_units(self):
+        summary = dict(request=None, learned='The tool returned synthetic text.')
+        _, _, payload = support.prepare(summary, dict(sources=[dict(id='tool',
+            source='hook:PostToolUse', body='The tool returned synthetic text.')]))
+        self.assertEqual({'learned': summary['learned']}, payload['units'])
+        self.assertIsNone(summary['request'])
+
     def test_field_units_remain_exact_and_comparisons_need_not_copy_them(self):
         self.summary['completed'] = 'Résultat 🙂: “passed…”; if rerun, verify again—not done yet.'
         self.summary.update(notes=' \n ', request=None, next_steps='')
