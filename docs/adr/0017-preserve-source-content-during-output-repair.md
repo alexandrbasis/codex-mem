@@ -6,11 +6,19 @@ Status: accepted. Date: 2026-10-29.
 
 A retained native review accepted details from earlier context as if a later message contained them. The citation pointed to a real source span, but that span did not contain the attributed price or duration. Structural citation validation could not detect this semantic error.
 
+A later frozen diagnostic showed the reverse scope error: a reviewer treated an omission from new observations as a denial of evidence in session history.
+
+Another review rejected a file path despite a successful content write and readback. It treated creation as insufficient because it required an edit to a pre-existing file.
+
 The observation job had already completed. Retrying that job or writing a replacement through explicit memory tools would bypass its lifecycle or review boundaries.
 
 ## Decision
 
 Keep source content separate from contextual interpretation in generation, correction and support review. History can explain a reference. It cannot add content to a claim about a specific message. A combined account must retain the origin of each detail. The reviewer must derive its evidence assertion from the selected source text before comparing it with the candidate.
+
+Preserve the named source or evidence window in absence claims. A fact in history cannot contradict an omission explicitly limited to current observations or a specific excerpt. An unqualified denial about all supplied evidence must still be checked against current and historical sources. Do not invent a narrower qualifier. Keep unresolved scope uncertain.
+
+File-operation metadata records observed operations. `files_modified` includes an actual content write that creates, edits or replaces a file. Proven creation needs no prior-file digest. A path mention, requested write or attempted command alone does not establish that content was written. Publication must establish a write to the identified file; publication without that evidence is insufficient. The rules for content inspection remain separate.
 
 Use one shared support, original-report interpretation and outcome review sequence for ordinary processing and explicit repair. Profiles, deadlines, evidence bounds and the ordinary correction allowance stay unchanged.
 
