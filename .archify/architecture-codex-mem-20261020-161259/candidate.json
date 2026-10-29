@@ -2,12 +2,12 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Codex Mem 1.12.6 project memory",
+    "title": "Codex Mem 1.12.8 project memory",
     "output": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "0860f178d7b27a49663e019e0ae6c4d40457bb64",
+      "revision": "063487c9f95743bd353519ee7ac8575d7f272527",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -199,8 +199,8 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 1791,
-          "end_line": 1846,
+          "line": 1772,
+          "end_line": 1818,
           "label": "Native account and exact catalog preflight"
         },
         {
@@ -221,7 +221,7 @@
       "id": "legacy",
       "type": "backend",
       "label": "Note and summary processor",
-      "sublabel": "Mandatory material support",
+      "sublabel": "Processing and guarded repair",
       "pos": [
         1000,
         460
@@ -234,20 +234,20 @@
         {
           "path": "codex_mem/summary_support.py",
           "line": 136,
-          "end_line": 587,
+          "end_line": 611,
           "label": "Material fields and exact report bindings"
         },
         {
-          "path": "codex_mem/summary_outcome.py",
-          "line": 52,
-          "end_line": 448,
-          "label": "Original report join and outcome states"
+          "path": "codex_mem/observation_review.py",
+          "line": 1,
+          "end_line": 57,
+          "label": "Shared material and outcome checks"
         },
         {
-          "path": "codex_mem/observation_contract.py",
+          "path": "codex_mem/observation_repair.py",
           "line": 1,
-          "end_line": 64,
-          "label": "Shared summary field evidence rules"
+          "end_line": 260,
+          "label": "Exact reviewed output repair"
         }
       ]
     },
@@ -335,15 +335,15 @@
       "sources": [
         {
           "path": "codex_mem/processor.py",
-          "line": 735,
-          "end_line": 753,
+          "line": 702,
+          "end_line": 718,
           "label": "Accepted packet and reviewed-evidence handoff"
         },
         {
           "path": "codex_mem/store.py",
           "line": 3284,
-          "end_line": 3429,
-          "label": "Lease, evidence and output membership"
+          "end_line": 3817,
+          "label": "Exact evidence and atomic output commits"
         },
         {
           "path": "codex_mem/observer_usage_store.py",
@@ -682,7 +682,8 @@
         "Generation and review instructions preserve only the actual observed execution scope. They do not invent local, regression, synthetic or production labels. Ambiguous candidate references can use context only from the same unit_records owner; permitted original-source and historical context remain available under existing rules. Evidence-limit wording is also checked for implied events or success. Incidental candidate-format descriptions are omitted. The candidate remains non-evidence. Semantic meaning is judged fallibly by the model; code validates shape, ownership and references. Sources: codex_mem/processor.py; codex_mem/summary_support.py.",
         "The support reviewer instructions require comparison of asserted relationships as well as their component facts. Separate change reports and passing checks do not establish that those checks verified the change. A verification claim needs supplied evidence linking the result to the claimed property at the asserted scope. Explicit tested properties or assertions can establish that link. Proximity, matching values, a shared command or an aggregate result cannot supply missing coverage. Matching commands and results can support their stated operation without external verification. Printed or quoted claims establish only that the text was printed or read. Separately supported outcomes need no unasserted verification relationship. These are model instructions. The structural validator checks shape, ownership and references, not whether the model judged the meaning correctly. Sources: codex_mem/summary_support.py.",
         "Retained full tool_input and tool_response have separate field-owned support spans as well as the display-body spans. Generation and review can cite the same retained material; truncation remains unknown. Tool-output quotes do not become original assistant-report anchors. Citation array capacity is limited by the available span catalog, while strict duplicate checks remain. Sources: codex_mem/summary_support.py; tests/test_summary_support_contract.py; tests/test_summary_support_v7.py.",
-        "A detailed packet can require more than fifty outcome relations. Code checks the complete bounded join in groups of at most fifty with stable IDs, the same profile and shared deadline, separate call receipts, and unchanged single generation correction. Every group must pass; late conflicts, uncertainty, malformed replies and source changes prevent storage. Missing and empty required summaries share the existing structural correction. Sources: codex_mem/summary_outcome.py; codex_mem/processor.py; codex_mem/observer_usage_store.py; tests/test_generation_shape_recovery.py; docs/adr/0016-recover-retained-packets-with-complete-evidence.md."
+        "A detailed packet can require more than fifty outcome relations. Code checks the complete bounded join in groups of at most fifty with stable IDs, the same profile and shared deadline, separate call receipts, and unchanged single generation correction. Every group must pass; late conflicts, uncertainty, malformed replies and source changes prevent storage. Missing and empty required summaries share the existing structural correction. Sources: codex_mem/summary_outcome.py; codex_mem/processor.py; codex_mem/observer_usage_store.py; tests/test_generation_shape_recovery.py; docs/adr/0016-recover-retained-packets-with-complete-evidence.md.",
+        "Generation, correction and material review keep source content separate from contextual interpretation. Earlier evidence can explain a reference but cannot add values or terms to a claim about the contents of a specific later message. An attributed synthesis keeps the origin of each detail. The reviewer derives its evidence assertion from selected source text. These semantic instructions do not turn structural citation validation into entailment proof. Sources: codex_mem/observation_contract.py; codex_mem/summary_support.py; docs/adr/0017-preserve-source-content-during-output-repair.md."
       ]
     },
     {
@@ -694,7 +695,8 @@
         "Explicit historical recovery requires the exact current failed job and attempt, matching requested/actual identities and a completed invalid support-v6 or outcome-v5 verdict from the final applicable review. Inconsistent later source receipts fail closed. The broad summary_support_invalid reason alone cannot authorize resume. Failed jobs, source snapshots and diagnostic history are preserved. No automatic global migration runs. Sources: codex_mem/service.py; tests/test_outcome_recovery.py; docs/adr/0013-isolate-malformed-review-responses.md.",
         "The project dashboard distinguishes past errors from current blockers. It shows a retry time only for waiting retries, excluding blocked, parked, running and ordinary fresh-work records. A blocked row states that no retry is scheduled. Sources: codex_mem/dashboard_data.py; codex_mem/ui_static/app.js; tests/test_dashboard_data.py.",
         "Explicit project-memory recovery pins one quarantined parent and its full blocked event set, source hashes, provenance, offsets, supersession, current revision and deletion generation. It creates an immutable parent-successor relation without resetting old attempts. Only the existing bounded prefix is dispatched; successful guarded commit releases only that authorized remainder. Failures keep selected events quarantined. Exact expiry reconciliation dispatches no model. Retained originals superseded by observation processing remain PM evidence if their pinned data is unchanged. Sources: codex_mem/project_memory.py; codex_mem/episode_processor.py; tests/test_project_memory_recovery.py; docs/adr/0016-recover-retained-packets-with-complete-evidence.md.",
-        "A manually inspected legacy protocol_error can receive a one-shot current-profile successor only with exact old worker IDs, job, attempt and fingerprint and a failed lease-free parent. The uncertain old worker outcome and original failure stay unchanged. This never revives its lease or enables automatic transport retry. Sources: codex_mem/store.py; codex_mem/processor.py; codex_mem/quarantine_recovery.py; tests/test_dispatched_legacy_recovery.py."
+        "A manually inspected legacy protocol_error can receive a one-shot current-profile successor only with exact old worker IDs, job, attempt and fingerprint and a failed lease-free parent. The uncertain old worker outcome and original failure stay unchanged. This never revives its lease or enables automatic transport retry. Sources: codex_mem/store.py; codex_mem/processor.py; codex_mem/quarantine_recovery.py; tests/test_dispatched_legacy_recovery.py.",
+        "Explicit processed-output maintenance accepts proposed replacements only for selected active outputs of one exact completed observation attempt. A guard binds project, job, attempt, output content, raw/history evidence and configured execution profile. Ordinary processing and repair share the support/source/outcome sequence; configured optional semantic checks also apply. The challenged outputs are excluded from evidence. Before commit, Store rechecks the guard atomically, writes successors with links to original raw evidence and replaced derived records, and supersedes only the selected outputs. Raw events, the original job and its attempt receipts remain immutable. An identical successful call returns its separate repair receipt without replaying native calls. Failed repair reviews return caller-retained receipts without database changes; repair usage does not rewrite the original observation ledger. Sources: codex_mem/observation_repair.py; codex_mem/observation_review.py; codex_mem/store.py; tests/test_observation_repair.py; docs/adr/0017-preserve-source-content-during-output-repair.md."
       ]
     },
     {

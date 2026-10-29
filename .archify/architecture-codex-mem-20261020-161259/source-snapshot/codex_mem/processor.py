@@ -11,6 +11,7 @@ from __future__ import annotations
 from .host import source_role
 from .observation_contract import (OBSERVATION_CLASSIFICATION_CONTRACT,
                                    OBSERVATION_FILE_EVIDENCE_CONTRACT,
+                                   SOURCE_CONTENT_EVIDENCE_CONTRACT,
                                    SUMMARY_FIELD_EVIDENCE_CONTRACT)
 
 from collections.abc import Callable, Mapping, Sequence
@@ -506,8 +507,7 @@ def process_pending(
                     nonlocal support_count, source_interpretation
                     if summary is None and not notes:
                         return None
-                    from .summary_support import prepare, validate, correction_prompt, rejection_key, record_candidates, material_units
-                    from .summary_outcome import prepare_source, validate_source, prepare_outcome_chunks, validate_outcome, outcome_applicable, current_report, OUTCOME_VERSION
+                    from .summary_support import correction_prompt, rejection_key, record_candidates, material_units
                     # Shape, preservation and membership were checked by the caller.
                     # A changed lease/source cannot reuse a previous semantic decision.
                     source_guard()
@@ -536,49 +536,17 @@ def process_pending(
                             raise ProcessorFailure("invalid_response", reason_code=reason)
                         return None
 
-                    support_review, support_payload, mark = review_stage(dict(summary=summary, notes=notes), f"summary_support_{support_count}",
-                        lambda: prepare(summary, generation_claim, notes), validate)
-                    feedback = resolve(support_review.issues, mark)
-                    if feedback:
-                        return feedback
-                    if summary is None:
-                        return None
-                    # Reuse only within this attempt and after source_guard confirms the
-                    # complete retained-evidence fingerprint captured before generation.
-                    if source_interpretation is None and current_report(generation_claim) is not None:
-                        source_interpretation, _, mark = review_stage(summary, "summary_source_1",
-                            lambda: prepare_source(generation_claim), validate_source)
-                        source_guard()
-                        mark("interpreted")
-                    if source_interpretation is None:
-                        from .summary_support import diagnostic
-                        source_guard()
-                        support_diagnostics.append(diagnostic(summary, generation_claim,
-                            status="not_assessed", version=OUTCOME_VERSION))
-                        return None
-                    from .summary_support import SupportError, diagnostic
-                    try:
-                        outcome_requests = prepare_outcome_chunks(summary, support_review, source_interpretation, support_payload, notes)
-                    except SupportError as exc:
-                        support_diagnostics.append(diagnostic(summary, generation_claim, status="invalid",
-                            invalid_subtype=exc.subtype, version=OUTCOME_VERSION))
-                        raise ProcessorFailure("invalid_response", reason_code="summary_support_invalid") from None
-                    if not outcome_applicable(outcome_requests[0][2]):
-                        source_guard()
-                        support_diagnostics.append(diagnostic(summary, generation_claim, status="unused", version=OUTCOME_VERSION))
-                        return None
-                    rejected = []
-                    for index, outcome_request in enumerate(outcome_requests, 1):
-                        call_id = f"summary_outcome_{support_count}"
-                        if len(outcome_requests) > 1:
-                            call_id += f"_chunk_{index}"
-                        outcome_review, _, mark = review_stage(summary, call_id,
-                            lambda: outcome_request, validate_outcome)
-                        mark("rejected" if outcome_review.status == "contradicted" else outcome_review.status)
-                        rejected.extend(outcome_review.issues)
-                    # Every group has its own receipt; resolve the complete candidate
-                    # once so chunking cannot multiply generation corrections.
-                    return resolve(rejected, lambda status: None)
+                    from .observation_review import review_packet as review_material_packet
+                    def set_interpretation(value):
+                        nonlocal source_interpretation
+                        source_interpretation = value
+                    feedback, source_interpretation = review_material_packet(
+                        summary, notes, generation_claim, support_count=support_count,
+                        source_interpretation=source_interpretation, review_stage=review_stage,
+                        resolve=resolve, source_guard=source_guard,
+                        append_diagnostic=support_diagnostics.append,
+                        set_interpretation=set_interpretation)
+                    return feedback
 
                 def review_quality(notes, summary, remaining, *, allow_correction=False):
                     nonlocal quality_audit, initial_quality_audit
@@ -2187,6 +2155,7 @@ def _build_prompt(
         "rationale and consequences. "
         f"{OBSERVATION_CLASSIFICATION_CONTRACT}"
         f"{OBSERVATION_FILE_EVIDENCE_CONTRACT}"
+        f"{SOURCE_CONTENT_EVIDENCE_CONTRACT}"
         "Derive concise concept labels from the note's supported content; leave concepts empty "
         "when no label adds useful information. Include only paths "
         "actually present in evidence, never inferred files. Leave unsupported arrays empty. "

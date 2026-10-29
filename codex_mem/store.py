@@ -3281,6 +3281,201 @@ class Store:
             records = self._read(lambda: self._observation_evidence_records(workspace, checked_ids, current))
             return {record["id"]: _observation_evidence_record_fingerprint(record) for record in records}
 
+    def observation_repair_snapshot(
+        self, project: str | Path, job_id: str, *, expected_attempt_count: int,
+        output_ids: Sequence[str],
+    ) -> dict[str, Any]:
+        """Read an exact processed packet without reopening its queue lease.
+
+        Superseded raw sources remain evidence. Selected derived outputs must
+        still be active and belong to this exact completed processor attempt.
+        """
+        workspace = project_key(project)
+        checked_job = _validate_ids([job_id], "job_id")[0]
+        selected = _validate_ids(output_ids, "output_ids")
+        if (isinstance(expected_attempt_count, bool) or not isinstance(expected_attempt_count, int)
+                or expected_attempt_count < 1):
+            raise ValueError("expected_attempt_count must be positive")
+        with self._lock:
+            self._require_open()
+            def read():
+                job = self._connection.execute(
+                    "SELECT * FROM observation_jobs WHERE project=? AND id=?", (workspace, checked_job)
+                ).fetchone()
+                from .processor import PROCESSOR_ID
+                if (job is None or job["status"] != "processed" or job["processor_id"] != PROCESSOR_ID
+                        or job["attempt_count"] != expected_attempt_count):
+                    raise ObservationEvidenceChanged("Processed observation repair is unavailable")
+                status = self._observation_job_result(job)
+                attempts = self.observation_attempts(workspace, checked_job)
+                attempt = next((item for item in attempts
+                                if item["attempt_count"] == expected_attempt_count), None)
+                if attempt is None or any(attempt.get(key) is None for key in
+                        ("runtime", "provider", "requested_model", "reasoning_effort", "timeout")):
+                    raise ObservationEvidenceChanged("Original observation profile is unavailable")
+                records = self.get(workspace, status["output_ids"])
+                by_id = {record["id"]: record for record in records}
+                if (set(by_id) != set(status["output_ids"]) or not set(selected) <= set(by_id)
+                        or any(by_id[key]["superseded_by"] is not None for key in selected)
+                        or any(record["source"] != f"processor:{PROCESSOR_ID}" for record in records)):
+                    raise ObservationEvidenceChanged("Processed observation outputs changed")
+                rows = self._observation_source_rows(checked_job, workspace)
+                fingerprints: dict[str, str] = {}
+                sources = self._bounded_observation_sources(rows, job["input_limit"], workspace,
+                    evidence_fingerprints=fingerprints)
+                context = self._observation_context(workspace, rows,
+                    evidence_fingerprints=fingerprints)
+                # A challenged output is a candidate, never its own evidence.
+                context = [record for record in context if record["id"] not in by_id]
+                retained = {record["id"] for record in [*sources, *context]}
+                fingerprints = {key: value for key, value in fingerprints.items() if key in retained}
+                if not sources:
+                    raise ObservationEvidenceChanged("Processed observation sources changed")
+                guard = dict(job_id=checked_job, expected_attempt_count=expected_attempt_count,
+                    selected_output_ids=selected,
+                    job_fingerprint=_observation_evidence_record_fingerprint(dict(job)),
+                    attempt_fingerprint=_observation_evidence_record_fingerprint(attempt),
+                    execution_profile=dict(runtime=attempt["runtime"], provider=attempt["provider"],
+                        model=attempt["requested_model"], reasoning_effort=attempt["reasoning_effort"],
+                        timeout=attempt["timeout"]),
+                    output_fingerprints={key: _observation_evidence_record_fingerprint(value)
+                                         for key, value in by_id.items()},
+                    source_ids=[record["id"] for record in sources],
+                    evidence_fingerprints=fingerprints)
+                return dict(guard=guard, outputs=records,
+                    claim=dict(status, sources=sources, context=context, project_context="",
+                               retained_evidence_fingerprints=fingerprints))
+            return self._read(read)
+
+    def check_observation_repair(self, project: str | Path, guard: Mapping[str, Any]) -> None:
+        """Compare the original job, candidates and full retained evidence."""
+        workspace = project_key(project)
+        with self._lock:
+            self._require_open()
+            job = self._read(lambda: self._connection.execute(
+                "SELECT * FROM observation_jobs WHERE project=? AND id=?", (workspace, guard["job_id"])
+            ).fetchone())
+            if (job is None or job["status"] != "processed"
+                    or job["attempt_count"] != guard["expected_attempt_count"]
+                    or _observation_evidence_record_fingerprint(dict(job)) != guard["job_fingerprint"]):
+                raise ObservationEvidenceChanged("Processed observation job changed")
+            attempt = next((item for item in self.observation_attempts(workspace, guard["job_id"])
+                            if item["attempt_count"] == guard["expected_attempt_count"]), None)
+            if attempt is None or _observation_evidence_record_fingerprint(attempt) != guard["attempt_fingerprint"]:
+                raise ObservationEvidenceChanged("Processed observation receipt changed")
+            records = self.get(workspace, list(guard["output_fingerprints"]))
+            if ({row["id"]: _observation_evidence_record_fingerprint(row) for row in records}
+                    != guard["output_fingerprints"]):
+                raise ObservationEvidenceChanged("Processed observation outputs changed")
+            evidence = self.observation_evidence_snapshot(workspace,
+                list(guard["evidence_fingerprints"]), current_ids=guard["source_ids"])
+            if evidence != guard["evidence_fingerprints"]:
+                raise ObservationEvidenceChanged("Processed observation evidence changed")
+
+    def observation_repair_receipt(self, project: str | Path, repair_key: str) -> dict[str, Any] | None:
+        """Read a previous exact repair without replaying its review calls."""
+        workspace = project_key(project)
+        if not isinstance(repair_key, str) or not _HASH_RE.fullmatch(repair_key):
+            raise ValueError("repair_key must be a SHA256 value")
+        with self._lock:
+            self._require_open()
+            def read():
+                if self._connection.execute(
+                        "SELECT 1 FROM sqlite_master WHERE name='observation_repairs'").fetchone() is None:
+                    return None
+                row = self._connection.execute(
+                    "SELECT receipt_json FROM observation_repairs WHERE project=? AND repair_key=?",
+                    (workspace, repair_key)).fetchone()
+                return json.loads(row[0]) if row else None
+            return self._read(read)
+
+    def commit_observation_repair(
+        self, project: str | Path, guard: Mapping[str, Any], *, repair_key: str,
+        replacements: Mapping[str, Mapping[str, Any]], receipt: Mapping[str, Any],
+        settings_guard: Callable[[], None],
+    ) -> dict[str, Any]:
+        """Atomically supersede only reviewed derived outputs under an exact CAS.
+
+        This maintenance commit never edits raw captures, original jobs or their
+        execution receipts. The review entry point owns semantic validation.
+        """
+        workspace = project_key(project)
+        if set(replacements) != set(guard["selected_output_ids"]):
+            raise ValueError("replacements must match selected output IDs")
+        # Validate complete typed records before beginning any durable mutation.
+        checked = {}
+        for old_id, record in replacements.items():
+            if record["kind"] == "note":
+                note = _validate_observation_notes([record["value"]])[0]
+                checked[old_id] = dict(kind="note", value=note)
+            elif record["kind"] == "session_summary":
+                checked[old_id] = dict(kind="session_summary", value=_validate_session_summary(record["value"]))
+            else:
+                raise ValueError("unsupported observation repair kind")
+        with self._lock:
+            self._require_open()
+            def commit():
+                previous = self.observation_repair_receipt(workspace, repair_key)
+                if previous is not None:
+                    return dict(previous, deduplicated=True)
+                # Acquiring BEGIN IMMEDIATE can wait behind another writer.
+                # Recheck filesystem settings after that wait, before mutation.
+                # This callback only reads bounded local configuration; it
+                # must never dispatch a model or perform external I/O.
+                settings_guard()
+                self.check_observation_repair(workspace, guard)
+                old_records = {row["id"]: row for row in self.get(workspace, list(checked))}
+                timestamp = _utc_now()
+                successors = {}
+                for old_id, replacement in checked.items():
+                    old = old_records[old_id]
+                    kind, value = replacement["kind"], replacement["value"]
+                    if old["kind"] != kind:
+                        raise ValueError("repair must preserve output kind")
+                    if kind == "session_summary":
+                        title = value["title"]
+                        body = "\n".join(f"{field.replace('_', ' ').capitalize()}: {value[field]}"
+                            for field in _SESSION_SUMMARY_FIELDS if value.get(field))
+                        tags, observation, summary = ["session_summary"], None, value
+                    else:
+                        title, body, tags = value["title"], value["body"], value["tags"]
+                        observation, summary = value["observation"], None
+                    source_ids = value.get("source_ids")
+                    if not source_ids or not set(source_ids) <= set(guard["source_ids"]):
+                        raise ValueError("repair sources must belong to original job")
+                    new_id = uuid.uuid4().hex
+                    self._connection.execute(
+                        "INSERT INTO entries(id,project,title,body,kind,session_id,turn_id,source,"
+                        "tags_json,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                        (new_id, workspace, title, body, kind, old["session_id"], old["turn_id"],
+                         old["source"], json.dumps(tags, ensure_ascii=False), timestamp, timestamp))
+                    self._upsert_metadata(self._connection, entry_id=new_id, observation=observation,
+                        session_summary=summary, timestamp=timestamp)
+                    self._upsert_embedding_document(self._connection, entry_id=new_id,
+                        project=workspace, title=title, body=body, tags=tags, timestamp=timestamp)
+                    self._connection.executemany(
+                        "INSERT INTO entry_sources(summary_id,source_id) VALUES (?,?)",
+                        [(new_id, source_id) for source_id in [*source_ids, old_id]])
+                    self._revoke_embedding_jobs(self._connection, project=workspace,
+                        source_ids=[old_id], code="source_superseded")
+                    self._connection.execute(
+                        "UPDATE entries SET superseded_by=?,superseded_at=?,updated_at=? "
+                        "WHERE project=? AND id=? AND superseded_by IS NULL",
+                        (new_id, timestamp, timestamp, workspace, old_id))
+                    successors[old_id] = new_id
+                result = dict(receipt, status="repaired", job_id=guard["job_id"],
+                    repair_key=repair_key, successors=successors, deduplicated=False)
+                self._connection.execute(
+                    "CREATE TABLE IF NOT EXISTS observation_repairs("
+                    "repair_key TEXT PRIMARY KEY,project TEXT NOT NULL,job_id TEXT NOT NULL,"
+                    "guard_json TEXT NOT NULL,receipt_json TEXT NOT NULL,created_at TEXT NOT NULL)")
+                self._connection.execute(
+                    "INSERT INTO observation_repairs VALUES (?,?,?,?,?,?)",
+                    (repair_key, workspace, guard["job_id"], json.dumps(dict(guard), sort_keys=True),
+                     json.dumps(result, ensure_ascii=False, sort_keys=True), timestamp))
+                return result
+            return self._write(commit)
+
     def finish_observation_batch(
         self,
         project: str | Path,

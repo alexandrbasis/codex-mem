@@ -43,6 +43,19 @@ OBSERVATION_FILE_EVIDENCE_CONTRACT = (
     "not review of the whole file. A filename-only listing establishes no content inspection. "
 )
 
+SOURCE_CONTENT_EVIDENCE_CONTRACT = (
+    "Keep the content of each source separate from context used to interpret it. "
+    "A claim that a particular message, document or result states X requires X in that source. "
+    "An earlier record or another speaker's report cannot add words, values, durations, "
+    "identities or terms to the claimed source, even when those details plausibly explain it. "
+    "History can resolve an unambiguous reference, but label the origin of any added detail: "
+    "the earlier offer said X; the new reply said Y. A contextual synthesis is not a claim "
+    "that the new reply itself stated both X and Y. For example, if an earlier offer says "
+    "39 units for six months and a later reply says only afterward 49, the later reply does "
+    "not itself state 39 or six months. Describe those as earlier terms when they are relevant. "
+    "Apply this source boundary to titles, prose, structured facts and summaries alike. "
+)
+
 SUMMARY_FIELD_EVIDENCE_CONTRACT = (
     "Populate request only from an evidenced actual user request; otherwise use null. "
     "A drafted or sent artifact, tool action or assistant report of work does not by itself "

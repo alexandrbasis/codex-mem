@@ -53,6 +53,8 @@ FIXED_SOURCES = (
     "docs/adr/0014-preserve-plans-and-single-review-citations.md",
     "docs/adr/0015-compare-overlapping-outcome-claims.md",
     "docs/adr/0016-recover-retained-packets-with-complete-evidence.md",
+    "docs/adr/0017-preserve-source-content-during-output-repair.md",
+    "tests/test_observation_repair.py",
     "tests/test_project_memory_recovery.py",
     "tests/test_dispatched_legacy_recovery.py",
     "tests/test_summary_outcome_chunks.py",
