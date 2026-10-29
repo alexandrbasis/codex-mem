@@ -10,7 +10,9 @@ from codex_mem.config import configure
 from codex_mem.execution import legacy_profile
 from codex_mem.observation_repair import inspect_processed_repair, repair_processed_outputs
 from codex_mem.processor import PROCESSOR_ID, MODEL, REASONING_EFFORT
-from codex_mem.store import Store, StoreError, ObservationEvidenceChanged
+from codex_mem.store import (Store, StoreError, ObservationEvidenceChanged,
+                             DEFAULT_OBSERVATION_CHARS, MAX_OBSERVATION_CHARS)
+from codex_mem.tool_io import normalize_capture
 from tests.test_summary_support import supported_review, support_rows
 
 
@@ -359,6 +361,134 @@ class ObservationRepairTests(unittest.TestCase):
         self.assertEqual("repaired", result["status"], result)
         with Store(self.data) as store:
             self.assertEqual(sibling, store.get(self.project, [self.note_id])[0])
+
+
+class ObservationRepairBoundaryTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.project = (Path(temporary.name) / "project").resolve()
+        self.project.mkdir()
+        self.data = Path(temporary.name) / "data"
+        configure(self.data, capture_scope="all", service_enabled=False, semantic_enabled=False,
+                  jev_filter_enabled=True, jev_quality_enabled=True)
+
+    def processed_source(self, *, target_chars=None):
+        capture = normalize_capture(dict(tool_name="Read", tool_use_id="synthetic-tool",
+            session_id="synthetic-session", tool_input=dict(path="fixture.txt"),
+            tool_response=dict(text="Synthetic detail. " * 3500)), project=str(self.project))
+        self.assertIsNotNone(capture)
+        with Store(self.data) as store:
+            source = store.remember(self.project, "Synthetic tool evidence", "Synthetic evidence.",
+                source="hook:PostToolUse", session_id="synthetic-session", tool_capture=capture)
+            if target_chars is not None:
+                row = store._connection.execute("SELECT * FROM entries WHERE id=?", (source["id"],)).fetchone()
+                record = store._hydrate_observation_source(str(self.project), store._records_from_rows([row])[0])
+                extra = target_chars - store._observation_source_chars(record)
+                self.assertGreater(extra, 0)
+                padding = ("fixture " * (extra // 8 + 1))[:extra]
+                store._connection.execute("UPDATE entries SET body=body || ? WHERE id=?", (padding, source["id"]))
+                store._connection.commit()
+            claim = store.claim_observation_batch(self.project, PROCESSOR_ID, MODEL, REASONING_EFFORT,
+                execution_profile=legacy_profile().to_dict())
+            self.assertEqual(1, len(claim["sources"]))
+            source_chars = store._observation_source_chars(claim["sources"][0])
+            self.assertGreater(source_chars, DEFAULT_OBSERVATION_CHARS)
+            self.assertEqual(source_chars, claim["input_limit"])
+            if target_chars is not None:
+                self.assertEqual(target_chars, source_chars)
+            result = store.finish_observation_batch(self.project, claim["job_id"], claim["lease_token"],
+                notes=[dict(title="Synthetic evidence", body="The tool returned synthetic evidence.",
+                            tags=[], source_ids=[source["id"]])])
+        self.source_id = source["id"]
+        self.job_id = claim["job_id"]
+        self.output_id = result["output_ids"][0]
+        self.input_limit = claim["input_limit"]
+
+    def inspect(self):
+        return inspect_processed_repair(self.project, self.data, job_id=self.job_id,
+            expected_attempt_count=1, output_ids=[self.output_id])
+
+    def test_exact_budget_oversized_processed_source_can_be_inspected_and_repaired(self):
+        from tests.test_jev_filter import answer
+        from tests.test_jev_quality import response
+        self.processed_source()
+        guard = self.inspect()
+        with Store(self.data) as store:
+            snapshot = store.observation_repair_snapshot(self.project, self.job_id,
+                expected_attempt_count=1, output_ids=[self.output_id])
+            record = snapshot["claim"]["sources"][0]
+            self.assertGreater(store._observation_source_chars(record), self.input_limit)
+            self.assertEqual(self.output_id, record["superseded_by"])
+            self.assertIsNotNone(record["superseded_at"])
+            before = store.get(self.project, [self.source_id])[0]
+        reviewer = mock.Mock(side_effect=supported_review)
+        filter_evaluator = mock.Mock(side_effect=lambda _: answer())
+        quality_evaluator = mock.Mock(side_effect=response)
+        result = repair_processed_outputs(self.project, self.data, guard=guard,
+            replacements={self.output_id: dict(title="Synthetic evidence", tags=[],
+                body="The tool returned the synthetic detail.", source_ids=[self.source_id])},
+            summary_reviewer=reviewer, jev_evaluator=filter_evaluator,
+            jev_quality_evaluator=quality_evaluator)
+        self.assertEqual("repaired", result["status"], result)
+        reviewer.assert_called()
+        filter_evaluator.assert_called()
+        quality_evaluator.assert_called()
+        with Store(self.data) as store:
+            self.assertEqual(before, store.get(self.project, [self.source_id])[0])
+            self.assertEqual(self.input_limit, store.observation_job_status(self.project, self.job_id)["input_limit"])
+
+
+    def test_source_body_or_hydrated_tool_io_growth_still_exceeds_original_budget(self):
+        self.processed_source()
+        for field in ("body", "tool_response"):
+            with self.subTest(field=field), Store(self.data) as store:
+                table, key = ("entries", "id") if field == "body" else ("tool_uses", "entry_id")
+                original = store._connection.execute(
+                    f"SELECT {field} FROM {table} WHERE {key}=?", (self.source_id,)).fetchone()[0]
+                changed = (original + "x" if field == "body" else
+                           json.dumps(dict(text=json.loads(original)["text"] + "x")))
+                store._connection.execute(
+                    f"UPDATE {table} SET {field}=? WHERE {key}=?", (changed, self.source_id))
+                store._connection.commit()
+                with self.assertRaisesRegex(StoreError, "stored batch boundary"):
+                    self.inspect()
+                store._connection.execute(
+                    f"UPDATE {table} SET {field}=? WHERE {key}=?", (original, self.source_id))
+                store._connection.commit()
+        self.inspect()
+
+    def test_full_processed_payload_still_must_fit_absolute_ceiling(self):
+        self.processed_source(target_chars=MAX_OBSERVATION_CHARS - 1)
+        with self.assertRaisesRegex(StoreError, "maximum boundary"):
+            self.inspect()
+
+    def test_invalid_stored_input_limits_are_rejected(self):
+        self.processed_source()
+        for limit in (255, MAX_OBSERVATION_CHARS + 1, "invalid", 60000.5):
+            with self.subTest(limit=limit), Store(self.data) as store:
+                store._connection.execute("UPDATE observation_jobs SET input_limit=? WHERE id=?",
+                                          (limit, self.job_id))
+                store._connection.commit()
+                with self.assertRaisesRegex(StoreError, "invalid data"):
+                    self.inspect()
+
+    def test_real_supersession_values_remain_bound_by_guard(self):
+        self.processed_source()
+        guard = self.inspect()
+        with Store(self.data) as store:
+            store._connection.execute("UPDATE entries SET superseded_at=? WHERE id=?",
+                                      ("2026-01-01T00:00:00.000000Z", self.source_id))
+            store._connection.commit()
+            with self.assertRaises(ObservationEvidenceChanged):
+                store.check_observation_repair(self.project, guard)
+
+    def test_ordinary_source_sizing_still_counts_supersession_fields(self):
+        self.processed_source()
+        with Store(self.data) as store:
+            rows = store._observation_source_rows(self.job_id, str(self.project))
+            with self.assertRaisesRegex(StoreError, "stored batch boundary"):
+                store._bounded_observation_sources(rows, self.input_limit, str(self.project))
 
 
 if __name__ == "__main__":

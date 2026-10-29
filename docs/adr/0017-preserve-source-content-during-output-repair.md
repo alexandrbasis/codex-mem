@@ -24,6 +24,8 @@ Use one shared support, original-report interpretation and outcome review sequen
 
 Expose a maintenance operation for selected outputs of one completed observation attempt. Its guard binds the project, original job and attempt, original outputs, retained source content and current execution settings. Replacement text is a proposal and must pass the existing shape, support, outcome and configured optional semantic checks. The challenged outputs cannot serve as evidence for their replacements.
 
+For completed-output repair, measure the original source budget before the two supersession fields added by processing. This calculation resets only `superseded_by` and `superseded_at` in a temporary size view. Keep their real values in returned evidence and guards. Content, tool I/O and other metadata still count against the original budget. The full hydrated payload must also remain within the existing absolute ceiling. Ordinary claims and retries use their existing size checks.
+
 Recheck the guard inside the commit transaction. Create successor records with links to the raw sources and replaced outputs. Supersede only the selected derived records. Preserve original source rows, the completed job, its attempts and its failure receipts. An identical successful call returns its repair receipt without another model call. No model runs inside the commit transaction.
 
 ## Evidence and limits

@@ -1,36 +1,25 @@
 {
   "format_version": 1,
   "provenance": "local_working_tree_snapshot_not_upstream_commit",
-  "captured_at": "2026-10-29T15:15:02.362406Z",
+  "captured_at": "2026-10-29T16:45:51.821913Z",
   "main_repository": {
     "url": "https://github.com/alexandrbasis/codex-mem.git",
-    "base_revision": "e896e6a58b09647be77b8416c9219599e0204452",
+    "base_revision": "f5b223f393a4906b189f4b992bd161f26a0002bf",
     "dirty_paths": [
       ".archify/architecture-codex-mem-20261020-161259/candidate.json",
-      ".archify/architecture-codex-mem-20261020-161259/codex-mem.delivery.json",
-      ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
-      ".archify/architecture-codex-mem-20261020-161259/maintenance-seal.json",
-      ".archify/architecture-codex-mem-20261020-161259/source-manifest.json",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot.bundle",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/.codex-plugin/plugin.json",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/codex_mem/__init__.py",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/codex_mem/observation_contract.py",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/docs/adr/0017-preserve-source-content-during-output-repair.md",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/package.json",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/pi/package.json",
-      ".archify/architecture-codex-mem-20261020-161259/source-snapshot/pyproject.toml",
       ".codex-plugin/plugin.json",
       "codex_mem/__init__.py",
-      "codex_mem/observation_contract.py",
+      "codex_mem/store.py",
       "docs/adr/0017-preserve-source-content-during-output-repair.md",
       "package.json",
       "pi/package.json",
-      "pyproject.toml"
+      "pyproject.toml",
+      "tests/test_observation_repair.py"
     ]
   },
   "snapshot_repository": {
     "url": "https://github.com/alexandrbasis/codex-mem.git",
-    "revision": "c0ca786e19e4793f900fa6623fd6b0ee6806ca5e",
+    "revision": "0cdcb80bbd00aadb1b958671c4410f2bffefcc6b",
     "link_mode": "local-only"
   },
   "source_selection": {
@@ -126,10 +115,10 @@
     ]
   },
   "files": {
-    ".codex-plugin/plugin.json": "2ad2c393530ff20d6d5866ef4d6a6b4e54bf0e6581cf8baae73fd8f788fd1e0d",
+    ".codex-plugin/plugin.json": "f9fe612733c6180a93f5ecfd0d90ab78bc4b61a77812f40fdf1f057cf3019cfd",
     ".mcp.json": "93d48a6b63b1f4115262e305cc868a8c831535391e733ae845cda947933c93d8",
     "GLOSSARY.md": "af43ee46ede3d346b58095b3f1e0621695ad6306bcdb0a121ef2d48aabf82db4",
-    "codex_mem/__init__.py": "ed06caaeda27cf642754378da4922978c8d7fdd5f2b04bc38e3779695e764599",
+    "codex_mem/__init__.py": "6d96925aa2cc0546a5c03c6d50940ad58c48bc3aac7002c39384c17f86f9c4e0",
     "codex_mem/__main__.py": "307299fda7b77d22c64cb51430ec75e5f59d78e9c948786afb3b2544fe45e4b7",
     "codex_mem/cli.py": "4c55e3dda9ed1171e8c7cd999d1ca74ac59bd25b53a102e7a7084ba27ee35a96",
     "codex_mem/config.py": "5d94a31f9446f43a524af415cada69fd1a2ca45f99d0260c815f6a1bb11159b9",
@@ -181,7 +170,7 @@
     "codex_mem/retrieval.py": "2908d94d9d27e9675e8a450c5407c40ae0fdc2ebdbdba0e7db48e2906c6f627a",
     "codex_mem/semantic.py": "9b3eb93701c95f94d28d62bc2ac1feaa618e28490a33745274c030f624e31fc4",
     "codex_mem/service.py": "7373779f8a7679c3654e4f09a344a826d269edc187cf29f60a2ef65736064710",
-    "codex_mem/store.py": "7b75b1c5de3442e5a1e84023e8290d02b9f6bcea7b60efa5b82a56583c136492",
+    "codex_mem/store.py": "cb8889e520ce8b943f7a0330d2a994256bbdfec6ca2c181a288bed4fb8afa660",
     "codex_mem/summary_outcome.py": "54630f0643d465ae4f31743fbf7a8c7ba329956629d90e67db0933fc51297ba5",
     "codex_mem/summary_support.py": "df15d7b31b1c1bf98d772338dde4147f19224c47fb0243515b08869c4c6e1a25",
     "codex_mem/tool_io.py": "7e1bfab0035130725971b6f398158d08fb8eae4577152ab4286662cd46fdce43",
@@ -207,17 +196,17 @@
     "docs/adr/0014-preserve-plans-and-single-review-citations.md": "b010d2cb49159bf0629cddf3e430af3244a95c40f1b909814e2b37bed2924f13",
     "docs/adr/0015-compare-overlapping-outcome-claims.md": "456ba8316b2b7369e598f6251836bdce682d59cd05b9ee4a7b4446808be17d48",
     "docs/adr/0016-recover-retained-packets-with-complete-evidence.md": "f0bdc895c37df0b0c45a9b9c064639da3b0751ff97fe454351c63694cfb368c1",
-    "docs/adr/0017-preserve-source-content-during-output-repair.md": "432d8d8a37d20bdf4a108b77ffc0f275b24eb86a68f349c76a0b8270440f983d",
+    "docs/adr/0017-preserve-source-content-during-output-repair.md": "55f14b53677987ce9bead694fbbd3fb3bc475241511e76cd329ed29029cf1bae",
     "docs/evidence/host-runtime-matrix-2026-10-24/live-final.json": "5e990db27f0a549458eead4937084f5837109d8caec14e40639de0620003349a",
     "docs/evidence/host-runtime-matrix-2026-10-24/snapshot-provenance.json": "1feba8da624707c9e73f523586e8eb7b2e3df605ce79ebb54d9412e11fcb71f6",
     "docs/evidence/memory-profile-comparison-2026-10-24/freeze.json": "a7db5de8b29fbd994d94799d3f96d4e8db84c145d530afb7eab4ad515a885101",
     "docs/evidence/memory-profile-comparison-2026-10-24/runtime-analysis.json": "fba56c56f95e128b8015482bfb4c133de08042526564252869078116d56d9093",
     "docs/pi-mcp.example.json": "8667e4584ec019e04e40ff6cf7ea03ec8312f8cce5f20dd29c9c30befd0fe809",
     "hooks/hooks.json": "5985d82de4f6b54fb1ba92bcc1dd6991061c31a16c86ed3e0748e19bd5500f52",
-    "package.json": "e2ee5b254df766b5b09e1125004dbd1972a9fe31b0da6b23515ada17e7c2e7c6",
+    "package.json": "352525a8db27cf931b966ebc1739ed6acf9a77ee2751cd8bdd3c5a655bd6b907",
     "pi/extension.ts": "b019884c95879759a3a602085ac937b7e773b5f862b119db4e02cfedc7934d72",
-    "pi/package.json": "935f8fd3ca5a1894d9dfc95250a822e834f501ee7e2beea9cb270ccb6f7593ad",
-    "pyproject.toml": "da2ce26ae3805044a9563a6788f0bbbc86fb7d796ec45514af04b6eaa6d000c1",
+    "pi/package.json": "809e91b746c78cbf3dbb1de7808b137e3fc9a7e280a402dd99861157112ca810",
+    "pyproject.toml": "dbf098fa202b826044cfdebb2a1784b9a9fe8aaf59ad76b6c1d5cecab3475d24",
     "scripts/check_pi_extension.py": "1445fa4b9b645bbe9c5a6dd0ad613bedd6ab9dfbe0064f891dcf1e1aabd9fb21",
     "scripts/codex-mem.py": "34cb80d20705b1c106319a3b5a486af78d60ccebf0614688f443f2f112526951",
     "scripts/demo_execution_dashboard.py": "e1a527f0d04f0eb84d3e81736f8e37da831ca0c50e5884c2d61439d60b15c835",
@@ -250,7 +239,7 @@
     "tests/test_memory_profile_comparison.py": "bf8022eca784bf00eb00f1e75a87f449914defe4477e253dabd4292e9de00242",
     "tests/test_observation_contract.py": "df3f589b175125d036c40b33b8b51843860b7edc5d7ac5def6eea88e7214a641",
     "tests/test_observation_profiles.py": "4b1e9e8d4bc3c40cce7083678fa35e5dc0a97e577beb0906f56ea930edf52d10",
-    "tests/test_observation_repair.py": "d82df3fb00b7f158175bd645062c75b61555cb4db8fa274eaf52e6faf37a3670",
+    "tests/test_observation_repair.py": "5c69935d89741d2b0d8b60eba0b429c46f18a7c7631ee65492907ad41f65850d",
     "tests/test_observer_usage_store.py": "0898969980c0b7353f2055f89bc5cf7e6b03d7d72ed1eaa851028ceb6b0ddf70",
     "tests/test_outcome_recovery.py": "618c893f594836b205e4c978a4eb058c957fca78718d9c2f1b157d19b1846cc5",
     "tests/test_pi_host.py": "3ffeef13e7d83e6a573021fdd2b19c85ffd2bbce9a3bcd32623e4855b522bde3",
@@ -275,7 +264,7 @@
   },
   "bundle": {
     "path": "source-snapshot.bundle",
-    "sha256": "3c2b0b34a99650378f48becdfbc18ed5c4c2b0dd121444fbc007c54a05142b0d"
+    "sha256": "7129048b2cdd2a41f4c08310c03f3c5a133c4412b6813d1eddb4b576d8fa7c69"
   },
   "limits": "Byte provenance only; no semantic freshness or completeness guarantee."
 }

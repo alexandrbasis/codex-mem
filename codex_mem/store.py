@@ -2354,14 +2354,30 @@ class Store:
     def _bounded_observation_sources(
         self, rows: Sequence[sqlite3.Row], max_chars: int, workspace: str | None = None,
         *, evidence_fingerprints: dict[str, str] | None = None,
+        processed_repair: bool = False,
     ) -> list[dict[str, Any]]:
+        if processed_repair and (
+            isinstance(max_chars, bool) or not isinstance(max_chars, int)
+            or not MIN_OBSERVATION_CHARS <= max_chars <= MAX_OBSERVATION_CHARS
+        ):
+            raise StoreError("Storage database contains invalid data")
         records = self._records_from_rows(rows)
         if workspace is not None:
             records = [self._hydrate_observation_source(workspace, record) for record in records]
         remaining = max_chars
+        full_remaining = MAX_OBSERVATION_CHARS
         bounded: list[dict[str, Any]] = []
         for record in records:
             source_chars = self._observation_source_chars(record)
+            if processed_repair:
+                full_remaining -= source_chars
+                if full_remaining < 0:
+                    raise StoreError("Observation sources exceed maximum boundary")
+                # Processing adds these two lifecycle values after the original
+                # input budget is stored. Discount only that envelope for repair
+                # sizing; retain the real record for evidence and fingerprints.
+                source_chars = self._observation_source_chars(
+                    dict(record, superseded_by=None, superseded_at=None))
             if source_chars > remaining:
                 raise StoreError("Observation sources exceed their stored batch boundary")
             remaining -= source_chars
@@ -3322,7 +3338,7 @@ class Store:
                 rows = self._observation_source_rows(checked_job, workspace)
                 fingerprints: dict[str, str] = {}
                 sources = self._bounded_observation_sources(rows, job["input_limit"], workspace,
-                    evidence_fingerprints=fingerprints)
+                    evidence_fingerprints=fingerprints, processed_repair=True)
                 context = self._observation_context(workspace, rows,
                     evidence_fingerprints=fingerprints)
                 # A challenged output is a candidate, never its own evidence.

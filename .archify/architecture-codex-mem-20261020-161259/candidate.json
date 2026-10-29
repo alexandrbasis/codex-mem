@@ -2,12 +2,12 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Codex Mem 1.12.9 project memory",
+    "title": "Codex Mem 1.12.10 project memory",
     "output": ".archify/architecture-codex-mem-20261020-161259/codex-mem.html",
     "quality_profile": "showcase",
     "repository": {
       "url": "https://github.com/alexandrbasis/codex-mem.git",
-      "revision": "c0ca786e19e4793f900fa6623fd6b0ee6806ca5e",
+      "revision": "0cdcb80bbd00aadb1b958671c4410f2bffefcc6b",
       "link_mode": "local-only"
     },
     "locale": "en"
@@ -341,9 +341,9 @@
         },
         {
           "path": "codex_mem/store.py",
-          "line": 3284,
-          "end_line": 3817,
-          "label": "Exact evidence and atomic output commits"
+          "line": 2354,
+          "end_line": 3833,
+          "label": "Source budgets and guarded output commits"
         },
         {
           "path": "codex_mem/observer_usage_store.py",
@@ -696,7 +696,7 @@
         "The project dashboard distinguishes past errors from current blockers. It shows a retry time only for waiting retries, excluding blocked, parked, running and ordinary fresh-work records. A blocked row states that no retry is scheduled. Sources: codex_mem/dashboard_data.py; codex_mem/ui_static/app.js; tests/test_dashboard_data.py.",
         "Explicit project-memory recovery pins one quarantined parent and its full blocked event set, source hashes, provenance, offsets, supersession, current revision and deletion generation. It creates an immutable parent-successor relation without resetting old attempts. Only the existing bounded prefix is dispatched; successful guarded commit releases only that authorized remainder. Failures keep selected events quarantined. Exact expiry reconciliation dispatches no model. Retained originals superseded by observation processing remain PM evidence if their pinned data is unchanged. Sources: codex_mem/project_memory.py; codex_mem/episode_processor.py; tests/test_project_memory_recovery.py; docs/adr/0016-recover-retained-packets-with-complete-evidence.md.",
         "A manually inspected legacy protocol_error can receive a one-shot current-profile successor only with exact old worker IDs, job, attempt and fingerprint and a failed lease-free parent. The uncertain old worker outcome and original failure stay unchanged. This never revives its lease or enables automatic transport retry. Sources: codex_mem/store.py; codex_mem/processor.py; codex_mem/quarantine_recovery.py; tests/test_dispatched_legacy_recovery.py.",
-        "Explicit processed-output maintenance accepts proposed replacements only for selected active outputs of one exact completed observation attempt. A guard binds project, job, attempt, output content, raw/history evidence and configured execution profile. Ordinary processing and repair share the support/source/outcome sequence; configured optional semantic checks also apply. The challenged outputs are excluded from evidence. Before commit, Store rechecks the guard atomically, writes successors with links to original raw evidence and replaced derived records, and supersedes only the selected outputs. Raw events, the original job and its attempt receipts remain immutable. An identical successful call returns its separate repair receipt without replaying native calls. Failed repair reviews return caller-retained receipts without database changes; repair usage does not rewrite the original observation ledger. Sources: codex_mem/observation_repair.py; codex_mem/observation_review.py; codex_mem/store.py; tests/test_observation_repair.py; docs/adr/0017-preserve-source-content-during-output-repair.md."
+        "Explicit processed-output maintenance accepts proposed replacements only for selected active outputs of one exact completed observation attempt. A guard binds project, job, attempt, output content, raw/history evidence and configured execution profile. Ordinary processing and repair share the support/source/outcome sequence; configured optional semantic checks also apply. The challenged outputs are excluded from evidence. Repair budget accounting excludes only the two processing-added supersession fields in a temporary size view; returned evidence and guards retain their real values. All content and other metadata still count against the stored budget, and the full hydrated payload must fit the existing absolute ceiling. Ordinary claim and retry bounds are unchanged. Before commit, Store rechecks the guard atomically, writes successors with links to original raw evidence and replaced derived records, and supersedes only the selected outputs. Raw events, the original job and its attempt receipts remain immutable. An identical successful call returns its separate repair receipt without replaying native calls. Failed repair reviews return caller-retained receipts without database changes; repair usage does not rewrite the original observation ledger. Sources: codex_mem/observation_repair.py; codex_mem/observation_review.py; codex_mem/store.py; tests/test_observation_repair.py; docs/adr/0017-preserve-source-content-during-output-repair.md."
       ]
     },
     {
